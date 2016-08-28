@@ -11,7 +11,8 @@ import homeassistant.util as util
 import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
-    ATTR_XY_COLOR)
+    ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
+    SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
 
 DEPENDENCIES = ['wemo']
 
@@ -19,6 +20,9 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 _LOGGER = logging.getLogger(__name__)
+
+SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
+                SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -95,6 +99,11 @@ class WemoLight(Light):
     def is_on(self):
         """True if device is on."""
         return self.device.state['onoff'] != 0
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_WEMO
 
     def turn_on(self, **kwargs):
         """Turn the light on."""

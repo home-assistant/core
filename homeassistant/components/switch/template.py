@@ -5,8 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.template/
 """
 import logging
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
+from homeassistant.components.switch import (
+    ENTITY_ID_FORMAT, SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
     ATTR_ENTITY_ID, MATCH_ALL)
@@ -15,7 +18,6 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.script import Script
 from homeassistant.helpers import template
 from homeassistant.helpers.event import track_state_change
-from homeassistant.util import slugify
 
 CONF_SWITCHES = 'switches'
 
@@ -25,41 +27,30 @@ OFF_ACTION = 'turn_off'
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, 'true', 'false']
 
+SWITCH_SCHEMA = vol.Schema({
+    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Required(ON_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Required(OFF_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+    vol.Optional(ATTR_ENTITY_ID, default=MATCH_ALL): cv.entity_ids
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+})
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Template switch."""
     switches = []
-    if config.get(CONF_SWITCHES) is None:
-        _LOGGER.error("Missing configuration data for switch platform")
-        return False
 
     for device, device_config in config[CONF_SWITCHES].items():
-
-        if device != slugify(device):
-            _LOGGER.error("Found invalid key for switch.template: %s. "
-                          "Use %s instead", device, slugify(device))
-            continue
-
-        if not isinstance(device_config, dict):
-            _LOGGER.error("Missing configuration data for switch %s", device)
-            continue
-
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        state_template = device_config.get(CONF_VALUE_TEMPLATE)
-        on_action = device_config.get(ON_ACTION)
-        off_action = device_config.get(OFF_ACTION)
-        if state_template is None:
-            _LOGGER.error(
-                "Missing %s for switch %s", CONF_VALUE_TEMPLATE, device)
-            continue
-
-        if on_action is None or off_action is None:
-            _LOGGER.error(
-                "Missing action for switch %s", device)
-            continue
-
-        entity_ids = device_config.get(ATTR_ENTITY_ID, MATCH_ALL)
+        state_template = device_config[CONF_VALUE_TEMPLATE]
+        on_action = device_config[ON_ACTION]
+        off_action = device_config[OFF_ACTION]
+        entity_ids = device_config[ATTR_ENTITY_ID]
 
         switches.append(
             SwitchTemplate(

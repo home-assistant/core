@@ -6,31 +6,146 @@ https://home-assistant.io/components/media_player.gpmdp/
 """
 import logging
 import json
+import os
 import socket
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_PAUSE, MediaPlayerDevice)
+    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_SEEK, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_OFF)
+from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['websocket-client==0.37.0']
-SUPPORT_GPMDP = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+SUPPORT_GPMDP = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+    SUPPORT_SEEK | SUPPORT_VOLUME_SET
+GPMDP_CONFIG_FILE = 'gpmpd.conf'
+_CONFIGURING = {}
+
+PLAYBACK_DICT = {'0': STATE_PAUSED,  # Stopped
+                 '1': STATE_PAUSED,
+                 '2': STATE_PLAYING}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the GPMDP platform."""
+def request_configuration(hass, config, url, add_devices_callback):
+    """Request configuration steps from the user."""
+    configurator = get_component('configurator')
+    if 'gpmdp' in _CONFIGURING:
+        configurator.notify_errors(
+            _CONFIGURING['gpmdp'], "Failed to register, please try again.")
+
+        return
     from websocket import create_connection
+    websocket = create_connection((url), timeout=1)
+    websocket.send(json.dumps({'namespace': 'connect',
+                               'method': 'connect',
+                               'arguments': ['Home Assistant']}))
 
+    # pylint: disable=unused-argument
+    def gpmdp_configuration_callback(callback_data):
+        """The actions to do when our configuration callback is called."""
+        while True:
+            from websocket import _exceptions
+            try:
+                msg = json.loads(websocket.recv())
+            except _exceptions.WebSocketConnectionClosedException:
+                continue
+            if msg['channel'] != 'connect':
+                continue
+            if msg['payload'] != "CODE_REQUIRED":
+                continue
+            pin = callback_data.get('pin')
+            websocket.send(json.dumps({'namespace': 'connect',
+                                       'method': 'connect',
+                                       'arguments': ['Home Assistant', pin]}))
+            tmpmsg = json.loads(websocket.recv())
+            if tmpmsg['channel'] == 'time':
+                _LOGGER.error('Error setting up GPMDP. Please pause'
+                              ' the desktop player and try again.')
+                break
+            code = tmpmsg['payload']
+            if code == 'CODE_REQUIRED':
+                continue
+            setup_gpmdp(hass, config, code,
+                        add_devices_callback)
+            _save_config(hass.config.path(GPMDP_CONFIG_FILE),
+                         {"CODE": code})
+            websocket.send(json.dumps({'namespace': 'connect',
+                                       'method': 'connect',
+                                       'arguments': ['Home Assistant', code]}))
+            websocket.close()
+            break
+
+    _CONFIGURING['gpmdp'] = configurator.request_config(
+        hass, "GPM Desktop Player", gpmdp_configuration_callback,
+        description=(
+            'Enter the pin that is displayed in the '
+            'Google Play Music Desktop Player.'),
+        submit_caption="Submit",
+        fields=[{'id': 'pin', 'name': 'Pin Code', 'type': 'number'}]
+    )
+
+
+def setup_gpmdp(hass, config, code, add_devices_callback):
+    """Setup gpmdp."""
     name = config.get("name", "GPM Desktop Player")
     address = config.get("address")
+    url = "ws://" + address + ":5672"
 
-    if address is None:
-        _LOGGER.error("Missing address in config")
+    if not code:
+        request_configuration(hass, config, url, add_devices_callback)
+        return
+
+    if 'gpmdp' in _CONFIGURING:
+        configurator = get_component('configurator')
+        configurator.request_done(_CONFIGURING.pop('gpmdp'))
+
+    add_devices_callback([GPMDP(name, url, code)])
+
+
+def _load_config(filename):
+    """Load configuration."""
+    if not os.path.isfile(filename):
+        return {}
+
+    try:
+        with open(filename, "r") as fdesc:
+            inp = fdesc.read()
+
+        # In case empty file
+        if not inp:
+            return {}
+
+        return json.loads(inp)
+    except (IOError, ValueError) as error:
+        _LOGGER.error("Reading config file %s failed: %s", filename, error)
+        return None
+
+
+def _save_config(filename, config):
+    """Save configuration."""
+    try:
+        with open(filename, "w") as fdesc:
+            fdesc.write(json.dumps(config, indent=4, sort_keys=True))
+    except (IOError, TypeError) as error:
+        _LOGGER.error("Saving config file failed: %s", error)
         return False
+    return True
 
-    add_devices([GPMDP(name, address, create_connection)])
+
+def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+    """Setup the GPMDP platform."""
+    codeconfig = _load_config(hass.config.path(GPMDP_CONFIG_FILE))
+    if len(codeconfig):
+        code = codeconfig.get("CODE")
+    elif discovery_info is not None:
+        if 'gpmdp' in _CONFIGURING:
+            return
+        code = None
+    else:
+        code = None
+    setup_gpmdp(hass, config, code, add_devices_callback)
 
 
 class GPMDP(MediaPlayerDevice):
@@ -38,57 +153,83 @@ class GPMDP(MediaPlayerDevice):
 
     # pylint: disable=too-many-public-methods, abstract-method
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, name, address, create_connection):
+    def __init__(self, name, url, code):
         """Initialize the media player."""
+        from websocket import create_connection
         self._connection = create_connection
-        self._address = address
+        self._url = url
+        self._authorization_code = code
         self._name = name
         self._status = STATE_OFF
         self._ws = None
         self._title = None
         self._artist = None
         self._albumart = None
+        self._seek_position = None
+        self._duration = None
+        self._volume = None
+        self._request_id = 0
         self.update()
 
     def get_ws(self):
         """Check if the websocket is setup and connected."""
         if self._ws is None:
             try:
-                self._ws = self._connection(("ws://" + self._address +
-                                             ":5672"), timeout=1)
-            except (socket.timeout, ConnectionRefusedError,
-                    ConnectionResetError):
-                self._ws = None
-        elif self._ws.connected is True:
-            self._ws.close()
-            try:
-                self._ws = self._connection(("ws://" + self._address +
-                                             ":5672"), timeout=1)
+                self._ws = self._connection((self._url), timeout=1)
+                msg = json.dumps({'namespace': 'connect',
+                                  'method': 'connect',
+                                  'arguments': ['Home Assistant',
+                                                self._authorization_code]})
+                self._ws.send(msg)
             except (socket.timeout, ConnectionRefusedError,
                     ConnectionResetError):
                 self._ws = None
         return self._ws
 
+    def send_gpmdp_msg(self, namespace, method, with_id=True):
+        """Send ws messages to GPMDP and verify request id in response."""
+        from websocket import _exceptions
+        try:
+            websocket = self.get_ws()
+            if websocket is None:
+                self._status = STATE_OFF
+                return
+            self._request_id += 1
+            websocket.send(json.dumps({'namespace': namespace,
+                                       'method': method,
+                                       'requestID': self._request_id}))
+            if not with_id:
+                return
+            while True:
+                msg = json.loads(websocket.recv())
+                if 'requestID' in msg:
+                    if msg['requestID'] == self._request_id:
+                        return msg
+        except (ConnectionRefusedError, ConnectionResetError,
+                _exceptions.WebSocketTimeoutException,
+                _exceptions.WebSocketProtocolException,
+                _exceptions.WebSocketPayloadException,
+                _exceptions.WebSocketConnectionClosedException):
+            self._ws = None
+
     def update(self):
         """Get the latest details from the player."""
-        websocket = self.get_ws()
-        if websocket is None:
-            self._status = STATE_OFF
+        playstate = self.send_gpmdp_msg('playback', 'getPlaybackState')
+        if playstate is None:
             return
-        else:
-            state = websocket.recv()
-            state = ((json.loads(state))['payload'])
-            if state is True:
-                websocket.recv()
-                websocket.recv()
-                song = websocket.recv()
-                song = json.loads(song)
-                self._title = (song['payload']['title'])
-                self._artist = (song['payload']['artist'])
-                self._albumart = (song['payload']['albumArt'])
-                self._status = STATE_PLAYING
-            elif state is False:
-                self._status = STATE_PAUSED
+        self._status = PLAYBACK_DICT[str(playstate['value'])]
+        time_data = self.send_gpmdp_msg('playback', 'getCurrentTime')
+        if time_data is not None:
+            self._seek_position = int(time_data['value'] / 1000)
+        track_data = self.send_gpmdp_msg('playback', 'getCurrentTrack')
+        if track_data is not None:
+            self._title = track_data['value']['title']
+            self._artist = track_data['value']['artist']
+            self._albumart = track_data['value']['albumArt']
+            self._duration = int(track_data['value']['duration'] / 1000)
+        volume_data = self.send_gpmdp_msg('volume', 'getVolume')
+        if volume_data is not None:
+            self._volume = volume_data['value'] / 100
 
     @property
     def media_content_type(self):
@@ -116,6 +257,21 @@ class GPMDP(MediaPlayerDevice):
         return self._albumart
 
     @property
+    def media_seek_position(self):
+        """Time in seconds of current seek positon."""
+        return self._seek_position
+
+    @property
+    def media_duration(self):
+        """Time in seconds of current song duration."""
+        return self._duration
+
+    @property
+    def volume_level(self):
+        """Volume level of the media player (0..1)."""
+        return self._volume
+
+    @property
     def name(self):
         """Return the name of the device."""
         return self._name
@@ -127,32 +283,56 @@ class GPMDP(MediaPlayerDevice):
 
     def media_next_track(self):
         """Send media_next command to media player."""
-        websocket = self.get_ws()
-        if websocket is None:
-            return
-        websocket.send('{"namespace": "playback", "method": "forward"}')
+        self.send_gpmdp_msg('playback', 'forward', False)
 
     def media_previous_track(self):
         """Send media_previous command to media player."""
-        websocket = self.get_ws()
-        if websocket is None:
-            return
-        websocket.send('{"namespace": "playback", "method": "rewind"}')
+        self.send_gpmdp_msg('playback', 'rewind', False)
 
     def media_play(self):
         """Send media_play command to media player."""
-        websocket = self.get_ws()
-        if websocket is None:
-            return
-        websocket.send('{"namespace": "playback", "method": "playPause"}')
-        self._status = STATE_PAUSED
+        self.send_gpmdp_msg('playback', 'playPause', False)
+        self._status = STATE_PLAYING
         self.update_ha_state()
 
     def media_pause(self):
         """Send media_pause command to media player."""
+        self.send_gpmdp_msg('playback', 'playPause', False)
+        self._status = STATE_PAUSED
+        self.update_ha_state()
+
+    def media_seek(self, position):
+        """Send media_seek command to media player."""
         websocket = self.get_ws()
         if websocket is None:
             return
-        websocket.send('{"namespace": "playback", "method": "playPause"}')
-        self._status = STATE_PAUSED
+        websocket.send(json.dumps({"namespace": "playback",
+                                   "method": "setCurrentTime",
+                                   "arguments": [position*1000]}))
+        self.update_ha_state()
+
+    def volume_up(self):
+        """Send volume_up command to media player."""
+        websocket = self.get_ws()
+        if websocket is None:
+            return
+        websocket.send('{"namespace": "volume", "method": "increaseVolume"}')
+        self.update_ha_state()
+
+    def volume_down(self):
+        """Send volume_down command to media player."""
+        websocket = self.get_ws()
+        if websocket is None:
+            return
+        websocket.send('{"namespace": "volume", "method": "decreaseVolume"}')
+        self.update_ha_state()
+
+    def set_volume_level(self, volume):
+        """Set volume on media player, range(0..1)."""
+        websocket = self.get_ws()
+        if websocket is None:
+            return
+        websocket.send(json.dumps({"namespace": "volume",
+                                   "method": "setVolume",
+                                   "arguments": [volume*100]}))
         self.update_ha_state()

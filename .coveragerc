@@ -101,18 +101,29 @@ omit =
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
     homeassistant/components/binary_sensor/arest.py
+    homeassistant/components/binary_sensor/ffmpeg.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/bloomsky.py
     homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
-    homeassistant/components/camera/generic.py
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
+    homeassistant/components/climate/eq3btsmart.py
+    homeassistant/components/climate/heatmiser.py
+    homeassistant/components/climate/homematic.py
+    homeassistant/components/climate/knx.py
+    homeassistant/components/climate/proliphix.py
+    homeassistant/components/climate/radiotherm.py
+    homeassistant/components/cover/homematic.py
+    homeassistant/components/cover/rpi_gpio.py
+    homeassistant/components/cover/scsgate.py
+    homeassistant/components/cover/wink.py
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/bluetooth_tracker.py
+    homeassistant/components/device_tracker/bluetooth_le_tracker.py
     homeassistant/components/device_tracker/bt_home_hub_5.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/fritz.py
@@ -173,8 +184,10 @@ omit =
     homeassistant/components/notify/aws_sqs.py
     homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/gntp.py
+    homeassistant/components/notify/group.py
     homeassistant/components/notify/instapush.py
     homeassistant/components/notify/joaoapps_join.py
+    homeassistant/components/notify/llamalab_automate.py
     homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/nma.py
     homeassistant/components/notify/pushbullet.py
@@ -202,13 +215,17 @@ omit =
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/forecast.py
+    homeassistant/components/sensor/fritzbox_callmonitor.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
     homeassistant/components/sensor/gpsd.py
     homeassistant/components/sensor/gtfs.py
+    homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/loopenergy.py
+    homeassistant/components/sensor/mhz19.py
+    homeassistant/components/sensor/mqtt_room.py
     homeassistant/components/sensor/neurio_energy.py
     homeassistant/components/sensor/nzbget.py
     homeassistant/components/sensor/ohmconnect.py

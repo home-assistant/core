@@ -1,5 +1,6 @@
 """Helpers for config validation using voluptuous."""
 from datetime import timedelta
+from urllib.parse import urlparse
 
 from typing import Any, Union, TypeVar, Callable, Sequence, List, Dict
 
@@ -29,6 +30,7 @@ latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
                     msg='invalid longitude')
 sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
+port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 
 # typing typevar
 T = TypeVar('T')
@@ -252,6 +254,17 @@ def time_zone(value):
         'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones')
 
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
+
+
+# pylint: disable=no-value-for-parameter
+def url(value: Any) -> str:
+    """Validate an URL."""
+    url_in = str(value)
+
+    if urlparse(url_in).scheme in ['http', 'https']:
+        return vol.Schema(vol.Url())(url_in)
+
+    raise vol.Invalid('invalid url')
 
 
 # Validator helpers

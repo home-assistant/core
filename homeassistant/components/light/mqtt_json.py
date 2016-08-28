@@ -12,7 +12,8 @@ import voluptuous as vol
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION,
-    ATTR_FLASH, FLASH_LONG, FLASH_SHORT, Light)
+    ATTR_FLASH, FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_FLASH,
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light)
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_PLATFORM
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
@@ -35,6 +36,9 @@ CONF_BRIGHTNESS = "brightness"
 CONF_RGB = "rgb"
 CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_FLASH_TIME_LONG = "flash_time_long"
+
+SUPPORT_MQTT_JSON = (SUPPORT_BRIGHTNESS | SUPPORT_FLASH | SUPPORT_RGB_COLOR |
+                     SUPPORT_TRANSITION)
 
 # Stealing some of these from the base MQTT configs.
 PLATFORM_SCHEMA = vol.Schema({

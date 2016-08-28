@@ -9,7 +9,8 @@ import logging
 
 from homeassistant.components import mysensors
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-                                            Light)
+                                            SUPPORT_BRIGHTNESS,
+                                            SUPPORT_RGB_COLOR, Light)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
@@ -17,6 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_RGB_WHITE = 'rgb_white'
 ATTR_VALUE = 'value'
 ATTR_VALUE_TYPE = 'value_type'
+
+SUPPORT_MYSENSORS = SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -37,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device_class_map = {
             pres.S_DIMMER: MySensorsLightDimmer,
         }
-        if float(gateway.version) >= 1.5:
+        if float(gateway.protocol_version) >= 1.5:
             # Add V_RGBW when rgb_white is implemented in the frontend
             map_sv_types.update({
                 pres.S_RGB_LIGHT: [set_req.V_RGB],
@@ -86,6 +89,11 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
     def is_on(self):
         """Return true if device is on."""
         return self._state
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_MYSENSORS
 
     def _turn_on_light(self):
         """Turn on light child device."""
@@ -161,7 +169,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
 
     def _turn_off_rgb_or_w(self, value_type=None, value=None):
         """Turn off RGB or RGBW child device."""
-        if float(self.gateway.version) >= 1.5:
+        if float(self.gateway.protocol_version) >= 1.5:
             set_req = self.gateway.const.SetReq
             if self.value_type == set_req.V_RGB:
                 value = '000000'
@@ -219,7 +227,6 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
-        self.battery_level = node.battery_level
         for value_type, value in child.values.items():
             _LOGGER.debug(
                 '%s: value_type %s, value = %s', self._name, value_type, value)

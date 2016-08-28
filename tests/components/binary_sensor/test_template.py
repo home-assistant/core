@@ -3,6 +3,7 @@ import unittest
 from unittest import mock
 
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
+import homeassistant.bootstrap as bootstrap
 from homeassistant.components.binary_sensor import template
 from homeassistant.exceptions import TemplateError
 
@@ -21,6 +22,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
                     'friendly_name': 'virtual thingy',
                     'value_template': '{{ foo }}',
                     'sensor_class': 'motion',
+                    'entity_id': 'test'
                 },
             }
         }
@@ -29,48 +31,61 @@ class TestBinarySensorTemplate(unittest.TestCase):
         result = template.setup_platform(hass, config, add_devices)
         self.assertTrue(result)
         mock_template.assert_called_once_with(hass, 'test', 'virtual thingy',
-                                              'motion', '{{ foo }}', MATCH_ALL)
+                                              'motion', '{{ foo }}', 'test')
         add_devices.assert_called_once_with([mock_template.return_value])
 
     def test_setup_no_sensors(self):
         """"Test setup with no sensors."""
-        config = {}
-        result = template.setup_platform(None, config, None)
+        hass = mock.MagicMock()
+        result = bootstrap.setup_component(hass, 'sensor', {
+            'sensor': {
+                'platform': 'template'
+            }
+        })
         self.assertFalse(result)
 
     def test_setup_invalid_device(self):
         """"Test the setup with invalid devices."""
-        config = {
-            'sensors': {
-                'foo bar': {},
-            },
-        }
-        result = template.setup_platform(None, config, None)
+        hass = mock.MagicMock()
+        result = bootstrap.setup_component(hass, 'sensor', {
+            'sensor': {
+                'platform': 'template',
+                'sensors': {
+                    'foo bar': {},
+                },
+            }
+        })
         self.assertFalse(result)
 
     def test_setup_invalid_sensor_class(self):
         """"Test setup with invalid sensor class."""
-        config = {
-            'sensors': {
-                'test': {
-                    'value_template': '{{ foo }}',
-                    'sensor_class': 'foobarnotreal',
+        hass = mock.MagicMock()
+        result = bootstrap.setup_component(hass, 'sensor', {
+            'sensor': {
+                'platform': 'template',
+                'sensors': {
+                    'test': {
+                        'value_template': '{{ foo }}',
+                        'sensor_class': 'foobarnotreal',
+                    },
                 },
-            },
-        }
-        result = template.setup_platform(None, config, None)
+            }
+        })
         self.assertFalse(result)
 
     def test_setup_invalid_missing_template(self):
         """"Test setup with invalid and missing template."""
-        config = {
-            'sensors': {
-                'test': {
-                    'sensor_class': 'motion',
-                },
-            },
-        }
-        result = template.setup_platform(None, config, None)
+        hass = mock.MagicMock()
+        result = bootstrap.setup_component(hass, 'sensor', {
+            'sensor': {
+                'platform': 'template',
+                'sensors': {
+                    'test': {
+                        'sensor_class': 'motion',
+                    },
+                }
+            }
+        })
         self.assertFalse(result)
 
     def test_attributes(self):

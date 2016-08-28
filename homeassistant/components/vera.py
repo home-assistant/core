@@ -7,12 +7,14 @@ https://home-assistant.io/components/vera/
 import logging
 from collections import defaultdict
 
-from requests.exceptions import RequestException
+import voluptuous as vol
 
+from requests.exceptions import RequestException
 
 from homeassistant.util.dt import utc_from_timestamp
 from homeassistant.util import convert
 from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
     ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
     EVENT_HOMEASSISTANT_STOP)
@@ -26,12 +28,23 @@ DOMAIN = 'vera'
 
 VERA_CONTROLLER = None
 
+CONF_CONTROLLER = 'vera_controller_url'
 CONF_EXCLUDE = 'exclude'
 CONF_LIGHTS = 'lights'
 
 ATTR_CURRENT_POWER_MWH = "current_power_mwh"
 
 VERA_DEVICES = defaultdict(list)
+
+VERA_ID_LIST_SCHEMA = vol.Schema([int])
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_CONTROLLER): cv.url,
+        vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
+        vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 # pylint: disable=unused-argument, too-many-function-args
@@ -41,14 +54,7 @@ def setup(hass, base_config):
     import pyvera as veraApi
 
     config = base_config.get(DOMAIN)
-    base_url = config.get('vera_controller_url')
-    if not base_url:
-        _LOGGER.error(
-            "The required parameter 'vera_controller_url'"
-            " was not found in config"
-        )
-        return False
-
+    base_url = config.get(CONF_CONTROLLER)
     VERA_CONTROLLER, _ = veraApi.init_controller(base_url)
 
     def stop_subscription(event):
@@ -65,15 +71,9 @@ def setup(hass, base_config):
         _LOGGER.exception("Error communicating with Vera API")
         return False
 
-    exclude = config.get(CONF_EXCLUDE, [])
-    if not isinstance(exclude, list):
-        _LOGGER.error("'exclude' must be a list of device_ids")
-        return False
+    exclude = config.get(CONF_EXCLUDE)
 
-    lights_ids = config.get(CONF_LIGHTS, [])
-    if not isinstance(lights_ids, list):
-        _LOGGER.error("'lights' must be a list of device_ids")
-        return False
+    lights_ids = config.get(CONF_LIGHTS)
 
     for device in all_devices:
         if device.device_id in exclude:

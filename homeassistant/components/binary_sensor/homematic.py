@@ -20,7 +20,9 @@ SENSOR_TYPES_CLASS = {
     "SmokeV2": "smoke",
     "Motion": "motion",
     "MotionV2": "motion",
-    "RemoteMotion": None
+    "RemoteMotion": None,
+    "WeatherSensor": None,
+    "TiltSensor": None,
 }
 
 

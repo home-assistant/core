@@ -3,6 +3,7 @@ import io
 import unittest
 import os
 import tempfile
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml
 import homeassistant.config as config_util
 from tests.common import get_test_config_dir
@@ -165,9 +166,16 @@ class TestSecrets(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Create & load secrets file."""
         config_dir = get_test_config_dir()
+        yaml.clear_secret_cache()
         self._yaml_path = os.path.join(config_dir,
                                        config_util.YAML_CONFIG_FILE)
-        self._secret_path = os.path.join(config_dir, 'secrets.yaml')
+        self._secret_path = os.path.join(config_dir, yaml._SECRET_YAML)
+        self._sub_folder_path = os.path.join(config_dir, 'subFolder')
+        if not os.path.exists(self._sub_folder_path):
+            os.makedirs(self._sub_folder_path)
+        self._unrelated_path = os.path.join(config_dir, 'unrelated')
+        if not os.path.exists(self._unrelated_path):
+            os.makedirs(self._unrelated_path)
 
         load_yaml(self._secret_path,
                   'http_pw: pwhttp\n'
@@ -185,7 +193,11 @@ class TestSecrets(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Clean up secrets."""
-        for path in [self._yaml_path, self._secret_path]:
+        yaml.clear_secret_cache()
+        for path in [self._yaml_path, self._secret_path,
+                     os.path.join(self._sub_folder_path, 'sub.yaml'),
+                     os.path.join(self._sub_folder_path, yaml._SECRET_YAML),
+                     os.path.join(self._unrelated_path, yaml._SECRET_YAML)]:
             if os.path.isfile(path):
                 os.remove(path)
 
@@ -198,6 +210,43 @@ class TestSecrets(unittest.TestCase):
             'username': 'un1',
             'password': 'pw1'}
         self.assertEqual(expected, self._yaml['component'])
+
+    def test_secrets_from_parent_folder(self):
+        """Test loading secrets from parent foler."""
+        expected = {'api_password': 'pwhttp'}
+        self._yaml = load_yaml(os.path.join(self._sub_folder_path, 'sub.yaml'),
+                               'http:\n'
+                               '  api_password: !secret http_pw\n'
+                               'component:\n'
+                               '  username: !secret comp1_un\n'
+                               '  password: !secret comp1_pw\n'
+                               '')
+
+        self.assertEqual(expected, self._yaml['http'])
+
+    def test_secret_overrides_parent(self):
+        """Test loading current directory secret overrides the parent."""
+        expected = {'api_password': 'override'}
+        load_yaml(os.path.join(self._sub_folder_path, yaml._SECRET_YAML),
+                  'http_pw: override')
+        self._yaml = load_yaml(os.path.join(self._sub_folder_path, 'sub.yaml'),
+                               'http:\n'
+                               '  api_password: !secret http_pw\n'
+                               'component:\n'
+                               '  username: !secret comp1_un\n'
+                               '  password: !secret comp1_pw\n'
+                               '')
+
+        self.assertEqual(expected, self._yaml['http'])
+
+    def test_secrets_from_unrelated_fails(self):
+        """Test loading secrets from unrelated folder fails."""
+        load_yaml(os.path.join(self._unrelated_path, yaml._SECRET_YAML),
+                  'test: failure')
+        with self.assertRaises(HomeAssistantError):
+            load_yaml(os.path.join(self._sub_folder_path, 'sub.yaml'),
+                      'http:\n'
+                      '  api_password: !secret test')
 
     def test_secrets_keyring(self):
         """Test keyring fallback & get_password."""

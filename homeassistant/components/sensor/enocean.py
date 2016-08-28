@@ -4,20 +4,32 @@ Support for EnOcean sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.enocean/
 """
+import logging
 
-from homeassistant.const import CONF_NAME
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_NAME, CONF_ID)
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components import enocean
 
-DEPENDENCIES = ["enocean"]
+_LOGGER = logging.getLogger(__name__)
 
-CONF_ID = "id"
+DEFAULT_NAME = 'EnOcean sensor'
+DEPENDENCIES = ['enocean']
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_ID): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup an EnOcean sensor device."""
-    dev_id = config.get(CONF_ID, None)
-    devname = config.get(CONF_NAME, None)
+    dev_id = config.get(CONF_ID)
+    devname = config.get(CONF_NAME)
+
     add_devices([EnOceanSensor(dev_id, devname)])
 
 
