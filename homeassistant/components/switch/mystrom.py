@@ -8,9 +8,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_PLATFORM, CONF_NAME, CONF_HOST)
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_NAME, CONF_HOST)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import SwitchDevice
 
 REQUIREMENTS = ['python-mystrom==0.3.6']
 
@@ -18,10 +18,9 @@ DEFAULT_NAME = 'myStrom Switch'
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'mystrom',
-    vol.Optional(CONF_NAME): cv.string,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -29,6 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return myStrom switch."""
     from pymystrom import MyStromPlug, exceptions
 
+    name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
 
     try:
@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("No route to device '%s'", host)
         return False
 
-    add_devices([MyStromSwitch(config.get('name', DEFAULT_NAME), host)])
+    add_devices([MyStromSwitch(name, host)])
 
 
 class MyStromSwitch(SwitchDevice):

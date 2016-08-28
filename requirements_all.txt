@@ -10,6 +10,9 @@ typing>=3,<4
 # homeassistant.components.isy994
 PyISY==1.0.6
 
+# homeassistant.components.notify.html5
+PyJWT==1.4.2
+
 # homeassistant.components.arduino
 PyMata==2.12
 
@@ -32,11 +35,12 @@ apcaccess==0.0.4
 astral==1.2
 
 # homeassistant.components.light.blinksticklight
-blinkstick==1.1.7
+blinkstick==1.1.8
 
 # homeassistant.components.sensor.bitcoin
 blockchain==1.3.3
 
+# homeassistant.components.climate.eq3btsmart
 # homeassistant.components.thermostat.eq3btsmart
 # bluepy_devices==0.2.0
 
@@ -47,6 +51,9 @@ boto3==1.3.1
 
 # homeassistant.components.http
 cherrypy==7.1.0
+
+# homeassistant.scripts.check_config
+colorlog>2.1,<3
 
 # homeassistant.components.media_player.directv
 directpy==0.1
@@ -64,6 +71,7 @@ eliqonline==1.0.12
 # homeassistant.components.enocean
 enocean==0.31
 
+# homeassistant.components.climate.honeywell
 # homeassistant.components.thermostat.honeywell
 evohomeclient==0.2.5
 
@@ -82,6 +90,9 @@ freesms==0.1.0
 # homeassistant.components.conversation
 fuzzywuzzy==0.11.1
 
+# homeassistant.components.device_tracker.bluetooth_le_tracker
+# gattlib==0.20150805
+
 # homeassistant.components.notify.gntp
 gntp==1.0.3
 
@@ -91,12 +102,14 @@ googlemaps==2.4.4
 # homeassistant.components.sensor.gpsd
 gps3==0.33.2
 
+# homeassistant.components.binary_sensor.ffmpeg
 # homeassistant.components.camera.ffmpeg
-ha-ffmpeg==0.4
+ha-ffmpeg==0.8
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.7.1
 
+# homeassistant.components.climate.heatmiser
 # homeassistant.components.thermostat.heatmiser
 heatmiserV3==0.9.1
 
@@ -104,7 +117,7 @@ heatmiserV3==0.9.1
 hikvision==0.4
 
 # homeassistant.components.sensor.dht
-# http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0
+# http://github.com/adafruit/Adafruit_Python_DHT/archive/310c59b0293354d07d94375f1365f7b9b9110c7d.zip#Adafruit_DHT==1.3.0
 
 # homeassistant.components.light.flux_led
 https://github.com/Danielhiversen/flux_led/archive/0.6.zip#flux_led==0.6
@@ -176,10 +189,13 @@ https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e22462
 https://github.com/sander76/powerviewApi/archive/master.zip#powerviewApi==0.2
 
 # homeassistant.components.mysensors
-https://github.com/theolind/pymysensors/archive/cc5d0b325e13c2b623fa934f69eea7cd4555f110.zip#pymysensors==0.6
+https://github.com/theolind/pymysensors/archive/8ce98b7fb56f7921a808eb66845ce8b2c455c81e.zip#pymysensors==0.7.1
 
 # homeassistant.components.alarm_control_panel.simplisafe
 https://github.com/w1ll1am23/simplisafe-python/archive/586fede0e85fd69e56e516aaa8e97eb644ca8866.zip#simplisafe-python==0.0.1
+
+# homeassistant.components.notify.html5
+https://github.com/web-push-libs/pywebpush/archive/e743dc92558fc62178d255c0018920d74fa778ed.zip#pywebpush==0.5.0
 
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
@@ -188,13 +204,16 @@ https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 influxdb==3.0.0
 
 # homeassistant.components.insteon_hub
-insteon_hub==0.4.5
+insteon_hub==0.5.0
 
 # homeassistant.components.media_player.kodi
 jsonrpc-requests==0.3
 
+# homeassistant.scripts.keyring
+keyring>=9.3,<10.0
+
 # homeassistant.components.knx
-knxip==0.3.2
+knxip==0.3.3
 
 # homeassistant.components.light.lifx
 liffylights==0.9.4
@@ -242,9 +261,11 @@ pilight==0.0.2
 # homeassistant.components.sensor.plex
 plexapi==2.0.2
 
+# homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
-pmsensor==0.2
+pmsensor==0.3
 
+# homeassistant.components.climate.proliphix
 # homeassistant.components.thermostat.proliphix
 proliphix==0.3.1
 
@@ -253,6 +274,7 @@ psutil==4.3.0
 
 # homeassistant.components.wink
 # homeassistant.components.binary_sensor.wink
+# homeassistant.components.cover.wink
 # homeassistant.components.garage_door.wink
 # homeassistant.components.light.wink
 # homeassistant.components.lock.wink
@@ -271,7 +293,7 @@ pushetta==1.0.15
 py-cpuinfo==0.2.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.10.1
+pyRFXtrx==0.11.0
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.0.8
@@ -299,7 +321,7 @@ pyenvisalink==1.0
 pyfttt==0.3
 
 # homeassistant.components.homematic
-pyhomematic==0.1.11
+pyhomematic==0.1.13
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
@@ -333,6 +355,9 @@ pysnmp==4.3.2
 # homeassistant.components.sensor.forecast
 python-forecastio==1.3.4
 
+# homeassistant.components.sensor.hp_ilo
+python-hpilo==3.8
+
 # homeassistant.components.lirc
 # python-lirc==1.2.1
 
@@ -359,13 +384,14 @@ python-twitch==1.3.0
 
 # homeassistant.components.wink
 # homeassistant.components.binary_sensor.wink
+# homeassistant.components.cover.wink
 # homeassistant.components.garage_door.wink
 # homeassistant.components.light.wink
 # homeassistant.components.lock.wink
 # homeassistant.components.rollershutter.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.7.11
+python-wink==0.7.13
 
 # homeassistant.components.keyboard
 pyuserinput==0.1.9
@@ -374,8 +400,9 @@ pyuserinput==0.1.9
 pyvera==0.2.15
 
 # homeassistant.components.wemo
-pywemo==0.4.5
+pywemo==0.4.6
 
+# homeassistant.components.climate.radiotherm
 # homeassistant.components.thermostat.radiotherm
 radiotherm==1.2
 
@@ -406,6 +433,7 @@ sleekxmpp==1.3.1
 # homeassistant.components.media_player.snapcast
 snapcast==1.2.1
 
+# homeassistant.components.climate.honeywell
 # homeassistant.components.thermostat.honeywell
 somecomfort==0.2.1
 
@@ -413,6 +441,7 @@ somecomfort==0.2.1
 speedtest-cli==0.3.4
 
 # homeassistant.components.recorder
+# homeassistant.scripts.db_migrator
 sqlalchemy==1.0.14
 
 # homeassistant.components.http
@@ -451,7 +480,7 @@ urllib3
 uvcclient==0.9.0
 
 # homeassistant.components.verisure
-vsure==0.8.1
+vsure==0.10.2
 
 # homeassistant.components.switch.wake_on_lan
 wakeonlan==0.2.2
@@ -467,7 +496,7 @@ xbee-helper==0.0.7
 xmltodict==0.10.2
 
 # homeassistant.components.sensor.yweather
-yahooweather==0.6
+yahooweather==0.7
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.6

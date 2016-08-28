@@ -5,41 +5,38 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.imap/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = 'mdi:email-outline'
-
-CONF_USER = "user"
-CONF_PASSWORD = "password"
 CONF_SERVER = "server"
-CONF_PORT = "port"
-CONF_NAME = "name"
 
 DEFAULT_PORT = 993
+ICON = 'mdi:email-outline'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required('platform'): 'imap',
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Required(CONF_USER): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_SERVER): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-        vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the IMAP platform."""
     sensor = ImapSensor(config.get(CONF_NAME, None),
-                        config.get(CONF_USER),
+                        config.get(CONF_USERNAME),
                         config.get(CONF_PASSWORD),
                         config.get(CONF_SERVER),
-                        config.get(CONF_PORT, DEFAULT_PORT))
+                        config.get(CONF_PORT))
 
     if sensor.connection:
         add_devices([sensor])

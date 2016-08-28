@@ -11,17 +11,17 @@ from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.helpers import template, script
 from homeassistant.components.http import HomeAssistantView
 
-DOMAIN = 'alexa'
-DEPENDENCIES = ['http']
-
 _LOGGER = logging.getLogger(__name__)
 
 API_ENDPOINT = '/api/alexa'
 
-CONF_INTENTS = 'intents'
-CONF_CARD = 'card'
-CONF_SPEECH = 'speech'
 CONF_ACTION = 'action'
+CONF_CARD = 'card'
+CONF_INTENTS = 'intents'
+CONF_SPEECH = 'speech'
+
+DOMAIN = 'alexa'
+DEPENDENCIES = ['http']
 
 
 def setup(hass, config):

@@ -6,23 +6,26 @@ https://home-assistant.io/components/notify.pushover/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TARGET, ATTR_DATA, DOMAIN, BaseNotificationService)
+    ATTR_TITLE, ATTR_TARGET, ATTR_DATA, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
-from homeassistant.helpers import validate_config
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-pushover==0.2']
 _LOGGER = logging.getLogger(__name__)
 
 
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
+    vol.Required('user_key'): cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+})
+
+
 # pylint: disable=unused-variable
 def get_service(hass, config):
     """Get the Pushover notification service."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['user_key', CONF_API_KEY]},
-                           _LOGGER):
-        return None
-
     from pushover import InitError
 
     try:
@@ -30,8 +33,7 @@ def get_service(hass, config):
                                            config[CONF_API_KEY])
     except InitError:
         _LOGGER.error(
-            "Wrong API key supplied. "
-            "Get it at https://pushover.net")
+            'Wrong API key supplied. Get it at https://pushover.net')
         return None
 
 
@@ -47,7 +49,7 @@ class PushoverNotificationService(BaseNotificationService):
         self.pushover = Client(
             self._user_key, api_token=self._api_token)
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message='', **kwargs):
         """Send a message to a user."""
         from pushover import RequestError
 
@@ -65,4 +67,4 @@ class PushoverNotificationService(BaseNotificationService):
         except ValueError as val_err:
             _LOGGER.error(str(val_err))
         except RequestError:
-            _LOGGER.exception("Could not send pushover notification")
+            _LOGGER.exception('Could not send pushover notification')

@@ -19,6 +19,7 @@ import homeassistant.config as conf_util
 import homeassistant.core as core
 import homeassistant.loader as loader
 import homeassistant.util.package as pkg_util
+from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -103,7 +104,7 @@ def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
             try:
                 config = component.CONFIG_SCHEMA(config)
             except vol.MultipleInvalid as ex:
-                _log_exception(ex, domain, config)
+                log_exception(ex, domain, config)
                 return False
 
         elif hasattr(component, 'PLATFORM_SCHEMA'):
@@ -113,7 +114,7 @@ def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
                 try:
                     p_validated = component.PLATFORM_SCHEMA(p_config)
                 except vol.MultipleInvalid as ex:
-                    _log_exception(ex, domain, p_config)
+                    log_exception(ex, domain, p_config)
                     return False
 
                 # Not all platform components follow same pattern for platforms
@@ -134,8 +135,8 @@ def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
                     try:
                         p_validated = platform.PLATFORM_SCHEMA(p_validated)
                     except vol.MultipleInvalid as ex:
-                        _log_exception(ex, '{}.{}'.format(domain, p_name),
-                                       p_validated)
+                        log_exception(ex, '{}.{}'.format(domain, p_name),
+                                      p_validated)
                         return False
 
                 platforms.append(p_validated)
@@ -239,7 +240,7 @@ def from_config_dict(config: Dict[str, Any],
     try:
         conf_util.process_ha_core_config(hass, core_config)
     except vol.Invalid as ex:
-        _log_exception(ex, 'homeassistant', core_config)
+        log_exception(ex, 'homeassistant', core_config)
         return None
 
     conf_util.process_ha_config_upgrade(hass)
@@ -308,6 +309,8 @@ def from_config_file(config_path: str,
         config_dict = conf_util.load_yaml_config_file(config_path)
     except HomeAssistantError:
         return None
+    finally:
+        clear_secret_cache()
 
     return from_config_dict(config_dict, hass, enable_log=False,
                             skip_pip=skip_pip)
@@ -371,7 +374,7 @@ def _ensure_loader_prepared(hass: core.HomeAssistant) -> None:
         loader.prepare(hass)
 
 
-def _log_exception(ex, domain, config):
+def log_exception(ex, domain, config):
     """Generate log exception for config validation."""
     message = 'Invalid config for [{}]: '.format(domain)
     if 'extra keys not allowed' in ex.error_message:
