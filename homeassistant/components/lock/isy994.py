@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             devs.append(ISYLockDevice(node))
 
     # Import ISY doors programs
-    for folder_name, states in (KEY_HA_LOCKS, [STATE_UNLOCKED, STATE_LOCKED]):
+    for folder_name, states in (KEY_HA_DOORS, [STATE_UNLOCKED, STATE_LOCKED]):
         try:
             folder = ISY.programs[MY_PROGRAMS][folder_name]
         except KeyError:
