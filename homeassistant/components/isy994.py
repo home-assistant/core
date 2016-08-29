@@ -73,7 +73,7 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
 
     # Load platforms for the devices in the ISY controller that we support.
-    for component in ('sensor', 'light', 'switch'):
+    for component in ('sensor', 'light', 'switch', 'lock'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     ISY.auto_update = True
