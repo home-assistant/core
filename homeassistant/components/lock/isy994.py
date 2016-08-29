@@ -10,6 +10,15 @@ from homeassistant.components.isy994 import (
     HIDDEN_STRING, ISY, SENSOR_STRING, ISYDeviceABC)
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
+MY_PROGRAMS = 'My Programs'
+ACTIONS = 'actions'
+PROGRAM = 'program'
+NOT_PROGRAM = 'Not a program'
+STATUS = 'status'
+KEY_LOCK = 'lock'
+KEY_BINARY = 'binary'
+KEY_FOLDER = 'folder'
+KEY_HA_DOORS = 'HA.doors'
 
 # The frontend doesn't seem to fully support the open and closed states yet.
 # Once it does, the HA.doors programs should report open and closed instead of
@@ -34,19 +43,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             devs.append(ISYLockDevice(node))
 
     # Import ISY doors programs
-    for folder_name, states in ('HA.locks', [STATE_UNLOCKED, STATE_LOCKED]):
+    for folder_name, states in (KEY_HA_LOCKS, [STATE_UNLOCKED, STATE_LOCKED]):
         try:
-            folder = ISY.programs['My Programs'][folder_name]
+            folder = ISY.programs[MY_PROGRAMS][folder_name]
         except KeyError:
             pass
         else:
             for dtype, name, node_id in folder.children:
-                if dtype is 'folder':
+                if dtype is KEY_FOLDER:
                     custom_switch = folder[node_id]
                     try:
-                        actions = custom_switch['actions'].leaf
-                        assert actions.dtype == 'program', 'Not a program'
-                        node = custom_switch['status'].leaf
+                        actions = custom_switch[ACTIONS].leaf
+                        assert actions.dtype == PROGRAM, NOT_PROGRAM
+                        node = custom_switch[STATUS].leaf
                     except (KeyError, AssertionError):
                         pass
                     else:
@@ -59,16 +68,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ISYLockDevice(ISYDeviceABC):
     """Representation of an ISY lock."""
 
-    _domain = 'locks'
-    _dtype = 'binary'
+    _domain = KEY_LOCK
+    _dtype = KEY_BINARY
     _states = [STATE_UNLOCKED, STATE_LOCKED]
 
 
 class ISYProgramDevice(ISYLockDevice):
     """Representation of an ISY door."""
 
-    _domain = 'lock'
-    _dtype = 'binary'
+    _domain = KEY_LOCK
+    _dtype = KEY_BINARY
 
     def __init__(self, name, node, actions, states):
         """Initialize the lock."""
