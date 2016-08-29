@@ -133,7 +133,7 @@ class SpeedtestData(object):
     def __init__(self, hass, config):
         """Initialize the data object."""
         self.data = None
-        self._server_id = str(config.get(CONF_SERVER_ID))
+        self._server_id = config.get(CONF_SERVER_ID)
         track_time_change(hass, self.update,
                           second=config.get(CONF_SECOND),
                           minute=config.get(CONF_MINUTE),
@@ -148,7 +148,7 @@ class SpeedtestData(object):
         try:
             args = [sys.executable, speedtest_cli.__file__, '--simple']
             if self._server_id:
-                args = args + ['--server', self._server_id]
+                args = args + ['--server', str(self._server_id)]
 
             re_output = _SPEEDTEST_REGEX.split(
                 check_output(args).decode("utf-8"))
