@@ -16,7 +16,7 @@ from homeassistant.util import Throttle
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 
 
-REQUIREMENTS = ['miflora==0.1.2']
+REQUIREMENTS = ['miflora==0.1.3']
 
 LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=900)
@@ -29,7 +29,7 @@ SENSOR_TYPES = {
     'temperature': ['Temperature', '°C'],
     'light': ['Light intensity', 'lux'],
     'moisture': ['Moisture', '%'],
-    'fertility': ['Fertility', 'us/cm'],
+    'conductivity': ['Conductivity', 'µS/cm'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
