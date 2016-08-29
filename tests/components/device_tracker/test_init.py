@@ -1,10 +1,10 @@
 """The tests for the device tracker component."""
 # pylint: disable=protected-access,too-many-public-methods
+import logging
 import unittest
 from unittest.mock import patch
 from datetime import datetime, timedelta
 import os
-import tempfile
 
 from homeassistant.loader import get_component
 import homeassistant.util.dt as dt_util
@@ -15,9 +15,12 @@ import homeassistant.components.device_tracker as device_tracker
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import (
-    get_test_home_assistant, fire_time_changed, fire_service_discovered)
+    get_test_home_assistant, fire_time_changed, fire_service_discovered,
+    patch_yaml_files)
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TestComponentsDeviceTracker(unittest.TestCase):
@@ -25,12 +28,12 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     hass = None  # HomeAssistant
     yaml_devices = None  # type: str
 
-    def setup_method(self, _):
+    def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.yaml_devices = self.hass.config.path(device_tracker.YAML_DEVICES)
 
-    def teardown_method(self, _):
+    def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         try:
             os.remove(self.yaml_devices)
@@ -53,15 +56,16 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     def test_reading_broken_yaml_config(self):  # pylint: disable=no-self-use
         """Test when known devices contains invalid data."""
-        with tempfile.NamedTemporaryFile() as fpt:
-            # file is empty
-            assert device_tracker.load_config(fpt.name, None, False) == []
-
-            fpt.write('100'.encode('utf-8'))
-            fpt.flush()
-
-            # file contains a non-dict format
-            assert device_tracker.load_config(fpt.name, None, False) == []
+        files = {'empty.yaml': '',
+                 'bad.yaml': '100',
+                 'ok.yaml': 'my_device:\n  name: Device'}
+        with patch_yaml_files(files):
+            # File is empty
+            assert device_tracker.load_config('empty.yaml', None, False) == []
+            # File contains a non-dict format
+            assert device_tracker.load_config('bad.yaml', None, False) == []
+            # A file that works fine
+            assert len(device_tracker.load_config('ok.yaml', None, False)) == 1
 
     def test_reading_yaml_config(self):
         """Test the rendering of the YAML configuration."""
@@ -92,9 +96,9 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             device_tracker.Device(self.hass, True, True, 'your_device',
                                   'AB:01', 'Your device', None, None, False)]
         device_tracker.DeviceTracker(self.hass, False, True, devices)
-        print(mock_warning.call_args_list)
+        _LOGGER.debug(mock_warning.call_args_list)
         assert mock_warning.call_count == 1, \
-            "The only warning call should be duplicates (check stdout)"
+            "The only warning call should be duplicates (check DEBUG)"
         args, _ = mock_warning.call_args
         assert 'Duplicate device MAC' in args[0], \
             'Duplicate MAC warning expected'
@@ -107,9 +111,9 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                   None, 'Your device', None, None, False)]
         device_tracker.DeviceTracker(self.hass, False, True, devices)
 
-        print(mock_warning.call_args_list)
+        _LOGGER.debug(mock_warning.call_args_list)
         assert mock_warning.call_count == 1, \
-            "The only warning call should be duplicates (check stdout)"
+            "The only warning call should be duplicates (check DEBUG)"
         args, _ = mock_warning.call_args
         assert 'Duplicate device IDs' in args[0], \
             'Duplicate device IDs warning expected'

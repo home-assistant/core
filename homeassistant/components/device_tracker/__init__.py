@@ -385,8 +385,6 @@ class Device(Entity):
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     """Load devices from YAML configuration file."""
-    if not os.path.isfile(path):
-        return []
     try:
         return [
             Device(hass, consider_home, device.get('track', False),
@@ -395,7 +393,7 @@ def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
                    device.get('gravatar'),
                    device.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
             for dev_id, device in load_yaml_config_file(path).items()]
-    except HomeAssistantError:
+    except (HomeAssistantError, FileNotFoundError):
         # When YAML file could not be loaded/did not contain a dict
         return []
 
