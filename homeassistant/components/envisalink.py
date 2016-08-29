@@ -12,7 +12,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.discovery import load_platform
 
-REQUIREMENTS = ['pyenvisalink==1.3', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyenvisalink==1.4', 'pydispatcher==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'envisalink'
@@ -92,6 +92,7 @@ def setup(hass, base_config):
     _port = config.get(CONF_EVL_PORT)
     _code = config.get(CONF_CODE)
     _panel_type = config.get(CONF_PANEL_TYPE)
+    _panic_type = config.get(CONF_PANIC)
     _version = config.get(CONF_EVL_VERSION)
     _user = config.get(CONF_USERNAME)
     _pass = config.get(CONF_PASS)
@@ -180,14 +181,15 @@ def setup(hass, base_config):
     # Load sub-components for Envisalink
     if _partitions:
         load_platform(hass, 'alarm_control_panel', 'envisalink',
-                      {'partitions': _partitions,
-                       'code': _code}, config)
+                      {CONF_PARTITIONS: _partitions,
+                       CONF_CODE: _code,
+                       CONF_PANIC: _panic_type}, config)
         load_platform(hass, 'sensor', 'envisalink',
-                      {'partitions': _partitions,
-                       'code': _code}, config)
+                      {CONF_PARTITIONS: _partitions,
+                       CONF_CODE: _code}, config)
     if _zones:
         load_platform(hass, 'binary_sensor', 'envisalink',
-                      {'zones': _zones}, config)
+                      {CONF_ZONES: _zones}, config)
 
     return True
 
