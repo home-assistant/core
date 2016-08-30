@@ -8,17 +8,19 @@ import requests
 from homeassistant import bootstrap, const
 import homeassistant.components.device_tracker as device_tracker
 import homeassistant.components.http as http
+from homeassistant.const import CONF_PLATFORM
 
 from tests.common import get_test_home_assistant, get_test_instance_port
 
 SERVER_PORT = get_test_instance_port()
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
 
-hass = None
+hass = None  # pylint: disable=invalid-name
 
 
-def _url(data={}):
+def _url(data=None):
     """Helper method to generate URLs."""
+    data = data or {}
     data = "&".join(["{}={}".format(name, value) for
                      name, value in data.items()])
     return "{}{}locative?{}".format(HTTP_BASE_URL, const.URL_API, data)
@@ -26,7 +28,7 @@ def _url(data={}):
 
 def setUpModule():   # pylint: disable=invalid-name
     """Initalize a Home Assistant server."""
-    global hass
+    global hass    # pylint: disable=invalid-name
 
     hass = get_test_home_assistant()
     bootstrap.setup_component(hass, http.DOMAIN, {
@@ -38,7 +40,7 @@ def setUpModule():   # pylint: disable=invalid-name
     # Set up device tracker
     bootstrap.setup_component(hass, device_tracker.DOMAIN, {
         device_tracker.DOMAIN: {
-            'platform': 'locative'
+            CONF_PLATFORM: 'locative'
         }
     })
 

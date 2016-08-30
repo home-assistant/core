@@ -34,9 +34,9 @@ PLATFORM_SCHEMA = vol.All(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PROTOCOL, default='ssh'):
-            vol.Schema(['ssh', 'telnet']),
+            vol.In(['ssh', 'telnet']),
         vol.Optional(CONF_MODE, default='router'):
-            vol.Schema(['router', 'ap']),
+            vol.In(['router', 'ap']),
         vol.Optional(CONF_SSH_KEY): cv.isfile,
         vol.Optional(CONF_PUB_KEY): cv.isfile
     }))
