@@ -80,6 +80,8 @@ class Thermostat(ClimateDevice):
             self.thermostat_index)
         self._name = self.thermostat['name']
         self.hold_temp = hold_temp
+        self._operation_list = ['auto', 'auxHeatOnly', 'cool',
+                                'heat', 'off']
 
     def update(self):
         """Get the latest state from the thermostat."""
@@ -125,11 +127,6 @@ class Thermostat(ClimateDevice):
         return int(self.thermostat['runtime']['desiredCool'] / 10)
 
     @property
-    def current_humidity(self):
-        """Return the current humidity."""
-        return self.thermostat['runtime']['actualHumidity']
-
-    @property
     def desired_fan_mode(self):
         """Return the desired fan mode of operation."""
         return self.thermostat['runtime']['desiredFanMode']
@@ -143,29 +140,24 @@ class Thermostat(ClimateDevice):
             return STATE_OFF
 
     @property
+    def current_operation(self):
+        """Return current operation."""
+        return self.operation_mode
+
+    @property
+    def operation_list(self):
+        """Return the operation modes list."""
+        return self._operation_list
+
+    @property
     def operation_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        status = self.thermostat['equipmentStatus']
-        if status == '':
-            return STATE_IDLE
-        elif 'Cool' in status:
-            return STATE_COOL
-        elif 'auxHeat' in status:
-            return STATE_HEAT
-        elif 'heatPump' in status:
-            return STATE_HEAT
-        else:
-            return status
+        return self.thermostat['settings']['hvacMode']
 
     @property
     def mode(self):
         """Return current mode ie. home, away, sleep."""
         return self.thermostat['program']['currentClimateRef']
-
-    @property
-    def current_operation(self):
-        """Return current hvac mode ie. auto, auxHeatOnly, cool, heat, off."""
-        return self.thermostat['settings']['hvacMode']
 
     @property
     def fan_min_on_time(self):
@@ -176,11 +168,23 @@ class Thermostat(ClimateDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         # Move these to Thermostat Device and make them global
+        status = self.thermostat['equipmentStatus']
+        operation = None
+        if status == '':
+            operation = STATE_IDLE
+        elif 'Cool' in status:
+            operation = STATE_COOL
+        elif 'auxHeat' in status:
+            operation = STATE_HEAT
+        elif 'heatPump' in status:
+            operation = STATE_HEAT
+        else:
+            operation = status
         return {
-            "humidity": self.current_humidity,
+            "humidity": self.thermostat['runtime']['actualHumidity'],
             "fan": self.fan,
             "mode": self.mode,
-            "operation_mode": self.current_operation,
+            "operation": operation,
             "fan_min_on_time": self.fan_min_on_time
         }
 

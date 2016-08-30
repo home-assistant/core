@@ -22,12 +22,12 @@ def setUpModule():   # pylint: disable=invalid-name
     """Write a device tracker known devices file to be used."""
     device_tracker.update_config(
         KNOWN_DEV_YAML_PATH, 'device_1', device_tracker.Device(
-            None, None, None, True, 'device_1', 'DEV1',
+            None, None, True, 'device_1', 'DEV1',
             picture='http://example.com/dev1.jpg'))
 
     device_tracker.update_config(
         KNOWN_DEV_YAML_PATH, 'device_2', device_tracker.Device(
-            None, None, None, True, 'device_2', 'DEV2',
+            None, None, True, 'device_2', 'DEV2',
             picture='http://example.com/dev2.jpg'))
 
 
@@ -83,7 +83,8 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
 
         self.assertTrue(light.is_on(self.hass))
 
-    def test_lights_turn_off_when_everyone_leaves(self):
+    def test_lights_turn_off_when_everyone_leaves(self): \
+            # pylint: disable=invalid-name
         """Test lights turn off when everyone leaves the house."""
         light.turn_on(self.hass)
 
@@ -99,7 +100,8 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
 
         self.assertFalse(light.is_on(self.hass))
 
-    def test_lights_turn_on_when_coming_home_after_sun_set(self):
+    def test_lights_turn_on_when_coming_home_after_sun_set(self): \
+            # pylint: disable=invalid-name
         """Test lights turn on when coming home after sun set."""
         light.turn_off(self.hass)
         ensure_sun_set(self.hass)

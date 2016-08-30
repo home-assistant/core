@@ -14,7 +14,7 @@ from homeassistant.components.camera.mjpeg import extract_image_from_mjpeg
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
 
-REQUIREMENTS = ['ha-ffmpeg==0.8']
+REQUIREMENTS = ['ha-ffmpeg==0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
