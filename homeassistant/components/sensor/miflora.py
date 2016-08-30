@@ -49,27 +49,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     force_update = config.get(CONF_FORCE_UPDATE)
 
     devs = []
-    try:
-        for parameter in config[CONF_MONITORED_CONDITIONS]:
-            name = SENSOR_TYPES[parameter][0]
-            unit = SENSOR_TYPES[parameter][1]
 
-            prefix = config.get(CONF_NAME)
+    for parameter in config[CONF_MONITORED_CONDITIONS]:
+        name = SENSOR_TYPES[parameter][0]
+        unit = SENSOR_TYPES[parameter][1]
 
-            if prefix == "":
-                # If no name is given, retrieve the name from the device
-                # this is usually "Flower mate"
-                prefix = poller.name()
+        prefix = config.get(CONF_NAME)
 
-            if len(prefix) > 0:
-                name = prefix + " " + name
-            devs.append(MiFloraSensor(poller,
-                                      parameter,
-                                      name, unit,
-                                      force_update))
-    except KeyError as err:
-        LOGGER.error("Sensor type %s unknown", err)
-        return False
+        if prefix == "":
+            # If no name is given, retrieve the name from the device
+            # this is usually "Flower mate"
+            prefix = poller.name()
+
+        if len(prefix) > 0:
+            name = prefix + " " + name
+        devs.append(MiFloraSensor(poller,
+                                  parameter,
+                                  name, unit,
+                                  force_update))
 
     add_devices(devs)
 
