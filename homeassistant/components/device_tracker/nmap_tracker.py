@@ -22,8 +22,8 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 _LOGGER = logging.getLogger(__name__)
 
 # Interval in minutes to exclude devices from a scan while they are home
-CONF_HOME_INTERVAL = "home_interval"
-CONF_EXCLUDE = "exclude"
+CONF_HOME_INTERVAL = 'home_interval'
+CONF_EXCLUDE = 'exclude'
 
 REQUIREMENTS = ['python-nmap==0.6.1']
 
@@ -61,10 +61,7 @@ class NmapDeviceScanner(object):
         self.last_results = []
 
         self.hosts = config[CONF_HOSTS]
-        if CONF_EXCLUDE in config:
-            self.exclude = config[CONF_EXCLUDE]
-        else:
-            self.exclude = []
+        self.exclude = config.get(CONF_EXCLUDE, [])
         minutes = convert(config.get(CONF_HOME_INTERVAL), int, 0)
         self.home_interval = timedelta(minutes=minutes)
 
