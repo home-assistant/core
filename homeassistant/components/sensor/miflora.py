@@ -128,6 +128,7 @@ class MiFloraSensor(Entity):
             self.data.append(data)
         else:
             LOGGER.debug("Did not receive any data for %s", self.name)
+            return
 
         LOGGER.debug("Data collected: %s", self.data)
         if len(self.data) > self.median_count:
