@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class TestComponentsDeviceTracker(unittest.TestCase):
     """Test the Device tracker."""
+
     hass = None  # HomeAssistant
     yaml_devices = None  # type: str
 
@@ -89,7 +90,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     def test_track_with_duplicate_mac_dev_id(self, mock_warning):  \
             # pylint: disable=invalid-name
         """Test adding duplicate MACs or device IDs to DeviceTracker."""
-
         devices = [
             device_tracker.Device(self.hass, True, True, 'my_device', 'AB:01',
                                   'My device', None, None, False),
