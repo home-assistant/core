@@ -157,17 +157,7 @@ class Thermostat(ClimateDevice):
     @property
     def operation_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        status = self.thermostat['equipmentStatus']
-        if status == '':
-            return STATE_IDLE
-        elif 'Cool' in status:
-            return STATE_COOL
-        elif 'auxHeat' in status:
-            return STATE_HEAT
-        elif 'heatPump' in status:
-            return STATE_HEAT
-        else:
-            return status
+        return self.thermostat['settings']['hvacMode']
 
     @property
     def mode(self):
@@ -183,11 +173,23 @@ class Thermostat(ClimateDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         # Move these to Thermostat Device and make them global
+        status = self.thermostat['equipmentStatus']
+        operation = None
+        if status == '':
+            operation = STATE_IDLE
+        elif 'Cool' in status:
+            operation = STATE_COOL
+        elif 'auxHeat' in status:
+            operation = STATE_HEAT
+        elif 'heatPump' in status:
+            operation = STATE_HEAT
+        else:
+            operation = status
         return {
             "humidity": self.current_humidity,
             "fan": self.fan,
             "mode": self.mode,
-            "hvac_mode": self.thermostat['settings']['hvacMode'],
+            "operation": operation,
             "fan_min_on_time": self.fan_min_on_time
         }
 
