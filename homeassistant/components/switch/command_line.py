@@ -30,6 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
 })
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return switches controlled by shell commands."""
@@ -53,6 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     add_devices(switches)
+
 
 # pylint: disable=too-many-instance-attributes
 class CommandSwitch(SwitchDevice):
