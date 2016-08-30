@@ -22,7 +22,7 @@ LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=900)
 CONF_MAC = "mac"
 CONF_FORCE_UPDATE = 'force_update'
-DEFAULT_NAME = ""
+DEFAULT_NAME = "Mi Flora"
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
@@ -55,11 +55,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         unit = SENSOR_TYPES[parameter][1]
 
         prefix = config.get(CONF_NAME)
-
-        if prefix == "":
-            # If no name is given, retrieve the name from the device
-            # this is usually "Flower mate"
-            prefix = poller.name()
 
         if len(prefix) > 0:
             name = prefix + " " + name
