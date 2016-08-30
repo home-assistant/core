@@ -23,7 +23,7 @@ PyMata==2.12
 SoCo==0.11.1
 
 # homeassistant.components.notify.twitter
-TwitterAPI==2.4.1
+TwitterAPI==2.4.2
 
 # homeassistant.components.http
 Werkzeug==0.11.10
@@ -104,7 +104,7 @@ gps3==0.33.2
 
 # homeassistant.components.binary_sensor.ffmpeg
 # homeassistant.components.camera.ffmpeg
-ha-ffmpeg==0.8
+ha-ffmpeg==0.9
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.7.1
@@ -422,7 +422,7 @@ schiene==0.17
 scsgate==0.1.0
 
 # homeassistant.components.notify.sendgrid
-sendgrid==3.1.10
+sendgrid==3.2.10
 
 # homeassistant.components.notify.slack
 slacker==0.9.24

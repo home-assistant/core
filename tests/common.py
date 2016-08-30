@@ -7,7 +7,7 @@ from io import StringIO
 import logging
 
 from homeassistant import core as ha, loader
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
@@ -137,15 +137,15 @@ def mock_http_component(hass):
     hass.config.components.append('http')
 
 
-@mock.patch('homeassistant.components.mqtt.MQTT')
-def mock_mqtt_component(hass, mock_mqtt):
+def mock_mqtt_component(hass):
     """Mock the MQTT component."""
-    _setup_component(hass, mqtt.DOMAIN, {
-        mqtt.DOMAIN: {
-            mqtt.CONF_BROKER: 'mock-broker',
-        }
-    })
-    return mock_mqtt
+    with mock.patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
+        setup_component(hass, mqtt.DOMAIN, {
+            mqtt.DOMAIN: {
+                mqtt.CONF_BROKER: 'mock-broker',
+            }
+        })
+        return mock_mqtt
 
 
 class MockModule(object):
