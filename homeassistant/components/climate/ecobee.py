@@ -127,11 +127,6 @@ class Thermostat(ClimateDevice):
         return int(self.thermostat['runtime']['desiredCool'] / 10)
 
     @property
-    def current_humidity(self):
-        """Return the current humidity."""
-        return self.thermostat['runtime']['actualHumidity']
-
-    @property
     def desired_fan_mode(self):
         """Return the desired fan mode of operation."""
         return self.thermostat['runtime']['desiredFanMode']
@@ -186,7 +181,7 @@ class Thermostat(ClimateDevice):
         else:
             operation = status
         return {
-            "humidity": self.current_humidity,
+            "humidity": self.thermostat['runtime']['actualHumidity'],
             "fan": self.fan,
             "mode": self.mode,
             "operation": operation,
