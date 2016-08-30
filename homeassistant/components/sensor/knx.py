@@ -4,7 +4,9 @@ Sensors of a KNX Device.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/knx/
 """
-from homeassistant.const import (TEMP_CELSIUS)
+from homeassistant.const import (TEMP_CELSIUS, TEMPERATURE, CONF_TYPE,
+                                 ILLUMINANCE, SPEED_MS, CONF_MINIMUM,
+                                 CONF_MAXIMUM)
 from homeassistant.components.knx import (KNXConfig, KNXGroupAddress)
 
 
@@ -34,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Setup the KNX Sensor platform."""
     # Add KNX Temperature Sensors
     # KNX Datapoint 9.001 DPT_Value_Temp
-    if config["type"] == "temperature":
+    if config[CONF_TYPE] == TEMPERATURE:
         minimum_value, maximum_value = \
             update_and_define_min_max(config, KNX_TEMP_MIN,
                                       KNX_TEMP_MAX)
@@ -46,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Add KNX Speed Sensors(Like Wind Speed)
     # KNX Datapoint 9.005 DPT_Value_Wsp
-    if config["type"] == "speed_ms":
+    elif config[CONF_TYPE] == SPEED_MS:
         minimum_value, maximum_value = \
             update_and_define_min_max(config, KNX_SPEED_MS_MIN,
                                       KNX_SPEED_MS_MAX)
@@ -58,7 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Add KNX Illuminance Sensors(Lux)
     # KNX Datapoint 9.004 DPT_Value_Lux
-    if config["type"] == "illuminance":
+    elif config[CONF_TYPE] == ILLUMINANCE:
         minimum_value, maximum_value = \
             update_and_define_min_max(config, KNX_LUX_MIN, KNX_LUX_MAX)
 
@@ -73,11 +75,11 @@ def update_and_define_min_max(config, minimum_default,
     """Function help determinate a min/max value defined in config."""
     minimum_value = minimum_default
     maximum_value = maximum_default
-    if config.get('minimum'):
-        minimum_value = config.get('minimum')
+    if config.get(CONF_MINIMUM):
+        minimum_value = config.get(CONF_MINIMUM)
 
-    if config.get('maximum'):
-        maximum_value = config.get('maximum')
+    if config.get(CONF_MAXIMUM):
+        maximum_value = config.get(CONF_MAXIMUM)
 
     return minimum_value, maximum_value
 
@@ -85,10 +87,17 @@ def update_and_define_min_max(config, minimum_default,
 class KNXSensorBaseClass():  # pylint: disable=too-few-public-methods
     """Sensor Base Class for all KNX Sensors."""
 
+    _unit_of_measurement = None
+
     @property
     def cache(self):
         """We don't want to cache any Sensor Value."""
         return False
+
+    @property
+    def unit_of_measurement(self):
+        """Return the defined Unit of Measurement for the KNX Sensor."""
+        return self._unit_of_measurement
 
 
 class KNXSensorFloatClass(KNXGroupAddress, KNXSensorBaseClass):
@@ -117,8 +126,3 @@ class KNXSensorFloatClass(KNXGroupAddress, KNXSensorBaseClass):
             if self._minimum_value <= value <= self._maximum_value:
                 return value
         return None
-
-    @property
-    def unit_of_measurement(self):
-        """Return the defined Unit of Measurement for the KNX Sensor."""
-        return self._unit_of_measurement
