@@ -10,14 +10,19 @@ from datetime import timedelta
 import logging
 import os
 import threading
+from typing import Any, Sequence, Callable
 
-from homeassistant.bootstrap import prepare_setup_platform
+import voluptuous as vol
+
+from homeassistant.bootstrap import (
+    prepare_setup_platform, log_exception)
 from homeassistant.components import group, zone
 from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
@@ -27,8 +32,7 @@ from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
     DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
 
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
-DOMAIN = "device_tracker"
+DOMAIN = 'device_tracker'
 DEPENDENCIES = ['zone']
 
 GROUP_NAME_ALL_DEVICES = 'all devices'
@@ -38,20 +42,17 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 YAML_DEVICES = 'known_devices.yaml'
 
-CONF_TRACK_NEW = "track_new_devices"
-DEFAULT_CONF_TRACK_NEW = True
+CONF_TRACK_NEW = 'track_new_devices'
+DEFAULT_TRACK_NEW = True
 
 CONF_CONSIDER_HOME = 'consider_home'
 DEFAULT_CONSIDER_HOME = 180  # seconds
 
-CONF_SCAN_INTERVAL = "interval_seconds"
+CONF_SCAN_INTERVAL = 'interval_seconds'
 DEFAULT_SCAN_INTERVAL = 12
 
 CONF_AWAY_HIDE = 'hide_if_away'
 DEFAULT_AWAY_HIDE = False
-
-CONF_HOME_RANGE = 'home_range'
-DEFAULT_HOME_RANGE = 100
 
 SERVICE_SEE = 'see'
 
@@ -62,23 +63,33 @@ ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
 ATTR_BATTERY = 'battery'
 
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,  # seconds
+}, extra=vol.ALLOW_EXTRA)
+
+_CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.All(cv.ensure_list, [
+    vol.Schema({
+        vol.Optional(CONF_TRACK_NEW): cv.boolean,
+        vol.Optional(CONF_CONSIDER_HOME): cv.positive_int  # seconds
+    }, extra=vol.ALLOW_EXTRA)])}, extra=vol.ALLOW_EXTRA)
+
 DISCOVERY_PLATFORMS = {
     SERVICE_NETGEAR: 'netgear',
 }
 _LOGGER = logging.getLogger(__name__)
 
-# pylint: disable=too-many-arguments
 
-
-def is_on(hass, entity_id=None):
+def is_on(hass: HomeAssistantType, entity_id: str=None):
     """Return the state if any or a specified device is home."""
     entity = entity_id or ENTITY_ID_ALL_DEVICES
 
     return hass.states.is_state(entity, STATE_HOME)
 
 
-def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
-        gps=None, gps_accuracy=None, battery=None):
+def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
+        host_name: str=None, location_name: str=None,
+        gps: GPSType=None, gps_accuracy=None,
+        battery=None):  # pylint: disable=too-many-arguments
     """Call service to notify you see device."""
     data = {key: value for key, value in
             ((ATTR_MAC, mac),
@@ -91,27 +102,24 @@ def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistantType, config: ConfigType):
     """Setup device tracker."""
     yaml_path = hass.config.path(YAML_DEVICES)
 
-    conf = config.get(DOMAIN, {})
-
-    # Config can be an empty list. In that case, substitute a dict
-    if isinstance(conf, list):
+    try:
+        conf = _CONFIG_SCHEMA(config).get(DOMAIN, [])
+    except vol.Invalid as ex:
+        log_exception(ex, DOMAIN, config)
+        return False
+    else:
         conf = conf[0] if len(conf) > 0 else {}
+        consider_home = timedelta(
+            seconds=conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME))
+        track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
-    consider_home = timedelta(
-        seconds=util.convert(conf.get(CONF_CONSIDER_HOME), int,
-                             DEFAULT_CONSIDER_HOME))
-    track_new = util.convert(conf.get(CONF_TRACK_NEW), bool,
-                             DEFAULT_CONF_TRACK_NEW)
-    home_range = util.convert(conf.get(CONF_HOME_RANGE), int,
-                              DEFAULT_HOME_RANGE)
+    devices = load_config(yaml_path, hass, consider_home)
 
-    devices = load_config(yaml_path, hass, consider_home, home_range)
-    tracker = DeviceTracker(hass, consider_home, track_new, home_range,
-                            devices)
+    tracker = DeviceTracker(hass, consider_home, track_new, devices)
 
     def setup_platform(p_type, p_config, disc_info=None):
         """Setup a device tracker platform."""
@@ -170,30 +178,37 @@ def setup(hass, config):
 class DeviceTracker(object):
     """Representation of a device tracker."""
 
-    def __init__(self, hass, consider_home, track_new, home_range, devices):
+    def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
+                 track_new: bool, devices: Sequence) -> None:
         """Initialize a device tracker."""
         self.hass = hass
         self.devices = {dev.dev_id: dev for dev in devices}
         self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
+        for dev in devices:
+            if self.devices[dev.dev_id] is not dev:
+                _LOGGER.warning('Duplicate device IDs detected %s', dev.dev_id)
+            if dev.mac and self.mac_to_dev[dev.mac] is not dev:
+                _LOGGER.warning('Duplicate device MAC addresses detected %s',
+                                dev.mac)
         self.consider_home = consider_home
         self.track_new = track_new
-        self.home_range = home_range
         self.lock = threading.Lock()
 
         for device in devices:
             if device.track:
                 device.update_ha_state()
 
-        self.group = None
+        self.group = None  # type: group.Group
 
-    def see(self, mac=None, dev_id=None, host_name=None, location_name=None,
-            gps=None, gps_accuracy=None, battery=None):
+    def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
+            location_name: str=None, gps: GPSType=None, gps_accuracy=None,
+            battery: str=None):
         """Notify the device tracker that you see a device."""
         with self.lock:
             if mac is None and dev_id is None:
                 raise HomeAssistantError('Neither mac or device id passed in')
             elif mac is not None:
-                mac = mac.upper()
+                mac = str(mac).upper()
                 device = self.mac_to_dev.get(mac)
                 if not device:
                     dev_id = util.slugify(host_name or '') or util.slugify(mac)
@@ -211,7 +226,7 @@ class DeviceTracker(object):
             # If no device can be found, create it
             dev_id = util.ensure_unique_string(dev_id, self.devices.keys())
             device = Device(
-                self.hass, self.consider_home, self.home_range, self.track_new,
+                self.hass, self.consider_home, self.track_new,
                 dev_id, mac, (host_name or dev_id).replace('_', ' '))
             self.devices[dev_id] = device
             if mac is not None:
@@ -234,7 +249,7 @@ class DeviceTracker(object):
         self.group = group.Group(
             self.hass, GROUP_NAME_ALL_DEVICES, entity_ids, False)
 
-    def update_stale(self, now):
+    def update_stale(self, now: dt_util.dt.datetime):
         """Update stale devices."""
         with self.lock:
             for device in self.devices.values():
@@ -246,19 +261,21 @@ class DeviceTracker(object):
 class Device(Entity):
     """Represent a tracked device."""
 
-    host_name = None
-    location_name = None
-    gps = None
+    host_name = None  # type: str
+    location_name = None  # type: str
+    gps = None  # type: GPSType
     gps_accuracy = 0
-    last_seen = None
-    battery = None
+    last_seen = None  # type: dt_util.dt.datetime
+    battery = None  # type: str
 
     # Track if the last update of this device was HOME.
     last_update_home = False
     _state = STATE_NOT_HOME
 
-    def __init__(self, hass, consider_home, home_range, track, dev_id, mac,
-                 name=None, picture=None, gravatar=None, away_hide=False):
+    def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
+                 track: bool, dev_id: str, mac: str, name: str=None,
+                 picture: str=None, gravatar: str=None,
+                 away_hide: bool=False) -> None:
         """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
@@ -267,8 +284,6 @@ class Device(Entity):
         # detected anymore.
         self.consider_home = consider_home
 
-        # Distance in meters
-        self.home_range = home_range
         # Device ID
         self.dev_id = dev_id
         self.mac = mac
@@ -286,13 +301,6 @@ class Device(Entity):
             self.config_picture = picture
 
         self.away_hide = away_hide
-
-    @property
-    def gps_home(self):
-        """Return if device is within range of home."""
-        distance = max(
-            0, self.hass.config.distance(*self.gps) - self.gps_accuracy)
-        return self.gps is not None and distance <= self.home_range
 
     @property
     def name(self):
@@ -329,26 +337,24 @@ class Device(Entity):
         """If device should be hidden."""
         return self.away_hide and self.state != STATE_HOME
 
-    def seen(self, host_name=None, location_name=None, gps=None,
-             gps_accuracy=0, battery=None):
+    def seen(self, host_name: str=None, location_name: str=None,
+             gps: GPSType=None, gps_accuracy=0, battery: str=None):
         """Mark the device as seen."""
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
         self.gps_accuracy = gps_accuracy or 0
         self.battery = battery
-        if gps is None:
-            self.gps = None
-        else:
+        self.gps = None
+        if gps is not None:
             try:
-                self.gps = tuple(float(val) for val in gps)
-            except ValueError:
+                self.gps = float(gps[0]), float(gps[1])
+            except (ValueError, TypeError, IndexError):
                 _LOGGER.warning('Could not parse gps value for %s: %s',
                                 self.dev_id, gps)
-                self.gps = None
         self.update()
 
-    def stale(self, now=None):
+    def stale(self, now: dt_util.dt.datetime=None):
         """Return if device state is stale."""
         return self.last_seen and \
             (now or dt_util.utcnow()) - self.last_seen > self.consider_home
@@ -377,32 +383,30 @@ class Device(Entity):
             self.last_update_home = True
 
 
-def load_config(path, hass, consider_home, home_range):
+def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     """Load devices from YAML configuration file."""
-    if not os.path.isfile(path):
-        return []
     try:
         return [
-            Device(hass, consider_home, home_range, device.get('track', False),
+            Device(hass, consider_home, device.get('track', False),
                    str(dev_id).lower(), str(device.get('mac')).upper(),
                    device.get('name'), device.get('picture'),
                    device.get('gravatar'),
                    device.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
             for dev_id, device in load_yaml_config_file(path).items()]
-    except HomeAssistantError:
+    except (HomeAssistantError, FileNotFoundError):
         # When YAML file could not be loaded/did not contain a dict
         return []
 
 
-def setup_scanner_platform(hass, config, scanner, see_device):
+def setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
+                           scanner: Any, see_device: Callable):
     """Helper method to connect scanner-based platform to device tracker."""
-    interval = util.convert(config.get(CONF_SCAN_INTERVAL), int,
-                            DEFAULT_SCAN_INTERVAL)
+    interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     # Initial scan of each mac we also tell about host name for config
-    seen = set()
+    seen = set()  # type: Any
 
-    def device_tracker_scan(now):
+    def device_tracker_scan(now: dt_util.dt.datetime):
         """Called when interval matches."""
         for mac in scanner.scan_devices():
             if mac in seen:
@@ -418,7 +422,7 @@ def setup_scanner_platform(hass, config, scanner, see_device):
     device_tracker_scan(None)
 
 
-def update_config(path, dev_id, device):
+def update_config(path: str, dev_id: str, device: Device):
     """Add device to YAML configuration file."""
     with open(path, 'a') as out:
         out.write('\n')
@@ -432,8 +436,8 @@ def update_config(path, dev_id, device):
             out.write('  {}: {}\n'.format(key, '' if value is None else value))
 
 
-def get_gravatar_for_email(email):
+def get_gravatar_for_email(email: str):
     """Return an 80px Gravatar for the given email address."""
     import hashlib
-    url = "https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar"
+    url = 'https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar'
     return url.format(hashlib.md5(email.encode('utf-8').lower()).hexdigest())
