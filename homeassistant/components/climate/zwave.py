@@ -35,11 +35,21 @@ DEVICE_MAPPINGS = {
     REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120
 }
 
-ZXT_120_SET_TEMP = {
+SET_TEMP_TO_INDEX = {
     'Heat': 1,
     'Cool': 2,
+    'Auto': 3,
+    'Aux Heat': 4,
+    'Resume': 5,
+    'Fan Only': 6,
+    'Furnace': 7,
     'Dry Air': 8,
-    'Auto Changeover': 10
+    'Moist Air': 9,
+    'Auto Changeover': 10,
+    'Heat Econ': 11,
+    'Cool Econ': 12,
+    'Away': 13,
+    'Unknown': 14
 }
 
 
@@ -78,7 +88,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._current_swing_mode = None
         self._swing_list = None
         self._unit = None
-        self._index = None
         self._zxt_120 = None
         self.update_properties()
         # register listener
@@ -107,15 +116,17 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     def update_properties(self):
         """Callback on data change for the registered node/value pair."""
         # Set point
-        temps = []
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
             self._unit = value.units
-            temps.append(int(value.data))
-            if value.index == self._index:
-                self._target_temperature = int(value.data)
-        self._target_temperature_high = max(temps)
-        self._target_temperature_low = min(temps)
+            if self.current_operation is not None:
+                if SET_TEMP_TO_INDEX.get(self._current_operation) \
+                   != value.index:
+                    continue
+                if self._zxt_120:
+                    continue
+            self._target_temperature = int(value.data)
+
         # Operation Mode
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_MODE).values():
@@ -209,23 +220,25 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """Set new target temperature."""
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
-            if value.command_class != 67 and value.index != self._index:
-                continue
-            if self._zxt_120:
-                # ZXT-120 does not support get setpoint
-                self._target_temperature = temperature
-                if ZXT_120_SET_TEMP.get(self._current_operation) \
-                   != value.index:
+            if self.current_operation is not None:
+                if SET_TEMP_TO_INDEX.get(self._current_operation) \
+                       != value.index:
                     continue
-                _LOGGER.debug("ZXT_120_SET_TEMP=%s and"
+                _LOGGER.debug("SET_TEMP_TO_INDEX=%s and"
                               " self._current_operation=%s",
-                              ZXT_120_SET_TEMP.get(self._current_operation),
+                              SET_TEMP_TO_INDEX.get(self._current_operation),
                               self._current_operation)
-                # ZXT-120 responds only to whole int
-                value.data = int(round(temperature, 0))
+                if self._zxt_120:
+                    # ZXT-120 does not support get setpoint
+                    self._target_temperature = temperature
+                    # ZXT-120 responds only to whole int
+                    value.data = int(round(temperature, 0))
+                else:
+                    value.data = int(temperature)
+                break
             else:
                 value.data = int(temperature)
-            break
+                break
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""

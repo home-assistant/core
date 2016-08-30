@@ -129,7 +129,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.In(CONF_RESOLVENAMES_OPTIONS),
         vol.Optional(CONF_USERNAME, default="Admin"): cv.string,
         vol.Optional(CONF_PASSWORD, default=""): cv.string,
-        vol.Optional(CONF_DELAY, default=0.5): cv.string,
+        vol.Optional(CONF_DELAY, default=0.5): vol.Coerce(float),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -282,7 +282,7 @@ def _system_callback_handler(hass, config, src, *args):
             for component_name, discovery_type in (
                     ('switch', DISCOVER_SWITCHES),
                     ('light', DISCOVER_LIGHTS),
-                    ('rollershutter', DISCOVER_COVER),
+                    ('cover', DISCOVER_COVER),
                     ('binary_sensor', DISCOVER_BINARY_SENSORS),
                     ('sensor', DISCOVER_SENSORS),
                     ('climate', DISCOVER_CLIMATE)):
