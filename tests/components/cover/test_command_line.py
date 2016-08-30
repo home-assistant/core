@@ -22,7 +22,7 @@ class TestCommandCover(unittest.TestCase):
         self.rs = cmd_rs.CommandCover(self.hass, 'foo',
                                       'command_open', 'command_close',
                                       'command_stop', 'command_state',
-                                      None)  # FIXME
+                                      None)
 
     def teardown_method(self, method):
         """Stop down everything that was started."""
