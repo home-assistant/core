@@ -63,7 +63,7 @@ def setup_scanner(hass, config, see):
     # Load all known devices.
     # We just need the devices so set consider_home and home range
     # to 0
-    for device in load_config(yaml_path, hass, 0, 0):
+    for device in load_config(yaml_path, hass, 0):
         # check if device is a valid bluetooth device
         if device.mac and device.mac[:3].upper() == BLE_PREFIX:
             if device.track:

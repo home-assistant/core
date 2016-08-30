@@ -110,16 +110,19 @@ class TestDemoClimate(unittest.TestCase):
 
     def test_set_operation_bad_attr(self):
         """Test setting operation mode without required attribute."""
-        self.assertEqual("Cool", self.hass.states.get(ENTITY_CLIMATE).state)
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual("Cool", state.attributes.get('operation_mode'))
         climate.set_operation_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.pool.block_till_done()
-        self.assertEqual("Cool", self.hass.states.get(ENTITY_CLIMATE).state)
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual("Cool", state.attributes.get('operation_mode'))
 
     def test_set_operation(self):
         """Test setting of new operation mode."""
         climate.set_operation_mode(self.hass, "Heat", ENTITY_CLIMATE)
         self.hass.pool.block_till_done()
-        self.assertEqual("Heat", self.hass.states.get(ENTITY_CLIMATE).state)
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual("Heat", state.attributes.get('operation_mode'))
 
     def test_set_away_mode_bad_attr(self):
         """Test setting the away mode without required attribute."""
