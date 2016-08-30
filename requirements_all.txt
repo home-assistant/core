@@ -104,7 +104,7 @@ gps3==0.33.2
 
 # homeassistant.components.binary_sensor.ffmpeg
 # homeassistant.components.camera.ffmpeg
-ha-ffmpeg==0.8
+ha-ffmpeg==0.9
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.7.1
