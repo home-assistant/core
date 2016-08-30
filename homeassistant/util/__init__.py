@@ -12,7 +12,7 @@ import string
 from functools import wraps
 from types import MappingProxyType
 
-from typing import Any, Optional, TypeVar, Callable, Sequence
+from typing import Any, Optional, TypeVar, Callable, Sequence, KeysView, Union
 
 from .dt import as_local, utcnow
 
@@ -63,8 +63,8 @@ def convert(value: T, to_type: Callable[[T], U],
         return default
 
 
-def ensure_unique_string(preferred_string: str,
-                         current_strings: Sequence[str]) -> str:
+def ensure_unique_string(preferred_string: str, current_strings:
+                         Union[Sequence[str], KeysView[str]]) -> str:
     """Return a string that is not present in current_strings.
 
     If preferred string exists will append _2, _3, ..
