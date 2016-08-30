@@ -8,10 +8,13 @@ import logging
 import re
 import sys
 from subprocess import check_output, CalledProcessError
+import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components import recorder
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
 
@@ -22,16 +25,30 @@ _SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms[\r\n]+'
                               r'Download:\s(\d+\.\d+)\sMbit/s[\r\n]+'
                               r'Upload:\s(\d+\.\d+)\sMbit/s[\r\n]+')
 
-CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 CONF_SECOND = 'second'
 CONF_MINUTE = 'minute'
 CONF_HOUR = 'hour'
 CONF_DAY = 'day'
+CONF_SERVER_ID = 'server_id'
 SENSOR_TYPES = {
     'ping': ['Ping', 'ms'],
     'download': ['Download', 'Mbit/s'],
     'upload': ['Upload', 'Mbit/s'],
 }
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES.keys()))]),
+    vol.Optional(CONF_SERVER_ID): cv.positive_int,
+    vol.Optional(CONF_SECOND, default=[0]):
+        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
+    vol.Optional(CONF_MINUTE, default=[0]):
+        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
+    vol.Optional(CONF_HOUR):
+        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
+    vol.Optional(CONF_DAY):
+        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -116,11 +133,12 @@ class SpeedtestData(object):
     def __init__(self, hass, config):
         """Initialize the data object."""
         self.data = None
+        self._server_id = config.get(CONF_SERVER_ID)
         track_time_change(hass, self.update,
-                          second=config.get(CONF_SECOND, 0),
-                          minute=config.get(CONF_MINUTE, 0),
-                          hour=config.get(CONF_HOUR, None),
-                          day=config.get(CONF_DAY, None))
+                          second=config.get(CONF_SECOND),
+                          minute=config.get(CONF_MINUTE),
+                          hour=config.get(CONF_HOUR),
+                          day=config.get(CONF_DAY))
 
     def update(self, now):
         """Get the latest data from speedtest.net."""
@@ -128,9 +146,12 @@ class SpeedtestData(object):
 
         _LOGGER.info('Executing speedtest')
         try:
+            args = [sys.executable, speedtest_cli.__file__, '--simple']
+            if self._server_id:
+                args = args + ['--server', str(self._server_id)]
+
             re_output = _SPEEDTEST_REGEX.split(
-                check_output([sys.executable, speedtest_cli.__file__,
-                              '--simple']).decode("utf-8"))
+                check_output(args).decode("utf-8"))
         except CalledProcessError as process_error:
             _LOGGER.error('Error executing speedtest: %s', process_error)
             return

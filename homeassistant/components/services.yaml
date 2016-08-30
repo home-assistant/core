@@ -73,6 +73,18 @@ homematic:
         description: Event to send i.e. PRESS_LONG, PRESS_SHORT
         example: PRESS_LONG
 
+  set_value:
+    description: Set the name of a node.
+
+    fields:
+      entity_id:
+        description: Name(s) of entities to set value
+        example: 'homematic.my_variable'
+
+      value:
+        description: New value
+        example: 1
+
 zwave:
   add_node:
     description: Add a new node to the zwave network. Refer to OZW.log for details.
@@ -100,3 +112,13 @@ zwave:
 
   test_network:
     description: This will send test to nodes in the zwave network. This will greatly slow down the zwave network while it is being processed. Refer to OZW.log for details.
+
+  rename_node:
+    description: Set the name of a node.
+    fields:
+      entity_id:
+        description: Name(s) of entities to to rename
+        example: 'light.leviton_vrmx11lz_multilevel_scene_switch_level_40'
+      name:
+        description: New Name
+        example: 'kitchen'

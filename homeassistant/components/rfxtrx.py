@@ -14,7 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (ATTR_ENTITY_ID, TEMP_CELSIUS)
 
-REQUIREMENTS = ['pyRFXtrx==0.10.1']
+REQUIREMENTS = ['pyRFXtrx==0.11.0']
 
 DOMAIN = "rfxtrx"
 
@@ -42,7 +42,7 @@ DATA_TYPES = OrderedDict([
     ('Total usage', 'W'),
     ('Sound', ''),
     ('Sensor Status', ''),
-    ('Unknown', '')])
+    ('Counter value', '')])
 
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}

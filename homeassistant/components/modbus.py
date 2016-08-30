@@ -31,6 +31,12 @@ IP_PORT = "port"
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_WRITE_REGISTER = "write_register"
+
+ATTR_ADDRESS = "address"
+ATTR_UNIT = "unit"
+ATTR_VALUE = "value"
+
 NETWORK = None
 TYPE = None
 
@@ -73,6 +79,16 @@ def setup(hass, config):
         """Start Modbus service."""
         NETWORK.connect()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
+
+        # Register services for modbus
+        hass.services.register(DOMAIN, SERVICE_WRITE_REGISTER, write_register)
+
+    def write_register(service):
+        """Write modbus register."""
+        unit = int(float(service.data.get(ATTR_UNIT)))
+        address = int(float(service.data.get(ATTR_ADDRESS)))
+        value = int(float(service.data.get(ATTR_VALUE)))
+        NETWORK.write_register(address, value, unit=unit)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
 

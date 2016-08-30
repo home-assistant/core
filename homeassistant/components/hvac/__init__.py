@@ -135,6 +135,9 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
 # pylint: disable=too-many-branches
 def setup(hass, config):
     """Setup hvacs."""
+    _LOGGER.warning('This component has been deprecated in favour of'
+                    ' the "climate" component and will be removed '
+                    'in the future. Please upgrade.')
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     component.setup(config)
 

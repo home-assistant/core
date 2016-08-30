@@ -313,19 +313,23 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
 
             _LOGGER.info("Loading wireless clients...")
 
-            url = 'http://{}/{}/userRpm/WlanStationRpm.htm' \
-                .format(self.host, self.token)
-            referer = 'http://{}'.format(self.host)
-            cookie = 'Authorization=Basic {}'.format(self.credentials)
+            mac_results = []
 
-            page = requests.get(url, headers={
-                'cookie': cookie,
-                'referer': referer
-            })
-            result = self.parse_macs.findall(page.text)
+            # Check both the 2.4GHz and 5GHz client list URLs
+            for clients_url in ('WlanStationRpm.htm', 'WlanStationRpm_5g.htm'):
+                url = 'http://{}/{}/userRpm/{}' \
+                    .format(self.host, self.token, clients_url)
+                referer = 'http://{}'.format(self.host)
+                cookie = 'Authorization=Basic {}'.format(self.credentials)
 
-            if not result:
+                page = requests.get(url, headers={
+                    'cookie': cookie,
+                    'referer': referer
+                })
+                mac_results.extend(self.parse_macs.findall(page.text))
+
+            if not mac_results:
                 return False
 
-            self.last_results = [mac.replace("-", ":") for mac in result]
+            self.last_results = [mac.replace("-", ":") for mac in mac_results]
             return True

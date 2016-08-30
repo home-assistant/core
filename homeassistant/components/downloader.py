@@ -16,20 +16,19 @@ from homeassistant.helpers import validate_config
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import sanitize_filename
 
-DOMAIN = "downloader"
-
-SERVICE_DOWNLOAD_FILE = "download_file"
-
-ATTR_URL = "url"
-ATTR_SUBDIR = "subdir"
-
-SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema({
-    # pylint: disable=no-value-for-parameter
-    vol.Required(ATTR_URL): vol.Url(),
-    vol.Optional(ATTR_SUBDIR): cv.string,
-})
+ATTR_SUBDIR = 'subdir'
+ATTR_URL = 'url'
 
 CONF_DOWNLOAD_DIR = 'download_dir'
+
+DOMAIN = 'downloader'
+
+SERVICE_DOWNLOAD_FILE = 'download_file'
+
+SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_URL): cv.url,
+    vol.Optional(ATTR_SUBDIR): cv.string,
+})
 
 
 # pylint: disable=too-many-branches

@@ -11,26 +11,26 @@ import logging
 from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME
 from homeassistant.helpers.entity import generate_entity_id
 
-DOMAIN = "configurator"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-SERVICE_CONFIGURE = "configure"
-
-STATE_CONFIGURE = "configure"
-STATE_CONFIGURED = "configured"
-
-ATTR_LINK_NAME = "link_name"
-ATTR_LINK_URL = "link_url"
-ATTR_CONFIGURE_ID = "configure_id"
-ATTR_DESCRIPTION = "description"
-ATTR_DESCRIPTION_IMAGE = "description_image"
-ATTR_SUBMIT_CAPTION = "submit_caption"
-ATTR_FIELDS = "fields"
-ATTR_ERRORS = "errors"
-
-_REQUESTS = {}
 _INSTANCES = {}
 _LOGGER = logging.getLogger(__name__)
+_REQUESTS = {}
+
+ATTR_CONFIGURE_ID = 'configure_id'
+ATTR_DESCRIPTION = 'description'
+ATTR_DESCRIPTION_IMAGE = 'description_image'
+ATTR_ERRORS = 'errors'
+ATTR_FIELDS = 'fields'
+ATTR_LINK_NAME = 'link_name'
+ATTR_LINK_URL = 'link_url'
+ATTR_SUBMIT_CAPTION = 'submit_caption'
+
+DOMAIN = 'configurator'
+
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+SERVICE_CONFIGURE = 'configure'
+STATE_CONFIGURE = 'configure'
+STATE_CONFIGURED = 'configured'
 
 
 # pylint: disable=too-many-arguments

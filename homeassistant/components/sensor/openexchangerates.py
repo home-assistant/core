@@ -16,14 +16,16 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-_RESOURCE = 'https://openexchangerates.org/api/latest.json'
 _LOGGER = logging.getLogger(__name__)
+_RESOURCE = 'https://openexchangerates.org/api/latest.json'
 
 CONF_BASE = 'base'
 CONF_QUOTE = 'quote'
 
-DEFAULT_NAME = 'Exchange Rate Sensor'
 DEFAULT_BASE = 'USD'
+DEFAULT_NAME = 'Exchange Rate Sensor'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -31,9 +33,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
