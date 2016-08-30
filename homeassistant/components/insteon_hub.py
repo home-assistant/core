@@ -11,7 +11,7 @@ from homeassistant.helpers import validate_config, discovery
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'insteon_hub'  # type: str
-REQUIREMENTS = ['insteon_hub==0.5.0']  # type: list
+REQUIREMENTS = ['insteon_hub==0.5.1']  # type: list
 INSTEON = None  # type: Insteon
 DEVCAT = 'DevCat'  # type: str
 SUBCAT = 'SubCat'  # type: str
