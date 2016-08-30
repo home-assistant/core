@@ -110,7 +110,7 @@ class MiFloraSensor(Entity):
 
     @property
     def force_update(self):
-        """Force update"""
+        """Force update."""
         return self._force_update
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -120,7 +120,6 @@ class MiFloraSensor(Entity):
 
         This uses a rolling median over 3 values to filter out outliers.
         """
-
         try:
             data = self.poller.parameter_value(self.parameter)
         except IOError:
