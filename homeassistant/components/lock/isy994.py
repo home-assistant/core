@@ -1,0 +1,122 @@
+"""
+Support for ISY994 locks.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/lock.isy994/
+"""
+import logging
+
+from homeassistant.components.lock import LockDevice, DOMAIN
+from homeassistant.components.isy994 import (ISYDevice, HIDDEN_NODES,
+                                             VISIBLE_NODES, PROGRAMS, ISY,
+                                             KEY_ACTIONS, KEY_STATUS)
+from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN
+from homeassistant.helpers.typing import ConfigType
+
+_LOGGER = logging.getLogger(__name__)
+
+VALUE_TO_STATE = {
+    0: STATE_UNLOCKED,
+    100: STATE_LOCKED
+}
+
+UOM = '11'
+
+
+def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
+    """Setup the ISY platform."""
+
+    if ISY is None or not ISY.connected:
+        _LOGGER.error('A connection has not been made to the ISY controller.')
+        return False
+
+    devices = []
+
+    for node in (HIDDEN_NODES + VISIBLE_NODES):
+        if node.uom == UOM or STATE_LOCKED in node.uom:
+            devices.append(ISYLockDevice(node))
+
+    for program in PROGRAMS.get(DOMAIN, []):
+        try:
+            status = program[KEY_STATUS]
+            actions = program[KEY_ACTIONS]
+            assert actions.dtype == 'program', 'Not a program'
+        except (KeyError, AssertionError):
+            pass
+        else:
+            devices.append(ISYLockProgram(program.name, status, actions))
+
+    add_devices(devices)
+
+
+class ISYLockDevice(ISYDevice, LockDevice):
+    """Representation of a ISY lock."""
+
+    def __init__(self, node):
+        """Initialize the lock."""
+        ISYDevice.__init__(self, node)
+        self._conn = node.parent.parent.conn
+
+    @property
+    def is_locked(self) -> bool:
+        """Return true if device is locked."""
+        return self.state == STATE_LOCKED
+
+    @property
+    def state(self) -> str:
+        """Return the state of the device."""
+        return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
+
+    def lock(self, **kwargs) -> None:
+        """Lock the device."""
+        # Hack until PyISY is updated
+        req_url = self._conn.compileURL(['nodes', self.unique_id, 'cmd',
+                                         'SECMD', '1'])
+        response = self._conn.request(req_url)
+
+        if response is None:
+            _LOGGER.error('Unable to lock device')
+
+        self._node.update(0.5)
+
+    def unlock(self, **kwargs) -> None:
+        """Unlock the device."""
+        # Hack until PyISY is updated
+        req_url = self._conn.compileURL(['nodes', self.unique_id, 'cmd',
+                                         'SECMD', '0'])
+        response = self._conn.request(req_url)
+
+        if response is None:
+            _LOGGER.error('Unable to lock device')
+
+        self._node.update(0.5)
+
+
+class ISYLockProgram(ISYLockDevice):
+    """Representation of a ISY lock program."""
+
+    def __init__(self, name, node, actions):
+        """Initialize the lock."""
+        ISYLockDevice.__init__(self, node)
+        self._name = name
+        self._actions = actions
+
+    @property
+    def is_locked(self) -> bool:
+        """Return true if the device is locked."""
+        return bool(self.value)
+
+    @property
+    def unit_of_measurement(self) -> None:
+        """No unit of measurement for lock programs."""
+        return None
+
+    def lock(self, **kwargs) -> None:
+        """Lock the device."""
+        if not self._actions.runThen():
+            _LOGGER.error('Unable to lock device')
+
+    def unlock(self, **kwargs) -> None:
+        """Unlock the device."""
+        if not self._actions.runElse():
+            _LOGGER.error('Unable to unlock device')
