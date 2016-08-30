@@ -14,7 +14,6 @@ from homeassistant.components.device_tracker import (
 )
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +24,8 @@ MIN_SEEN_NEW = 5
 CONF_SCAN_DURATION = "scan_duration"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_DURATION, default=10): cv.positive_integer,
+    vol.Optional(CONF_SCAN_DURATION, default=10): vol.All(vol.Coerce(int),
+                                                          vol.Range(min=1))
 })
 
 
