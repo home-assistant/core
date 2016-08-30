@@ -80,6 +80,8 @@ class Thermostat(ClimateDevice):
             self.thermostat_index)
         self._name = self.thermostat['name']
         self.hold_temp = hold_temp
+        self._operation_list = ['auto', 'auxHeatOnly', 'cool',
+                                'heat', 'off']
 
     def update(self):
         """Get the latest state from the thermostat."""
@@ -146,6 +148,11 @@ class Thermostat(ClimateDevice):
     def current_operation(self):
         """Return current operation."""
         return self.operation_mode
+
+    @property
+    def operation_list(self):
+        """Return the operation modes list."""
+        return self._operation_list
 
     @property
     def operation_mode(self):
