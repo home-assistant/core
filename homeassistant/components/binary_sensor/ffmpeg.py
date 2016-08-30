@@ -16,7 +16,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_NAME,
                                  ATTR_ENTITY_ID)
 
-REQUIREMENTS = ["ha-ffmpeg==0.8"]
+REQUIREMENTS = ["ha-ffmpeg==0.9"]
 
 SERVICE_RESTART = 'ffmpeg_restart'
 
