@@ -100,6 +100,11 @@ class ISYCoverProgram(ISYCoverDevice):
         return bool(self.value)
 
     @property
+    def state(self):
+        """Return cover state."""
+        return STATE_CLOSED if self.is_closed else STATE_OPEN
+
+    @property
     def unit_of_measurement(self) -> None:
         """No unit of measurement for lock programs."""
         return None

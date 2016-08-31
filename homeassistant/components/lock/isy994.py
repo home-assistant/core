@@ -108,6 +108,11 @@ class ISYLockProgram(ISYLockDevice):
         """Return true if the device is locked."""
         return bool(self.value)
 
+    @property
+    def state(self):
+        """Return the state of the lock."""
+        return STATE_LOCKED if self.is_locked else STATE_UNLOCKED
+
     def lock(self, **kwargs) -> None:
         """Lock the device."""
         if not self._actions.runThen():

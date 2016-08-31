@@ -103,6 +103,11 @@ class ISYFanProgram(ISYFanDevice):
         """Return true if the device is locked."""
         return bool(self.value)
 
+    @property
+    def state(self):
+        """Return state of the fan."""
+        return STATE_ON if self.is_on else STATE_OFF
+
     def turn_off(self, **kwargs):
         """Turn fan on."""
         if not self._actions.runThen():
