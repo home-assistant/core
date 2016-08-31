@@ -244,7 +244,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
     devices = []
 
     for node in SENSOR_NODES:
-        if node.uom[0] not in BINARY_UOM and \
+        if (len(node.uom) == 0 or node.uom[0] not in BINARY_UOM) and \
                 STATE_OFF not in node.uom and STATE_ON not in node.uom:
             _LOGGER.debug('LOADING %s', node.name)
             devices.append(ISYSensorDevice(node))
