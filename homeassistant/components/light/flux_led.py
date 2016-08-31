@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
                                             ATTR_EFFECT, EFFECT_RANDOM,
                                             SUPPORT_BRIGHTNESS,
+                                            SUPPORT_EFFECT,
                                             SUPPORT_RGB_COLOR, Light)
 import homeassistant.helpers.config_validation as cv
 
@@ -33,7 +34,8 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional('automatic_add', default=False):  cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
-SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
+                    SUPPORT_RGB_COLOR)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
