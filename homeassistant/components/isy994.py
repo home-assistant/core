@@ -110,9 +110,9 @@ def _categorize_nodes(hidden_identifier: str, sensor_identifier: str) -> None:
             node.name += hidden_identifier
         if sensor_identifier in path or sensor_identifier in node.name:
             SENSOR_NODES.append(node)
-        elif isinstance(node, PYISY.Nodes.Node):
+        elif isinstance(node, PYISY.Nodes.Node):  # pylint: disable=no-member
             NODES.append(node)
-        elif isinstance(node, PYISY.Nodes.Group):
+        elif isinstance(node, PYISY.Nodes.Group):  # pylint: disable=no-member
             GROUPS.append(node)
 
 
