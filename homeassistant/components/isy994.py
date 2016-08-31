@@ -50,12 +50,17 @@ PROGRAMS = {}
 HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
 COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor', 'light', 'switch']
-# '('binary_sensor', 'climate', 'cover', 'fan', 'light',
-#                       'lock', 'sensor')
 
 
 def filter_nodes(nodes: list, units: list=[], states: list=[]) -> list:
-    """Filter nodes for the specified units or states."""
+    """
+    Filter a list of ISY nodes based on the units and states provided.
+
+    :param nodes: List of nodes to filter.
+    :param units: List of units the node should meet.
+    :param states: List of states the node should meet.
+    :return: List of filtered Nodes.
+    """
     filtered_nodes = []
     for node in nodes:
         match_unit = False
@@ -77,9 +82,12 @@ def filter_nodes(nodes: list, units: list=[], states: list=[]) -> list:
 
 
 def setup(hass, config: ConfigType) -> bool:
-    """Setup ISY994 component.
+    """
+    Set up the ISY 994 platform.
 
-    This will automatically import associated lights, switches, and sensors.
+    :param hass: HomeAssistant.
+    :param config: Platform configuration.
+    :return: Whether the platform was setup correctly.
     """
     isy_config = config.get(DOMAIN)
 
@@ -171,12 +179,19 @@ def setup(hass, config: ConfigType) -> bool:
 
 # pylint: disable=unused-argument
 def stop(event: object) -> None:
-    """Cleanup the ISY subscription."""
+    """
+    Stop ISY auto updates.
+
+    :param event: The event being watched.
+    :return: None.
+    """
     ISY.auto_update = False
 
 
 class ISYDevice(Entity):
-    """Base class for all isy994 devices."""
+    """
+    Representation of an ISY994 device.
+    """
 
     import PyISY.Nodes.node  # noqa
 
@@ -185,58 +200,98 @@ class ISYDevice(Entity):
     _name = None
 
     def __init__(self, node: PyISY.Nodes.node) -> None:
-        """Initialize the isy device."""
+        """
+        Initialize the insteon device.
+
+        :param node: The ISY994 node object.
+        """
         self._node = node
 
         self._change_handler = self._node.status.subscribe('changed',
                                                            self.on_update)
 
     def __del__(self) -> None:
-        """Cleanup subscriptions."""
+        """
+        Cleanup the subscriptions.
+
+        :return: None.
+        """
         self._change_handler.unsubscribe()
 
     # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
-        """Handle the update received event."""
+        """
+        Handle the update event from the ISY994 Node.
+        :param event: The event being subscribed to.
+        :return: None.
+        """
         self.update_ha_state()
 
     @property
     def domain(self) -> str:
-        """Return the domain of the device."""
+        """
+        Get the domain of the device.
+
+        :return: The domain of the device.
+        """
         return self._domain
 
     @property
     def unique_id(self):
-        """Return the node id."""
+        """
+        Get the unique identifier of the device.
+
+        :return: The ISY994 Node Id.
+        """
         # pylint: disable=protected-access
         return self._node._id
 
     @property
     def raw_name(self):
-        """Return the raw node name."""
+        """
+        Get the raw name of the device.
+
+        :return: The raw name of the ISY994 Node.
+        """
         return str(self._name) \
             if self._name is not None else str(self._node.name)
 
     @property
     def name(self):
-        """Return the cleaned name of the node."""
+        """
+        Get the name of the device.
+
+        :return: The device name.
+        """
         return self.raw_name.replace(HIDDEN_STRING, '').strip() \
             .replace('_', ' ')
 
     @property
     def should_poll(self) -> bool:
-        """No polling required."""
+        """
+        No polling required since we're using the subscription.
+
+        :return: False.
+        """
         return False
 
     @property
     def value(self) -> object:
-        """Return the raw value from the controller"""
+        """
+        Get the current value of the device.
+
+        :return: The ISY994 Node's value.
+        """
         # pylint: disable=protected-access
         return self._node.status._val
 
     @property
     def state_attributes(self) -> Dict:
-        """Return the state attributes for the node."""
+        """
+        Get the state attributes for the device.
+
+        :return: The state attributes associated with the device.
+        """
         attr = {}
         if hasattr(self._node, 'aux_properties'):
             for name, val in self._node.aux_properties.items():
@@ -245,19 +300,36 @@ class ISYDevice(Entity):
 
     @property
     def hidden(self):
-        """Flag to hide entity from UI."""
+        """
+        Get whether the device should be hidden from the UI.
+
+        :return: Whether the device should be hidden.
+        """
         return HIDDEN_STRING in self.raw_name
 
     @property
     def unit_of_measurement(self):
-        """Default to no unit of measure."""
+        """
+        Get the device unit of measure.
+
+        :return: None.
+        """
         return None
 
     def _attr_filter(self, attr):
-        """A Placeholder for attribute filters."""
+        """
+        Filter the attribute.
+
+        :param attr: Attribute to filter.
+        :return: The attribute.
+        """
         # pylint: disable=no-self-use
         return attr
 
     def update(self):
-        """Update the state of the device."""
+        """
+        Perform an update for the device.
+
+        :return: None
+        """
         pass

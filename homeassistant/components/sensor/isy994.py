@@ -235,8 +235,15 @@ BINARY_UOM = ['2', '78']
 
 
 def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
-    """Setup the ISY platform."""
+    """
+    Setup the ISY994 sensor platform.
 
+    :param hass: HomeAssistant.
+    :param config: The platform configuration dictionary.
+    :param add_devices: The add device callback method.
+    :param discovery_info: The discovery information.
+    :return: Whether the platform was setup properly.
+    """
     if ISY is None or not ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
         return False
@@ -253,15 +260,25 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
 
 class ISYSensorDevice(ISYDevice):
-    """Representation of a ISY sensor."""
+    """
+    Representation of an ISY994 sensor device.
+    """
 
     def __init__(self, node):
-        """Initialize the sensor."""
+        """
+        Initialize the ISY994 sensor device.
+
+        :param node: The ISY994 node.
+        """
         ISYDevice.__init__(self, node)
 
     @property
     def state(self) -> str:
-        """Return the state of the device."""
+        """
+        Get the state of the ISY994 sensor device.
+
+        :return: The state of the ISY994 sensor device.
+        """
         if len(self._node.uom) == 1:
             if self._node.uom[0] in UOM_TO_STATES:
                 states = UOM_TO_STATES.get(self._node.uom[0])
@@ -280,7 +297,11 @@ class ISYSensorDevice(ISYDevice):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement for the device."""
+        """
+        Get the unit of measurement for the ISY994 sensor device.
+
+        :return: The unit of measurment for the ISY994 sensor device.
+        """
         if len(self._node.uom) == 1:
             if self._node.uom[0] in UOM_FRIENDLY_NAME:
                 return UOM_FRIENDLY_NAME.get(self._node.uom[0])

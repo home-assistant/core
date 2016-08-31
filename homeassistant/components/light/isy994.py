@@ -27,8 +27,15 @@ STATES = [STATE_OFF, STATE_ON, 'true', 'false']
 
 
 def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
-    """Setup the ISY platform."""
+    """
+    Set up the ISY994 light platform.
 
+    :param hass: HomeAssistant.
+    :param config: Platform configuration.
+    :param add_devices: The add devices callback method.
+    :param discovery_info: The discovery information.
+    :return: Whether the platform was set up properly.
+    """
     if ISY is None or not ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
         return False
@@ -44,29 +51,52 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
 
 class ISYLightDevice(ISYDevice, Light):
-    """Representation of a ISY switch."""
+    """
+    Representation of an ISY994 light devie.
+    """
 
     def __init__(self, node):
-        """Initialize the binary sensor."""
+        """
+        Initialize the ISY994 light device.
+
+        :param node: The ISY994 node.
+        """
         ISYDevice.__init__(self, node)
 
     @property
     def is_on(self) -> bool:
-        """Return true if device is locked."""
+        """
+        Get whether the ISY994 light is on.
+
+        :return: Whether the ISY994 light is in the 'on' state
+        """
         return self.state == STATE_ON
 
     @property
     def state(self) -> str:
-        """Return the state of the device."""
+        """
+        Get the state of the ISY994 light.
+
+        :return: The state of the ISY994 light device.
+        """
         return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
 
     def turn_off(self, **kwargs):
-        """Turn off the switch."""
+        """
+        Send the turn off command to the ISY994 light device.
+
+        :param kwargs: Keyword Arguments.
+        :return: None.
+        """
         if not self._node.fastOff():
             _LOGGER.debug('Unable to turn on switch.')
 
-    def turn_on(self, **kwargs):
-        """Turn on the switch."""
-        brightness = kwargs.get('brightness', 100)
+    def turn_on(self, brightness=100, **kwargs):
+        """
+        Send the turn on command to the ISY994 light device.
+
+        :param kwargs: Keyword arguments.
+        :return: None.
+        """
         if not self._node.on(val=brightness):
             _LOGGER.debug('Unable to turn on switch.')

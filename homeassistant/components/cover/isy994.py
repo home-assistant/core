@@ -25,8 +25,15 @@ STATES = [STATE_OPEN, STATE_CLOSED, 'closing', 'opening']
 
 
 def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
-    """Setup the ISY platform."""
+    """
+    Setup the ISY994 cover platform.
 
+    :param hass: HomeAssistant.
+    :param config: Platform configuration.
+    :param add_devices: The add devices callback method.
+    :param discovery_info: The discovery information.
+    :return: Whether the platform was setup properly.
+    """
     if ISY is None or not ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
         return False
@@ -51,69 +58,117 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
 
 class ISYCoverDevice(ISYDevice, CoverDevice):
-    """Representation of a ISY cover device."""
+    """
+    Representation of an ISY994 cover device.
+    """
 
     def __init__(self, node):
-        """Initialize the binary sensor."""
+        """
+        Initialize the ISY994 cover device.
+
+        :param node: The ISY994 node.
+        """
         ISYDevice.__init__(self, node)
 
     @property
     def current_cover_position(self):
-        """Return the current cover position."""
+        """
+        Get the current cover position.
+
+        :return: The percentage value representing how closed the cover is.
+        """
         return sorted((0, self.value, 100))[1]
 
     @property
     def is_closed(self) -> bool:
-        """Return true if device is locked."""
+        """
+        Get whether the ISY994 cover device is closed.
+
+        :return: Whether the ISY994 cover device is in the 'closed' status.
+        """
         return self.state == STATE_CLOSED
 
     @property
     def state(self) -> str:
-        """Return the state of the device."""
-        _LOGGER.error('STATE %s %s %s', self.name, self.value, VALUE_TO_STATE.get(self.value, STATE_OPEN))
+        """
+        Get the state of the ISY994 cover device.
+
+        :return: The state of the ISY994 cover device.
+        """
         return VALUE_TO_STATE.get(self.value, STATE_OPEN)
 
     def open_cover(self, **kwargs):
-        """Open the cover."""
+        """
+        Send the open cover command to the ISY994 cover device.
+
+        :param kwargs: Keyword arguments.
+        :return: None.
+        """
         if not self._node.on(val=100):
             _LOGGER.error('Unable to open the cover')
 
     def close_cover(self, **kwargs):
-        """Close cover."""
+        """
+        Send the close cover command to the ISY994 cover device.
+
+        :param kwargs: Keyword arguments.
+        :return: None.
+        """
         if not self._node.off():
             _LOGGER.error('Unable to close the cover')
 
 
 class ISYCoverProgram(ISYCoverDevice):
-    """Representation of a ISY cover program."""
+    """
+    Representation of an ISY994 cover program.
+    """
 
     def __init__(self, name, node, actions):
-        """Initialize the cover."""
+        """
+        Initialize the ISY994 cover program.
+
+        :param name: The name of the cover device.
+        :param node: The status program to get the device status.
+        :param actions: The actions program for the device.
+        """
         ISYDevice.__init__(self, node)
         self._name = name
         self._actions = actions
 
     @property
     def is_closed(self) -> bool:
-        """Return true if the device is locked."""
-        return bool(self.value)
+        """
+        Get whether the ISY994 cover program is closed.
+
+        :return: Whether the ISY994 is closed.
+        """
+        return not bool(self.value)
 
     @property
     def state(self):
-        """Return cover state."""
+        """
+        Get the state of the ISY994 cover program.
+
+        :return: The program state.
+        """
         return STATE_CLOSED if self.is_closed else STATE_OPEN
 
-    @property
-    def unit_of_measurement(self) -> None:
-        """No unit of measurement for lock programs."""
-        return None
-
     def open_cover(self, **kwargs):
-        """Open the cover."""
+        """
+        Send the open cover command to the ISY994 cover program.
+
+        :param kwargs: Keyword arguments.
+        :return: None.
+        """
         if not self._actions.runThen():
             _LOGGER.error('Unable to open the cover')
 
     def close_cover(self, **kwargs):
-        """Close the cover."""
+        """
+        Send the close cover command to the ISY994 cover program.
+
+        :param kwargs: Keyword arguments.
+        :return: None.
+        """
         if not self._actions.runElse():
             _LOGGER.error('Unable to close the cover')
