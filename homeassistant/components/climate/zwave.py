@@ -12,7 +12,6 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.zwave import (
     ATTR_NODE_ID, ATTR_VALUE_ID, ZWaveDeviceEntity)
 from homeassistant.components import zwave
-from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELSIUS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,11 +58,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug("No discovery_info=%s or no NETWORK=%s",
                       discovery_info, zwave.NETWORK)
         return
-
+    temp_unit = hass.config.units.temperature_unit
     node = zwave.NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
     value = node.values[discovery_info[ATTR_VALUE_ID]]
     value.set_change_verified(False)
-    add_devices([ZWaveClimate(value)])
+    add_devices([ZWaveClimate(value, temp_unit)])
     _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
                   discovery_info, zwave.NETWORK)
 
@@ -73,7 +72,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     """Represents a ZWave Climate device."""
 
     # pylint: disable=too-many-public-methods, too-many-instance-attributes
-    def __init__(self, value):
+    def __init__(self, value, temp_unit):
         """Initialize the zwave climate device."""
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
@@ -87,7 +86,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._fan_list = None
         self._current_swing_mode = None
         self._swing_list = None
-        self._unit = None
+        self._unit = temp_unit
+        _LOGGER.debug("temp_unit is %s", self._unit)
         self._zxt_120 = None
         self.update_properties()
         # register listener
@@ -186,16 +186,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        unit = self._unit
-        if unit == 'C':
-            return TEMP_CELSIUS
-        elif unit == 'F':
-            return TEMP_FAHRENHEIT
-        elif unit is None:
-            return hass.config.units.temperature_unit
-        else:
-            _LOGGER.exception("unit_of_measurement=%s is not valid",
-                              unit)
+        return self._unit
 
     @property
     def current_temperature(self):
