@@ -244,8 +244,9 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
     devices = []
 
     for node in SENSOR_NODES:
-        if node.uom not in BINARY_UOM and \
+        if node.uom[0] not in BINARY_UOM and \
                 STATE_OFF not in node.uom and STATE_ON not in node.uom:
+            _LOGGER.debug('LOADING %s', node.name)
             devices.append(ISYSensorDevice(node))
 
     add_devices(devices)
@@ -262,11 +263,18 @@ class ISYSensorDevice(ISYDevice):
     def state(self) -> str:
         """Return the state of the device."""
         if len(self._node.uom) == 1:
-            return self.value
-        elif self._node.uom in UOM_TO_STATES:
-            states = UOM_TO_STATES.get(self._node.uom)
-            if self.value in states:
-                return states.get(self.value)
+            if self._node.uom[0] in UOM_TO_STATES:
+                states = UOM_TO_STATES.get(self._node.uom[0])
+                if self.value in states:
+                    return states.get(self.value)
+            elif self._node.prec and self._node.prec != [0]:
+                str_val = str(self.value)
+                int_prec = int(self._node.prec)
+                decimal_part =str_val[-int_prec:]
+                whole_part = str_val[:len(str_val) - int_prec]
+                return '{}.{}'.format(whole_part, decimal_part)
+            else:
+                return self.value
 
         return None
 
@@ -274,9 +282,9 @@ class ISYSensorDevice(ISYDevice):
     def unit_of_measurement(self):
         """Return the unit of measurement for the device."""
         if len(self._node.uom) == 1:
-            if self._node.uom in UOM_FRIENDLY_NAME:
-                return UOM_FRIENDLY_NAME.get(self._node.uom)
+            if self._node.uom[0] in UOM_FRIENDLY_NAME:
+                return UOM_FRIENDLY_NAME.get(self._node.uom[0])
             else:
-                return self._node.uom
+                return self._node.uom[0]
         else:
             return None

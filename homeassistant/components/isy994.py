@@ -19,7 +19,7 @@ DOMAIN = "isy994"
 REQUIREMENTS = ['PyISY==1.0.7']
 
 ISY = None
-DEFAULT_SENSOR_STRING = 'Sensor'
+DEFAULT_SENSOR_STRING = 'sensor'
 DEFAULT_HIDDEN_STRING = '{HIDE ME}'
 CONF_TLS_VER = 'tls'
 CONF_HIDDEN_STRING = 'hidden_string'
@@ -49,7 +49,7 @@ PROGRAMS = {}
 
 HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
-COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan']
+COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor']
 # '('binary_sensor', 'climate', 'cover', 'fan', 'light',
 #                       'lock', 'sensor')
 
