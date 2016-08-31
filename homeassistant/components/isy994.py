@@ -49,6 +49,8 @@ NODES = []
 GROUPS = []
 PROGRAMS = {}
 
+PYISY = None
+
 HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
 COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor', 'light',
@@ -108,9 +110,9 @@ def _categorize_nodes(hidden_identifier: str, sensor_identifier: str) -> None:
             node.name += hidden_identifier
         if sensor_identifier in path or sensor_identifier in node.name:
             SENSOR_NODES.append(node)
-        elif isinstance(node, ISY.Nodes.Node):
+        elif isinstance(node, PYISY.Nodes.Node):
             NODES.append(node)
-        elif isinstance(node, ISY.Nodes.Group):
+        elif isinstance(node, PYISY.Nodes.Group):
             GROUPS.append(node)
 
 
@@ -182,6 +184,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     addr = addr.replace(':{}'.format(port), '')
 
     import PyISY
+
+    global PYISY
+    PYISY = PyISY
 
     # Connect to ISY controller.
     global ISY
