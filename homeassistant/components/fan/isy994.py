@@ -6,6 +6,7 @@ https://home-assistant.io/components/fan.isy994/
 """
 import logging
 
+from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.fan import (FanEntity, DOMAIN, ATTR_SPEED,
                                           SPEED_OFF, SPEED_LOW, SPEED_MED,
                                           SPEED_HIGH)
@@ -28,6 +29,8 @@ STATE_TO_VALUE = {}
 for key in VALUE_TO_STATE:
     STATE_TO_VALUE[VALUE_TO_STATE[key]] = key
 
+STATES = [SPEED_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]
+
 def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
     """Setup the ISY platform."""
 
@@ -37,12 +40,8 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
     devices = []
 
-    for node in (HIDDEN_NODES + VISIBLE_NODES):
-        if (SPEED_OFF in node.uom and
-                SPEED_LOW in node.uom and
-                SPEED_MED in node.uom and
-                SPEED_HIGH in node.uom):
-            devices.append(ISYFanDevice(node))
+    for node in filter_nodes(HIDDEN_NODES + VISIBLE_NODES, states=STATES):
+        devices.append(ISYFanDevice(node))
 
     for program in PROGRAMS.get(DOMAIN, []):
         try:
@@ -103,11 +102,6 @@ class ISYFanProgram(ISYFanDevice):
     def is_on(self) -> bool:
         """Return true if the device is locked."""
         return bool(self.value)
-
-    @property
-    def unit_of_measurement(self) -> None:
-        """No unit of measurement for lock programs."""
-        return None
 
     def turn_off(self, **kwargs):
         """Turn fan on."""

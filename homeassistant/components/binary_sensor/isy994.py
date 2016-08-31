@@ -6,6 +6,7 @@ https://home-assistant.io/components/binary_sensor.isy994/
 """
 import logging
 
+from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
 from homeassistant.components.isy994 import (ISYDevice, HIDDEN_NODES,
                                              SENSOR_NODES, PROGRAMS, ISY,
@@ -23,6 +24,7 @@ VALUE_TO_STATE = {
 }
 
 UOM = ['2', '78']
+STATES = [STATE_OFF, STATE_ON, 'true', 'false']
 
 
 def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
@@ -34,9 +36,9 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
     devices = []
 
-    for node in (HIDDEN_NODES + SENSOR_NODES):
-        if node.uom in UOM or (STATE_ON in node.uom and STATE_OFF in node.uom):
-            devices.append(ISYBinarySensorDevice(node))
+    for node in filter_nodes(HIDDEN_NODES + SENSOR_NODES, units=UOM,
+                             states=STATES):
+        devices.append(ISYBinarySensorDevice(node))
 
     for program in PROGRAMS.get(DOMAIN, []):
         try:
@@ -79,8 +81,3 @@ class ISYBinarySensorProgram(ISYBinarySensorDevice):
     def is_on(self) -> bool:
         """Return true if the device is locked."""
         return bool(self.value)
-
-    @property
-    def unit_of_measurement(self) -> None:
-        """No unit of measurement for lock programs."""
-        return None

@@ -6,6 +6,7 @@ https://home-assistant.io/components/lock.isy994/
 """
 import logging
 
+from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.lock import LockDevice, DOMAIN
 from homeassistant.components.isy994 import (ISYDevice, HIDDEN_NODES,
                                              VISIBLE_NODES, PROGRAMS, ISY,
@@ -20,7 +21,8 @@ VALUE_TO_STATE = {
     100: STATE_LOCKED
 }
 
-UOM = '11'
+UOM = ['11']
+STATES = [STATE_LOCKED, STATE_UNLOCKED]
 
 
 def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
@@ -32,9 +34,9 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
     devices = []
 
-    for node in (HIDDEN_NODES + VISIBLE_NODES):
-        if node.uom == UOM or STATE_LOCKED in node.uom:
-            devices.append(ISYLockDevice(node))
+    for node in filter_nodes(HIDDEN_NODES + VISIBLE_NODES, units=UOM,
+                             states=STATES):
+        devices.append(ISYLockDevice(node))
 
     for program in PROGRAMS.get(DOMAIN, []):
         try:
@@ -105,11 +107,6 @@ class ISYLockProgram(ISYLockDevice):
     def is_locked(self) -> bool:
         """Return true if the device is locked."""
         return bool(self.value)
-
-    @property
-    def unit_of_measurement(self) -> None:
-        """No unit of measurement for lock programs."""
-        return None
 
     def lock(self, **kwargs) -> None:
         """Lock the device."""

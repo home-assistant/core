@@ -6,6 +6,7 @@ https://home-assistant.io/components/cover.isy994/
 """
 import logging
 
+from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.cover import CoverDevice, DOMAIN, ATTR_POSITION
 from homeassistant.components.isy994 import (ISYDevice, HIDDEN_NODES,
                                              VISIBLE_NODES, PROGRAMS, ISY,
@@ -21,6 +22,7 @@ VALUE_TO_STATE = {
 }
 
 UOM = ['97']
+STATES = [STATE_OPEN, STATE_CLOSED, 'closing', 'opening']
 
 
 def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
@@ -32,13 +34,9 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
     devices = []
 
-    for node in (HIDDEN_NODES + VISIBLE_NODES):
-        if node.uom in UOM or (
-                        STATE_OPEN in node.uom and
-                        STATE_CLOSED in node.uom and
-                        'closing' in node.uom and
-                        'opening' in node.uom):
-            devices.append(ISYCoverDevice(node))
+    for node in filter_nodes((HIDDEN_NODES + VISIBLE_NODES), units=UOM,
+                             states=STATES):
+        devices.append(ISYCoverDevice(node))
 
     for program in PROGRAMS.get(DOMAIN, []):
         try:

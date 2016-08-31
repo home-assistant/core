@@ -54,6 +54,28 @@ COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor']
 #                       'lock', 'sensor')
 
 
+def filter_nodes(nodes: list, units: list=[], states: list=[]) -> list:
+    """Filter nodes for the specified units or states."""
+    filtered_nodes = []
+    for node in nodes:
+        match_unit = False
+        match_state = True
+        for uom in node.uom:
+            if uom in units:
+                match_unit = True
+                continue
+            elif uom not in states:
+                match_state = False
+
+            if match_unit:
+                continue
+
+        if match_unit or match_state:
+            filtered_nodes.append(node)
+
+    return filtered_nodes
+
+
 def setup(hass, config: ConfigType) -> bool:
     """Setup ISY994 component.
 
@@ -227,12 +249,8 @@ class ISYDevice(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the defined units of measurement or None."""
-        # More than one uom = enumerated states
-        if len(self._node.uom) < 2:
-            return self._node.uom
-        else:
-            return None
+        """Default to no unit of measure."""
+        return None
 
     def _attr_filter(self, attr):
         """A Placeholder for attribute filters."""
