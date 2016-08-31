@@ -49,7 +49,7 @@ PROGRAMS = {}
 
 HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
-COMPONENTS = ['lock', 'binary_sensor', 'cover']
+COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan']
 # '('binary_sensor', 'climate', 'cover', 'fan', 'light',
 #                       'lock', 'sensor')
 
