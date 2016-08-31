@@ -90,8 +90,7 @@ class OnkyoDevice(MediaPlayerDevice):
         """Run an eiscp command and catch connection errors."""
         try:
             result = self._receiver.command(command)
-        except (BlockingIOError, ValueError, OSError, ConnectionAbortedError,
-                AttributeError, AssertionError):
+        except (ValueError, OSError, AttributeError, AssertionError):
             if self._receiver.command_socket:
                 self._receiver.command_socket = None
                 _LOGGER.info('Reseting connection to %s.', self._name)
