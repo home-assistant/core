@@ -118,11 +118,11 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         # Set point
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
-            self._unit = value.units
             if self.current_operation is not None:
                 if SET_TEMP_TO_INDEX.get(self._current_operation) \
                    != value.index:
                     continue
+                self._unit = value.units
                 if self._zxt_120:
                     continue
             self._target_temperature = int(value.data)
