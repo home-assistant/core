@@ -117,7 +117,7 @@ class ISYSwitchProgram(ISYSwitchDevice):
 
     def __init__(self, name, node, actions):
         """
-        Initialize the ISY994 switch program
+        Initialize the ISY994 switch program.
 
         :param name: The device name.
         :param node: The status program node.
