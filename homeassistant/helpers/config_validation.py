@@ -1,5 +1,8 @@
 """Helpers for config validation using voluptuous."""
 from datetime import timedelta
+import os
+import re
+import tempfile
 from urllib.parse import urlparse
 
 from typing import Any, Union, TypeVar, Callable, Sequence, List, Dict
@@ -65,9 +68,36 @@ def boolean(value: Any) -> bool:
     return bool(value)
 
 
-def isfile(value):
+def isfile(value: Any) -> str:
     """Validate that the value is an existing file."""
-    return vol.IsFile('not a file')(value)
+    if value is None:
+        raise vol.Invalid('None is not file')
+    return vol.IsFile('not a file')(str(value))
+
+
+def file(value: Any) -> str:
+    """Validate if file is reade/writeable and could be create (platform)."""
+    if value is None:
+        raise vol.Invalid('None is not file')
+    file_in = str(value)
+    (path, name) = os.path.split(file_in)
+
+    # if use HA config directory
+    if not path:
+        return file_in
+    if not name or os.path.isdir(file_in):
+        raise vol.Invalid('None is not file')
+    # file exists, control access
+    if os.path.isfile(file_in) and os.access(file_in, os.R_OK | os.W_OK):
+        return file_in
+    # check if HA can create a new file on this pleace
+    try:
+        with tempfile.TemporaryFile(dir=path):
+            return file_in
+    except EnvironmentError:
+        raise vol.Invalid('File can not be create')
+
+    raise vol.Invalid('no valid file access')
 
 
 def ensure_list(value: Union[T, Sequence[T]]) -> List[T]:
@@ -265,6 +295,19 @@ def url(value: Any) -> str:
         return vol.Schema(vol.Url())(url_in)
 
     raise vol.Invalid('invalid url')
+
+
+def email(value: Any) -> str:
+    """Validate an email address."""
+    email_in = str(value)
+    email_re = re.match(
+        r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)",
+        email_in
+    )
+
+    if email_re is None:
+        raise vol.Invalid('invalid email')
+    return email_in
 
 
 # Validator helpers

@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 CONF_TIMESTAMP = 'timestamp'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILENAME): cv.string,
+    vol.Required(CONF_FILENAME): cv.file,
     vol.Optional(CONF_TIMESTAMP, default=False): cv.boolean,
 })
 
@@ -54,7 +54,6 @@ class FileNotificationService(BaseNotificationService):
 
             if self.add_timestamp:
                 text = '{} {}\n'.format(dt_util.utcnow().isoformat(), message)
-                file.write(text)
             else:
                 text = '{}\n'.format(message)
-                file.write(text)
+            file.write(text)

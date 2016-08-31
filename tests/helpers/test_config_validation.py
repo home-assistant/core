@@ -1,4 +1,6 @@
 from datetime import timedelta
+import os
+import tempfile
 
 import pytest
 import voluptuous as vol
@@ -32,7 +34,7 @@ def test_latitude():
             schema(value)
 
     for value in ('-89', 89, '12.34'):
-        schema(value)
+        assert schema(value)
 
 
 def test_longitude():
@@ -44,7 +46,7 @@ def test_longitude():
             schema(value)
 
     for value in ('-179', 179, '12.34'):
-        schema(value)
+        assert schema(value)
 
 
 def test_port():
@@ -56,7 +58,53 @@ def test_port():
             schema(value)
 
     for value in ('1000', 21, 24574):
-        schema(value)
+        assert schema(value)
+
+
+def test_isfile():
+    """Validate that the value is an existing file."""
+    schema = vol.Schema(cv.isfile)
+
+    for value in ('invalid', None, -1, 0, 80000, '/fhadh/djd/test.txt'):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    with tempfile.TemporaryDirectory() as tmp_path:
+        tmp_file = os.path.join(tmp_path, "test.txt")
+        with open(tmp_file, "w") as tmp_handl:
+            tmp_handl.write("Test File")
+        assert schema(tmp_file)
+
+
+def test_file():
+    """Validate if file is reade/writeable and could be create (platform)."""
+    schema = vol.Schema(cv.file)
+
+    for value in (None, '/fhadh/djd/test.txt', os.getcwd()):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    with tempfile.TemporaryDirectory() as tmp_path:
+        tmp_file = os.path.join(tmp_path, "test.txt")
+        with open(tmp_file, "w") as tmp_handl:
+            tmp_handl.write("Test File")
+        assert schema(tmp_file)
+
+    assert schema(os.path.join(os.path.expanduser("~"), 'test.txt'))
+    assert schema("test.txt")
+
+
+def test_email():
+    """Test email address."""
+    schema = vol.Schema(cv.email)
+
+    for value in ('invalid', None, -1, 0, 'example@balue',
+                  'test example@email.com'):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ('example@example.com', 'info@home-assistant.io'):
+        assert schema(value)
 
 
 def test_url():
