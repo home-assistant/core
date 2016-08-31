@@ -5,7 +5,6 @@ import unittest
 from unittest.mock import patch
 
 import homeassistant.components.notify as notify
-from homeassistant.bootstrap import setup_component
 from homeassistant import bootstrap
 from tests.common import get_test_home_assistant
 

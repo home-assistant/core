@@ -5,6 +5,7 @@ from homeassistant.components.sensor import command_line
 from homeassistant import bootstrap
 from tests.common import get_test_home_assistant
 
+
 class TestCommandSensorSensor(unittest.TestCase):
     """Test the Command line sensor."""
 
