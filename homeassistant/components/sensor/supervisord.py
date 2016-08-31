@@ -7,28 +7,41 @@ https://home-assistant.io/components/sensor.supervisord/
 import logging
 import xmlrpc.client
 
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_URL
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_URL = 'http://localhost:9001/RPC2'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url,
+})
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Supervisord platform."""
+    url = config.get(CONF_URL)
     try:
-        supervisor_server = xmlrpc.client.ServerProxy(
-            config.get('url', 'http://localhost:9001/RPC2'))
+        supervisor_server = xmlrpc.client.ServerProxy(url)
     except ConnectionRefusedError:
         _LOGGER.error('Could not connect to Supervisord')
-        return
+        return False
+
     processes = supervisor_server.supervisor.getAllProcessInfo()
+
     add_devices(
         [SupervisorProcessSensor(info, supervisor_server)
          for info in processes])
 
 
 class SupervisorProcessSensor(Entity):
-    """Represent a supervisor-monitored process."""
+    """Representation of a supervisor-monitored process."""
 
     # pylint: disable=abstract-method
     def __init__(self, info, server):
