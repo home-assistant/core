@@ -6,43 +6,75 @@ https://home-assistant.io/components/isy994/
 """
 import logging
 from urllib.parse import urlparse
+import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP)
-from homeassistant.helpers import validate_config, discovery
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers import discovery, config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType, Dict  # noqa
 
 DOMAIN = "isy994"
-REQUIREMENTS = ['PyISY==1.0.6']
+REQUIREMENTS = ['PyISY==1.0.7']
 
 ISY = None
-SENSOR_STRING = 'Sensor'
-HIDDEN_STRING = '{HIDE ME}'
+DEFAULT_SENSOR_STRING = 'Sensor'
+DEFAULT_HIDDEN_STRING = '{HIDE ME}'
 CONF_TLS_VER = 'tls'
+CONF_HIDDEN_STRING = 'hidden_string'
+CONF_SENSOR_STRING = 'sensor_string'
+KEY_MY_PROGRAMS = 'My Programs'
+KEY_FOLDER = 'folder'
+KEY_ACTIONS = 'actions'
+KEY_STATUS = 'status'
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOST): cv.url,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_TLS_VER, None): vol.Coerce(float),
+        vol.Optional(CONF_HIDDEN_STRING, DEFAULT_HIDDEN_STRING): cv.string,
+        vol.Optional(CONF_SENSOR_STRING, DEFAULT_SENSOR_STRING): cv.string
+    })
+}, extra=vol.ALLOW_EXTRA)
 
-def setup(hass, config):
+SENSOR_NODES = []
+HIDDEN_NODES = []
+VISIBLE_NODES = []
+PROGRAMS = {}
+
+HIDDEN_STRING = DEFAULT_HIDDEN_STRING
+
+COMPONENTS = ['lock', 'binary_sensor']
+# '('binary_sensor', 'climate', 'cover', 'fan', 'light',
+#                       'lock', 'sensor')
+
+
+def setup(hass, config: ConfigType) -> bool:
     """Setup ISY994 component.
 
     This will automatically import associated lights, switches, and sensors.
     """
-    import PyISY
+    isy_config = config.get(DOMAIN)
 
-    # pylint: disable=global-statement
-    # check for required values in configuration file
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-        return False
-
-    # Pull and parse standard configuration.
-    user = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
-    host = urlparse(config[DOMAIN][CONF_HOST])
+    user = isy_config.get(CONF_USERNAME)
+    password = isy_config.get(CONF_PASSWORD)
+    tls_version = isy_config.get(CONF_TLS_VER)
+    host = urlparse(isy_config.get(CONF_HOST))
+    port = host.port
     addr = host.geturl()
+    hidden_identifier = isy_config.get(CONF_HIDDEN_STRING,
+                                       DEFAULT_HIDDEN_STRING)
+    sensor_identifier = isy_config.get(CONF_SENSOR_STRING,
+                                       DEFAULT_SENSOR_STRING)
+
+    global HIDDEN_STRING
+    HIDDEN_STRING = hidden_identifier
+
     if host.scheme == 'http':
         addr = addr.replace('http://', '')
         https = False
@@ -50,17 +82,12 @@ def setup(hass, config):
         addr = addr.replace('https://', '')
         https = True
     else:
-        _LOGGER.error('isy994 host value in configuration file is invalid.')
+        _LOGGER.error('isy994 host value in configuration is invalid.')
         return False
-    port = host.port
+
     addr = addr.replace(':{}'.format(port), '')
 
-    # Pull and parse optional configuration.
-    global SENSOR_STRING
-    global HIDDEN_STRING
-    SENSOR_STRING = str(config[DOMAIN].get('sensor_string', SENSOR_STRING))
-    HIDDEN_STRING = str(config[DOMAIN].get('hidden_string', HIDDEN_STRING))
-    tls_version = config[DOMAIN].get(CONF_TLS_VER, None)
+    import PyISY
 
     # Connect to ISY controller.
     global ISY
@@ -69,93 +96,103 @@ def setup(hass, config):
     if not ISY.connected:
         return False
 
+    global SENSOR_NODES
+    global HIDDEN_NODES
+    global VISIBLE_NODES
+    global PROGRAMS
+
+    SENSOR_NODES = []
+    HIDDEN_NODES = []
+    VISIBLE_NODES = []
+    PROGRAMS = {}
+
+    for (path, node) in ISY.nodes:
+        if not isinstance(node, PyISY.Nodes.Node):
+            continue
+        if sensor_identifier in path or sensor_identifier in node.name:
+            SENSOR_NODES.append(node)
+        elif hidden_identifier in path or hidden_identifier in node.name:
+            HIDDEN_NODES.append(node)
+        else:
+            VISIBLE_NODES.append(node)
+
+    for component in COMPONENTS:
+        try:
+            folder = ISY.programs[KEY_MY_PROGRAMS][component]
+        except KeyError:
+            pass
+        else:
+            for dtype, name, node_id in folder.children:
+                if dtype is KEY_FOLDER:
+                    program = folder[node_id]
+                    try:
+                        node = program[KEY_STATUS].leaf
+                        assert node.dtype == 'program', 'Not a program'
+                    except (KeyError, AssertionError):
+                        pass
+                    else:
+                        if component not in PROGRAMS:
+                            PROGRAMS[component] = []
+                        PROGRAMS[component].append(program)
+
     # Listen for HA stop to disconnect.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
 
     # Load platforms for the devices in the ISY controller that we support.
-    for component in ('sensor', 'light', 'switch'):
+    for component in COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     ISY.auto_update = True
     return True
 
 
-def stop(event):
+# pylint: disable=unused-argument
+def stop(event: object) -> None:
     """Cleanup the ISY subscription."""
     ISY.auto_update = False
 
 
-class ISYDeviceABC(ToggleEntity):
-    """An abstract Class for an ISY device."""
+class ISYDevice(Entity):
+    """Base class for all isy994 devices."""
+
+    import PyISY.Nodes.node  # noqa
 
     _attrs = {}
-    _onattrs = []
-    _states = []
-    _dtype = None
     _domain = None
     _name = None
 
-    def __init__(self, node):
-        """Initialize the device."""
-        # setup properties
-        self.node = node
+    def __init__(self, node: PyISY.Nodes.node) -> None:
+        """Initialize the isy device."""
+        self._node = node
 
-        # track changes
-        self._change_handler = self.node.status. \
-            subscribe('changed', self.on_update)
+        self._change_handler = self._node.status.subscribe('changed',
+                                                           self.on_update)
 
-    def __del__(self):
-        """Cleanup subscriptions because it is the right thing to do."""
+    def __del__(self) -> None:
+        """Cleanup subscriptions."""
         self._change_handler.unsubscribe()
 
+    # pylint: disable=unused-argument
+    def on_update(self, event: object) -> None:
+        """Handle the update received event."""
+        self.update_ha_state()
+
     @property
-    def domain(self):
-        """Return the domain of the entity."""
+    def domain(self) -> str:
+        """Return the domain of the device."""
         return self._domain
 
     @property
-    def dtype(self):
-        """Return the data type of the entity (binary or analog)."""
-        if self._dtype in ['analog', 'binary']:
-            return self._dtype
-        return 'binary' if self.unit_of_measurement is None else 'analog'
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def value(self):
-        """Return the unclean value from the controller."""
-        # pylint: disable=protected-access
-        return self.node.status._val
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes for the node."""
-        attr = {}
-        for name, prop in self._attrs.items():
-            attr[name] = getattr(self, prop)
-            attr = self._attr_filter(attr)
-        return attr
-
-    def _attr_filter(self, attr):
-        """A Placeholder for attribute filters."""
-        # pylint: disable=no-self-use
-        return attr
-
-    @property
     def unique_id(self):
-        """Return the ID of this ISY sensor."""
+        """Return the node id."""
         # pylint: disable=protected-access
-        return self.node._id
+        return self._node._id
 
     @property
     def raw_name(self):
-        """Return the unclean node name."""
+        """Return the raw node name."""
         return str(self._name) \
-            if self._name is not None else str(self.node.name)
+            if self._name is not None else str(self._node.name)
 
     @property
     def name(self):
@@ -164,55 +201,44 @@ class ISYDeviceABC(ToggleEntity):
             .replace('_', ' ')
 
     @property
+    def should_poll(self) -> bool:
+        """No polling required."""
+        return False
+
+    @property
+    def value(self) -> object:
+        """Return the raw value from the controller"""
+        # pylint: disable=protected-access
+        return self._node.status._val
+
+    @property
+    def state_attributes(self) -> Dict:
+        """Return the state attributes for the node."""
+        attr = {}
+        for name, prop in self._attrs.items():
+            attr[name] = getattr(self, prop)
+            attr = self._attr_filter(attr)
+        return attr
+
+    @property
     def hidden(self):
-        """Suggestion if the entity should be hidden from UIs."""
+        """Flag to hide entity from UI."""
         return HIDDEN_STRING in self.raw_name
-
-    def update(self):
-        """Update state of the sensor."""
-        # ISY objects are automatically updated by the ISY's event stream
-        pass
-
-    def on_update(self, event):
-        """Handle the update received event."""
-        self.update_ha_state()
-
-    @property
-    def is_on(self):
-        """Return a boolean response if the node is on."""
-        return bool(self.value)
-
-    @property
-    def is_open(self):
-        """Return boolean response if the node is open. On = Open."""
-        return self.is_on
-
-    @property
-    def state(self):
-        """Return the state of the node."""
-        if len(self._states) > 0:
-            return self._states[0] if self.is_on else self._states[1]
-        return self.value
-
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
-        if self.domain is not 'sensor':
-            attrs = [kwargs.get(name) for name in self._onattrs]
-            self.node.on(*attrs)
-        else:
-            _LOGGER.error('ISY cannot turn on sensors.')
-
-    def turn_off(self, **kwargs):
-        """Turn the device off."""
-        if self.domain is not 'sensor':
-            self.node.off()
-        else:
-            _LOGGER.error('ISY cannot turn off sensors.')
 
     @property
     def unit_of_measurement(self):
         """Return the defined units of measurement or None."""
-        try:
-            return self.node.units
-        except AttributeError:
+        # More than one uom = enumerated states
+        if len(self._node.uom) < 2:
+            return self._node.uom
+        else:
             return None
+
+    def _attr_filter(self, attr):
+        """A Placeholder for attribute filters."""
+        # pylint: disable=no-self-use
+        return attr
+
+    def update(self):
+        """Update the state of the device."""
+        pass
