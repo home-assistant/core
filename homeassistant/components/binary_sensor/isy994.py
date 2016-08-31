@@ -35,9 +35,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
     devices = []
 
     for node in (HIDDEN_NODES + SENSOR_NODES):
-        if not hasattr(node, 'uom'):
-            _LOGGER.error('WTF %s', node.name)
-        elif node.uom in UOM or (STATE_ON in node.uom and STATE_OFF in node.uom):
+        if node.uom in UOM or (STATE_ON in node.uom and STATE_OFF in node.uom):
             devices.append(ISYBinarySensorDevice(node))
 
     for program in PROGRAMS.get(DOMAIN, []):
@@ -66,7 +64,6 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
     @property
     def state(self) -> str:
         """Return the state of the device."""
-        _LOGGER.debug('GETTING STATE %s %s %s', self.name, self.value, VALUE_TO_STATE.get(self.value))
         return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
 
 
