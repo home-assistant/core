@@ -12,6 +12,7 @@ from collections import defaultdict
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import STATE_HOME
 from homeassistant.util import convert, slugify
+from homeassistant.components import zone as zone_comp
 
 DEPENDENCIES = ['mqtt']
 
@@ -22,20 +23,29 @@ BEACON_DEV_ID = 'beacon'
 
 LOCATION_TOPIC = 'owntracks/+/+'
 EVENT_TOPIC = 'owntracks/+/+/event'
+WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoint'
 
 _LOGGER = logging.getLogger(__name__)
 
 LOCK = threading.Lock()
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
+CONF_WAYPOINT_IMPORT = 'waypoints'
+CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
 
 VALIDATE_LOCATION = 'location'
 VALIDATE_TRANSITION = 'transition'
+VALIDATE_WAYPOINTS = 'waypoints'
+
+WAYPOINT_LAT_KEY = 'lat'
+WAYPOINT_LON_KEY = 'lon'
 
 
 def setup_scanner(hass, config, see):
     """Setup an OwnTracks tracker."""
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
+    waypoint_import = config.get(CONF_WAYPOINT_IMPORT, True)
+    waypoint_whitelist = config.get(CONF_WAYPOINT_WHITELIST)
 
     def validate_payload(payload, data_type):
         """Validate OwnTracks payload."""
@@ -50,7 +60,7 @@ def setup_scanner(hass, config, see):
                           'because of missing or malformatted data: %s',
                           data_type, data)
             return None
-        if data_type == VALIDATE_TRANSITION:
+        if data_type == VALIDATE_TRANSITION or data_type == VALIDATE_WAYPOINTS:
             return data
         if max_gps_accuracy is not None and \
                 convert(data.get('acc'), float, 0.0) > max_gps_accuracy:
@@ -182,6 +192,26 @@ def setup_scanner(hass, config, see):
                 data['event'])
             return
 
+    def owntracks_waypoint_update(topic, payload, qos):
+        """List of waypoints published by a user."""
+        # Docs on available data:
+        # http://owntracks.org/booklet/tech/json/#_typewaypoints
+        data = validate_payload(payload, VALIDATE_WAYPOINTS)
+        if not data:
+            return
+
+        wayps = data['waypoints']
+        _LOGGER.info("Got %d waypoints from %s", len(wayps), topic)
+        for wayp in wayps:
+            name = wayp['desc']
+            pretty_name = parse_topic(topic, True)[1] + ' - ' + name
+            lat = wayp[WAYPOINT_LAT_KEY]
+            lon = wayp[WAYPOINT_LON_KEY]
+            rad = wayp['rad']
+            zone = zone_comp.Zone(hass, pretty_name, lat, lon, rad,
+                                  zone_comp.ICON_IMPORT, False, True)
+            zone_comp.add_zone(hass, pretty_name, zone)
+
     def see_beacons(dev_id, kwargs_param):
         """Set active beacons to the current location."""
         kwargs = kwargs_param.copy()
@@ -195,18 +225,39 @@ def setup_scanner(hass, config, see):
     mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
     mqtt.subscribe(hass, EVENT_TOPIC, owntracks_event_update, 1)
 
+    if waypoint_import:
+        if waypoint_whitelist is None:
+            mqtt.subscribe(hass, WAYPOINT_TOPIC.format('+', '+'),
+                           owntracks_waypoint_update, 1)
+        else:
+            for whitelist_user in waypoint_whitelist:
+                mqtt.subscribe(hass, WAYPOINT_TOPIC.format(whitelist_user,
+                                                           '+'),
+                               owntracks_waypoint_update, 1)
+
     return True
+
+
+def parse_topic(topic, pretty=False):
+    """Parse an MQTT topic owntracks/user/dev, return (user, dev) tuple."""
+    parts = topic.split('/')
+    dev_id_format = ''
+    if pretty:
+        dev_id_format = '{} {}'
+    else:
+        dev_id_format = '{}_{}'
+    dev_id = slugify(dev_id_format.format(parts[1], parts[2]))
+    host_name = parts[1]
+    return (host_name, dev_id)
 
 
 def _parse_see_args(topic, data):
     """Parse the OwnTracks location parameters, into the format see expects."""
-    parts = topic.split('/')
-    dev_id = slugify('{}_{}'.format(parts[1], parts[2]))
-    host_name = parts[1]
+    (host_name, dev_id) = parse_topic(topic, False)
     kwargs = {
         'dev_id': dev_id,
         'host_name': host_name,
-        'gps': (data['lat'], data['lon'])
+        'gps': (data[WAYPOINT_LAT_KEY], data[WAYPOINT_LON_KEY])
     }
     if 'acc' in data:
         kwargs['gps_accuracy'] = data['acc']
