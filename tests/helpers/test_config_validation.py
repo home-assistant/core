@@ -76,9 +76,9 @@ def test_isfile():
         assert schema(tmp_file)
 
 
-def test_file():
+def test_filename():
     """Validate if file is reade/writeable and could be create (platform)."""
-    schema = vol.Schema(cv.file)
+    schema = vol.Schema(cv.filename)
 
     for value in (None, '/fhadh/djd/test.txt', os.getcwd()):
         with pytest.raises(vol.MultipleInvalid):

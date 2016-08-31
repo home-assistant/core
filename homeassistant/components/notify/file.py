@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 CONF_TIMESTAMP = 'timestamp'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILENAME): cv.file,
+    vol.Required(CONF_FILENAME): cv.filename,
     vol.Optional(CONF_TIMESTAMP, default=False): cv.boolean,
 })
 
