@@ -113,6 +113,8 @@ class OnkyoDevice(MediaPlayerDevice):
         volume_raw = self.command('volume query')
         mute_raw = self.command('audio-muting query')
         current_source_raw = self.command('input-selector query')
+        if not (volume_raw and mute_raw and current_source_raw):
+            return
         for source in current_source_raw[1]:
             if source in self._source_mapping:
                 self._current_source = self._source_mapping[source]
