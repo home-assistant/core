@@ -68,7 +68,6 @@ class ISYFanDevice(ISYDevice, FanEntity):
     @property
     def state(self) -> str:
         """Return the state of the device."""
-        _LOGGER.error('STATE %s %s %s', self.name, self.value, VALUE_TO_STATE.get(self.value, STATE_UNKNOWN))
         return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
 
     def set_speed(self, speed: str) -> None:
