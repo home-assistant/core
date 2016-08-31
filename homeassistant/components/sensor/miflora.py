@@ -20,9 +20,9 @@ REQUIREMENTS = ['miflora==0.1.4']
 
 LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=900)
-CONF_MAC = "mac"
+CONF_MAC = 'mac'
 CONF_FORCE_UPDATE = 'force_update'
-DEFAULT_NAME = "Mi Flora"
+DEFAULT_NAME = 'Mi Flora'
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
@@ -57,7 +57,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         prefix = config.get(CONF_NAME)
 
         if len(prefix) > 0:
-            name = prefix + " " + name
+            name = "{} {}".format(prefix, name)
+
         devs.append(MiFloraSensor(poller,
                                   parameter,
                                   name, unit,
