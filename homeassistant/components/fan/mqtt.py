@@ -10,7 +10,7 @@ from functools import partial
 import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
@@ -51,6 +51,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
 })
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -96,10 +97,8 @@ class MqttFan(FanEntity):
         self._retain = retain
         self._payload = payload
         self._optimistic = optimistic or topic["state_topic"] is None
-        self._optimistic_oscillation = (optimistic or
-                                        topic["oscillation_state_topic"] is None)
-        self._optimistic_speed = (optimistic or
-                                  topic["speed_state_topic"] is None)
+        self._optimistic_oscillation = (optimistic or topic["oscillation_state_topic"] is None)
+        self._optimistic_speed = (optimistic or topic["speed_state_topic"] is None)
         self._state = False
         self._supported_features = 0
         self._supported_features |= (
