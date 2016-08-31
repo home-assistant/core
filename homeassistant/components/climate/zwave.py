@@ -115,18 +115,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     def update_properties(self):
         """Callback on data change for the registered node/value pair."""
-        # Set point
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
-            if self.current_operation is not None:
-                if SET_TEMP_TO_INDEX.get(self._current_operation) \
-                   != value.index:
-                    continue
-                self._unit = value.units
-                if self._zxt_120:
-                    continue
-            self._target_temperature = int(value.data)
-
         # Operation Mode
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_MODE).values():
@@ -158,6 +146,17 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     _LOGGER.debug("self._swing_list=%s", self._swing_list)
                     _LOGGER.debug("self._current_swing_mode=%s",
                                   self._current_swing_mode)
+        # Set point
+        for value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
+            if self.current_operation is not None:
+                if SET_TEMP_TO_INDEX.get(self._current_operation) \
+                   != value.index:
+                    continue
+                self._unit = value.units
+                if self._zxt_120:
+                    continue
+            self._target_temperature = int(value.data)
 
     @property
     def should_poll(self):
@@ -192,6 +191,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             return TEMP_CELSIUS
         elif unit == 'F':
             return TEMP_FAHRENHEIT
+        elif unit is None:
+            return hass.config.units.temperature_unit
         else:
             _LOGGER.exception("unit_of_measurement=%s is not valid",
                               unit)
