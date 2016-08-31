@@ -80,7 +80,7 @@ def isfile(value: Any) -> str:
 
 
 def filename(value: Any) -> str:
-    """Validate if file is reade/writeable and could be create (platform)."""
+    """Validate if file is writeable and can be created."""
     if value is None:
         raise vol.Invalid('None is not file')
     file_in = str(value)
