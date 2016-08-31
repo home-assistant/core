@@ -66,7 +66,7 @@ def test_isfile():
     schema = vol.Schema(cv.isfile)
 
     for value in ('invalid', None, -1, 0, 80000, '/fhadh/djd/test.txt'):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(vol.Invalid):
             schema(value)
 
     with tempfile.TemporaryDirectory() as tmp_path:
@@ -81,7 +81,7 @@ def test_filename():
     schema = vol.Schema(cv.filename)
 
     for value in (None, '/fhadh/djd/test.txt', os.getcwd()):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(vol.Invalid):
             schema(value)
 
     with tempfile.TemporaryDirectory() as tmp_path:
@@ -100,7 +100,7 @@ def test_email():
 
     for value in ('invalid', None, -1, 0, 'example@test@balue',
                   'test example@email.com'):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(vol.Invalid):
             schema(value)
 
     for value in ('example@example.com', 'info@home-assistant.io',
