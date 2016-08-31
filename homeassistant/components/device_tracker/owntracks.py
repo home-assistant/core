@@ -35,6 +35,7 @@ CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
 
 VALIDATE_LOCATION = 'location'
 VALIDATE_TRANSITION = 'transition'
+VALIDATE_WAYPOINTS = 'waypoints'
 
 WAYPOINT_LAT_KEY = 'lat'
 WAYPOINT_LON_KEY = 'lon'
@@ -59,7 +60,7 @@ def setup_scanner(hass, config, see):
                           'because of missing or malformatted data: %s',
                           data_type, data)
             return None
-        if data_type == VALIDATE_TRANSITION or data_type == 'waypoints':
+        if data_type == VALIDATE_TRANSITION or data_type == VALIDATE_WAYPOINTS:
             return data
         if max_gps_accuracy is not None and \
                 convert(data.get('acc'), float, 0.0) > max_gps_accuracy:
@@ -195,7 +196,7 @@ def setup_scanner(hass, config, see):
         """List of waypoints published by a user."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typewaypoints
-        data = validate_payload(payload, 'waypoints')
+        data = validate_payload(payload, VALIDATE_WAYPOINTS)
         if not data:
             return
 
