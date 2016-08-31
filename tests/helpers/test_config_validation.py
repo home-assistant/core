@@ -98,12 +98,13 @@ def test_email():
     """Test email address."""
     schema = vol.Schema(cv.email)
 
-    for value in ('invalid', None, -1, 0, 'example@balue',
+    for value in ('invalid', None, -1, 0, 'example@test@balue',
                   'test example@email.com'):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in ('example@example.com', 'info@home-assistant.io'):
+    for value in ('example@example.com', 'info@home-assistant.io',
+                  'test@localhost'):
         assert schema(value)
 
 

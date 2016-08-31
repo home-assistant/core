@@ -90,7 +90,7 @@ def file(value: Any) -> str:
     # file exists, control access
     if os.path.isfile(file_in) and os.access(file_in, os.R_OK | os.W_OK):
         return file_in
-    # check if HA can create a new file on this pleace
+    # check if HA can create a new file at this location
     try:
         with tempfile.TemporaryFile(dir=path):
             return file_in
@@ -301,7 +301,7 @@ def email(value: Any) -> str:
     """Validate an email address."""
     email_in = str(value)
     email_re = re.match(
-        r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)",
+        r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-\.]+$)",
         email_in
     )
 
