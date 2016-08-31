@@ -49,6 +49,8 @@ NODES = []
 GROUPS = []
 PROGRAMS = {}
 
+PYISY = None
+
 HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
 COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor', 'light',
@@ -94,8 +96,6 @@ def _categorize_nodes(hidden_identifier: str, sensor_identifier: str) -> None:
     :param sensor_identifier: String to denote teh node is a sensor.
     :return: None.
     """
-    import PyISY
-
     global SENSOR_NODES
     global NODES
     global GROUPS
@@ -185,6 +185,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     import PyISY
 
+    global PYISY
+    PYISY = PyISY
+
     # Connect to ISY controller.
     global ISY
     ISY = PyISY.ISY(addr, port, username=user, password=password,
@@ -221,13 +224,11 @@ def stop(event: object) -> None:
 class ISYDevice(Entity):
     """Representation of an ISY994 device."""
 
-    import PyISY.Nodes.node  # noqa
-
     _attrs = {}
     _domain = None
     _name = None
 
-    def __init__(self, node: PyISY.Nodes.node) -> None:
+    def __init__(self, node: PYISY.Nodes.node) -> None:
         """
         Initialize the insteon device.
 
