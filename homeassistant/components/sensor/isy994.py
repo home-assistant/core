@@ -6,12 +6,9 @@ https://home-assistant.io/components/binary_sensor.isy994/
 """
 import logging
 
-from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.isy994 import (ISYDevice, HIDDEN_NODES,
-                                             SENSOR_NODES, PROGRAMS, ISY,
-                                             KEY_ACTIONS, KEY_STATUS)
-from homeassistant.const import (STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.helpers.entity import Entity
+                                             SENSOR_NODES, ISY)
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -245,8 +242,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
     devices = []
 
     for node in (HIDDEN_NODES + SENSOR_NODES):
-        if (STATE_ON not in node.uom and STATE_OFF not in node.uom):
-            devices.append(ISYSensorDevice(node))
+        devices.append(ISYSensorDevice(node))
 
     add_devices(devices)
 
@@ -263,32 +259,20 @@ class ISYSensorDevice(ISYDevice):
         """Return the state of the device."""
         if len(self._node.uom) == 1:
             return self.value
-        else:
-            return None
+        elif self._node.uom in UOM_TO_STATES:
+            states = UOM_TO_STATES.get(self._node.uom)
+            if self.value in states:
+                return states.get(self.value)
+
+        return None
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement for the device."""
         if len(self._node.uom) == 1:
-            return self._node.uom[0]
+            if self._node.uom in UOM_FRIENDLY_NAME:
+                return UOM_FRIENDLY_NAME.get(self._node.uom)
+            else:
+                return self._node.uom
         else:
             return None
-
-
-class ISYBinarySensorProgram(ISYBinarySensorDevice):
-    """Representation of a ISY lock program."""
-
-    def __init__(self, name, node):
-        """Initialize the lock."""
-        ISYDevice.__init__(self, node)
-        self._name = name
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the device is locked."""
-        return bool(self.value)
-
-    @property
-    def unit_of_measurement(self) -> None:
-        """No unit of measurement for lock programs."""
-        return None
