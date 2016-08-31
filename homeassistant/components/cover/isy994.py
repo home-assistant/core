@@ -139,7 +139,7 @@ class ISYCoverProgram(ISYCoverDevice):
 
         :return: Whether the ISY994 is closed.
         """
-        return not bool(self.value)
+        return bool(self.value)
 
     @property
     def state(self):
