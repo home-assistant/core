@@ -6,9 +6,9 @@ https://home-assistant.io/components/binary_sensor.isy994/
 """
 import logging
 
-from homeassistant.components.isy994 import (ISYDevice, HIDDEN_NODES,
-                                             SENSOR_NODES, ISY)
-from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.components.isy994 import (ISYDevice, SENSOR_NODES, ISY)
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF,
+                                 STATE_ON)
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -231,6 +231,8 @@ UOM_TO_STATES = {
     }
 }
 
+BINARY_UOM = ['2', '78']
+
 
 def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
     """Setup the ISY platform."""
@@ -241,8 +243,10 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
     devices = []
 
-    for node in (HIDDEN_NODES + SENSOR_NODES):
-        devices.append(ISYSensorDevice(node))
+    for node in SENSOR_NODES:
+        if node.uom not in BINARY_UOM and \
+                STATE_OFF not in node.uom and STATE_ON not in node.uom:
+            devices.append(ISYSensorDevice(node))
 
     add_devices(devices)
 
@@ -251,7 +255,7 @@ class ISYSensorDevice(ISYDevice):
     """Representation of a ISY sensor."""
 
     def __init__(self, node):
-        """Initialize the binary sensor."""
+        """Initialize the sensor."""
         ISYDevice.__init__(self, node)
 
     @property
