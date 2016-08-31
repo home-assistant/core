@@ -260,9 +260,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
 
 class ISYSensorDevice(ISYDevice):
-    """
-    Representation of an ISY994 sensor device.
-    """
+    """Representation of an ISY994 sensor device."""
 
     def __init__(self, node):
         """
@@ -287,7 +285,7 @@ class ISYSensorDevice(ISYDevice):
             elif self._node.prec and self._node.prec != [0]:
                 str_val = str(self.value)
                 int_prec = int(self._node.prec)
-                decimal_part =str_val[-int_prec:]
+                decimal_part = str_val[-int_prec:]
                 whole_part = str_val[:len(str_val) - int_prec]
                 return '{}.{}'.format(whole_part, decimal_part)
             else:

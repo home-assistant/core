@@ -6,12 +6,13 @@ https://home-assistant.io/components/cover.isy994/
 """
 import logging
 
-from homeassistant.components.isy994 import filter_nodes
-from homeassistant.components.cover import CoverDevice, DOMAIN, ATTR_POSITION
+from homeassistant.components.cover import CoverDevice, DOMAIN
 from homeassistant.components.isy994 import (ISYDevice, NODES, PROGRAMS, ISY,
-                                             KEY_ACTIONS, KEY_STATUS)
+                                             KEY_ACTIONS, KEY_STATUS,
+                                             filter_nodes)
 from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,9 +59,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
 
 class ISYCoverDevice(ISYDevice, CoverDevice):
-    """
-    Representation of an ISY994 cover device.
-    """
+    """Representation of an ISY994 cover device."""
 
     def __init__(self, node):
         """
@@ -119,9 +118,7 @@ class ISYCoverDevice(ISYDevice, CoverDevice):
 
 
 class ISYCoverProgram(ISYCoverDevice):
-    """
-    Representation of an ISY994 cover program.
-    """
+    """Representation of an ISY994 cover program."""
 
     def __init__(self, name, node, actions):
         """
@@ -131,7 +128,7 @@ class ISYCoverProgram(ISYCoverDevice):
         :param node: The status program to get the device status.
         :param actions: The actions program for the device.
         """
-        ISYDevice.__init__(self, node)
+        ISYCoverDevice.__init__(self, node)
         self._name = name
         self._actions = actions
 

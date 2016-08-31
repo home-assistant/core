@@ -7,8 +7,8 @@ https://home-assistant.io/components/fan.isy994/
 import logging
 
 from homeassistant.components.isy994 import filter_nodes
-from homeassistant.components.fan import (FanEntity, DOMAIN, ATTR_SPEED,
-                                          SPEED_OFF, SPEED_LOW, SPEED_MED,
+from homeassistant.components.fan import (FanEntity, DOMAIN, SPEED_OFF,
+                                          SPEED_LOW, SPEED_MED,
                                           SPEED_HIGH)
 from homeassistant.components.isy994 import (ISYDevice, NODES, PROGRAMS, ISY,
                                              KEY_ACTIONS, KEY_STATUS)
@@ -66,9 +66,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
 
 class ISYFanDevice(ISYDevice, FanEntity):
-    """
-    Representation of an ISY994 fan device.
-    """
+    """Representation of an ISY994 fan device."""
 
     def __init__(self, node):
         """
@@ -100,7 +98,7 @@ class ISYFanDevice(ISYDevice, FanEntity):
         else:
             self.speed = self.state
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: str=None, **kwargs) -> None:
         """
         Send the turn on command to the ISY994 fan device.
 
@@ -124,9 +122,7 @@ class ISYFanDevice(ISYDevice, FanEntity):
 
 
 class ISYFanProgram(ISYFanDevice):
-    """
-    Representation of an ISY994 fan program.
-    """
+    """Representation of an ISY994 fan program."""
 
     def __init__(self, name, node, actions):
         """
@@ -136,10 +132,10 @@ class ISYFanProgram(ISYFanDevice):
         :param node: The ISY994 program to get the status.
         :param actions: The ISY994 program to send commands.
         """
-        ISYDevice.__init__(self, node)
+        ISYFanDevice.__init__(self, node)
         self._name = name
         self._actions = actions
-        self.speed = STATE_ON if self.is_on() else STATE_OFF
+        self.speed = STATE_ON if self.is_on else STATE_OFF
 
     @property
     def is_on(self) -> bool:
@@ -169,7 +165,7 @@ class ISYFanProgram(ISYFanDevice):
         if not self._actions.runThen():
             _LOGGER.error('Unable to open the cover')
         else:
-            self.speed = STATE_ON if self.is_on() else STATE_OFF
+            self.speed = STATE_ON if self.is_on else STATE_OFF
 
     def turn_on(self, **kwargs):
         """
@@ -181,4 +177,4 @@ class ISYFanProgram(ISYFanDevice):
         if not self._actions.runElse():
             _LOGGER.error('Unable to close the cover')
         else:
-            self.speed = STATE_ON if self.is_on() else STATE_OFF
+            self.speed = STATE_ON if self.is_on else STATE_OFF

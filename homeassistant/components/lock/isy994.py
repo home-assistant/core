@@ -59,9 +59,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
 
 class ISYLockDevice(ISYDevice, LockDevice):
-    """
-    Representation of an ISY994 lock device.
-    """
+    """Representation of an ISY994 lock device."""
 
     def __init__(self, node):
         """

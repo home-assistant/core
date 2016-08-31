@@ -6,18 +6,16 @@ https://home-assistant.io/components/binary_sensor.isy994/
 """
 import logging
 
-from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
-from homeassistant.components.isy994 import (ISYDevice, SENSOR_NODES, PROGRAMS, ISY,
-                                             KEY_ACTIONS, KEY_STATUS)
+from homeassistant.components.isy994 import (ISYDevice, SENSOR_NODES, PROGRAMS,
+                                             ISY, KEY_STATUS, filter_nodes)
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType
+
 
 _LOGGER = logging.getLogger(__name__)
 
 VALUE_TO_STATE = {
-    0: STATE_OFF,
-    100: STATE_ON,
     False: STATE_OFF,
     True: STATE_ON,
 }
@@ -58,9 +56,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
 
 class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
-    """
-    Representation of an ISY994 binary sensor device.
-    """
+    """Representation of an ISY994 binary sensor device."""
 
     def __init__(self, node):
         """
@@ -86,13 +82,11 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
 
         :return: The state of the ISY994 binary sensor device.
         """
-        return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
+        return VALUE_TO_STATE.get(bool(self.value), STATE_UNKNOWN)
 
 
 class ISYBinarySensorProgram(ISYBinarySensorDevice):
-    """
-    Representation of an ISY994 binary sensor program.
-    """
+    """Representation of an ISY994 binary sensor program."""
 
     def __init__(self, name, node):
         """
@@ -101,7 +95,7 @@ class ISYBinarySensorProgram(ISYBinarySensorDevice):
         :param name: The name of the ISY994 binary sensor.
         :param node: The ISY994 program to get the sensor status.
         """
-        ISYDevice.__init__(self, node)
+        ISYBinarySensorDevice.__init__(self, node)
         self._name = name
 
     @property

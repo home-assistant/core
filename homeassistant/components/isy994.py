@@ -8,12 +8,14 @@ import logging
 from urllib.parse import urlparse
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant  # noqa
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, Dict  # noqa
+
 
 DOMAIN = "isy994"
 REQUIREMENTS = ['PyISY==1.0.7']
@@ -49,10 +51,11 @@ PROGRAMS = {}
 
 HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
-COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor', 'light', 'switch']
+COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor', 'light',
+              'switch']
 
 
-def filter_nodes(nodes: list, units: list=[], states: list=[]) -> list:
+def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
     """
     Filter a list of ISY nodes based on the units and states provided.
 
@@ -62,6 +65,8 @@ def filter_nodes(nodes: list, units: list=[], states: list=[]) -> list:
     :return: List of filtered Nodes.
     """
     filtered_nodes = []
+    units = units if units else []
+    states = states if states else []
     for node in nodes:
         match_unit = False
         match_state = True
@@ -81,7 +86,68 @@ def filter_nodes(nodes: list, units: list=[], states: list=[]) -> list:
     return filtered_nodes
 
 
-def setup(hass, config: ConfigType) -> bool:
+def _categorize_nodes(hidden_identifier: str, sensor_identifier: str) -> None:
+    """
+    Categorize the ISY994 nodes.
+
+    :param hidden_identifier: String to denote the node should be hidden.
+    :param sensor_identifier: String to denote teh node is a sensor.
+    :return: None.
+    """
+    import PyISY
+
+    global SENSOR_NODES
+    global NODES
+    global GROUPS
+
+    SENSOR_NODES = []
+    NODES = []
+    GROUPS = []
+
+    for (path, node) in ISY.nodes:
+        hidden = hidden_identifier in path or hidden_identifier in node.name
+        if hidden:
+            node.name += hidden_identifier
+        if sensor_identifier in path or sensor_identifier in node.name:
+            SENSOR_NODES.append(node)
+        elif isinstance(node, PyISY.Nodes.Node):
+            NODES.append(node)
+        elif isinstance(node, PyISY.Nodes.Group):
+            GROUPS.append(node)
+
+
+def _categorize_programs() -> None:
+    """
+    Categorize the ISY994 programs.
+
+    :return: None.
+    """
+    global PROGRAMS
+
+    PROGRAMS = {}
+
+    for component in COMPONENTS:
+        try:
+            folder = ISY.programs[KEY_MY_PROGRAMS][component]
+        except KeyError:
+            pass
+        else:
+            for dtype, _, node_id in folder.children:
+                if dtype is KEY_FOLDER:
+                    program = folder[node_id]
+                    try:
+                        node = program[KEY_STATUS].leaf
+                        assert node.dtype == 'program', 'Not a program'
+                    except (KeyError, AssertionError):
+                        pass
+                    else:
+                        if component not in PROGRAMS:
+                            PROGRAMS[component] = []
+                        PROGRAMS[component].append(program)
+
+
+# pylint: disable=too-many-locals
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """
     Set up the ISY 994 platform.
 
@@ -121,50 +187,14 @@ def setup(hass, config: ConfigType) -> bool:
 
     # Connect to ISY controller.
     global ISY
-    ISY = PyISY.ISY(addr, port, user, password, use_https=https,
-                    tls_ver=tls_version, log=_LOGGER)
+    ISY = PyISY.ISY(addr, port, username=user, password=password,
+                    use_https=https, tls_ver=tls_version, log=_LOGGER)
     if not ISY.connected:
         return False
 
-    global SENSOR_NODES
-    global NODES
-    global GROUPS
-    global PROGRAMS
+    _categorize_nodes(hidden_identifier, sensor_identifier)
 
-    SENSOR_NODES = []
-    NODES = []
-    GROUPS = []
-    PROGRAMS = {}
-
-    for (path, node) in ISY.nodes:
-        hidden = hidden_identifier in path or hidden_identifier in node.name
-        if hidden:
-            node.name += hidden_identifier
-        if sensor_identifier in path or sensor_identifier in node.name:
-            SENSOR_NODES.append(node)
-        elif isinstance(node, PyISY.Nodes.Node):
-            NODES.append(node)
-        elif isinstance(node, PyISY.Nodes.Group):
-            GROUPS.append(node)
-
-    for component in COMPONENTS:
-        try:
-            folder = ISY.programs[KEY_MY_PROGRAMS][component]
-        except KeyError:
-            pass
-        else:
-            for dtype, name, node_id in folder.children:
-                if dtype is KEY_FOLDER:
-                    program = folder[node_id]
-                    try:
-                        node = program[KEY_STATUS].leaf
-                        assert node.dtype == 'program', 'Not a program'
-                    except (KeyError, AssertionError):
-                        pass
-                    else:
-                        if component not in PROGRAMS:
-                            PROGRAMS[component] = []
-                        PROGRAMS[component].append(program)
+    _categorize_programs()
 
     # Listen for HA stop to disconnect.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
@@ -189,9 +219,7 @@ def stop(event: object) -> None:
 
 
 class ISYDevice(Entity):
-    """
-    Representation of an ISY994 device.
-    """
+    """Representation of an ISY994 device."""
 
     import PyISY.Nodes.node  # noqa
 
@@ -222,6 +250,7 @@ class ISYDevice(Entity):
     def on_update(self, event: object) -> None:
         """
         Handle the update event from the ISY994 Node.
+
         :param event: The event being subscribed to.
         :return: None.
         """

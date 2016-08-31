@@ -7,17 +7,14 @@ https://home-assistant.io/components/switch.isy994/
 import logging
 
 from homeassistant.components.isy994 import filter_nodes
-from homeassistant.components.light import Light, DOMAIN
-from homeassistant.components.isy994 import (ISYDevice, NODES, PROGRAMS, ISY,
-                                             KEY_ACTIONS, KEY_STATUS)
+from homeassistant.components.light import Light
+from homeassistant.components.isy994 import ISYDevice, NODES, ISY
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 VALUE_TO_STATE = {
-    0: STATE_OFF,
-    100: STATE_ON,
     False: STATE_OFF,
     True: STATE_ON,
 }
@@ -51,9 +48,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
 
 class ISYLightDevice(ISYDevice, Light):
-    """
-    Representation of an ISY994 light devie.
-    """
+    """Representation of an ISY994 light devie."""
 
     def __init__(self, node):
         """
@@ -79,7 +74,7 @@ class ISYLightDevice(ISYDevice, Light):
 
         :return: The state of the ISY994 light device.
         """
-        return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
+        return VALUE_TO_STATE.get(bool(self.value), STATE_UNKNOWN)
 
     def turn_off(self, **kwargs):
         """

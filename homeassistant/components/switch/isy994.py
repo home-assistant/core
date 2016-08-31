@@ -17,8 +17,6 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 VALUE_TO_STATE = {
-    0: STATE_OFF,
-    100: STATE_ON,
     False: STATE_OFF,
     True: STATE_ON,
 }
@@ -48,7 +46,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
         if not node.dimmable:
             devices.append(ISYSwitchDevice(node))
 
-    for node in (GROUPS):
+    for node in GROUPS:
         devices.append(ISYSwitchDevice(node))
 
     for program in PROGRAMS.get(DOMAIN, []):
@@ -65,9 +63,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
 
 class ISYSwitchDevice(ISYDevice, SwitchDevice):
-    """
-    Representation of an ISY994 switch device.
-    """
+    """Representation of an ISY994 switch device."""
 
     def __init__(self, node):
         """
@@ -93,7 +89,7 @@ class ISYSwitchDevice(ISYDevice, SwitchDevice):
 
         :return: The state of the ISY994 switch.
         """
-        return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
+        return VALUE_TO_STATE.get(bool(self.value), STATE_UNKNOWN)
 
     def turn_off(self, **kwargs):
         """
@@ -117,9 +113,7 @@ class ISYSwitchDevice(ISYDevice, SwitchDevice):
 
 
 class ISYSwitchProgram(ISYSwitchDevice):
-    """
-    A representation of an ISY994 program switch.
-    """
+    """A representation of an ISY994 program switch."""
 
     def __init__(self, name, node, actions):
         """
@@ -129,7 +123,7 @@ class ISYSwitchProgram(ISYSwitchDevice):
         :param node: The status program node.
         :param actions: The actions program node.
         """
-        ISYDevice.__init__(self, node)
+        ISYSwitchDevice.__init__(self, node)
         self._name = name
         self._actions = actions
 
