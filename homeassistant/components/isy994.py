@@ -215,9 +215,9 @@ class ISYDevice(Entity):
     def state_attributes(self) -> Dict:
         """Return the state attributes for the node."""
         attr = {}
-        for name, prop in self._attrs.items():
-            attr[name] = getattr(self, prop)
-            attr = self._attr_filter(attr)
+        if hasattr(self._node, 'aux_properties'):
+            for name, val in self._node.aux_properties.items():
+                attr[name] = '{} {}'.format(val.get('value'), val.get('uom'))
         return attr
 
     @property
