@@ -49,8 +49,6 @@ NODES = []
 GROUPS = []
 PROGRAMS = {}
 
-PYISY = None
-
 HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
 COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor', 'light',
@@ -185,9 +183,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     import PyISY
 
-    global PYISY
-    PYISY = PyISY
-
     # Connect to ISY controller.
     global ISY
     ISY = PyISY.ISY(addr, port, username=user, password=password,
@@ -228,7 +223,7 @@ class ISYDevice(Entity):
     _domain = None
     _name = None
 
-    def __init__(self, node: PYISY.Nodes.node) -> None:
+    def __init__(self, node) -> None:
         """
         Initialize the insteon device.
 
