@@ -101,8 +101,6 @@ def filename(value: Any) -> str:
     except EnvironmentError:
         raise vol.Invalid('File can not be create')
 
-    raise vol.Invalid('no valid file access')
-
 
 def ensure_list(value: Union[T, Sequence[T]]) -> List[T]:
     """Wrap value in list if it is not one."""
