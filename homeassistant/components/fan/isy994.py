@@ -10,8 +10,7 @@ from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.fan import (FanEntity, DOMAIN, ATTR_SPEED,
                                           SPEED_OFF, SPEED_LOW, SPEED_MED,
                                           SPEED_HIGH)
-from homeassistant.components.isy994 import (ISYDevice, HIDDEN_NODES,
-                                             VISIBLE_NODES, PROGRAMS, ISY,
+from homeassistant.components.isy994 import (ISYDevice, NODES, PROGRAMS, ISY,
                                              KEY_ACTIONS, KEY_STATUS)
 from homeassistant.const import STATE_UNKNOWN, STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
@@ -21,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 VALUE_TO_STATE = {
     0: SPEED_OFF,
     63: SPEED_LOW,
+    64: SPEED_LOW,
+    190: SPEED_MED,
     191: SPEED_MED,
     255: SPEED_HIGH,
 }
@@ -40,7 +41,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
     devices = []
 
-    for node in filter_nodes(HIDDEN_NODES + VISIBLE_NODES, states=STATES):
+    for node in filter_nodes(NODES, states=STATES):
         devices.append(ISYFanDevice(node))
 
     for program in PROGRAMS.get(DOMAIN, []):

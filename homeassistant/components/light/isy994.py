@@ -1,59 +1,72 @@
 """
-Support for ISY994 lights.
+Support for ISY994 switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/isy994/
+https://home-assistant.io/components/switch.isy994/
 """
 import logging
 
-from homeassistant.components.isy994 import (
-    HIDDEN_STRING, ISY, SENSOR_STRING, ISYDeviceABC)
-from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            ATTR_SUPPORTED_FEATURES,
-                                            SUPPORT_BRIGHTNESS)
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.isy994 import filter_nodes
+from homeassistant.components.light import Light, DOMAIN
+from homeassistant.components.isy994 import (ISYDevice, NODES, PROGRAMS, ISY,
+                                             KEY_ACTIONS, KEY_STATUS)
+from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN
+from homeassistant.helpers.typing import ConfigType
 
-SUPPORT_ISY994 = SUPPORT_BRIGHTNESS
+_LOGGER = logging.getLogger(__name__)
+
+VALUE_TO_STATE = {
+    0: STATE_OFF,
+    100: STATE_ON,
+    False: STATE_OFF,
+    True: STATE_ON,
+}
+
+UOM = ['2', '78']
+STATES = [STATE_OFF, STATE_ON, 'true', 'false']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ISY994 platform."""
-    logger = logging.getLogger(__name__)
-    devs = []
+def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
+    """Setup the ISY platform."""
 
     if ISY is None or not ISY.connected:
-        logger.error('A connection has not been made to the ISY controller.')
+        _LOGGER.error('A connection has not been made to the ISY controller.')
         return False
 
-    # Import dimmable nodes
-    for (path, node) in ISY.nodes:
-        if node.dimmable and SENSOR_STRING not in node.name:
-            if HIDDEN_STRING in path:
-                node.name += HIDDEN_STRING
-            devs.append(ISYLightDevice(node))
+    devices = []
 
-    add_devices(devs)
+    for node in filter_nodes(NODES, units=UOM,
+                             states=STATES):
+        if node.dimmable:
+            devices.append(ISYLightDevice(node))
+
+    add_devices(devices)
 
 
-class ISYLightDevice(ISYDeviceABC):
-    """Representation of a ISY light."""
+class ISYLightDevice(ISYDevice, Light):
+    """Representation of a ISY switch."""
 
-    _domain = 'light'
-    _dtype = 'analog'
-    _attrs = {
-        ATTR_BRIGHTNESS: 'value',
-        ATTR_SUPPORTED_FEATURES: 'supported_features',
-    }
-    _onattrs = [ATTR_BRIGHTNESS]
-    _states = [STATE_ON, STATE_OFF]
+    def __init__(self, node):
+        """Initialize the binary sensor."""
+        ISYDevice.__init__(self, node)
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_ISY994
+    def is_on(self) -> bool:
+        """Return true if device is locked."""
+        return self.state == STATE_ON
 
-    def _attr_filter(self, attr):
-        """Filter brightness out of entity while off."""
-        if ATTR_BRIGHTNESS in attr and not self.is_on:
-            del attr[ATTR_BRIGHTNESS]
-        return attr
+    @property
+    def state(self) -> str:
+        """Return the state of the device."""
+        return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
+
+    def turn_off(self, **kwargs):
+        """Turn off the switch."""
+        if not self._node.fastOff():
+            _LOGGER.debug('Unable to turn on switch.')
+
+    def turn_on(self, **kwargs):
+        """Turn on the switch."""
+        brightness = kwargs.get('brightness', 100)
+        if not self._node.on(val=brightness):
+            _LOGGER.debug('Unable to turn on switch.')

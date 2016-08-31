@@ -8,8 +8,8 @@ import logging
 
 from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.lock import LockDevice, DOMAIN
-from homeassistant.components.isy994 import (ISYDevice, HIDDEN_NODES,
-                                             VISIBLE_NODES, PROGRAMS, ISY,
+from homeassistant.components.isy994 import (ISYDevice, NODES,
+                                             PROGRAMS, ISY,
                                              KEY_ACTIONS, KEY_STATUS)
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType
@@ -34,7 +34,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
     devices = []
 
-    for node in filter_nodes(HIDDEN_NODES + VISIBLE_NODES, units=UOM,
+    for node in filter_nodes(NODES, units=UOM,
                              states=STATES):
         devices.append(ISYLockDevice(node))
 

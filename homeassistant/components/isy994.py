@@ -43,13 +43,13 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SENSOR_NODES = []
-HIDDEN_NODES = []
-VISIBLE_NODES = []
+NODES = []
+GROUPS = []
 PROGRAMS = {}
 
 HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
-COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor']
+COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor', 'light', 'switch']
 # '('binary_sensor', 'climate', 'cover', 'fan', 'light',
 #                       'lock', 'sensor')
 
@@ -119,24 +119,25 @@ def setup(hass, config: ConfigType) -> bool:
         return False
 
     global SENSOR_NODES
-    global HIDDEN_NODES
-    global VISIBLE_NODES
+    global NODES
+    global GROUPS
     global PROGRAMS
 
     SENSOR_NODES = []
-    HIDDEN_NODES = []
-    VISIBLE_NODES = []
+    NODES = []
+    GROUPS = []
     PROGRAMS = {}
 
     for (path, node) in ISY.nodes:
-        if not isinstance(node, PyISY.Nodes.Node):
-            continue
+        hidden = hidden_identifier in path or hidden_identifier in node.name
+        if hidden:
+            node.name += hidden_identifier
         if sensor_identifier in path or sensor_identifier in node.name:
             SENSOR_NODES.append(node)
-        elif hidden_identifier in path or hidden_identifier in node.name:
-            HIDDEN_NODES.append(node)
-        else:
-            VISIBLE_NODES.append(node)
+        elif isinstance(node, PyISY.Nodes.Node):
+            NODES.append(node)
+        elif isinstance(node, PyISY.Nodes.Group):
+            GROUPS.append(node)
 
     for component in COMPONENTS:
         try:

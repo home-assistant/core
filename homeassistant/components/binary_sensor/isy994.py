@@ -8,8 +8,7 @@ import logging
 
 from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
-from homeassistant.components.isy994 import (ISYDevice, HIDDEN_NODES,
-                                             SENSOR_NODES, PROGRAMS, ISY,
+from homeassistant.components.isy994 import (ISYDevice, SENSOR_NODES, PROGRAMS, ISY,
                                              KEY_ACTIONS, KEY_STATUS)
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType
@@ -36,7 +35,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 
     devices = []
 
-    for node in filter_nodes(HIDDEN_NODES + SENSOR_NODES, units=UOM,
+    for node in filter_nodes(SENSOR_NODES, units=UOM,
                              states=STATES):
         devices.append(ISYBinarySensorDevice(node))
 
