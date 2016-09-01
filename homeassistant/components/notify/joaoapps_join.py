@@ -7,7 +7,7 @@ https://home-assistant.io/components/notify.join/
 import logging
 import voluptuous as vol
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TITLE, BaseNotificationService)
+    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService)
 from homeassistant.const import CONF_PLATFORM, CONF_NAME, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
@@ -52,7 +52,7 @@ class JoinNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         from pyjoin import send_notification
-        title = kwargs.get(ATTR_TITLE)
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA) or {}
         send_notification(device_id=self._device_id,
                           text=message,
