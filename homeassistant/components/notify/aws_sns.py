@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_PLATFORM, CONF_NAME)
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TARGET, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_TARGET, BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ["boto3==1.3.1"]
@@ -76,5 +76,6 @@ class AWSSNS(BaseNotificationService):
                               for k, v in kwargs.items() if v}
         for target in targets:
             self.client.publish(TargetArn=target, Message=message,
-                                Subject=kwargs.get(ATTR_TITLE),
+                                Subject=kwargs.get(ATTR_TITLE,
+                                                   ATTR_TITLE_DEFAULT),
                                 MessageAttributes=message_attributes)

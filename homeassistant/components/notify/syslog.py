@@ -7,7 +7,7 @@ https://home-assistant.io/components/notify.syslog/
 import logging
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, DOMAIN, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN, BaseNotificationService)
 from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +80,7 @@ class SyslogNotificationService(BaseNotificationService):
         """Send a message to a user."""
         import syslog
 
-        title = kwargs.get(ATTR_TITLE)
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         syslog.openlog(title, self._option, self._facility)
         syslog.syslog(self._priority, message)

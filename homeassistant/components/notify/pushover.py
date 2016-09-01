@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TARGET, ATTR_DATA, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_TARGET, ATTR_DATA,
+    BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
@@ -56,7 +57,7 @@ class PushoverNotificationService(BaseNotificationService):
         # Make a copy and use empty dict if necessary
         data = dict(kwargs.get(ATTR_DATA) or {})
 
-        data['title'] = kwargs.get(ATTR_TITLE)
+        data['title'] = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         target = kwargs.get(ATTR_TARGET)
         if target is not None:
