@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_PROTOCOL = 'protocol'
 
-DEFAULT_HOST= '127.0.0.1'
+DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 5000
 DOMAIN = 'pilight'
 
