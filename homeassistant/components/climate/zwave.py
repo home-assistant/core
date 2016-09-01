@@ -12,7 +12,6 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.zwave import (
     ATTR_NODE_ID, ATTR_VALUE_ID, ZWaveDeviceEntity)
 from homeassistant.components import zwave
-from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 _LOGGER = logging.getLogger(__name__)
 
