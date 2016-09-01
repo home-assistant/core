@@ -106,10 +106,20 @@ class TelegramNotificationService(BaseNotificationService):
         elif data is not None and ATTR_DOCUMENT in data:
             return self.send_document(data.get(ATTR_DOCUMENT))
 
+        text = ''
+
+        if title:
+            text = '{} {}'.format(title, message)
+        else:
+            text = message
+
+        parse_mode = telegram.parsemode.ParseMode.MARKDOWN
+
         # send message
         try:
             self.bot.sendMessage(chat_id=self._chat_id,
-                                 text=title + "  " + message)
+                                 text=text,
+                                 parse_mode=parse_mode)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending message.")
             return

@@ -10,7 +10,7 @@ import logging
 import requests
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, DOMAIN, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import validate_config
 
@@ -70,7 +70,7 @@ class InstapushNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        title = kwargs.get(ATTR_TITLE)
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = {"event": self._event,
                 "trackers": {self._tracker: title + " : " + message}}
 
