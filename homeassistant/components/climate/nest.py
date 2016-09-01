@@ -8,13 +8,12 @@ import voluptuous as vol
 
 import homeassistant.components.nest as nest
 from homeassistant.components.climate import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice)
-from homeassistant.const import TEMP_CELSIUS, CONF_PLATFORM, CONF_SCAN_INTERVAL
+    STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+from homeassistant.const import TEMP_CELSIUS, CONF_SCAN_INTERVAL
 
 DEPENDENCIES = ['nest']
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): nest.DOMAIN,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
 })
