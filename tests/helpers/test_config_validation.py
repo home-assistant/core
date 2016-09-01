@@ -96,7 +96,7 @@ def test_filename():
 
 def test_isdir():
     """Validate that the value is an existing folder."""
-    schema = vol.Schema(cv.isfile)
+    schema = vol.Schema(cv.isdir)
 
     for value in ('invalid', None, -1, 0, 80000, '/fhadh/djd'):
         with pytest.raises(vol.Invalid):
@@ -108,7 +108,7 @@ def test_isdir():
 
 def test_dirname():
     """Validate if folder is writeable."""
-    schema = vol.Schema(cv.filename)
+    schema = vol.Schema(cv.dirname)
 
     for value in (None, '/fhadh/djd'):
         with pytest.raises(vol.Invalid):
