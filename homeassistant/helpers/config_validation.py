@@ -1,5 +1,6 @@
 """Helpers for config validation using voluptuous."""
 from datetime import timedelta
+import os
 from urllib.parse import urlparse
 
 from typing import Any, Union, TypeVar, Callable, Sequence, List, Dict
@@ -65,9 +66,17 @@ def boolean(value: Any) -> bool:
     return bool(value)
 
 
-def isfile(value):
+def isfile(value: Any) -> str:
     """Validate that the value is an existing file."""
-    return vol.IsFile('not a file')(value)
+    if value is None:
+        raise vol.Invalid('None is not file')
+    file_in = str(value)
+
+    if not os.path.isfile(file_in):
+        raise vol.Invalid('not a file')
+    if not os.access(file_in, os.R_OK):
+        raise vol.Invalid('file not readable')
+    return file_in
 
 
 def ensure_list(value: Union[T, Sequence[T]]) -> List[T]:
