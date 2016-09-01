@@ -11,7 +11,7 @@ import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
 from homeassistant.components.notify import (
-    ATTR_TITLE, PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_FILENAME
 import homeassistant.helpers.config_validation as cv
 
@@ -47,7 +47,7 @@ class FileNotificationService(BaseNotificationService):
         with open(self.filepath, 'a') as file:
             if os.stat(self.filepath).st_size == 0:
                 title = '{} notifications (Log started: {})\n{}\n'.format(
-                    kwargs.get(ATTR_TITLE),
+                    kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
                     dt_util.utcnow().isoformat(),
                     '-' * 80)
                 file.write(title)

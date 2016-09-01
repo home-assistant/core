@@ -7,7 +7,7 @@ https://home-assistant.io/components/notify.xmpp/
 import logging
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, DOMAIN, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN, BaseNotificationService)
 from homeassistant.helpers import validate_config
 
 REQUIREMENTS = ['sleekxmpp==1.3.1',
@@ -45,7 +45,7 @@ class XmppNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        title = kwargs.get(ATTR_TITLE)
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = "{}: {}".format(title, message) if title else message
 
         send_message(self._sender + '/home-assistant', self._password,

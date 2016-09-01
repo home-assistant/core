@@ -7,7 +7,7 @@ https://home-assistant.io/components/notify.pushbullet/
 import logging
 
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, BaseNotificationService)
+    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ class PushBulletNotificationService(BaseNotificationService):
         call which doesn't require a push object.
         """
         targets = kwargs.get(ATTR_TARGET)
-        title = kwargs.get(ATTR_TITLE)
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         refreshed = False
 
         if not targets:

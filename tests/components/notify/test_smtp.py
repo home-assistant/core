@@ -37,7 +37,7 @@ class TestNotifySmtp(unittest.TestCase):
         expected = ('Content-Type: text/plain; charset="us-ascii"\n'
                     'MIME-Version: 1.0\n'
                     'Content-Transfer-Encoding: 7bit\n'
-                    'Subject: \n'
+                    'Subject: Home Assistant\n'
                     'To: testrecip@test.com\n'
                     'From: test@test.com\n'
                     'X-Mailer: HomeAssistant\n'

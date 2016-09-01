@@ -8,7 +8,7 @@ import logging
 import os
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService)
 
 REQUIREMENTS = ['gntp==1.0.3']
 
@@ -59,5 +59,6 @@ class GNTPNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        self.gntp.notify(noteType="Notification", title=kwargs.get(ATTR_TITLE),
+        self.gntp.notify(noteType="Notification",
+                         title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
                          description=message)

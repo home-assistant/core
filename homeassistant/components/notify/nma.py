@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 import requests
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, DOMAIN, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import validate_config
 
@@ -49,7 +49,7 @@ class NmaNotificationService(BaseNotificationService):
         data = {
             "apikey": self._api_key,
             "application": 'home-assistant',
-            "event": kwargs.get(ATTR_TITLE),
+            "event": kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
             "description": message,
             "priority": 0,
         }
