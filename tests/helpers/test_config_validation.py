@@ -117,7 +117,7 @@ def test_dirname():
     with tempfile.TemporaryDirectory() as tmp_path:
         assert schema(tmp_path)
 
-    assert schema(os.path.join(os.path.expanduser("~"))
+    assert schema(os.path.join(os.path.expanduser("~")))
     assert schema("download")
 
 

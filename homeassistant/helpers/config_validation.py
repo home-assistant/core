@@ -1,7 +1,6 @@
 """Helpers for config validation using voluptuous."""
 from datetime import timedelta
 import os
-import re
 import tempfile
 from urllib.parse import urlparse
 
