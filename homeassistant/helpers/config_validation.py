@@ -1,5 +1,7 @@
 """Helpers for config validation using voluptuous."""
 from datetime import timedelta
+import os
+import tempfile
 from urllib.parse import urlparse
 
 from typing import Any, Union, TypeVar, Callable, Sequence, List, Dict
@@ -65,9 +67,66 @@ def boolean(value: Any) -> bool:
     return bool(value)
 
 
-def isfile(value):
+def isfile(value: Any) -> str:
     """Validate that the value is an existing file."""
-    return vol.IsFile('not a file')(value)
+    if value is None:
+        raise vol.Invalid('None is not file')
+    file_in = str(value)
+
+    if not os.path.isfile(file_in) or not os.access(file_in, os.R_OK):
+        raise vol.Invalid('not a file')
+    return file_in
+
+
+def filename(value: Any) -> str:
+    """Validate if file is writeable and can be created."""
+    if value is None:
+        raise vol.Invalid('None is not file')
+    file_in = str(value)
+    (path, name) = os.path.split(file_in)
+
+    # if use HA config directory
+    if not path:
+        return file_in
+    if not name or os.path.isdir(file_in):
+        raise vol.Invalid('None is not file')
+    # file exists, control access
+    if os.path.isfile(file_in) and os.access(file_in, os.R_OK | os.W_OK):
+        return file_in
+    # check if HA can create a new file at this location
+    try:
+        with tempfile.TemporaryFile(dir=path):
+            return file_in
+    except EnvironmentError:
+        raise vol.Invalid('File can not be create')
+
+
+def isdir(value: Any) -> str:
+    """Validate that the value is an existing folder."""
+    if value is None:
+        raise vol.Invalid('None is not folder')
+    dir_in = str(value)
+
+    if not os.path.isdir(dir_in) or not os.access(dir_in, os.R_OK):
+        raise vol.Invalid('not a folder')
+    return dir_in
+
+
+def dirname(value: Any) -> str:
+    """Validate if folder is writeable."""
+    if value is None:
+        raise vol.Invalid('None is not folder')
+    dir_in = str(value)
+
+    # if use HA config directory / relative path
+    if not os.path.isabs(dir_in):
+        return dir_in
+    # check if HA can create a new file at this location
+    try:
+        with tempfile.TemporaryFile(dir=dir_in):
+            return dir_in
+    except EnvironmentError:
+        raise vol.Invalid('Folder have no write access')
 
 
 def ensure_list(value: Union[T, Sequence[T]]) -> List[T]:
