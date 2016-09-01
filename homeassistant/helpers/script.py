@@ -7,7 +7,7 @@ from typing import Optional, Sequence
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
-from homeassistant.const import EVENT_TIME_CHANGED, CONF_CONDITION
+from homeassistant.const import CONF_CONDITION
 from homeassistant.helpers import (
     service, condition, template, config_validation as cv)
 from homeassistant.helpers.event import track_point_in_utc_time
@@ -47,7 +47,7 @@ class Script():
         self.can_cancel = any(CONF_DELAY in action for action
                               in self.sequence)
         self._lock = threading.Lock()
-        self._delay_listener = None
+        self._unsub_delay_listener = None
 
     @property
     def is_running(self) -> bool:
@@ -72,7 +72,7 @@ class Script():
                     # Call ourselves in the future to continue work
                     def script_delay(now):
                         """Called after delay is done."""
-                        self._delay_listener = None
+                        self._unsub_delay_listener = None
                         self.run(variables)
 
                     delay = action[CONF_DELAY]
@@ -83,7 +83,7 @@ class Script():
                             cv.positive_timedelta)(
                                 template.render(self.hass, delay))
 
-                    self._delay_listener = track_point_in_utc_time(
+                    self._unsub_delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
                         date_util.utcnow() + delay)
                     self._cur = cur + 1
@@ -139,10 +139,9 @@ class Script():
 
     def _remove_listener(self):
         """Remove point in time listener, if any."""
-        if self._delay_listener:
-            self.hass.bus.remove_listener(EVENT_TIME_CHANGED,
-                                          self._delay_listener)
-            self._delay_listener = None
+        if self._unsub_delay_listener:
+            self._unsub_delay_listener()
+            self._unsub_delay_listener = None
 
     def _log(self, msg):
         """Logger helper."""

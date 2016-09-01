@@ -39,5 +39,4 @@ def trigger(hass, config, action):
                 },
             })
 
-    hass.bus.listen(event_type, handle_event)
-    return True
+    return hass.bus.listen(event_type, handle_event)

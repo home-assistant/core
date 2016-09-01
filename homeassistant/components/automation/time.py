@@ -47,7 +47,5 @@ def trigger(hass, config, action):
             },
         })
 
-    track_time_change(hass, time_automation_listener,
-                      hour=hours, minute=minutes, second=seconds)
-
-    return True
+    return track_time_change(hass, time_automation_listener,
+                             hour=hours, minute=minutes, second=seconds)

@@ -50,6 +50,12 @@ class TestAutomationMQTT(unittest.TestCase):
         self.assertEqual('mqtt - test-topic - test_payload',
                          self.calls[0].data['some'])
 
+        automation.turn_off(self.hass)
+        self.hass.pool.block_till_done()
+        fire_mqtt_message(self.hass, 'test-topic', 'test_payload')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_if_fires_on_topic_and_payload_match(self):
         """Test if message is fired on topic and payload match."""
         assert _setup_component(self.hass, automation.DOMAIN, {
