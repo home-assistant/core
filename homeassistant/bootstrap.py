@@ -130,6 +130,7 @@ def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
 def prepare_setup_component(hass: core.HomeAssistant, config: dict,
                             domain: str):
     """Prepare setup of a component and return processed config."""
+    # pylint: disable=too-many-return-statements
     component = loader.get_component(domain)
     missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
                     if dep not in hass.config.components]
