@@ -16,12 +16,13 @@ from homeassistant.util import Throttle
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 
 
-REQUIREMENTS = ['miflora==0.1.4']
+REQUIREMENTS = ['miflora==0.1.5']
 
 LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=900)
 CONF_MAC = 'mac'
 CONF_FORCE_UPDATE = 'force_update'
+CONF_MEDIAN = 'median'
 DEFAULT_NAME = 'Mi Flora'
 
 # Sensor types are defined like: Name, units
@@ -37,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_MEDIAN, default=3): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=False): cv.boolean,
 })
 
@@ -47,6 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     poller = miflora_poller.MiFloraPoller(config.get(CONF_MAC))
     force_update = config.get(CONF_FORCE_UPDATE)
+    median = config.get(CONF_MEDIAN)
 
     devs = []
 
@@ -61,8 +64,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         devs.append(MiFloraSensor(poller,
                                   parameter,
-                                  name, unit,
-                                  force_update))
+                                  name,
+                                  unit,
+                                  force_update,
+                                  median))
 
     add_devices(devs)
 
@@ -71,7 +76,7 @@ class MiFloraSensor(Entity):
     """Implementing the MiFlora sensor."""
 
 # pylint: disable=too-many-instance-attributes,too-many-arguments
-    def __init__(self, poller, parameter, name, unit, force_update):
+    def __init__(self, poller, parameter, name, unit, force_update, median=3):
         """Initialize the sensor."""
         self.poller = poller
         self.parameter = parameter
@@ -83,7 +88,7 @@ class MiFloraSensor(Entity):
         # Median is used to filter out outliers. median of 3 will filter
         # single outliers, while  median of 5 will filter double outliers
         # Use median_count = 1 if no filtering is required.
-        self.median_count = 3
+        self.median_count = median
 
     @property
     def name(self):
@@ -115,13 +120,21 @@ class MiFloraSensor(Entity):
         try:
             data = self.poller.parameter_value(self.parameter)
         except IOError:
+            data = None
             return
 
         if data:
             LOGGER.debug("%s = %s", self.name, data)
             self.data.append(data)
         else:
-            LOGGER.debug("Did not receive any data for %s", self.name)
+            LOGGER.info("Did not receive any data from Mi Flora sensor %s",
+                        self.name)
+            # Remove old data from median list or set sensor value to None
+            # if no data is available anymore
+            if len(self.data) > 0:
+                self.data = self.data[1:]
+            else:
+                self._state = None
             return
 
         LOGGER.debug("Data collected: %s", self.data)
