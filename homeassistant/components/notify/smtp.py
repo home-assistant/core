@@ -28,10 +28,10 @@ CONF_DEBUG = 'debug'
 CONF_SERVER = 'server'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RECIPIENT): cv.string,
+    vol.Required(CONF_RECIPIENT): vol.Email,
     vol.Optional(CONF_SERVER, default='localhost'): cv.string,
     vol.Optional(CONF_PORT, default=25): cv.port,
-    vol.Optional(CONF_SENDER): cv.string,
+    vol.Optional(CONF_SENDER): vol.Email,
     vol.Optional(CONF_STARTTLS, default=False): cv.boolean,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
