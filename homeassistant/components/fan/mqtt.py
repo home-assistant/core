@@ -32,6 +32,12 @@ CONF_OSCILLATION_COMMAND_TOPIC = 'oscillation_command_topic'
 CONF_OSCILLATION_VALUE_TEMPLATE = 'oscillation_value_template'
 CONF_PAYLOAD_ON = 'payload_on'
 CONF_PAYLOAD_OFF = 'payload_off'
+CONF_PAYLOAD_OSCILLATION_ON = 'payload_oscillation_on'
+CONF_PAYLOAD_OSCILLATION_OFF = 'payload_oscillation_off'
+CONF_PAYLOAD_LOW_SPEED = 'payload_low_speed'
+CONF_PAYLOAD_MEDIUM_SPEED = 'payload_medium_speed'
+CONF_PAYLOAD_HIGH_SPEED = 'payload_high_speed'
+CONF_SPEED_LIST = 'speeds'
 
 DEFAULT_NAME = 'MQTT Fan'
 DEFAULT_PAYLOAD_ON = 'ON'
@@ -49,6 +55,12 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_OSCILLATION_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_PAYLOAD_OSCILLATION_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
+    vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MED): cv.string,
+    vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
+    vol.Optional(CONF_SPEED_LIST, default=[SPEED_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]): cv.ensure_list,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
 })
 
@@ -79,7 +91,13 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         {
             'on': config[CONF_PAYLOAD_ON],
             'off': config[CONF_PAYLOAD_OFF],
+            'oscillate_on': config[CONF_PAYLOAD_OSCILLATION_ON],
+            'oscillate_off': config[CONF_PAYLOAD_OSCILLATION_OFF],
+            'low': config[CONF_PAYLOAD_LOW_SPEED],
+            'medium': config[CONF_PAYLOAD_MEDIUM_SPEED],
+            'high': config[CONF_PAYLOAD_HIGH_SPEED],
         },
+        config[CONF_SPEED_LIST],
         config[CONF_OPTIMISTIC],
     )])
 
@@ -88,7 +106,7 @@ class MqttFan(FanEntity):
     """A MQTT fan component."""
 
     def __init__(self, hass, name, topic, templates, qos, retain, payload,
-                 optimistic):
+                 speed_list, optimistic):
         """Initialize MQTT fan."""
         self._hass = hass
         self._name = name
@@ -96,6 +114,7 @@ class MqttFan(FanEntity):
         self._qos = qos
         self._retain = retain
         self._payload = payload
+        self._speed_list = speed_list
         self._optimistic = optimistic or topic["state_topic"] is None
         self._optimistic_oscillation = (optimistic or topic["oscillation_state_topic"] is None)
         self._optimistic_speed = (optimistic or topic["speed_state_topic"] is None)
@@ -126,7 +145,13 @@ class MqttFan(FanEntity):
 
         def speed_received(topic, payload, qos):
             """A new MQTT message for the speed has been received."""
-            self._speed = templates['speed'](payload)
+            payload = templates['speed'](payload)
+            if payload == self._payload["low"]:
+                self._speed = SPEED_LOW
+            elif payload == self._payload["medium"]:
+                self._speed = SPEED_MED
+            elif payload == self._payload["high"]:
+                self._speed = SPEED_HIGH
             self.update_ha_state()
 
         if self._topic["speed_state_topic"] is not None:
@@ -140,7 +165,11 @@ class MqttFan(FanEntity):
 
         def oscillation_received(topic, payload, qos):
             """A new MQTT message has been received."""
-            self._oscillation = bool(templates['oscillation'](payload))
+            payload = templates['oscillation'](payload)
+            if payload == self._payload["oscillate_on"]:
+                self._oscillation = True
+            elif payload == self._payload["oscillate_off"]:
+                self._oscillation = False
             self.update_ha_state()
 
         if self._topic["oscillation_state_topic"] is not None:
@@ -175,16 +204,28 @@ class MqttFan(FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return [SPEED_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]
+        return self._speed_list
 
-    def turn_on(self, brightness: str, speed: str=SPEED_MED) -> None:
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return self._supported_features
+
+    @property
+    def speed(self):
+        """Return the current speed."""
+        return self._speed
+
+    @property
+    def oscillating(self):
+        """Return the current speed."""
+        return self._oscillation
+
+    def turn_on(self, speed: str=SPEED_MED) -> None:
         """Turn on the entity."""
         mqtt.publish(self._hass, self._topic["command_topic"],
                      self._payload["on"], self._qos, self._retain)
-        if brightness is not None:
-            self.set_speed(self.map_brightness_to_speed(int(brightness)))
-        else:
-            self.set_speed(speed)
+        self.set_speed(speed)
 
     def turn_off(self) -> None:
         """Turn off the entity."""
@@ -194,9 +235,18 @@ class MqttFan(FanEntity):
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         if self._topic["speed_command_topic"] is not None:
+            mqtt_payload = SPEED_OFF
+            if speed == SPEED_LOW:
+                mqtt_payload = self._payload["low"]
+            elif speed == SPEED_MED:
+                mqtt_payload = self._payload["medium"]
+            elif speed == SPEED_HIGH:
+                mqtt_payload = self._payload["high"]
+            else:
+                mqtt_payload = speed
             self._speed = speed
             mqtt.publish(self._hass, self._topic["speed_command_topic"],
-                         self._speed, self._qos, self._retain)
+                         mqtt_payload, self._qos, self._retain)
             self.update_ha_state()
 
     def oscillate(self, oscillating: bool) -> None:
@@ -206,17 +256,3 @@ class MqttFan(FanEntity):
             mqtt.publish(self._hass, self._topic["oscillation_command_topic"],
                          self._oscillation, self._qos, self._retain)
             self.update_ha_state()
-
-    def map_brightness_to_speed(self, brightness: int):
-        """Map a 0-255 brightness value to speed."""
-        if brightness > 0 and brightness < 85:
-            return SPEED_LOW
-        elif brightness > 85 and brightness < 170:
-            return SPEED_MED
-        elif brightness > 170 and brightness < 255:
-            return SPEED_HIGH
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
