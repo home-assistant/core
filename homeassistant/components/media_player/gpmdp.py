@@ -8,6 +8,7 @@ import logging
 import json
 import os
 import socket
+import time
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
@@ -214,6 +215,7 @@ class GPMDP(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the player."""
+        time.sleep(1)
         playstate = self.send_gpmdp_msg('playback', 'getPlaybackState')
         if playstate is None:
             return
