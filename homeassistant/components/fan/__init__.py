@@ -45,8 +45,6 @@ ATTR_SPEED = 'speed'
 ATTR_SPEED_LIST = 'speed_list'
 ATTR_OSCILLATING = 'oscillating'
 
-ATTR_FAKE_BRIGHTNESS = 'brightness'
-
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
     'speed_list': ATTR_SPEED_LIST,
@@ -61,8 +59,7 @@ FAN_SET_SPEED_SCHEMA = vol.Schema({
 
 FAN_TURN_ON_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Exclusive(ATTR_SPEED, 'speed'): cv.string,
-    vol.Exclusive(ATTR_FAKE_BRIGHTNESS, 'speed'): cv.string
+    vol.Optional(ATTR_SPEED): cv.string
 })  # type: dict
 
 FAN_TURN_OFF_SCHEMA = vol.Schema({
@@ -168,8 +165,6 @@ def setup(hass, config: dict) -> None:
 
         if service_fun:
             for fan in target_fans:
-                if params.get(ATTR_FAKE_BRIGHTNESS) is not None:
-                    params[ATTR_SPEED] = params.get(ATTR_FAKE_BRIGHTNESS)
                 getattr(fan, service_fun)(**params)
 
             for fan in target_fans:
