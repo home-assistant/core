@@ -102,6 +102,34 @@ def filename(value: Any) -> str:
         raise vol.Invalid('File can not be create')
 
 
+def isdir(value: Any) -> str:
+    """Validate that the value is an existing folder."""
+    if value is None:
+        raise vol.Invalid('None is not folder')
+    dir_in = str(value)
+
+    if not os.path.isdir(dir_in) or not os.access(dir_in, os.R_OK):
+        raise vol.Invalid('not a folder')
+    return dir_in
+
+
+def dirname(value: Any) -> str:
+    """Validate if folder is writeable."""
+    if value is None:
+        raise vol.Invalid('None is not folder')
+    dir_in = str(value)
+
+    # if use HA config directory / relative path
+    if not os.path.isabs(dir_in):
+        return dir_in
+    # check if HA can create a new file at this location
+    try:
+        with tempfile.TemporaryFile(dir=dir_in):
+            return dir_in
+    except EnvironmentError:
+        raise vol.Invalid('Folder have no write access')
+
+
 def ensure_list(value: Union[T, Sequence[T]]) -> List[T]:
     """Wrap value in list if it is not one."""
     return value if isinstance(value, list) else [value]
@@ -297,19 +325,6 @@ def url(value: Any) -> str:
         return vol.Schema(vol.Url())(url_in)
 
     raise vol.Invalid('invalid url')
-
-
-def email(value: Any) -> str:
-    """Validate an email address."""
-    email_in = str(value)
-    email_re = re.match(
-        r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-\.]+$)",
-        email_in
-    )
-
-    if email_re is None:
-        raise vol.Invalid('invalid email')
-    return email_in
 
 
 # Validator helpers

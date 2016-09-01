@@ -77,7 +77,7 @@ def test_isfile():
 
 
 def test_filename():
-    """Validate if file is reade/writeable and could be create (platform)."""
+    """Validate if file is writeable and can be created."""
     schema = vol.Schema(cv.filename)
 
     for value in (None, '/fhadh/djd/test.txt', os.getcwd()):
@@ -94,18 +94,31 @@ def test_filename():
     assert schema("test.txt")
 
 
-def test_email():
-    """Test email address."""
-    schema = vol.Schema(cv.email)
+def test_isdir():
+    """Validate that the value is an existing folder."""
+    schema = vol.Schema(cv.isfile)
 
-    for value in ('invalid', None, -1, 0, 'example@test@balue',
-                  'test example@email.com'):
+    for value in ('invalid', None, -1, 0, 80000, '/fhadh/djd'):
         with pytest.raises(vol.Invalid):
             schema(value)
 
-    for value in ('example@example.com', 'info@home-assistant.io',
-                  'test@localhost'):
-        assert schema(value)
+    with tempfile.TemporaryDirectory() as tmp_path:
+        assert schema(tmp_path)
+
+
+def test_dirname():
+    """Validate if folder is writeable."""
+    schema = vol.Schema(cv.filename)
+
+    for value in (None, '/fhadh/djd'):
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    with tempfile.TemporaryDirectory() as tmp_path:
+        assert schema(tmp_path)
+
+    assert schema(os.path.join(os.path.expanduser("~"))
+    assert schema("download")
 
 
 def test_url():
