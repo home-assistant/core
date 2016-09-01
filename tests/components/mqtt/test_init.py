@@ -149,7 +149,7 @@ class TestMQTT(unittest.TestCase):
 
     def test_subscribe_topic(self):
         """Test the subscription of a topic."""
-        mqtt.subscribe(self.hass, 'test-topic', self.record_calls)
+        unsub = mqtt.subscribe(self.hass, 'test-topic', self.record_calls)
 
         fire_mqtt_message(self.hass, 'test-topic', 'test-payload')
 
@@ -157,6 +157,13 @@ class TestMQTT(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
         self.assertEqual('test-topic', self.calls[0][0])
         self.assertEqual('test-payload', self.calls[0][1])
+
+        unsub()
+
+        fire_mqtt_message(self.hass, 'test-topic', 'test-payload')
+
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
 
     def test_subscribe_topic_not_match(self):
         """Test if subscribed topic is not a match."""

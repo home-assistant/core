@@ -297,6 +297,12 @@ class EventBus(object):
             else:
                 self._listeners[event_type] = [listener]
 
+        def remove_listener():
+            """Remove the listener."""
+            self.remove_listener(event_type, listener)
+
+        return remove_listener
+
     def listen_once(self, event_type, listener):
         """Listen once for event of a specific type.
 
