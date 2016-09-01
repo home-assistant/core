@@ -4,19 +4,26 @@ Allow to setup simple automation rules via the config file.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/automation/
 """
+from functools import partial
 import logging
 
 import voluptuous as vol
 
 from homeassistant.bootstrap import prepare_setup_platform
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
+    SERVICE_TOGGLE)
 from homeassistant.components import logbook
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import get_platform
+from homeassistant.util.dt import utcnow
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'automation'
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 DEPENDENCIES = ['group']
 
@@ -35,6 +42,10 @@ DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 
 METHOD_TRIGGER = 'trigger'
 METHOD_IF_ACTION = 'if_action'
+
+ATTR_LAST_TRIGGERED = 'last_triggered'
+ATTR_VARIABLES = 'variables'
+SERVICE_TRIGGER = 'trigger'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,39 +99,169 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
     vol.Required(CONF_CONDITION_TYPE, default=DEFAULT_CONDITION_TYPE):
         vol.All(vol.Lower, vol.Any(CONDITION_TYPE_AND, CONDITION_TYPE_OR)),
-    CONF_CONDITION: _CONDITION_SCHEMA,
+    vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
     vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
 })
+
+SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+TRIGGER_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_VARIABLES, default={}): dict,
+})
+
+
+def is_on(hass, entity_id=None):
+    """
+    Return true if specified automation entity_id is on.
+
+    Check all automation if no entity_id specified.
+    """
+    entity_ids = [entity_id] if entity_id else hass.states.entity_ids(DOMAIN)
+    return any(hass.states.is_state(entity_id, STATE_ON)
+               for entity_id in entity_ids)
+
+
+def turn_on(hass, entity_id=None):
+    """Turn on specified automation or all."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+
+
+def turn_off(hass, entity_id=None):
+    """Turn off specified automation or all."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+
+
+def toggle(hass, entity_id=None):
+    """Toggle specified automation or all."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
+
+
+def trigger(hass, entity_id=None):
+    """Trigger specified automation or all."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_TRIGGER, data)
 
 
 def setup(hass, config):
     """Setup the automation."""
+    # pylint: disable=too-many-locals
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
     success = False
     for config_key in extract_domain_configs(config, DOMAIN):
         conf = config[config_key]
 
         for list_no, config_block in enumerate(conf):
-            name = config_block.get(CONF_ALIAS, "{}, {}".format(config_key,
-                                                                list_no))
-            success = (_setup_automation(hass, config_block, name, config) or
-                       success)
+            name = config_block.get(CONF_ALIAS) or "{} {}".format(config_key,
+                                                                  list_no)
 
-    return success
+            action = _get_action(hass, config_block.get(CONF_ACTION, {}), name)
 
+            if CONF_CONDITION in config_block:
+                cond_func = _process_if(hass, config, config_block)
 
-def _setup_automation(hass, config_block, name, config):
-    """Setup one instance of automation."""
-    action = _get_action(hass, config_block.get(CONF_ACTION, {}), name)
+                if cond_func is None:
+                    continue
+            else:
+                def cond_func(variables):
+                    """Condition will always pass."""
+                    return True
 
-    if CONF_CONDITION in config_block:
-        action = _process_if(hass, config, config_block, action)
+            attach_triggers = partial(_process_trigger, hass, config,
+                                      config_block.get(CONF_TRIGGER, []), name)
+            entity = AutomationEntity(name, attach_triggers, cond_func, action)
+            component.add_entities((entity,))
+            success = True
 
-        if action is None:
-            return False
+    if not success:
+        return False
 
-    _process_trigger(hass, config, config_block.get(CONF_TRIGGER, []), name,
-                     action)
+    def trigger_service_handler(service_call):
+        """Handle automation triggers."""
+        for entity in component.extract_from_service(service_call):
+            entity.trigger(service_call.data.get(ATTR_VARIABLES))
+
+    def service_handler(service_call):
+        """Handle automation service calls."""
+        for entity in component.extract_from_service(service_call):
+            getattr(entity, service_call.service)()
+
+    hass.services.register(DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
+                           schema=TRIGGER_SERVICE_SCHEMA)
+
+    for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE):
+        hass.services.register(DOMAIN, service, service_handler,
+                               schema=SERVICE_SCHEMA)
+
     return True
+
+
+class AutomationEntity(ToggleEntity):
+    """Entity to show status of entity."""
+
+    def __init__(self, name, attach_triggers, cond_func, action):
+        """Initialize an automation entity."""
+        self._name = name
+        self._attach_triggers = attach_triggers
+        self._detach_triggers = attach_triggers(self.trigger)
+        self._cond_func = cond_func
+        self._action = action
+        self._enabled = True
+        self._last_triggered = None
+
+    @property
+    def name(self):
+        """Name of the automation."""
+        return self._name
+
+    @property
+    def should_poll(self):
+        """No polling needed for automation entities."""
+        return False
+
+    @property
+    def state_attributes(self):
+        """Return the entity state attributes."""
+        return {
+            ATTR_LAST_TRIGGERED: self._last_triggered
+        }
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
+        return self._enabled
+
+    def turn_on(self, **kwargs) -> None:
+        """Turn the entity on."""
+        if self._enabled:
+            return
+
+        self._detach_triggers = self._attach_triggers(self.trigger)
+        self._enabled = True
+        self.update_ha_state()
+
+    def turn_off(self, **kwargs) -> None:
+        """Turn the entity off."""
+        if not self._enabled:
+            return
+
+        self._detach_triggers()
+        self._detach_triggers = None
+        self._enabled = False
+        self.update_ha_state()
+
+    def trigger(self, variables):
+        """Trigger automation."""
+        if self._cond_func(variables):
+            self._action(variables)
+            self._last_triggered = utcnow()
+            self.update_ha_state()
 
 
 def _get_action(hass, config, name):
@@ -136,7 +277,7 @@ def _get_action(hass, config, name):
     return action
 
 
-def _process_if(hass, config, p_config, action):
+def _process_if(hass, config, p_config):
     """Process if checks."""
     cond_type = p_config.get(CONF_CONDITION_TYPE,
                              DEFAULT_CONDITION_TYPE).lower()
@@ -182,29 +323,43 @@ def _process_if(hass, config, p_config, action):
     if cond_type == CONDITION_TYPE_AND:
         def if_action(variables=None):
             """AND all conditions."""
-            if all(check(hass, variables) for check in checks):
-                action(variables)
+            return all(check(hass, variables) for check in checks)
     else:
         def if_action(variables=None):
             """OR all conditions."""
-            if any(check(hass, variables) for check in checks):
-                action(variables)
+            return any(check(hass, variables) for check in checks)
 
     return if_action
 
 
 def _process_trigger(hass, config, trigger_configs, name, action):
     """Setup the triggers."""
+    removes = []
+
     for conf in trigger_configs:
         platform = _resolve_platform(METHOD_TRIGGER, hass, config,
                                      conf.get(CONF_PLATFORM))
         if platform is None:
             continue
 
-        if platform.trigger(hass, conf, action):
-            _LOGGER.info("Initialized rule %s", name)
-        else:
+        remove = platform.trigger(hass, conf, action)
+
+        if not remove:
             _LOGGER.error("Error setting up rule %s", name)
+            continue
+
+        _LOGGER.info("Initialized rule %s", name)
+        removes.append(remove)
+
+    if not removes:
+        return None
+
+    def remove_triggers():
+        """Remove attached triggers."""
+        for remove in removes:
+            remove()
+
+    return remove_triggers
 
 
 def _resolve_platform(method, hass, config, platform):

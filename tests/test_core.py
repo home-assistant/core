@@ -175,6 +175,29 @@ class TestEventBus(unittest.TestCase):
         # Try deleting listener while category doesn't exist either
         self.bus.remove_listener('test', listener)
 
+    def test_unsubscribe_listener(self):
+        """Test unsubscribe listener from returned function."""
+        self.bus._pool.add_worker()
+        calls = []
+
+        def listener(event):
+            """Mock listener."""
+            calls.append(event)
+
+        unsub = self.bus.listen('test', listener)
+
+        self.bus.fire('test')
+        self.bus._pool.block_till_done()
+
+        assert len(calls) == 1
+
+        unsub()
+
+        self.bus.fire('event')
+        self.bus._pool.block_till_done()
+
+        assert len(calls) == 1
+
     def test_listen_once_event(self):
         """Test listen_once_event method."""
         runs = []
