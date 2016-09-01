@@ -107,7 +107,8 @@ def track_sunrise(hass, action, offset=None):
     def sunrise_automation_listener(now):
         """Called when it's time for action."""
         nonlocal remove
-        track_point_in_utc_time(hass, sunrise_automation_listener, next_rise())
+        remove = track_point_in_utc_time(hass, sunrise_automation_listener,
+                                         next_rise())
         action()
 
     remove = track_point_in_utc_time(hass, sunrise_automation_listener,
