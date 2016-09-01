@@ -14,7 +14,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
+    BaseNotificationService)
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,7 +121,7 @@ class MailNotificationService(BaseNotificationService):
         Will send plain text normally, or will build a multipart HTML message
         with inline image attachments if images config is defined.
         """
-        subject = kwargs.get(ATTR_TITLE)
+        subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA)
 
         if data:
