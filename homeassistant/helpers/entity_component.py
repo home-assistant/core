@@ -93,11 +93,10 @@ class EntityComponent(object):
 
         key = (platform_type, scan_interval, entity_namespace)
 
-        if key in self._platforms:
-            entity_platform = self._platforms[key]
-        else:
+        if key not in self._platforms:
             self._platforms[key] = EntityPlatform(self, scan_interval,
                                                   entity_namespace)
+        entity_platform = self._platforms[key]
 
         try:
             platform.setup_platform(self.hass, platform_config,
