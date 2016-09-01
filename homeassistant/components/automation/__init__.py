@@ -9,7 +9,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import prepare_setup_platform
+from homeassistant.bootstrap import (
+    prepare_setup_platform, prepare_setup_component)
 from homeassistant import config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
@@ -159,7 +160,6 @@ def reload(hass):
 
 def setup(hass, config):
     """Setup the automation."""
-    # pylint: disable=too-many-locals
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     success = _process_config(hass, config, component)
@@ -186,28 +186,10 @@ def setup(hass, config):
             _LOGGER.error(err)
             return
 
-        # For now copied from bootstrap.py
-        # Depends on work by @Kellerza to split this out
-        from homeassistant.bootstrap import config_per_platform, log_exception
+        conf = prepare_setup_component(hass, conf, DOMAIN)
 
-        platforms = []
-        for _, p_config in config_per_platform(conf, DOMAIN):
-            # Validate component specific platform schema
-            try:
-                p_validated = PLATFORM_SCHEMA(p_config)
-            except vol.MultipleInvalid as ex:
-                log_exception(ex, DOMAIN, p_config)
-                return
-
-            platforms.append(p_validated)
-
-        # Create a copy of the configuration with all config for current
-        # component removed and add validated config back in.
-        filter_keys = extract_domain_configs(conf, DOMAIN)
-        conf = {key: value for key, value in conf.items()
-                if key not in filter_keys}
-        conf[DOMAIN] = platforms
-        # End copied from bootstrap
+        if conf is None:
+            return
 
         component.reset()
         _process_config(hass, conf, component)
