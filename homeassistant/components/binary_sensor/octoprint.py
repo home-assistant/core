@@ -9,8 +9,10 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, STATE_ON, STATE_OFF, CONF_MONITORED_CONDITIONS
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME, STATE_ON, STATE_OFF, CONF_MONITORED_CONDITIONS)
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
@@ -32,6 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
