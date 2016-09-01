@@ -85,7 +85,7 @@ def trigger(hass, config, action):
     def remove():
         """Remove state listeners."""
         unsub()
-
+        # pylint: disable=not-callable
         if remove_state_for_cancel is not None:
             remove_state_for_cancel()
 

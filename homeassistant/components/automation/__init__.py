@@ -150,6 +150,7 @@ def trigger(hass, entity_id=None):
 
 def setup(hass, config):
     """Setup the automation."""
+    # pylint: disable=too-many-locals
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     success = False
