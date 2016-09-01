@@ -7,7 +7,12 @@ https://home-assistant.io/components/sensor.dht/
 import logging
 from datetime import timedelta
 
-from homeassistant.const import TEMP_FAHRENHEIT
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
@@ -18,18 +23,29 @@ REQUIREMENTS = ['http://github.com/adafruit/Adafruit_Python_DHT/archive/'
                 '#Adafruit_DHT==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
+
 CONF_PIN = 'pin'
 CONF_SENSOR = 'sensor'
+
+DEFAULT_NAME = 'DHT Sensor'
+
+# DHT11 is able to deliver data once per second, DHT22 once every two
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+
 SENSOR_TEMPERATURE = 'temperature'
 SENSOR_HUMIDITY = 'humidity'
 SENSOR_TYPES = {
     SENSOR_TEMPERATURE: ['Temperature', None],
     SENSOR_HUMIDITY: ['Humidity', '%']
 }
-DEFAULT_NAME = "DHT Sensor"
-# Return cached results if last scan was less then this time ago
-# DHT11 is able to deliver data once per second, DHT22 once every two
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_SENSOR): cv.string,
+    vol.Required(CONF_PIN): cv.string,
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -46,23 +62,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensor = available_sensors.get(config.get(CONF_SENSOR))
     pin = config.get(CONF_PIN)
 
-    if not sensor or not pin:
-        _LOGGER.error(
-            "Config error "
-            "Please check your settings for DHT, sensor not supported.")
-        return None
+    if not sensor:
+        _LOGGER.error("DHT sensor type is not supported")
+        return False
 
     data = DHTClient(Adafruit_DHT, sensor, pin)
     dev = []
-    name = config.get('name', DEFAULT_NAME)
+    name = config.get(CONF_NAME)
 
     try:
-        for variable in config['monitored_conditions']:
-            if variable not in SENSOR_TYPES:
-                _LOGGER.error('Sensor type: "%s" does not exist', variable)
-            else:
-                dev.append(
-                    DHTSensor(data, variable, SENSOR_TYPES[variable][1], name))
+        for variable in config[CONF_MONITORED_CONDITIONS]:
+            dev.append(DHTSensor(
+                data, variable, SENSOR_TYPES[variable][1], name))
     except KeyError:
         pass
 
@@ -109,8 +120,7 @@ class DHTSensor(Entity):
             if (temperature >= -20) and (temperature < 80):
                 self._state = temperature
                 if self.temp_unit == TEMP_FAHRENHEIT:
-                    self._state = round(celsius_to_fahrenheit(temperature),
-                                        1)
+                    self._state = round(celsius_to_fahrenheit(temperature), 1)
         elif self.type == SENSOR_HUMIDITY:
             humidity = round(data[SENSOR_HUMIDITY], 1)
             if (humidity >= 0) and (humidity <= 100):
