@@ -13,20 +13,19 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE,
     PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN)
+    STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN,
+    CONF_HOST, CONF_PORT)
 
 SUPPORT_SNAPCAST = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_SELECT_SOURCE
 
 DOMAIN = 'snapcast'
 REQUIREMENTS = ['snapcast==1.2.2']
-HOST = 'host'
-PORT = 'port'
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(HOST): cv.string,
-    vol.Optional(PORT): cv.port
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT): cv.port
 })
 
 
@@ -34,8 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Snapcast platform."""
     import snapcast.control
-    host = config.get(HOST)
-    port = config.get(PORT, snapcast.control.CONTROL_PORT)
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT, snapcast.control.CONTROL_PORT)
     try:
         server = snapcast.control.Snapserver(host, port)
     except socket.gaierror:
