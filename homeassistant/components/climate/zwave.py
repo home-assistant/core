@@ -155,7 +155,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 if SET_TEMP_TO_INDEX.get(self._current_operation) \
                    != value.index:
                     continue
-                self._unit = value.units
                 if self._zxt_120:
                     continue
             self._target_temperature = int(value.data)
@@ -188,13 +187,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        unit = self._unit
-        if unit == 'C':
-            return TEMP_CELSIUS
-        elif unit == 'F':
-            return TEMP_FAHRENHEIT
-        else:
-            return self._unit
+        return self._unit
 
     @property
     def current_temperature(self):
