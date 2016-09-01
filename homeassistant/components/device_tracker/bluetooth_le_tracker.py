@@ -2,16 +2,19 @@
 import logging
 from datetime import timedelta
 
+import voluptuous as vol
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker import (
     YAML_DEVICES,
     CONF_TRACK_NEW,
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
+    PLATFORM_SCHEMA,
     load_config,
 )
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,6 +22,11 @@ REQUIREMENTS = ['gattlib==0.20150805']
 
 BLE_PREFIX = 'BLE_'
 MIN_SEEN_NEW = 5
+CONF_SCAN_DURATION = "scan_duration"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_SCAN_DURATION, default=10): cv.positive_int
+})
 
 
 def setup_scanner(hass, config, see):
@@ -51,12 +59,13 @@ def setup_scanner(hass, config, see):
         """Discover Bluetooth LE devices."""
         _LOGGER.debug("Discovering Bluetooth LE devices")
         service = DiscoveryService()
-        devices = service.discover(10)
+        devices = service.discover(duration)
         _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
 
         return devices
 
     yaml_path = hass.config.path(YAML_DEVICES)
+    duration = config.get(CONF_SCAN_DURATION)
     devs_to_track = []
     devs_donot_track = []
 
@@ -65,11 +74,13 @@ def setup_scanner(hass, config, see):
     # to 0
     for device in load_config(yaml_path, hass, 0):
         # check if device is a valid bluetooth device
-        if device.mac and device.mac[:3].upper() == BLE_PREFIX:
+        if device.mac and device.mac[:4].upper() == BLE_PREFIX:
             if device.track:
-                devs_to_track.append(device.mac[3:])
+                _LOGGER.debug("Adding %s to BLE tracker", device.mac)
+                devs_to_track.append(device.mac[4:])
             else:
-                devs_donot_track.append(device.mac[3:])
+                _LOGGER.debug("Adding %s to BLE do not track", device.mac)
+                devs_donot_track.append(device.mac[4:])
 
     # if track new devices is true discover new devices
     # on every scan.
@@ -96,7 +107,7 @@ def setup_scanner(hass, config, see):
         if track_new:
             for address in devs:
                 if address not in devs_to_track and \
-                  address not in devs_donot_track:
+                        address not in devs_donot_track:
                     _LOGGER.info("Discovered Bluetooth LE device %s", address)
                     see_device(address, devs[address], new_device=True)
 
