@@ -181,7 +181,7 @@ class Thermostat(ClimateDevice):
         else:
             operation = status
         return {
-            "humidity": self.thermostat['runtime']['actualHumidity'],
+            "actual_humidity": self.thermostat['runtime']['actualHumidity'],
             "fan": self.fan,
             "mode": self.mode,
             "operation": operation,
