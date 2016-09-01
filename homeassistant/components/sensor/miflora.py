@@ -16,7 +16,7 @@ from homeassistant.util import Throttle
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 
 
-REQUIREMENTS = ['miflora==0.1.5']
+REQUIREMENTS = ['miflora==0.1.6']
 
 LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=900)
@@ -118,12 +118,14 @@ class MiFloraSensor(Entity):
         This uses a rolling median over 3 values to filter out outliers.
         """
         try:
+            LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)
-        except IOError:
+        except IOError as ioerr:
+            LOGGER.info("Polling error %s", ioerr)
             data = None
             return
 
-        if data:
+        if data is not None:
             LOGGER.debug("%s = %s", self.name, data)
             self.data.append(data)
         else:
