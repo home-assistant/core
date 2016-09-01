@@ -388,7 +388,8 @@ def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     try:
         return [
             Device(hass, consider_home, device.get('track', False),
-                   str(dev_id).lower(), str(device.get('mac')).upper(),
+                   str(dev_id).lower(), None if device.get('mac') is None
+                   else str(device.get('mac')).upper(),
                    device.get('name'), device.get('picture'),
                    device.get('gravatar'),
                    device.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
