@@ -55,12 +55,16 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-    vol.Optional(CONF_PAYLOAD_OSCILLATION_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-    vol.Optional(CONF_PAYLOAD_OSCILLATION_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_OSCILLATION_ON,
+                 default=DEFAULT_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_PAYLOAD_OSCILLATION_OFF,
+                 default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
     vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MED): cv.string,
     vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
-    vol.Optional(CONF_SPEED_LIST, default=[SPEED_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]): cv.ensure_list,
+    vol.Optional(CONF_SPEED_LIST,
+                 default=[SPEED_OFF, SPEED_LOW,
+                          SPEED_MED, SPEED_HIGH]): cv.ensure_list,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
 })
 
@@ -116,8 +120,11 @@ class MqttFan(FanEntity):
         self._payload = payload
         self._speed_list = speed_list
         self._optimistic = optimistic or topic["state_topic"] is None
-        self._optimistic_oscillation = (optimistic or topic["oscillation_state_topic"] is None)
-        self._optimistic_speed = (optimistic or topic["speed_state_topic"] is None)
+        self._optimistic_oscillation = (optimistic or
+                                        topic["oscillation_state_topic"]
+                                        is None)
+        self._optimistic_speed = (optimistic or
+                                  topic["speed_state_topic"] is None)
         self._state = False
         self._supported_features = 0
         self._supported_features |= (
