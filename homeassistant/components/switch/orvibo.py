@@ -19,7 +19,7 @@ CONF_HOST = 'host'
 CONF_NAME = 'name'
 CONF_MAC = 'mac'
 CONF_DISCOVERY = 'discovery'
-DEFAULT_NAME = "Orvibo S20 Switch"
+DEFAULT_NAME = 'Orvibo S20 Switch'
 DEFAULT_DISCOVERY = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
