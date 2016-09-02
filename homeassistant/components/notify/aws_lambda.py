@@ -7,12 +7,14 @@ https://home-assistant.io/components/notify.aws_lambda/
 import logging
 import json
 import base64
+
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_PLATFORM, CONF_NAME)
 from homeassistant.components.notify import (
-    ATTR_TARGET, BaseNotificationService)
+    ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ["boto3==1.3.1"]
@@ -23,13 +25,11 @@ CONF_SECRET_ACCESS_KEY = "aws_secret_access_key"
 CONF_PROFILE_NAME = "profile_name"
 CONF_CONTEXT = "context"
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): "aws_lambda",
-    vol.Optional(CONF_NAME): vol.Coerce(str),
-    vol.Optional(CONF_REGION, default="us-east-1"): vol.Coerce(str),
-    vol.Inclusive(CONF_ACCESS_KEY_ID, "credentials"): vol.Coerce(str),
-    vol.Inclusive(CONF_SECRET_ACCESS_KEY, "credentials"): vol.Coerce(str),
-    vol.Exclusive(CONF_PROFILE_NAME, "credentials"): vol.Coerce(str),
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_REGION, default="us-east-1"): cv.string,
+    vol.Inclusive(CONF_ACCESS_KEY_ID, "credentials"): cv.string,
+    vol.Inclusive(CONF_SECRET_ACCESS_KEY, "credentials"): cv.string,
+    vol.Exclusive(CONF_PROFILE_NAME, "credentials"): cv.string,
     vol.Optional(CONF_CONTEXT, default=dict()): vol.Coerce(dict)
 })
 

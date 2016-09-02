@@ -7,14 +7,15 @@ https://home-assistant.io/components/notify.telegram/
 import io
 import logging
 import urllib
+
 import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_DATA, BaseNotificationService)
-from homeassistant.const import (CONF_API_KEY, CONF_NAME, ATTR_LOCATION,
-                                 ATTR_LATITUDE, ATTR_LONGITUDE, CONF_PLATFORM)
+    ATTR_TITLE, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import (CONF_API_KEY, ATTR_LOCATION, ATTR_LATITUDE,
+                                 ATTR_LONGITUDE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,9 +27,7 @@ ATTR_CAPTION = "caption"
 
 CONF_CHAT_ID = 'chat_id'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): "telegram",
-    vol.Optional(CONF_NAME): cv.string,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_CHAT_ID): cv.string,
 })
