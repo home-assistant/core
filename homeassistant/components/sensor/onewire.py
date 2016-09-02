@@ -4,13 +4,24 @@ Support for DS18B20 One Wire Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.onewire/
 """
-import logging
 import os
 import time
+import logging
 from glob import glob
-
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS
+import voluptuous as vol
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+
+CONF_MOUNT_DIR = 'mount_dir'
+CONF_NAMES = 'names'
+DEFAULT_MOUNT_DIR = '/sys/bus/w1/devices/'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAMES): {cv.string: cv.string},
+    vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_MOUNT_DIR): cv.string,
+})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,11 +42,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device_files.append(os.path.join(device_folder, 'temperature'))
 
     if device_files == []:
-        _LOGGER.error('No onewire sensor found.')
-        _LOGGER.error('Check if dtoverlay=w1-gpio,gpiopin=4.')
-        _LOGGER.error('is in your /boot/config.txt and')
-        _LOGGER.error('the correct gpiopin number is set.')
-        _LOGGER.error('Check the mount_dir parameter if it\'s defined.')
+        _LOGGER.error('No onewire sensor found. Check if '
+                      'dtoverlay=w1-gpio,gpiopin=4 is in your '
+                      '/boot/config.txt and the correct gpiopin number is set. '
+                      'Check the mount_dir parameter if it\'s defined.')
         return
 
     devs = []
