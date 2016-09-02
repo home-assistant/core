@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SITE_ID, default='default'): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PORT, default=8443): cv.positive_int
+    vol.Required(CONF_PORT, default=8443): cv.port
 })
 
 
