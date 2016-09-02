@@ -1,3 +1,4 @@
+"""The tests for the emulated Hue component."""
 import time
 import json
 import threading
@@ -11,8 +12,7 @@ import homeassistant.components as core_components
 from homeassistant.components import emulated_hue, http, light, mqtt
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.emulated_hue import (
-    HUE_API_STATE_ON, HUE_API_STATE_BRI
-)
+    HUE_API_STATE_ON, HUE_API_STATE_BRI)
 
 from tests.common import get_test_instance_port, get_test_home_assistant
 
@@ -27,6 +27,7 @@ mqtt_broker = None
 
 
 def setUpModule():
+    """Setup things to be run when tests are started."""
     global mqtt_broker
 
     mqtt_broker = MQTTBroker('127.0.0.1', MQTT_BROKER_PORT)
@@ -34,12 +35,14 @@ def setUpModule():
 
 
 def tearDownModule():
+    """Stop everything that was started."""
     global mqtt_broker
 
     mqtt_broker.stop()
 
 
 def setup_hass_instance(emulated_hue_config):
+    """Setup the Home Assistant instance to test."""
     hass = get_test_home_assistant()
 
     # We need to do this to get access to homeassistant/turn_(on,off)
@@ -55,15 +58,19 @@ def setup_hass_instance(emulated_hue_config):
 
 
 def start_hass_instance(hass):
+    """Start the Home Assistant instance to test."""
     hass.start()
     time.sleep(0.05)
 
 
 class TestEmulatedHue(unittest.TestCase):
+    """Test the emulated Hue component."""
+
     hass = None
 
     @classmethod
     def setUpClass(cls):
+        """Setup the class."""
         cls.hass = setup_hass_instance({
             emulated_hue.DOMAIN: {
                 emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT
@@ -73,9 +80,11 @@ class TestEmulatedHue(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """Stop the class."""
         cls.hass.stop()
 
     def test_description_xml(self):
+        """Test the description."""
         import xml.etree.ElementTree as ET
 
         result = requests.get(
@@ -91,6 +100,7 @@ class TestEmulatedHue(unittest.TestCase):
             self.fail('description.xml is not valid XML!')
 
     def test_create_username(self):
+        """Test the creation of an username."""
         request_json = {'devicetype': 'my_device'}
 
         result = requests.post(
@@ -107,6 +117,7 @@ class TestEmulatedHue(unittest.TestCase):
         self.assertTrue('username' in success_json['success'])
 
     def test_valid_username_request(self):
+        """Test request with a valid username."""
         request_json = {'invalid_key': 'my_device'}
 
         result = requests.post(
@@ -117,8 +128,11 @@ class TestEmulatedHue(unittest.TestCase):
 
 
 class TestEmulatedHueExposedByDefault(unittest.TestCase):
+    """Test class for emulated hue component."""
+
     @classmethod
     def setUpClass(cls):
+        """Setup the class."""
         cls.hass = setup_hass_instance({
             emulated_hue.DOMAIN: {
                 emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT,
@@ -177,9 +191,11 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """Stop the class."""
         cls.hass.stop()
 
     def test_discover_lights(self):
+        """Test the discovery of lights."""
         result = requests.get(
             BRIDGE_URL_BASE.format('/api/username/lights'), timeout=5)
 
@@ -194,6 +210,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertTrue('light.kitchen_light' not in result_json)
 
     def test_get_light_state(self):
+        """Test the getting of light state."""
         # Turn office light on and set to 127 brightness
         self.hass.services.call(
             light.DOMAIN, const.SERVICE_TURN_ON,
@@ -229,6 +246,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(kitchen_result.status_code, 404)
 
     def test_put_light_state(self):
+        """Test the seeting of light states."""
         self.perform_put_test_on_office_light()
 
         # Turn the bedroom light on first
@@ -264,6 +282,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(kitchen_result.status_code, 404)
 
     def test_put_with_form_urlencoded_content_type(self):
+        """Test the form with urlencoded content."""
         # Needed for Alexa
         self.perform_put_test_on_office_light(
             'application/x-www-form-urlencoded')
@@ -278,6 +297,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(result.status_code, 400)
 
     def test_entity_not_found(self):
+        """Test for entity which are not found."""
         result = requests.get(
             BRIDGE_URL_BASE.format(
                 '/api/username/lights/{}'.format("not.existant_entity")),
@@ -293,6 +313,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(result.status_code, 404)
 
     def test_allowed_methods(self):
+        """Test the allowed methods."""
         result = requests.get(
             BRIDGE_URL_BASE.format(
                 '/api/username/lights/{}/state'.format("light.office_light")))
@@ -313,6 +334,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(result.status_code, 405)
 
     def test_proper_put_state_request(self):
+        """Test the request to set the state."""
         # Test proper on value parsing
         result = requests.put(
             BRIDGE_URL_BASE.format(
@@ -334,6 +356,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
     def perform_put_test_on_office_light(self,
                                          content_type='application/json'):
+        """Test the setting of a light."""
         # Turn the office light off first
         self.hass.services.call(
             light.DOMAIN, const.SERVICE_TURN_OFF,
@@ -361,6 +384,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(office_light.attributes[light.ATTR_BRIGHTNESS], 56)
 
     def perform_get_light_state(self, entity_id, expected_status):
+        """Test the gettting of a light state."""
         result = requests.get(
             BRIDGE_URL_BASE.format(
                 '/api/username/lights/{}'.format(entity_id)), timeout=5)
@@ -377,6 +401,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
     def perform_put_light_state(self, entity_id, is_on, brightness=None,
                                 content_type='application/json'):
+        """Test the setting of a light state."""
         url = BRIDGE_URL_BASE.format(
             '/api/username/lights/{}/state'.format(entity_id))
 
@@ -432,6 +457,7 @@ class MQTTBroker(object):
         self._thread.join()
 
     def _run_loop(self):
+        """Run the loop."""
         asyncio.set_event_loop(self._loop)
         self._loop.run_until_complete(self._broker_coroutine())
 
@@ -442,4 +468,5 @@ class MQTTBroker(object):
 
     @asyncio.coroutine
     def _broker_coroutine(self):
+        """The Broker coroutine."""
         yield from self._broker.start()
