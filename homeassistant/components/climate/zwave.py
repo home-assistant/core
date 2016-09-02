@@ -12,6 +12,7 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.zwave import (
     ATTR_NODE_ID, ATTR_VALUE_ID, ZWaveDeviceEntity)
 from homeassistant.components import zwave
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,6 +129,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 class_id=COMMAND_CLASS_SENSOR_MULTILEVEL).values():
             if value.label == 'Temperature':
                 self._current_temperature = int(value.data)
+                self._unit = value.units
         # Fan Mode
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_FAN_MODE).values():
@@ -186,7 +188,12 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self._unit
+        if self._unit == 'C':
+            return TEMP_CELSIUS
+        elif self._unit == 'F':
+            return TEMP_FAHRENHEIT
+        else:
+            return self._unit
 
     @property
     def current_temperature(self):
