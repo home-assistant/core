@@ -8,34 +8,32 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_SWITCHES, CONF_MAC, CONF_DISCOVERY)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['orvibo==1.1.1']
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SWITCHES = 'switches'
-CONF_HOST = 'host'
-CONF_NAME = 'name'
-CONF_MAC = 'mac'
-CONF_DISCOVERY = 'discovery'
 DEFAULT_NAME = 'Orvibo S20 Switch'
 DEFAULT_DISCOVERY = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
     vol.Required(CONF_SWITCHES, default=[]):
         vol.All(cv.ensure_list, [{
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_MAC): cv.string,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-        }])
+        }]),
+    vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
 })
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Find and return S20 switches."""
+    """Setup S20 switches."""
     from orvibo.s20 import discover, S20, S20Exception
 
     switch_data = {}
@@ -51,7 +49,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     for host, data in switch_data.items():
         try:
-            switches.append(S20Switch(data.get(CONF_NAME, DEFAULT_NAME),
+            switches.append(S20Switch(data.get(CONF_NAME),
                                       S20(host, mac=data.get(CONF_MAC))))
             _LOGGER.info("Initialized S20 at %s", host)
         except S20Exception:
