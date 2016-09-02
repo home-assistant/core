@@ -96,13 +96,17 @@ class MqttCover(CoverDevice):
                 payload = template.render_with_possible_json_value(
                     hass, value_template, payload)
             if payload == self._state_open:
-                self._state = True
+                self._state = False
+                _LOGGER.warning("state=%s", int(self._state))
                 self.update_ha_state()
             elif payload == self._state_closed:
-                self._state = False
+                self._state = True
                 self.update_ha_state()
             elif payload.isnumeric() and 0 <= int(payload) <= 100:
-                self._state = int(payload)
+                if int(payload) > 0:
+                    self._state = False
+                else:
+                    self._state = True
                 self._position = int(payload)
                 self.update_ha_state()
             else:
@@ -129,11 +133,7 @@ class MqttCover(CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        if self.current_cover_position is not None:
-            if self.current_cover_position > 0:
-                return False
-            else:
-                return True
+        return self._state
 
     @property
     def current_cover_position(self):
