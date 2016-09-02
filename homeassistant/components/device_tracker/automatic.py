@@ -54,7 +54,7 @@ def setup_scanner(hass, config: dict, see):
     """Validate the configuration and return an Automatic scanner."""
     try:
         AutomaticDeviceScanner(config, see)
-    except IOError as err:
+    except requests.HTTPError as err:
         _LOGGER.error(str(err))
         return False
 
@@ -104,8 +104,7 @@ class AutomaticDeviceScanner(object):
                 URL_AUTHORIZE,
                 data=self._access_token_payload)
 
-            if resp.status_code != 200:
-                raise IOError(resp.content)
+            resp.raise_for_status()
 
             json = resp.json()
 
@@ -125,8 +124,7 @@ class AutomaticDeviceScanner(object):
 
         response = requests.get(URL_VEHICLES, headers=self._headers)
 
-        if response.status_code != 200:
-            raise IOError(response.content)
+        response.raise_for_status()
 
         self.last_results = [item for item in response.json()[ATTR_RESULTS]
                              if self._devices is None or item[
