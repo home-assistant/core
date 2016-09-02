@@ -61,17 +61,20 @@ def setup_scanner(hass, config: dict, see):
     return True
 
 
-# pylint: disable=too-many-instance-attributes
 class AutomaticDeviceScanner(object):
     """A class representing an Automatic device."""
 
     def __init__(self, config: dict, see) -> None:
         """Initialize the automatic device scanner."""
-        self._client_id = config.get(CONF_CLIENT_ID)
-        self._secret = config.get(CONF_SECRET)
-        self._user_name = config.get(CONF_USERNAME)
-        self._password = config.get(CONF_PASSWORD)
         self._devices = config.get(CONF_DEVICES, None)
+        self._access_token_payload = {
+            'username': config.get(CONF_USERNAME),
+            'password': config.get(CONF_PASSWORD),
+            'client_id': config.get(CONF_CLIENT_ID),
+            'client_secret': config.get(CONF_SECRET),
+            'grant_type': 'password',
+            'scope': SCOPE
+        }
         self._headers = None
         self._access_token = None
         self._token_expires = dt_util.now()
@@ -98,18 +101,9 @@ class AutomaticDeviceScanner(object):
     def _get_access_token(self):
         """Get the access token from automatic."""
         if self._access_token is None or self._token_expires <= dt_util.now():
-            data = {
-                'username': self._user_name,
-                'password': self._password,
-                'client_id': self._client_id,
-                'client_secret': self._secret,
-                'grant_type': 'password',
-                'scope': SCOPE
-            }
-
             resp = requests.post(
                 URL_AUTHORIZE,
-                data=data)
+                data=self._access_token_payload)
 
             if resp.status_code != 200:
                 raise IOError(resp.content)
