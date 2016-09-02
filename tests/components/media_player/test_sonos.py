@@ -26,6 +26,7 @@ class SoCoMock():
         """Initialize soco object."""
         self.ip_address = ip
         self.is_visible = True
+        self.uid = 'RINCON_ABCDEFGHIJKLMNOPQ'
 
     def get_speaker_info(self):
         """Return a dict with various data points about the speaker."""
