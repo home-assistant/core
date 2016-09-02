@@ -31,11 +31,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Xbox platform."""
     from xboxapi import xbox_api
     api = xbox_api.XboxApi(config.get(CONF_API_KEY))
+    devices = []
 
-    add_devices([XboxSensor(hass,
-                            api,
-                            xuid)
-                 for xuid in config.get(CONF_XUID)])
+    for xuid in config.get(CONF_XUID):
+        new_device = XboxSensor(hass, api, xuid)
+        if new_device.success_init:
+            devices.append(new_device)
+
+    if len(devices) > 0:
+        add_devices(devices)
+    else:
+        return False
 
 
 class XboxSensor(Entity):
@@ -51,8 +57,14 @@ class XboxSensor(Entity):
 
         # get profile info
         profile = self._api.get_user_profile(self._xuid)
-        self._gamertag = profile.get('Gamertag')
-        self._picture = profile.get('GameDisplayPicRaw')
+
+        if profile.get('success', True) \
+                and profile.get('code', 0) != 28:
+            self.success_init = True
+            self._gamertag = profile.get('Gamertag')
+            self._picture = profile.get('GameDisplayPicRaw')
+        else:
+            self.success_init = False
 
     @property
     def name(self):
