@@ -1,63 +1,9 @@
 """
-Netio switch component.
-
-The Netio platform allows you to control your [Netio]
-(http://www.netio-products.com/en/overview/) Netio4, Netio4 All and Netio 230B.
-These are smart outlets controllable through ethernet and/or WiFi that reports
-consumptions (Netio4all).
-
-To use these devices in your installation, add the following to your
-configuration.yaml file:
-```
-switch:
-  - platform: netio
-    host: netio-living
-    outlets:
-      1: "AppleTV"
-      2: "Htpc"
-      3: "Lampe Gauche"
-      4: "Lampe Droite"
-  - platform: netio
-    host: 192.168.1.43
-    port: 1234
-    username: user
-    password: pwd
-    outlets:
-      1: "Nothing..."
-      4: "Lampe du fer"
-```
-
-To get pushed updates from the netio devices, one can add this lua code in the
-device interface as an action triggered on "Netio" "System variables updated"
-with an 'Always' schedule:
-
-``
--- this will send socket and consumption status updates via CGI
--- to given address. Associate with 'System variables update' event
--- to get consumption updates when they show up
-
-local address='ha:8123'
-local path = '/api/netio/<host>'
-
-
-local output = {}
-for i = 1, 4 do for _, what in pairs({'state', 'consumption',
-                        'cumulatedConsumption', 'consumptionStart'}) do
-    local varname = string.format('output%d_%s', i, what)
-    table.insert(output,
-        varname..'='..tostring(devices.system[varname]):gsub(" ","|"))
-end end
-
-local qs = table.concat(output, '&')
-local url = string.format('http://%s%s?%s', address, path, qs)
-devices.system.CustomCGI{url=url}
-```
-
+The Netio switch component.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.netio/
 """
-
 import logging
 from collections import namedtuple
 from datetime import timedelta
