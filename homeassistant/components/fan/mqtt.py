@@ -106,9 +106,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     )])
 
 
+# pylint: disable=too-many-instance-attributes
 class MqttFan(FanEntity):
     """A MQTT fan component."""
 
+    # pylint: disable=too-many-arguments
     def __init__(self, hass, name, topic, templates, qos, retain, payload,
                  speed_list, optimistic):
         """Initialize MQTT fan."""
