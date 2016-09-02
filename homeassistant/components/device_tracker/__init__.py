@@ -168,7 +168,7 @@ def setup(hass: HomeAssistantType, config: ConfigType):
         """Service to see a device."""
         args = {key: value for key, value in call.data.items() if key in
                 (ATTR_MAC, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_LOCATION_NAME,
-                 ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_FUEL_LEVEL)}
+                 ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ATTRIBUTES)}
         tracker.see(**args)
 
     descriptions = load_yaml_config_file(
@@ -206,7 +206,7 @@ class DeviceTracker(object):
 
     def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
             location_name: str=None, gps: GPSType=None, gps_accuracy=None,
-            battery: str=None, fuel_level: str=None):
+            battery: str=None, attributes: dict=None):
         """Notify the device tracker that you see a device."""
         with self.lock:
             if mac is None and dev_id is None:
@@ -222,7 +222,7 @@ class DeviceTracker(object):
 
             if device:
                 device.seen(host_name, location_name, gps, gps_accuracy,
-                            battery, fuel_level)
+                            battery, attributes)
                 if device.track:
                     device.update_ha_state()
                 return
@@ -237,7 +237,7 @@ class DeviceTracker(object):
                 self.mac_to_dev[mac] = device
 
             device.seen(host_name, location_name, gps, gps_accuracy, battery,
-                        fuel_level)
+                        attributes)
             if device.track:
                 device.update_ha_state()
 
@@ -272,7 +272,7 @@ class Device(Entity):
     gps_accuracy = 0
     last_seen = None  # type: dt_util.dt.datetime
     battery = None  # type: str
-    fuel_level = None  # type: str
+    attributes = None  # type: dict
 
     # Track if the last update of this device was HOME.
     last_update_home = False
@@ -336,8 +336,9 @@ class Device(Entity):
         if self.battery:
             attr[ATTR_BATTERY] = self.battery
 
-        if self.fuel_level is not None:
-            attr[ATTR_FUEL_LEVEL] = self.fuel_level
+        if self.attributes:
+            for key, value in self.attributes:
+                attr[key] = value
 
         return attr
 
@@ -348,14 +349,14 @@ class Device(Entity):
 
     def seen(self, host_name: str=None, location_name: str=None,
              gps: GPSType=None, gps_accuracy=0, battery: str=None,
-             fuel_level=None):
+             attributes: dict=None):
         """Mark the device as seen."""
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
         self.gps_accuracy = gps_accuracy or 0
         self.battery = battery
-        self.fuel_level = fuel_level
+        self.attributes = attributes
         self.gps = None
         if gps is not None:
             try:
