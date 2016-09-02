@@ -205,6 +205,7 @@ omit =
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/bitcoin.py
+    homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
