@@ -2,12 +2,11 @@
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import homeassistant.components.notify as notify
-
+from homeassistant import bootstrap
 from tests.common import get_test_home_assistant
-
-from unittest.mock import patch
 
 
 class TestCommandLine(unittest.TestCase):
@@ -21,18 +20,21 @@ class TestCommandLine(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
+    def test_setup(self):
+        """Test setup."""
+        assert bootstrap.setup_component(self.hass, 'notify', {
+            'notify': {
+                'name': 'test',
+                'platform': 'command_line',
+                'command': 'echo $(cat); exit 1',
+            }})
+
     def test_bad_config(self):
-        """Test set up the platform with bad/missing config."""
+        """Test set up the platform with bad/missing configuration."""
         self.assertFalse(notify.setup(self.hass, {
             'notify': {
                 'name': 'test',
                 'platform': 'bad_platform',
-            }
-        }))
-        self.assertFalse(notify.setup(self.hass, {
-            'notify': {
-                'name': 'test',
-                'platform': 'command_line',
             }
         }))
 
