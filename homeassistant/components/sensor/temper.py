@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Temper sensors."""
     from temperusb.temper import TemperHandler
 
@@ -37,12 +37,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         "offset": config.get(CONF_OFFSET)
     }
     temper_devices = TemperHandler().get_devices()
-    add_devices_callback([TemperSensor(dev,
-                                       temp_unit,
-                                       name if idx == 0
-                                       else name + '_' + str(idx),
-                                       scaling)
-                          for idx, dev in enumerate(temper_devices)])
+    devices = []
+
+    for idx, dev in enumerate(temper_devices):
+        if idx != 0:
+            name = name + '_' + str(idx)
+        devices.append(TemperSensor(dev, temp_unit, name, scaling))
+
+    add_devices(devices)
 
 
 class TemperSensor(Entity):
