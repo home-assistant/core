@@ -46,12 +46,11 @@ CMD_DICT = {LAMP: '* 0 Lamp ?\r',
             STATE_OFF: '* 0 IR 002\r'}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILENAME): cv.string,
+    vol.Required(CONF_FILENAME): cv.isfile,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_WRITE_TIMEOUT, default=DEFAULT_WRITE_TIMEOUT):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+        cv.positive_int,
 })
 
 
