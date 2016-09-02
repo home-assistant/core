@@ -87,10 +87,11 @@ def is_on(hass: HomeAssistantType, entity_id: str=None):
     return hass.states.is_state(entity, STATE_HOME)
 
 
+# pylint: disable=too-many-arguments
 def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
         host_name: str=None, location_name: str=None,
         gps: GPSType=None, gps_accuracy=None,
-        battery=None, attributes: dict=None):  # pylint: disable=too-many-arguments
+        battery=None, attributes: dict=None):
     """Call service to notify you see device."""
     data = {key: value for key, value in
             ((ATTR_MAC, mac),
