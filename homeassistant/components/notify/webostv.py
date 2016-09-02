@@ -6,33 +6,30 @@ https://home-assistant.io/components/notify.webostv/
 """
 import logging
 
-from homeassistant.components.notify import (BaseNotificationService, DOMAIN)
-from homeassistant.const import (CONF_HOST, CONF_NAME)
-from homeassistant.helpers import validate_config
+import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.notify import (BaseNotificationService,
+                                             PLATFORM_SCHEMA)
+from homeassistant.const import CONF_HOST
+
+_LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv'
                 '/archive/v0.1.2.zip'
                 '#pylgtv==0.1.2']
 
-_LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+})
 
 
 def get_service(hass, config):
     """Return the notify service."""
-    if not validate_config({DOMAIN: config}, {DOMAIN: [CONF_HOST, CONF_NAME]},
-                           _LOGGER):
-        return None
-
-    host = config.get(CONF_HOST, None)
-
-    if not host:
-        _LOGGER.error('No host provided.')
-        return None
-
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
 
-    client = WebOsClient(host)
+    client = WebOsClient(config.get(CONF_HOST))
 
     try:
         client.register()
