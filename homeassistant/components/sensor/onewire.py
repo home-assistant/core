@@ -44,8 +44,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if device_files == []:
         _LOGGER.error('No onewire sensor found. Check if '
                       'dtoverlay=w1-gpio,gpiopin=4 is in your '
-                      '/boot/config.txt and the correct gpiopin number is set. '
-                      'Check the mount_dir parameter if it\'s defined.')
+                      '/boot/config.txt and the correct gpiopin number is set.'
+                      ' Check the mount_dir parameter if it\'s defined.')
         return
 
     devs = []
