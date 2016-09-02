@@ -402,3 +402,9 @@ SCRIPT_SCHEMA = vol.All(
     [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA, EVENT_SCHEMA,
              CONDITION_SCHEMA)],
 )
+
+
+def string_schema(*args: Sequence) -> Dict:
+    """Return a schema dict of Required values or Optional values."""
+    return {val if isinstance(val, vol.Optional) else vol.Required(val): string
+            for val in args}
