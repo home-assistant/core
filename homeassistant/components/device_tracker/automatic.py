@@ -80,7 +80,6 @@ class AutomaticDeviceScanner(object):
         self._token_expires = dt_util.now()
         self.last_results = {}
         self.last_trips = {}
-        self.lock = threading.Lock()
         self.see = see
 
         self.scan_devices()
@@ -98,7 +97,7 @@ class AutomaticDeviceScanner(object):
 
         return vehicle[0]
 
-    def _get_access_token(self):
+    def _update_headers(self):
         """Get the access token from automatic."""
         if self._access_token is None or self._token_expires <= dt_util.now():
             resp = requests.post(
@@ -121,45 +120,42 @@ class AutomaticDeviceScanner(object):
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self) -> None:
         """Update the device info."""
-        with self.lock:
-            self._get_access_token()
+        _LOGGER.info('Updating devices')
+        self._update_headers()
 
-            _LOGGER.info('Getting device states')
-            response = requests.get(URL_VEHICLES, headers=self._headers)
+        response = requests.get(URL_VEHICLES, headers=self._headers)
 
-            if response.status_code != 200:
-                raise IOError(response.content)
+        if response.status_code != 200:
+            raise IOError(response.content)
 
-            self.last_results = [item for item in response.json()[ATTR_RESULTS]
-                                 if self._devices is None or item[
-                                     'display_name'] in self._devices]
+        self.last_results = [item for item in response.json()[ATTR_RESULTS]
+                             if self._devices is None or item[
+                                 'display_name'] in self._devices]
 
-            _LOGGER.info('Getting device trips')
-            response = requests.get(URL_TRIPS, headers=self._headers)
+        response = requests.get(URL_TRIPS, headers=self._headers)
 
-            if response.status_code == 200:
-                for trip in response.json()[ATTR_RESULTS]:
-                    vehicle_id = _VEHICLE_ID_REGEX.match(
-                        trip[ATTR_VEHICLE]).group(1)
-                    if vehicle_id not in self.last_trips:
-                        self.last_trips[vehicle_id] = trip
-                    elif self.last_trips[vehicle_id][ATTR_ENDED_AT] < trip[
-                            ATTR_ENDED_AT]:
-                        self.last_trips[vehicle_id] = trip
+        if response.status_code == 200:
+            for trip in response.json()[ATTR_RESULTS]:
+                vehicle_id = _VEHICLE_ID_REGEX.match(
+                    trip[ATTR_VEHICLE]).group(1)
+                if vehicle_id not in self.last_trips:
+                    self.last_trips[vehicle_id] = trip
+                elif self.last_trips[vehicle_id][ATTR_ENDED_AT] < trip[
+                        ATTR_ENDED_AT]:
+                    self.last_trips[vehicle_id] = trip
 
-            _LOGGER.info('Build device attributes')
-            for vehicle in self.last_results:
-                dev_id = vehicle.get('id')
+        for vehicle in self.last_results:
+            dev_id = vehicle.get('id')
 
-                kwargs = {
-                    'dev_id': dev_id,
-                    'mac': dev_id,
-                    'fuel_level': vehicle.get('fuel_level_percent')
-                }
+            kwargs = {
+                'dev_id': dev_id,
+                'mac': dev_id,
+                'fuel_level': vehicle.get('fuel_level_percent')
+            }
 
-                if dev_id in self.last_trips:
-                    end_location = self.last_trips[dev_id][ATTR_END_LOCATION]
-                    kwargs['gps'] = (end_location['lat'], end_location['lon'])
-                    kwargs['gps_accuracy'] = end_location['accuracy_m']
+            if dev_id in self.last_trips:
+                end_location = self.last_trips[dev_id][ATTR_END_LOCATION]
+                kwargs['gps'] = (end_location['lat'], end_location['lon'])
+                kwargs['gps_accuracy'] = end_location['accuracy_m']
 
-                self.see(**kwargs)
+            self.see(**kwargs)
