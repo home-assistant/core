@@ -27,8 +27,8 @@ class TestCommandSwitch(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'switch_status')
             test_switch = {
-                'oncmd': 'echo 1 > {}'.format(path),
-                'offcmd': 'echo 0 > {}'.format(path),
+                'command_on': 'echo 1 > {}'.format(path),
+                'command_off': 'echo 0 > {}'.format(path),
             }
             self.assertTrue(switch.setup(self.hass, {
                 'switch': {
@@ -59,9 +59,9 @@ class TestCommandSwitch(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'switch_status')
             test_switch = {
-                'statecmd': 'cat {}'.format(path),
-                'oncmd': 'echo 1 > {}'.format(path),
-                'offcmd': 'echo 0 > {}'.format(path),
+                'command_state': 'cat {}'.format(path),
+                'command_on': 'echo 1 > {}'.format(path),
+                'command_off': 'echo 0 > {}'.format(path),
                 'value_template': '{{ value=="1" }}'
             }
             self.assertTrue(switch.setup(self.hass, {
@@ -95,9 +95,9 @@ class TestCommandSwitch(unittest.TestCase):
             oncmd = json.dumps({'status': 'ok'})
             offcmd = json.dumps({'status': 'nope'})
             test_switch = {
-                'statecmd': 'cat {}'.format(path),
-                'oncmd': 'echo \'{}\' > {}'.format(oncmd, path),
-                'offcmd': 'echo \'{}\' > {}'.format(offcmd, path),
+                'command_state': 'cat {}'.format(path),
+                'command_on': 'echo \'{}\' > {}'.format(oncmd, path),
+                'command_off': 'echo \'{}\' > {}'.format(offcmd, path),
                 'value_template': '{{ value_json.status=="ok" }}'
             }
             self.assertTrue(switch.setup(self.hass, {
@@ -129,9 +129,9 @@ class TestCommandSwitch(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'switch_status')
             test_switch = {
-                'statecmd': 'cat {}'.format(path),
-                'oncmd': 'echo 1 > {}'.format(path),
-                'offcmd': 'echo 0 > {}'.format(path),
+                'command_state': 'cat {}'.format(path),
+                'command_on': 'echo 1 > {}'.format(path),
+                'command_off': 'echo 0 > {}'.format(path),
             }
             self.assertTrue(switch.setup(self.hass, {
                 'switch': {

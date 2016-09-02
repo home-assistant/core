@@ -3,6 +3,7 @@ import unittest
 
 from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.components.binary_sensor import command_line
+from homeassistant import bootstrap
 
 from tests.common import get_test_home_assistant
 
@@ -24,6 +25,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
                   'command': 'echo 1',
                   'payload_on': '1',
                   'payload_off': '0'}
+
         devices = []
 
         def add_dev_callback(devs):
@@ -31,8 +33,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
             for dev in devs:
                 devices.append(dev)
 
-        command_line.setup_platform(
-            self.hass, config, add_dev_callback)
+        command_line.setup_platform(self.hass, config, add_dev_callback)
 
         self.assertEqual(1, len(devices))
         entity = devices[0]
@@ -41,19 +42,13 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
 
     def test_setup_bad_config(self):
         """Test the setup with a bad configuration."""
-        config = {}
+        config = {'name': 'test',
+                  'platform': 'not_command_line',
+                  }
 
-        devices = []
-
-        def add_dev_callback(devs):
-            """Add callback to add devices."""
-            for dev in devs:
-                devices.append(dev)
-
-        self.assertFalse(command_line.setup_platform(
-            self.hass, config, add_dev_callback))
-
-        self.assertEqual(0, len(devices))
+        self.assertFalse(bootstrap.setup_component(self.hass, 'test', {
+            'command_line': config,
+        }))
 
     def test_template(self):
         """Test setting the state with a template."""
