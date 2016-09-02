@@ -106,13 +106,12 @@ class AutomaticDeviceScanner(object):
 
             json = resp.json()
 
-            self._access_token = json[ATTR_ACCESS_TOKEN]
+            access_token = json[ATTR_ACCESS_TOKEN]
             self._token_expires = dt_util.now() + timedelta(
                 seconds=json[ATTR_EXPIRES_IN])
-
-        self._headers = {
-            'Authorization': 'Bearer {}'.format(self._access_token)
-        }
+            self._headers = {
+                'Authorization': 'Bearer {}'.format(access_token)
+            }
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self) -> None:
