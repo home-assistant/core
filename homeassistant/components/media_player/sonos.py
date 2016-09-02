@@ -200,7 +200,8 @@ class SonosDevice(MediaPlayerDevice):
         self.hass = hass
         self.volume_increment = 5
         self._player = player
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, self._player.uid, hass=self.hass)
+        self.entity_id = generate_entity_id(
+            ENTITY_ID_FORMAT, self._player.uid, hass=self.hass)
         self.update()
         self.soco_snapshot = Snapshot(self._player)
 
