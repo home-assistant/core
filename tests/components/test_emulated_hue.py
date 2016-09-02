@@ -191,7 +191,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """Stop the ."""
+        """Stop the class."""
         cls.hass.stop()
 
     def test_discover_lights(self):
