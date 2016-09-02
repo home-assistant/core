@@ -11,7 +11,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT
 
 REQUIREMENTS = ['sleekxmpp==1.3.1',
                 'dnspython3==1.12.0',
@@ -19,8 +19,6 @@ REQUIREMENTS = ['sleekxmpp==1.3.1',
                 'pyasn1-modules==0.0.8']
 
 
-CONF_SENDER = 'sender'
-CONF_RECIPIENT = 'recipient'
 CONF_TLS = 'tls'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
