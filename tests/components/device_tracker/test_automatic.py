@@ -1,6 +1,7 @@
 """Test the automatic device tracker platform."""
 
 import logging
+import requests
 import unittest
 from unittest.mock import patch
 
@@ -40,6 +41,11 @@ def mocked_requests(*args, **kwargs):
         def content(self):
             """Return the content of the response."""
             return self.json()
+
+        def raise_for_status(self):
+            """Raise an HTTPError if status is not 200."""
+            if self.status_code != 200:
+                raise requests.HTTPError(self.status_code)
 
     data = kwargs.get('data')
 
