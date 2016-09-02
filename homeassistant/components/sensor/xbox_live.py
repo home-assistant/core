@@ -44,6 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
 
+# pylint: disable=too-many-instance-attributes
 class XboxSensor(Entity):
     """A class for the Xbox account."""
 
@@ -70,6 +71,11 @@ class XboxSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._gamertag
+
+    @property
+    def entity_id(self):
+        """Return the entity ID."""
+        return 'sensor.xbox_' + self._gamertag
 
     @property
     def state(self):
