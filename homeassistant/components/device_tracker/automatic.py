@@ -7,7 +7,6 @@ https://home-assistant.io/components/device_tracker.automatic/
 from datetime import timedelta
 import logging
 import re
-import threading
 import requests
 
 import voluptuous as vol
@@ -76,7 +75,6 @@ class AutomaticDeviceScanner(object):
             'scope': SCOPE
         }
         self._headers = None
-        self._access_token = None
         self._token_expires = dt_util.now()
         self.last_results = {}
         self.last_trips = {}
@@ -99,7 +97,7 @@ class AutomaticDeviceScanner(object):
 
     def _update_headers(self):
         """Get the access token from automatic."""
-        if self._access_token is None or self._token_expires <= dt_util.now():
+        if self._headers is None or self._token_expires <= dt_util.now():
             resp = requests.post(
                 URL_AUTHORIZE,
                 data=self._access_token_payload)
