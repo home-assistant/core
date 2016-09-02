@@ -11,7 +11,8 @@ import requests
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (PLATFORM_SCHEMA,
+                                                     ATTR_ATTRIBUTES)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, datetime as dt_util
@@ -142,10 +143,14 @@ class AutomaticDeviceScanner(object):
         for vehicle in self.last_results:
             dev_id = vehicle.get('id')
 
+            attrs = {
+                'fuel_level': vehicle.get('fuel_level_percent')
+            }
+
             kwargs = {
                 'dev_id': dev_id,
                 'mac': dev_id,
-                'fuel_level': vehicle.get('fuel_level_percent')
+                ATTR_ATTRIBUTES: attrs
             }
 
             if dev_id in self.last_trips:

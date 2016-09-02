@@ -198,7 +198,8 @@ class TestAutomatic(unittest.TestCase):
     def see_mock(self, **kwargs):
         """Mock see function."""
         self.assertEqual('vid', kwargs.get('dev_id'))
-        self.assertEqual(FUEL_LEVEL, kwargs.get('fuel_level'))
+        self.assertEqual(FUEL_LEVEL,
+                         kwargs.get('attributes', {}).get('fuel_level'))
         self.assertEqual((LATITUDE, LONGITUDE), kwargs.get('gps'))
         self.assertEqual(ACCURACY, kwargs.get('gps_accuracy'))
 
