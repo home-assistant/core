@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import (CONF_API_KEY, CONF_NAME)
+from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['slacker==0.9.24']
@@ -22,7 +22,6 @@ CONF_CHANNEL = 'default_channel'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_CHANNEL): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
 })
 
 
