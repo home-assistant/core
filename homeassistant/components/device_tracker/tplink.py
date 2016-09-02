@@ -33,12 +33,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return a TP-Link scanner."""
-    for _ in range(0, 4):
-        scanner = Tplink3DeviceScanner(config[DOMAIN])
+    for cls in [Tplink4DeviceScanner, Tplink3DeviceScanner,
+                Tplink2DeviceScanner, TplinkDeviceScanner]:
+        scanner = cls(config[DOMAIN])
         if scanner.success_init:
-            break
+            return scanner
 
-    return scanner if scanner.success_init else None
+    return None
 
 
 class TplinkDeviceScanner(object):
