@@ -54,7 +54,8 @@ def setup_scanner(hass, config: dict, see):
     """Validate the configuration and return an Automatic scanner."""
     try:
         AutomaticDeviceScanner(config, see)
-    except IOError:
+    except IOError as err:
+        _LOGGER.error(str(err))
         return False
 
     return True
