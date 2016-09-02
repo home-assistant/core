@@ -62,7 +62,7 @@ ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
 ATTR_BATTERY = 'battery'
-ATTR_FUEL_LEVEL = 'fuel_level'
+ATTR_ATTRIBUTES = 'attributes'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,  # seconds
@@ -90,7 +90,7 @@ def is_on(hass: HomeAssistantType, entity_id: str=None):
 def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
         host_name: str=None, location_name: str=None,
         gps: GPSType=None, gps_accuracy=None,
-        battery=None, fuel_level=None):  # pylint: disable=too-many-arguments
+        battery=None, attrs: dict=None):  # pylint: disable=too-many-arguments
     """Call service to notify you see device."""
     data = {key: value for key, value in
             ((ATTR_MAC, mac),
@@ -99,8 +99,10 @@ def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
              (ATTR_LOCATION_NAME, location_name),
              (ATTR_GPS, gps),
              (ATTR_GPS_ACCURACY, gps_accuracy),
-             (ATTR_BATTERY, battery),
-             (ATTR_FUEL_LEVEL, fuel_level)) if value is not None}
+             (ATTR_BATTERY, battery)) if value is not None}
+    if attrs:
+        for key, value in attrs:
+            data[key] = value
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
