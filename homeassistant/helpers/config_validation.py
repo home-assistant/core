@@ -70,7 +70,7 @@ def isfile(value: Any) -> str:
     """Validate that the value is an existing file."""
     if value is None:
         raise vol.Invalid('None is not file')
-    file_in = str(value)
+    file_in = os.path.expanduser(str(value))
 
     if not os.path.isfile(file_in):
         raise vol.Invalid('not a file')
