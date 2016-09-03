@@ -12,7 +12,7 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.zwave import (
     ATTR_NODE_ID, ATTR_VALUE_ID, ZWaveDeviceEntity)
 from homeassistant.components import zwave
-from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELSIUS)
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,11 +59,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug("No discovery_info=%s or no NETWORK=%s",
                       discovery_info, zwave.NETWORK)
         return
-
+    temp_unit = hass.config.units.temperature_unit
     node = zwave.NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
     value = node.values[discovery_info[ATTR_VALUE_ID]]
     value.set_change_verified(False)
-    add_devices([ZWaveClimate(value)])
+    add_devices([ZWaveClimate(value, temp_unit)])
     _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
                   discovery_info, zwave.NETWORK)
 
@@ -73,7 +73,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     """Represents a ZWave Climate device."""
 
     # pylint: disable=too-many-public-methods, too-many-instance-attributes
-    def __init__(self, value):
+    def __init__(self, value, temp_unit):
         """Initialize the zwave climate device."""
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
@@ -87,7 +87,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._fan_list = None
         self._current_swing_mode = None
         self._swing_list = None
-        self._unit = None
+        self._unit = temp_unit
+        _LOGGER.debug("temp_unit is %s", self._unit)
         self._zxt_120 = None
         self.update_properties()
         # register listener
@@ -115,18 +116,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     def update_properties(self):
         """Callback on data change for the registered node/value pair."""
-        # Set point
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
-            self._unit = value.units
-            if self.current_operation is not None:
-                if SET_TEMP_TO_INDEX.get(self._current_operation) \
-                   != value.index:
-                    continue
-                if self._zxt_120:
-                    continue
-            self._target_temperature = int(value.data)
-
         # Operation Mode
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_MODE).values():
@@ -140,6 +129,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 class_id=COMMAND_CLASS_SENSOR_MULTILEVEL).values():
             if value.label == 'Temperature':
                 self._current_temperature = int(value.data)
+                self._unit = value.units
         # Fan Mode
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_FAN_MODE).values():
@@ -158,6 +148,17 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     _LOGGER.debug("self._swing_list=%s", self._swing_list)
                     _LOGGER.debug("self._current_swing_mode=%s",
                                   self._current_swing_mode)
+        # Set point
+        for value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
+            if self.current_operation is not None and \
+               self.current_operation != 'Off':
+                if SET_TEMP_TO_INDEX.get(self._current_operation) \
+                   != value.index:
+                    continue
+                if self._zxt_120:
+                    continue
+            self._target_temperature = int(value.data)
 
     @property
     def should_poll(self):
@@ -187,14 +188,12 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        unit = self._unit
-        if unit == 'C':
+        if self._unit == 'C':
             return TEMP_CELSIUS
-        elif unit == 'F':
+        elif self._unit == 'F':
             return TEMP_FAHRENHEIT
         else:
-            _LOGGER.exception("unit_of_measurement=%s is not valid",
-                              unit)
+            return self._unit
 
     @property
     def current_temperature(self):
