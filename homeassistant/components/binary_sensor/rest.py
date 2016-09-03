@@ -13,12 +13,15 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
     CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE,
-    CONF_SENSOR_CLASS)
+    CONF_SENSOR_CLASS, CONF_VERIFY_SSL)
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
+_LOGGER = logging.getLogger(__name__)
+
 DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'REST Binary Sensor'
+DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
@@ -27,9 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD): cv.string,
     vol.Optional(CONF_SENSOR_CLASS): SENSOR_CLASSES_SCHEMA,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
-
-_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-variable
@@ -39,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
     payload = config.get(CONF_PAYLOAD)
-    verify_ssl = config.get('verify_ssl', True)
+    verify_ssl = config.get(CONF_VERIFY_SSL)
     sensor_class = config.get(CONF_SENSOR_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 

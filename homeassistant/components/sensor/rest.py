@@ -12,13 +12,16 @@ import requests
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE,
-    CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
+    CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, CONF_VERIFY_SSL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
+_LOGGER = logging.getLogger(__name__)
+
 DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'REST Sensor'
+DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
@@ -27,9 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
-
-_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-variable
@@ -39,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
     payload = config.get(CONF_PAYLOAD)
-    verify_ssl = config.get('verify_ssl', True)
+    verify_ssl = config.get(CONF_VERIFY_SSL)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
@@ -58,7 +60,7 @@ class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
     def __init__(self, hass, rest, name, unit_of_measurement, value_template):
-        """Initialize the sensor."""
+        """Initialize the REST sensor."""
         self._hass = hass
         self.rest = rest
         self._name = name
