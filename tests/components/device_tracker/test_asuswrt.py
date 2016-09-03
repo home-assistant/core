@@ -138,7 +138,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
         asuswrt.ssh_connection()
         ssh.login.assert_called_once_with('fake_host', 'fake_user',
-                                          'fake_pass')
+                                          password='fake_pass')
 
     def test_ssh_login_without_password_or_pubkey(self):  \
             # pylint: disable=invalid-name
