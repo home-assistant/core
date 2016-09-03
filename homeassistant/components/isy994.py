@@ -128,7 +128,7 @@ def _categorize_programs() -> None:
 
     for component in COMPONENTS:
         try:
-            folder = ISY.programs[KEY_MY_PROGRAMS][component]
+            folder = ISY.programs[KEY_MY_PROGRAMS]['HA.' + component]
         except KeyError:
             pass
         else:
