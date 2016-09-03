@@ -6,12 +6,23 @@ https://home-assistant.io/components/notify.slack/
 """
 import logging
 
-from homeassistant.components.notify import DOMAIN, BaseNotificationService
+import voluptuous as vol
+
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
-from homeassistant.helpers import validate_config
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['slacker==0.9.24']
+
 _LOGGER = logging.getLogger(__name__)
+
+CONF_CHANNEL = 'default_channel'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_CHANNEL): cv.string,
+})
 
 
 # pylint: disable=unused-variable
@@ -19,14 +30,9 @@ def get_service(hass, config):
     """Get the Slack notification service."""
     import slacker
 
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['default_channel', CONF_API_KEY]},
-                           _LOGGER):
-        return None
-
     try:
         return SlackNotificationService(
-            config['default_channel'],
+            config[CONF_CHANNEL],
             config[CONF_API_KEY])
 
     except slacker.Error:
@@ -61,5 +67,5 @@ class SlackNotificationService(BaseNotificationService):
             self.slack.chat.post_message(channel, message,
                                          as_user=True,
                                          attachments=attachments)
-        except slacker.Error:
-            _LOGGER.exception("Could not send slack notification")
+        except slacker.Error as err:
+            _LOGGER.error("Could not send slack notification. Error: %s", err)
