@@ -58,10 +58,13 @@ def setup_scanner(hass, config, see):
     def discover_ble_devices():
         """Discover Bluetooth LE devices."""
         _LOGGER.debug("Discovering Bluetooth LE devices")
-        service = DiscoveryService()
-        devices = service.discover(duration)
-        _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
-
+        try:
+            service = DiscoveryService()
+            devices = service.discover(duration)
+            _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
+        except RuntimeError as error:
+            _LOGGER.error("Error during Bluetooth LE scan: %s", error)
+            devices = []
         return devices
 
     yaml_path = hass.config.path(YAML_DEVICES)
