@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 
-__version__ = '0.27.1'
+__version__ = '0.27.2'
 REQUIRED_PYTHON_VER = (3, 4)
 
 PLATFORM_FORMAT = '{}.{}'
@@ -244,7 +244,7 @@ SERVICE_OPEN_COVER = 'open_cover'
 SERVICE_OPEN_COVER_TILT = 'open_cover_tilt'
 SERVICE_SET_COVER_POSITION = 'set_cover_position'
 SERVICE_SET_COVER_TILT_POSITION = 'set_cover_tilt_position'
-SERVICE_STOP_COVER = 'stop'
+SERVICE_STOP_COVER = 'stop_cover'
 SERVICE_STOP_COVER_TILT = 'stop_cover_tilt'
 
 SERVICE_MOVE_UP = 'move_up'
