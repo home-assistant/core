@@ -58,14 +58,12 @@ class SlackNotificationService(BaseNotificationService):
 
         channel = kwargs.get('target') or self._default_channel
         data = kwargs.get('data')
-        if data:
-            attachments = data.get('attachments')
-        else:
-            attachments = None
+        attachments = data.get('attachments') if data else None
 
         try:
             self.slack.chat.post_message(channel, message,
                                          as_user=True,
-                                         attachments=attachments)
+                                         attachments=attachments,
+                                         link_names=True)
         except slacker.Error as err:
             _LOGGER.error("Could not send slack notification. Error: %s", err)
