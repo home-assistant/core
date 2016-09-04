@@ -260,6 +260,20 @@ class ISYSensorDevice(ISYDevice):
         ISYDevice.__init__(self, node)
 
     @property
+    def raw_unit_of_measurement(self) -> str:
+        """Get the raw unit of measurement for the ISY994 sensor device."""
+        if len(self._node.uom) == 1:
+            if self._node.uom[0] in UOM_FRIENDLY_NAME:
+                friendly_name = UOM_FRIENDLY_NAME.get(self._node.uom[0])
+                if friendly_name == TEMP_CELSIUS or friendly_name == TEMP_FAHRENHEIT:
+                    friendly_name = self.hass.config.units.temperature_unit
+                return friendly_name
+            else:
+                return self._node.uom[0]
+        else:
+            return None
+
+    @property
     def state(self) -> str:
         """Get the state of the ISY994 sensor device."""
         if len(self._node.uom) == 1:
@@ -272,7 +286,11 @@ class ISYSensorDevice(ISYDevice):
                 int_prec = int(self._node.prec)
                 decimal_part = str_val[-int_prec:]
                 whole_part = str_val[:len(str_val) - int_prec]
-                return '{}.{}'.format(whole_part, decimal_part)
+                val = float('{}.{}'.format(whole_part, decimal_part))
+                if self.raw_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+                    val = self.hass.config.units.temperature(val, self.raw_unit_of_measurement)
+
+                return str(val)
             else:
                 return self.value
 
@@ -281,10 +299,8 @@ class ISYSensorDevice(ISYDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Get the unit of measurement for the ISY994 sensor device."""
-        if len(self._node.uom) == 1:
-            if self._node.uom[0] in UOM_FRIENDLY_NAME:
-                return UOM_FRIENDLY_NAME.get(self._node.uom[0])
-            else:
-                return self._node.uom[0]
+        raw_units = self.raw_unit_of_measurement
+        if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS):
+            return self.hass.config.units.temperature_unit
         else:
-            return None
+            return raw_units
