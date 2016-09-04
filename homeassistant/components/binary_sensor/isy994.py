@@ -60,12 +60,7 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 binary sensor device is on."""
-        return self.state == STATE_ON
-
-    @property
-    def state(self) -> str:
-        """Get the state of the ISY994 binary sensor device."""
-        return VALUE_TO_STATE.get(bool(self.value), STATE_UNKNOWN)
+        return bool(self.state)
 
 
 class ISYBinarySensorProgram(ISYBinarySensorDevice):
@@ -77,6 +72,6 @@ class ISYBinarySensorProgram(ISYBinarySensorDevice):
         self._name = name
 
     @property
-    def state(self) -> bool:
-        """Get state of the ISY994 binary sensor program."""
-        return STATE_ON if bool(self.value) else STATE_OFF
+    def is_on(self):
+        """Get whether the ISY994 binary sensor program is on."""
+        return bool(self.value)
