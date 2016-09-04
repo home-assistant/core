@@ -80,4 +80,5 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
         self.hass.bus.fire('button_pressed', {"id": self.dev_id,
                                               'pushed': value,
                                               'which': self.which,
-                                              'onoff': self.onoff})
+                                              'onoff': self.onoff,
+                                              'devname': self.devname})
