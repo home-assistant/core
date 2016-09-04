@@ -32,13 +32,14 @@ class EntityComponent(object):
 
         self.entities = {}
         self.group = None
-        self.is_polling = False
 
         self.config = None
         self.lock = Lock()
 
-        self.add_entities = EntityPlatform(self, self.scan_interval,
-                                           None).add_entities
+        self._platforms = {
+            'core': EntityPlatform(self, self.scan_interval, None),
+        }
+        self.add_entities = self._platforms['core'].add_entities
 
     def setup(self, config):
         """Set up a full entity component.
@@ -85,17 +86,22 @@ class EntityComponent(object):
             return
 
         # Config > Platform > Component
-        scan_interval = platform_config.get(
-            CONF_SCAN_INTERVAL,
-            getattr(platform, 'SCAN_INTERVAL', self.scan_interval))
+        scan_interval = (platform_config.get(CONF_SCAN_INTERVAL) or
+                         getattr(platform, 'SCAN_INTERVAL', None) or
+                         self.scan_interval)
         entity_namespace = platform_config.get(CONF_ENTITY_NAMESPACE)
 
+        key = (platform_type, scan_interval, entity_namespace)
+
+        if key not in self._platforms:
+            self._platforms[key] = EntityPlatform(self, scan_interval,
+                                                  entity_namespace)
+        entity_platform = self._platforms[key]
+
         try:
-            platform.setup_platform(
-                self.hass, platform_config,
-                EntityPlatform(self, scan_interval,
-                               entity_namespace).add_entities,
-                discovery_info)
+            platform.setup_platform(self.hass, platform_config,
+                                    entity_platform.add_entities,
+                                    discovery_info)
 
             self.hass.config.components.append(
                 '{}.{}'.format(self.domain, platform_type))
@@ -135,6 +141,22 @@ class EntityComponent(object):
         if self.group is not None:
             self.group.update_tracked_entity_ids(self.entities.keys())
 
+    def reset(self):
+        """Remove entities and reset the entity component to initial values."""
+        with self.lock:
+            for platform in self._platforms.values():
+                platform.reset()
+
+            self._platforms = {
+                'core': self._platforms['core']
+            }
+            self.entities = {}
+            self.config = None
+
+            if self.group is not None:
+                self.group.stop()
+                self.group = None
+
 
 class EntityPlatform(object):
     """Keep track of entities for a single platform."""
@@ -146,7 +168,7 @@ class EntityPlatform(object):
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
         self.platform_entities = []
-        self.is_polling = False
+        self._unsub_polling = None
 
     def add_entities(self, new_entities):
         """Add entities for a single platform."""
@@ -157,16 +179,22 @@ class EntityPlatform(object):
 
             self.component.update_group()
 
-            if self.is_polling or \
+            if self._unsub_polling is not None or \
                not any(entity.should_poll for entity
                        in self.platform_entities):
                 return
 
-            self.is_polling = True
-
-            track_utc_time_change(
+            self._unsub_polling = track_utc_time_change(
                 self.component.hass, self._update_entity_states,
                 second=range(0, 60, self.scan_interval))
+
+    def reset(self):
+        """Remove all entities and reset data."""
+        for entity in self.platform_entities:
+            entity.remove()
+        if self._unsub_polling is not None:
+            self._unsub_polling()
+            self._unsub_polling = None
 
     def _update_entity_states(self, now):
         """Update the states of all the polling entities."""
