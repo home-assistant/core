@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.isy994/
 """
 import logging
+from typing import Callable  # noqa
 
 from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
 from homeassistant.components.isy994 import (ISYDevice, SENSOR_NODES, PROGRAMS,
@@ -24,7 +25,8 @@ UOM = ['2', '78']
 STATES = [STATE_OFF, STATE_ON, 'true', 'false']
 
 
-def setup_platform(hass, config: ConfigType, add_devices: Callable[[list], None], discovery_info=None):
+def setup_platform(hass, config: ConfigType,
+                   add_devices: Callable[[list], None], discovery_info=None):
     """Setup the ISY994 binary sensor platform."""
     if ISY is None or not ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')

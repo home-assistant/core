@@ -26,7 +26,8 @@ UOM = ['11']
 STATES = [STATE_LOCKED, STATE_UNLOCKED]
 
 
-def setup_platform(hass, config: ConfigType, add_devices: Callable[[list], None], discovery_info=None):
+def setup_platform(hass, config: ConfigType,
+                   add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 lock platform."""
     if ISY is None or not ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')

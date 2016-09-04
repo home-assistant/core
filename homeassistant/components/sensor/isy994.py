@@ -235,7 +235,8 @@ UOM_TO_STATES = {
 BINARY_UOM = ['2', '78']
 
 
-def setup_platform(hass, config: ConfigType, add_devices: Callable[[list], None], discovery_info=None):
+def setup_platform(hass, config: ConfigType,
+                   add_devices: Callable[[list], None], discovery_info=None):
     """Setup the ISY994 sensor platform."""
     if ISY is None or not ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
@@ -265,7 +266,8 @@ class ISYSensorDevice(ISYDevice):
         if len(self._node.uom) == 1:
             if self._node.uom[0] in UOM_FRIENDLY_NAME:
                 friendly_name = UOM_FRIENDLY_NAME.get(self._node.uom[0])
-                if friendly_name == TEMP_CELSIUS or friendly_name == TEMP_FAHRENHEIT:
+                if friendly_name == TEMP_CELSIUS or \
+                        friendly_name == TEMP_FAHRENHEIT:
                     friendly_name = self.hass.config.units.temperature_unit
                 return friendly_name
             else:
@@ -287,8 +289,10 @@ class ISYSensorDevice(ISYDevice):
                 decimal_part = str_val[-int_prec:]
                 whole_part = str_val[:len(str_val) - int_prec]
                 val = float('{}.{}'.format(whole_part, decimal_part))
-                if self.raw_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
-                    val = self.hass.config.units.temperature(val, self.raw_unit_of_measurement)
+                raw_units = self.raw_unit_of_measurement
+                if raw_units in (
+                        TEMP_CELSIUS, TEMP_FAHRENHEIT):
+                    val = self.hass.config.units.temperature(val, raw_units)
 
                 return str(val)
             else:
