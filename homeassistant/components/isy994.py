@@ -53,8 +53,8 @@ PYISY = None
 
 HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
-COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor', 'light',
-              'switch']
+SUPPORTED_DOMAINS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor', 'light',
+                     'switch']
 
 
 def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
@@ -109,7 +109,7 @@ def _categorize_programs() -> None:
 
     PROGRAMS = {}
 
-    for component in COMPONENTS:
+    for component in SUPPORTED_DOMAINS:
         try:
             folder = ISY.programs[KEY_MY_PROGRAMS]['HA.' + component]
         except KeyError:
@@ -180,7 +180,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
 
     # Load platforms for the devices in the ISY controller that we support.
-    for component in COMPONENTS:
+    for component in SUPPORTED_DOMAINS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     ISY.auto_update = True
