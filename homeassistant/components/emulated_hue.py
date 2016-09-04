@@ -44,7 +44,7 @@ DEFAULT_LISTEN_PORT = 8300
 DEFAULT_OFF_MAPS_TO_ON_DOMAINS = ['script', 'scene']
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
-    'switch', 'light', 'group', 'input_boolean', 'media_player'
+    'switch', 'light', 'group', 'input_boolean', 'media_player', 'fan'
 ]
 
 HUE_API_STATE_ON = 'on'

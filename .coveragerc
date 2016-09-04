@@ -138,6 +138,7 @@ omit =
     homeassistant/components/device_tracker/ubus.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
+    homeassistant/components/fan/mqtt.py
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
     homeassistant/components/garage_door/rpi_gpio.py
