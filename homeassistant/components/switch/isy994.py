@@ -26,6 +26,7 @@ UOM = ['2', '78']
 STATES = [STATE_OFF, STATE_ON, 'true', 'false']
 
 
+# pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 switch platform."""
