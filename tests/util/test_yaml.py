@@ -3,6 +3,7 @@ import io
 import unittest
 import os
 import tempfile
+from unittest.mock import patch
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml
@@ -264,3 +265,12 @@ class TestSecrets(unittest.TestCase):
         """Ensure logger: debug was removed."""
         with self.assertRaises(yaml.HomeAssistantError):
             load_yaml(self._yaml_path, 'api_password: !secret logger')
+
+    @patch('homeassistant.util.yaml._LOGGER.error')
+    def test_bad_logger_value(self, mock_error):
+        """Ensure logger: debug was removed."""
+        yaml.clear_secret_cache()
+        load_yaml(self._secret_path, 'logger: info\npw: abc')
+        load_yaml(self._yaml_path, 'api_password: !secret pw')
+        assert mock_error.call_count == 1, \
+            "Expected an error about logger: value"
