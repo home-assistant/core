@@ -1,8 +1,8 @@
 """
-Support for ISY994 switches.
+Support for ISY994 lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.isy994/
+https://home-assistant.io/components/light.isy994/
 """
 import logging
 from typing import Callable
@@ -62,9 +62,9 @@ class ISYLightDevice(ISYDevice, Light):
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 light device."""
         if not self._node.fastOff():
-            _LOGGER.debug('Unable to turn on switch.')
+            _LOGGER.debug('Unable to turn on light.')
 
     def turn_on(self, brightness=100, **kwargs) -> None:
         """Send the turn on command to the ISY994 light device."""
         if not self._node.on(val=brightness):
-            _LOGGER.debug('Unable to turn on switch.')
+            _LOGGER.debug('Unable to turn on light.')
