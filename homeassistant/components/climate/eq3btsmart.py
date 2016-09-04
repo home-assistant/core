@@ -7,7 +7,7 @@ https://home-assistant.io/components/climate.eq3btsmart/
 import logging
 
 from homeassistant.components.climate import ClimateDevice
-from homeassistant.const import TEMP_CELSIUS, CONF_DEVICES
+from homeassistant.const import TEMP_CELSIUS, CONF_DEVICES, ATTR_TEMPERATURE
 from homeassistant.util.temperature import convert
 
 REQUIREMENTS = ['bluepy_devices==0.2.0']
@@ -60,8 +60,11 @@ class EQ3BTSmartThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         return self._thermostat.target_temperature
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
         self._thermostat.target_temperature = temperature
 
     @property
