@@ -9,7 +9,9 @@ import re
 import threading
 from datetime import timedelta
 
-from homeassistant.helpers.config_validation import string_schema
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
@@ -25,8 +27,11 @@ _DEVICES_REGEX = re.compile(
     r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+' +
     r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s+')
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    string_schema(CONF_USERNAME, CONF_PASSWORD, CONF_HOST))
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
+})
 
 
 # pylint: disable=unused-argument

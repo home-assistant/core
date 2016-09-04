@@ -11,8 +11,9 @@ import threading
 from datetime import timedelta
 
 import requests
+import voluptuous as vol
 
-from homeassistant.helpers.config_validation import string_schema
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
@@ -22,8 +23,11 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    string_schema(CONF_USERNAME, CONF_PASSWORD, CONF_HOST))
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string
+})
 
 
 def get_scanner(hass, config):
