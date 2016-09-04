@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.isy994/
 """
 import logging
+from typing import Callable  # noqa
 
 from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.switch import SwitchDevice, DOMAIN
@@ -12,7 +13,7 @@ from homeassistant.components.isy994 import (ISYDevice, NODES, PROGRAMS, ISY,
                                              KEY_ACTIONS, KEY_STATUS,
                                              GROUPS)
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType  # noqa
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ UOM = ['2', '78']
 STATES = [STATE_OFF, STATE_ON, 'true', 'false']
 
 
-def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
+def setup_platform(hass, config: ConfigType, add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 switch platform."""
     if ISY is None or not ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
@@ -57,7 +58,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 class ISYSwitchDevice(ISYDevice, SwitchDevice):
     """Representation of an ISY994 switch device."""
 
-    def __init__(self, node):
+    def __init__(self, node) -> None:
         """Initialize the ISY994 switch device."""
         ISYDevice.__init__(self, node)
 
@@ -71,12 +72,12 @@ class ISYSwitchDevice(ISYDevice, SwitchDevice):
         """Get the state of the ISY994 device."""
         return VALUE_TO_STATE.get(bool(self.value), STATE_UNKNOWN)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs) -> None:
         """Send the turn on command to the ISY994 switch."""
         if not self._node.off():
             _LOGGER.debug('Unable to turn on switch.')
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 switch."""
         if not self._node.on():
             _LOGGER.debug('Unable to turn on switch.')
@@ -85,7 +86,7 @@ class ISYSwitchDevice(ISYDevice, SwitchDevice):
 class ISYSwitchProgram(ISYSwitchDevice):
     """A representation of an ISY994 program switch."""
 
-    def __init__(self, name, node, actions):
+    def __init__(self, name: str, node, actions) -> None:
         """Initialize the ISY994 switch program."""
         ISYSwitchDevice.__init__(self, node)
         self._name = name
@@ -96,12 +97,12 @@ class ISYSwitchProgram(ISYSwitchDevice):
         """Get whether the ISY994 switch program is on."""
         return bool(self.value)
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs) -> None:
         """Send the turn on command to the ISY994 switch program."""
         if not self._actions.runThen():
             _LOGGER.error('Unable to turn on switch')
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 switch program."""
         if not self._actions.runElse():
             _LOGGER.error('Unable to turn off switch')

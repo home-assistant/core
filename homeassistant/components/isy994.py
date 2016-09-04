@@ -197,8 +197,8 @@ class ISYDevice(Entity):
     """Representation of an ISY994 device."""
 
     _attrs = {}
-    _domain = None
-    _name = None
+    _domain = None  # type: str
+    _name = None  # type: str
 
     def __init__(self, node) -> None:
         """Initialize the insteon device."""
@@ -222,19 +222,19 @@ class ISYDevice(Entity):
         return self._domain
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Get the unique identifier of the device."""
         # pylint: disable=protected-access
         return self._node._id
 
     @property
-    def raw_name(self):
+    def raw_name(self) -> str:
         """Get the raw name of the device."""
         return str(self._name) \
             if self._name is not None else str(self._node.name)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Get the name of the device."""
         return self.raw_name.replace(HIDDEN_STRING, '').strip() \
             .replace('_', ' ')
@@ -260,20 +260,20 @@ class ISYDevice(Entity):
         return attr
 
     @property
-    def hidden(self):
+    def hidden(self) -> bool:
         """Get whether the device should be hidden from the UI."""
         return HIDDEN_STRING in self.raw_name
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Get the device unit of measure."""
         return None
 
-    def _attr_filter(self, attr):
+    def _attr_filter(self, attr: str) -> str:
         """Filter the attribute."""
         # pylint: disable=no-self-use
         return attr
 
-    def update(self):
+    def update(self) -> None:
         """Perform an update for the device."""
         pass

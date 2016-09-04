@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.isy994/
 """
 import logging
+from typing import Callable
 
 from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.light import Light
@@ -23,7 +24,7 @@ UOM = ['2', '78']
 STATES = [STATE_OFF, STATE_ON, 'true', 'false']
 
 
-def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
+def setup_platform(hass, config: ConfigType, add_devices: Callable[[list, None]], discovery_info=None):
     """Set up the ISY994 light platform."""
     if ISY is None or not ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
@@ -42,7 +43,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 class ISYLightDevice(ISYDevice, Light):
     """Representation of an ISY994 light devie."""
 
-    def __init__(self, node):
+    def __init__(self, node: object) -> None:
         """Initialize the ISY994 light device."""
         ISYDevice.__init__(self, node)
 
@@ -56,12 +57,12 @@ class ISYLightDevice(ISYDevice, Light):
         """Get the state of the ISY994 light."""
         return VALUE_TO_STATE.get(bool(self.value), STATE_UNKNOWN)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 light device."""
         if not self._node.fastOff():
             _LOGGER.debug('Unable to turn on switch.')
 
-    def turn_on(self, brightness=100, **kwargs):
+    def turn_on(self, brightness=100, **kwargs) -> None:
         """Send the turn on command to the ISY994 light device."""
         if not self._node.on(val=brightness):
             _LOGGER.debug('Unable to turn on switch.')

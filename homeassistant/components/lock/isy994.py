@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.isy994/
 """
 import logging
+from typing import Callable  # noqa
 
 from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.lock import LockDevice, DOMAIN
@@ -25,7 +26,7 @@ UOM = ['11']
 STATES = [STATE_LOCKED, STATE_UNLOCKED]
 
 
-def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
+def setup_platform(hass, config: ConfigType, add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 lock platform."""
     if ISY is None or not ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
@@ -53,7 +54,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 class ISYLockDevice(ISYDevice, LockDevice):
     """Representation of an ISY994 lock device."""
 
-    def __init__(self, node):
+    def __init__(self, node) -> None:
         """Initialize the ISY994 lock device."""
         ISYDevice.__init__(self, node)
         self._conn = node.parent.parent.conn
@@ -96,7 +97,7 @@ class ISYLockDevice(ISYDevice, LockDevice):
 class ISYLockProgram(ISYLockDevice):
     """Representation of a ISY lock program."""
 
-    def __init__(self, name, node, actions):
+    def __init__(self, name: str, node, actions) -> None:
         """Initialize the lock."""
         ISYLockDevice.__init__(self, node)
         self._name = name
@@ -108,7 +109,7 @@ class ISYLockProgram(ISYLockDevice):
         return bool(self.value)
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the lock."""
         return STATE_LOCKED if self.is_locked else STATE_UNLOCKED
 

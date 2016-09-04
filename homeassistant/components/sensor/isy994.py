@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.isy994/
 """
 import logging
+from typing import Callable  # noqa
 
 from homeassistant.components.isy994 import (ISYDevice, SENSOR_NODES, ISY)
 from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF,
@@ -234,7 +235,7 @@ UOM_TO_STATES = {
 BINARY_UOM = ['2', '78']
 
 
-def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
+def setup_platform(hass, config: ConfigType, add_devices: Callable[[list], None], discovery_info=None):
     """Setup the ISY994 sensor platform."""
     if ISY is None or not ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
@@ -254,7 +255,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 class ISYSensorDevice(ISYDevice):
     """Representation of an ISY994 sensor device."""
 
-    def __init__(self, node):
+    def __init__(self, node) -> None:
         """Initialize the ISY994 sensor device."""
         ISYDevice.__init__(self, node)
 
@@ -278,7 +279,7 @@ class ISYSensorDevice(ISYDevice):
         return None
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Get the unit of measurement for the ISY994 sensor device."""
         if len(self._node.uom) == 1:
             if self._node.uom[0] in UOM_FRIENDLY_NAME:

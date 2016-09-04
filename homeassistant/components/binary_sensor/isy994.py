@@ -24,7 +24,7 @@ UOM = ['2', '78']
 STATES = [STATE_OFF, STATE_ON, 'true', 'false']
 
 
-def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
+def setup_platform(hass, config: ConfigType, add_devices: Callable[[list], None], discovery_info=None):
     """Setup the ISY994 binary sensor platform."""
     if ISY is None or not ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
@@ -50,7 +50,7 @@ def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
 class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
     """Representation of an ISY994 binary sensor device."""
 
-    def __init__(self, node):
+    def __init__(self, node) -> None:
         """Initialize the ISY994 binary sensor device."""
         ISYDevice.__init__(self, node)
 
@@ -68,7 +68,7 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
 class ISYBinarySensorProgram(ISYBinarySensorDevice):
     """Representation of an ISY994 binary sensor program."""
 
-    def __init__(self, name, node):
+    def __init__(self, name, node) -> None:
         """Initialize the ISY994 binary sensor program."""
         ISYBinarySensorDevice.__init__(self, node)
         self._name = name
