@@ -34,14 +34,15 @@ HUB = None
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_ALARM, default=True): cv.boolean,
         vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
         vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
         vol.Optional(CONF_LOCKS, default=True): cv.boolean,
         vol.Optional(CONF_MOUSE, default=True): cv.boolean,
         vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
+        vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 

@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Verisure platform."""
     alarms = []
-    if int(hub.config.get(CONF_ALARM, '1')):
+    if int(hub.config.get(CONF_ALARM, 1)):
         hub.update_alarms()
         alarms.extend([
             VerisureAlarm(value.id)

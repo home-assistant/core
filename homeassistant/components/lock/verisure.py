@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Verisure platform."""
     locks = []
-    if int(hub.config.get(CONF_LOCKS, '1')):
+    if int(hub.config.get(CONF_LOCKS, 1)):
         hub.update_locks()
         locks.extend([
             VerisureDoorlock(device_id)
