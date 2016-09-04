@@ -122,8 +122,6 @@ def setup_bravia(config, pin, hass, add_devices):
     """Setup a Sony Bravia TV based on host parameter."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
-    if name is None:
-        name = DEFAULT_NAME
 
     if pin is None:
         request_configuration(config, hass, add_devices)
@@ -148,13 +146,10 @@ def setup_bravia(config, pin, hass, add_devices):
         add_devices([BraviaTVDevice(host, mac, name, pin)])
 
 
-def request_configuration(config, hass, add_devices_callback):
+def request_configuration(config, hass, add_devices):
     """Request configuration steps from the user."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
-
-    if name is None:
-        name = DEFAULT_NAME
 
     configurator = get_component('configurator')
 
@@ -172,9 +167,9 @@ def request_configuration(config, hass, add_devices_callback):
         braviarc = braviarc.BraviaRC(host)
         braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
         if braviarc.is_connected():
-            setup_bravia(config, pin, hass, add_devices_callback)
+            setup_bravia(config, pin, hass, add_devices)
         else:
-            request_configuration(config, hass, add_devices_callback)
+            request_configuration(config, hass, add_devices)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, name, bravia_configuration_callback,
