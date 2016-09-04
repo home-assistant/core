@@ -58,9 +58,10 @@ class EnOceanDongle:
 
     def _combine_hex(self, data):  # pylint: disable=no-self-use
         """Combine list of integer values to one big integer."""
-        output = 0x00
+        output = 0
+        data = data.replace(' ', '').strip('[]').split(',')
         for i, j in enumerate(reversed(data)):
-            output |= (j << i * 8)
+            output |= (int(j) << i * 8)
         return output
 
     # pylint: disable=too-many-branches
