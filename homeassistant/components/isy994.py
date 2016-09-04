@@ -58,14 +58,7 @@ COMPONENTS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor', 'light',
 
 
 def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
-    """
-    Filter a list of ISY nodes based on the units and states provided.
-
-    :param nodes: List of nodes to filter.
-    :param units: List of units the node should meet.
-    :param states: List of states the node should meet.
-    :return: List of filtered Nodes.
-    """
+    """Filter a list of ISY nodes based on the units and states provided."""
     filtered_nodes = []
     units = units if units else []
     states = states if states else []
@@ -89,13 +82,7 @@ def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
 
 
 def _categorize_nodes(hidden_identifier: str, sensor_identifier: str) -> None:
-    """
-    Categorize the ISY994 nodes.
-
-    :param hidden_identifier: String to denote the node should be hidden.
-    :param sensor_identifier: String to denote teh node is a sensor.
-    :return: None.
-    """
+    """Categorize the ISY994 nodes."""
     global SENSOR_NODES
     global NODES
     global GROUPS
@@ -117,11 +104,7 @@ def _categorize_nodes(hidden_identifier: str, sensor_identifier: str) -> None:
 
 
 def _categorize_programs() -> None:
-    """
-    Categorize the ISY994 programs.
-
-    :return: None.
-    """
+    """Categorize the ISY994 programs."""
     global PROGRAMS
 
     PROGRAMS = {}
@@ -148,13 +131,7 @@ def _categorize_programs() -> None:
 
 # pylint: disable=too-many-locals
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """
-    Set up the ISY 994 platform.
-
-    :param hass: HomeAssistant.
-    :param config: Platform configuration.
-    :return: Whether the platform was setup correctly.
-    """
+    """Set up the ISY 994 platform."""
     isy_config = config.get(DOMAIN)
 
     user = isy_config.get(CONF_USERNAME)
@@ -212,12 +189,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 # pylint: disable=unused-argument
 def stop(event: object) -> None:
-    """
-    Stop ISY auto updates.
-
-    :param event: The event being watched.
-    :return: None.
-    """
+    """Stop ISY auto updates."""
     ISY.auto_update = False
 
 
@@ -229,99 +201,58 @@ class ISYDevice(Entity):
     _name = None
 
     def __init__(self, node) -> None:
-        """
-        Initialize the insteon device.
-
-        :param node: The ISY994 node object.
-        """
+        """Initialize the insteon device."""
         self._node = node
 
         self._change_handler = self._node.status.subscribe('changed',
                                                            self.on_update)
 
     def __del__(self) -> None:
-        """
-        Cleanup the subscriptions.
-
-        :return: None.
-        """
+        """Cleanup the subscriptions."""
         self._change_handler.unsubscribe()
 
     # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
-        """
-        Handle the update event from the ISY994 Node.
-
-        :param event: The event being subscribed to.
-        :return: None.
-        """
+        """Handle the update event from the ISY994 Node."""
         self.update_ha_state()
 
     @property
     def domain(self) -> str:
-        """
-        Get the domain of the device.
-
-        :return: The domain of the device.
-        """
+        """Get the domain of the device."""
         return self._domain
 
     @property
     def unique_id(self):
-        """
-        Get the unique identifier of the device.
-
-        :return: The ISY994 Node Id.
-        """
+        """Get the unique identifier of the device."""
         # pylint: disable=protected-access
         return self._node._id
 
     @property
     def raw_name(self):
-        """
-        Get the raw name of the device.
-
-        :return: The raw name of the ISY994 Node.
-        """
+        """Get the raw name of the device."""
         return str(self._name) \
             if self._name is not None else str(self._node.name)
 
     @property
     def name(self):
-        """
-        Get the name of the device.
-
-        :return: The device name.
-        """
+        """Get the name of the device."""
         return self.raw_name.replace(HIDDEN_STRING, '').strip() \
             .replace('_', ' ')
 
     @property
     def should_poll(self) -> bool:
-        """
-        No polling required since we're using the subscription.
-
-        :return: False.
-        """
+        """No polling required since we're using the subscription."""
         return False
 
     @property
     def value(self) -> object:
-        """
-        Get the current value of the device.
-
-        :return: The ISY994 Node's value.
-        """
+        """Get the current value of the device."""
         # pylint: disable=protected-access
         return self._node.status._val
 
     @property
     def state_attributes(self) -> Dict:
-        """
-        Get the state attributes for the device.
-
-        :return: The state attributes associated with the device.
-        """
+        """Get the state attributes for the device."""
         attr = {}
         if hasattr(self._node, 'aux_properties'):
             for name, val in self._node.aux_properties.items():
@@ -330,36 +261,19 @@ class ISYDevice(Entity):
 
     @property
     def hidden(self):
-        """
-        Get whether the device should be hidden from the UI.
-
-        :return: Whether the device should be hidden.
-        """
+        """Get whether the device should be hidden from the UI."""
         return HIDDEN_STRING in self.raw_name
 
     @property
     def unit_of_measurement(self):
-        """
-        Get the device unit of measure.
-
-        :return: None.
-        """
+        """Get the device unit of measure."""
         return None
 
     def _attr_filter(self, attr):
-        """
-        Filter the attribute.
-
-        :param attr: Attribute to filter.
-        :return: The attribute.
-        """
+        """Filter the attribute."""
         # pylint: disable=no-self-use
         return attr
 
     def update(self):
-        """
-        Perform an update for the device.
-
-        :return: None
-        """
+        """Perform an update for the device."""
         pass

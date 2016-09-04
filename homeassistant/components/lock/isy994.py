@@ -26,15 +26,7 @@ STATES = [STATE_LOCKED, STATE_UNLOCKED]
 
 
 def setup_platform(hass, config: ConfigType, add_devices, discovery_info=None):
-    """
-    Set up the ISY994 lock platform.
-
-    :param hass: HomeAssistant.
-    :param config: The configuration dictionary.
-    :param add_devices: Add device callback function.
-    :param discovery_info: Discovery information
-    :return: Whether the platform was setup properly.
-    """
+    """Set up the ISY994 lock platform."""
     if ISY is None or not ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
         return False
@@ -62,39 +54,22 @@ class ISYLockDevice(ISYDevice, LockDevice):
     """Representation of an ISY994 lock device."""
 
     def __init__(self, node):
-        """
-        Initialize the ISY994 lock device.
-
-        :param node: The ISY994 Node
-        """
+        """Initialize the ISY994 lock device."""
         ISYDevice.__init__(self, node)
         self._conn = node.parent.parent.conn
 
     @property
     def is_locked(self) -> bool:
-        """
-        Get whether the lock is in locked state.
-
-        :return: Whether the lock is in locked state.
-        """
+        """Get whether the lock is in locked state."""
         return self.state == STATE_LOCKED
 
     @property
     def state(self) -> str:
-        """
-        Get the state of the lock.
-
-        :return: The state of the device.
-        """
+        """Get the state of the lock."""
         return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
 
     def lock(self, **kwargs) -> None:
-        """
-        Send the lock command to the ISY994 device.
-
-        :param kwargs: Keyword arguments.
-        :return: None.
-        """
+        """Send the lock command to the ISY994 device."""
         # Hack until PyISY is updated
         req_url = self._conn.compileURL(['nodes', self.unique_id, 'cmd',
                                          'SECMD', '1'])
@@ -106,12 +81,7 @@ class ISYLockDevice(ISYDevice, LockDevice):
         self._node.update(0.5)
 
     def unlock(self, **kwargs) -> None:
-        """
-        Send the unlock command to the ISY994 device.
-
-        :param kwargs: Keyword arguments.
-        :return: None
-        """
+        """Send the unlock command to the ISY994 device."""
         # Hack until PyISY is updated
         req_url = self._conn.compileURL(['nodes', self.unique_id, 'cmd',
                                          'SECMD', '0'])
