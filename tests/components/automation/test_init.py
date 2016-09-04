@@ -5,6 +5,7 @@ from unittest.mock import patch
 from homeassistant.bootstrap import _setup_component
 import homeassistant.components.automation as automation
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_home_assistant
@@ -414,3 +415,132 @@ class TestAutomation(unittest.TestCase):
         automation.turn_on(self.hass, entity_id)
         self.hass.pool.block_till_done()
         assert automation.is_on(self.hass, entity_id)
+
+    @patch('homeassistant.config.load_yaml_config_file', return_value={
+        automation.DOMAIN: {
+            'alias': 'bye',
+            'trigger': {
+                'platform': 'event',
+                'event_type': 'test_event2',
+            },
+            'action': {
+                'service': 'test.automation',
+                'data_template': {
+                    'event': '{{ trigger.event.event_type }}'
+                }
+            }
+        }
+    })
+    def test_reload_config_service(self, mock_load_yaml):
+        """Test the reload config service."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'alias': 'hello',
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'action': {
+                    'service': 'test.automation',
+                    'data_template': {
+                        'event': '{{ trigger.event.event_type }}'
+                    }
+                }
+            }
+        })
+        assert self.hass.states.get('automation.hello') is not None
+        assert self.hass.states.get('automation.bye') is None
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+
+        assert len(self.calls) == 1
+        assert self.calls[0].data.get('event') == 'test_event'
+
+        automation.reload(self.hass)
+        self.hass.pool.block_till_done()
+
+        assert self.hass.states.get('automation.hello') is None
+        assert self.hass.states.get('automation.bye') is not None
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        assert len(self.calls) == 1
+
+        self.hass.bus.fire('test_event2')
+        self.hass.pool.block_till_done()
+        assert len(self.calls) == 2
+        assert self.calls[1].data.get('event') == 'test_event2'
+
+    @patch('homeassistant.config.load_yaml_config_file', return_value={
+        automation.DOMAIN: 'not valid',
+    })
+    def test_reload_config_when_invalid_config(self, mock_load_yaml):
+        """Test the reload config service handling invalid config."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'alias': 'hello',
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'action': {
+                    'service': 'test.automation',
+                    'data_template': {
+                        'event': '{{ trigger.event.event_type }}'
+                    }
+                }
+            }
+        })
+        assert self.hass.states.get('automation.hello') is not None
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+
+        assert len(self.calls) == 1
+        assert self.calls[0].data.get('event') == 'test_event'
+
+        automation.reload(self.hass)
+        self.hass.pool.block_till_done()
+
+        assert self.hass.states.get('automation.hello') is not None
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        assert len(self.calls) == 2
+
+    def test_reload_config_handles_load_fails(self):
+        """Test the reload config service."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'alias': 'hello',
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'action': {
+                    'service': 'test.automation',
+                    'data_template': {
+                        'event': '{{ trigger.event.event_type }}'
+                    }
+                }
+            }
+        })
+        assert self.hass.states.get('automation.hello') is not None
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+
+        assert len(self.calls) == 1
+        assert self.calls[0].data.get('event') == 'test_event'
+
+        with patch('homeassistant.config.load_yaml_config_file',
+                   side_effect=HomeAssistantError('bla')):
+            automation.reload(self.hass)
+            self.hass.pool.block_till_done()
+
+        assert self.hass.states.get('automation.hello') is not None
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        assert len(self.calls) == 2
