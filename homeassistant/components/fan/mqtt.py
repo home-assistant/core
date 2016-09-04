@@ -235,7 +235,7 @@ class MqttFan(FanEntity):
 
     @property
     def oscillating(self):
-        """Return the current speed."""
+        """Return the oscillation state."""
         return self._oscillation
 
     def turn_on(self, speed: str=SPEED_MED) -> None:
