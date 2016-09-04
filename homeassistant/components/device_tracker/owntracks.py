@@ -9,6 +9,9 @@ import logging
 import threading
 from collections import defaultdict
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import STATE_HOME
 from homeassistant.util import convert, slugify
@@ -40,11 +43,17 @@ VALIDATE_WAYPOINTS = 'waypoints'
 WAYPOINT_LAT_KEY = 'lat'
 WAYPOINT_LON_KEY = 'lon'
 
+PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_MAX_GPS_ACCURACY): cv.string,
+    vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
+    vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(cv.ensure_list, [cv.string])
+})
+
 
 def setup_scanner(hass, config, see):
     """Setup an OwnTracks tracker."""
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
-    waypoint_import = config.get(CONF_WAYPOINT_IMPORT, True)
+    waypoint_import = config.get(CONF_WAYPOINT_IMPORT)
     waypoint_whitelist = config.get(CONF_WAYPOINT_WHITELIST)
 
     def validate_payload(payload, data_type):
