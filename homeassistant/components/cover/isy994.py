@@ -96,14 +96,9 @@ class ISYCoverProgram(ISYCoverDevice):
         self._actions = actions
 
     @property
-    def is_closed(self) -> bool:
-        """Get whether the ISY994 cover program is closed."""
-        return bool(self.value)
-
-    @property
     def state(self) -> str:
         """Get the state of the ISY994 cover program."""
-        return STATE_CLOSED if self.is_closed else STATE_OPEN
+        return STATE_CLOSED if bool(self.value) else STATE_OPEN
 
     def open_cover(self, **kwargs) -> None:
         """Send the open cover command to the ISY994 cover program."""
