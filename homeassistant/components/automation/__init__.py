@@ -6,6 +6,7 @@ https://home-assistant.io/components/automation/
 """
 from functools import partial
 import logging
+import os
 
 import voluptuous as vol
 
@@ -167,6 +168,9 @@ def setup(hass, config):
     if not success:
         return False
 
+    descriptions = conf_util.load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
     def trigger_service_handler(service_call):
         """Handle automation triggers."""
         for entity in component.extract_from_service(service_call):
@@ -195,13 +199,16 @@ def setup(hass, config):
         _process_config(hass, conf, component)
 
     hass.services.register(DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
+                           descriptions.get(SERVICE_TRIGGER),
                            schema=TRIGGER_SERVICE_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_RELOAD, reload_service_handler,
+                           descriptions.get(SERVICE_RELOAD),
                            schema=RELOAD_SERVICE_SCHEMA)
 
     for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE):
         hass.services.register(DOMAIN, service, service_handler,
+                               descriptions.get(service),
                                schema=SERVICE_SCHEMA)
 
     return True

@@ -509,9 +509,7 @@ class TestAutomation(unittest.TestCase):
         self.hass.pool.block_till_done()
         assert len(self.calls) == 2
 
-    @patch('homeassistant.config.load_yaml_config_file',
-           side_effect=HomeAssistantError('bla'))
-    def test_reload_config_handles_load_fails(self, mock_load_yaml):
+    def test_reload_config_handles_load_fails(self):
         """Test the reload config service."""
         assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
@@ -536,8 +534,10 @@ class TestAutomation(unittest.TestCase):
         assert len(self.calls) == 1
         assert self.calls[0].data.get('event') == 'test_event'
 
-        automation.reload(self.hass)
-        self.hass.pool.block_till_done()
+        with patch('homeassistant.config.load_yaml_config_file',
+                   side_effect=HomeAssistantError('bla')):
+            automation.reload(self.hass)
+            self.hass.pool.block_till_done()
 
         assert self.hass.states.get('automation.hello') is not None
 
