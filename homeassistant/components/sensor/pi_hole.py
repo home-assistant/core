@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the REST binary sensor."""
+    """Setup the Pi-Hole sensor."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     method = 'GET'
@@ -67,7 +67,7 @@ class PiHoleSensor(Entity):
     """Representation of a Pi-Hole sensor."""
 
     def __init__(self, hass, rest, name):
-        """Initialize a Pi-Hole binary sensor."""
+        """Initialize a Pi-Hole sensor."""
         self._hass = hass
         self.rest = rest
         self._name = name
@@ -99,4 +99,3 @@ class PiHoleSensor(Entity):
         """Get the latest data from REST API and updates the state."""
         self.rest.update()
         self._state = json.loads(self.rest.data)
-        print("### Type ", type(self._state))
