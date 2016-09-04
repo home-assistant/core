@@ -103,14 +103,9 @@ class ISYFanProgram(ISYFanDevice):
         self.speed = STATE_ON if self.is_on else STATE_OFF
 
     @property
-    def is_on(self) -> bool:
-        """Get whether the ISY994 fan program is on."""
-        return bool(self.value)
-
-    @property
     def state(self) -> str:
         """Get the state of the ISY994 fan program."""
-        return STATE_ON if self.is_on else STATE_OFF
+        return STATE_ON if bool(self.value) else STATE_OFF
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn on command to ISY994 fan program."""
