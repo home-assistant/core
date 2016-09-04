@@ -10,7 +10,7 @@ from typing import Callable  # noqa
 from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
 from homeassistant.components.isy994 import (ISYDevice, SENSOR_NODES, PROGRAMS,
                                              ISY, KEY_STATUS, filter_nodes)
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN
+from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
 
 

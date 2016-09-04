@@ -39,8 +39,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_TLS_VER): vol.Coerce(float),
-        vol.Optional(CONF_HIDDEN_STRING, default=DEFAULT_HIDDEN_STRING): cv.string,
-        vol.Optional(CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING): cv.string
+        vol.Optional(CONF_HIDDEN_STRING,
+                     default=DEFAULT_HIDDEN_STRING): cv.string,
+        vol.Optional(CONF_SENSOR_STRING,
+                     default=DEFAULT_SENSOR_STRING): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -53,8 +55,8 @@ PYISY = None
 
 HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
-SUPPORTED_DOMAINS = ['lock', 'binary_sensor', 'cover', 'fan', 'sensor', 'light',
-                     'switch']
+SUPPORTED_DOMAINS = ['binary_sensor', 'cover', 'fan', 'light', 'lock',
+                     'sensor', 'switch']
 
 
 def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
