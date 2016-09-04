@@ -264,8 +264,10 @@ class HueLight(Light):
 
         if flash == FLASH_LONG:
             command['alert'] = 'lselect'
+            del command['on']
         elif flash == FLASH_SHORT:
             command['alert'] = 'select'
+            del command['on']
         elif self.bridge_type == 'hue':
             command['alert'] = 'none'
 
@@ -289,6 +291,17 @@ class HueLight(Light):
             # Transition time is in 1/10th seconds and cannot exceed
             # 900 seconds.
             command['transitiontime'] = min(9000, kwargs[ATTR_TRANSITION] * 10)
+
+        flash = kwargs.get(ATTR_FLASH)
+
+        if flash == FLASH_LONG:
+            command['alert'] = 'lselect'
+            del command['on']
+        elif flash == FLASH_SHORT:
+            command['alert'] = 'select'
+            del command['on']
+        elif self.bridge_type == 'hue':
+            command['alert'] = 'none'
 
         self.bridge.set_light(self.light_id, command)
 
