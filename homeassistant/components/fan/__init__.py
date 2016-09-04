@@ -39,6 +39,7 @@ SERVICE_OSCILLATE = 'oscillate'
 SPEED_OFF = 'off'
 SPEED_LOW = 'low'
 SPEED_MED = 'med'
+SPEED_MEDIUM = 'medium'
 SPEED_HIGH = 'high'
 
 ATTR_SPEED = 'speed'
