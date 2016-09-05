@@ -1,7 +1,5 @@
 """The tests for the Group components."""
 # pylint: disable=protected-access,too-many-public-methods
-import os
-import tempfile
 import unittest
 from unittest.mock import patch
 
