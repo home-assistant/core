@@ -16,7 +16,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ENTITY_ID,
-    CONF_SENSOR_CLASS)
+    CONF_SENSOR_CLASS,
+    STATE_UNKNOWN,)
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_state_change
 
@@ -120,22 +121,25 @@ class SensorTrend(BinarySensorDevice):
 
     def update(self):
         """Get the latest data and update the states."""
-        if (self.from_state and self.to_state and
-                self.from_state != 'Unknown' and self.to_state != 'Unknown'):
-            try:
-                if self._attribute:
-                    from_value = float(
-                        self.from_state.attributes.get(self._attribute))
-                    to_value = float(
-                        self.to_state.attributes.get(self._attribute))
-                else:
-                    from_value = float(self.from_state.state)
-                    to_value = float(self.to_state.state)
+        if self.from_state is None or self.to_state is None:
+            return
+        if (self.from_state.state == STATE_UNKNOWN or
+                self.to_state.state == STATE_UNKNOWN):
+            return
+        try:
+            if self._attribute:
+                from_value = float(
+                    self.from_state.attributes.get(self._attribute))
+                to_value = float(
+                    self.to_state.attributes.get(self._attribute))
+            else:
+                from_value = float(self.from_state.state)
+                to_value = float(self.to_state.state)
 
-                self._state = to_value > from_value
-                if self._invert:
-                    self._state = not self._state
+            self._state = to_value > from_value
+            if self._invert:
+                self._state = not self._state
 
-            except (ValueError, TypeError) as ex:
-                self._state = None
-                _LOGGER.error(ex)
+        except (ValueError, TypeError) as ex:
+            self._state = None
+            _LOGGER.error(ex)
