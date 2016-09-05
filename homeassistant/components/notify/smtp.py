@@ -16,15 +16,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
     BaseNotificationService)
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
+                                 CONF_SENDER, CONF_RECIPIENT)
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_IMAGES = 'images'  # optional embedded image file attachments
 
 CONF_STARTTLS = 'starttls'
-CONF_SENDER = 'sender'
-CONF_RECIPIENT = 'recipient'
 CONF_DEBUG = 'debug'
 CONF_SERVER = 'server'
 

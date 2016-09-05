@@ -6,24 +6,29 @@ https://home-assistant.io/components/notify.sendgrid/
 """
 import logging
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN, BaseNotificationService)
-from homeassistant.helpers import validate_config
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import CONF_API_KEY, CONF_SENDER, CONF_RECIPIENT
 
 REQUIREMENTS = ['sendgrid==3.2.10']
 _LOGGER = logging.getLogger(__name__)
 
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_SENDER): vol.Email,
+    vol.Required(CONF_RECIPIENT): cv.string,
+})
+
+
 def get_service(hass, config):
     """Get the SendGrid notification service."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['api_key', 'sender', 'recipient']},
-                           _LOGGER):
-        return None
-
-    api_key = config['api_key']
-    sender = config['sender']
-    recipient = config['recipient']
+    api_key = config[CONF_API_KEY]
+    sender = config[CONF_SENDER]
+    recipient = config[CONF_RECIPIENT]
 
     return SendgridNotificationService(api_key, sender, recipient)
 
