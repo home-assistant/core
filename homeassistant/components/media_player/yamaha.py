@@ -6,10 +6,13 @@ https://home-assistant.io/components/media_player.yamaha/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
-from homeassistant.const import STATE_OFF, STATE_ON
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_NAME, STATE_OFF, STATE_ON)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['rxv==0.1.11']
 
@@ -21,16 +24,23 @@ SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 CONF_SOURCE_NAMES = 'source_names'
 CONF_SOURCE_IGNORE = 'source_ignore'
 
+DEFAULT_NAME = 'Yamaha Receiver'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yamaha platform."""
     import rxv
 
+    name = config.get(CONF_NAME)
     source_ignore = config.get(CONF_SOURCE_IGNORE, [])
     source_names = config.get(CONF_SOURCE_NAMES, {})
 
     add_devices(
-        YamahaDevice(config.get("name"), receiver, source_ignore, source_names)
+        YamahaDevice(name, receiver, source_ignore, source_names)
         for receiver in rxv.find())
 
 
