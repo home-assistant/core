@@ -14,7 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/LinuxChristian/pyW215/archive/'
-                'v0.1.1.zip#pyW215==0.1.1']
+                'v0.3.3.zip#pyW215==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +55,19 @@ class SmartPlugSwitch(SwitchDevice):
     def name(self):
         """Return the name of the Smart Plug, if any."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        attr = {}
+        cur_coms = '{} W'.format(self.smartplug.current_consumption)
+        total_coms = '{} W'.format(self.smartplug.total_consumption)
+        temp = '{} \u2103'.format(self.smartplug.temperature)
+        attr['Current Comsumption'] = cur_coms
+        attr['Total Comsumption'] = total_coms
+        attr['Temperature'] = temp
+
+        return attr
 
     @property
     def current_power_watt(self):
