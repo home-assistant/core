@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     method = 'GET'
-    payload = ''
+    payload = None
     verify_ssl = config.get(CONF_VERIFY_SSL)
     use_ssl = config.get(CONF_SSL)
 
