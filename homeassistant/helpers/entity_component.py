@@ -2,10 +2,10 @@
 from threading import Lock
 
 from homeassistant.bootstrap import prepare_setup_platform
-from homeassistant.components import group
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
+from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_utc_time_change
@@ -135,6 +135,7 @@ class EntityComponent(object):
     def update_group(self):
         """Set up and/or update component group."""
         if self.group is None and self.group_name is not None:
+            group = get_component('group')
             self.group = group.Group(self.hass, self.group_name,
                                      user_defined=False)
 
