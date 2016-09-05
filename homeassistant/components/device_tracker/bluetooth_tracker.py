@@ -64,15 +64,20 @@ def setup_scanner(hass, config, see):
                 devs_to_track.append(dev[0])
                 see_device(dev)
 
-    if not devs_to_track:
-        _LOGGER.warning("No bluetooth devices to track!")
-        return False
+    # if not devs_to_track:
+    #     _LOGGER.warning("No bluetooth devices to track!")
+    #     return False
 
     interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     def update_bluetooth(now):
         """Lookup bluetooth device and update status."""
         try:
+            if track_new:
+                for dev in discover_devices():
+                    if dev[0] not in devs_to_track and \
+                        dev[0] not in devs_donot_track:
+                        devs_to_track.append(dev[0])
             for mac in devs_to_track:
                 _LOGGER.debug("Scanning " + mac)
                 result = bluetooth.lookup_name(mac, timeout=5)
