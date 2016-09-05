@@ -38,7 +38,7 @@ class EcobeeBinarySensor(BinarySensorDevice):
         self.sensor_name = sensor_name
         self.index = sensor_index
         self._state = None
-        self._sensor_class = 'motion'
+        self._sensor_class = 'occupancy'
         self.update()
 
     @property
