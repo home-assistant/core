@@ -6,29 +6,39 @@ https://home-assistant.io/components/media_player.mpchc/
 """
 import logging
 import re
+
 import requests
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_STEP, MediaPlayerDevice,
+    PLATFORM_SCHEMA)
 from homeassistant.const import (
-    STATE_OFF, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
+    STATE_OFF, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, CONF_NAME, CONF_HOST,
+    CONF_PORT)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_NAME = 'MPC-HC'
+DEFAULT_PORT = 13579
+
 SUPPORT_MPCHC = SUPPORT_VOLUME_MUTE | SUPPORT_PAUSE | SUPPORT_STOP | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_STEP
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+})
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MPC-HC platform."""
-    name = config.get("name", "MPC-HC")
-    url = '{}:{}'.format(config.get('host'), config.get('port', '13579'))
-
-    if config.get('host') is None:
-        _LOGGER.error("Missing NPC-HC host address in config")
-        return False
+    name = config.get(CONF_NAME)
+    url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
 
     add_devices([MpcHcDevice(name, url)])
 
@@ -49,7 +59,7 @@ class MpcHcDevice(MediaPlayerDevice):
         self._player_variables = dict()
 
         try:
-            response = requests.get("{}/variables.html".format(self._url),
+            response = requests.get('{}/variables.html'.format(self._url),
                                     data=None, timeout=3)
 
             mpchc_variables = re.findall(r'<p id="(.+?)">(.+?)</p>',
