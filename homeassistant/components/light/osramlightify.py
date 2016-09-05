@@ -157,7 +157,6 @@ class OsramLightifyLight(Light):
 
         effect = kwargs.get(ATTR_EFFECT)
         if effect == EFFECT_RANDOM:
-            effect = kwargs[ATTR_EFFECT]
             self._light.set_rgb(random.randrange(0, 255),
                                 random.randrange(0, 255),
                                 random.randrange(0, 255),
