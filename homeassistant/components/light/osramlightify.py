@@ -6,6 +6,7 @@ https://home-assistant.io/components/light.osramlightify/
 """
 import logging
 import socket
+import random
 from datetime import timedelta
 
 from homeassistant import util
@@ -14,9 +15,12 @@ from homeassistant.components.light import (
     Light,
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
+    EFFECT_RANDOM,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_EFFECT,
     SUPPORT_COLOR_TEMP,
     SUPPORT_RGB_COLOR,
     SUPPORT_TRANSITION,
@@ -33,7 +37,8 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 SUPPORT_OSRAMLIGHTIFY = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                         SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
+                         SUPPORT_EFFECT | SUPPORT_RGB_COLOR |
+                         SUPPORT_TRANSITION)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -149,6 +154,13 @@ class OsramLightifyLight(Light):
             kelvin = int(((TEMP_MAX - TEMP_MIN) * (color_t - TEMP_MIN_HASS) /
                           (TEMP_MAX_HASS - TEMP_MIN_HASS)) + TEMP_MIN)
             self._light.set_temperature(kelvin, fade)
+
+        effect = kwargs.get(ATTR_EFFECT)
+        if effect == EFFECT_RANDOM:
+            self._light.set_rgb(random.randrange(0, 255),
+                                random.randrange(0, 255),
+                                random.randrange(0, 255),
+                                fade)
 
         self._light.set_luminance(brightness, fade)
         self.update_ha_state()
