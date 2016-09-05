@@ -119,23 +119,20 @@ def expand_entity_ids(hass, entity_ids):
 
 def get_entity_ids(hass, entity_id, domain_filter=None):
     """Get members of this group."""
-    entity_id = entity_id.lower()
+    group = hass.states.get(entity_id)
 
-    try:
-        entity_ids = hass.states.get(entity_id).attributes[ATTR_ENTITY_ID]
-
-        if domain_filter:
-            domain_filter = domain_filter.lower()
-
-            return [ent_id for ent_id in entity_ids
-                    if ent_id.startswith(domain_filter)]
-        else:
-            return entity_ids
-
-    except (AttributeError, KeyError):
-        # AttributeError if state did not exist
-        # KeyError if key did not exist in attributes
+    if not group or ATTR_ENTITY_ID not in group.attributes:
         return []
+
+    entity_ids = group.attributes[ATTR_ENTITY_ID]
+
+    if not domain_filter:
+        return entity_ids
+
+    domain_filter = domain_filter.lower() + '.'
+
+    return [ent_id for ent_id in entity_ids
+            if ent_id.startswith(domain_filter)]
 
 
 def setup(hass, config):
