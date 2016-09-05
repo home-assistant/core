@@ -156,14 +156,14 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 if SET_TEMP_TO_INDEX.get(self._current_operation) \
                    != value.index:
                     continue
+                if self._zxt_120:
+                    continue
                 self._target_temperature = int(value.data)
                 _LOGGER.debug("Setpoint get SET_TEMP_TO_INDEX=%s and"
                               " self._current_operation=%s",
                               SET_TEMP_TO_INDEX.get(self._current_operation),
                               self._current_operation)
                 break
-#                if self._zxt_120:
-#                    continue
             _LOGGER.debug("Setpoint get not matching SET_TEMP_TO_INDEX=%s and"
                           " self._current_operation=%s. Using value.data=%s",
                           SET_TEMP_TO_INDEX.get(self._current_operation),
