@@ -10,8 +10,7 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import (
-    prepare_setup_platform, prepare_setup_component)
+from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant import config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
@@ -183,19 +182,9 @@ def setup(hass, config):
 
     def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
-        try:
-            path = conf_util.find_config_file(hass.config.config_dir)
-            conf = conf_util.load_yaml_config_file(path)
-        except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
-
-        conf = prepare_setup_component(hass, conf, DOMAIN)
-
+        conf = component.prepare_reload()
         if conf is None:
             return
-
-        component.reset()
         _process_config(hass, conf, component)
 
     hass.services.register(DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
