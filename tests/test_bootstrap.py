@@ -280,7 +280,7 @@ class TestBootstrap:
 
         loader.set_component(
             'switch.platform_a',
-            MockPlatform('comp_b', platform_schema=platform_schema))
+            MockPlatform(platform_schema=platform_schema))
 
         assert not bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
