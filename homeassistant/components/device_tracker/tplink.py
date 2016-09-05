@@ -279,7 +279,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
 
         # Generate md5 hash of password
         password = hashlib.md5(self.password.encode('utf')).hexdigest()
-        credentials = '{}:{}'.format(self.username, password).encode('utf')
+        credentials = '{}:{}'.format(self.username, password[:15]).encode('utf')
 
         # Encode the credentials to be sent as a cookie.
         self.credentials = base64.b64encode(credentials).decode('utf')
