@@ -165,8 +165,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                               self._current_operation)
                 break
             _LOGGER.debug("Get setpoint value not matching any "
-                          "SET_TEMP_TO_INDEX=%s and self._current_operation=%s."
-                          " Using value.data=%s",
+                          "SET_TEMP_TO_INDEX=%s and "
+                          "self._current_operation=%s. Using value.data=%s",
                           SET_TEMP_TO_INDEX.get(self._current_operation),
                           self._current_operation, int(value.data))
             self._target_temperature = int(value.data)
