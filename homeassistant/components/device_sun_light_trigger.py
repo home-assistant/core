@@ -19,19 +19,21 @@ import homeassistant.helpers.config_validation as cv
 DOMAIN = 'device_sun_light_trigger'
 DEPENDENCIES = ['light', 'device_tracker', 'group', 'sun']
 
-LIGHT_TRANSITION_TIME = timedelta(minutes=15)
-
-DEFAULT_LIGHT_PROFILE = 'relax'
-
 CONF_DEVICE_GROUP = 'device_group'
 CONF_DISABLE_TURN_OFF = 'disable_turn_off'
 CONF_LIGHT_GROUP = 'light_group'
 CONF_LIGHT_PROFILE = 'light_profile'
 
+DEFAULT_DISABLE_TURN_OFF = False
+DEFAULT_LIGHT_PROFILE = 'relax'
+
+LIGHT_TRANSITION_TIME = timedelta(minutes=15)
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_DEVICE_GROUP): cv.entity_id,
-        vol.Optional(CONF_DISABLE_TURN_OFF): cv.boolean,
+        vol.Optional(CONF_DISABLE_TURN_OFF, default=DEFAULT_DISABLE_TURN_OFF):
+            cv.boolean,
         vol.Optional(CONF_LIGHT_GROUP): cv.string,
         vol.Optional(CONF_LIGHT_PROFILE, default=DEFAULT_LIGHT_PROFILE):
             cv.string,
@@ -48,7 +50,7 @@ def setup(hass, config):
     light = get_component('light')
     sun = get_component('sun')
 
-    disable_turn_off = CONF_DISABLE_TURN_OFF in config[DOMAIN]
+    disable_turn_off = config[DOMAIN].get(CONF_DISABLE_TURN_OFF)
     light_group = config[DOMAIN].get(CONF_LIGHT_GROUP,
                                      light.ENTITY_ID_ALL_LIGHTS)
     light_profile = config[DOMAIN].get(CONF_LIGHT_PROFILE)
