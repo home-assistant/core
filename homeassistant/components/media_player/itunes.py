@@ -7,16 +7,24 @@ https://home-assistant.io/components/media_player.itunes/
 import logging
 
 import requests
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, PLATFORM_SCHEMA,
     MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
+    STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING, CONF_NAME,
+    CONF_HOST, CONF_PORT)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_NAME = 'iTunes'
+DEFAULT_PORT = 8181
+DEFAULT_TIMEOUT = 10
+DOMAIN = 'itunes'
 
 SUPPORT_ITUNES = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
@@ -24,7 +32,12 @@ SUPPORT_ITUNES = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 SUPPORT_AIRPLAY = SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
-DOMAIN = 'itunes'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+})
 
 
 class Itunes(object):
@@ -39,23 +52,23 @@ class Itunes(object):
     def _base_url(self):
         """Return the base url for endpoints."""
         if self.port:
-            return self.host + ":" + str(self.port)
+            return 'http://{}:{}'.format(self.host, self.port)
         else:
-            return self.host
+            return 'http://{}'.format(self.host)
 
     def _request(self, method, path, params=None):
         """Make the actual request and returns the parsed response."""
-        url = self._base_url + path
+        url = '{}{}'.format(self._base_url, path)
 
         try:
             if method == 'GET':
-                response = requests.get(url)
-            elif method == "POST":
-                response = requests.put(url, params)
-            elif method == "PUT":
-                response = requests.put(url, params)
-            elif method == "DELETE":
-                response = requests.delete(url)
+                response = requests.get(url, timeout=DEFAULT_TIMEOUT)
+            elif method == 'POST':
+                response = requests.put(url, params, timeout=DEFAULT_TIMEOUT)
+            elif method == 'PUT':
+                response = requests.put(url, params, timeout=DEFAULT_TIMEOUT)
+            elif method == 'DELETE':
+                response = requests.delete(url, timeout=DEFAULT_TIMEOUT)
 
             return response.json()
         except requests.exceptions.HTTPError:
@@ -139,9 +152,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the itunes platform."""
     add_devices([
         ItunesDevice(
-            config.get('name', 'iTunes'),
-            config.get('host'),
-            config.get('port'),
+            config.get(CONF_NAME),
+            config.get(CONF_HOST),
+            config.get(CONF_PORT),
             add_devices
         )
     ])
@@ -380,9 +393,9 @@ class AirPlayDevice(MediaPlayerDevice):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         if self.selected is True:
-            return "mdi:volume-high"
+            return 'mdi:volume-high'
         else:
-            return "mdi:volume-off"
+            return 'mdi:volume-off'
 
     @property
     def state(self):
