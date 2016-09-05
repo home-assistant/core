@@ -7,7 +7,6 @@ https://home-assistant.io/components/group/
 import logging
 import os
 import threading
-from collections import OrderedDict
 
 import voluptuous as vol
 
@@ -42,33 +41,19 @@ _LOGGER = logging.getLogger(__name__)
 
 def _conf_preprocess(value):
     """Preprocess alternative configuration formats."""
-    if isinstance(value, (str, list)):
+    if not isinstance(value, dict):
         value = {CONF_ENTITIES: value}
 
     return value
 
-_SINGLE_GROUP_CONFIG = vol.Schema(vol.All(_conf_preprocess, {
-    vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
-    CONF_VIEW: bool,
-    CONF_NAME: str,
-    CONF_ICON: cv.icon,
-}))
-
-
-def _group_dict(value):
-    """Validate a dictionary of group definitions."""
-    config = OrderedDict()
-    for key, group in value.items():
-        try:
-            config[key] = _SINGLE_GROUP_CONFIG(group)
-        except vol.MultipleInvalid as ex:
-            raise vol.Invalid('Group {} is invalid: {}'.format(key, ex))
-
-    return config
-
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(dict, _group_dict)
+    DOMAIN: {cv.match_all: vol.Schema(vol.All(_conf_preprocess, {
+        vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
+        CONF_VIEW: bool,
+        CONF_NAME: cv.string,
+        CONF_ICON: cv.icon,
+    }))}
 }, extra=vol.ALLOW_EXTRA)
 
 # List of ON/OFF state tuples for groupable states
