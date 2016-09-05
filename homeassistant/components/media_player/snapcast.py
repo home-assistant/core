@@ -6,26 +6,29 @@ https://home-assistant.io/components/media_player.snapcast/
 """
 import logging
 import socket
+
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE,
     PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN,
-    CONF_HOST, CONF_PORT)
+    STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, CONF_HOST, CONF_PORT)
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['snapcast==1.2.2']
+
+_LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'snapcast'
 
 SUPPORT_SNAPCAST = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_SELECT_SOURCE
 
-DOMAIN = 'snapcast'
-REQUIREMENTS = ['snapcast==1.2.2']
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT): cv.port
+    vol.Optional(CONF_PORT): cv.port,
 })
 
 
@@ -35,12 +38,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import snapcast.control
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, snapcast.control.CONTROL_PORT)
+
     try:
         server = snapcast.control.Snapserver(host, port)
     except socket.gaierror:
         _LOGGER.error('Could not connect to Snapcast server at %s:%d',
                       host, port)
-        return
+        return False
+
     add_devices([SnapcastDevice(client) for client in server.clients])
 
 
