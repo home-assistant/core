@@ -16,12 +16,11 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_IDLE, STATE_OFF,
-    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONF_NAME, CONF_PORT)
+    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'SqueezeBox'
 DEFAULT_PORT = 9090
 
 KNOWN_DEVICES = []
@@ -32,7 +31,6 @@ SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_USERNAME): cv.string,
