@@ -7,24 +7,45 @@ https://home-assistant.io/components/media_player.kodi/
 import logging
 import urllib
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, MediaPlayerDevice)
+    SUPPORT_TURN_OFF, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
+    CONF_PORT, CONF_USERNAME, CONF_PASSWORD)
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['jsonrpc-requests==0.3']
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['jsonrpc-requests==0.3']
+
+CONF_TURN_OFF_ACTION = 'turn_off_action'
+
+DEFAULT_NAME = 'Kodi'
+DEFAULT_PORT = 8080
+
+TURN_OFF_ACTION = [None, 'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
     SUPPORT_PLAY_MEDIA | SUPPORT_STOP
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_TURN_OFF_ACTION, default=None): vol.In(TURN_OFF_ACTION),
+    vol.Optional(CONF_USERNAME): cv.string,
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Kodi platform."""
-    url = '{}:{}'.format(config.get('host'), config.get('port', '8080'))
+    url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
 
     jsonrpc_url = config.get('url')  # deprecated
     if jsonrpc_url:
@@ -32,12 +53,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([
         KodiDevice(
-            config.get('name', 'Kodi'),
+            config.get(CONF_NAME),
             url,
-            auth=(
-                config.get('user', ''),
-                config.get('password', '')),
-            turn_off_action=config.get('turn_off_action', 'none')),
+            auth=(config.get(CONF_USERNAME), config.get(CONF_PASSWORD)),
+            turn_off_action=config.get(CONF_TURN_OFF_ACTION)),
     ])
 
 
@@ -176,19 +195,14 @@ class KodiDevice(MediaPlayerDevice):
         if self._item is not None:
             return self._item.get(
                 'title',
-                self._item.get(
-                    'label',
-                    self._item.get(
-                        'file',
-                        'unknown')))
+                self._item.get('label', self._item.get('file', 'unknown')))
 
     @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
         supported_media_commands = SUPPORT_KODI
 
-        if self._turn_off_action in [
-                'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']:
+        if self._turn_off_action in TURN_OFF_ACTION:
             supported_media_commands |= SUPPORT_TURN_OFF
 
         return supported_media_commands
