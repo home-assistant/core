@@ -1,8 +1,41 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
-
-__version__ = '0.28.0.dev0'
+MAJOR_VERSION = 0
+MINOR_VERSION = 28
+PATCH_VERSION = '0.dev0'
+__short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
+__version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4)
+
+PROJECT_NAME = 'Home Assistant'
+PROJECT_PACKAGE_NAME = 'homeassistant'
+PROJECT_LICENSE = 'MIT License'
+PROJECT_AUTHOR = 'The Home Assistant Authors'
+PROJECT_COPYRIGHT = '2016, {}'.format(PROJECT_AUTHOR)
+PROJECT_URL = 'https://home-assistant.io/'
+PROJECT_EMAIL = 'hello@home-assistant.io'
+PROJECT_DESCRIPTION = ('Open-source home automation platform '
+                       'running on Python 3.')
+PROJECT_LONG_DESCRIPTION = ('Home Assistant is an open-source '
+                            'home automation platform running on Python 3. '
+                            'Track and control all devices at home and '
+                            'automate control. '
+                            'Installation in less than a minute.')
+PROJECT_CLASSIFIERS = [
+    'Intended Audience :: End Users/Desktop',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python :: 3.4',
+    'Topic :: Home Automation'
+]
+
+PROJECT_GITHUB_USERNAME = 'home-assistant'
+PROJECT_GITHUB_REPOSITORY = 'home-assistant'
+
+PYPI_URL = 'https://pypi.python.org/pypi/{}'.format(PROJECT_PACKAGE_NAME)
+GITHUB_URL = 'https://github.com/{}/{}'.format(PROJECT_GITHUB_USERNAME,
+                                               PROJECT_GITHUB_REPOSITORY)
 
 PLATFORM_FORMAT = '{}.{}'
 
