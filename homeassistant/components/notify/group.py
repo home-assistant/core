@@ -8,8 +8,9 @@ import collections
 import logging
 import voluptuous as vol
 
-from homeassistant.const import (CONF_PLATFORM, CONF_NAME, ATTR_SERVICE)
+from homeassistant.const import ATTR_SERVICE
 from homeassistant.components.notify import (DOMAIN, ATTR_MESSAGE, ATTR_DATA,
+                                             PLATFORM_SCHEMA,
                                              BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
 
@@ -17,9 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SERVICES = "services"
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): "group",
-    vol.Required(CONF_NAME): vol.Coerce(str),
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERVICES): vol.All(cv.ensure_list, [{
         vol.Required(ATTR_SERVICE): cv.slug,
         vol.Optional(ATTR_DATA): dict,
