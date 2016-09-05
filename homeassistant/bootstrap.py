@@ -122,7 +122,8 @@ def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
             hass.pool.add_worker()
 
         hass.bus.fire(
-            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
+            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
+        )
 
         return True
 
@@ -278,23 +279,29 @@ def from_config_dict(config: Dict[str, Any],
     components = set(key.split(' ')[0] for key in config.keys()
                      if key != core.DOMAIN)
 
-    if not core_components.setup(hass, config):
-        _LOGGER.error('Home Assistant core failed to initialize. '
-                      'Further initialization aborted.')
-        return hass
+    # Setup in a thread to avoid blocking
+    def component_setup():
 
-    persistent_notification.setup(hass, config)
+        if not core_components.setup(hass, config):
+            _LOGGER.error('Home Assistant core failed to initialize. '
+                          'Further initialization aborted.')
+            return hass
 
-    _LOGGER.info('Home Assistant core initialized')
+        persistent_notification.setup(hass, config)
 
-    # Give event decorators access to HASS
-    event_decorators.HASS = hass
-    service.HASS = hass
+        _LOGGER.info('Home Assistant core initialized')
 
-    # Setup the components
-    for domain in loader.load_order_components(components):
-        _setup_component(hass, domain, config)
+        # Give event decorators access to HASS
+        event_decorators.HASS = hass
+        service.HASS = hass
 
+        # Setup the components
+        for domain in loader.load_order_components(components):
+            _setup_component(hass, domain, config)
+
+    hass.loop.run_until_complete(
+        hass.loop.run_in_executor(None, component_setup)
+    )
     return hass
 
 
