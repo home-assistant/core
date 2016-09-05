@@ -7,8 +7,9 @@ https://home-assistant.io/components/notify.join/
 import logging
 import voluptuous as vol
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService)
-from homeassistant.const import CONF_PLATFORM, CONF_NAME, CONF_API_KEY
+    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
+from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
@@ -19,10 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DEVICE_ID = 'device_id'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'joaoapps_join',
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE_ID): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_API_KEY): cv.string
 })
 
