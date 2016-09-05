@@ -11,12 +11,10 @@ import threading
 import voluptuous as vol
 
 from homeassistant import config as conf_util, core as ha
-from homeassistant.bootstrap import prepare_setup_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
     STATE_UNLOCKED, STATE_UNKNOWN, ATTR_ASSUMED_STATE)
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_state_change
@@ -154,19 +152,9 @@ def setup(hass, config):
 
     def reload_service_handler(service_call):
         """Remove all groups and load new ones from config."""
-        try:
-            path = conf_util.find_config_file(hass.config.config_dir)
-            conf = conf_util.load_yaml_config_file(path)
-        except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
-
-        conf = prepare_setup_component(hass, conf, DOMAIN)
-
+        conf = component.prepare_reload()
         if conf is None:
             return
-
-        component.reset()
         _process_config(hass, conf, component)
 
     hass.services.register(DOMAIN, SERVICE_RELOAD, reload_service_handler,
