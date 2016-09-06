@@ -8,23 +8,24 @@ import logging
 import xml.etree.ElementTree as ET
 
 import requests
+import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
-from homeassistant.helpers import validate_config
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://www.notifymyandroid.com/publicapi/'
 
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+})
+
+
 def get_service(hass, config):
     """Get the NMA notification service."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: [CONF_API_KEY]},
-                           _LOGGER):
-        return None
-
     response = requests.get(_RESOURCE + 'verify',
                             params={"apikey": config[CONF_API_KEY]})
     tree = ET.fromstring(response.content)
