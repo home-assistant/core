@@ -8,14 +8,13 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.util.dt as dt_util
-
-from homeassistant.const import (CONF_RESOURCES, STATE_OFF, STATE_ON)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_RESOURCES, STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['psutil==4.3.0']
+REQUIREMENTS = ['psutil==4.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
