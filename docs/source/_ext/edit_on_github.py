@@ -13,13 +13,11 @@ __licence__ = 'BSD (3 clause)'
 
 
 def get_github_url(app, view, path):
+    github_fmt = 'https://github.com/{}/{}/{}/{}{}'
     return (
-        'https://github.com/{project}/{view}/{branch}/{src_path}{path}'.format(
-        project=app.config.edit_on_github_project,
-        view=view,
-        branch=app.config.edit_on_github_branch,
-        src_path=app.config.edit_on_github_src_path,
-        path=path))
+        github_fmt.format(app.config.edit_on_github_project, view,
+                          app.config.edit_on_github_branch,
+                          app.config.edit_on_github_src_path, path))
 
 
 def html_page_context(app, pagename, templatename, context, doctree):
