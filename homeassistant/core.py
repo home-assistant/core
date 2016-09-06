@@ -115,7 +115,7 @@ class HomeAssistant(object):
     @property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
-        return self.state == CoreState.running
+        return self.state in (CoreState.starting, CoreState.running)
 
     def start(self) -> None:
         """Start home assistant."""

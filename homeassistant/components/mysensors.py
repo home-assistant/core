@@ -7,74 +7,116 @@ https://home-assistant.io/components/sensor.mysensors/
 import logging
 import socket
 
+import voluptuous as vol
+
+from homeassistant.bootstrap import setup_component
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_OPTIMISTIC,
                                  EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP,
-                                 STATE_OFF, STATE_ON)
-from homeassistant.helpers import validate_config, discovery
+                                 EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
+from homeassistant.helpers import discovery
+from homeassistant.loader import get_component
 
-CONF_GATEWAYS = 'gateways'
-CONF_DEVICE = 'device'
-CONF_DEBUG = 'debug'
-CONF_PERSISTENCE = 'persistence'
-CONF_PERSISTENCE_FILE = 'persistence_file'
-CONF_VERSION = 'version'
-CONF_BAUD_RATE = 'baud_rate'
-CONF_TCP_PORT = 'tcp_port'
-DEFAULT_VERSION = '1.4'
-DEFAULT_BAUD_RATE = 115200
-DEFAULT_TCP_PORT = 5003
-
-DOMAIN = 'mysensors'
-DEPENDENCIES = []
-REQUIREMENTS = [
-    'https://github.com/theolind/pymysensors/archive/'
-    'cc5d0b325e13c2b623fa934f69eea7cd4555f110.zip#pymysensors==0.6']
 _LOGGER = logging.getLogger(__name__)
+
 ATTR_NODE_ID = 'node_id'
 ATTR_CHILD_ID = 'child_id'
+ATTR_DESCRIPTION = 'description'
 ATTR_DEVICE = 'device'
-
+CONF_BAUD_RATE = 'baud_rate'
+CONF_DEVICE = 'device'
+CONF_DEBUG = 'debug'
+CONF_GATEWAYS = 'gateways'
+CONF_PERSISTENCE = 'persistence'
+CONF_PERSISTENCE_FILE = 'persistence_file'
+CONF_TCP_PORT = 'tcp_port'
+CONF_TOPIC_IN_PREFIX = 'topic_in_prefix'
+CONF_TOPIC_OUT_PREFIX = 'topic_out_prefix'
+CONF_RETAIN = 'retain'
+CONF_VERSION = 'version'
+DEFAULT_VERSION = 1.4
+DEFAULT_BAUD_RATE = 115200
+DEFAULT_TCP_PORT = 5003
+DOMAIN = 'mysensors'
 GATEWAYS = None
+MQTT_COMPONENT = 'mqtt'
+REQUIREMENTS = [
+    'https://github.com/theolind/pymysensors/archive/'
+    '8ce98b7fb56f7921a808eb66845ce8b2c455c81e.zip#pymysensors==0.7.1']
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_GATEWAYS): vol.All(cv.ensure_list, [
+            {
+                vol.Required(CONF_DEVICE): cv.string,
+                vol.Optional(CONF_PERSISTENCE_FILE): cv.string,
+                vol.Optional(
+                    CONF_BAUD_RATE,
+                    default=DEFAULT_BAUD_RATE): cv.positive_int,
+                vol.Optional(
+                    CONF_TCP_PORT,
+                    default=DEFAULT_TCP_PORT): cv.port,
+                vol.Optional(CONF_TOPIC_IN_PREFIX, default=''): cv.string,
+                vol.Optional(CONF_TOPIC_OUT_PREFIX, default=''): cv.string,
+            },
+        ]),
+        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+        vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
+        vol.Optional(CONF_RETAIN, default=True): cv.boolean,
+        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.Coerce(float),
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):  # pylint: disable=too-many-locals
     """Setup the MySensors component."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_GATEWAYS]},
-                           _LOGGER):
-        return False
-    if not all(CONF_DEVICE in gateway
-               for gateway in config[DOMAIN][CONF_GATEWAYS]):
-        _LOGGER.error('Missing required configuration items '
-                      'in %s: %s', DOMAIN, CONF_DEVICE)
-        return False
-
     import mysensors.mysensors as mysensors
 
-    version = str(config[DOMAIN].get(CONF_VERSION, DEFAULT_VERSION))
-    is_metric = hass.config.units.is_metric
-    persistence = config[DOMAIN].get(CONF_PERSISTENCE, True)
+    version = config[DOMAIN].get(CONF_VERSION)
+    persistence = config[DOMAIN].get(CONF_PERSISTENCE)
 
-    def setup_gateway(device, persistence_file, baud_rate, tcp_port):
+    def setup_gateway(device, persistence_file, baud_rate, tcp_port, in_prefix,
+                      out_prefix):
         """Return gateway after setup of the gateway."""
-        try:
-            socket.inet_aton(device)
-            # valid ip address
-            gateway = mysensors.TCPGateway(
-                device, event_callback=None, persistence=persistence,
-                persistence_file=persistence_file, protocol_version=version,
-                port=tcp_port)
-        except OSError:
-            # invalid ip address
-            gateway = mysensors.SerialGateway(
-                device, event_callback=None, persistence=persistence,
-                persistence_file=persistence_file, protocol_version=version,
-                baud=baud_rate)
-        gateway.metric = is_metric
-        gateway.debug = config[DOMAIN].get(CONF_DEBUG, False)
-        optimistic = config[DOMAIN].get(CONF_OPTIMISTIC, False)
-        gateway = GatewayWrapper(gateway, version, optimistic)
+        # pylint: disable=too-many-arguments
+        if device == MQTT_COMPONENT:
+            if not setup_component(hass, MQTT_COMPONENT, config):
+                return
+            mqtt = get_component(MQTT_COMPONENT)
+            retain = config[DOMAIN].get(CONF_RETAIN)
+
+            def pub_callback(topic, payload, qos, retain):
+                """Call mqtt publish function."""
+                mqtt.publish(hass, topic, payload, qos, retain)
+
+            def sub_callback(topic, callback, qos):
+                """Call mqtt subscribe function."""
+                mqtt.subscribe(hass, topic, callback, qos)
+            gateway = mysensors.MQTTGateway(
+                pub_callback, sub_callback,
+                event_callback=None, persistence=persistence,
+                persistence_file=persistence_file,
+                protocol_version=version, in_prefix=in_prefix,
+                out_prefix=out_prefix, retain=retain)
+        else:
+            try:
+                socket.inet_aton(device)
+                # valid ip address
+                gateway = mysensors.TCPGateway(
+                    device, event_callback=None, persistence=persistence,
+                    persistence_file=persistence_file,
+                    protocol_version=version, port=tcp_port)
+            except OSError:
+                # invalid ip address
+                gateway = mysensors.SerialGateway(
+                    device, event_callback=None, persistence=persistence,
+                    persistence_file=persistence_file,
+                    protocol_version=version, baud=baud_rate)
+        gateway.metric = hass.config.units.is_metric
+        gateway.debug = config[DOMAIN].get(CONF_DEBUG)
+        optimistic = config[DOMAIN].get(CONF_OPTIMISTIC)
+        gateway = GatewayWrapper(gateway, optimistic, device)
         # pylint: disable=attribute-defined-outside-init
         gateway.event_callback = gateway.callback_factory()
 
@@ -95,18 +137,26 @@ def setup(hass, config):  # pylint: disable=too-many-locals
     global GATEWAYS
     GATEWAYS = {}
     conf_gateways = config[DOMAIN][CONF_GATEWAYS]
-    if isinstance(conf_gateways, dict):
-        conf_gateways = [conf_gateways]
 
     for index, gway in enumerate(conf_gateways):
         device = gway[CONF_DEVICE]
         persistence_file = gway.get(
             CONF_PERSISTENCE_FILE,
             hass.config.path('mysensors{}.pickle'.format(index + 1)))
-        baud_rate = gway.get(CONF_BAUD_RATE, DEFAULT_BAUD_RATE)
-        tcp_port = gway.get(CONF_TCP_PORT, DEFAULT_TCP_PORT)
+        baud_rate = gway.get(CONF_BAUD_RATE)
+        tcp_port = gway.get(CONF_TCP_PORT)
+        in_prefix = gway.get(CONF_TOPIC_IN_PREFIX)
+        out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX)
         GATEWAYS[device] = setup_gateway(
-            device, persistence_file, baud_rate, tcp_port)
+            device, persistence_file, baud_rate, tcp_port, in_prefix,
+            out_prefix)
+        if GATEWAYS[device] is None:
+            GATEWAYS.pop(device)
+
+    if not GATEWAYS:
+        _LOGGER.error(
+            'No devices could be setup as gateways, check your configuration')
+        return False
 
     for component in 'sensor', 'switch', 'light', 'binary_sensor':
         discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -152,25 +202,25 @@ class GatewayWrapper(object):
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, gateway, version, optimistic):
+    def __init__(self, gateway, optimistic, device):
         """Setup class attributes on instantiation.
 
         Args:
         gateway (mysensors.SerialGateway): Gateway to wrap.
-        version (str): Version of mysensors API.
         optimistic (bool): Send values to actuators without feedback state.
+        device (str): Path to serial port, ip adress or mqtt.
 
         Attributes:
         _wrapped_gateway (mysensors.SerialGateway): Wrapped gateway.
-        version (str): Version of mysensors API.
         platform_callbacks (list): Callback functions, one per platform.
         optimistic (bool): Send values to actuators without feedback state.
+        device (str): Device configured as gateway.
         __initialised (bool): True if GatewayWrapper is initialised.
         """
         self._wrapped_gateway = gateway
-        self.version = version
         self.platform_callbacks = []
         self.optimistic = optimistic
+        self.device = device
         self.__initialised = True
 
     def __getattr__(self, name):
@@ -195,7 +245,7 @@ class GatewayWrapper(object):
         """Return a new callback function."""
         def node_update(update_type, node_id):
             """Callback for node updates from the MySensors gateway."""
-            _LOGGER.debug('update %s: node %s', update_type, node_id)
+            _LOGGER.debug('Update %s: node %s', update_type, node_id)
             for callback in self.platform_callbacks:
                 callback(self, node_id)
 
@@ -205,7 +255,7 @@ class GatewayWrapper(object):
 class MySensorsDeviceEntity(object):
     """Represent a MySensors entity."""
 
-    # pylint: disable=too-many-arguments,too-many-instance-attributes
+    # pylint: disable=too-many-arguments
 
     def __init__(
             self, gateway, node_id, child_id, name, value_type, child_type):
@@ -237,7 +287,6 @@ class MySensorsDeviceEntity(object):
         self._name = name
         self.value_type = value_type
         self.child_type = child_type
-        self.battery_level = 0
         self._values = {}
 
     @property
@@ -253,16 +302,14 @@ class MySensorsDeviceEntity(object):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        address = getattr(self.gateway, 'server_address', None)
-        if address:
-            device = '{}:{}'.format(address[0], address[1])
-        else:
-            device = self.gateway.port
+        node = self.gateway.sensors[self.node_id]
+        child = node.children[self.child_id]
         attr = {
-            ATTR_DEVICE: device,
-            ATTR_NODE_ID: self.node_id,
+            ATTR_BATTERY_LEVEL: node.battery_level,
             ATTR_CHILD_ID: self.child_id,
-            ATTR_BATTERY_LEVEL: self.battery_level,
+            ATTR_DESCRIPTION: child.description,
+            ATTR_DEVICE: self.gateway.device,
+            ATTR_NODE_ID: self.node_id,
         }
 
         set_req = self.gateway.const.SetReq
@@ -271,9 +318,9 @@ class MySensorsDeviceEntity(object):
             try:
                 attr[set_req(value_type).name] = value
             except ValueError:
-                _LOGGER.error('value_type %s is not valid for mysensors '
+                _LOGGER.error('Value_type %s is not valid for mysensors '
                               'version %s', value_type,
-                              self.gateway.version)
+                              self.gateway.protocol_version)
         return attr
 
     @property
@@ -285,7 +332,6 @@ class MySensorsDeviceEntity(object):
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
-        self.battery_level = node.battery_level
         set_req = self.gateway.const.SetReq
         for value_type, value in child.values.items():
             _LOGGER.debug(

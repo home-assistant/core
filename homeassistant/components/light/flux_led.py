@@ -7,10 +7,13 @@ https://home-assistant.io/components/light.flux_led/
 
 import logging
 import socket
+import random
 import voluptuous as vol
 
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-                                            Light)
+                                            ATTR_EFFECT, EFFECT_RANDOM,
+                                            SUPPORT_BRIGHTNESS,
+                                            SUPPORT_RGB_COLOR, Light)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/0.6.zip'
@@ -29,6 +32,8 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional('devices', default={}): {cv.string: DEVICE_SCHEMA},
     vol.Optional('automatic_add', default=False):  cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
+
+SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -110,6 +115,11 @@ class FluxLight(Light):
         """Return the color property."""
         return self._bulb.getRgb()
 
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_FLUX_LED
+
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         if not self.is_on:
@@ -117,10 +127,15 @@ class FluxLight(Light):
 
         rgb = kwargs.get(ATTR_RGB_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
+        effect = kwargs.get(ATTR_EFFECT)
         if rgb:
             self._bulb.setRgb(*tuple(rgb))
         elif brightness:
             self._bulb.setWarmWhite255(brightness)
+        elif effect == EFFECT_RANDOM:
+            self._bulb.setRgb(random.randrange(0, 255),
+                              random.randrange(0, 255),
+                              random.randrange(0, 255))
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""

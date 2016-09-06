@@ -1,5 +1,5 @@
 """
-Support for DS18B20 One Wire Sensors.
+Support for 1-Wire temperature sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.onewire/
@@ -17,6 +17,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 CONF_MOUNT_DIR = 'mount_dir'
 CONF_NAMES = 'names'
 DEFAULT_MOUNT_DIR = '/sys/bus/w1/devices/'
+DEVICE_FAMILIES = ('10', '22', '28', '3B', '42')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAMES): {cv.string: cv.string},
@@ -29,23 +30,22 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the one wire Sensors."""
-    base_dir = config.get('mount_dir', '/sys/bus/w1/devices/')
+    base_dir = config.get(CONF_MOUNT_DIR)
     sensor_ids = []
     device_files = []
-    for device_family in ('10', '22', '28', '3B', '42'):
+    for device_family in DEVICE_FAMILIES:
         for device_folder in glob(os.path.join(base_dir, device_family +
                                                '.*')):
             sensor_ids.append(os.path.split(device_folder)[1])
-            if base_dir.startswith('/sys/bus/w1/devices'):
+            if base_dir == DEFAULT_MOUNT_DIR:
                 device_files.append(os.path.join(device_folder, 'w1_slave'))
             else:
                 device_files.append(os.path.join(device_folder, 'temperature'))
 
     if device_files == []:
         _LOGGER.error('No onewire sensor found. Check if '
-                      'dtoverlay=w1-gpio,gpiopin=4 is in your '
-                      '/boot/config.txt and the correct gpiopin number is set.'
-                      ' Check the mount_dir parameter if it\'s defined.')
+                      'dtoverlay=w1-gpio is in your /boot/config.txt. '
+                      'Check the mount_dir parameter if it\'s defined.')
         return
 
     devs = []
@@ -104,7 +104,7 @@ class OneWire(Entity):
     def update(self):
         """Get the latest data from the device."""
         temp = -99
-        if self._device_file.startswith('/sys/bus/w1/devices'):
+        if self._device_file.startswith(DEFAULT_MOUNT_DIR):
             lines = self._read_temp_raw()
             while lines[0].strip()[-3:] != 'YES':
                 time.sleep(0.2)

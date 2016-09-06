@@ -15,7 +15,11 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
-    ATTR_TRANSITION
+    ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_RGB_COLOR,
+    SUPPORT_TRANSITION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,6 +31,9 @@ TEMP_MIN_HASS = 154           # home assistant minimum temperature
 TEMP_MAX_HASS = 500           # home assistant maximum temperature
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
+
+SUPPORT_OSRAMLIGHTIFY = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
+                         SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -113,6 +120,11 @@ class OsramLightifyLight(Light):
         _LOGGER.debug("is_on light state for light: %s is: %s",
                       self._light.name(), self._light.on())
         return self._light.on()
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OSRAMLIGHTIFY
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

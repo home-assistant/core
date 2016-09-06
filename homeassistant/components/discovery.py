@@ -12,13 +12,13 @@ import threading
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.helpers.discovery import load_platform, discover
 
-DOMAIN = "discovery"
 REQUIREMENTS = ['netdisco==0.7.1']
 
-SCAN_INTERVAL = 300  # seconds
+DOMAIN = 'discovery'
 
-SERVICE_WEMO = 'belkin_wemo'
+SCAN_INTERVAL = 300  # seconds
 SERVICE_NETGEAR = 'netgear_router'
+SERVICE_WEMO = 'belkin_wemo'
 
 SERVICE_HANDLERS = {
     SERVICE_NETGEAR: ('device_tracker', None),

@@ -9,7 +9,9 @@ import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
-    ATTR_TRANSITION, EFFECT_COLORLOOP, EFFECT_WHITE, FLASH_LONG, Light)
+    ATTR_TRANSITION, EFFECT_COLORLOOP, EFFECT_WHITE, FLASH_LONG,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['limitlessled==1.0.0']
@@ -19,6 +21,12 @@ DEFAULT_PORT = 8899
 DEFAULT_VERSION = 5
 DEFAULT_LED_TYPE = 'rgbw'
 WHITE = [255, 255, 255]
+
+SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
+                              SUPPORT_TRANSITION)
+SUPPORT_LIMITLESSLED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
+                            SUPPORT_FLASH | SUPPORT_RGB_COLOR |
+                            SUPPORT_TRANSITION)
 
 
 def rewrite_legacy(config):
@@ -168,6 +176,11 @@ class LimitlessLEDWhiteGroup(LimitlessLEDGroup):
         """Return the temperature property."""
         return self._temperature
 
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_LIMITLESSLED_WHITE
+
     @state(True)
     def turn_on(self, transition_time, pipeline, **kwargs):
         """Turn on (or adjust property of) a group."""
@@ -202,6 +215,11 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
     def rgb_color(self):
         """Return the color property."""
         return self._color
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_LIMITLESSLED_RGB
 
     @state(True)
     def turn_on(self, transition_time, pipeline, **kwargs):

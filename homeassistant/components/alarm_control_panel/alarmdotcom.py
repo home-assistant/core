@@ -80,7 +80,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        if not self._validate_code(code, 'arming home'):
+        if not self._validate_code(code, 'disarming home'):
             return
         from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
         # Open another session to alarm.com to fire off the command
