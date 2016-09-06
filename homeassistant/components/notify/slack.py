@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['slacker==0.9.24']
+REQUIREMENTS = ['slacker==0.9.25']
 
 _LOGGER = logging.getLogger(__name__)
 
