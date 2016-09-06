@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 _PULSEAUDIO_SERVERS = {}
 
-CONF_BUFFER_SIZE = 1024
+CONF_BUFFER_SIZE = 'buffer_size'
 CONF_SINK_NAME = 'sink_name'
 CONF_SOURCE_NAME = 'source_name'
 CONF_TCP_TIMEOUT = 'tcp_timeout'
