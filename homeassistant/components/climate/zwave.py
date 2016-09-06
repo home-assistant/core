@@ -234,7 +234,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     # HRT4-ZW can change setpoint when off.
                     value.data = int(temperature)
                 if SET_TEMP_TO_INDEX.get(self._current_operation) \
-                       != value.index:
+                        != value.index:
                     continue
                 _LOGGER.debug("SET_TEMP_TO_INDEX=%s and"
                               " self._current_operation=%s",
