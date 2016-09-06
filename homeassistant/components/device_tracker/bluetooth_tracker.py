@@ -8,7 +8,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker import (
     YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
-    load_config, PLATFORM_SCHEMA)
+    load_config, PLATFORM_SCHEMA, DEFAULT_TRACK_NEW)
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ def setup_scanner(hass, config, see):
                 devs_donot_track.append(device.mac[3:])
 
     # if track new devices is true discover new devices on startup.
-    track_new = config.get(CONF_TRACK_NEW, len(devs_to_track) == 0)
+    track_new = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
     if track_new:
         for dev in discover_devices():
             if dev[0] not in devs_to_track and \
@@ -64,15 +64,16 @@ def setup_scanner(hass, config, see):
                 devs_to_track.append(dev[0])
                 see_device(dev)
 
-    if not devs_to_track:
-        _LOGGER.warning("No bluetooth devices to track!")
-        return False
-
     interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     def update_bluetooth(now):
         """Lookup bluetooth device and update status."""
         try:
+            if track_new:
+                for dev in discover_devices():
+                    if dev[0] not in devs_to_track and \
+                       dev[0] not in devs_donot_track:
+                        devs_to_track.append(dev[0])
             for mac in devs_to_track:
                 _LOGGER.debug("Scanning " + mac)
                 result = bluetooth.lookup_name(mac, timeout=5)
