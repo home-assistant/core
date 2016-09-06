@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     device_files = []
     for device_family in DEVICE_FAMILIES:
         for device_folder in glob(os.path.join(base_dir, device_family +
-                                               '.*')):
+                                               '[.-]*')):
             sensor_ids.append(os.path.split(device_folder)[1])
             if base_dir == DEFAULT_MOUNT_DIR:
                 device_files.append(os.path.join(device_folder, 'w1_slave'))
