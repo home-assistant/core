@@ -278,7 +278,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
         url = 'http://{}/userRpm/LoginRpm.htm?Save=Save'.format(self.host)
 
         # Generate md5 hash of password
-        password = hashlib.md5(self.password.encode('utf')).hexdigest()
+        password = hashlib.md5(self.password.encode('utf')[:15]).hexdigest()
         credentials = '{}:{}'.format(self.username, password).encode('utf')
 
         # Encode the credentials to be sent as a cookie.
