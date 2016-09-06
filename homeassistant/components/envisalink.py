@@ -12,7 +12,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.discovery import load_platform
 
-REQUIREMENTS = ['pyenvisalink==1.4', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyenvisalink==1.5', 'pydispatcher==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'envisalink'
@@ -41,7 +41,7 @@ DEFAULT_EVL_VERSION = 3
 DEFAULT_KEEPALIVE = 60
 DEFAULT_ZONEDUMP_INTERVAL = 30
 DEFAULT_ZONETYPE = 'opening'
-DEFAULT_PANIC = 'Fire'
+DEFAULT_PANIC = 'Police'
 
 SIGNAL_ZONE_UPDATE = 'zones_updated'
 SIGNAL_PARTITION_UPDATE = 'partition_updated'
