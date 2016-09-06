@@ -270,7 +270,7 @@ pmsensor==0.3
 proliphix==0.3.1
 
 # homeassistant.components.sensor.systemmonitor
-psutil==4.3.0
+psutil==4.3.1
 
 # homeassistant.components.wink
 # homeassistant.components.binary_sensor.wink
