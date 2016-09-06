@@ -23,7 +23,7 @@ REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377
 REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
 
-HORSTMANN = 0x89
+HORSTMANN = 0x0059
 HORSTMANN_HRT4_ZW = 0x3
 HORSTMANN_HRT4_ZW_THERMOSTAT = (HORSTMANN, HORSTMANN_HRT4_ZW)
 
@@ -233,7 +233,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 if self._hrt4_zw and self.current_operation == 'Off':
                     # HRT4-ZW can change setpoint when off.
                     value.data = int(temperature)
-
                 if SET_TEMP_TO_INDEX.get(self._current_operation) \
                        != value.index:
                     continue
