@@ -12,12 +12,12 @@ from email.mime.image import MIMEImage
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
     BaseNotificationService)
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
-                                 CONF_SENDER, CONF_RECIPIENT)
+from homeassistant.const import (
+    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_RECIPIENT)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,15 +27,21 @@ CONF_STARTTLS = 'starttls'
 CONF_DEBUG = 'debug'
 CONF_SERVER = 'server'
 
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 25
+DEFAULT_DEBUG = False
+DEFAULT_STARTTLS = False
+
+# pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RECIPIENT): vol.Email,
-    vol.Optional(CONF_SERVER, default='localhost'): cv.string,
-    vol.Optional(CONF_PORT, default=25): cv.port,
-    vol.Optional(CONF_SENDER): vol.Email,
-    vol.Optional(CONF_STARTTLS, default=False): cv.boolean,
+    vol.Required(CONF_RECIPIENT): vol.Email(),
+    vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SENDER): vol.Email(),
+    vol.Optional(CONF_STARTTLS, default=DEFAULT_STARTTLS): cv.boolean,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+    vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
 })
 
 
@@ -95,16 +101,14 @@ class MailNotificationService(BaseNotificationService):
         except smtplib.socket.gaierror:
             _LOGGER.exception(
                 "SMTP server not found (%s:%s). "
-                "Please check the IP address or hostname of your SMTP server.",
+                "Please check the IP address or hostname of your SMTP server",
                 self._server, self._port)
-
             return False
 
         except (smtplib.SMTPAuthenticationError, ConnectionRefusedError):
             _LOGGER.exception(
                 "Login not possible. "
-                "Please check your setting and/or your credentials.")
-
+                "Please check your setting and/or your credentials")
             return False
 
         finally:
@@ -154,13 +158,13 @@ class MailNotificationService(BaseNotificationService):
 
 def _build_text_msg(message):
     """Build plaintext email."""
-    _LOGGER.debug('Building plain text email.')
+    _LOGGER.debug('Building plain text email')
     return MIMEText(message)
 
 
 def _build_multipart_msg(message, images):
     """Build Multipart message with in-line images."""
-    _LOGGER.debug('Building multipart email with embedded attachment(s).')
+    _LOGGER.debug('Building multipart email with embedded attachment(s)')
     msg = MIMEMultipart('related')
     msg_alt = MIMEMultipart('alternative')
     msg.attach(msg_alt)
@@ -177,7 +181,7 @@ def _build_multipart_msg(message, images):
                 msg.attach(attachment)
                 attachment.add_header('Content-ID', '<{}>'.format(cid))
         except FileNotFoundError:
-            _LOGGER.warning('Attachment %s not found. Skipping.',
+            _LOGGER.warning('Attachment %s not found. Skipping',
                             atch_name)
 
     body_html = MIMEText(''.join(body_text), 'html')
