@@ -12,20 +12,27 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import TEMP_CELSIUS
 
 REQUIREMENTS = ['https://github.com/LinuxChristian/pyW215/archive/'
-                'v0.1.1.zip#pyW215==0.1.1']
+                'v0.3.4.zip#pyW215==0.3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'D-link Smart Plug W215'
 DEFAULT_PASSWORD = ''
 DEFAULT_USERNAME = 'admin'
+CONF_USE_LEGACY_PROTOCOL = 'use_legacy_protocol'
+
+ATTR_CURRENT_CONSUMPTION = 'Current Consumption'
+ATTR_TOTAL_CONSUMPTION = 'Total Consumption'
+ATTR_TEMPERATURE = 'Temperature'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+    vol.Optional(CONF_USE_LEGACY_PROTOCOL, default=False): cv.boolean,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -38,16 +45,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    use_legacy_protocol = config.get(CONF_USE_LEGACY_PROTOCOL)
     name = config.get(CONF_NAME)
 
-    add_devices([SmartPlugSwitch(SmartPlug(host, password, username), name)])
+    add_devices([SmartPlugSwitch(hass, SmartPlug(host,
+                                                 password,
+                                                 username,
+                                                 use_legacy_protocol),
+                                 name)])
 
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a D-link Smart Plug switch."""
 
-    def __init__(self, smartplug, name):
+    def __init__(self, hass, smartplug, name):
         """Initialize the switch."""
+        self.units = hass.config.units
         self.smartplug = smartplug
         self._name = name
 
@@ -55,6 +68,23 @@ class SmartPlugSwitch(SwitchDevice):
     def name(self):
         """Return the name of the Smart Plug, if any."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        ui_temp = self.units.temperature(int(self.smartplug.temperature),
+                                         TEMP_CELSIUS)
+        temperature = "{} {}".format(ui_temp, self.units.temperature_unit)
+        current_consumption = "{} W".format(self.smartplug.current_consumption)
+        total_consumption = "{} W".format(self.smartplug.total_consumption)
+
+        attrs = {
+            ATTR_CURRENT_CONSUMPTION: current_consumption,
+            ATTR_TOTAL_CONSUMPTION: total_consumption,
+            ATTR_TEMPERATURE: temperature
+        }
+
+        return attrs
 
     @property
     def current_power_watt(self):
