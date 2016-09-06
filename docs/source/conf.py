@@ -17,19 +17,20 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import sys, os
-from os.path import relpath, dirname
+import sys
+import os
+from os.path import relpath
 import inspect
+from homeassistant.const import (__version__, __short_version__, PROJECT_NAME,
+                                 PROJECT_LONG_DESCRIPTION,
+                                 PROJECT_COPYRIGHT, PROJECT_AUTHOR,
+                                 PROJECT_GITHUB_USERNAME,
+                                 PROJECT_GITHUB_REPOSITORY,
+                                 GITHUB_PATH, GITHUB_URL)
+
 
 sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.abspath('../homeassistant'))
-
-from homeassistant.const import (__version__, __short_version__, PROJECT_NAME,
-                                 PROJECT_LONG_DESCRIPTION, PROJECT_URL,
-                                 PROJECT_COPYRIGHT, PROJECT_AUTHOR,
-                                 PROJECT_GITHUB_USERNAME,
-                                 PROJECT_GITHUB_REPOSITORY, PYPI_URL,
-                                 GITHUB_PATH, GITHUB_URL)
 
 # -- General configuration ------------------------------------------------
 
@@ -83,6 +84,7 @@ code_branch = 'dev' if 'dev' in __version__ else 'master'
 edit_on_github_project = GITHUB_PATH
 edit_on_github_branch = code_branch
 edit_on_github_src_path = 'docs/source/'
+
 
 def linkcode_resolve(domain, info):
     """
