@@ -6,37 +6,42 @@ https://home-assistant.io/components/notify.pushetta/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
-from homeassistant.helpers import validate_config
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
 REQUIREMENTS = ['pushetta==1.0.15']
+
+
+CONF_CHANNEL_NAME = 'channel_name'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_CHANNEL_NAME): cv.string,
+})
 
 
 def get_service(hass, config):
     """Get the Pushetta notification service."""
     from pushetta import Pushetta, exceptions
 
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: [CONF_API_KEY, 'channel_name']},
-                           _LOGGER):
-        return None
-
     try:
         pushetta = Pushetta(config[CONF_API_KEY])
-        pushetta.pushMessage(config['channel_name'], "Home Assistant started")
+        pushetta.pushMessage(config[CONF_CHANNEL_NAME],
+                             "Home Assistant started")
     except exceptions.TokenValidationError:
         _LOGGER.error("Please check your access token")
         return None
     except exceptions.ChannelNotFoundError:
-        _LOGGER.error("Channel '%s' not found", config['channel_name'])
+        _LOGGER.error("Channel '%s' not found", config[CONF_CHANNEL_NAME])
         return None
 
     return PushettaNotificationService(config[CONF_API_KEY],
-                                       config['channel_name'])
+                                       config[CONF_CHANNEL_NAME])
 
 
 # pylint: disable=too-few-public-methods
