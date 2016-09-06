@@ -7,11 +7,8 @@ https://home-assistant.io/components/switch.isy994/
 import logging
 from typing import Callable  # noqa
 
-from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.switch import SwitchDevice, DOMAIN
-from homeassistant.components.isy994 import (ISYDevice, NODES, PROGRAMS, ISY,
-                                             KEY_ACTIONS, KEY_STATUS,
-                                             GROUPS)
+import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType  # noqa
 
@@ -30,24 +27,24 @@ STATES = [STATE_OFF, STATE_ON, 'true', 'false']
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 switch platform."""
-    if ISY is None or not ISY.connected:
+    if isy.ISY is None or not isy.ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
         return False
 
     devices = []
 
-    for node in filter_nodes(NODES, units=UOM,
-                             states=STATES):
+    for node in isy.filter_nodes(isy.NODES, units=UOM,
+                                 states=STATES):
         if not node.dimmable:
             devices.append(ISYSwitchDevice(node))
 
-    for node in GROUPS:
+    for node in isy.GROUPS:
         devices.append(ISYSwitchDevice(node))
 
-    for program in PROGRAMS.get(DOMAIN, []):
+    for program in isy.PROGRAMS.get(DOMAIN, []):
         try:
-            status = program[KEY_STATUS]
-            actions = program[KEY_ACTIONS]
+            status = program[isy.KEY_STATUS]
+            actions = program[isy.KEY_ACTIONS]
             assert actions.dtype == 'program', 'Not a program'
         except (KeyError, AssertionError):
             pass
@@ -57,12 +54,12 @@ def setup_platform(hass, config: ConfigType,
     add_devices(devices)
 
 
-class ISYSwitchDevice(ISYDevice, SwitchDevice):
+class ISYSwitchDevice(isy.ISYDevice, SwitchDevice):
     """Representation of an ISY994 switch device."""
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 switch device."""
-        ISYDevice.__init__(self, node)
+        isy.ISYDevice.__init__(self, node)
 
     @property
     def is_on(self) -> bool:

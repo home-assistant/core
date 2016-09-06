@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.isy994/
 import logging
 from typing import Callable  # noqa
 
-from homeassistant.components.isy994 import (ISYDevice, SENSOR_NODES, ISY)
+import homeassistant.components.isy994 as isy
 from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF,
                                  STATE_ON)
 from homeassistant.helpers.typing import ConfigType
@@ -239,13 +239,13 @@ BINARY_UOM = ['2', '78']
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Setup the ISY994 sensor platform."""
-    if ISY is None or not ISY.connected:
+    if isy.ISY is None or not isy.ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
         return False
 
     devices = []
 
-    for node in SENSOR_NODES:
+    for node in isy.SENSOR_NODES:
         if (len(node.uom) == 0 or node.uom[0] not in BINARY_UOM) and \
                 STATE_OFF not in node.uom and STATE_ON not in node.uom:
             _LOGGER.debug('LOADING %s', node.name)
@@ -254,12 +254,12 @@ def setup_platform(hass, config: ConfigType,
     add_devices(devices)
 
 
-class ISYSensorDevice(ISYDevice):
+class ISYSensorDevice(isy.ISYDevice):
     """Representation of an ISY994 sensor device."""
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 sensor device."""
-        ISYDevice.__init__(self, node)
+        isy.ISYDevice.__init__(self, node)
 
     @property
     def raw_unit_of_measurement(self) -> str:

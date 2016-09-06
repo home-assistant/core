@@ -7,12 +7,10 @@ https://home-assistant.io/components/fan.isy994/
 import logging
 from typing import Callable
 
-from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.fan import (FanEntity, DOMAIN, SPEED_OFF,
                                           SPEED_LOW, SPEED_MED,
                                           SPEED_HIGH)
-from homeassistant.components.isy994 import (ISYDevice, NODES, PROGRAMS, ISY,
-                                             KEY_ACTIONS, KEY_STATUS)
+import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_UNKNOWN, STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
 
@@ -38,19 +36,19 @@ STATES = [SPEED_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Setup the ISY994 fan platform."""
-    if ISY is None or not ISY.connected:
+    if isy.ISY is None or not isy.ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
         return False
 
     devices = []
 
-    for node in filter_nodes(NODES, states=STATES):
+    for node in isy.filter_nodes(isy.NODES, states=STATES):
         devices.append(ISYFanDevice(node))
 
-    for program in PROGRAMS.get(DOMAIN, []):
+    for program in isy.PROGRAMS.get(DOMAIN, []):
         try:
-            status = program[KEY_STATUS]
-            actions = program[KEY_ACTIONS]
+            status = program[isy.KEY_STATUS]
+            actions = program[isy.KEY_ACTIONS]
             assert actions.dtype == 'program', 'Not a program'
         except (KeyError, AssertionError):
             pass
@@ -60,12 +58,12 @@ def setup_platform(hass, config: ConfigType,
     add_devices(devices)
 
 
-class ISYFanDevice(ISYDevice, FanEntity):
+class ISYFanDevice(isy.ISYDevice, FanEntity):
     """Representation of an ISY994 fan device."""
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 fan device."""
-        ISYDevice.__init__(self, node)
+        isy.ISYDevice.__init__(self, node)
         self.speed = self.state
 
     @property

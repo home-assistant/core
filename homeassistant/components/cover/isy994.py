@@ -8,9 +8,7 @@ import logging
 from typing import Callable  # noqa
 
 from homeassistant.components.cover import CoverDevice, DOMAIN
-from homeassistant.components.isy994 import (ISYDevice, NODES, PROGRAMS, ISY,
-                                             KEY_ACTIONS, KEY_STATUS,
-                                             filter_nodes)
+import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType
 
@@ -30,20 +28,20 @@ STATES = [STATE_OPEN, STATE_CLOSED, 'closing', 'opening']
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Setup the ISY994 cover platform."""
-    if ISY is None or not ISY.connected:
+    if isy.ISY is None or not isy.ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
         return False
 
     devices = []
 
-    for node in filter_nodes(NODES, units=UOM,
-                             states=STATES):
+    for node in isy.filter_nodes(isy.NODES, units=UOM,
+                                 states=STATES):
         devices.append(ISYCoverDevice(node))
 
-    for program in PROGRAMS.get(DOMAIN, []):
+    for program in isy.PROGRAMS.get(DOMAIN, []):
         try:
-            status = program[KEY_STATUS]
-            actions = program[KEY_ACTIONS]
+            status = program[isy.KEY_STATUS]
+            actions = program[isy.KEY_ACTIONS]
             assert actions.dtype == 'program', 'Not a program'
         except (KeyError, AssertionError):
             pass
@@ -53,12 +51,12 @@ def setup_platform(hass, config: ConfigType,
     add_devices(devices)
 
 
-class ISYCoverDevice(ISYDevice, CoverDevice):
+class ISYCoverDevice(isy.ISYDevice, CoverDevice):
     """Representation of an ISY994 cover device."""
 
     def __init__(self, node: object):
         """Initialize the ISY994 cover device."""
-        ISYDevice.__init__(self, node)
+        isy.ISYDevice.__init__(self, node)
 
     @property
     def current_cover_position(self) -> int:

@@ -7,11 +7,8 @@ https://home-assistant.io/components/lock.isy994/
 import logging
 from typing import Callable  # noqa
 
-from homeassistant.components.isy994 import filter_nodes
 from homeassistant.components.lock import LockDevice, DOMAIN
-from homeassistant.components.isy994 import (ISYDevice, NODES,
-                                             PROGRAMS, ISY,
-                                             KEY_ACTIONS, KEY_STATUS)
+import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType
 
@@ -30,20 +27,20 @@ STATES = [STATE_LOCKED, STATE_UNLOCKED]
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 lock platform."""
-    if ISY is None or not ISY.connected:
+    if isy.ISY is None or not isy.ISY.connected:
         _LOGGER.error('A connection has not been made to the ISY controller.')
         return False
 
     devices = []
 
-    for node in filter_nodes(NODES, units=UOM,
-                             states=STATES):
+    for node in isy.filter_nodes(isy.NODES, units=UOM,
+                                 states=STATES):
         devices.append(ISYLockDevice(node))
 
-    for program in PROGRAMS.get(DOMAIN, []):
+    for program in isy.PROGRAMS.get(DOMAIN, []):
         try:
-            status = program[KEY_STATUS]
-            actions = program[KEY_ACTIONS]
+            status = program[isy.KEY_STATUS]
+            actions = program[isy.KEY_ACTIONS]
             assert actions.dtype == 'program', 'Not a program'
         except (KeyError, AssertionError):
             pass
@@ -53,12 +50,12 @@ def setup_platform(hass, config: ConfigType,
     add_devices(devices)
 
 
-class ISYLockDevice(ISYDevice, LockDevice):
+class ISYLockDevice(isy.ISYDevice, LockDevice):
     """Representation of an ISY994 lock device."""
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 lock device."""
-        ISYDevice.__init__(self, node)
+        isy.ISYDevice.__init__(self, node)
         self._conn = node.parent.parent.conn
 
     @property
