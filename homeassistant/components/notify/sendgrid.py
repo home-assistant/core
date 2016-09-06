@@ -8,27 +8,28 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import CONF_API_KEY, CONF_SENDER, CONF_RECIPIENT
+from homeassistant.const import (CONF_API_KEY, CONF_SENDER, CONF_RECIPIENT)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['sendgrid==3.2.10']
+
 _LOGGER = logging.getLogger(__name__)
 
-
+# pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_SENDER): vol.Email,
-    vol.Required(CONF_RECIPIENT): cv.string,
+    vol.Required(CONF_SENDER): vol.Email(),
+    vol.Required(CONF_RECIPIENT): vol.Email(),
 })
 
 
 def get_service(hass, config):
     """Get the SendGrid notification service."""
-    api_key = config[CONF_API_KEY]
-    sender = config[CONF_SENDER]
-    recipient = config[CONF_RECIPIENT]
+    api_key = config.get(CONF_API_KEY)
+    sender = config.get(CONF_SENDER)
+    recipient = config.get(CONF_RECIPIENT)
 
     return SendgridNotificationService(api_key, sender, recipient)
 
