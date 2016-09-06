@@ -23,8 +23,6 @@ class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
                                        side)
         self.type = sleepiq.IS_IN_BED
         self._name = sleepiq.SENSOR_TYPES[self.type]
-        self._sensor_class = 'motion'
-
         self.update()
 
     @property
@@ -43,6 +41,11 @@ class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
         """Icon to use in the frontend, if any."""
         # pylint: disable=no-member
         return BinarySensorDevice.icon.fget(self)
+
+    @property
+    def sensor_class(self):
+        """Return the class of this sensor."""
+        return "occupancy"
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
