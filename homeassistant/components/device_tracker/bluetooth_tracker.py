@@ -64,10 +64,6 @@ def setup_scanner(hass, config, see):
                 devs_to_track.append(dev[0])
                 see_device(dev)
 
-    # if not devs_to_track:
-    #     _LOGGER.warning("No bluetooth devices to track!")
-    #     return False
-
     interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     def update_bluetooth(now):
