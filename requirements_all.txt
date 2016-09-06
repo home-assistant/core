@@ -103,7 +103,7 @@ gntp==1.0.3
 googlemaps==2.4.4
 
 # homeassistant.components.sensor.gpsd
-gps3==0.33.2
+gps3==0.33.3
 
 # homeassistant.components.binary_sensor.ffmpeg
 # homeassistant.components.camera.ffmpeg
