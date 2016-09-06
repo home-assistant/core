@@ -57,7 +57,7 @@ html:
 
 .PHONY: livehtml
 livehtml:
-	sphinx-autobuild --port 0 -B -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	sphinx-autobuild -z ../homeassistant/ --port 0 -B -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 .PHONY: dirhtml
 dirhtml:

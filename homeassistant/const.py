@@ -11,7 +11,7 @@ PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
 PROJECT_LICENSE = 'MIT License'
 PROJECT_AUTHOR = 'The Home Assistant Authors'
-PROJECT_COPYRIGHT = '2016, {}'.format(PROJECT_AUTHOR)
+PROJECT_COPYRIGHT = ' 2016, {}'.format(PROJECT_AUTHOR)
 PROJECT_URL = 'https://home-assistant.io/'
 PROJECT_EMAIL = 'hello@home-assistant.io'
 PROJECT_DESCRIPTION = ('Open-source home automation platform '
@@ -34,8 +34,9 @@ PROJECT_GITHUB_USERNAME = 'home-assistant'
 PROJECT_GITHUB_REPOSITORY = 'home-assistant'
 
 PYPI_URL = 'https://pypi.python.org/pypi/{}'.format(PROJECT_PACKAGE_NAME)
-GITHUB_URL = 'https://github.com/{}/{}'.format(PROJECT_GITHUB_USERNAME,
-                                               PROJECT_GITHUB_REPOSITORY)
+GITHUB_PATH = '{}/{}'.format(PROJECT_GITHUB_USERNAME,
+                             PROJECT_GITHUB_REPOSITORY)
+GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
 
 PLATFORM_FORMAT = '{}.{}'
 
