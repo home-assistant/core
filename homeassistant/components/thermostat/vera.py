@@ -27,6 +27,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         device in VERA_DEVICES['thermostat'])
 
 
+# pylint: disable=abstract-method
 class VeraThermostat(VeraDevice, ThermostatDevice):
     """Representation of a Vera Thermostat."""
 
