@@ -31,12 +31,12 @@ DEFAULT_SCAN_INTERVAL = 60
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_URL): cv.string,
-    vol.Required(CONF_ID): cv.string,
-    vol.Optional(CONF_EXCLUDE_FEEDID, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_INCLUDE_FEEDID, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_INCLUDE_FEEDID_NAMES, default=[]):
+    vol.Required(CONF_ID): cv.positive_int,
+    vol.Exclusive(CONF_INCLUDE_FEEDID, 'only_include_or_exclude'):
+        vol.All(cv.ensure_list, [cv.positive_int]),
+    vol.Exclusive(CONF_EXCLUDE_FEEDID, 'only_include_or_exclude'):
+        vol.All(cv.ensure_list, [cv.positive_int]),
+    vol.Optional(CONF_INCLUDE_FEEDID_NAMES):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="W"): cv.string,
@@ -74,43 +74,36 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     interval = util.convert(config.get(CONF_SCAN_INTERVAL), int,
                             DEFAULT_SCAN_INTERVAL)
 
-    include_length = len(include_feeds)
-    exclude_length = len(exclude_feeds)
-    include_names_length = len(include_feeds_names)
-
-    if include_length > 0 and exclude_length > 0:
-        _LOGGER.error("Both config values '%s' and '%s' are " +
-                      "specified this is not valid! " +
-                      "Please check your configuration",
-                      CONF_EXCLUDE_FEEDID, CONF_INCLUDE_FEEDID)
-        return False
-
     data = EmonCmsData(hass, url, apikey, interval)
 
     if data.data is None:
         return False
 
     sensors = []
+
+    if include_feeds_names is not None:
+        include_names_length = len(include_feeds_names)
+
     for elem in data.data:
-        if include_length == 0 and exclude_length == 0:
+        if include_feeds is None and exclude_feeds is None:
             sensors.append(EmonCmsSensor(hass, data, None, value_template,
-                                         unit_of_measurement, sensorid,
+                                         unit_of_measurement, str(sensorid),
                                          elem))
 
-        elif exclude_length > 0:
-            if not elem["id"] in exclude_feeds:
+        elif exclude_feeds is not None:
+            if not int(elem["id"]) in exclude_feeds:
                 sensors.append(EmonCmsSensor(hass, data, None,
                                              value_template,
                                              unit_of_measurement,
-                                             sensorid,
+                                             str(sensorid),
                                              elem))
 
-        elif include_length > 0:
-            if elem["id"] in include_feeds:
+        elif include_feeds is not None:
+            if int(elem["id"]) in include_feeds:
                 name = None
-                if include_names_length > 0:
+                if include_feeds_names is not None:
                     try:
-                        listindex = include_feeds.index(elem["id"])
+                        listindex = include_feeds.index(int(elem["id"]))
                     except ValueError:
                         listindex = -1
 
@@ -121,7 +114,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 sensors.append(EmonCmsSensor(hass, data, name,
                                              value_template,
                                              unit_of_measurement,
-                                             sensorid,
+                                             str(sensorid),
                                              elem))
     add_devices(sensors)
 
