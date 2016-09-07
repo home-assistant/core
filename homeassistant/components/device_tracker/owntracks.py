@@ -16,6 +16,7 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.const import STATE_HOME
 from homeassistant.util import convert, slugify
 from homeassistant.components import zone as zone_comp
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 
 DEPENDENCIES = ['mqtt']
 
@@ -43,8 +44,8 @@ VALIDATE_WAYPOINTS = 'waypoints'
 WAYPOINT_LAT_KEY = 'lat'
 WAYPOINT_LON_KEY = 'lon'
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MAX_GPS_ACCURACY): cv.string,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
     vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
     vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(cv.ensure_list, [cv.string])
 })
