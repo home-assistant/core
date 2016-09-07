@@ -203,15 +203,25 @@ class HomeAssistant(object):
 
     def block_till_done(self):
         """Block till all pending work is done."""
-        run_callback_threadsafe(
-            self.loop,
-            self.pool.block_till_done,
-        ).result()
+        import threading
 
-    @asyncio.coroutine
-    def async_block_till_done(self):
-        """Async block till all pending work is done."""
-        yield from self.loop.run_in_executor(None, self.pool.block_till_done)
+        pool_done = asyncio.Event(loop=self.loop)
+
+        @asyncio.coroutine
+        def await_pool_done():
+            """Wait till thread pool is done."""
+            yield from pool_done.wait()
+
+        result = run_coroutine_threadsafe(await_pool_done(), self.loop)
+
+        def notify_when_done():
+            """Notify event loop when pool done."""
+            self.pool.block_till_done()
+            pool_done.set()
+
+        threading.Thread(target=notify_when_done).start()
+
+        result.result()
 
     @asyncio.coroutine
     def stop(self) -> None:
@@ -1046,7 +1056,7 @@ def create_timer(hass, interval=TIMER_INTERVAL):
                 slp_seconds = interval - now.second % interval + \
                     .5 - now.microsecond/1000000.0
 
-                yield from asyncio.sleep(slp_seconds)
+                yield from asyncio.sleep(slp_seconds, loop=hass.loop)
 
                 now = calc_now()
 

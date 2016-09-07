@@ -6,8 +6,6 @@ import os
 import signal
 import unittest
 from unittest.mock import patch
-import time
-import threading
 from datetime import datetime, timedelta
 
 import pytz
@@ -40,63 +38,36 @@ class TestHomeAssistant(unittest.TestCase):
 
     def setUp(self):     # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.hass.states.set("light.Bowl", "on")
-        self.hass.states.set("switch.AC", "off")
+        self.hass = get_test_home_assistant(0)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
-        try:
-            self.hass.stop()
-        except HomeAssistantError:
-            # Already stopped after the block till stopped test
-            pass
+        self.hass.stop()
 
-    def test_start(self):
+    def test_start_and_sigterm(self):
         """Start the test."""
         calls = []
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
                                   lambda event: calls.append(1))
-        self.hass.start()
-        self.hass.pool.block_till_done()
+
+        @asyncio.coroutine
+        def fake_stop():
+            print("BIER")
+            yield None
+
+        with patch.object(self.hass.loop, 'run_forever', return_value=None):
+            with patch.object(self.hass, 'stop', return_value=fake_stop()):
+                self.hass.start()
+                self.hass.block_till_done()
+
         self.assertEqual(1, len(calls))
 
-    # @patch('homeassistant.core.time.sleep')
-    def test_block_till_stoped(self):
-        """Test if we can block till stop service is called."""
-        with patch('time.sleep'):
-            blocking_thread = threading.Thread(
-                target=self.hass.block_till_stopped)
-
-            self.assertFalse(blocking_thread.is_alive())
-
-            blocking_thread.start()
-
-            self.assertTrue(blocking_thread.is_alive())
-
-            self.hass.services.call(ha.DOMAIN, ha.SERVICE_HOMEASSISTANT_STOP)
-            self.hass.pool.block_till_done()
-
-        # Wait for thread to stop
-        for _ in range(20):
-            if not blocking_thread.is_alive():
-                break
-            time.sleep(0.05)
-
-        self.assertFalse(blocking_thread.is_alive())
-
-    def test_stopping_with_sigterm(self):
-        """Test for stopping with sigterm."""
-        calls = []
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                                   lambda event: calls.append(1))
 
-        def send_sigterm(length):
-            """Send sigterm."""
-            os.kill(os.getpid(), signal.SIGTERM)
+        os.kill(os.getpid(), signal.SIGTERM)
 
-        with patch('homeassistant.core.time.sleep', send_sigterm):
-            self.hass.block_till_stopped()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(calls))
 
@@ -148,17 +119,17 @@ class TestEventBus(unittest.TestCase):
 
     def setUp(self):     # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.bus = ha.EventBus(ha.create_worker_pool(0),
-                               asyncio.get_event_loop())
+        self.hass = get_test_home_assistant()
+        self.bus = self.hass.bus
         self.bus.listen('test_event', lambda x: len)
+        # self.hass.block_till_done()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down stuff we started."""
-        self.bus._pool.stop()
+        self.hass.stop()
 
     def test_add_remove_listener(self):
         """Test remove_listener method."""
-        self.bus._pool.add_worker()
         old_count = len(self.bus.listeners)
 
         def listener(_): pass
@@ -179,7 +150,6 @@ class TestEventBus(unittest.TestCase):
 
     def test_unsubscribe_listener(self):
         """Test unsubscribe listener from returned function."""
-        self.bus._pool.add_worker()
         calls = []
 
         def listener(event):
@@ -189,14 +159,14 @@ class TestEventBus(unittest.TestCase):
         unsub = self.bus.listen('test', listener)
 
         self.bus.fire('test')
-        self.bus._pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
 
         unsub()
 
         self.bus.fire('event')
-        self.bus._pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
 
@@ -210,8 +180,7 @@ class TestEventBus(unittest.TestCase):
         # Second time it should not increase runs
         self.bus.fire('test_event')
 
-        self.bus._pool.add_worker()
-        self.bus._pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(runs))
 
 
@@ -277,11 +246,13 @@ class TestStateMachine(unittest.TestCase):
     def setUp(self):    # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant(0)
+        self.states = self.hass.states
         self.states.set("light.Bowl", "on")
         self.states.set("switch.AC", "off")
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down stuff we started."""
+        self.hass.stop()
 
     def test_is_state(self):
         """Test is_state method."""
@@ -320,9 +291,12 @@ class TestStateMachine(unittest.TestCase):
     def test_remove(self):
         """Test remove method."""
         events = []
+        self.hass.bus.listen(EVENT_STATE_CHANGED,
+                             lambda event: events.append(event))
 
         self.assertIn('light.bowl', self.states.entity_ids())
         self.assertTrue(self.states.remove('light.bowl'))
+        self.hass.block_till_done()
 
         self.assertNotIn('light.bowl', self.states.entity_ids())
         self.assertEqual(1, len(events))
@@ -333,14 +307,18 @@ class TestStateMachine(unittest.TestCase):
 
         # If it does not exist, we should get False
         self.assertFalse(self.states.remove('light.Bowl'))
+        self.hass.block_till_done()
         self.assertEqual(1, len(events))
 
     def test_case_insensitivty(self):
         """Test insensitivty."""
         runs = []
 
+        self.hass.bus.listen(EVENT_STATE_CHANGED,
+                             lambda event: runs.append(event))
 
         self.states.set('light.BOWL', 'off')
+        self.hass.block_till_done()
 
         self.assertTrue(self.states.is_state('light.bowl', 'off'))
         self.assertEqual(1, len(runs))
@@ -353,16 +331,23 @@ class TestStateMachine(unittest.TestCase):
 
         with patch('homeassistant.util.dt.utcnow', return_value=future):
             self.states.set("light.Bowl", "on", {'attr': 'triggers_change'})
+            self.hass.block_till_done()
 
+        state2 = self.states.get('light.Bowl')
+        assert state2 is not None
+        assert state.last_changed == state2.last_changed
 
     def test_force_update(self):
         """Test force update option."""
         events = []
+        self.hass.bus.listen(EVENT_STATE_CHANGED, events.append)
 
         self.states.set('light.bowl', 'on')
+        self.hass.block_till_done()
         self.assertEqual(0, len(events))
 
         self.states.set('light.bowl', 'on', None, True)
+        self.hass.block_till_done()
         self.assertEqual(1, len(events))
 
 
