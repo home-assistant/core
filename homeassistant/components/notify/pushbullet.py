@@ -6,12 +6,21 @@ https://home-assistant.io/components/notify.pushbullet/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService)
+    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pushbullet.py==0.10.0']
+
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+})
 
 
 # pylint: disable=unused-argument
@@ -19,10 +28,6 @@ def get_service(hass, config):
     """Get the PushBullet notification service."""
     from pushbullet import PushBullet
     from pushbullet import InvalidKeyError
-
-    if CONF_API_KEY not in config:
-        _LOGGER.error("Unable to find config key '%s'", CONF_API_KEY)
-        return None
 
     try:
         pushbullet = PushBullet(config[CONF_API_KEY])
