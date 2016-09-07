@@ -4,7 +4,7 @@ Core components of Home Assistant.
 Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
-
+# pylint: disable=unused-import, too-many-lines
 import asyncio
 import enum
 import functools as ft
@@ -16,7 +16,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 from types import MappingProxyType
 
-# pylint: disable=unused-import
 from typing import Optional, Any, Callable, List  # NOQA
 
 import voluptuous as vol
@@ -106,6 +105,7 @@ class JobPriority(util.OrderedEnum):
 
 class HomeAssistant(object):
     """Root object of the Home Assistant home automation."""
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self):
         """Initialize new Home Assistant object."""
@@ -136,11 +136,13 @@ class HomeAssistant(object):
 
         @asyncio.coroutine
         def stop_homeassistant(*args):
+            """Stop Home Assistant."""
             self.exit_code = 0
             yield from self.stop()
 
         @asyncio.coroutine
         def restart_homeassistant(*args):
+            """Restart Home Assistant."""
             self.exit_code = RESTART_EXIT_CODE
             yield from self.stop()
 
@@ -311,7 +313,7 @@ class EventBus(object):
         return
 
     def async_fire(self, event_type: str, event_data=None,
-                         origin=EventOrigin.local, wait=False):
+                   origin=EventOrigin.local, wait=False):
         """Fire an event."""
         # Copy the list of the current listeners because some listeners
         # remove themselves as a listener while being executed which
@@ -341,7 +343,7 @@ class EventBus(object):
         try:
             self._pool.add_many_jobs(sync_jobs)
         except:
-            _LOGGER.info("Unable to queue: %s" % sync_jobs)
+            _LOGGER.info("Unable to queue: %s", sync_jobs)
             raise
 
     def listen(self, event_type, listener):
@@ -672,7 +674,7 @@ class StateMachine(object):
         )
 
     def async_set(self, entity_id, new_state, attributes=None,
-                        force_update=False):
+                  force_update=False):
         """Set the state of an entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state.
@@ -1012,12 +1014,14 @@ def create_timer(hass, interval=TIMER_INTERVAL):
     # Setting the Event inside the loop by marking it as a coroutine
     @asyncio.coroutine
     def stop_timer(event):
+        """Stop the timer."""
         stop_event.set()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
 
     @asyncio.coroutine
     def timer(interval, stop_event):
+        """Create an async timer."""
         _LOGGER.info("Timer:starting")
 
         last_fired_on_second = -1
@@ -1062,6 +1066,7 @@ def create_timer(hass, interval=TIMER_INTERVAL):
 
     @asyncio.coroutine
     def start_timer(event):
+        """Start our async timer."""
         hass.loop.create_task(timer(interval, stop_event))
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_timer)
