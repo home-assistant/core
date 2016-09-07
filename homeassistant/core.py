@@ -205,23 +205,25 @@ class HomeAssistant(object):
         """Block till all pending work is done."""
         import threading
 
-        pool_done = asyncio.Event(loop=self.loop)
-
-        @asyncio.coroutine
-        def await_pool_done():
-            """Wait till thread pool is done."""
-            yield from pool_done.wait()
-
-        result = run_coroutine_threadsafe(await_pool_done(), self.loop)
+        complete = threading.Event()
 
         def notify_when_done():
             """Notify event loop when pool done."""
-            self.pool.block_till_done()
-            pool_done.set()
+            while True:
+                # Wait for the work queue to empty
+                self.pool.block_till_done()
+
+                # Verify the loop is empty
+                loop_empty = self.loop._current_handle is None and \
+                    len(self.loop._ready) == 0
+
+                if loop_empty:
+                    break
+
+            complete.set()
 
         threading.Thread(target=notify_when_done).start()
-
-        result.result()
+        complete.wait()
 
     @asyncio.coroutine
     def stop(self) -> None:
@@ -682,7 +684,7 @@ class StateMachine(object):
         run_callback_threadsafe(
             self._loop,
             self.async_set, entity_id, new_state, attributes, force_update,
-        )
+        ).result()
 
     def async_set(self, entity_id, new_state, attributes=None,
                   force_update=False):
