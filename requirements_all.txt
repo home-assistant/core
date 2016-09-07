@@ -82,7 +82,7 @@ evohomeclient==0.2.5
 feedparser==5.2.1
 
 # homeassistant.components.sensor.fitbit
-fitbit==0.2.2
+fitbit==0.2.3
 
 # homeassistant.components.sensor.fixer
 fixerio==0.1.1
