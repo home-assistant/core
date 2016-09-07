@@ -35,7 +35,7 @@ NETWORK = None
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_API_KEY): cv.string,
         vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean
     })
 }, extra=vol.ALLOW_EXTRA)
