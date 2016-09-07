@@ -199,6 +199,17 @@ class HomeAssistant(object):
 
         self.pool.add_job(priority, (target,) + args)
 
+    def block_till_done(self):
+        """Block till all pending work is done."""
+        self.loop.run_until_complete(
+            self.loop.run_in_executor(None, self.pool.block_till_done)
+        )
+
+    @asyncio.coroutine
+    def async_block_till_done(self):
+        """Async block till all pending work is done."""
+        yield from self.loop.run_in_executor(None, self.pool.block_till_done)
+
     @asyncio.coroutine
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
