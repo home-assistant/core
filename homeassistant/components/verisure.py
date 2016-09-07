@@ -9,26 +9,46 @@ import threading
 import time
 from datetime import timedelta
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config, discovery
-from homeassistant.util import Throttle
+import voluptuous as vol
 
-DOMAIN = "verisure"
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import discovery
+from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['vsure==0.10.2']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ALARM = 'alarm'
+CONF_CODE_DIGITS = 'code_digits'
+CONF_HYDROMETERS = 'hygrometers'
+CONF_LOCKS = 'locks'
+CONF_MOUSE = 'mouse'
+CONF_SMARTPLUGS = 'smartplugs'
+CONF_THERMOMETERS = 'thermometers'
+
+DOMAIN = 'verisure'
+
 HUB = None
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_ALARM, default=True): cv.boolean,
+        vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
+        vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
+        vol.Optional(CONF_LOCKS, default=True): cv.boolean,
+        vol.Optional(CONF_MOUSE, default=True): cv.boolean,
+        vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
+        vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Setup the Verisure component."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-        return False
-
     import verisure
     global HUB
     HUB = VerisureHub(config[DOMAIN], verisure)
