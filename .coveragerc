@@ -225,6 +225,7 @@ omit =
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/lastfm.py
+    homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/mhz19.py
     homeassistant/components/sensor/mqtt_room.py
