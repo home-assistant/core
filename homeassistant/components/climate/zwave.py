@@ -63,6 +63,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     node = zwave.NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
     value = node.values[discovery_info[ATTR_VALUE_ID]]
     value.set_change_verified(False)
+    if value.index != 1:  # Only add 1 device
+        return
     add_devices([ZWaveClimate(value, temp_unit)])
     _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
                   discovery_info, zwave.NETWORK)
@@ -158,6 +160,17 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     continue
                 if self._zxt_120:
                     continue
+                self._target_temperature = int(value.data)
+                _LOGGER.debug("Get setpoint value: SET_TEMP_TO_INDEX=%s and"
+                              " self._current_operation=%s",
+                              SET_TEMP_TO_INDEX.get(self._current_operation),
+                              self._current_operation)
+                break
+            _LOGGER.debug("Get setpoint value not matching any "
+                          "SET_TEMP_TO_INDEX=%s and "
+                          "self._current_operation=%s. Using value.data=%s",
+                          SET_TEMP_TO_INDEX.get(self._current_operation),
+                          self._current_operation, int(value.data))
             self._target_temperature = int(value.data)
 
     @property
