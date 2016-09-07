@@ -5,16 +5,28 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.ecobee/
 """
 import logging
+
+import voluptuous as vol
+
 from homeassistant.components import ecobee
-from homeassistant.components.notify import BaseNotificationService
+from homeassistant.components.notify import (
+    BaseNotificationService, PLATFORM_SCHEMA)  # NOQA
+import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['ecobee']
 _LOGGER = logging.getLogger(__name__)
 
 
+CONF_INDEX = 'index'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_INDEX, default=0): cv.positive_int,
+})
+
+
 def get_service(hass, config):
     """Get the Ecobee notification service."""
-    index = int(config['index']) if 'index' in config else 0
+    index = config.get(CONF_INDEX)
     return EcobeeNotificationService(index)
 
 
