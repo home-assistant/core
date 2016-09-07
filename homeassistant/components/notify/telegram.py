@@ -12,6 +12,7 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import template
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (CONF_API_KEY, ATTR_LOCATION, ATTR_LATITUDE,
@@ -47,7 +48,7 @@ def get_service(hass, config):
         _LOGGER.error("Please check your access token.")
         return None
 
-    return TelegramNotificationService(api_key, chat_id)
+    return TelegramNotificationService(hass, api_key, chat_id)
 
 
 def load_data(url=None, file=None, username=None, password=None):
@@ -77,10 +78,11 @@ def load_data(url=None, file=None, username=None, password=None):
 class TelegramNotificationService(BaseNotificationService):
     """Implement the notification service for Telegram."""
 
-    def __init__(self, api_key, chat_id):
+    def __init__(self, hass, api_key, chat_id):
         """Initialize the service."""
         import telegram
 
+        self.hass = hass
         self._api_key = api_key
         self._chat_id = chat_id
         self.bot = telegram.Bot(token=self._api_key)
@@ -154,8 +156,10 @@ class TelegramNotificationService(BaseNotificationService):
     def send_location(self, gps):
         """Send a location."""
         import telegram
-        latitude = float(gps.get(ATTR_LATITUDE, 0.0))
-        longitude = float(gps.get(ATTR_LONGITUDE, 0.0))
+        latitude = float(template.render(
+            self.hass, gps.get(ATTR_LATITUDE, "0.0")))
+        longitude = float(template.render(
+            self.hass, gps.get(ATTR_LONGITUDE, "0.0")))
 
         # send location
         try:
