@@ -39,6 +39,11 @@ foursquare:
         description: Vertical accuracy of the user's location, in meters.
         example: 1
 
+group:
+  reload:
+    description: "Reload group configuration."
+    fields:
+
 persistent_notification:
   create:
     description: Show a notification in the frontend

@@ -1,6 +1,7 @@
 """The tests for the Group components."""
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
+from unittest.mock import patch
 
 from homeassistant.bootstrap import _setup_component
 from homeassistant.const import (
@@ -308,3 +309,33 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertEqual(STATE_NOT_HOME,
                          self.hass.states.get(
                              group.ENTITY_ID_FORMAT.format('peeps')).state)
+
+    def test_reloading_groups(self):
+        """Test reloading the group config."""
+        _setup_component(self.hass, 'group', {'group': {
+                    'second_group': {
+                        'entities': 'light.Bowl',
+                        'icon': 'mdi:work',
+                        'view': True,
+                    },
+                    'test_group': 'hello.world,sensor.happy',
+                    'empty_group': {'name': 'Empty Group', 'entities': None},
+                }
+            })
+
+        assert sorted(self.hass.states.entity_ids()) == \
+            ['group.empty_group', 'group.second_group', 'group.test_group']
+        assert self.hass.bus.listeners['state_changed'] == 3
+
+        with patch('homeassistant.config.load_yaml_config_file', return_value={
+                'group': {
+                    'hello': {
+                        'entities': 'light.Bowl',
+                        'icon': 'mdi:work',
+                        'view': True,
+                    }}}):
+            group.reload(self.hass)
+            self.hass.pool.block_till_done()
+
+        assert self.hass.states.entity_ids() == ['group.hello']
+        assert self.hass.bus.listeners['state_changed'] == 1
