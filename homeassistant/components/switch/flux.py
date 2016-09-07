@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.light import is_on, turn_on
 from homeassistant.components.sun import next_setting, next_rising
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, EVENT_TIME_CHANGED
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util.color import color_temperature_to_rgb as temp_to_rgb
 from homeassistant.util.color import color_RGB_to_xy
@@ -124,7 +124,7 @@ class FluxSwitch(SwitchDevice):
         self._stop_colortemp = stop_colortemp
         self._brightness = brightness
         self._mode = mode
-        self.tracker = None
+        self.unsub_tracker = None
 
     @property
     def name(self):
@@ -139,15 +139,17 @@ class FluxSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn on flux."""
         self._state = True
-        self.tracker = track_utc_time_change(self.hass,
-                                             self.flux_update,
-                                             second=[0, 30])
+        self.unsub_tracker = track_utc_time_change(self.hass, self.flux_update,
+                                                   second=[0, 30])
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn off flux."""
+        if self.unsub_tracker is not None:
+            self.unsub_tracker()
+            self.unsub_tracker = None
+
         self._state = False
-        self.hass.bus.remove_listener(EVENT_TIME_CHANGED, self.tracker)
         self.update_ha_state()
 
     # pylint: disable=too-many-locals
