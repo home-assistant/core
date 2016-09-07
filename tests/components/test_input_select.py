@@ -2,6 +2,8 @@
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
+import voluptuous as vol
+
 from homeassistant.components import input_select
 from homeassistant.const import (
     ATTR_ICON, ATTR_FRIENDLY_NAME)
@@ -22,34 +24,18 @@ class TestInputSelect(unittest.TestCase):
 
     def test_config(self):
         """Test config."""
-        self.assertFalse(input_select.setup(self.hass, {
-            'input_select': None
-        }))
-
-        self.assertFalse(input_select.setup(self.hass, {
-            'input_select': {
-            }
-        }))
-
-        self.assertFalse(input_select.setup(self.hass, {
-            'input_select': {
-                'name with space': None
-            }
-        }))
-
-        self.assertFalse(input_select.setup(self.hass, {
-            'input_select': {
+        with self.assertRaises(vol.Invalid):
+            input_select.PLATFORM_SCHEMA(None)
+        with self.assertRaises(vol.Invalid):
+            input_select.PLATFORM_SCHEMA({})
+        with self.assertRaises(vol.Invalid):
+            input_select.PLATFORM_SCHEMA({'name with space': None})
+        with self.assertRaises(vol.Invalid):
+            input_select.PLATFORM_SCHEMA({
                 'hello': {
                     'options': None
                 }
-            }
-        }))
-
-        self.assertFalse(input_select.setup(self.hass, {
-            'input_select': {
-                'hello': None
-            }
-        }))
+            })
 
     def test_select_option(self):
         """Test select_option methods."""
@@ -91,7 +77,7 @@ class TestInputSelect(unittest.TestCase):
         ]
 
         self.assertTrue(input_select.setup(self.hass, {
-            'input_select': {
+            'input_select': input_select.PLATFORM_SCHEMA({
                 'test_1': {
                     'options': [
                         1,
@@ -100,11 +86,11 @@ class TestInputSelect(unittest.TestCase):
                 },
                 'test_2': {
                     'name': 'Hello World',
-                    'icon': 'work',
+                    'icon': 'mdi:work',
                     'options': test_2_options,
                     'initial': 'Better Option',
                 },
-            },
+            })
         }))
 
         self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
@@ -119,11 +105,10 @@ class TestInputSelect(unittest.TestCase):
         self.assertEqual(['1', '2'],
                          state_1.attributes.get(input_select.ATTR_OPTIONS))
         self.assertNotIn(ATTR_ICON, state_1.attributes)
-        self.assertNotIn(ATTR_FRIENDLY_NAME, state_1.attributes)
 
         self.assertEqual('Better Option', state_2.state)
         self.assertEqual(test_2_options,
                          state_2.attributes.get(input_select.ATTR_OPTIONS))
         self.assertEqual('Hello World',
                          state_2.attributes.get(ATTR_FRIENDLY_NAME))
-        self.assertEqual('work', state_2.attributes.get(ATTR_ICON))
+        self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))

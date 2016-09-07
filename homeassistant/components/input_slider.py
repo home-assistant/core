@@ -12,7 +12,6 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.util import slugify
 
 DOMAIN = 'input_slider'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -37,6 +36,17 @@ SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
     vol.Required(ATTR_VALUE): vol.Coerce(float),
 })
 
+PLATFORM_SCHEMA = vol.Schema({
+    cv.slug: {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_MIN): vol.Coerce(int),
+        vol.Optional(CONF_MAX): vol.Coerce(int),
+        vol.Optional(CONF_INITIAL): vol.Coerce(int),
+        vol.Optional(CONF_STEP, default=1): vol.Coerce(int),
+        vol.Optional(CONF_ICON): cv.icon,
+        vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
+    }}, required=True)
+
 
 def select_value(hass, entity_id, value):
     """Set input_slider to value."""
@@ -48,28 +58,16 @@ def select_value(hass, entity_id, value):
 
 def setup(hass, config):
     """Set up input slider."""
-    if not isinstance(config.get(DOMAIN), dict):
-        _LOGGER.error('Expected %s config to be a dictionary', DOMAIN)
-        return False
-
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
-        if object_id != slugify(object_id):
-            _LOGGER.warning("Found invalid key for boolean input: %s. "
-                            "Use %s instead", object_id, slugify(object_id))
-            continue
-        if not cfg:
-            _LOGGER.warning("No configuration specified for %s", object_id)
-            continue
-
         name = cfg.get(CONF_NAME)
         minimum = cfg.get(CONF_MIN)
         maximum = cfg.get(CONF_MAX)
         state = cfg.get(CONF_INITIAL, minimum)
-        step = cfg.get(CONF_STEP, 1)
+        step = cfg.get(CONF_STEP)
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
 

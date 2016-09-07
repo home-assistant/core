@@ -2,8 +2,9 @@
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
-from homeassistant.components import input_slider
+import voluptuous as vol
 
+from homeassistant.components import input_slider
 from tests.common import get_test_home_assistant
 
 
@@ -20,31 +21,23 @@ class TestInputSlider(unittest.TestCase):
 
     def test_config(self):
         """Test config."""
-        self.assertFalse(input_slider.setup(self.hass, {
-            'input_slider': None
-        }))
-
-        self.assertFalse(input_slider.setup(self.hass, {
-            'input_slider': {
-            }
-        }))
-
-        self.assertFalse(input_slider.setup(self.hass, {
-            'input_slider': {
-                'name with space': None
-            }
-        }))
+        with self.assertRaises(vol.Invalid):
+            input_slider.PLATFORM_SCHEMA(None)
+        with self.assertRaises(vol.Invalid):
+            input_slider.PLATFORM_SCHEMA({})
+        with self.assertRaises(vol.Invalid):
+            input_slider.PLATFORM_SCHEMA({'name with space': None})
 
     def test_select_value(self):
         """Test select_value method."""
         self.assertTrue(input_slider.setup(self.hass, {
-            'input_slider': {
+            'input_slider': input_slider.PLATFORM_SCHEMA({
                 'test_1': {
                     'initial': 50,
                     'min': 0,
                     'max': 100,
                 },
-            }
+            })
         }))
         entity_id = 'input_slider.test_1'
 

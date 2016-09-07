@@ -2,6 +2,8 @@
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
+import voluptuous as vol
+
 from homeassistant.components import input_boolean
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ICON, ATTR_FRIENDLY_NAME)
@@ -22,20 +24,12 @@ class TestInputBoolean(unittest.TestCase):
 
     def test_config(self):
         """Test config."""
-        self.assertFalse(input_boolean.setup(self.hass, {
-            'input_boolean': None
-        }))
-
-        self.assertFalse(input_boolean.setup(self.hass, {
-            'input_boolean': {
-            }
-        }))
-
-        self.assertFalse(input_boolean.setup(self.hass, {
-            'input_boolean': {
-                'name with space': None
-            }
-        }))
+        with self.assertRaises(vol.Invalid):
+            input_boolean.PLATFORM_SCHEMA(None)
+        with self.assertRaises(vol.Invalid):
+            input_boolean.PLATFORM_SCHEMA({})
+        with self.assertRaises(vol.Invalid):
+            input_boolean.PLATFORM_SCHEMA({'name with space': None})
 
     def test_methods(self):
         """Test is_on, turn_on, turn_off methods."""

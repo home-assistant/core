@@ -30,6 +30,13 @@ SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
+PLATFORM_SCHEMA = vol.Schema({
+    cv.slug: {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_INITIAL, default=False): cv.boolean,
+        vol.Optional(CONF_ICON): cv.icon,
+    }}, required=True)
+
 
 def is_on(hass, entity_id):
     """Test if input_boolean is True."""
@@ -53,10 +60,6 @@ def toggle(hass, entity_id):
 
 def setup(hass, config):
     """Set up input boolean."""
-    if not isinstance(config.get(DOMAIN), dict):
-        _LOGGER.error('Expected %s config to be a dictionary', DOMAIN)
-        return False
-
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []

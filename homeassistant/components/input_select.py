@@ -12,7 +12,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.util import slugify
 
 DOMAIN = 'input_select'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -33,6 +32,14 @@ SERVICE_SELECT_OPTION_SCHEMA = vol.Schema({
     vol.Required(ATTR_OPTION): cv.string,
 })
 
+PLATFORM_SCHEMA = vol.Schema({
+    cv.slug: {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_INITIAL): cv.string,
+        vol.Optional(CONF_ICON): cv.icon,
+    }}, required=True)
+
 
 def select_option(hass, entity_id, option):
     """Set input_select to False."""
@@ -44,36 +51,22 @@ def select_option(hass, entity_id, option):
 
 def setup(hass, config):
     """Setup input select."""
-    if not isinstance(config.get(DOMAIN), dict):
-        _LOGGER.error('Expected %s config to be a dictionary', DOMAIN)
-        return False
-
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
-        if object_id != slugify(object_id):
-            _LOGGER.warning("Found invalid key for boolean input: %s. "
-                            "Use %s instead", object_id, slugify(object_id))
-            continue
-        if not cfg:
-            _LOGGER.warning("No configuration specified for %s", object_id)
-            continue
-
         name = cfg.get(CONF_NAME)
         options = cfg.get(CONF_OPTIONS)
-
-        if not isinstance(options, list) or len(options) == 0:
-            _LOGGER.warning('Key %s should be a list of options', CONF_OPTIONS)
-            continue
-
-        options = [str(val) for val in options]
-
         state = cfg.get(CONF_INITIAL)
 
         if state not in options:
+            print(options)
+            print(cfg)
             state = options[0]
+            if state is not None:
+                _LOGGER.warning('Initial state %s is not in the options %s',
+                                state, ','.join(options))
 
         icon = cfg.get(CONF_ICON)
 
