@@ -24,6 +24,10 @@ REQUIREMENTS = ['python-telegram-bot==5.0.0']
 ATTR_PHOTO = "photo"
 ATTR_DOCUMENT = "document"
 ATTR_CAPTION = "caption"
+ATTR_URL = 'url'
+ATTR_FILE = 'file'
+ATTR_USERNAME = 'username'
+ATTR_PASSWORD = 'password'
 
 CONF_CHAT_ID = 'chat_id'
 
@@ -105,8 +109,6 @@ class TelegramNotificationService(BaseNotificationService):
         elif data is not None and ATTR_DOCUMENT in data:
             return self.send_document(data.get(ATTR_DOCUMENT))
 
-        text = ''
-
         if title:
             text = '{} {}'.format(title, message)
         else:
@@ -126,11 +128,16 @@ class TelegramNotificationService(BaseNotificationService):
     def send_photo(self, data):
         """Send a photo."""
         import telegram
-        caption = data.pop(ATTR_CAPTION, None)
+        caption = data.get(ATTR_CAPTION)
 
         # send photo
         try:
-            photo = load_data(**data)
+            photo = load_data(
+                url=data.get(ATTR_URL),
+                file=data.get(ATTR_FILE),
+                username=data.get(ATTR_USERNAME),
+                password=data.get(ATTR_PASSWORD),
+            )
             self.bot.sendPhoto(chat_id=self._chat_id,
                                photo=photo, caption=caption)
         except telegram.error.TelegramError:
@@ -140,11 +147,16 @@ class TelegramNotificationService(BaseNotificationService):
     def send_document(self, data):
         """Send a document."""
         import telegram
-        caption = data.pop(ATTR_CAPTION, None)
+        caption = data.get(ATTR_CAPTION)
 
         # send photo
         try:
-            document = load_data(**data)
+            document = load_data(
+                url=data.get(ATTR_URL),
+                file=data.get(ATTR_FILE),
+                username=data.get(ATTR_USERNAME),
+                password=data.get(ATTR_PASSWORD),
+            )
             self.bot.sendDocument(chat_id=self._chat_id,
                                   document=document, caption=caption)
         except telegram.error.TelegramError:
