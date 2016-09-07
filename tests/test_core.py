@@ -1,6 +1,7 @@
 """Test to verify that Home Assistant core works."""
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
+import asyncio
 import os
 import signal
 import unittest
@@ -147,7 +148,8 @@ class TestEventBus(unittest.TestCase):
 
     def setUp(self):     # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.bus = ha.EventBus(ha.create_worker_pool(0))
+        self.bus = ha.EventBus(ha.create_worker_pool(0),
+                               asyncio.get_event_loop())
         self.bus.listen('test_event', lambda x: len)
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -275,8 +277,8 @@ class TestStateMachine(unittest.TestCase):
     def setUp(self):    # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.pool = ha.create_worker_pool(0)
-        self.bus = ha.EventBus(self.pool)
-        self.states = ha.StateMachine(self.bus)
+        self.bus = ha.EventBus(self.pool, asyncio.get_event_loop())
+        self.states = ha.StateMachine(self.bus, asyncio.get_event_loop())
         self.states.set("light.Bowl", "on")
         self.states.set("switch.AC", "off")
 
@@ -400,21 +402,14 @@ class TestServiceRegistry(unittest.TestCase):
 
     def setUp(self):     # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.pool = ha.create_worker_pool(0)
-        self.bus = ha.EventBus(self.pool)
-
-        def add_job(*args, **kwargs):
-            """Forward calls to add_job on Home Assistant."""
-            # self works because we also have self.pool defined.
-            return ha.HomeAssistant.add_job(self, *args, **kwargs)
-
-        self.services = ha.ServiceRegistry(self.bus, add_job)
+        self.hass = get_test_home_assistant()
+        self.services = self.hass.services
         self.services.register("Test_Domain", "TEST_SERVICE", lambda x: None)
+        self.hass.block_till_done()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down stuff we started."""
-        if self.pool.worker_count:
-            self.pool.stop()
+        self.hass.stop()
 
     def test_has_service(self):
         """Test has_service method."""
@@ -434,8 +429,6 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_call_with_blocking_done_in_time(self):
         """Test call with blocking."""
-        self.pool.add_worker()
-        self.pool.add_worker()
         calls = []
         self.services.register("test_domain", "register_calls",
                                lambda x: calls.append(1))
@@ -444,28 +437,22 @@ class TestServiceRegistry(unittest.TestCase):
             self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
         self.assertEqual(1, len(calls))
 
-    def test_call_with_blocking_not_done_in_time(self):
+    @patch.object(ha, 'SERVICE_CALL_LIMIT', return_value=0.01)
+    def test_call_with_blocking_not_done_in_time(self, mock_limit):
         """Test with blocking."""
         calls = []
         self.services.register("test_domain", "register_calls",
                                lambda x: calls.append(1))
 
-        orig_limit = ha.SERVICE_CALL_LIMIT
-        ha.SERVICE_CALL_LIMIT = 0.01
         self.assertFalse(
             self.services.call('test_domain', 'register_calls', blocking=True))
         self.assertEqual(0, len(calls))
-        ha.SERVICE_CALL_LIMIT = orig_limit
 
-    def test_call_non_existing_with_blocking(self):
+    @patch.object(ha, 'SERVICE_CALL_LIMIT', return_value=0.01)
+    def test_call_non_existing_with_blocking(self, mock_limit):
         """Test non-existing with blocking."""
-        self.pool.add_worker()
-        self.pool.add_worker()
-        orig_limit = ha.SERVICE_CALL_LIMIT
-        ha.SERVICE_CALL_LIMIT = 0.01
-        self.assertFalse(
-            self.services.call('test_domain', 'i_do_not_exist', blocking=True))
-        ha.SERVICE_CALL_LIMIT = orig_limit
+        assert not self.services.call('test_domain', 'i_do_not_exist',
+                                      blocking=True)
 
 
 class TestConfig(unittest.TestCase):

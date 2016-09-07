@@ -14,7 +14,6 @@ except ImportError:
     ensure_future = async
 
 
-
 def _set_result_unless_cancelled(fut, result):
     """Helper setting the result only if the future was not cancelled."""
     if fut.cancelled():

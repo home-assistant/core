@@ -834,8 +834,10 @@ class ServiceRegistry(object):
         else:
             self._services[domain] = {service: service_obj}
 
-        self._bus.async_fire(EVENT_SERVICE_REGISTERED,
-                             {ATTR_DOMAIN: domain, ATTR_SERVICE: service})
+        self._bus.async_fire(
+            EVENT_SERVICE_REGISTERED,
+            {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
+        )
 
     def call(self, domain, service, service_data=None, blocking=False):
         """
