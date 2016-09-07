@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/modbus/
 """
 import logging
+import threading
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
@@ -37,7 +38,7 @@ ATTR_ADDRESS = "address"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 
-NETWORK = None
+HUB = None
 TYPE = None
 
 
@@ -50,34 +51,36 @@ def setup(hass, config):
 
     # Connect to Modbus network
     # pylint: disable=global-statement, import-error
-    global NETWORK
 
     if TYPE == "serial":
         from pymodbus.client.sync import ModbusSerialClient as ModbusClient
-        NETWORK = ModbusClient(method=config[DOMAIN][METHOD],
-                               port=config[DOMAIN][SERIAL_PORT],
-                               baudrate=config[DOMAIN][BAUDRATE],
-                               stopbits=config[DOMAIN][STOPBITS],
-                               bytesize=config[DOMAIN][BYTESIZE],
-                               parity=config[DOMAIN][PARITY])
+        client = ModbusClient(method=config[DOMAIN][METHOD],
+                              port=config[DOMAIN][SERIAL_PORT],
+                              baudrate=config[DOMAIN][BAUDRATE],
+                              stopbits=config[DOMAIN][STOPBITS],
+                              bytesize=config[DOMAIN][BYTESIZE],
+                              parity=config[DOMAIN][PARITY])
     elif TYPE == "tcp":
         from pymodbus.client.sync import ModbusTcpClient as ModbusClient
-        NETWORK = ModbusClient(host=config[DOMAIN][HOST],
-                               port=config[DOMAIN][IP_PORT])
+        client = ModbusClient(host=config[DOMAIN][HOST],
+                              port=config[DOMAIN][IP_PORT])
     elif TYPE == "udp":
         from pymodbus.client.sync import ModbusUdpClient as ModbusClient
-        NETWORK = ModbusClient(host=config[DOMAIN][HOST],
-                               port=config[DOMAIN][IP_PORT])
+        client = ModbusClient(host=config[DOMAIN][HOST],
+                              port=config[DOMAIN][IP_PORT])
     else:
         return False
 
+    global HUB
+    HUB = ModbusHub(client)
+
     def stop_modbus(event):
         """Stop Modbus service."""
-        NETWORK.close()
+        HUB.close()
 
     def start_modbus(event):
         """Start Modbus service."""
-        NETWORK.connect()
+        HUB.connect()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
 
         # Register services for modbus
@@ -88,8 +91,59 @@ def setup(hass, config):
         unit = int(float(service.data.get(ATTR_UNIT)))
         address = int(float(service.data.get(ATTR_ADDRESS)))
         value = int(float(service.data.get(ATTR_VALUE)))
-        NETWORK.write_register(address, value, unit=unit)
+        HUB.write_register(unit, address, value)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
 
     return True
+
+
+class ModbusHub(object):
+    """Thread safe wrapper class for pymodbus."""
+
+    def __init__(self, modbus_client):
+        """Initialize the modbus hub."""
+        self._client = modbus_client
+        self._lock = threading.Lock()
+
+    def close(self):
+        """Disconnect client."""
+        with self._lock:
+            self._client.close()
+
+    def connect(self):
+        """Connect client."""
+        with self._lock:
+            self._client.connect()
+
+    def read_coils(self, unit, address, count):
+        """Read coils."""
+        with self._lock:
+            return self._client.read_coils(
+                address,
+                count,
+                unit=unit)
+
+    def read_holding_registers(self, unit, address, count):
+        """Read holding registers."""
+        with self._lock:
+            return self._client.read_holding_registers(
+                address,
+                count,
+                unit=unit)
+
+    def write_coil(self, unit, address, value):
+        """Write coil."""
+        with self._lock:
+            self._client.write_coil(
+                address,
+                value,
+                unit=unit)
+
+    def write_register(self, unit, address, value):
+        """Write register."""
+        with self._lock:
+            self._client.write_register(
+                address,
+                value,
+                unit=unit)

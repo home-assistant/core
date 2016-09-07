@@ -90,12 +90,10 @@ class ModbusSwitch(ToggleEntity):
             self.update()
 
         if self._coil:
-            modbus.NETWORK.write_coil(self.register, True)
+            modbus.HUB.write_coil(self.slave, self.register, True)
         else:
             val = self.register_value | (0x0001 << self.bit)
-            modbus.NETWORK.write_register(unit=self.slave,
-                                          address=self.register,
-                                          value=val)
+            modbus.HUB.write_register(self.slave, self.register, val)
 
     def turn_off(self, **kwargs):
         """Set switch off."""
@@ -103,23 +101,22 @@ class ModbusSwitch(ToggleEntity):
             self.update()
 
         if self._coil:
-            modbus.NETWORK.write_coil(self.register, False)
+            modbus.HUB.write_coil(self.slave, self.register, False)
         else:
             val = self.register_value & ~(0x0001 << self.bit)
-            modbus.NETWORK.write_register(unit=self.slave,
-                                          address=self.register,
-                                          value=val)
+            modbus.HUB.write_register(self.slave, self.register, val)
 
     def update(self):
         """Update the state of the switch."""
         if self._coil:
-            result = modbus.NETWORK.read_coils(self.register, 1)
+            result = modbus.HUB.read_coils(self.slave, self.register, 1)
             self.register_value = result.bits[0]
             self._is_on = self.register_value
         else:
-            result = modbus.NETWORK.read_holding_registers(
-                unit=self.slave, address=self.register,
-                count=1)
+            result = modbus.HUB.read_holding_registers(
+                self.slave,
+                self.register,
+                1)
             val = 0
             for i, res in enumerate(result.registers):
                 val += res * (2**(i*16))
