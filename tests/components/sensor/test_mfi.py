@@ -147,6 +147,11 @@ class TestMfiSensor(unittest.TestCase):
         self.port.tag = 'balloons'
         self.assertEqual('balloons', self.sensor.unit_of_measurement)
 
+    def test_uom_uninitialized(self):
+        """Test that the UOM defaults if not initialized."""
+        type(self.port).tag = mock.PropertyMock(side_effect=ValueError)
+        self.assertEqual('State', self.sensor.unit_of_measurement)
+
     def test_state_digital(self):
         """Test the digital input."""
         self.port.model = 'Input Digital'
@@ -165,6 +170,11 @@ class TestMfiSensor(unittest.TestCase):
             self.assertEqual(1.2, self.sensor.state)
         with mock.patch.dict(mfi.DIGITS, {}):
             self.assertEqual(1.0, self.sensor.state)
+
+    def test_state_uninitialized(self):
+        """Test the state of uninitialized sensors."""
+        type(self.port).tag = mock.PropertyMock(side_effect=ValueError)
+        self.assertEqual(mfi.STATE_OFF, self.sensor.state)
 
     def test_update(self):
         """Test the update."""

@@ -91,7 +91,13 @@ class MfiSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._port.model == 'Input Digital':
+        try:
+            tag = self._port.tag
+        except ValueError:
+            tag = None
+        if tag is None:
+            return STATE_OFF
+        elif self._port.model == 'Input Digital':
             return self._port.value > 0 and STATE_ON or STATE_OFF
         else:
             digits = DIGITS.get(self._port.tag, 0)
@@ -100,13 +106,18 @@ class MfiSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        if self._port.tag == 'temperature':
+        try:
+            tag = self._port.tag
+        except ValueError:
+            return 'State'
+
+        if tag == 'temperature':
             return TEMP_CELSIUS
-        elif self._port.tag == 'active_pwr':
+        elif tag == 'active_pwr':
             return 'Watts'
         elif self._port.model == 'Input Digital':
             return 'State'
-        return self._port.tag
+        return tag
 
     def update(self):
         """Get the latest data."""
