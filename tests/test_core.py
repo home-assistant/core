@@ -49,6 +49,7 @@ class TestHomeAssistant(unittest.TestCase):
         calls = []
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
                                   lambda event: calls.append(1))
+        self.hass._testing = True
 
         @asyncio.coroutine
         def fake_stop():
@@ -56,9 +57,10 @@ class TestHomeAssistant(unittest.TestCase):
             yield None
 
         with patch.object(self.hass.loop, 'run_forever', return_value=None):
-            with patch.object(self.hass, 'stop', return_value=fake_stop()):
-                self.hass.start()
-                self.hass.block_till_done()
+            with patch.object(self.hass, 'async_stop', return_value=fake_stop()):
+                with patch.object(ha, 'create_timer', return_value=None):
+                    self.hass.start()
+                    self.hass.block_till_done()
 
         self.assertEqual(1, len(calls))
 
@@ -405,20 +407,9 @@ class TestServiceRegistry(unittest.TestCase):
             self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
         self.assertEqual(1, len(calls))
 
-    @patch.object(ha, 'SERVICE_CALL_LIMIT', return_value=0.01)
-    def test_call_with_blocking_not_done_in_time(self, mock_limit):
-        """Test with blocking."""
-        calls = []
-        self.services.register("test_domain", "register_calls",
-                               lambda x: calls.append(1))
-
-        self.assertFalse(
-            self.services.call('test_domain', 'register_calls', blocking=True))
-        self.assertEqual(0, len(calls))
-
-    @patch.object(ha, 'SERVICE_CALL_LIMIT', return_value=0.01)
-    def test_call_non_existing_with_blocking(self, mock_limit):
+    def test_call_non_existing_with_blocking(self):
         """Test non-existing with blocking."""
+        ha.SERVICE_CALL_LIMIT = 0.01
         assert not self.services.call('test_domain', 'i_do_not_exist',
                                       blocking=True)
 

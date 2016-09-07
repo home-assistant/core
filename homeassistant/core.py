@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import signal
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 from types import MappingProxyType
@@ -31,8 +32,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.helpers.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe,
-    fire_coroutine_threadsafe)
+    run_coroutine_threadsafe, run_callback_threadsafe)
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
@@ -138,13 +138,13 @@ class HomeAssistant(object):
         def stop_homeassistant(*args):
             """Stop Home Assistant."""
             self.exit_code = 0
-            yield from self.stop()
+            yield from self.async_stop()
 
         @asyncio.coroutine
         def restart_homeassistant(*args):
             """Restart Home Assistant."""
             self.exit_code = RESTART_EXIT_CODE
-            yield from self.stop()
+            yield from self.async_stop()
 
         # Register the restart/stop event
         self.loop.call_soon(
@@ -183,7 +183,10 @@ class HomeAssistant(object):
 
     @asyncio.coroutine
     def async_start(self):
-        """Finalizes startup from inside the event loop"""
+        """Finalizes startup from inside the event loop.
+
+        This method is a coroutine.
+        """
         create_timer(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
         yield from self.loop.run_in_executor(None, self.pool.block_till_done)
@@ -207,6 +210,10 @@ class HomeAssistant(object):
 
         complete = threading.Event()
 
+        @asyncio.coroutine
+        def sleep_wait():
+            yield from self.loop.run_in_executor(None, time.sleep, 1)
+
         def notify_when_done():
             """Notify event loop when pool done."""
             while True:
@@ -220,15 +227,29 @@ class HomeAssistant(object):
                 if loop_empty:
                     break
 
+                # sleep in the loop executor, this forces execution back into
+                # the event loop to avoid the block thread from starving the
+                # async loop
+                run_coroutine_threadsafe(
+                    sleep_wait(),
+                    self.loop
+                ).result()
+
             complete.set()
 
-        threading.Thread(target=notify_when_done).start()
+        threading.Thread(name="BlockThread", target=notify_when_done).start()
         complete.wait()
 
-    @asyncio.coroutine
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
-        _LOGGER.info("Stopping")
+        run_coroutine_threadsafe(self.async_stop(), self.loop)
+
+    @asyncio.coroutine
+    def async_stop(self) -> None:
+        """Stop Home Assistant and shuts down all threads.
+
+        This method is a coroutine.
+        """
         self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         yield from self.loop.run_in_executor(None, self.pool.block_till_done)
@@ -826,7 +847,7 @@ class ServiceRegistry(object):
             self._loop,
             self.async_register, domain, service, service_func, description,
             schema
-        )
+        ).result()
 
     def async_register(self, domain, service, service_func, description=None,
                        schema=None):
@@ -871,16 +892,10 @@ class ServiceRegistry(object):
         Because the service is sent as an event you are not allowed to use
         the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
         """
-        if blocking:
-            return run_coroutine_threadsafe(
-                self.async_call(domain, service, service_data, blocking),
-                self._loop
-            ).result()
-        else:
-            fire_coroutine_threadsafe(
-                self.async_call(domain, service, service_data, blocking),
-                self._loop
-            )
+        return run_coroutine_threadsafe(
+            self.async_call(domain, service, service_data, blocking),
+            self._loop
+        ).result()
 
     @asyncio.coroutine
     def async_call(self, domain, service, service_data=None, blocking=False):
