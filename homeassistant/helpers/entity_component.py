@@ -1,11 +1,14 @@
 """Helpers for components that manage entities."""
 from threading import Lock
 
-from homeassistant.bootstrap import prepare_setup_platform
-from homeassistant.components import group
+from homeassistant import config as conf_util
+from homeassistant.bootstrap import (prepare_setup_platform,
+                                     prepare_setup_component)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_utc_time_change
@@ -135,6 +138,7 @@ class EntityComponent(object):
     def update_group(self):
         """Set up and/or update component group."""
         if self.group is None and self.group_name is not None:
+            group = get_component('group')
             self.group = group.Group(self.hass, self.group_name,
                                      user_defined=False)
 
@@ -156,6 +160,23 @@ class EntityComponent(object):
             if self.group is not None:
                 self.group.stop()
                 self.group = None
+
+    def prepare_reload(self):
+        """Prepare reloading this entity component."""
+        try:
+            path = conf_util.find_config_file(self.hass.config.config_dir)
+            conf = conf_util.load_yaml_config_file(path)
+        except HomeAssistantError as err:
+            self.logger.error(err)
+            return None
+
+        conf = prepare_setup_component(self.hass, conf, self.domain)
+
+        if conf is None:
+            return None
+
+        self.reset()
+        return conf
 
 
 class EntityPlatform(object):

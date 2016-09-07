@@ -6,11 +6,11 @@ import logging
 import jinja2
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
-from homeassistant.components import group
 from homeassistant.const import STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import State
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
+from homeassistant.loader import get_component
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -168,6 +168,8 @@ class LocationMethods(object):
                 gr_entity_id = entities.entity_id
             else:
                 gr_entity_id = str(entities)
+
+            group = get_component('group')
 
             states = [self._hass.states.get(entity_id) for entity_id
                       in group.expand_entity_ids(self._hass, [gr_entity_id])]
