@@ -23,6 +23,10 @@ REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377
 REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
 
+HORSTMANN = 0x0059
+HORSTMANN_HRT4_ZW = 0x3
+HORSTMANN_HRT4_ZW_THERMOSTAT = (HORSTMANN, HORSTMANN_HRT4_ZW)
+
 COMMAND_CLASS_SENSOR_MULTILEVEL = 0x31
 COMMAND_CLASS_THERMOSTAT_MODE = 0x40
 COMMAND_CLASS_THERMOSTAT_SETPOINT = 0x43
@@ -30,9 +34,11 @@ COMMAND_CLASS_THERMOSTAT_FAN_MODE = 0x44
 COMMAND_CLASS_CONFIGURATION = 0x70
 
 WORKAROUND_ZXT_120 = 'zxt_120'
+WORKAROUND_HRT4_ZW = 'hrt4_zw'
 
 DEVICE_MAPPINGS = {
-    REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120
+    REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120,
+    HORSTMANN_HRT4_ZW_THERMOSTAT: WORKAROUND_HRT4_ZW
 }
 
 SET_TEMP_TO_INDEX = {
@@ -92,6 +98,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._unit = temp_unit
         _LOGGER.debug("temp_unit is %s", self._unit)
         self._zxt_120 = None
+        self._hrt4_zw = None
         self.update_properties()
         # register listener
         dispatcher.connect(
@@ -101,12 +108,15 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 value.node.product_id.strip()):
             specific_sensor_key = (int(value.node.manufacturer_id, 16),
                                    int(value.node.product_id, 16))
-
             if specific_sensor_key in DEVICE_MAPPINGS:
                 if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZXT_120:
                     _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat"
                                   " workaround")
                     self._zxt_120 = 1
+                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_HRT4_ZW:
+                    _LOGGER.debug("Horstmann HRT4-ZW Zwave Thermostat"
+                                  " workaround")
+                    self._hrt4_zw = 1
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
@@ -233,8 +243,11 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
             if self.current_operation is not None:
+                if self._hrt4_zw and self.current_operation == 'Off':
+                    # HRT4-ZW can change setpoint when off.
+                    value.data = int(temperature)
                 if SET_TEMP_TO_INDEX.get(self._current_operation) \
-                       != value.index:
+                        != value.index:
                     continue
                 _LOGGER.debug("SET_TEMP_TO_INDEX=%s and"
                               " self._current_operation=%s",
