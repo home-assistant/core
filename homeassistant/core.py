@@ -5,6 +5,7 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 
+from copy import deepcopy
 import enum
 import functools as ft
 import logging
@@ -592,7 +593,7 @@ class ServiceCall(object):
         """Initialize a service call."""
         self.domain = domain.lower()
         self.service = service.lower()
-        self.data = data or {}
+        self.data = deepcopy(data) if data else {}
         self.call_id = call_id
 
     def __repr__(self):
