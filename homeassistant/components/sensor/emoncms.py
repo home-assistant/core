@@ -1,6 +1,7 @@
 """
-Support for the emoncms suite.
+Support for monitoring emoncms feeds.
 
+https://emoncms.org
 """
 import logging
 import requests
@@ -29,12 +30,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_URL): cv.string,
     vol.Required(CONF_ID): cv.string,
-    vol.Optional(CONF_EXCLUDE_FEEDID, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_INCLUDE_FEEDID, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_INCLUDE_FEEDID_NAMES, default=[]): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_EXCLUDE_FEEDID, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_INCLUDE_FEEDID, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_INCLUDE_FEEDID_NAMES, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="W"): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL):vol.All(vol.Coerce(int), vol.Range(min=5)),
+    vol.Optional(CONF_SCAN_INTERVAL):
+        vol.All(vol.Coerce(int), vol.Range(min=5)),
 
 })
 
@@ -47,13 +52,15 @@ ATTR_USERID = 'UserID'
 ATTR_FEEDNAME = 'FeedName'
 ATTR_LASTUPDATETIMESTR = 'LastUpdateTimeStr'
 
+
 def getId(SensorID, feedtag, feedname, feedid, feeduserid):
+    """Return unique identifier for feed / sensor."""
     return "emoncms" + SensorID + "_" + feedtag + "_" + \
            feedname + "_" + feedid + "_" + feeduserid
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Emoncms sensor."""
-
     apikey = config.get(CONF_API_KEY)
     url = config.get(CONF_URL)
     sensorid = config.get(CONF_ID)
@@ -68,59 +75,74 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = EmonCmsData(hass, url, apikey, interval)
     data.update(dt_util.utcnow())
 
-    """ fail setup_platform if no data was returned """
+    """fail setup_platform if no data was returned."""
     if data.data is None:
         return False
-    
+
     sensors = []
     include_length = len(include_feeds)
     exclude_length = len(exclude_feeds)
     include_names_length = len(include_feeds_names)
     index = 0
-    
+
     for elem in data.data:
         if include_length == 0:
             if exclude_length == 0:
-                """Add All feeds"""
-                sensors.append(EmonCmsSensor(hass, data, None, value_template, unit_of_measurement, sensorid,
-                                             elem["id"], elem["name"], elem["userid"], elem["tag"],
-                                             elem["size"], elem["time"], elem["value"]))
+                """Add All feeds."""
+                sensors.append(EmonCmsSensor(hass, data, None, value_template,
+                                             unit_of_measurement, sensorid,
+                                             elem["id"], elem["name"],
+                                             elem["userid"], elem["tag"],
+                                             elem["size"], elem["time"],
+                                             elem["value"]))
             else:
                 """Add All feeds except ..."""
                 if not elem["id"] in exclude_feeds:
-                    sensors.append(EmonCmsSensor(hass, data, None, value_template, unit_of_measurement, sensorid,
-                                                 elem["id"], elem["name"], elem["userid"], elem["tag"],
-                                                 elem["size"], elem["time"], elem["value"]))
-        
+                    sensors.append(EmonCmsSensor(hass, data, None,
+                                                 value_template,
+                                                 unit_of_measurement,
+                                                 sensorid,
+                                                 elem["id"], elem["name"],
+                                                 elem["userid"], elem["tag"],
+                                                 elem["size"], elem["time"],
+                                                 elem["value"]))
+
         else:
             if exclude_length == 0:
                 """Only include these feed id's ..."""
                 if elem["id"] in include_feeds:
-                    name = None;
+                    name = None
                     if include_names_length > 0:
                         if index < include_names_length:
                             name = include_feeds_names[index]
                             index = index + 1
-                    sensors.append(EmonCmsSensor(hass, data, name, value_template, unit_of_measurement, sensorid,
-                                                 elem["id"], elem["name"], elem["userid"], elem["tag"],
-                                                 elem["size"], elem["time"], elem["value"]))
-                        
+                    sensors.append(EmonCmsSensor(hass, data, name,
+                                                 value_template,
+                                                 unit_of_measurement,
+                                                 sensorid,
+                                                 elem["id"], elem["name"],
+                                                 elem["userid"], elem["tag"],
+                                                 elem["size"], elem["time"],
+                                                 elem["value"]))
+
             else:
-                _LOGGER.error("Both config values '%s' and '%s' are specified this is not valid! " + \
+                _LOGGER.error("Both config values '%s' and '%s' are " +
+                              "specified this is not valid! " +
                               "Please check your configuration",
                               CONF_EXCLUDE_FEEDID, CONF_INCLUDE_FEEDID)
                 return
-            
-    add_devices(sensors)    
 
-      
+    add_devices(sensors)
+
+
 class EmonCmsSensor(Entity):
     """Implementation of an EmonCmsSensor sensor."""
 
-    def __init__(self, hass, data, name, value_template, unit_of_measurement, sensorid,
-                 feedid, feedname, userid, tag, size, lastupdatetime, value):
+    def __init__(self, hass, data, name, value_template,
+                 unit_of_measurement, sensorid,
+                 feedid, feedname, userid, tag, size,
+                 lastupdatetime, value):
         """Initialize the sensor."""
-
         if name is None:
             self._name = "emoncms" + sensorid + "_feedid_" + feedid
         else:
@@ -142,8 +164,8 @@ class EmonCmsSensor(Entity):
             self._state = template.render_with_possible_json_value(
                 self._hass, self._value_template, self._value, "N/A")
         else:
-            self._state = round(float(self._value), DECIMALS);
-        
+            self._state = round(float(self._value), DECIMALS)
+
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -153,11 +175,25 @@ class EmonCmsSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
-    
+
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def state_attributes(self):
+        """Return the atrributes of the sensor."""
+        return {
+            ATTR_FEEDID: self._feedid,
+            ATTR_TAG: self._tag,
+            ATTR_FEEDNAME: self._feedname,
+            ATTR_SIZE: self._size,
+            ATTR_USERID: self._userid,
+            ATTR_LASTUPDATETIME: self._lastupdatetime,
+            ATTR_LASTUPDATETIMESTR: template.timestamp_local(
+                float(self._lastupdatetime)),
+        }
 
     def update(self):
         """Get the latest data and updates the state."""
@@ -165,66 +201,65 @@ class EmonCmsSensor(Entity):
             return
 
         found = False
-        if self._data.data is not None:            
+        if self._data.data is not None:
             for elem in self._data.data:
-                id = getId(self._sensorid, elem["tag"], elem["name"], elem["id"], elem["userid"])                     
+                id = getId(self._sensorid, elem["tag"], elem["name"],
+                           elem["id"], elem["userid"])
                 if id == self._identifier:
-                    found = True;
+                    found = True
                     self._lastupdatetime = elem["time"]
                     self._size = elem["size"]
                     self._value = elem["value"]
                     break
-                
+
         if found:
             if self._value_template is not None:
                 self._state = template.render_with_possible_json_value(
                     self._hass, self._value_template, self._value, "N/A")
             else:
-                self._state = round(float(self._value), DECIMALS);
+                self._state = round(float(self._value), DECIMALS)
             self.update_ha_state()
-        
-    @property
-    def state_attributes(self):
-        """ returns the atrributes of the sensor """
-        return {
-            ATTR_FEEDID : self._feedid,
-            ATTR_TAG : self._tag,
-            ATTR_FEEDNAME : self._feedname,
-            ATTR_SIZE : self._size,
-            ATTR_USERID : self._userid,
-            ATTR_LASTUPDATETIME : self._lastupdatetime,
-            ATTR_LASTUPDATETIMESTR : template.timestamp_local(float(self._lastupdatetime)),
-        }
-    
+
+
 class EmonCmsData(object):
     """The class for handling the data retrieval."""
 
     def __init__(self, hass, url, apikey, interval):
         """Initialize the data object."""
-        self._apikey = apikey        
+        self._apikey = apikey
         self._url = url + "/feed/list.json"
-        self._interval = interval                
+        self._interval = interval
         self._hass = hass
         self.data = None
-            
+
     def update(self, now):
-        """Get the latest data """       
+        """Get the latest data."""
         try:
-            try:    
-                r = requests.get(self._url, params={"apikey":self._apikey}, verify=False, allow_redirects=True, timeout=5)            
+            try:
+                r = requests.get(self._url, params={"apikey": self._apikey},
+                                 verify=False, allow_redirects=True,
+                                 timeout=5)
             except requests.exceptions.RequestException as e:
-                _LOGGER.error(e)                
+                _LOGGER.error(e)
                 return
-                
-            if r.status_code == 200:            
-                self.data = r.json()                                                    
+
+            if r.status_code == 200:
+                self.data = r.json()
             else:
-                _LOGGER.error("please verify if the specified config value '%s' is correct! (HTTP Status_code = %d)", CONF_URL, r.status_code)             
+                _LOGGER.error("please verify if the specified config value "
+                              "'%s' is correct! (HTTP Status_code = %d)",
+                              CONF_URL, r.status_code)
         finally:
-            """ during setup don't schedule new call, however if setup was succesfull (there
-                should be already data availible) keep trying since the connection could
-                be temporary down (server reboot for example at least in my use case it can happen)"""  
-            if not self.data is None:
-                track_point_in_utc_time(self._hass, self.update, now + timedelta(seconds=self._interval))
-            
-      
+            """
+               during setup don't schedule new call, however
+               if setup was succesfull (there
+               should be already data availible) keep trying
+               since the connection could be temporary down
+               (server reboot for example at least in my use
+               case it can happen).
+            """
+            if self.data is not None:
+                track_point_in_utc_time(self._hass,
+                                        self.update,
+                                        now +
+                                        timedelta(seconds=self._interval))
