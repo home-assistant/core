@@ -16,6 +16,7 @@ from homeassistant.const import (
     REQUIRED_PYTHON_VER,
     RESTART_EXIT_CODE,
 )
+from homeassistant.helpers.async import run_callback_threadsafe
 
 
 def validate_python() -> None:
@@ -256,12 +257,14 @@ def setup_and_run_hass(config_dir: str,
                 import webbrowser
                 webbrowser.open(hass.config.api.base_url)
 
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, open_browser)
+        run_callback_threadsafe(
+            hass.loop,
+            hass.bus.async_listen_once,
+            EVENT_HOMEASSISTANT_START, open_browser
+        )
 
     hass.start()
-    exit_code = int(hass.block_till_stopped())
-
-    return exit_code
+    return hass.exit_code
 
 
 def try_to_restart() -> None:
