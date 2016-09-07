@@ -14,7 +14,8 @@ from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_URL, CONF_VALUE_TEMPLATE,
-    CONF_UNIT_OF_MEASUREMENT, CONF_ID, CONF_SCAN_INTERVAL)
+    CONF_UNIT_OF_MEASUREMENT, CONF_ID, CONF_SCAN_INTERVAL,
+    STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 
@@ -45,12 +46,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 ATTR_SIZE = 'Size'
-ATTR_LASTUPDATETIME = 'LastUpdateTime'
+ATTR_LASTUPDATETIME = 'LastUpdated'
 ATTR_TAG = 'Tag'
 ATTR_FEEDID = 'FeedId'
-ATTR_USERID = 'UserID'
+ATTR_USERID = 'UserId'
 ATTR_FEEDNAME = 'FeedName'
-ATTR_LASTUPDATETIMESTR = 'LastUpdateTimeStr'
+ATTR_LASTUPDATETIMESTR = 'LastUpdatedStr'
 
 
 def get_id(sensorid, feedtag, feedname, feedid, feeduserid):
@@ -73,52 +74,55 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     interval = util.convert(config.get(CONF_SCAN_INTERVAL), int,
                             DEFAULT_SCAN_INTERVAL)
 
+    include_length = len(include_feeds)
+    exclude_length = len(exclude_feeds)
+    include_names_length = len(include_feeds_names)
+
+    if include_length > 0 and exclude_length > 0:
+        _LOGGER.error("Both config values '%s' and '%s' are " +
+                      "specified this is not valid! " +
+                      "Please check your configuration",
+                      CONF_EXCLUDE_FEEDID, CONF_INCLUDE_FEEDID)
+        return False
+
     data = EmonCmsData(hass, url, apikey, interval)
-    data.update(dt_util.utcnow())
 
     if data.data is None:
         return False
 
     sensors = []
-    include_length = len(include_feeds)
-    exclude_length = len(exclude_feeds)
-    include_names_length = len(include_feeds_names)
-    index = 0
-
     for elem in data.data:
-        if include_length == 0:
-            if exclude_length == 0:
-                sensors.append(EmonCmsSensor(hass, data, None, value_template,
-                                             unit_of_measurement, sensorid,
-                                             elem))
-            else:
-                if not elem["id"] in exclude_feeds:
-                    sensors.append(EmonCmsSensor(hass, data, None,
-                                                 value_template,
-                                                 unit_of_measurement,
-                                                 sensorid,
-                                                 elem))
+        if include_length == 0 and exclude_length == 0:
+            sensors.append(EmonCmsSensor(hass, data, None, value_template,
+                                         unit_of_measurement, sensorid,
+                                         elem))
 
-        else:
-            if exclude_length == 0:
-                if elem["id"] in include_feeds:
-                    name = None
-                    if include_names_length > 0:
-                        if index < include_names_length:
-                            name = include_feeds_names[index]
-                            index = index + 1
+        elif exclude_length > 0:
+            if not elem["id"] in exclude_feeds:
+                sensors.append(EmonCmsSensor(hass, data, None,
+                                             value_template,
+                                             unit_of_measurement,
+                                             sensorid,
+                                             elem))
+
+        elif include_length > 0:
+            if elem["id"] in include_feeds:
+                name = None
+                if include_names_length > 0:
+                    try:
+                        listindex = include_feeds.index(elem["id"])
+                    except ValueError:
+                        listindex = -1
+
+                    if listindex < include_names_length and \
+                       listindex > -1:
+                        name = include_feeds_names[listindex]
+
                 sensors.append(EmonCmsSensor(hass, data, name,
                                              value_template,
                                              unit_of_measurement,
                                              sensorid,
                                              elem))
-            else:
-                _LOGGER.error("Both config values '%s' and '%s' are " +
-                              "specified this is not valid! " +
-                              "Please check your configuration",
-                              CONF_EXCLUDE_FEEDID, CONF_INCLUDE_FEEDID)
-                return
-
     add_devices(sensors)
 
 
@@ -151,7 +155,8 @@ class EmonCmsSensor(Entity):
         self._value = elem["value"]
         if self._value_template is not None:
             self._state = template.render_with_possible_json_value(
-                self._hass, self._value_template, self._value, "N/A")
+                self._hass, self._value_template, self._value,
+                STATE_UNKNOWN)
         else:
             self._state = round(float(self._value), DECIMALS)
 
@@ -171,7 +176,7 @@ class EmonCmsSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the atrributes of the sensor."""
         return {
             ATTR_FEEDID: self._feedid,
@@ -204,10 +209,10 @@ class EmonCmsSensor(Entity):
         if found:
             if self._value_template is not None:
                 self._state = template.render_with_possible_json_value(
-                    self._hass, self._value_template, self._value, "N/A")
+                    self._hass, self._value_template, self._value,
+                    STATE_UNKNOWN)
             else:
                 self._state = round(float(self._value), DECIMALS)
-            self.update_ha_state()
 
 
 # pylint: disable=too-few-public-methods
@@ -221,6 +226,7 @@ class EmonCmsData(object):
         self._interval = interval
         self._hass = hass
         self.data = None
+        self.update(dt_util.utcnow())
 
     def update(self, now):
         """Get the latest data."""
