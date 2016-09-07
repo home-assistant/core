@@ -44,16 +44,6 @@ class TestNotifyDemo(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertTrue(len(self.events) == 0)
 
-    def test_sending_templated_message(self):
-        """Send a templated message."""
-        self.hass.states.set('sensor.temperature', 10)
-        notify.send_message(self.hass, '{{ states.sensor.temperature.state }}',
-                            '{{ states.sensor.temperature.name }}')
-        self.hass.pool.block_till_done()
-        last_event = self.events[-1]
-        self.assertEqual(last_event.data[notify.ATTR_TITLE], 'temperature')
-        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], '10')
-
     def test_method_forwards_correct_data(self):
         """Test that all data from the service gets forwarded to service."""
         notify.send_message(self.hass, 'my message', 'my title',
