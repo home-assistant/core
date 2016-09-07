@@ -107,9 +107,9 @@ class HomeAssistant(object):
     """Root object of the Home Assistant home automation."""
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self):
+    def __init__(self, loop=None):
         """Initialize new Home Assistant object."""
-        self.loop = asyncio.get_event_loop()
+        self.loop = loop or asyncio.get_event_loop()
         self.executer = ThreadPoolExecutor(max_workers=5)
         self.loop.set_default_executor(self.executer)
         self.pool = pool = create_worker_pool()
@@ -203,9 +203,10 @@ class HomeAssistant(object):
 
     def block_till_done(self):
         """Block till all pending work is done."""
-        self.loop.run_until_complete(
-            self.loop.run_in_executor(None, self.pool.block_till_done)
-        )
+        run_callback_threadsafe(
+            self.loop,
+            self.pool.block_till_done,
+        ).result()
 
     @asyncio.coroutine
     def async_block_till_done(self):

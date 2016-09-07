@@ -276,15 +276,12 @@ class TestStateMachine(unittest.TestCase):
 
     def setUp(self):    # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.pool = ha.create_worker_pool(0)
-        self.bus = ha.EventBus(self.pool, asyncio.get_event_loop())
-        self.states = ha.StateMachine(self.bus, asyncio.get_event_loop())
+        self.hass = get_test_home_assistant(0)
         self.states.set("light.Bowl", "on")
         self.states.set("switch.AC", "off")
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down stuff we started."""
-        self.pool.stop()
 
     def test_is_state(self):
         """Test is_state method."""
@@ -322,14 +319,10 @@ class TestStateMachine(unittest.TestCase):
 
     def test_remove(self):
         """Test remove method."""
-        self.pool.add_worker()
         events = []
-        self.bus.listen(EVENT_STATE_CHANGED,
-                        lambda event: events.append(event))
 
         self.assertIn('light.bowl', self.states.entity_ids())
         self.assertTrue(self.states.remove('light.bowl'))
-        self.pool.block_till_done()
 
         self.assertNotIn('light.bowl', self.states.entity_ids())
         self.assertEqual(1, len(events))
@@ -340,18 +333,14 @@ class TestStateMachine(unittest.TestCase):
 
         # If it does not exist, we should get False
         self.assertFalse(self.states.remove('light.Bowl'))
-        self.pool.block_till_done()
         self.assertEqual(1, len(events))
 
     def test_case_insensitivty(self):
         """Test insensitivty."""
-        self.pool.add_worker()
         runs = []
 
-        self.bus.listen(EVENT_STATE_CHANGED, lambda event: runs.append(event))
 
         self.states.set('light.BOWL', 'off')
-        self.bus._pool.block_till_done()
 
         self.assertTrue(self.states.is_state('light.bowl', 'off'))
         self.assertEqual(1, len(runs))
@@ -365,21 +354,15 @@ class TestStateMachine(unittest.TestCase):
         with patch('homeassistant.util.dt.utcnow', return_value=future):
             self.states.set("light.Bowl", "on", {'attr': 'triggers_change'})
 
-        self.assertEqual(state.last_changed,
-                         self.states.get('light.Bowl').last_changed)
 
     def test_force_update(self):
         """Test force update option."""
-        self.pool.add_worker()
         events = []
-        self.bus.listen(EVENT_STATE_CHANGED, events.append)
 
         self.states.set('light.bowl', 'on')
-        self.bus._pool.block_till_done()
         self.assertEqual(0, len(events))
 
         self.states.set('light.bowl', 'on', None, True)
-        self.bus._pool.block_till_done()
         self.assertEqual(1, len(events))
 
 
