@@ -277,8 +277,9 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
         _LOGGER.info("Retrieving auth tokens...")
         url = 'http://{}/userRpm/LoginRpm.htm?Save=Save'.format(self.host)
 
-        # Generate md5 hash of password. The C7 appears to only use the first 15 characters
-        # of a password, so we truncate to remove additional characters.
+        # Generate md5 hash of password. The C7 appears to only use the first 15
+        # characters of the password, so we truncate to remove additional
+        # characters from being hashed.
         password = hashlib.md5(self.password.encode('utf')[:15]).hexdigest()
         credentials = '{}:{}'.format(self.username, password).encode('utf')
 
