@@ -581,6 +581,7 @@ class Service(object):
         try:
             if self.schema:
                 call.data = self.schema(call.data)
+            call.data = MappingProxyType(call.data)
 
             self.func(call)
         except vol.MultipleInvalid as ex:
