@@ -450,6 +450,9 @@ class TestAutomation(unittest.TestCase):
         })
         assert self.hass.states.get('automation.hello') is not None
         assert self.hass.states.get('automation.bye') is None
+        listeners = self.hass.bus.listeners
+        assert listeners.get('test_event') == 1
+        assert listeners.get('test_event2') is None
 
         self.hass.bus.fire('test_event')
         self.hass.pool.block_till_done()
@@ -462,6 +465,9 @@ class TestAutomation(unittest.TestCase):
 
         assert self.hass.states.get('automation.hello') is None
         assert self.hass.states.get('automation.bye') is not None
+        listeners = self.hass.bus.listeners
+        assert listeners.get('test_event') is None
+        assert listeners.get('test_event2') == 1
 
         self.hass.bus.fire('test_event')
         self.hass.pool.block_till_done()
