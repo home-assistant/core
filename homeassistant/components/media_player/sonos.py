@@ -14,12 +14,13 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, ENTITY_ID_FORMAT, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_OFF,
     ATTR_ENTITY_ID)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import generate_entity_id
 
 REQUIREMENTS = ['SoCo==0.11.1']
 
@@ -199,6 +200,8 @@ class SonosDevice(MediaPlayerDevice):
         self.hass = hass
         self.volume_increment = 5
         self._player = player
+        self.entity_id = generate_entity_id(
+            ENTITY_ID_FORMAT, self._player.uid, hass=self.hass)
         self.update()
         self.soco_snapshot = Snapshot(self._player)
 
@@ -215,11 +218,6 @@ class SonosDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return "{}.{}".format(self.__class__, self._player.uid)
 
     @property
     def state(self):
