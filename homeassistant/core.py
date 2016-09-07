@@ -574,6 +574,7 @@ class Service(object):
         try:
             if self.schema:
                 call.data = self.schema(call.data)
+            call.data = MappingProxyType(call.data)
 
             self.func(call)
         except vol.MultipleInvalid as ex:
@@ -592,7 +593,7 @@ class ServiceCall(object):
         """Initialize a service call."""
         self.domain = domain.lower()
         self.service = service.lower()
-        self.data = MappingProxyType(data or {})
+        self.data = data or {}
         self.call_id = call_id
 
     def __repr__(self):
