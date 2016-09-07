@@ -14,7 +14,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 import homeassistant.components as core_components
-from homeassistant.components import group, persistent_notification
+from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
 import homeassistant.core as core
 import homeassistant.loader as loader
@@ -118,7 +118,7 @@ def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
 
         # Assumption: if a component does not depend on groups
         # it communicates with devices
-        if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
+        if 'group' not in getattr(component, 'DEPENDENCIES', []):
             hass.pool.add_worker()
 
         hass.bus.fire(
