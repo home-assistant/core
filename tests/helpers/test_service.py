@@ -47,6 +47,7 @@ class TestServiceHelpers(unittest.TestCase):
                     'value': '{{ \'complex\' }}',
                     'simple': 'simple'
                 },
+                'list': ['{{ \'list\' }}', '2'],
             },
         }
         runs = []
@@ -60,6 +61,7 @@ class TestServiceHelpers(unittest.TestCase):
         self.assertEqual('goodbye', runs[0].data['hello'])
         self.assertEqual('complex', runs[0].data['data']['value'])
         self.assertEqual('simple', runs[0].data['data']['simple'])
+        self.assertEqual('list', runs[0].data['list'][0])
 
     def test_passing_variables_to_templates(self):
         """Test passing variables to templates."""
