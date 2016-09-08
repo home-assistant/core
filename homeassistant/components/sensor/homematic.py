@@ -80,10 +80,6 @@ class HMSensor(homematic.HMDevice):
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from hm metadata."""
-        if self._state is None and len(self._hmdevice.SENSORNODE) == 1:
-            for value in self._hmdevice.SENSORNODE:
-                self._state = value
-
         # Add state to data dict
         if self._state:
             _LOGGER.debug("%s init datadict with main node '%s'", self._name,
