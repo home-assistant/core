@@ -57,6 +57,22 @@ def get_test_home_assistant(num_threads=None):
     threading.Thread(name="LoopThread", target=loop.run_forever,
                      daemon=True).start()
 
+    orig_start = hass.start
+
+    @asyncio.coroutine
+    def fake_stop():
+        yield None
+
+    def start_hass():
+        """Helper to start hass."""
+        with patch.object(hass.loop, 'run_forever', return_value=None):
+            with patch.object(hass, 'async_stop', return_value=fake_stop()):
+                with patch.object(ha, 'create_timer', return_value=None):
+                    orig_start()
+                    hass.block_till_done()
+
+    hass.start = start_hass
+
     return hass
 
 

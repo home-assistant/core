@@ -1,5 +1,7 @@
 """Test Home Assistant remote methods and classes."""
 # pylint: disable=protected-access,too-many-public-methods
+import asyncio
+import threading
 import time
 import unittest
 
@@ -52,8 +54,15 @@ def setUpModule():   # pylint: disable=invalid-name
     master_api = remote.API("127.0.0.1", API_PASSWORD, MASTER_PORT)
 
     # Start slave
-    slave = remote.HomeAssistant(master_api)
+    loop = asyncio.new_event_loop()
+
+    # FIXME: should not be a daemon
+    threading.Thread(name="LoopThread", daemon=True,
+                     target=loop.run_forever).start()
+
+    slave = remote.HomeAssistant(master_api, loop=loop)
     slave.config.config_dir = get_test_config_dir()
+    slave.config.skip_pip = True
     bootstrap.setup_component(
         slave, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
@@ -223,8 +232,8 @@ class TestRemoteClasses(unittest.TestCase):
 
     def tearDown(self):
         """Stop everything that was started."""
-        slave.pool.block_till_done()
-        hass.pool.block_till_done()
+        slave.block_till_done()
+        hass.block_till_done()
 
     def test_home_assistant_init(self):
         """Test HomeAssistant init."""

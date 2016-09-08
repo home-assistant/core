@@ -11,8 +11,7 @@ from datetime import datetime, timedelta
 import pytz
 
 import homeassistant.core as ha
-from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError)
+from homeassistant.exceptions import InvalidEntityFormatError
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
@@ -49,18 +48,8 @@ class TestHomeAssistant(unittest.TestCase):
         calls = []
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
                                   lambda event: calls.append(1))
-        self.hass._testing = True
 
-        @asyncio.coroutine
-        def fake_stop():
-            print("BIER")
-            yield None
-
-        with patch.object(self.hass.loop, 'run_forever', return_value=None):
-            with patch.object(self.hass, 'async_stop', return_value=fake_stop()):
-                with patch.object(ha, 'create_timer', return_value=None):
-                    self.hass.start()
-                    self.hass.block_till_done()
+        self.hass.start()
 
         self.assertEqual(1, len(calls))
 
@@ -124,7 +113,6 @@ class TestEventBus(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.bus = self.hass.bus
         self.bus.listen('test_event', lambda x: len)
-        # self.hass.block_till_done()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down stuff we started."""
