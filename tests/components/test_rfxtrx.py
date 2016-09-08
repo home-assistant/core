@@ -94,6 +94,7 @@ class TestRFXTRX(unittest.TestCase):
             calls.append(event)
 
         self.hass.bus.listen(rfxtrx.EVENT_BUTTON_PRESSED, record_event)
+        self.hass.block_till_done()
 
         entity = rfxtrx.RFX_DEVICES['213c7f216']
         self.assertEqual('Test', entity.name)
@@ -138,6 +139,7 @@ class TestRFXTRX(unittest.TestCase):
             calls.append(event)
 
         self.hass.bus.listen("signal_received", record_event)
+        self.hass.block_till_done()
         event = rfxtrx.get_rfx_object('0a520802060101ff0f0269')
         event.data = bytearray(b'\nR\x08\x01\x07\x01\x00\xb8\x1b\x02y')
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS[0](event)
