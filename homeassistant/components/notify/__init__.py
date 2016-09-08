@@ -12,7 +12,7 @@ import voluptuous as vol
 
 import homeassistant.bootstrap as bootstrap
 from homeassistant.config import load_yaml_config_file
-from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import config_per_platform, template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.util import slugify
@@ -91,13 +91,15 @@ def setup(hass, config):
 
         def notify_message(notify_service, call):
             """Handle sending notification message service calls."""
-            message = call.data.get(ATTR_MESSAGE)
-            title = call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+            message = call.data[ATTR_MESSAGE]
 
+            title = template.render(
+                hass, call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT))
             if targets.get(call.service) is not None:
                 target = targets[call.service]
             else:
                 target = call.data.get(ATTR_TARGET)
+            message = template.render(hass, message)
             data = call.data.get(ATTR_DATA)
 
             notify_service.send_message(message, title=title, target=target,
