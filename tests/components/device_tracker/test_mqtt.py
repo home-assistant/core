@@ -65,5 +65,5 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
             }
         })
         fire_mqtt_message(self.hass, topic, location)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(location, self.hass.states.get(enttiy_id).state)

@@ -17,7 +17,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(1)
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -36,7 +36,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def wait_recording_done(self):
         """Block till recording is done."""
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
 
     def test_setup(self):

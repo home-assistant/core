@@ -37,7 +37,7 @@ class TestRecorder(unittest.TestCase):
         five_days_ago = now - timedelta(days=5)
         attributes = {'test_attr': 5, 'test_attr_10': 'nice'}
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
 
         for event_id in range(5):
@@ -67,7 +67,7 @@ class TestRecorder(unittest.TestCase):
         five_days_ago = now - timedelta(days=5)
         event_data = {'test_attr': 5, 'test_attr_10': 'nice'}
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
         for event_id in range(5):
             if event_id < 2:
@@ -93,7 +93,7 @@ class TestRecorder(unittest.TestCase):
 
         self.hass.states.set(entity_id, state, attributes)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
 
         db_states = recorder.query('States')
@@ -120,7 +120,7 @@ class TestRecorder(unittest.TestCase):
 
         self.hass.bus.fire(event_type, event_data)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
 
         db_events = recorder.execute(

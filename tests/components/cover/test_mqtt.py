@@ -41,19 +41,19 @@ class TestCoverMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNKNOWN, state.state)
 
         fire_mqtt_message(self.hass, 'state-topic', '0')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_CLOSED, state.state)
 
         fire_mqtt_message(self.hass, 'state-topic', '50')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_OPEN, state.state)
 
         fire_mqtt_message(self.hass, 'state-topic', '100')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_OPEN, state.state)
@@ -75,7 +75,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNKNOWN, state.state)
 
         cover.open_cover(self.hass, 'cover.test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'OPEN', 2, False),
                          self.mock_publish.mock_calls[-1][1])
@@ -99,7 +99,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNKNOWN, state.state)
 
         cover.close_cover(self.hass, 'cover.test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'CLOSE', 2, False),
                          self.mock_publish.mock_calls[-1][1])
@@ -123,7 +123,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNKNOWN, state.state)
 
         cover.stop_cover(self.hass, 'cover.test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'STOP', 2, False),
                          self.mock_publish.mock_calls[-1][1])
@@ -150,25 +150,25 @@ class TestCoverMQTT(unittest.TestCase):
         self.assertFalse('current_position' in state_attributes_dict)
 
         fire_mqtt_message(self.hass, 'state-topic', '0')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         current_cover_position = self.hass.states.get(
             'cover.test').attributes['current_position']
         self.assertEqual(0, current_cover_position)
 
         fire_mqtt_message(self.hass, 'state-topic', '50')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         current_cover_position = self.hass.states.get(
             'cover.test').attributes['current_position']
         self.assertEqual(50, current_cover_position)
 
         fire_mqtt_message(self.hass, 'state-topic', '101')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         current_cover_position = self.hass.states.get(
             'cover.test').attributes['current_position']
         self.assertEqual(50, current_cover_position)
 
         fire_mqtt_message(self.hass, 'state-topic', 'non-numeric')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         current_cover_position = self.hass.states.get(
             'cover.test').attributes['current_position']
         self.assertEqual(50, current_cover_position)

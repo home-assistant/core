@@ -22,7 +22,7 @@ class TestPersistentNotification:
 
         pn.create(self.hass, 'Hello World {{ 1 + 1 }}',
                   title='{{ 1 + 1 }} beers')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         entity_ids = self.hass.states.entity_ids(pn.DOMAIN)
         assert len(entity_ids) == 1
@@ -36,14 +36,14 @@ class TestPersistentNotification:
         assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 0
 
         pn.create(self.hass, 'test', notification_id='Beer 2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(self.hass.states.entity_ids()) == 1
         state = self.hass.states.get('persistent_notification.beer_2')
         assert state.state == 'test'
 
         pn.create(self.hass, 'test 2', notification_id='Beer 2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         # We should have overwritten old one
         assert len(self.hass.states.entity_ids()) == 1
@@ -55,7 +55,7 @@ class TestPersistentNotification:
         assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 0
 
         pn.create(self.hass, '{{ message + 1 }}', '{{ title + 1 }}')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         entity_ids = self.hass.states.entity_ids(pn.DOMAIN)
         assert len(entity_ids) == 1

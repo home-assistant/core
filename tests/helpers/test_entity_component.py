@@ -104,7 +104,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         poll_ent.update_ha_state.reset_mock()
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert not no_poll_ent.update_ha_state.called
         assert poll_ent.update_ha_state.called
@@ -121,7 +121,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         ent2.update_ha_state = lambda *_: component.add_entities([ent1])
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert 2 == len(self.hass.states.entity_ids())
 
@@ -236,7 +236,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         discovery.load_platform(self.hass, DOMAIN, 'platform_test',
                                 {'msg': 'discovery_info'})
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert mock_setup.called
         assert ('platform_test', {}, {'msg': 'discovery_info'}) == \
