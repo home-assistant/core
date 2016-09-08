@@ -38,6 +38,7 @@ class NestThermostat(ClimateDevice):
         self._unit = temp_unit
         self.structure = structure
         self.device = device
+        self._fan_list = ["On", "Auto"]
 
     @property
     def name(self):
@@ -164,17 +165,18 @@ class NestThermostat(ClimateDevice):
         self.structure.away = False
 
     @property
-    def is_fan_on(self):
+    def current_fan_mode(self):
         """Return whether the fan is on."""
-        return self.device.fan
+        return "On" if self.device.fan else "Auto"
 
-    def turn_fan_on(self):
-        """Turn fan on."""
-        self.device.fan = True
+    @property
+    def fan_list(self):
+        """List of available fan modes."""
+        return self._fan_list
 
-    def turn_fan_off(self):
-        """Turn fan off."""
-        self.device.fan = False
+    def set_fan_mode(self, fan):
+        """Turn fan on/off."""
+        self.device.fan = fan.lower()
 
     @property
     def min_temp(self):
