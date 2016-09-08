@@ -121,6 +121,16 @@ def _ordered_dict(loader: SafeLineLoader,
         line = getattr(node, '__line__', 'unknown')
         if line != 'unknown' and (min_line is None or line < min_line):
             min_line = line
+
+        try:
+            hash(key)
+        except TypeError:
+            fname = getattr(loader.stream, 'name', '')
+            raise yaml.MarkedYAMLError(
+                context="invalid key: \"{}\"".format(key),
+                context_mark=yaml.Mark(fname, 0, min_line, -1, None, None)
+            )
+
         if key in seen:
             fname = getattr(loader.stream, 'name', '')
             first_mark = yaml.Mark(fname, 0, seen[key], -1, None, None)
