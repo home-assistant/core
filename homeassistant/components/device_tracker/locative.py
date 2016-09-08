@@ -6,16 +6,15 @@ https://home-assistant.io/components/device_tracker.locative/
 """
 import logging
 
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
-
 from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME
 from homeassistant.components.http import HomeAssistantView
+# pylint: disable=unused-import
+from homeassistant.components.device_tracker import (  # NOQA
+    DOMAIN, PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA
 
 
 def setup_scanner(hass, config, see):
