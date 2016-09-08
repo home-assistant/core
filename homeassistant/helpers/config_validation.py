@@ -233,14 +233,8 @@ def template(value):
     """Validate a jinja2 template."""
     if value is None:
         raise vol.Invalid('template value is None')
-    if isinstance(value, list):
-        for idx, element in enumerate(value):
-            value[idx] = template(element)
-        return value
-    if isinstance(value, dict):
-        for key, element in value.items():
-            value[key] = template(element)
-        return value
+    if isinstance(value, (list, dict)):
+        raise vol.Invalid('template value should be a string')
 
     value = str(value)
     try:
@@ -248,6 +242,20 @@ def template(value):
         return value
     except jinja2.exceptions.TemplateSyntaxError as ex:
         raise vol.Invalid('invalid template ({})'.format(ex))
+
+
+def template_complex(value):
+    """Validate a complex jinja2 template."""
+    if isinstance(value, list):
+        for idx, element in enumerate(value):
+            value[idx] = template_complex(element)
+        return value
+    if isinstance(value, dict):
+        for key, element in value.items():
+            value[key] = template_complex(element)
+        return value
+
+    return template(value)
 
 
 def time(value):
@@ -316,7 +324,7 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service', 'service name'): service,
     vol.Exclusive('service_template', 'service name'): template,
     vol.Optional('data'): dict,
-    vol.Optional('data_template'): {match_all: template},
+    vol.Optional('data_template'): {match_all: template_complex},
     vol.Optional(CONF_ENTITY_ID): entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
 

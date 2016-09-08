@@ -299,6 +299,22 @@ def test_template():
     """Test template validator."""
     schema = vol.Schema(cv.template)
 
+    for value in (None, '{{ partial_print }', '{% if True %}Hello', ['test']):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in (
+        1, 'Hello',
+        '{{ beer }}',
+        '{% if 1 == 1 %}Hello{% else %}World{% endif %}',
+    ):
+        schema(value)
+
+
+def test_template_complex():
+    """Test template_complex validator."""
+    schema = vol.Schema(cv.template_complex)
+
     for value in (None, '{{ partial_print }', '{% if True %}Hello'):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
