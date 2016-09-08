@@ -54,7 +54,8 @@ class NX584Alarm(alarm.AlarmControlPanel):
         from nx584 import client
         self._hass = hass
         self._name = name
-        self._alarm = client.Client(url)
+        self._url = url
+        self._alarm = client.Client(self._url)
         # Do an initial list operation so that we will try to actually
         # talk to the API and trigger a requests exception for setup_platform()
         # to catch
