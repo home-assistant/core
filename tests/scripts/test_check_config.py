@@ -137,7 +137,10 @@ class TestCheckConfig(unittest.TestCase):
         self.maxDiff = None
 
         with patch_yaml_files(files):
-            res = check_config.check(get_test_config_dir('secret.yaml'))
+            config_path = get_test_config_dir('secret.yaml')
+            secrets_path = get_test_config_dir('secrets.yaml')
+
+            res = check_config.check(config_path)
             change_yaml_files(res)
 
             # convert secrets OrderedDict to dict for assertequal
@@ -148,7 +151,7 @@ class TestCheckConfig(unittest.TestCase):
                 'components': {'http': {'api_password': 'abc123',
                                         'server_port': 8123}},
                 'except': {},
-                'secret_cache': {'secrets.yaml': {'http_pw': 'abc123'}},
+                'secret_cache': {secrets_path: {'http_pw': 'abc123'}},
                 'secrets': {'http_pw': 'abc123'},
-                'yaml_files': ['.../secret.yaml', 'secrets.yaml']
+                'yaml_files': ['.../secret.yaml', '.../secrets.yaml']
             }, res)
