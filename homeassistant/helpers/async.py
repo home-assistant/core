@@ -104,6 +104,7 @@ def run_coroutine_threadsafe(coro, loop):
     def callback():
         """Callback to call the coroutine."""
         try:
+            # pylint: disable=deprecated-method
             _chain_future(ensure_future(coro, loop=loop), future)
         except Exception as exc:
             if future.set_running_or_notify_cancel():
@@ -126,6 +127,7 @@ def fire_coroutine_threadsafe(coro, loop):
 
     def callback():
         """Callback to fire coroutine."""
+        # pylint: disable=deprecated-method
         ensure_future(coro, loop=loop)
 
     loop.call_soon_threadsafe(callback)
