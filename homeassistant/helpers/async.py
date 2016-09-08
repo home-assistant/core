@@ -1,6 +1,4 @@
-"""
-Asyncio backports for Python 3.4.3 compatibility
-"""
+"""Asyncio backports for Python 3.4.3 compatibility."""
 import concurrent.futures
 from asyncio import coroutines
 from asyncio.futures import Future
@@ -21,19 +19,19 @@ def _set_result_unless_cancelled(fut, result):
     fut.set_result(result)
 
 
-def _set_concurrent_future_state(concurrent, source):
+def _set_concurrent_future_state(concurr, source):
     """Copy state from a future to a concurrent.futures.Future."""
     assert source.done()
     if source.cancelled():
-        concurrent.cancel()
-    if not concurrent.set_running_or_notify_cancel():
+        concurr.cancel()
+    if not concurr.set_running_or_notify_cancel():
         return
     exception = source.exception()
     if exception is not None:
-        concurrent.set_exception(exception)
+        concurr.set_exception(exception)
     else:
         result = source.result()
-        concurrent.set_result(result)
+        concurr.set_result(result)
 
 
 def _copy_future_state(source, dest):
@@ -67,6 +65,7 @@ def _chain_future(source, destination):
         raise TypeError('A future is required for source argument')
     if not isinstance(destination, (Future, concurrent.futures.Future)):
         raise TypeError('A future is required for destination argument')
+    # pylint: disable=protected-access
     source_loop = source._loop if isinstance(source, Future) else None
     dest_loop = destination._loop if isinstance(destination, Future) else None
 
@@ -103,6 +102,7 @@ def run_coroutine_threadsafe(coro, loop):
     future = concurrent.futures.Future()
 
     def callback():
+        """Callback to call the coroutine."""
         try:
             _chain_future(ensure_future(coro, loop=loop), future)
         except Exception as exc:
@@ -125,6 +125,7 @@ def fire_coroutine_threadsafe(coro, loop):
         raise TypeError('A coroutine object is required: %s' % coro)
 
     def callback():
+        """Callback to fire coroutine."""
         ensure_future(coro, loop=loop)
 
     loop.call_soon_threadsafe(callback)
@@ -138,7 +139,8 @@ def run_callback_threadsafe(loop, callback, *args):
     """
     future = concurrent.futures.Future()
 
-    def cb():
+    def run_callback():
+        """Run callback and store result."""
         try:
             future.set_result(callback(*args))
         except Exception as exc:
@@ -146,5 +148,5 @@ def run_callback_threadsafe(loop, callback, *args):
                 future.set_exception(exc)
             raise
 
-    loop.call_soon_threadsafe(cb)
+    loop.call_soon_threadsafe(run_callback)
     return future

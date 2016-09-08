@@ -105,6 +105,7 @@ class JobPriority(util.OrderedEnum):
 
 class HomeAssistant(object):
     """Root object of the Home Assistant home automation."""
+
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, loop=None):
@@ -183,7 +184,7 @@ class HomeAssistant(object):
 
     @asyncio.coroutine
     def async_start(self):
-        """Finalizes startup from inside the event loop.
+        """Finalize startup from inside the event loop.
 
         This method is a coroutine.
         """
@@ -201,7 +202,6 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-
         self.pool.add_job(priority, (target,) + args)
 
     def block_till_done(self):
@@ -212,6 +212,7 @@ class HomeAssistant(object):
 
         @asyncio.coroutine
         def sleep_wait():
+            """Sleep in thread pool."""
             yield from self.loop.run_in_executor(None, time.sleep, 1)
 
         def notify_when_done():
@@ -221,6 +222,7 @@ class HomeAssistant(object):
                 self.pool.block_till_done()
 
                 # Verify the loop is empty
+                # pylint: disable=protected-access
                 loop_empty = self.loop._current_handle is None and \
                     len(self.loop._ready) == 0
 
@@ -323,10 +325,7 @@ class EventBus(object):
         self._loop = loop
 
     def async_listeners(self):
-        """Dict with events and the number of listeners.
-
-
-        """
+        """Dict with events and the number of listeners."""
         return {key: len(self._listeners[key])
                 for key in self._listeners}
 

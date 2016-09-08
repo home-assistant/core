@@ -281,7 +281,7 @@ def from_config_dict(config: Dict[str, Any],
 
     # Setup in a thread to avoid blocking
     def component_setup():
-
+        """Set up a component."""
         if not core_components.setup(hass, config):
             _LOGGER.error('Home Assistant core failed to initialize. '
                           'Further initialization aborted.')
