@@ -78,11 +78,18 @@ class TestInputSelect(unittest.TestCase):
 
         self.assertTrue(input_select.setup(self.hass, {
             'input_select': input_select.PLATFORM_SCHEMA({
+                'test_0': {
+                    'options': [
+                        1,
+                        2,
+                    ],
+                },
                 'test_1': {
                     'options': [
                         1,
                         2,
                     ],
+                    'initial': 3
                 },
                 'test_2': {
                     'name': 'Hello World',
@@ -93,14 +100,17 @@ class TestInputSelect(unittest.TestCase):
             })
         }))
 
-        self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
+        self.assertEqual(count_start + 3, len(self.hass.states.entity_ids()))
 
+        state_0 = self.hass.states.get('input_select.test_0')
         state_1 = self.hass.states.get('input_select.test_1')
         state_2 = self.hass.states.get('input_select.test_2')
 
+        self.assertIsNotNone(state_0)
         self.assertIsNotNone(state_1)
         self.assertIsNotNone(state_2)
 
+        self.assertEqual('1', state_0.state)
         self.assertEqual('1', state_1.state)
         self.assertEqual(['1', '2'],
                          state_1.attributes.get(input_select.ATTR_OPTIONS))

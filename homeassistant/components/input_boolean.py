@@ -9,12 +9,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_TOGGLE,
-    STATE_ON)
+    ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_TOGGLE, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.util import slugify
 
 DOMAIN = 'input_boolean'
 
@@ -22,20 +21,18 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NAME = "name"
-CONF_INITIAL = "initial"
-CONF_ICON = "icon"
+CONF_INITIAL = 'initial'
 
 SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-PLATFORM_SCHEMA = vol.Schema({
+CONFIG_SCHEMA = vol.Schema({
     cv.slug: {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_INITIAL, default=False): cv.boolean,
         vol.Optional(CONF_ICON): cv.icon,
-    }}, required=True)
+    }}, required=True, extra=vol.ALLOW_EXTRA)
 
 
 def is_on(hass, entity_id):
@@ -65,10 +62,6 @@ def setup(hass, config):
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
-        if object_id != slugify(object_id):
-            _LOGGER.warning("Found invalid key for boolean input: %s. "
-                            "Use %s instead", object_id, slugify(object_id))
-            continue
         if not cfg:
             cfg = {}
 

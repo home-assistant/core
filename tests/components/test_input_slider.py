@@ -28,6 +28,15 @@ class TestInputSlider(unittest.TestCase):
         with self.assertRaises(vol.Invalid):
             input_slider.PLATFORM_SCHEMA({'name with space': None})
 
+        self.assertFalse(input_slider.setup(self.hass, {
+            input_slider.DOMAIN: input_slider.PLATFORM_SCHEMA({
+                'test_1': {
+                    'min': 50,
+                    'max': 50,
+                },
+            })
+        }))
+
     def test_select_value(self):
         """Test select_value method."""
         self.assertTrue(input_slider.setup(self.hass, {

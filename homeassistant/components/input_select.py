@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -17,9 +17,7 @@ DOMAIN = 'input_select'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NAME = 'name'
 CONF_INITIAL = 'initial'
-CONF_ICON = 'icon'
 CONF_OPTIONS = 'options'
 
 ATTR_OPTION = 'option'
@@ -61,8 +59,6 @@ def setup(hass, config):
         state = cfg.get(CONF_INITIAL)
 
         if state not in options:
-            print(options)
-            print(cfg)
             state = options[0]
             if state is not None:
                 _LOGGER.warning('Initial state %s is not in the options %s',
@@ -71,9 +67,6 @@ def setup(hass, config):
         icon = cfg.get(CONF_ICON)
 
         entities.append(InputSelect(object_id, name, state, options, icon))
-
-    if not entities:
-        return False
 
     def select_option_service(call):
         """Handle a calls to the input select services."""

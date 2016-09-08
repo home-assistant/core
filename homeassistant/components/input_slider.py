@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -17,11 +18,9 @@ DOMAIN = 'input_slider'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NAME = 'name'
 CONF_INITIAL = 'initial'
 CONF_MIN = 'min'
 CONF_MAX = 'max'
-CONF_ICON = 'icon'
 CONF_STEP = 'step'
 
 ATTR_VALUE = 'value'
@@ -39,10 +38,11 @@ SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = vol.Schema({
     cv.slug: {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_MIN): vol.Coerce(int),
-        vol.Optional(CONF_MAX): vol.Coerce(int),
-        vol.Optional(CONF_INITIAL): vol.Coerce(int),
-        vol.Optional(CONF_STEP, default=1): vol.Coerce(int),
+        vol.Optional(CONF_MIN): vol.Coerce(float),
+        vol.Optional(CONF_MAX): vol.Coerce(float),
+        vol.Optional(CONF_INITIAL): vol.Coerce(float),
+        vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float),
+                                                    vol.Range(min=1e-3)),
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
     }}, required=True)
@@ -75,6 +75,10 @@ def setup(hass, config):
             state = minimum
         if state > maximum:
             state = maximum
+        if minimum >= maximum:
+            _LOGGER.warning('Maximum (%s) is not greater than minimum (%s)'
+                            ' for %s', minimum, maximum, object_id)
+            continue
 
         entities.append(InputSlider(object_id, name, state, minimum, maximum,
                                     step, icon, unit))
