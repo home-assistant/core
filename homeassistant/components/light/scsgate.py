@@ -8,33 +8,36 @@ import logging
 
 import homeassistant.components.scsgate as scsgate
 from homeassistant.components.light import Light
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME)
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['scsgate']
 
+PLATFORM_SCHEMA = scsgate.PLATFORM_SCHEMA
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Add the SCSGate swiches defined inside of the configuration file."""
-    devices = config.get('devices')
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the SCSGate switches."""
+    devices = config.get(CONF_DEVICES)
     lights = []
     logger = logging.getLogger(__name__)
 
     if devices:
         for _, entity_info in devices.items():
-            if entity_info['scs_id'] in scsgate.SCSGATE.devices:
+            if entity_info[scsgate.CONF_SCS_ID] in scsgate.SCSGATE.devices:
                 continue
 
-            logger.info("Adding %s scsgate.light", entity_info['name'])
+            name = entity_info[CONF_NAME]
+            scs_id = entity_info[scsgate.CONF_SCS_ID]
 
-            name = entity_info['name']
-            scs_id = entity_info['scs_id']
-            light = SCSGateLight(
-                name=name,
-                scs_id=scs_id,
-                logger=logger)
+            logger.info("Adding %s scsgate.light", name)
+
+            light = SCSGateLight(name=name, scs_id=scs_id, logger=logger)
             lights.append(light)
 
-    add_devices_callback(lights)
+    add_devices(lights)
     scsgate.SCSGATE.add_devices_to_register(lights)
 
 
@@ -73,9 +76,7 @@ class SCSGateLight(Light):
         from scsgate.tasks import ToggleStatusTask
 
         scsgate.SCSGATE.append_task(
-            ToggleStatusTask(
-                target=self._scs_id,
-                toggled=True))
+            ToggleStatusTask(target=self._scs_id, toggled=True))
 
         self._toggled = True
         self.update_ha_state()
@@ -85,9 +86,7 @@ class SCSGateLight(Light):
         from scsgate.tasks import ToggleStatusTask
 
         scsgate.SCSGATE.append_task(
-            ToggleStatusTask(
-                target=self._scs_id,
-                toggled=False))
+            ToggleStatusTask(target=self._scs_id, toggled=False))
 
         self._toggled = False
         self.update_ha_state()
@@ -111,6 +110,6 @@ class SCSGateLight(Light):
         self.hass.bus.fire(
             'button_pressed', {
                 ATTR_ENTITY_ID: self._scs_id,
-                'state': command
+                ATTR_STATE: command,
             }
         )

@@ -8,35 +8,36 @@ import logging
 
 import homeassistant.components.scsgate as scsgate
 from homeassistant.components.cover import CoverDevice
-from homeassistant.const import CONF_NAME
+from homeassistant.const import (CONF_DEVICES, CONF_NAME)
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['scsgate']
-SCS_ID = 'scs_id'
+
+PLATFORM_SCHEMA = scsgate.PLATFORM_SCHEMA
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the SCSGate cover."""
-    devices = config.get('devices')
+    devices = config.get(CONF_DEVICES)
     covers = []
     logger = logging.getLogger(__name__)
 
     if devices:
         for _, entity_info in devices.items():
-            if entity_info[SCS_ID] in scsgate.SCSGATE.devices:
+            if entity_info[scsgate.CONF_SCS_ID] in scsgate.SCSGATE.devices:
                 continue
 
-            logger.info("Adding %s scsgate.cover", entity_info[CONF_NAME])
-
             name = entity_info[CONF_NAME]
-            scs_id = entity_info[SCS_ID]
-            cover = SCSGateCover(
-                name=name,
-                scs_id=scs_id,
-                logger=logger)
+            scs_id = entity_info[scsgate.CONF_SCS_ID]
+
+            logger.info("Adding %s scsgate.cover", name)
+
+            cover = SCSGateCover(name=name, scs_id=scs_id, logger=logger)
             scsgate.SCSGATE.add_device(cover)
             covers.append(cover)
 
-    add_devices_callback(covers)
+    add_devices(covers)
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
@@ -91,6 +92,5 @@ class SCSGateCover(CoverDevice):
 
     def process_event(self, message):
         """Handle a SCSGate message related with this cover."""
-        self._logger.debug(
-            "Rollershutter %s, got message %s",
-            self._scs_id, message.toggled)
+        self._logger.debug("Rollershutter %s, got message %s",
+                           self._scs_id, message.toggled)
