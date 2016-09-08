@@ -689,12 +689,12 @@ class HMDevice(Entity):
             if self._check_hm_to_ha_object():
                 try:
                     # Init datapoints of this object
-                    self._init_data_struct()
+                    self._init_data()
                     if HOMEMATIC_LINK_DELAY:
                         # We delay / pause loading of data to avoid overloading
                         # of CCU / Homegear when doing auto detection
                         time.sleep(HOMEMATIC_LINK_DELAY)
-                    self._load_init_data_from_hm()
+                    self._load_data_from_hm()
                     _LOGGER.debug("%s datastruct: %s",
                                   self._name, str(self._data))
 
@@ -771,7 +771,7 @@ class HMDevice(Entity):
                                             bequeath=False,
                                             channel=channel)
 
-    def _load_init_data_from_hm(self):
+    def _load_data_from_hm(self):
         """Load first value from pyhomematic."""
         if not self._connected:
             return False
@@ -801,10 +801,7 @@ class HMDevice(Entity):
         return None
 
     def _check_hm_to_ha_object(self):
-        """Check if it is possible to use the Homematic object as this HA type.
-
-        NEEDS overwrite by inherit!
-        """
+        """Check if it is possible to use the Homematic object."""
         if not self._connected or self._hmdevice is None:
             _LOGGER.error("HA object is not linked to homematic.")
             return False
@@ -816,11 +813,15 @@ class HMDevice(Entity):
 
         return True
 
-    def _init_data_struct(self):
-        """Generate a data dict (self._data) from the Homematic metadata.
-
-        NEEDS overwrite by inherit!
-        """
+    def _init_data(self):
+        """Generate a data dict (self._data) from the Homematic metadata."""
         # Add all attributes to data dict
         for data_note in self._hmdevice.ATTRIBUTENODE:
             self._data.update({data_note: STATE_UNKNOWN})
+
+        # init device specified data
+        self._init_data_struct()
+
+    def _init_data_struct(self):
+        """Generate a data dict from the Homematic device metadata."""
+        raise NotImplementedError
