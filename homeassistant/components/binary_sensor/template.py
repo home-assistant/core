@@ -5,22 +5,22 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.template/
 """
 import logging
+
 import voluptuous as vol
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA,
+    SENSOR_CLASSES_SCHEMA)
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, MATCH_ALL, CONF_VALUE_TEMPLATE,
+    CONF_SENSOR_CLASS, CONF_SENSORS)
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import template
+from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.event import track_state_change
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.binary_sensor import (BinarySensorDevice,
-                                                    ENTITY_ID_FORMAT,
-                                                    PLATFORM_SCHEMA,
-                                                    SENSOR_CLASSES_SCHEMA)
-
-from homeassistant.const import (ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, MATCH_ALL,
-                                 CONF_VALUE_TEMPLATE, CONF_SENSOR_CLASS)
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers import template
-from homeassistant.helpers.event import track_state_change
-
-CONF_SENSORS = 'sensors'
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
@@ -33,15 +33,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
 })
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup template binary sensors."""
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
-
         value_template = device_config[CONF_VALUE_TEMPLATE]
         entity_ids = device_config[ATTR_ENTITY_ID]
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
@@ -85,8 +82,7 @@ class BinarySensorTemplate(BinarySensorDevice):
             """Called when the target device changes state."""
             self.update_ha_state(True)
 
-        track_state_change(hass, entity_ids,
-                           template_bsensor_state_listener)
+        track_state_change(hass, entity_ids, template_bsensor_state_listener)
 
     @property
     def name(self):
@@ -111,8 +107,8 @@ class BinarySensorTemplate(BinarySensorDevice):
     def update(self):
         """Get the latest data and update the state."""
         try:
-            self._state = template.render(self.hass,
-                                          self._template).lower() == 'true'
+            self._state = template.render(
+                self.hass, self._template).lower() == 'true'
         except TemplateError as ex:
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):
