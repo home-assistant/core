@@ -31,9 +31,11 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    return homematic.setup_hmdevice_discovery_helper(HMBinarySensor,
-                                                     discovery_info,
-                                                     add_callback_devices)
+    return homematic.setup_hmdevice_discovery_helper(
+        HMBinarySensor,
+        discovery_info,
+        add_callback_devices
+    )
 
 
 class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
@@ -57,44 +59,8 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
             return "motion"
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
 
-    def _check_hm_to_ha_object(self):
-        """Check if possible to use the HM Object as this HA type."""
-        from pyhomematic.devicetypes.sensors import HMBinarySensor\
-            as pyHMBinarySensor
-
-        # Check compatibility from HMDevice
-        if not super()._check_hm_to_ha_object():
-            return False
-
-        # check if the Homematic device correct for this HA device
-        if not isinstance(self._hmdevice, pyHMBinarySensor):
-            _LOGGER.critical("This %s can't be use as binary", self._name)
-            return False
-
-        # if exists user value?
-        if self._state and self._state not in self._hmdevice.BINARYNODE:
-            _LOGGER.critical("This %s have no binary with %s", self._name,
-                             self._state)
-            return False
-
-        # only check and give a warning to the user
-        if self._state is None and len(self._hmdevice.BINARYNODE) > 1:
-            _LOGGER.critical("%s have multiple binary params. It use all "
-                             "binary nodes as one. Possible param values: %s",
-                             self._name, str(self._hmdevice.BINARYNODE))
-            return False
-
-        return True
-
     def _init_data_struct(self):
         """Generate a data struct (self._data) from the Homematic metadata."""
-        super()._init_data_struct()
-
-        # object have 1 binary
-        if self._state is None and len(self._hmdevice.BINARYNODE) == 1:
-            for value in self._hmdevice.BINARYNODE:
-                self._state = value
-
         # add state to data struct
         if self._state:
             _LOGGER.debug("%s init datastruct with main node '%s'", self._name,
