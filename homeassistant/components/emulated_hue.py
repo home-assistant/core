@@ -188,7 +188,7 @@ class DescriptionXmlView(HomeAssistantView):
 class HueUsernameView(HomeAssistantView):
     """Handle requests to create a username for the emulated hue bridge."""
 
-    url = '/api'
+    url = '/api/'
     name = 'hue:api'
     requires_auth = False
 
