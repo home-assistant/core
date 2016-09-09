@@ -213,7 +213,7 @@ class HomeAssistant(object):
         @asyncio.coroutine
         def sleep_wait():
             """Sleep in thread pool."""
-            yield from self.loop.run_in_executor(None, time.sleep, 0.1)
+            yield from self.loop.run_in_executor(None, time.sleep, 0)
 
         def notify_when_done():
             """Notify event loop when pool done."""

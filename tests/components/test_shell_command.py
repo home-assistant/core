@@ -34,6 +34,7 @@ class TestShellCommand(unittest.TestCase):
 
             self.hass.services.call('shell_command', 'test_service',
                                     blocking=True)
+            self.hass.block_till_done()
 
             self.assertTrue(os.path.isfile(path))
 
