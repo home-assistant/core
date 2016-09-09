@@ -97,7 +97,6 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_STOP: 'media_stop',
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
-    SERVICE_SELECT_SOURCE: 'select_source',
     SERVICE_CLEAR_PLAYLIST: 'clear_playlist'
 }
 

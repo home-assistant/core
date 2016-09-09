@@ -101,7 +101,7 @@ class HMThermostat(homematic.HMDevice, ClimateDevice):
         for mode, state in HM_STATE_MAP.items():
             if state == operation_mode:
                 code = getattr(self._hmdevice, mode, 0)
-                self._hmdevice.STATE = code
+                self._hmdevice.MODE = code
 
     @property
     def min_temp(self):
