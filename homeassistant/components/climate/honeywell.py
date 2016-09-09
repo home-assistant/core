@@ -9,7 +9,8 @@ import socket
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    ATTR_TEMPERATURE)
 
 REQUIREMENTS = ['evohomeclient==0.2.5',
                 'somecomfort==0.2.1']
@@ -132,8 +133,11 @@ class RoundThermostat(ClimateDevice):
             return None
         return self._target_temperature
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
         self.device.set_temperature(self._name, temperature)
 
     @property
@@ -234,8 +238,11 @@ class HoneywellUSThermostat(ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         return getattr(self._device, 'system_mode', None)
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
         import somecomfort
         try:
             if self._device.system_mode == 'cool':

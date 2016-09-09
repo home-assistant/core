@@ -8,7 +8,7 @@ import logging
 import homeassistant.components.homematic as homematic
 from homeassistant.components.climate import ClimateDevice, STATE_AUTO
 from homeassistant.util.temperature import convert
-from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
+from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN, ATTR_TEMPERATURE
 
 DEPENDENCIES = ['homematic']
 
@@ -90,10 +90,13 @@ class HMThermostat(homematic.HMDevice, ClimateDevice):
             return None
         return self._data.get('SET_TEMPERATURE', None)
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
         if not self.available:
             return None
+        if temperature is None:
+            return
         self._hmdevice.set_temperature(temperature)
 
     def set_operation_mode(self, operation_mode):
