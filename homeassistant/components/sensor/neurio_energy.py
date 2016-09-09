@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_API_SECRET = 'api_secret'
 CONF_SENSOR_ID = 'sensor_id'
 
-DEFAULT_NAME =
+DEFAULT_NAME = 'Energy Usage'
 
 ICON = 'mdi:flash'
 
