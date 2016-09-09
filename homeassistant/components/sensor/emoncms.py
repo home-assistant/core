@@ -57,8 +57,8 @@ ATTR_LASTUPDATETIMESTR = 'LastUpdatedStr'
 
 def get_id(sensorid, feedtag, feedname, feedid, feeduserid):
     """Return unique identifier for feed / sensor."""
-    return "emoncms" + sensorid + "_" + feedtag + "_" + \
-           feedname + "_" + feedid + "_" + feeduserid
+    return "emoncms{}_{}_{}_{}_{}".format(
+        sensorid, feedtag, feedname, feedid, feeduserid)
 
 
 # pylint: disable=too-many-locals
@@ -129,7 +129,8 @@ class EmonCmsSensor(Entity):
                  unit_of_measurement, sensorid, elem):
         """Initialize the sensor."""
         if name is None:
-            self._name = "emoncms" + sensorid + "_feedid_" + elem["id"]
+            self._name = "emoncms{}_feedid_{}".format(
+                sensorid, elem["id"])
         else:
             self._name = name
         self._identifier = get_id(sensorid, elem["tag"],
@@ -216,7 +217,7 @@ class EmonCmsData(object):
     def __init__(self, hass, url, apikey, interval):
         """Initialize the data object."""
         self._apikey = apikey
-        self._url = url + "/feed/list.json"
+        self._url = "{}/feed/list.json".format(url)
         self._interval = interval
         self._hass = hass
         self.data = None
