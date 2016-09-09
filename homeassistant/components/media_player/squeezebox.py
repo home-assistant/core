@@ -319,7 +319,8 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def play_uri(self, media_id):
         """
-        Replaces the current play list with the uri.
+        Replace the current play list with the uri.
+
         <playerid> playlist play <item> <title> <fadeInSecs>
 
         The "playlist play" command puts the specified song URL,
@@ -341,7 +342,8 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def add_uri_to_playlist(self, media_id):
         """
-        Adds a items to the existing playlist.
+        Add a items to the existing playlist.
+
         <playerid> playlist add <item>
 
         The "playlist add" command adds the specified song URL, playlist or
