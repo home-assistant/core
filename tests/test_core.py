@@ -1,7 +1,6 @@
 """Test to verify that Home Assistant core works."""
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
-import asyncio
 import os
 import signal
 import unittest
