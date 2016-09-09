@@ -86,37 +86,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         include_names_length = len(include_feeds_names)
 
     for elem in data.data:
-        if include_feeds is None and exclude_feeds is None:
-            sensors.append(EmonCmsSensor(hass, data, None, value_template,
-                                         unit_of_measurement, str(sensorid),
-                                         elem))
+        name = None
 
-        elif exclude_feeds is not None:
-            if not int(elem["id"]) in exclude_feeds:
-                sensors.append(EmonCmsSensor(hass, data, None,
-                                             value_template,
-                                             unit_of_measurement,
-                                             str(sensorid),
-                                             elem))
+        if exclude_feeds is not None:
+            if int(elem["id"]) in exclude_feeds:
+                continue
 
-        elif include_feeds is not None:
-            if int(elem["id"]) in include_feeds:
-                name = None
-                if include_feeds_names is not None:
-                    try:
-                        listindex = include_feeds.index(int(elem["id"]))
-                    except ValueError:
-                        listindex = -1
+        if include_feeds is not None:
+            if int(elem["id"]) not in include_feeds:
+                continue
 
-                    if listindex < include_names_length and \
-                       listindex > -1:
-                        name = include_feeds_names[listindex]
+            if include_feeds_names is not None:
+                try:
+                    listindex = include_feeds.index(int(elem["id"]))
+                except ValueError:
+                    listindex = -1
 
-                sensors.append(EmonCmsSensor(hass, data, name,
-                                             value_template,
-                                             unit_of_measurement,
-                                             str(sensorid),
-                                             elem))
+                if listindex < include_names_length and listindex > -1:
+                    name = include_feeds_names[listindex]
+
+        sensors.append(EmonCmsSensor(hass, data, name, value_template,
+                                     unit_of_measurement, str(sensorid),
+                                     elem))
     add_devices(sensors)
 
 
