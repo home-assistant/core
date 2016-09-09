@@ -274,7 +274,7 @@ class TestHoneywellRound(unittest.TestCase):
 
     def test_set_temperature(self):
         """Test setting the temperature."""
-        self.round1.set_temperature(25)
+        self.round1.set_temperature(temperature=25)
         self.device.set_temperature.assert_called_once_with('House', 25)
 
     def test_set_operation_mode(self: unittest.TestCase) -> None:
@@ -327,13 +327,13 @@ class TestHoneywellUS(unittest.TestCase):
 
     def test_set_temp(self):
         """Test setting the temperature."""
-        self.honeywell.set_temperature(70)
+        self.honeywell.set_temperature(temperature=70)
         self.assertEqual(70, self.device.setpoint_heat)
         self.assertEqual(70, self.honeywell.target_temperature)
 
         self.device.system_mode = 'cool'
         self.assertEqual(78, self.honeywell.target_temperature)
-        self.honeywell.set_temperature(74)
+        self.honeywell.set_temperature(temperature=74)
         self.assertEqual(74, self.device.setpoint_cool)
         self.assertEqual(74, self.honeywell.target_temperature)
 
@@ -351,7 +351,7 @@ class TestHoneywellUS(unittest.TestCase):
         """Test if setting the temperature fails."""
         self.device.setpoint_heat = mock.MagicMock(
             side_effect=somecomfort.SomeComfortError)
-        self.honeywell.set_temperature(123)
+        self.honeywell.set_temperature(temperature=123)
 
     def test_attributes(self):
         """Test the attributes."""

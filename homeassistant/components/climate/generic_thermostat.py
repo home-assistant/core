@@ -11,7 +11,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components import switch
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice)
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE)
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import track_state_change
 
@@ -123,8 +124,11 @@ class GenericThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         return self._target_temp
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
         self._target_temp = temperature
         self._control_heating()
         self.update_ha_state()
