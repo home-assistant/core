@@ -12,16 +12,14 @@ from homeassistant.helpers import validate_config, discovery
 
 REQUIREMENTS = [
     'https://github.com/jabesq/netatmo-api-python/archive/'
-    'v0.5.0.zip#lnetatmo==0.5.0']
+    'master.zip#lnetatmo==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SECRET_KEY = 'secret_key'
 
-DOMAIN = "netatmo"
+DOMAIN = 'netatmo'
 NETATMO_AUTH = None
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
