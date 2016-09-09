@@ -325,7 +325,10 @@ class EventBus(object):
         self._loop = loop
 
     def async_listeners(self):
-        """Dict with events and the number of listeners."""
+        """Dict with events and the number of listeners.
+
+        This method must be run in the event loop.
+        """
         return {key: len(self._listeners[key])
                 for key in self._listeners}
 
@@ -347,7 +350,10 @@ class EventBus(object):
 
     def async_fire(self, event_type: str, event_data=None,
                    origin=EventOrigin.local, wait=False):
-        """Fire an event."""
+        """Fire an event.
+
+        This method must be run in the event loop.
+        """
         # Copy the list of the current listeners because some listeners
         # remove themselves as a listener while being executed which
         # causes the iterator to be confused.
@@ -373,11 +379,12 @@ class EventBus(object):
 
         # Send all the sync jobs at once, since there's a lock involved we
         # fire this off to a thread as well
-        try:
-            self._pool.add_many_jobs(sync_jobs)
-        except:
-            _LOGGER.info("Unable to queue: %s", sync_jobs)
-            raise
+        if sync_jobs:
+            try:
+                self._pool.add_many_jobs(sync_jobs)
+            except:
+                _LOGGER.info("Unable to queue: %s", sync_jobs)
+                raise
 
     def listen(self, event_type, listener):
         """Listen for all events or events of a specific type.
@@ -400,6 +407,8 @@ class EventBus(object):
 
         To listen to all events specify the constant ``MATCH_ALL``
         as event_type.
+
+        This method must be run in the event loop.
         """
         if event_type in self._listeners:
             self._listeners[event_type].append(listener)
@@ -447,6 +456,8 @@ class EventBus(object):
         as event_type.
 
         Returns registered listener that can be used with remove_listener.
+
+        This method must be run in the event loop.
         """
         @ft.wraps(listener)
         @asyncio.coroutine
@@ -487,7 +498,10 @@ class EventBus(object):
         future.result()
 
     def async_remove_listener(self, event_type, listener):
-        """Remove a listener of a specific event_type."""
+        """Remove a listener of a specific event_type.
+
+        This method must be run in the event loop.
+        """
         try:
             self._listeners[event_type].remove(listener)
 
@@ -630,7 +644,10 @@ class StateMachine(object):
         return run_callback_threadsafe(self._loop, self.async_all).result()
 
     def async_all(self):
-        """Create a list of all states."""
+        """Create a list of all states.
+
+        This method must be run in the event loop.
+        """
         return list(self._states.values())
 
     def get(self, entity_id):
@@ -644,7 +661,10 @@ class StateMachine(object):
         ).result()
 
     def async_is_state(self, entity_id, state):
-        """Test if entity exists and is specified state."""
+        """Test if entity exists and is specified state.
+
+        This method must be run in the event loop.
+        """
         entity_id = entity_id.lower()
 
         return (entity_id in self._states and
@@ -657,7 +677,10 @@ class StateMachine(object):
         ).result()
 
     def async_is_state_attr(self, entity_id, name, value):
-        """Test if entity exists and has a state attribute set to value."""
+        """Test if entity exists and has a state attribute set to value.
+
+        This method must be run in the event loop.
+        """
         entity_id = entity_id.lower()
 
         return (entity_id in self._states and
@@ -675,6 +698,8 @@ class StateMachine(object):
         """Remove the state of an entity.
 
         Returns boolean to indicate if an entity was removed.
+
+        This method must be run in the event loop.
         """
         entity_id = entity_id.lower()
 
@@ -714,6 +739,8 @@ class StateMachine(object):
 
         If you just update the attributes and not the state, last changed will
         not be affected.
+
+        This method must be run in the event loop.
         """
         entity_id = entity_id.lower()
         new_state = str(new_state)
@@ -857,6 +884,8 @@ class ServiceRegistry(object):
         the service and a key 'fields' to describe the fields.
 
         Schema is called to coerce and validate the service data.
+
+        This method must be run in the event loop.
         """
         domain = domain.lower()
         service = service.lower()
@@ -913,6 +942,8 @@ class ServiceRegistry(object):
 
         Because the service is sent as an event you are not allowed to use
         the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
+
+        This method is a coroutine.
         """
         call_id = self._generate_unique_id()
 
