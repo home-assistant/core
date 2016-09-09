@@ -28,8 +28,6 @@ CONF_EXCLUDE_FEEDID = "exclude_feed_id"
 CONF_ONLY_INCLUDE_FEEDID = "include_only_feed_id"
 CONF_SENSOR_NAMES = "sensor_names"
 
-DEFAULT_SCAN_INTERVAL = 60
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_URL): cv.string,
@@ -42,8 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All({cv.positive_int: vol.All(cv.string, vol.Length(min=1))}),
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="W"): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=5)),
 })
 
 ATTR_SIZE = 'Size'
