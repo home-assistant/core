@@ -9,7 +9,8 @@ import voluptuous as vol
 import homeassistant.components.nest as nest
 from homeassistant.components.climate import (
     STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
-from homeassistant.const import TEMP_CELSIUS, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    TEMP_CELSIUS, CONF_SCAN_INTERVAL, ATTR_TEMPERATURE)
 
 DEPENDENCIES = ['nest']
 
@@ -131,8 +132,11 @@ class NestThermostat(ClimateDevice):
         """Return if away mode is on."""
         return self.structure.away
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
         if self.device.mode == 'range':
             if self.target_temperature == self.target_temperature_low:
                 temperature = (temperature, self.target_temperature_high)
