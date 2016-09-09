@@ -62,7 +62,6 @@ class SlackNotificationService(BaseNotificationService):
 
         try:
             self.slack.chat.post_message(channel, message,
-                                         as_user=True,
                                          attachments=attachments,
                                          link_names=True)
         except slacker.Error as err:
