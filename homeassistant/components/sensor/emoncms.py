@@ -6,10 +6,11 @@ at https://home-assistant.io/components/sensor.emoncms/
 """
 from datetime import timedelta
 import logging
-import requests
+
 import voluptuous as vol
+import requests
+
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -20,30 +21,29 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 
-
 _LOGGER = logging.getLogger(__name__)
 
 DECIMALS = 2
 CONF_EXCLUDE_FEEDID = "exclude_feed_id"
-CONF_INCLUDE_FEEDID = "include_feed_id"
-CONF_INCLUDE_FEEDID_NAMES = "include_feed_id_names"
+CONF_ONLY_INCLUDE_FEEDID = "include_only_feed_id"
+CONF_SENSOR_NAMES = "sensor_names"
+
 DEFAULT_SCAN_INTERVAL = 60
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_URL): cv.string,
     vol.Required(CONF_ID): cv.positive_int,
-    vol.Exclusive(CONF_INCLUDE_FEEDID, 'only_include_or_exclude'):
+    vol.Exclusive(CONF_ONLY_INCLUDE_FEEDID, 'only_include_exclude_or_none'):
         vol.All(cv.ensure_list, [cv.positive_int]),
-    vol.Exclusive(CONF_EXCLUDE_FEEDID, 'only_include_or_exclude'):
+    vol.Exclusive(CONF_EXCLUDE_FEEDID, 'only_include_exclude_or_none'):
         vol.All(cv.ensure_list, [cv.positive_int]),
-    vol.Optional(CONF_INCLUDE_FEEDID_NAMES):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SENSOR_NAMES):
+        vol.All({cv.positive_int: vol.All(cv.string, vol.Length(min=1))}),
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="W"): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL):
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
         vol.All(vol.Coerce(int), vol.Range(min=5)),
-
 })
 
 ATTR_SIZE = 'Size'
@@ -70,10 +70,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
-    include_feeds = config.get(CONF_INCLUDE_FEEDID)
-    include_feeds_names = config.get(CONF_INCLUDE_FEEDID_NAMES)
-    interval = util.convert(config.get(CONF_SCAN_INTERVAL), int,
-                            DEFAULT_SCAN_INTERVAL)
+    include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
+    sensor_names = config.get(CONF_SENSOR_NAMES)
+    interval = config.get(CONF_SCAN_INTERVAL)
 
     data = EmonCmsData(hass, url, apikey, interval)
 
@@ -82,28 +81,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
 
-    if include_feeds_names is not None:
-        include_names_length = len(include_feeds_names)
-
     for elem in data.data:
-        name = None
 
         if exclude_feeds is not None:
             if int(elem["id"]) in exclude_feeds:
                 continue
 
-        if include_feeds is not None:
-            if int(elem["id"]) not in include_feeds:
+        if include_only_feeds is not None:
+            if int(elem["id"]) not in include_only_feeds:
                 continue
 
-            if include_feeds_names is not None:
-                try:
-                    listindex = include_feeds.index(int(elem["id"]))
-                except ValueError:
-                    listindex = -1
-
-                if listindex < include_names_length and listindex > -1:
-                    name = include_feeds_names[listindex]
+        name = None
+        if sensor_names is not None:
+            name = sensor_names.get(int(elem["id"]), None)
 
         sensors.append(EmonCmsSensor(hass, data, name, value_template,
                                      unit_of_measurement, str(sensorid),
