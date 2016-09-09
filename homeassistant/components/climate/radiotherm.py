@@ -11,7 +11,7 @@ from urllib.error import URLError
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_OFF,
     ClimateDevice)
-from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT
+from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 
 REQUIREMENTS = ['radiotherm==1.2']
 HOLD_TEMP = 'hold_temp'
@@ -107,8 +107,11 @@ class RadioThermostat(ClimateDevice):
         else:
             self._current_operation = STATE_IDLE
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
         if self._current_operation == STATE_COOL:
             self.device.t_cool = temperature
         elif self._current_operation == STATE_HEAT:
