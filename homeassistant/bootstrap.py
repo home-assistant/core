@@ -14,11 +14,12 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 import homeassistant.components as core_components
-from homeassistant.components import group, persistent_notification
+from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
 import homeassistant.core as core
 import homeassistant.loader as loader
 import homeassistant.util.package as pkg_util
+from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -89,67 +90,12 @@ def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
                           domain, domain)
             return False
 
+        config = prepare_setup_component(hass, config, domain)
+
+        if config is None:
+            return False
+
         component = loader.get_component(domain)
-        missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
-                        if dep not in hass.config.components]
-
-        if missing_deps:
-            _LOGGER.error(
-                'Not initializing %s because not all dependencies loaded: %s',
-                domain, ", ".join(missing_deps))
-            return False
-
-        if hasattr(component, 'CONFIG_SCHEMA'):
-            try:
-                config = component.CONFIG_SCHEMA(config)
-            except vol.MultipleInvalid as ex:
-                _log_exception(ex, domain, config)
-                return False
-
-        elif hasattr(component, 'PLATFORM_SCHEMA'):
-            platforms = []
-            for p_name, p_config in config_per_platform(config, domain):
-                # Validate component specific platform schema
-                try:
-                    p_validated = component.PLATFORM_SCHEMA(p_config)
-                except vol.MultipleInvalid as ex:
-                    _log_exception(ex, domain, p_config)
-                    return False
-
-                # Not all platform components follow same pattern for platforms
-                # So if p_name is None we are not going to validate platform
-                # (the automation component is one of them)
-                if p_name is None:
-                    platforms.append(p_validated)
-                    continue
-
-                platform = prepare_setup_platform(hass, config, domain,
-                                                  p_name)
-
-                if platform is None:
-                    return False
-
-                # Validate platform specific schema
-                if hasattr(platform, 'PLATFORM_SCHEMA'):
-                    try:
-                        p_validated = platform.PLATFORM_SCHEMA(p_validated)
-                    except vol.MultipleInvalid as ex:
-                        _log_exception(ex, '{}.{}'.format(domain, p_name),
-                                       p_validated)
-                        return False
-
-                platforms.append(p_validated)
-
-            # Create a copy of the configuration with all config for current
-            # component removed and add validated config back in.
-            filter_keys = extract_domain_configs(config, domain)
-            config = {key: value for key, value in config.items()
-                      if key not in filter_keys}
-            config[domain] = platforms
-
-        if not _handle_requirements(hass, component, domain):
-            return False
-
         _CURRENT_SETUP.append(domain)
 
         try:
@@ -172,13 +118,81 @@ def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
 
         # Assumption: if a component does not depend on groups
         # it communicates with devices
-        if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
+        if 'group' not in getattr(component, 'DEPENDENCIES', []):
             hass.pool.add_worker()
 
         hass.bus.fire(
             EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
 
         return True
+
+
+def prepare_setup_component(hass: core.HomeAssistant, config: dict,
+                            domain: str):
+    """Prepare setup of a component and return processed config."""
+    # pylint: disable=too-many-return-statements
+    component = loader.get_component(domain)
+    missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
+                    if dep not in hass.config.components]
+
+    if missing_deps:
+        _LOGGER.error(
+            'Not initializing %s because not all dependencies loaded: %s',
+            domain, ", ".join(missing_deps))
+        return None
+
+    if hasattr(component, 'CONFIG_SCHEMA'):
+        try:
+            config = component.CONFIG_SCHEMA(config)
+        except vol.MultipleInvalid as ex:
+            log_exception(ex, domain, config)
+            return None
+
+    elif hasattr(component, 'PLATFORM_SCHEMA'):
+        platforms = []
+        for p_name, p_config in config_per_platform(config, domain):
+            # Validate component specific platform schema
+            try:
+                p_validated = component.PLATFORM_SCHEMA(p_config)
+            except vol.MultipleInvalid as ex:
+                log_exception(ex, domain, p_config)
+                return None
+
+            # Not all platform components follow same pattern for platforms
+            # So if p_name is None we are not going to validate platform
+            # (the automation component is one of them)
+            if p_name is None:
+                platforms.append(p_validated)
+                continue
+
+            platform = prepare_setup_platform(hass, config, domain,
+                                              p_name)
+
+            if platform is None:
+                return None
+
+            # Validate platform specific schema
+            if hasattr(platform, 'PLATFORM_SCHEMA'):
+                try:
+                    p_validated = platform.PLATFORM_SCHEMA(p_validated)
+                except vol.MultipleInvalid as ex:
+                    log_exception(ex, '{}.{}'.format(domain, p_name),
+                                  p_validated)
+                    return None
+
+            platforms.append(p_validated)
+
+        # Create a copy of the configuration with all config for current
+        # component removed and add validated config back in.
+        filter_keys = extract_domain_configs(config, domain)
+        config = {key: value for key, value in config.items()
+                  if key not in filter_keys}
+        config[domain] = platforms
+
+    if not _handle_requirements(hass, component, domain):
+        return None
+
+    return config
 
 
 def prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
@@ -239,7 +253,7 @@ def from_config_dict(config: Dict[str, Any],
     try:
         conf_util.process_ha_core_config(hass, core_config)
     except vol.Invalid as ex:
-        _log_exception(ex, 'homeassistant', core_config)
+        log_exception(ex, 'homeassistant', core_config)
         return None
 
     conf_util.process_ha_config_upgrade(hass)
@@ -308,6 +322,8 @@ def from_config_file(config_path: str,
         config_dict = conf_util.load_yaml_config_file(config_path)
     except HomeAssistantError:
         return None
+    finally:
+        clear_secret_cache()
 
     return from_config_dict(config_dict, hass, enable_log=False,
                             skip_pip=skip_pip)
@@ -371,7 +387,7 @@ def _ensure_loader_prepared(hass: core.HomeAssistant) -> None:
         loader.prepare(hass)
 
 
-def _log_exception(ex, domain, config):
+def log_exception(ex, domain, config):
     """Generate log exception for config validation."""
     message = 'Invalid config for [{}]: '.format(domain)
     if 'extra keys not allowed' in ex.error_message:

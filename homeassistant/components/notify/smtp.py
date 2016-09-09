@@ -10,31 +10,52 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 
+import voluptuous as vol
+
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_DATA, DOMAIN, BaseNotificationService)
-from homeassistant.helpers import validate_config
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
+    BaseNotificationService)
+from homeassistant.const import (
+    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_RECIPIENT)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_IMAGES = 'images'  # optional embedded image file attachments
 
+CONF_STARTTLS = 'starttls'
+CONF_DEBUG = 'debug'
+CONF_SERVER = 'server'
+
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 25
+DEFAULT_DEBUG = False
+DEFAULT_STARTTLS = False
+
+# pylint: disable=no-value-for-parameter
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_RECIPIENT): vol.Email(),
+    vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SENDER): vol.Email(),
+    vol.Optional(CONF_STARTTLS, default=DEFAULT_STARTTLS): cv.boolean,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
+})
+
 
 def get_service(hass, config):
     """Get the mail notification service."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['recipient']},
-                           _LOGGER):
-        return None
-
     mail_service = MailNotificationService(
-        config.get('server', 'localhost'),
-        int(config.get('port', '25')),
-        config.get('sender', None),
-        int(config.get('starttls', 0)),
-        config.get('username', None),
-        config.get('password', None),
-        config.get('recipient', None),
-        config.get('debug', 0))
+        config.get(CONF_SERVER),
+        config.get(CONF_PORT),
+        config.get(CONF_SENDER),
+        config.get(CONF_STARTTLS),
+        config.get(CONF_USERNAME),
+        config.get(CONF_PASSWORD),
+        config.get(CONF_RECIPIENT),
+        config.get(CONF_DEBUG))
 
     if mail_service.connection_is_valid():
         return mail_service
@@ -65,7 +86,7 @@ class MailNotificationService(BaseNotificationService):
         mail = smtplib.SMTP(self._server, self._port, timeout=5)
         mail.set_debuglevel(self.debug)
         mail.ehlo_or_helo_if_needed()
-        if self.starttls == 1:
+        if self.starttls:
             mail.starttls()
             mail.ehlo()
         if self.username and self.password:
@@ -80,16 +101,14 @@ class MailNotificationService(BaseNotificationService):
         except smtplib.socket.gaierror:
             _LOGGER.exception(
                 "SMTP server not found (%s:%s). "
-                "Please check the IP address or hostname of your SMTP server.",
+                "Please check the IP address or hostname of your SMTP server",
                 self._server, self._port)
-
             return False
 
         except (smtplib.SMTPAuthenticationError, ConnectionRefusedError):
             _LOGGER.exception(
                 "Login not possible. "
-                "Please check your setting and/or your credentials.")
-
+                "Please check your setting and/or your credentials")
             return False
 
         finally:
@@ -105,7 +124,7 @@ class MailNotificationService(BaseNotificationService):
         Will send plain text normally, or will build a multipart HTML message
         with inline image attachments if images config is defined.
         """
-        subject = kwargs.get(ATTR_TITLE)
+        subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA)
 
         if data:
@@ -139,13 +158,13 @@ class MailNotificationService(BaseNotificationService):
 
 def _build_text_msg(message):
     """Build plaintext email."""
-    _LOGGER.debug('Building plain text email.')
+    _LOGGER.debug('Building plain text email')
     return MIMEText(message)
 
 
 def _build_multipart_msg(message, images):
     """Build Multipart message with in-line images."""
-    _LOGGER.debug('Building multipart email with embedded attachment(s).')
+    _LOGGER.debug('Building multipart email with embedded attachment(s)')
     msg = MIMEMultipart('related')
     msg_alt = MIMEMultipart('alternative')
     msg.attach(msg_alt)
@@ -162,7 +181,7 @@ def _build_multipart_msg(message, images):
                 msg.attach(attachment)
                 attachment.add_header('Content-ID', '<{}>'.format(cid))
         except FileNotFoundError:
-            _LOGGER.warning('Attachment %s not found. Skipping.',
+            _LOGGER.warning('Attachment %s not found. Skipping',
                             atch_name)
 
     body_html = MIMEText(''.join(body_text), 'html')

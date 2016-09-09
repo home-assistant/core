@@ -7,24 +7,35 @@ https://home-assistant.io/components/switch.rest/
 import logging
 
 import requests
+import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_NAME, CONF_RESOURCE)
+import homeassistant.helpers.config_validation as cv
+
+CONF_BODY_OFF = 'body_off'
+CONF_BODY_ON = 'body_on'
+DEFAULT_BODY_OFF = 'OFF'
+DEFAULT_BODY_ON = 'ON'
+DEFAULT_NAME = 'REST Switch'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.string,
+    vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "REST Switch"
-DEFAULT_BODY_ON = "ON"
-DEFAULT_BODY_OFF = "OFF"
 
 
 # pylint: disable=unused-argument,
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the REST switch."""
-    resource = config.get('resource')
-
-    if resource is None:
-        _LOGGER.error("Missing required variable: resource")
-        return False
+    """Setup the RESTful switch."""
+    name = config.get(CONF_NAME)
+    resource = config.get(CONF_RESOURCE)
+    body_on = config.get(CONF_BODY_ON)
+    body_off = config.get(CONF_BODY_OFF)
 
     try:
         requests.get(resource, timeout=10)
@@ -36,12 +47,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.error("No route to resource/endpoint: %s", resource)
         return False
 
-    add_devices_callback([RestSwitch(
-        hass,
-        config.get('name', DEFAULT_NAME),
-        config.get('resource'),
-        config.get('body_on', DEFAULT_BODY_ON),
-        config.get('body_off', DEFAULT_BODY_OFF))])
+    add_devices_callback([RestSwitch(hass, name, resource, body_on, body_off)])
 
 
 # pylint: disable=too-many-arguments

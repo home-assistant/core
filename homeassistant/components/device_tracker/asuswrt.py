@@ -12,13 +12,36 @@ import threading
 from collections import namedtuple
 from datetime import timedelta
 
-from homeassistant.components.device_tracker import DOMAIN
+import voluptuous as vol
+
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+
+CONF_PROTOCOL = 'protocol'
+CONF_MODE = 'mode'
+CONF_SSH_KEY = 'ssh_key'
+CONF_PUB_KEY = 'pub_key'
+SECRET_GROUP = 'Password or SSH Key'
+
+PLATFORM_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_PASSWORD, CONF_PUB_KEY, CONF_SSH_KEY),
+    PLATFORM_SCHEMA.extend({
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PROTOCOL, default='ssh'):
+            vol.In(['ssh', 'telnet']),
+        vol.Optional(CONF_MODE, default='router'):
+            vol.In(['router', 'ap']),
+        vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
+        vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
+        vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile
+    }))
+
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pexpect==4.0.1']
@@ -57,16 +80,6 @@ _IP_NEIGH_REGEX = re.compile(
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return an ASUS-WRT scanner."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME]},
-                           _LOGGER):
-        return None
-    elif CONF_PASSWORD not in config[DOMAIN] and \
-            'ssh_key' not in config[DOMAIN] and \
-            'pub_key' not in config[DOMAIN]:
-        _LOGGER.error('Either a private key or password must be provided')
-        return None
-
     scanner = AsusWrtDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
@@ -83,11 +96,26 @@ class AsusWrtDeviceScanner(object):
     def __init__(self, config):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
-        self.username = str(config[CONF_USERNAME])
-        self.password = str(config.get(CONF_PASSWORD, ''))
-        self.ssh_key = str(config.get('ssh_key', config.get('pub_key', '')))
-        self.protocol = config.get('protocol')
-        self.mode = config.get('mode')
+        self.username = config[CONF_USERNAME]
+        self.password = config.get(CONF_PASSWORD, '')
+        self.ssh_key = config.get('ssh_key', config.get('pub_key', ''))
+        self.protocol = config[CONF_PROTOCOL]
+        self.mode = config[CONF_MODE]
+
+        if self.protocol == 'ssh':
+            if self.ssh_key:
+                self.ssh_secret = {'ssh_key': self.ssh_key}
+            elif self.password:
+                self.ssh_secret = {'password': self.password}
+            else:
+                _LOGGER.error('No password or private key specified')
+                self.success_init = False
+                return
+        else:
+            if not self.password:
+                _LOGGER.error('No password specified')
+                self.success_init = False
+                return
 
         self.lock = threading.Lock()
 
@@ -137,15 +165,17 @@ class AsusWrtDeviceScanner(object):
         """Retrieve data from ASUSWRT via the ssh protocol."""
         from pexpect import pxssh, exceptions
 
+        ssh = pxssh.pxssh()
         try:
-            ssh = pxssh.pxssh()
-            if self.ssh_key:
-                ssh.login(self.host, self.username, ssh_key=self.ssh_key)
-            elif self.password:
-                ssh.login(self.host, self.username, self.password)
-            else:
-                _LOGGER.error('No password or private key specified')
-                return None
+            ssh.login(self.host, self.username, **self.ssh_secret)
+        except exceptions.EOF as err:
+            _LOGGER.error('Connection refused. Is SSH enabled?')
+            return None
+        except pxssh.ExceptionPxssh as err:
+            _LOGGER.error('Unable to connect via SSH: %s', str(err))
+            return None
+
+        try:
             ssh.sendline(_IP_NEIGH_CMD)
             ssh.prompt()
             neighbors = ssh.before.split(b'\n')[1:-1]
@@ -165,9 +195,6 @@ class AsusWrtDeviceScanner(object):
             return AsusWrtResult(neighbors, leases_result, arp_result)
         except pxssh.ExceptionPxssh as exc:
             _LOGGER.error('Unexpected response from router: %s', exc)
-            return None
-        except exceptions.EOF:
-            _LOGGER.error('Connection refused or no route to host')
             return None
 
     def telnet_connection(self):

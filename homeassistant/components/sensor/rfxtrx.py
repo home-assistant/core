@@ -9,6 +9,7 @@ import voluptuous as vol
 
 import homeassistant.components.rfxtrx as rfxtrx
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.components.rfxtrx import (
@@ -20,7 +21,7 @@ DEPENDENCIES = ['rfxtrx']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required("platform"): rfxtrx.DOMAIN,
+    vol.Required(CONF_PLATFORM): rfxtrx.DOMAIN,
     vol.Optional(CONF_DEVICES, default={}): vol.All(dict, rfxtrx.valid_sensor),
     vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
@@ -31,7 +32,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     # pylint: disable=too-many-locals
     from RFXtrx import SensorEvent
     sensors = []
-    for packet_id, entity_info in config['devices'].items():
+    for packet_id, entity_info in config[CONF_DEVICES].items():
         event = rfxtrx.get_rfx_object(packet_id)
         device_id = "sensor_" + slugify(event.device.id_string.lower())
         if device_id in rfxtrx.RFX_DEVICES:
@@ -41,7 +42,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         sub_sensors = {}
         data_types = entity_info[ATTR_DATA_TYPE]
         if len(data_types) == 0:
-            data_type = "Unknown"
+            data_types = ['']
             for data_type in DATA_TYPES:
                 if data_type in event.values:
                     data_types = [data_type]
@@ -52,7 +53,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             sensors.append(new_sensor)
             sub_sensors[_data_type] = new_sensor
         rfxtrx.RFX_DEVICES[device_id] = sub_sensors
-
     add_devices_callback(sensors)
 
     def sensor_update(event):
@@ -75,7 +75,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                                 sensors[key].entity_id,
                         }
                     )
-
             return
 
         # Add entity if not exist and the automatic_add is True
@@ -84,9 +83,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         pkt_id = "".join("{0:02x}".format(x) for x in event.data)
         _LOGGER.info("Automatic add rfxtrx.sensor: %s",
-                     device_id)
+                     pkt_id)
 
-        data_type = "Unknown"
+        data_type = ''
         for _data_type in DATA_TYPES:
             if _data_type in event.values:
                 data_type = _data_type
@@ -109,10 +108,8 @@ class RfxtrxSensor(Entity):
         self.event = event
         self._name = name
         self.should_fire_event = should_fire_event
-        if data_type not in DATA_TYPES:
-            data_type = "Unknown"
         self.data_type = data_type
-        self._unit_of_measurement = DATA_TYPES[data_type]
+        self._unit_of_measurement = DATA_TYPES.get(data_type, '')
 
     def __str__(self):
         """Return the name of the sensor."""
@@ -121,9 +118,9 @@ class RfxtrxSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.event:
-            return self.event.values[self.data_type]
-        return None
+        if not self.event:
+            return None
+        return self.event.values.get(self.data_type)
 
     @property
     def name(self):
@@ -133,8 +130,9 @@ class RfxtrxSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self.event:
-            return self.event.values
+        if not self.event:
+            return None
+        return self.event.values
 
     @property
     def unit_of_measurement(self):

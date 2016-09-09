@@ -26,11 +26,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if registers:
         for regnum, register in registers.items():
             if register.get("name"):
-                sensors.append(ModbusSensor(register.get("name"),
-                                            slave,
-                                            regnum,
-                                            None,
-                                            register.get("unit")))
+                sensors.append(
+                    ModbusSensor(register.get("name"),
+                                 slave,
+                                 regnum,
+                                 None,
+                                 register.get("unit"),
+                                 scale=register.get("scale", 1),
+                                 offset=register.get("offset", 0),
+                                 precision=register.get("precision", 0)))
             if register.get("bits"):
                 bits = register.get("bits")
                 for bitnum, bit in bits.items():
@@ -53,8 +57,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ModbusSensor(Entity):
     """Representation of a Modbus Sensor."""
 
-    # pylint: disable=too-many-arguments
-    def __init__(self, name, slave, register, bit=None, unit=None, coil=False):
+    # pylint: disable=too-many-arguments, too-many-instance-attributes
+    def __init__(self, name, slave, register, bit=None, unit=None, coil=False,
+                 scale=1, offset=0, precision=0):
         """Initialize the sensor."""
         self._name = name
         self.slave = int(slave) if slave else 1
@@ -63,6 +68,9 @@ class ModbusSensor(Entity):
         self._value = None
         self._unit = unit
         self._coil = coil
+        self._scale = scale
+        self._offset = offset
+        self._precision = precision
 
     def __str__(self):
         """Return the name and the state of the sensor."""
@@ -106,16 +114,17 @@ class ModbusSensor(Entity):
     def update(self):
         """Update the state of the sensor."""
         if self._coil:
-            result = modbus.NETWORK.read_coils(self.register, 1)
+            result = modbus.HUB.read_coils(self.slave, self.register, 1)
             self._value = result.bits[0]
         else:
-            result = modbus.NETWORK.read_holding_registers(
-                unit=self.slave, address=self.register,
-                count=1)
+            result = modbus.HUB.read_holding_registers(
+                self.slave, self.register, 1)
             val = 0
             for i, res in enumerate(result.registers):
                 val += res * (2**(i*16))
             if self.bit:
                 self._value = val & (0x0001 << self.bit)
             else:
-                self._value = val
+                self._value = format(
+                    self._scale * val + self._offset,
+                    ".{}f".format(self._precision))

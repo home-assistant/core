@@ -54,6 +54,9 @@ def open_door(hass, entity_id=None):
 
 def setup(hass, config):
     """Track states and offer events for garage door."""
+    _LOGGER.warning('This component has been deprecated in favour of the '
+                    '"cover" component and will be removed in the future.'
+                    ' Please upgrade.')
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_GARAGE_DOORS)
     component.setup(config)

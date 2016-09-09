@@ -170,8 +170,13 @@ def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
             callback(event.data[ATTR_TOPIC], event.data[ATTR_PAYLOAD],
                      event.data[ATTR_QOS])
 
-    hass.bus.listen(EVENT_MQTT_MESSAGE_RECEIVED, mqtt_topic_subscriber)
+    remove = hass.bus.listen(EVENT_MQTT_MESSAGE_RECEIVED,
+                             mqtt_topic_subscriber)
+
+    # Future: track subscriber count and unsubscribe in remove
     MQTT_CLIENT.subscribe(topic, qos)
+
+    return remove
 
 
 def _setup_server(hass, config):
@@ -203,14 +208,14 @@ def setup(hass, config):
 
     broker_config = _setup_server(hass, config)
 
-    broker_in_conf = True if CONF_BROKER in conf else False
+    broker_in_conf = CONF_BROKER in conf
 
     # Only auto config if no server config was passed in
     if broker_config and CONF_EMBEDDED not in conf:
         broker, port, username, password, certificate, protocol = broker_config
         # Embedded broker doesn't have some ssl variables
         client_key, client_cert, tls_insecure = None, None, None
-    elif not broker_config and CONF_BROKER not in conf:
+    elif not broker_config and not broker_in_conf:
         _LOGGER.error('Unable to start broker and auto-configure MQTT.')
         return False
 

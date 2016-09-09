@@ -1,41 +1,58 @@
 """
-Support for REST API sensors..
+Support for REST API sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rest/
 """
 import logging
 
+import voluptuous as vol
 import requests
 
-from homeassistant.const import CONF_VALUE_TEMPLATE, STATE_UNKNOWN
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE,
+    CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, CONF_VERIFY_SSL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'REST Sensor'
 DEFAULT_METHOD = 'GET'
+DEFAULT_NAME = 'REST Sensor'
+DEFAULT_VERIFY_SSL = True
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(['POST', 'GET']),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PAYLOAD): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+})
 
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the REST sensor."""
-    resource = config.get('resource', None)
-    method = config.get('method', DEFAULT_METHOD)
-    payload = config.get('payload', None)
-    verify_ssl = config.get('verify_ssl', True)
+    """Setup the RESTful sensor."""
+    name = config.get(CONF_NAME)
+    resource = config.get(CONF_RESOURCE)
+    method = config.get(CONF_METHOD)
+    payload = config.get(CONF_PAYLOAD)
+    verify_ssl = config.get(CONF_VERIFY_SSL)
+    unit = config.get(CONF_UNIT_OF_MEASUREMENT)
+    value_template = config.get(CONF_VALUE_TEMPLATE)
 
     rest = RestData(method, resource, payload, verify_ssl)
     rest.update()
 
     if rest.data is None:
-        _LOGGER.error('Unable to fetch Rest data')
+        _LOGGER.error('Unable to fetch REST data')
         return False
 
-    add_devices([RestSensor(
-        hass, rest, config.get('name', DEFAULT_NAME),
-        config.get('unit_of_measurement'), config.get(CONF_VALUE_TEMPLATE))])
+    add_devices([RestSensor(hass, rest, name, unit, value_template)])
 
 
 # pylint: disable=too-many-arguments
@@ -43,7 +60,7 @@ class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
     def __init__(self, hass, rest, name, unit_of_measurement, value_template):
-        """Initialize the sensor."""
+        """Initialize the REST sensor."""
         self._hass = hass
         self.rest = rest
         self._name = name

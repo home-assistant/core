@@ -13,7 +13,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
-REQUIREMENTS = ['python-wink==0.7.11', 'pubnub==3.8.2']
+REQUIREMENTS = ['python-wink==0.7.13', 'pubnub==3.8.2']
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {

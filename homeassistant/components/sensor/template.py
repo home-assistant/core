@@ -6,47 +6,42 @@ https://home-assistant.io/components/sensor.template/
 """
 import logging
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
+import voluptuous as vol
+
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
-    ATTR_ENTITY_ID, MATCH_ALL)
+    ATTR_ENTITY_ID, MATCH_ALL, CONF_SENSORS)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers import template
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.event import track_state_change
-from homeassistant.util import slugify
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-CONF_SENSORS = 'sensors'
+
+SENSOR_SCHEMA = vol.Schema({
+    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+    vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(ATTR_ENTITY_ID, default=MATCH_ALL): cv.entity_ids
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
+})
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the template sensors."""
     sensors = []
-    if config.get(CONF_SENSORS) is None:
-        _LOGGER.error("Missing configuration data for sensor platform")
-        return False
 
     for device, device_config in config[CONF_SENSORS].items():
-        if device != slugify(device):
-            _LOGGER.error("Found invalid key for sensor.template: %s. "
-                          "Use %s instead", device, slugify(device))
-            continue
-
-        if not isinstance(device_config, dict):
-            _LOGGER.error("Missing configuration data for sensor %s", device)
-            continue
-
+        state_template = device_config[CONF_VALUE_TEMPLATE]
+        entity_ids = device_config[ATTR_ENTITY_ID]
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
-        state_template = device_config.get(CONF_VALUE_TEMPLATE)
-        if state_template is None:
-            _LOGGER.error(
-                "Missing %s for sensor %s", CONF_VALUE_TEMPLATE, device)
-            continue
-
-        entity_ids = device_config.get(ATTR_ENTITY_ID, MATCH_ALL)
 
         sensors.append(
             SensorTemplate(
@@ -85,8 +80,7 @@ class SensorTemplate(Entity):
             """Called when the target device changes state."""
             self.update_ha_state(True)
 
-        track_state_change(hass, entity_ids,
-                           template_sensor_state_listener)
+        track_state_change(hass, entity_ids, template_sensor_state_listener)
 
     @property
     def name(self):

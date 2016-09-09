@@ -1,26 +1,30 @@
 """
 Support for information from HP ILO sensors.
 
-This allows monitoring of HP server information
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.sensor.hp_ilo/
 """
 import logging
 from datetime import timedelta
 
 import voluptuous as vol
+
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_NAME,
-    CONF_MONITORED_VARIABLES,
-    STATE_ON, STATE_OFF)
+    CONF_MONITORED_VARIABLES, STATE_ON, STATE_OFF)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-hpilo==3.8']
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'HP ILO'
 DEFAULT_PORT = 443
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 # Each sensor is defined as follows: 'Descriptive name', 'python-ilo function'
 SENSOR_TYPES = {
@@ -43,13 +47,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_MONITORED_VARIABLES, default=['server_name']):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 
 # pylint: disable=unused-argument
@@ -82,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class HpIloSensor(Entity):
-    """Represents an HP ILO sensor."""
+    """Representation a HP ILO sensor."""
 
     def __init__(self, hp_ilo_data, sensor_type, client_name):
         """Initialize the sensor."""
@@ -167,4 +168,4 @@ class HpIloData(object):
                                   port=self._port)
         except (hpilo.IloError, hpilo.IloCommunicationError,
                 hpilo.IloLoginFailed) as error:
-            raise ValueError("Unable to init HP ILO. - %s", error)
+            raise ValueError("Unable to init HP ILO, %s", error)

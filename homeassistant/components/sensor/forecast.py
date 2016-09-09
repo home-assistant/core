@@ -6,17 +6,27 @@ https://home-assistant.io/components/sensor.forecast/
 """
 import logging
 from datetime import timedelta
+
+import voluptuous as vol
 from requests.exceptions import ConnectionError as ConnectError, \
     HTTPError, Timeout
 
-from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import CONF_API_KEY
-from homeassistant.helpers import validate_config
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-forecastio==1.3.4']
+
 _LOGGER = logging.getLogger(__name__)
+
+CONF_UNITS = 'units'
+
+DEFAULT_NAME = 'Forecast.io'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
@@ -55,10 +65,14 @@ SENSOR_TYPES = {
     'precip_intensity_max': ['Daily Max Precip Intensity',
                              'mm', 'in', 'mm', 'mm', 'mm'],
 }
-DEFAULT_NAME = "Forecast.io"
 
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2'])
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -67,12 +81,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
-    elif not validate_config({DOMAIN: config},
-                             {DOMAIN: [CONF_API_KEY]}, _LOGGER):
-        return False
 
-    if 'units' in config:
-        units = config['units']
+    if CONF_UNITS in config:
+        units = config[CONF_UNITS]
     elif hass.config.units.is_metric:
         units = 'si'
     else:
@@ -89,15 +100,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error(error)
         return False
 
-    name = config.get('name', DEFAULT_NAME)
+    name = config.get(CONF_NAME)
 
-    # Initialize and add all of the sensors.
     sensors = []
-    for variable in config['monitored_conditions']:
-        if variable in SENSOR_TYPES:
-            sensors.append(ForeCastSensor(forecast_data, variable, name))
-        else:
-            _LOGGER.error('Sensor type: "%s" does not exist', variable)
+    for variable in config[CONF_MONITORED_CONDITIONS]:
+        sensors.append(ForeCastSensor(forecast_data, variable, name))
 
     add_devices(sensors)
 
@@ -243,10 +250,8 @@ class ForeCastData(object):
         import forecastio
 
         try:
-            self.data = forecastio.load_forecast(self._api_key,
-                                                 self.latitude,
-                                                 self.longitude,
-                                                 units=self.units)
+            self.data = forecastio.load_forecast(
+                self._api_key, self.latitude, self.longitude, units=self.units)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             raise ValueError("Unable to init Forecast.io. - %s", error)
         self.unit_system = self.data.json['flags']['units']

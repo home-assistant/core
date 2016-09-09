@@ -8,20 +8,18 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.mqtt as mqtt
-from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN
 from homeassistant.components.mqtt import CONF_STATE_TOPIC, CONF_QOS
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers import template
+from homeassistant.helpers.entity import Entity
+import homeassistant.components.mqtt as mqtt
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_NAME = 'MQTT Sensor'
 DEPENDENCIES = ['mqtt']
-
-CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
-
-DEFAULT_NAME = "MQTT Sensor"
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -30,13 +28,13 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup MQTT Sensor."""
-    add_devices_callback([MqttSensor(
+    add_devices([MqttSensor(
         hass,
-        config[CONF_NAME],
-        config[CONF_STATE_TOPIC],
-        config[CONF_QOS],
+        config.get(CONF_NAME),
+        config.get(CONF_STATE_TOPIC),
+        config.get(CONF_QOS),
         config.get(CONF_UNIT_OF_MEASUREMENT),
         config.get(CONF_VALUE_TEMPLATE),
     )])

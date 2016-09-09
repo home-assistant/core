@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PORT, CONF_MONITORED_VARIABLES)
+    CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PORT, CONF_MONITORED_VARIABLES,
+    CONF_SSL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -20,8 +21,14 @@ REQUIREMENTS = ['https://github.com/jamespcole/home-assistant-nzb-clients/'
                 'archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip'
                 '#python-sabnzbd==0.1']
 
+_LOGGER = logging.getLogger(__name__)
+_THROTTLED_REFRESH = None
+
 DEFAULT_NAME = 'SABnzbd'
 DEFAULT_PORT = 8080
+DEFAULT_SSL = False
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
 SENSOR_TYPES = {
     'current_status': ['Status', None],
@@ -38,17 +45,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_VARIABLES, default=['current_status']):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
 })
 
-_LOGGER = logging.getLogger(__name__)
-_THROTTLED_REFRESH = None
 
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
-
-
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument, too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the SABnzbd sensors."""
     from pysabnzbd import SabnzbdApi, SabnzbdApiException
@@ -58,14 +60,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
     monitored_types = config.get(CONF_MONITORED_VARIABLES)
-    base_url = "http://{}:{}/".format(host, port)
+    use_ssl = config.get(CONF_SSL)
+
+    if use_ssl:
+        uri_scheme = 'https://'
+    else:
+        uri_scheme = 'http://'
+
+    base_url = "{}{}:{}/".format(uri_scheme, host, port)
 
     sab_api = SabnzbdApi(base_url, api_key)
 
     try:
         sab_api.check_available()
     except SabnzbdApiException:
-        _LOGGER.exception("Connection to SABnzbd API failed")
+        _LOGGER.error("Connection to SABnzbd API failed")
         return False
 
     # pylint: disable=global-statement

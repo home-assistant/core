@@ -177,6 +177,7 @@ class TestBootstrap:
                 return_value=False)
     def test_component_not_installed_if_requirement_fails(self, mock_install):
         """Component setup should fail if requirement can't install."""
+        self.hass.config.skip_pip = False
         loader.set_component(
             'comp', MockModule('comp', requirements=['package==0.0.1']))
 
@@ -210,19 +211,19 @@ class TestBootstrap:
         deps = ['non_existing']
         loader.set_component('comp', MockModule('comp', dependencies=deps))
 
-        assert not bootstrap._setup_component(self.hass, 'comp', None)
+        assert not bootstrap._setup_component(self.hass, 'comp', {})
         assert 'comp' not in self.hass.config.components
 
         self.hass.config.components.append('non_existing')
 
-        assert bootstrap._setup_component(self.hass, 'comp', None)
+        assert bootstrap._setup_component(self.hass, 'comp', {})
 
     def test_component_failing_setup(self):
         """Test component that fails setup."""
         loader.set_component(
             'comp', MockModule('comp', setup=lambda hass, config: False))
 
-        assert not bootstrap._setup_component(self.hass, 'comp', None)
+        assert not bootstrap._setup_component(self.hass, 'comp', {})
         assert 'comp' not in self.hass.config.components
 
     def test_component_exception_setup(self):
@@ -233,7 +234,7 @@ class TestBootstrap:
 
         loader.set_component('comp', MockModule('comp', setup=exception_setup))
 
-        assert not bootstrap._setup_component(self.hass, 'comp', None)
+        assert not bootstrap._setup_component(self.hass, 'comp', {})
         assert 'comp' not in self.hass.config.components
 
     def test_home_assistant_core_config_validation(self):
@@ -279,7 +280,7 @@ class TestBootstrap:
 
         loader.set_component(
             'switch.platform_a',
-            MockPlatform('comp_b', platform_schema=platform_schema))
+            MockPlatform(platform_schema=platform_schema))
 
         assert not bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
