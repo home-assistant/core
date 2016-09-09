@@ -127,6 +127,30 @@ class TestUtilTemplate(unittest.TestCase):
                 template.render(self.hass,
                                 '{{ %s | multiply(10) | round }}' % inp))
 
+    def test_timestamp_custom(self):
+        """Test the timestamps to custom filter."""
+        tests = [
+            (None, None, None, 'None'),
+            (1469119144, None, True, '2016-07-21 16:39:04'),
+            (1469119144, '%Y', True, '2016'),
+            (1469119144, 'invalid', True, 'invalid'),
+            (dt_util.as_timestamp(dt_util.utcnow()), None, False,
+                dt_util.now().strftime('%Y-%m-%d %H:%M:%S'))
+        ]
+
+        for inp, fmt, local, out in tests:
+            if fmt:
+                fil = 'timestamp_custom(\'{}\')'.format(fmt)
+            elif fmt and local:
+                fil = 'timestamp_custom(\'{0}\', {1})'.format(fmt, local)
+            else:
+                fil = 'timestamp_custom'
+
+            self.assertEqual(
+                    out,
+                    template.render(self.hass, '{{ %s | %s }}' % (inp, fil))
+                )
+
     def test_timestamp_local(self):
         """Test the timestamps to local filter."""
         tests = {
