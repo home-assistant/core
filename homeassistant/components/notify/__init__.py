@@ -91,19 +91,22 @@ def setup(hass, config):
 
         def notify_message(notify_service, call):
             """Handle sending notification message service calls."""
+            kwargs = {}
             message = call.data[ATTR_MESSAGE]
+            title = call.data.get(ATTR_TITLE)
 
-            title = template.render(
-                hass, call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT))
+            if title:
+                kwargs[ATTR_TITLE] = template.render(hass, title)
+
             if targets.get(call.service) is not None:
-                target = targets[call.service]
+                kwargs[ATTR_TARGET] = targets[call.service]
             else:
-                target = call.data.get(ATTR_TARGET)
-            message = template.render(hass, message)
-            data = call.data.get(ATTR_DATA)
+                kwargs[ATTR_TARGET] = call.data.get(ATTR_TARGET)
 
-            notify_service.send_message(message, title=title, target=target,
-                                        data=data)
+            kwargs[ATTR_MESSAGE] = template.render(hass, message)
+            kwargs[ATTR_DATA] = call.data.get(ATTR_DATA)
+
+            notify_service.send_message(**kwargs)
 
         service_call_handler = partial(notify_message, notify_service)
 
