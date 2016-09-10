@@ -21,7 +21,6 @@ OPERATION_LIST = ["Heat", "Cool", "Auto Changeover", "Off"]
 FAN_OPERATION_LIST = ["On", "Auto", "Cycle"]
 
 
-
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Find and return Vera thermostats."""
     add_devices_callback(
