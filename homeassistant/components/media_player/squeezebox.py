@@ -28,7 +28,7 @@ KNOWN_DEVICES = []
 
 SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+    SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -304,7 +304,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """Turn the media player on."""
         self._lms.query(self._id, 'power', '1')
         self.update_ha_state()
-        
+
     def play_media(self, media_type, media_id, **kwargs):
         """
         Send the play_media command to the media player.
@@ -363,4 +363,3 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """
         self._lms.query(self._id, 'playlist', 'add', media_id)
         self.update_ha_state()
-        
