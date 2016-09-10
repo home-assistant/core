@@ -48,16 +48,10 @@ class KODINotificationService(BaseNotificationService):
         """Send a message to Kodi."""
         import jsonrpc_requests
         try:
-            data = kwargs.get(ATTR_DATA)
-            displaytime = 10000
-            icon = "info"
+            data = kwargs.get(ATTR_DATA) or {}
 
-            if data is not None and ATTR_DISPLAYTIME in data:
-                displaytime = data.get(ATTR_DISPLAYTIME, 10000)
-
-            if data is not None and ATTR_ICON in data:
-                icon = data.get(ATTR_ICON, "info")
-
+            displaytime = data.get(ATTR_DISPLAYTIME, 10000)
+            icon = data.get(ATTR_ICON, "info")
             title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
             self._server.GUI.ShowNotification(title, message, icon,
                                               displaytime)
