@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+import homeassistant.core as ha
 import homeassistant.components.notify as notify
 from homeassistant import bootstrap
 from tests.common import get_test_home_assistant
@@ -40,6 +41,7 @@ class TestCommandLine(unittest.TestCase):
 
     def test_command_line_output(self):
         """Test the command line output."""
+        ha.SERVICE_CALL_LIMIT = 1
         with tempfile.TemporaryDirectory() as tempdirname:
             filename = os.path.join(tempdirname, 'message.txt')
             message = 'one, two, testing, testing'
@@ -51,9 +53,10 @@ class TestCommandLine(unittest.TestCase):
                 }
             }))
 
-            self.hass.services.call('notify', 'test', {'message': message},
-                                    blocking=True)
-            self.hass.block_till_done()
+            self.assertTrue(
+                self.hass.services.call('notify', 'test', {'message': message},
+                                        blocking=True)
+            )
 
             result = open(filename).read()
             # the echo command adds a line break
@@ -62,6 +65,7 @@ class TestCommandLine(unittest.TestCase):
     @patch('homeassistant.components.notify.command_line._LOGGER.error')
     def test_error_for_none_zero_exit_code(self, mock_error):
         """Test if an error is logged for non zero exit codes."""
+        ha.SERVICE_CALL_LIMIT = 1
         self.assertTrue(notify.setup(self.hass, {
             'notify': {
                 'name': 'test',
@@ -70,7 +74,8 @@ class TestCommandLine(unittest.TestCase):
             }
         }))
 
-        self.hass.services.call('notify', 'test', {'message': 'error'},
-                                blocking=True)
-        self.hass.block_till_done()
+        self.assertTrue(
+            self.hass.services.call('notify', 'test', {'message': 'error'},
+                                    blocking=True)
+        )
         self.assertEqual(1, mock_error.call_count)
