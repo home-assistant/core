@@ -83,7 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if config.get(CONF_RUN_TEST):
         test = Test(config.get(CONF_FFMPEG_BIN))
         if not test.run_test(config.get(CONF_INPUT)):
-            _LOGGER.critical("FFmpeg test fails!")
+            _LOGGER.error("FFmpeg '%s' test fails!", config.get(CONF_INPUT))
             return
 
     # generate sensor object
