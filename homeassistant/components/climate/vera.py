@@ -17,12 +17,16 @@ DEPENDENCIES = ['vera']
 
 _LOGGER = logging.getLogger(__name__)
 
+OPERATION_LIST = ["Heat", "Cool", "Auto Changeover", "Off"]
+FAN_OPERATION_LIST = ["On", "Auto", "Cycle"]
+
+
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Find and return Vera thermostats."""
     add_devices_callback(
         VeraThermostat(device, VERA_CONTROLLER) for
-        device in VERA_DEVICES['thermostat'])
+        device in VERA_DEVICES['climate'])
 
 
 # pylint: disable=abstract-method
@@ -32,52 +36,50 @@ class VeraThermostat(VeraDevice, ClimateDevice):
     def __init__(self, vera_device, controller):
         """Initialize the Vera device."""
         VeraDevice.__init__(self, vera_device, controller)
-        self._fan_list = ["On", "Auto", "Cycle"]
-        self._operation_list = ["Heat", "Cool", "Auto Changeover", "Off"]
 
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
         mode = self.vera_device.get_hvac_mode()
         if mode == "HeatOn":
-            return self._operation_list[0]  # heat
+            return OPERATION_LIST[0]  # heat
         elif mode == "CoolOn":
-            return self._operation_list[1]  # cool
+            return OPERATION_LIST[1]  # cool
         elif mode == "AutoChangeOver":
-            return self._operation_list[2]  # auto
+            return OPERATION_LIST[2]  # auto
         elif mode == "Off":
-            return self._operation_list[3]  # off
+            return OPERATION_LIST[3]  # off
         return "Off"
 
     @property
     def operation_list(self):
         """List of available operation modes."""
-        return self._operation_list
+        return OPERATION_LIST
 
     @property
     def current_fan_mode(self):
         """Return the fan setting."""
         mode = self.vera_device.get_fan_mode()
         if mode == "ContinuousOn":
-            return self._fan_list[0]  # on
+            return FAN_OPERATION_LIST[0]  # on
         elif mode == "Auto":
-            return self._fan_list[1]  # auto
+            return FAN_OPERATION_LIST[1]  # auto
         elif mode == "PeriodicOn":
-            return self._fan_list[2]  # cycle
+            return FAN_OPERATION_LIST[2]  # cycle
         return "Auto"
 
     @property
     def fan_list(self):
         """List of available fan modes."""
-        return self._fan_list
+        return FAN_OPERATION_LIST
 
     def set_fan_mode(self, mode):
         """Set new target temperature."""
-        if mode == self._fan_list[0]:
+        if mode == FAN_OPERATION_LIST[0]:
             self.vera_device.fan_on()
-        elif mode == self._fan_list[1]:
+        elif mode == FAN_OPERATION_LIST[1]:
             self.vera_device.fan_auto()
-        elif mode == self._fan_list[2]:
+        elif mode == FAN_OPERATION_LIST[2]:
             return self.vera_device.fan_cycle()
 
     @property
@@ -117,13 +119,13 @@ class VeraThermostat(VeraDevice, ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, cool, heat, off)."""
-        if operation_mode == self._operation_list[3]:  # off
+        if operation_mode == OPERATION_LIST[3]:  # off
             self.vera_device.turn_off()
-        elif operation_mode == self._operation_list[2]:  # auto
+        elif operation_mode == OPERATION_LIST[2]:  # auto
             self.vera_device.turn_auto_on()
-        elif operation_mode == self._operation_list[1]:  # cool
+        elif operation_mode == OPERATION_LIST[1]:  # cool
             self.vera_device.turn_cool_on()
-        elif operation_mode == self._operation_list[0]:  # heat
+        elif operation_mode == OPERATION_LIST[0]:  # heat
             self.vera_device.turn_heat_on()
 
     def turn_fan_on(self):

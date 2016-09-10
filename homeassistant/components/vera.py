@@ -31,7 +31,6 @@ VERA_CONTROLLER = None
 CONF_CONTROLLER = 'vera_controller_url'
 CONF_EXCLUDE = 'exclude'
 CONF_LIGHTS = 'lights'
-CONF_CLIMATE = 'climate'
 
 ATTR_CURRENT_POWER_MWH = "current_power_mwh"
 
@@ -43,13 +42,12 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CONTROLLER): cv.url,
         vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
-        vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
-        vol.Optional(CONF_CLIMATE, default="climate"): cv.string
+        vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 VERA_COMPONENTS = [
-    'binary_sensor', 'sensor', 'light', 'switch', 'lock'
+    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'climate'
 ]
 
 
@@ -89,7 +87,6 @@ def setup(hass, base_config):
             continue
         VERA_DEVICES[dev_type].append(device)
 
-    VERA_COMPONENTS.append(config.get(CONF_CLIMATE))
     for component in VERA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, base_config)
 
@@ -111,7 +108,7 @@ def map_vera_device(vera_device, remap):
     if isinstance(vera_device, veraApi.VeraLock):
         return 'lock'
     if isinstance(vera_device, veraApi.VeraThermostat):
-        return 'thermostat'
+        return 'climate'
     if isinstance(vera_device, veraApi.VeraSwitch):
         if vera_device.device_id in remap:
             return 'light'
