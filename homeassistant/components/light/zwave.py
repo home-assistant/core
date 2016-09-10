@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     value.set_change_verified(False)
 
-    if node.has_command_class(zwave.COMMAND_CLASS_COLOR):
+    if node.has_command_class(zwave.COMMAND_CLASS_SWITCH_COLOR):
         try:
             add_devices([ZwaveColorLight(value)])
         except ValueError as exception:
@@ -195,7 +195,7 @@ class ZwaveColorLight(ZwaveDimmer):
             raise ValueError("No matching color command found.")
 
         for value_color_channels in value.node.get_values(
-                class_id=zwave.COMMAND_CLASS_COLOR, genre='System',
+                class_id=zwave.COMMAND_CLASS_SWITCH_COLOR, genre='System',
                 type="Int").values():
             self._value_color_channels = value_color_channels
 

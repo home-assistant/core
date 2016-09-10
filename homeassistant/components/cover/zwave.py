@@ -12,9 +12,6 @@ from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
 from homeassistant.components.cover import CoverDevice
 
-COMMAND_CLASS_SWITCH_MULTILEVEL = 0x26  # 38
-COMMAND_CLASS_SWITCH_BINARY = 0x25  # 37
-
 SOMFY = 0x47
 SOMFY_ZRTSI = 0x5a52
 SOMFY_ZRTSI_CONTROLLER = (SOMFY, SOMFY_ZRTSI)
@@ -35,12 +32,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
 
-    if (value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL and
-            value.index == 0):
+    if node.has_command_class(zwave.COMMAND_CLASS_SWITCH_MULTILEVEL) and \
+            value.index == 0:
         value.set_change_verified(False)
         add_devices([ZwaveRollershutter(value)])
-    elif (value.command_class == zwave.COMMAND_CLASS_SWITCH_BINARY or
-          value.command_class == zwave.COMMAND_CLASS_BARRIER_OPERATOR):
+    elif node.has_command_class(zwave.COMMAND_CLASS_SWITCH_BINARY) or \
+            node.has_command_class(zwave.COMMAND_CLASS_BARRIER_OPERATOR):
         if value.type != zwave.TYPE_BOOL and \
            value.genre != zwave.GENRE_USER:
             return
@@ -88,7 +85,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         """Callback on data change for the registered node/value pair."""
         # Position value
         for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
+                class_id=zwave.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
                and value.label == 'Level':
                 self._current_position = value.data
@@ -118,7 +115,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
         for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
+                class_id=zwave.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
                and value.label == 'Open' or \
                value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
@@ -129,7 +126,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
     def close_cover(self, **kwargs):
         """Move the roller shutter down."""
         for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
+                class_id=zwave.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
                and value.label == 'Up' or \
                value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
@@ -144,7 +141,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""
         for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
+                class_id=zwave.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
                and value.label == 'Open' or \
                value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \

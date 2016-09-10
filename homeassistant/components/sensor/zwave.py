@@ -59,15 +59,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 return
 
     # Generic Device mappings
-    if value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
+    if node.has_command_class(zwave.COMMAND_CLASS_SENSOR_MULTILEVEL):
         add_devices([ZWaveMultilevelSensor(value)])
 
-    elif (value.command_class == zwave.COMMAND_CLASS_METER and
-          value.type == zwave.TYPE_DECIMAL):
+    elif node.has_command_class(zwave.COMMAND_CLASS_METER) and \
+            value.type == zwave.TYPE_DECIMAL:
         add_devices([ZWaveMultilevelSensor(value)])
 
-    elif (value.command_class == zwave.COMMAND_CLASS_ALARM or
-          value.command_class == zwave.COMMAND_CLASS_SENSOR_ALARM):
+    elif node.has_command_class(zwave.COMMAND_CLASS_ALARM) or \
+            node.has_command_class(zwave.COMMAND_CLASS_SENSOR_ALARM):
         add_devices([ZWaveAlarmSensor(value)])
 
 
