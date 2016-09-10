@@ -13,11 +13,10 @@ notify:
   password: PASSWORD            (Optional)
 """
 import logging
-import urllib
 
 from homeassistant.components.notify import (ATTR_TITLE, ATTR_TITLE_DEFAULT,
                                              ATTR_DATA,
-                                             BaseNotificationService, DOMAIN)
+                                             BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['jsonrpc-requests==0.3']
@@ -59,6 +58,7 @@ class KODINotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to Kodi."""
+        import jsonrpc_requests
         try:
             data = kwargs.get(ATTR_DATA)
             displaytime = 10000
@@ -73,5 +73,9 @@ class KODINotificationService(BaseNotificationService):
             title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
             self._server.GUI.ShowNotification(title, message, icon,
                                               displaytime)
-        except ErrorException as exception:
-            _LOGGER.warning('Unable to fetch kodi data, "%s"', exception)
+
+        except jsonrpc_requests.jsonrpc.TransportError:
+            _LOGGER.warning('Unable to fetch kodi data, Is kodi online?')
+
+        except Exception as exception:
+            _LOGGER.warning('Error: "%s"', exception)
