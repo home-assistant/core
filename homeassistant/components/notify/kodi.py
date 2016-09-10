@@ -6,6 +6,7 @@ https://home-assistant.io/components/notify.kodi/
 """
 import logging
 
+from homeassistant.consts import ATTR_ICON
 from homeassistant.components.notify import (ATTR_TITLE, ATTR_TITLE_DEFAULT,
                                              ATTR_DATA,
                                              BaseNotificationService)
@@ -14,7 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['jsonrpc-requests==0.3']
 
 ATTR_DISPLAYTIME = 'displaytime'
-ATTR_ICON = 'icon'
 
 
 def get_service(hass, config):
@@ -63,7 +63,7 @@ class KODINotificationService(BaseNotificationService):
                                               displaytime)
 
         except jsonrpc_requests.jsonrpc.TransportError:
-            _LOGGER.warning('Unable to fetch kodi data, Is kodi online?')
+            _LOGGER.warning('Unable to fetch Kodi data, Is Kodi online?')
 
         except Exception as exception:
             _LOGGER.warning('Error: "%s"', exception)
