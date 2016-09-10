@@ -3,14 +3,6 @@ Kodi notification service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.kodi/
-
-notify:
-  platform: kodi
-  host: http://192.168.0.123    (Required)
-  port: 8080                    (Required)
-  name: Kodi                    (Optional)
-  username: USERNAME            (Optional)
-  password: PASSWORD            (Optional)
 """
 import logging
 
