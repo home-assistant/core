@@ -87,11 +87,20 @@ def setup(hass, config):
         hass.services.register(DOMAIN, SERVICE_WRITE_REGISTER, write_register)
 
     def write_register(service):
-        """Write modbus register."""
+        """Write modbus registers."""
         unit = int(float(service.data.get(ATTR_UNIT)))
         address = int(float(service.data.get(ATTR_ADDRESS)))
-        value = int(float(service.data.get(ATTR_VALUE)))
-        HUB.write_register(unit, address, value)
+        value = service.data.get(ATTR_VALUE)
+        if isinstance(value, list):
+            HUB.write_registers(
+                unit,
+                address,
+                [int(float(i)) for i in value])
+        else:
+            HUB.write_register(
+                unit,
+                address,
+                int(float(value)))
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
 
@@ -146,4 +155,12 @@ class ModbusHub(object):
             self._client.write_register(
                 address,
                 value,
+                unit=unit)
+
+    def write_registers(self, unit, address, values):
+        """Write registers."""
+        with self._lock:
+            self._client.write_registers(
+                address,
+                values,
                 unit=unit)
