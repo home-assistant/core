@@ -21,10 +21,6 @@ def get_service(hass, config):
     """Return the notify service."""
     url = '{}:{}'.format(config.get('host'), config.get('port', '8080'))
 
-    jsonrpc_url = config.get('url')  # deprecated
-    if jsonrpc_url:
-        url = jsonrpc_url.rstrip('/jsonrpc')
-
     auth = (config.get('username', ''),
             config.get('password', ''))
 
