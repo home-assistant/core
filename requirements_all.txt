@@ -515,3 +515,6 @@ yahooweather==0.8
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.6
+
+# homeassistant.components.notify.kodi
+jsonrpc-requests==0.3
