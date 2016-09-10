@@ -6,7 +6,7 @@ https://home-assistant.io/components/notify.kodi/
 """
 import logging
 
-from homeassistant.consts import ATTR_ICON
+from homeassistant.const import ATTR_ICON
 from homeassistant.components.notify import (ATTR_TITLE, ATTR_TITLE_DEFAULT,
                                              ATTR_DATA,
                                              BaseNotificationService)
