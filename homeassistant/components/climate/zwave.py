@@ -69,11 +69,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                   discovery_info, zwave.NETWORK)
 
 
-# pylint: disable=too-many-arguments, abstract-method
+# pylint: disable=abstract-method
 class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     """Represents a ZWave Climate device."""
 
-    # pylint: disable=too-many-public-methods, too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, value, temp_unit):
         """Initialize the zwave climate device."""
         from openzwave.network import ZWaveNetwork
@@ -227,7 +227,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
-# pylint: disable=too-many-branches, too-many-statements
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:

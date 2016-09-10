@@ -56,6 +56,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        # pylint: disable=no-member
         self._lozwmgr = libopenzwave.PyManager()
         self._lozwmgr.create()
         self._node = value.node
