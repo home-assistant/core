@@ -9,17 +9,14 @@ from datetime import timedelta
 
 import requests
 
-from homeassistant.components.binary_sensor import (BinarySensorDevice,
-                                                    SENSOR_CLASSES)
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, SENSOR_CLASSES)
+from homeassistant.const import CONF_RESOURCE, CONF_PIN
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-# Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
-
-CONF_RESOURCE = 'resource'
-CONF_PIN = 'pin'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
