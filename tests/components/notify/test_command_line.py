@@ -4,7 +4,6 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import homeassistant.core as ha
 import homeassistant.components.notify as notify
 from homeassistant import bootstrap
 from tests.common import get_test_home_assistant

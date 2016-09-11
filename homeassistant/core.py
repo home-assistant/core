@@ -206,7 +206,7 @@ class HomeAssistant(object):
         self.pool.add_job(priority, (target,) + args)
 
     def _loop_empty(self):
-        """Python 3.4.2 empty loop compatibility function"""
+        """Python 3.4.2 empty loop compatibility function."""
         if sys.version_info < (3, 4, 3):
             # pylint: disable=protected-access
             return len(self.loop._scheduled) == 0 and \
