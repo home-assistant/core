@@ -58,7 +58,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class RestSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using REST."""
 
-    def __init__(self, hass, name, resource, body_on, body_off, value_template):
+    def __init__(self, hass, name, resource, body_on, body_off,
+                 value_template):
         """Initialize the REST switch."""
         self._state = None
         self._hass = hass
