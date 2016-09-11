@@ -7,7 +7,7 @@ https://home-assistant.io/components/climate.proliphix/
 from homeassistant.components.climate import (
     STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 
 REQUIREMENTS = ['proliphix==0.3.1']
 
@@ -85,6 +85,9 @@ class ProliphixThermostat(ClimateDevice):
         elif state == 6:
             return STATE_COOL
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
         self._pdp.setback = temperature

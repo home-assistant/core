@@ -6,55 +6,69 @@ https://home-assistant.io/components/media_player.onkyo/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
-from homeassistant.const import STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/danieljkemp/onkyo-eiscp/archive/'
                 'python3.zip#onkyo-eiscp==0.9.2']
+
 _LOGGER = logging.getLogger(__name__)
+
+CONF_SOURCES = 'sources'
+
+DEFAULT_NAME = 'Onkyo Receiver'
+
+KNOWN_HOSTS = []
 
 SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
-KNOWN_HOSTS = []
-DEFAULT_SOURCES = {"tv": "TV", "bd": "Bluray", "game": "Game", "aux1": "Aux1",
-                   "video1": "Video 1", "video2": "Video 2",
-                   "video3": "Video 3", "video4": "Video 4",
-                   "video5": "Video 5", "video6": "Video 6",
-                   "video7": "Video 7"}
-CONFIG_SOURCE_LIST = "sources"
+
+DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
+                   'video1': 'Video 1', 'video2': 'Video 2',
+                   'video3': 'Video 3', 'video4': 'Video 4',
+                   'video5': 'Video 5', 'video6': 'Video 6',
+                   'video7': 'Video 7'}
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES):
+        {cv.string: cv.string},
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Onkyo platform."""
     import eiscp
     from eiscp import eISCP
+
+    host = config.get(CONF_HOST)
     hosts = []
 
-    if CONF_HOST in config and config[CONF_HOST] not in KNOWN_HOSTS:
+    if CONF_HOST in config and host not in KNOWN_HOSTS:
         try:
-            hosts.append(OnkyoDevice(eiscp.eISCP(config[CONF_HOST]),
-                                     config.get(CONFIG_SOURCE_LIST,
-                                                DEFAULT_SOURCES),
-                                     name=config[CONF_NAME]))
-            KNOWN_HOSTS.append(config[CONF_HOST])
+            hosts.append(OnkyoDevice(eiscp.eISCP(host),
+                                     config.get(CONF_SOURCES),
+                                     name=config.get(CONF_NAME)))
+            KNOWN_HOSTS.append(host)
         except OSError:
-            _LOGGER.error('Unable to connect to receiver at %s.',
-                          config[CONF_HOST])
+            _LOGGER.error('Unable to connect to receiver at %s.', host)
     else:
         for receiver in eISCP.discover():
             if receiver.host not in KNOWN_HOSTS:
-                hosts.append(OnkyoDevice(receiver,
-                                         config.get(CONFIG_SOURCE_LIST,
-                                                    DEFAULT_SOURCES)))
+                hosts.append(OnkyoDevice(receiver, config.get(CONF_SOURCES)))
                 KNOWN_HOSTS.append(receiver.host)
     add_devices(hosts)
 
 
 # pylint: disable=too-many-instance-attributes
 class OnkyoDevice(MediaPlayerDevice):
-    """Representation of a Onkyo device."""
+    """Representation of an Onkyo device."""
 
     # pylint: disable=too-many-public-methods, abstract-method
     def __init__(self, receiver, sources, name=None):
@@ -90,7 +104,7 @@ class OnkyoDevice(MediaPlayerDevice):
                 self._current_source = '_'.join(
                     [i for i in current_source_raw[1]])
         self._muted = bool(mute_raw[1] == 'on')
-        self._volume = int(volume_raw[1], 16)/80.0
+        self._volume = int(volume_raw[1], 16) / 80.0
 
     @property
     def name(self):

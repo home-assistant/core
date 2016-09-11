@@ -6,23 +6,27 @@ https://home-assistant.io/components/climate.ecobee/
 """
 import logging
 from os import path
+
 import voluptuous as vol
 
 from homeassistant.components import ecobee
 from homeassistant.components.climate import (
-    DOMAIN, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice)
+    DOMAIN, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice,
+    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['ecobee']
-_LOGGER = logging.getLogger(__name__)
-ECOBEE_CONFIG_FILE = 'ecobee.conf'
 _CONFIGURING = {}
+_LOGGER = logging.getLogger(__name__)
 
-ATTR_FAN_MIN_ON_TIME = "fan_min_on_time"
-SERVICE_SET_FAN_MIN_ON_TIME = "ecobee_set_fan_min_on_time"
+ATTR_FAN_MIN_ON_TIME = 'fan_min_on_time'
+
+DEPENDENCIES = ['ecobee']
+
+SERVICE_SET_FAN_MIN_ON_TIME = 'ecobee_set_fan_min_on_time'
+
 SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_FAN_MIN_ON_TIME): vol.Coerce(int),
@@ -142,7 +146,11 @@ class Thermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation."""
-        return self.operation_mode
+        if self.operation_mode == 'auxHeatOnly' or \
+           self.operation_mode == 'heatPump':
+            return STATE_HEAT
+        else:
+            return self.operation_mode
 
     @property
     def operation_list(self):
@@ -211,11 +219,17 @@ class Thermostat(ClimateDevice):
         """Turn away off."""
         self.data.ecobee.resume_program(self.thermostat_index)
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = int(temperature)
-        low_temp = temperature - 1
-        high_temp = temperature + 1
+        if kwargs.get(ATTR_TEMPERATURE) is not None:
+            temperature = kwargs.get(ATTR_TEMPERATURE)
+            low_temp = temperature - 1
+            high_temp = temperature + 1
+        if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None and \
+           kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
+            low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
+            high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+
         if self.hold_temp:
             self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
                                            high_temp, "indefinite")

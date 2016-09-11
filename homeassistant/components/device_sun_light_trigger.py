@@ -7,23 +7,38 @@ https://home-assistant.io/components/device_sun_light_trigger/
 import logging
 from datetime import timedelta
 
+import voluptuous as vol
+
 import homeassistant.util.dt as dt_util
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.event_decorators import track_state_change
 from homeassistant.loader import get_component
+import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "device_sun_light_trigger"
+DOMAIN = 'device_sun_light_trigger'
 DEPENDENCIES = ['light', 'device_tracker', 'group', 'sun']
+
+CONF_DEVICE_GROUP = 'device_group'
+CONF_DISABLE_TURN_OFF = 'disable_turn_off'
+CONF_LIGHT_GROUP = 'light_group'
+CONF_LIGHT_PROFILE = 'light_profile'
+
+DEFAULT_DISABLE_TURN_OFF = False
+DEFAULT_LIGHT_PROFILE = 'relax'
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
-# Light profile to be used if none given
-LIGHT_PROFILE = 'relax'
-
-CONF_LIGHT_PROFILE = 'light_profile'
-CONF_LIGHT_GROUP = 'light_group'
-CONF_DEVICE_GROUP = 'device_group'
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_DEVICE_GROUP): cv.entity_id,
+        vol.Optional(CONF_DISABLE_TURN_OFF, default=DEFAULT_DISABLE_TURN_OFF):
+            cv.boolean,
+        vol.Optional(CONF_LIGHT_GROUP): cv.string,
+        vol.Optional(CONF_LIGHT_PROFILE, default=DEFAULT_LIGHT_PROFILE):
+            cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 # pylint: disable=too-many-locals
@@ -35,10 +50,10 @@ def setup(hass, config):
     light = get_component('light')
     sun = get_component('sun')
 
-    disable_turn_off = 'disable_turn_off' in config[DOMAIN]
+    disable_turn_off = config[DOMAIN].get(CONF_DISABLE_TURN_OFF)
     light_group = config[DOMAIN].get(CONF_LIGHT_GROUP,
                                      light.ENTITY_ID_ALL_LIGHTS)
-    light_profile = config[DOMAIN].get(CONF_LIGHT_PROFILE, LIGHT_PROFILE)
+    light_profile = config[DOMAIN].get(CONF_LIGHT_PROFILE)
     device_group = config[DOMAIN].get(CONF_DEVICE_GROUP,
                                       device_tracker.ENTITY_ID_ALL_DEVICES)
     device_entity_ids = group.get_entity_ids(hass, device_group,
@@ -52,7 +67,7 @@ def setup(hass, config):
     light_ids = group.get_entity_ids(hass, light_group, light.DOMAIN)
 
     if not light_ids:
-        logger.error("No lights found to turn on ")
+        logger.error("No lights found to turn on")
         return False
 
     def calc_time_for_light_when_sunset():

@@ -44,6 +44,13 @@ class TestAutomationEvent(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
+        automation.turn_off(self.hass)
+        self.hass.pool.block_till_done()
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_if_fires_on_event_with_data(self):
         """Test the firing of events with data."""
         assert _setup_component(self.hass, automation.DOMAIN, {

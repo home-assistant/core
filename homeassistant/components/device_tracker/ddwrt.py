@@ -10,10 +10,11 @@ import threading
 from datetime import timedelta
 
 import requests
+import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago.
@@ -24,15 +25,16 @@ _LOGGER = logging.getLogger(__name__)
 _DDWRT_DATA_REGEX = re.compile(r'\{(\w+)::([^\}]*)\}')
 _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
+})
+
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return a DD-WRT scanner."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-        return None
-
     scanner = DdWrtDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
@@ -107,7 +109,7 @@ class DdWrtDeviceScanner(object):
             return False
 
         with self.lock:
-            _LOGGER.info("Checking ARP")
+            _LOGGER.info('Checking ARP')
 
             url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
             data = self.get_ddwrt_data(url)
@@ -143,18 +145,18 @@ class DdWrtDeviceScanner(object):
                 auth=(self.username, self.password),
                 timeout=4)
         except requests.exceptions.Timeout:
-            _LOGGER.exception("Connection to the router timed out")
+            _LOGGER.exception('Connection to the router timed out')
             return
         if response.status_code == 200:
             return _parse_ddwrt_response(response.text)
         elif response.status_code == 401:
             # Authentication error
             _LOGGER.exception(
-                "Failed to authenticate, "
-                "please check your username and password")
+                'Failed to authenticate, '
+                'please check your username and password')
             return
         else:
-            _LOGGER.error("Invalid response from ddwrt: %s", response)
+            _LOGGER.error('Invalid response from ddwrt: %s', response)
 
 
 def _parse_ddwrt_response(data_str):

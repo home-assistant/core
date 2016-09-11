@@ -10,7 +10,7 @@ https://home-assistant.io/components/climate.heatmiser/
 import logging
 
 from homeassistant.components.climate import ClimateDevice
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
 CONF_IPADDRESS = 'ipaddress'
 CONF_PORT = 'port'
@@ -98,16 +98,18 @@ class HeatmiserV3Thermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = int(temperature)
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
         self.heatmiser.hmSendAddress(
             self._id,
             18,
             temperature,
             1,
             self.serport)
-        self._target_temperature = int(temperature)
+        self._target_temperature = temperature
 
     def update(self):
         """Get the latest data."""

@@ -11,6 +11,7 @@ from homeassistant.components.device_tracker import (
     DEFAULT_SCAN_INTERVAL,
     PLATFORM_SCHEMA,
     load_config,
+    DEFAULT_TRACK_NEW
 )
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
@@ -58,10 +59,13 @@ def setup_scanner(hass, config, see):
     def discover_ble_devices():
         """Discover Bluetooth LE devices."""
         _LOGGER.debug("Discovering Bluetooth LE devices")
-        service = DiscoveryService()
-        devices = service.discover(duration)
-        _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
-
+        try:
+            service = DiscoveryService()
+            devices = service.discover(duration)
+            _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
+        except RuntimeError as error:
+            _LOGGER.error("Error during Bluetooth LE scan: %s", error)
+            devices = []
         return devices
 
     yaml_path = hass.config.path(YAML_DEVICES)
@@ -85,7 +89,7 @@ def setup_scanner(hass, config, see):
     # if track new devices is true discover new devices
     # on every scan.
     track_new = util.convert(config.get(CONF_TRACK_NEW), bool,
-                             len(devs_to_track) == 0)
+                             DEFAULT_TRACK_NEW)
     if not devs_to_track and not track_new:
         _LOGGER.warning("No Bluetooth LE devices to track!")
         return False

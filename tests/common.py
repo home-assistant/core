@@ -44,6 +44,7 @@ def get_test_home_assistant(num_threads=None):
     hass.config.elevation = 0
     hass.config.time_zone = date_util.get_time_zone('US/Pacific')
     hass.config.units = METRIC_SYSTEM
+    hass.config.skip_pip = True
 
     if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
         loader.prepare(hass)
@@ -246,20 +247,23 @@ def patch_yaml_files(files_dict, endswith=True):
     """Patch load_yaml with a dictionary of yaml files."""
     # match using endswith, start search with longest string
     matchlist = sorted(list(files_dict.keys()), key=len) if endswith else []
-    # matchlist.sort(key=len)
 
     def mock_open_f(fname, **_):
         """Mock open() in the yaml module, used by load_yaml."""
         # Return the mocked file on full match
         if fname in files_dict:
             _LOGGER.debug('patch_yaml_files match %s', fname)
-            return StringIO(files_dict[fname])
+            res = StringIO(files_dict[fname])
+            setattr(res, 'name', fname)
+            return res
 
         # Match using endswith
         for ends in matchlist:
             if fname.endswith(ends):
                 _LOGGER.debug('patch_yaml_files end match %s: %s', ends, fname)
-                return StringIO(files_dict[ends])
+                res = StringIO(files_dict[ends])
+                setattr(res, 'name', fname)
+                return res
 
         # Fallback for hass.components (i.e. services.yaml)
         if 'homeassistant/components' in fname:
@@ -267,6 +271,6 @@ def patch_yaml_files(files_dict, endswith=True):
             return open(fname, encoding='utf-8')
 
         # Not found
-        raise IOError('File not found: {}'.format(fname))
+        raise FileNotFoundError('File not found: {}'.format(fname))
 
     return patch.object(yaml, 'open', mock_open_f, create=True)

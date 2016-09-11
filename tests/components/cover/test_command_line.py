@@ -17,12 +17,10 @@ class TestCommandCover(unittest.TestCase):
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = ha.HomeAssistant()
-        self.hass.config.latitude = 32.87336
-        self.hass.config.longitude = 117.22743
         self.rs = cmd_rs.CommandCover(self.hass, 'foo',
-                                      'cmd_open', 'cmd_close',
-                                      'cmd_stop', 'cmd_state',
-                                      None)  # FIXME
+                                      'command_open', 'command_close',
+                                      'command_stop', 'command_state',
+                                      None)
 
     def teardown_method(self, method):
         """Stop down everything that was started."""
@@ -47,10 +45,10 @@ class TestCommandCover(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'cover_status')
             test_cover = {
-                'statecmd': 'cat {}'.format(path),
-                'opencmd': 'echo 1 > {}'.format(path),
-                'closecmd': 'echo 1 > {}'.format(path),
-                'stopcmd': 'echo 0 > {}'.format(path),
+                'command_state': 'cat {}'.format(path),
+                'command_open': 'echo 1 > {}'.format(path),
+                'command_close': 'echo 1 > {}'.format(path),
+                'command_stop': 'echo 0 > {}'.format(path),
                 'value_template': '{{ value }}'
             }
             self.assertTrue(cover.setup(self.hass, {

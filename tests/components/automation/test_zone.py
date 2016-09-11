@@ -74,6 +74,24 @@ class TestAutomationZone(unittest.TestCase):
             'zone - test.entity - hello - hello - test',
             self.calls[0].data['some'])
 
+        # Set out of zone again so we can trigger call
+        self.hass.states.set('test.entity', 'hello', {
+            'latitude': 32.881011,
+            'longitude': -117.234758
+        })
+        self.hass.pool.block_till_done()
+
+        automation.turn_off(self.hass)
+        self.hass.pool.block_till_done()
+
+        self.hass.states.set('test.entity', 'hello', {
+            'latitude': 32.880586,
+            'longitude': -117.237564
+        })
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(1, len(self.calls))
+
     def test_if_not_fires_for_enter_on_zone_leave(self):
         """Test for not firing on zone leave."""
         self.hass.states.set('test.entity', 'hello', {

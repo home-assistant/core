@@ -41,8 +41,8 @@ def setup(hass, config):
             ('binary_sensor', pywink.get_sensors),
             ('sensor', lambda: pywink.get_sensors or pywink.get_eggtrays),
             ('lock', pywink.get_locks),
-            ('rollershutter', pywink.get_shades),
-            ('garage_door', pywink.get_garage_doors)):
+            ('cover', pywink.get_shades),
+            ('cover', pywink.get_garage_doors)):
 
         if func_exists():
             discovery.load_platform(hass, component_name, DOMAIN, {}, config)

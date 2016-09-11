@@ -6,11 +6,11 @@ import logging
 import jinja2
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
-from homeassistant.components import group
 from homeassistant.const import STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import State
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
+from homeassistant.loader import get_component
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -169,6 +169,8 @@ class LocationMethods(object):
             else:
                 gr_entity_id = str(entities)
 
+            group = get_component('group')
+
             states = [self._hass.states.get(entity_id) for entity_id
                       in group.expand_entity_ids(self._hass, [gr_entity_id])]
 
@@ -250,6 +252,20 @@ def multiply(value, amount):
         return value
 
 
+def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True):
+    """Filter to convert given timestamp to format."""
+    try:
+        date = dt_util.utc_from_timestamp(value)
+
+        if local:
+            date = dt_util.as_local(date)
+
+        return date.strftime(date_format)
+    except (ValueError, TypeError):
+        # If timestamp can't be converted
+        return value
+
+
 def timestamp_local(value):
     """Filter to convert given timestamp to local date/time."""
     try:
@@ -261,7 +277,7 @@ def timestamp_local(value):
 
 
 def timestamp_utc(value):
-    """Filter to convert gibrn timestamp to UTC date/time."""
+    """Filter to convert given timestamp to UTC date/time."""
     try:
         return dt_util.utc_from_timestamp(value).strftime(DATE_STR_FORMAT)
     except (ValueError, TypeError):
@@ -287,5 +303,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
+ENV.filters['timestamp_custom'] = timestamp_custom
 ENV.filters['timestamp_local'] = timestamp_local
 ENV.filters['timestamp_utc'] = timestamp_utc
