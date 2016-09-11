@@ -7,31 +7,62 @@ https://home-assistant.io/components/tellduslive/
 import logging
 from datetime import timedelta
 
-from homeassistant.helpers import validate_config, discovery
-from homeassistant.util import Throttle
+import voluptuous as vol
 
-DOMAIN = "tellduslive"
+from homeassistant.helpers import discovery
+from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
+
+DOMAIN = 'tellduslive'
 
 REQUIREMENTS = ['tellive-py==0.5.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PUBLIC_KEY = "public_key"
-CONF_PRIVATE_KEY = "private_key"
-CONF_TOKEN = "token"
-CONF_TOKEN_SECRET = "token_secret"
+CONF_PUBLIC_KEY = 'public_key'
+CONF_PRIVATE_KEY = 'private_key'
+CONF_TOKEN = 'token'
+CONF_TOKEN_SECRET = 'token_secret'
 
 MIN_TIME_BETWEEN_SWITCH_UPDATES = timedelta(minutes=1)
 MIN_TIME_BETWEEN_SENSOR_UPDATES = timedelta(minutes=5)
 
 NETWORK = None
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_PUBLIC_KEY): cv.string,
+        vol.Required(CONF_PRIVATE_KEY): cv.string,
+        vol.Required(CONF_TOKEN): cv.string,
+        vol.Required(CONF_TOKEN_SECRET): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+
+def setup(hass, config):
+    """Setup the Telldus Live component."""
+    # fixme: aquire app key and provide authentication using username+password
+
+    global NETWORK
+    NETWORK = TelldusLiveData(hass, config)
+
+    if not NETWORK.validate_session():
+        _LOGGER.error(
+            "Authentication Error: "
+            "Please make sure you have configured your keys "
+            "that can be aquired from https://api.telldus.com/keys/index")
+        return False
+
+    NETWORK.discover()
+
+    return True
+
 
 @Throttle(MIN_TIME_BETWEEN_SWITCH_UPDATES)
 def request_switches():
     """Make request to online service."""
     _LOGGER.debug("Updating switches from Telldus Live")
-    switches = NETWORK.request("devices/list")["device"]
+    switches = NETWORK.request('devices/list')['device']
     # Filter out any group of switches.
     switches = {switch["id"]: switch for switch in switches
                 if switch["type"] == "device"}
@@ -42,11 +73,11 @@ def request_switches():
 def request_sensors():
     """Make request to online service."""
     _LOGGER.debug("Updating sensors from Telldus Live")
-    units = NETWORK.request("sensors/list")["sensor"]
+    units = NETWORK.request('sensors/list')['sensor']
     # One unit can contain many sensors.
-    sensors = {unit["id"]+sensor["name"]: dict(unit, data=sensor)
+    sensors = {unit['id']+sensor['name']: dict(unit, data=sensor)
                for unit in units
-               for sensor in unit["data"]}
+               for sensor in unit['data']}
     return sensors
 
 
@@ -68,10 +99,9 @@ class TelldusLiveData(object):
         self._hass = hass
         self._config = config
 
-        self._client = LiveClient(public_key=public_key,
-                                  private_key=private_key,
-                                  access_token=token,
-                                  access_secret=token_secret)
+        self._client = LiveClient(
+            public_key=public_key, private_key=private_key, access_token=token,
+            access_secret=token_secret)
 
     def validate_session(self):
         """Make a dummy request to see if the session is valid."""
@@ -112,9 +142,9 @@ class TelldusLiveData(object):
         #   | const.TELLSTICK_STOP
 
         default_params = {'supportedMethods': supported_methods,
-                          "includeValues": 1,
-                          "includeScale": 1,
-                          "includeIgnored": 0}
+                          'includeValues': 1,
+                          'includeScale': 1,
+                          'includeIgnored': 0}
         params.update(default_params)
 
         # room for improvement: the telllive library doesn't seem to
@@ -149,15 +179,13 @@ class TelldusLiveData(object):
 
     def update_sensors(self):
         """Update local list of sensors."""
-        self._sensors = self.update_devices(self._sensors,
-                                            request_sensors(),
-                                            "sensor")
+        self._sensors = self.update_devices(
+            self._sensors, request_sensors(), 'sensor')
 
     def update_switches(self):
         """Update local list of switches."""
-        self._switches = self.update_devices(self._switches,
-                                             request_switches(),
-                                             "switch")
+        self._switches = self.update_devices(
+            self._switches, request_switches(), 'switch')
 
     def _check_request(self, what, **params):
         """Make request, check result if successful."""
@@ -174,42 +202,12 @@ class TelldusLiveData(object):
 
     def turn_switch_on(self, switch_id):
         """Turn switch off."""
-        if self._check_request("device/turnOn", id=switch_id):
+        if self._check_request('device/turnOn', id=switch_id):
             from tellive.live import const
-            self.get_switch(switch_id)["state"] = const.TELLSTICK_TURNON
+            self.get_switch(switch_id)['state'] = const.TELLSTICK_TURNON
 
     def turn_switch_off(self, switch_id):
         """Turn switch on."""
-        if self._check_request("device/turnOff", id=switch_id):
+        if self._check_request('device/turnOff', id=switch_id):
             from tellive.live import const
-            self.get_switch(switch_id)["state"] = const.TELLSTICK_TURNOFF
-
-
-def setup(hass, config):
-    """Setup the Telldus Live component."""
-    # fixme: aquire app key and provide authentication using username+password
-    if not validate_config(config,
-                           {DOMAIN: [CONF_PUBLIC_KEY,
-                                     CONF_PRIVATE_KEY,
-                                     CONF_TOKEN,
-                                     CONF_TOKEN_SECRET]},
-                           _LOGGER):
-        _LOGGER.error(
-            "Configuration Error: "
-            "Please make sure you have configured your keys "
-            "that can be aquired from https://api.telldus.com/keys/index")
-        return False
-
-    global NETWORK
-    NETWORK = TelldusLiveData(hass, config)
-
-    if not NETWORK.validate_session():
-        _LOGGER.error(
-            "Authentication Error: "
-            "Please make sure you have configured your keys "
-            "that can be aquired from https://api.telldus.com/keys/index")
-        return False
-
-    NETWORK.discover()
-
-    return True
+            self.get_switch(switch_id)['state'] = const.TELLSTICK_TURNOFF
