@@ -16,7 +16,7 @@ from homeassistant.loader import get_component
 from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ["fitbit==0.2.2"]
+REQUIREMENTS = ["fitbit==0.2.3"]
 DEPENDENCIES = ["http"]
 
 ICON = "mdi:walk"

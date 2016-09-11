@@ -19,9 +19,11 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    return homematic.setup_hmdevice_discovery_helper(HMSwitch,
-                                                     discovery_info,
-                                                     add_callback_devices)
+    return homematic.setup_hmdevice_discovery_helper(
+        HMSwitch,
+        discovery_info,
+        add_callback_devices
+    )
 
 
 class HMSwitch(homematic.HMDevice, SwitchDevice):
@@ -56,47 +58,12 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
         if self.available:
             self._hmdevice.off(self._channel)
 
-    def _check_hm_to_ha_object(self):
-        """Check if possible to use the Homematic object as this HA type."""
-        from pyhomematic.devicetypes.actors import Dimmer, Switch
-
-        # Check compatibility from HMDevice
-        if not super()._check_hm_to_ha_object():
-            return False
-
-        # Check if the Homematic device is correct for this HA device
-        if isinstance(self._hmdevice, Switch):
-            return True
-        if isinstance(self._hmdevice, Dimmer):
-            return True
-
-        _LOGGER.critical("This %s can't be use as switch", self._name)
-        return False
-
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""
-        from pyhomematic.devicetypes.actors import Dimmer,\
-            Switch, SwitchPowermeter
-
-        super()._init_data_struct()
-
         # Use STATE
-        if isinstance(self._hmdevice, Switch):
-            self._state = "STATE"
-
-        # Use LEVEL
-        if isinstance(self._hmdevice, Dimmer):
-            self._state = "LEVEL"
+        self._state = "STATE"
+        self._data.update({self._state: STATE_UNKNOWN})
 
         # Need sensor values for SwitchPowermeter
-        if isinstance(self._hmdevice, SwitchPowermeter):
-            for node in self._hmdevice.SENSORNODE:
-                self._data.update({node: STATE_UNKNOWN})
-
-        # Add state to data dict
-        if self._state:
-            _LOGGER.debug("%s init data dict with main node '%s'", self._name,
-                          self._state)
-            self._data.update({self._state: STATE_UNKNOWN})
-        else:
-            _LOGGER.critical("Can't correctly init light %s.", self._name)
+        for node in self._hmdevice.SENSORNODE:
+            self._data.update({node: STATE_UNKNOWN})

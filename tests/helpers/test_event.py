@@ -65,13 +65,21 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(2, len(runs))
 
+        unsub = track_point_in_time(
+            self.hass, lambda x: runs.append(1), birthday_paulus)
+        unsub()
+
+        self._send_time_changed(after_birthday)
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(runs))
+
     def test_track_time_change(self):
         """Test tracking time change."""
         wildcard_runs = []
         specific_runs = []
 
-        track_time_change(self.hass, lambda x: wildcard_runs.append(1))
-        track_utc_time_change(
+        unsub = track_time_change(self.hass, lambda x: wildcard_runs.append(1))
+        unsub_utc = track_utc_time_change(
             self.hass, lambda x: specific_runs.append(1), second=[0, 30])
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
@@ -83,6 +91,14 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(2, len(wildcard_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+        self.assertEqual(3, len(wildcard_runs))
+
+        unsub()
+        unsub_utc()
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
         self.hass.pool.block_till_done()
@@ -186,11 +202,12 @@ class TestEventHelpers(unittest.TestCase):
 
         # Track sunrise
         runs = []
-        track_sunrise(self.hass, lambda: runs.append(1))
+        unsub = track_sunrise(self.hass, lambda: runs.append(1))
 
         offset_runs = []
         offset = timedelta(minutes=30)
-        track_sunrise(self.hass, lambda: offset_runs.append(1), offset)
+        unsub2 = track_sunrise(self.hass, lambda: offset_runs.append(1),
+                               offset)
 
         # run tests
         self._send_time_changed(next_rising - offset)
@@ -202,6 +219,14 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(runs))
         self.assertEqual(0, len(offset_runs))
+
+        self._send_time_changed(next_rising + offset)
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(runs))
+        self.assertEqual(1, len(offset_runs))
+
+        unsub()
+        unsub2()
 
         self._send_time_changed(next_rising + offset)
         self.hass.pool.block_till_done()
@@ -232,11 +257,11 @@ class TestEventHelpers(unittest.TestCase):
 
         # Track sunset
         runs = []
-        track_sunset(self.hass, lambda: runs.append(1))
+        unsub = track_sunset(self.hass, lambda: runs.append(1))
 
         offset_runs = []
         offset = timedelta(minutes=30)
-        track_sunset(self.hass, lambda: offset_runs.append(1), offset)
+        unsub2 = track_sunset(self.hass, lambda: offset_runs.append(1), offset)
 
         # Run tests
         self._send_time_changed(next_setting - offset)
@@ -254,6 +279,14 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(2, len(runs))
         self.assertEqual(1, len(offset_runs))
 
+        unsub()
+        unsub2()
+
+        self._send_time_changed(next_setting + offset)
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(runs))
+        self.assertEqual(1, len(offset_runs))
+
     def _send_time_changed(self, now):
         """Send a time changed event."""
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
@@ -262,7 +295,7 @@ class TestEventHelpers(unittest.TestCase):
         """Test periodic tasks per minute."""
         specific_runs = []
 
-        track_utc_time_change(
+        unsub = track_utc_time_change(
             self.hass, lambda x: specific_runs.append(1), minute='/5')
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
@@ -277,11 +310,17 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(2, len(specific_runs))
 
+        unsub()
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 5, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
     def test_periodic_task_hour(self):
         """Test periodic tasks per hour."""
         specific_runs = []
 
-        track_utc_time_change(
+        unsub = track_utc_time_change(
             self.hass, lambda x: specific_runs.append(1), hour='/2')
 
         self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
@@ -304,11 +343,17 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(3, len(specific_runs))
 
+        unsub()
+
+        self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(3, len(specific_runs))
+
     def test_periodic_task_day(self):
         """Test periodic tasks per day."""
         specific_runs = []
 
-        track_utc_time_change(
+        unsub = track_utc_time_change(
             self.hass, lambda x: specific_runs.append(1), day='/2')
 
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
@@ -323,11 +368,17 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(2, len(specific_runs))
 
+        unsub()
+
+        self._send_time_changed(datetime(2014, 5, 4, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
     def test_periodic_task_year(self):
         """Test periodic tasks per year."""
         specific_runs = []
 
-        track_utc_time_change(
+        unsub = track_utc_time_change(
             self.hass, lambda x: specific_runs.append(1), year='/2')
 
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
@@ -337,6 +388,12 @@ class TestEventHelpers(unittest.TestCase):
         self._send_time_changed(datetime(2015, 5, 2, 0, 0, 0))
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2016, 5, 2, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        unsub()
 
         self._send_time_changed(datetime(2016, 5, 2, 0, 0, 0))
         self.hass.pool.block_till_done()

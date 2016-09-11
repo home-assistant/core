@@ -297,13 +297,19 @@ class EventBus(object):
             else:
                 self._listeners[event_type] = [listener]
 
+        def remove_listener():
+            """Remove the listener."""
+            self._remove_listener(event_type, listener)
+
+        return remove_listener
+
     def listen_once(self, event_type, listener):
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
         as event_type.
 
-        Returns registered listener that can be used with remove_listener.
+        Returns function to unsubscribe the listener.
         """
         @ft.wraps(listener)
         def onetime_listener(event):
@@ -317,15 +323,21 @@ class EventBus(object):
             # This will make sure the second time it does nothing.
             setattr(onetime_listener, 'run', True)
 
-            self.remove_listener(event_type, onetime_listener)
+            remove_listener()
 
             listener(event)
 
-        self.listen(event_type, onetime_listener)
+        remove_listener = self.listen(event_type, onetime_listener)
 
-        return onetime_listener
+        return remove_listener
 
     def remove_listener(self, event_type, listener):
+        """Remove a listener of a specific event_type. (DEPRECATED 0.28)."""
+        _LOGGER.warning('bus.remove_listener has been deprecated. Please use '
+                        'the function returned from calling listen.')
+        self._remove_listener(event_type, listener)
+
+    def _remove_listener(self, event_type, listener):
         """Remove a listener of a specific event_type."""
         with self._lock:
             try:
@@ -338,7 +350,8 @@ class EventBus(object):
             except (KeyError, ValueError):
                 # KeyError is key event_type listener did not exist
                 # ValueError if listener did not exist within event_type
-                pass
+                _LOGGER.warning('Unable to remove unknown listener %s',
+                                listener)
 
 
 class State(object):
@@ -568,6 +581,7 @@ class Service(object):
         try:
             if self.schema:
                 call.data = self.schema(call.data)
+            call.data = MappingProxyType(call.data)
 
             self.func(call)
         except vol.MultipleInvalid as ex:
@@ -682,14 +696,13 @@ class ServiceRegistry(object):
                 if call.data[ATTR_SERVICE_CALL_ID] == call_id:
                     executed_event.set()
 
-            self._bus.listen(EVENT_SERVICE_EXECUTED, service_executed)
+            unsub = self._bus.listen(EVENT_SERVICE_EXECUTED, service_executed)
 
         self._bus.fire(EVENT_CALL_SERVICE, event_data)
 
         if blocking:
             success = executed_event.wait(SERVICE_CALL_LIMIT)
-            self._bus.remove_listener(
-                EVENT_SERVICE_EXECUTED, service_executed)
+            unsub()
             return success
 
     def _event_to_service_call(self, event):

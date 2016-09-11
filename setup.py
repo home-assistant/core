@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 import os
 from setuptools import setup, find_packages
-from homeassistant.const import __version__
+from homeassistant.const import (__version__, PROJECT_PACKAGE_NAME,
+                                 PROJECT_LICENSE, PROJECT_URL,
+                                 PROJECT_EMAIL, PROJECT_DESCRIPTION,
+                                 PROJECT_CLASSIFIERS, GITHUB_URL,
+                                 PROJECT_AUTHOR)
 
-PACKAGE_NAME = 'homeassistant'
 HERE = os.path.abspath(os.path.dirname(__file__))
-DOWNLOAD_URL = ('https://github.com/home-assistant/home-assistant/archive/'
-                '{}.zip'.format(__version__))
+DOWNLOAD_URL = ('{}/archive/'
+                '{}.zip'.format(GITHUB_URL, __version__))
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
@@ -21,14 +24,14 @@ REQUIRES = [
 ]
 
 setup(
-    name=PACKAGE_NAME,
+    name=PROJECT_PACKAGE_NAME,
     version=__version__,
-    license='MIT License',
-    url='https://home-assistant.io/',
+    license=PROJECT_LICENSE,
+    url=PROJECT_URL,
     download_url=DOWNLOAD_URL,
-    author='Home Assistant',
-    author_email='hello@home-assistant.io',
-    description='Open-source home automation platform running on Python 3.',
+    author=PROJECT_AUTHOR,
+    author_email=PROJECT_EMAIL,
+    description=PROJECT_DESCRIPTION,
     packages=PACKAGES,
     include_package_data=True,
     zip_safe=False,
@@ -41,12 +44,5 @@ setup(
             'hass = homeassistant.__main__:main'
         ]
     },
-    classifiers=[
-        'Intended Audience :: End Users/Desktop',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.4',
-        'Topic :: Home Automation'
-    ],
+    classifiers=PROJECT_CLASSIFIERS,
 )

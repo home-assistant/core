@@ -49,5 +49,4 @@ def trigger(hass, config, action):
         elif not template_result:
             already_triggered = False
 
-    track_state_change(hass, MATCH_ALL, state_changed_listener)
-    return True
+    return track_state_change(hass, MATCH_ALL, state_changed_listener)

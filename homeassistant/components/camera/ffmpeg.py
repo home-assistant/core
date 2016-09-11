@@ -5,16 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.ffmpeg/
 """
 import logging
-from contextlib import closing
 
 import voluptuous as vol
 
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
-from homeassistant.components.camera.mjpeg import extract_image_from_mjpeg
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
 
-REQUIREMENTS = ['ha-ffmpeg==0.9']
+REQUIREMENTS = ['ha-ffmpeg==0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,22 +47,20 @@ class FFmpegCamera(Camera):
         self._extra_arguments = config.get(CONF_EXTRA_ARGUMENTS)
         self._ffmpeg_bin = config.get(CONF_FFMPEG_BIN)
 
-    def _ffmpeg_stream(self):
-        """Return a FFmpeg process object."""
-        from haffmpeg import CameraMjpeg
-
-        ffmpeg = CameraMjpeg(self._ffmpeg_bin)
-        ffmpeg.open_camera(self._input, extra_cmd=self._extra_arguments)
-        return ffmpeg
-
     def camera_image(self):
         """Return a still image response from the camera."""
-        with closing(self._ffmpeg_stream()) as stream:
-            return extract_image_from_mjpeg(stream)
+        from haffmpeg import ImageSingle, IMAGE_JPEG
+        ffmpeg = ImageSingle(self._ffmpeg_bin)
+
+        return ffmpeg.get_image(self._input, output_format=IMAGE_JPEG,
+                                extra_cmd=self._extra_arguments)
 
     def mjpeg_stream(self, response):
         """Generate an HTTP MJPEG stream from the camera."""
-        stream = self._ffmpeg_stream()
+        from haffmpeg import CameraMjpeg
+
+        stream = CameraMjpeg(self._ffmpeg_bin)
+        stream.open_camera(self._input, extra_cmd=self._extra_arguments)
         return response(
             stream,
             mimetype='multipart/x-mixed-replace;boundary=ffserver',
