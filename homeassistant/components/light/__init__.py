@@ -94,9 +94,9 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
                            vol.Coerce(tuple)),
     ATTR_COLOR_TEMP: vol.All(int, vol.Range(min=154, max=500)),
+    ATTR_WHITE_VALUE: vol.All(int, vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: vol.In([EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_WHITE]),
-    ATTR_WHITE_VALUE: vol.All(int, vol.Range(min=0, max=255)),
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
@@ -125,8 +125,8 @@ def is_on(hass, entity_id=None):
 
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, color_temp=None, profile=None,
-            flash=None, effect=None, color_name=None, white_value=None):
+            rgb_color=None, xy_color=None, color_temp=None, white_value=None, profile=None,
+            flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -137,10 +137,10 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_RGB_COLOR, rgb_color),
             (ATTR_XY_COLOR, xy_color),
             (ATTR_COLOR_TEMP, color_temp),
+            (ATTR_WHITE_VALUE, white_value),
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
-            (ATTR_WHITE_VALUE, white_value),
         ] if value is not None
     }
 
@@ -287,7 +287,7 @@ class Light(ToggleEntity):
     def color_temp(self):
         """Return the CT color value in mireds."""
         return None
-        
+
     @property
     def white_value(self):
         """Return the CT color value in mireds."""
