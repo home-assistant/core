@@ -10,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (
+    CONF_API_KEY, CONF_USERNAME, CONF_ICON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['slacker==0.9.25']
@@ -22,6 +23,8 @@ CONF_CHANNEL = 'default_channel'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_CHANNEL): cv.string,
+    vol.Optional(CONF_USERNAME, default=None): cv.string,
+    vol.Optional(CONF_ICON, default=None): cv.string,
 })
 
 
@@ -33,7 +36,9 @@ def get_service(hass, config):
     try:
         return SlackNotificationService(
             config[CONF_CHANNEL],
-            config[CONF_API_KEY])
+            config[CONF_API_KEY],
+            config[CONF_USERNAME],
+            config[CONF_ICON])
 
     except slacker.Error:
         _LOGGER.exception("Slack authentication failed")
@@ -44,11 +49,13 @@ def get_service(hass, config):
 class SlackNotificationService(BaseNotificationService):
     """Implement the notification service for Slack."""
 
-    def __init__(self, default_channel, api_token):
+    def __init__(self, default_channel, api_token, username, icon):
         """Initialize the service."""
         from slacker import Slacker
         self._default_channel = default_channel
         self._api_token = api_token
+        self._username = username
+        self._icon = icon
         self.slack = Slacker(self._api_token)
         self.slack.auth.test()
 
@@ -61,9 +68,17 @@ class SlackNotificationService(BaseNotificationService):
         attachments = data.get('attachments') if data else None
 
         try:
-            self.slack.chat.post_message(channel, message,
-                                         as_user=True,
-                                         attachments=attachments,
-                                         link_names=True)
+            if self._username or self._icon:
+                self.slack.chat.post_message(channel, message,
+                                             as_user=False,
+                                             username=self._username,
+                                             icon_emoji=self._icon,
+                                             attachments=attachments,
+                                             link_names=True)
+            else:
+                self.slack.chat.post_message(channel, message,
+                                             as_user=True,
+                                             attachments=attachments,
+                                             link_names=True)
         except slacker.Error as err:
             _LOGGER.error("Could not send slack notification. Error: %s", err)
