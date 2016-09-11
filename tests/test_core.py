@@ -396,9 +396,13 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_call_non_existing_with_blocking(self):
         """Test non-existing with blocking."""
-        ha.SERVICE_CALL_LIMIT = 0.01
-        assert not self.services.call('test_domain', 'i_do_not_exist',
-                                      blocking=True)
+        prior = ha.SERVICE_CALL_LIMIT
+        try:
+            ha.SERVICE_CALL_LIMIT = 0.01
+            assert not self.services.call('test_domain', 'i_do_not_exist',
+                                          blocking=True)
+        finally:
+            ha.SERVICE_CALL_LIMIT = prior
 
 
 class TestConfig(unittest.TestCase):
