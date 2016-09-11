@@ -7,11 +7,13 @@ https://home-assistant.io/components/switch.rest/
 import logging
 
 import requests
+import traceback
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_RESOURCE)
+from homeassistant.const import (CONF_NAME, CONF_RESOURCE, CONF_VALUE_TEMPLATE)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import template
 
 CONF_BODY_OFF = 'body_off'
 CONF_BODY_ON = 'body_on'
@@ -24,6 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.string,
     vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +39,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     resource = config.get(CONF_RESOURCE)
     body_on = config.get(CONF_BODY_ON)
     body_off = config.get(CONF_BODY_OFF)
+    value_template = config.get(CONF_VALUE_TEMPLATE)
 
     try:
         requests.get(resource, timeout=10)
@@ -47,14 +51,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.error("No route to resource/endpoint: %s", resource)
         return False
 
-    add_devices_callback([RestSwitch(hass, name, resource, body_on, body_off)])
+    add_devices_callback([RestSwitch(hass, name, resource, body_on, body_off, value_template)])
 
 
 # pylint: disable=too-many-arguments
 class RestSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using REST."""
 
-    def __init__(self, hass, name, resource, body_on, body_off):
+    def __init__(self, hass, name, resource, body_on, body_off, value_template):
         """Initialize the REST switch."""
         self._state = None
         self._hass = hass
@@ -62,6 +66,7 @@ class RestSwitch(SwitchDevice):
         self._resource = resource
         self._body_on = body_on
         self._body_off = body_off
+        self._value_template = value_template
 
     @property
     def name(self):
@@ -75,32 +80,39 @@ class RestSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
+        bodyOn = template.render_with_possible_json_value(
+                self._hass, self._body_on, "" , False)
         request = requests.post(self._resource,
-                                data=self._body_on,
-                                timeout=10)
+                                data=bodyOn,
+                                timeout=50)
         if request.status_code == 200:
             self._state = True
         else:
-            _LOGGER.error("Can't turn on %s. Is resource/endpoint offline?",
+            _LOGGER.info("Can't turn on %s. Is resource/endpoint offline?",
                           self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         request = requests.post(self._resource,
                                 data=self._body_off,
-                                timeout=10)
+                                timeout=50)
         if request.status_code == 200:
             self._state = False
         else:
-            _LOGGER.error("Can't turn off %s. Is resource/endpoint offline?",
+            _LOGGER.info("Can't turn off %s. Is resource/endpoint offline?",
                           self._resource)
 
     def update(self):
         """Get the latest data from REST API and update the state."""
-        request = requests.get(self._resource, timeout=10)
-        if request.text == self._body_on:
-            self._state = True
-        elif request.text == self._body_off:
+        request = requests.get(self._resource, timeout=50)
+
+        _LOGGER.info("request text %s." ,
+                          request.text)
+        if self._value_template is not None:
+            response = template.render_with_possible_json_value(
+                self._hass, self._value_template, request.text , False)
+            
+        if response == 'False':
             self._state = False
         else:
-            self._state = None
+            self._state = True
