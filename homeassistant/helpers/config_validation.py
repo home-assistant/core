@@ -302,6 +302,7 @@ def ordered_dict(value_validator, key_validator=match_all):
                 v_key = key_validator(key)
             except ValueError:
                 errors.append(vol.ValueInvalid('is not a valid key', [key]))
+                continue
             except vol.Invalid as ex:
                 errors.append(ex)
                 continue
@@ -310,6 +311,7 @@ def ordered_dict(value_validator, key_validator=match_all):
                 val = value_validator(val)
             except ValueError:
                 errors.append(vol.ValueInvalid('is not a valid value', [key]))
+                continue
             except vol.Invalid as ex:
                 errors.append(ex)
                 continue
