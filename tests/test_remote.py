@@ -4,6 +4,7 @@ import asyncio
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
@@ -57,7 +58,7 @@ def setUpModule():   # pylint: disable=invalid-name
     loop = asyncio.new_event_loop()
 
     # FIXME: should not be a daemon
-    threading.Thread(name="LoopThread", daemon=True,
+    threading.Thread(name="SlaveThread", daemon=True,
                      target=loop.run_forever).start()
 
     slave = remote.HomeAssistant(master_api, loop=loop)
@@ -68,7 +69,8 @@ def setUpModule():   # pylint: disable=invalid-name
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
                        http.CONF_SERVER_PORT: SLAVE_PORT}})
 
-    slave.start()
+    with patch.object(ha, 'create_timer', return_value=None):
+        slave.start()
 
 
 def tearDownModule():   # pylint: disable=invalid-name
