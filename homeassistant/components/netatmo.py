@@ -16,8 +16,7 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
     'https://github.com/jabesq/netatmo-api-python/archive/'
-    'master.zip#lnetatmo==0.5.0']
-# 'v0.5.0.zip#lnetatmo==0.5.0']
+    'v0.5.0.zip#lnetatmo==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ NETATMO_AUTH = None
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_API_KEY): cv.string,
+        vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_SECRET_KEY): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
