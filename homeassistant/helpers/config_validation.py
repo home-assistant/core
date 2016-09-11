@@ -292,7 +292,11 @@ def url(value: Any) -> str:
 
 
 def ordered_dict(value_validator, key_validator=match_all):
-    """Generate an ordered dict validator that maintains ordering."""
+    """Validate an ordered dict validator that maintains ordering.
+
+    value_validator will be applied to each value of the dictionary.
+    key_validator (optional) will be applied to each key of the dictionary.
+    """
     def validator(value):
         """Validate ordered dict."""
         config = OrderedDict()
