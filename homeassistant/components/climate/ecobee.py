@@ -113,22 +113,19 @@ class Thermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         if (self.operation_mode == 'heat' or
                 self.operation_mode == 'auxHeatOnly'):
-            return self.target_temperature_high
-        elif self.operation_mode == 'cool':
             return self.target_temperature_low
-        else:
-            return (self.target_temperature_low +
-                    self.target_temperature_high) / 2
+        elif self.operation_mode == 'cool':
+            return self.target_temperature_high
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        return int(self.thermostat['runtime']['desiredCool'] / 10)
+        return int(self.thermostat['runtime']['desiredHeat'] / 10)
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        return int(self.thermostat['runtime']['desiredHeat'] / 10)
+        return int(self.thermostat['runtime']['desiredCool'] / 10)
 
     @property
     def desired_fan_mode(self):
@@ -227,8 +224,8 @@ class Thermostat(ClimateDevice):
             high_temp = temperature + 1
         if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None and \
            kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
-            low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+            high_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
+            low_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
         if self.hold_temp:
             self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
