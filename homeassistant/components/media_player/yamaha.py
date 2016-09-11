@@ -28,6 +28,9 @@ DEFAULT_NAME = 'Yamaha Receiver'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SOURCE_IGNORE, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
 })
 
 
@@ -36,8 +39,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import rxv
 
     name = config.get(CONF_NAME)
-    source_ignore = config.get(CONF_SOURCE_IGNORE, [])
-    source_names = config.get(CONF_SOURCE_NAMES, {})
+    source_ignore = config.get(CONF_SOURCE_IGNORE)
+    source_names = config.get(CONF_SOURCE_NAMES)
 
     add_devices(
         YamahaDevice(name, receiver, source_ignore, source_names)
@@ -76,8 +79,8 @@ class YamahaDevice(MediaPlayerDevice):
             self.build_source_list()
 
         current_source = self._receiver.input
-        self._current_source = self._source_names.get(current_source,
-                                                      current_source)
+        self._current_source = self._source_names.get(
+            current_source, current_source)
 
     def build_source_list(self):
         """Build the source list."""
@@ -145,5 +148,4 @@ class YamahaDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self._receiver.input = self._reverse_mapping.get(source,
-                                                         source)
+        self._receiver.input = self._reverse_mapping.get(source, source)
