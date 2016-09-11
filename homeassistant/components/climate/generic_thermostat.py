@@ -5,16 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.generic_thermostat/
 """
 import logging
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components import switch
 from homeassistant.components.climate import (
-    STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice)
+    STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE)
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import track_state_change
+import homeassistant.helpers.config_validation as cv
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['switch', 'sensor']
 
@@ -30,18 +33,16 @@ CONF_TARGET_TEMP = 'target_temp'
 CONF_AC_MODE = 'ac_mode'
 CONF_MIN_DUR = 'min_cycle_duration'
 
-_LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required("platform"): "generic_thermostat",
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HEATER): cv.entity_id,
     vol.Required(CONF_SENSOR): cv.entity_id,
-    vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_AC_MODE): cv.boolean,
     vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-    vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
-    vol.Optional(CONF_AC_MODE): vol.Coerce(bool),
     vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
 })
 
 
@@ -56,10 +57,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ac_mode = config.get(CONF_AC_MODE)
     min_cycle_duration = config.get(CONF_MIN_DUR)
 
-    add_devices([GenericThermostat(hass, name, heater_entity_id,
-                                   sensor_entity_id, min_temp,
-                                   max_temp, target_temp, ac_mode,
-                                   min_cycle_duration)])
+    add_devices([GenericThermostat(
+        hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
+        target_temp, ac_mode, min_cycle_duration)])
 
 
 # pylint: disable=too-many-instance-attributes, abstract-method
