@@ -8,35 +8,41 @@ import logging
 import subprocess
 from datetime import timedelta
 
-from homeassistant.const import CONF_VALUE_TEMPLATE
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Command Sensor"
+DEFAULT_NAME = 'Command Sensor'
 
-# Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_COMMAND): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+})
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Command Sensor."""
-    if config.get('command') is None:
-        _LOGGER.error('Missing required variable: "command"')
-        return False
+    name = config.get(CONF_NAME)
+    command = config.get(CONF_COMMAND)
+    unit = config.get(CONF_UNIT_OF_MEASUREMENT)
+    value_template = config.get(CONF_VALUE_TEMPLATE)
 
-    data = CommandSensorData(config.get('command'))
+    data = CommandSensorData(command)
 
-    add_devices_callback([CommandSensor(
-        hass,
-        data,
-        config.get('name', DEFAULT_NAME),
-        config.get('unit_of_measurement'),
-        config.get(CONF_VALUE_TEMPLATE)
-    )])
+    add_devices([CommandSensor(hass, data, name, unit, value_template)])
 
 
 # pylint: disable=too-many-arguments

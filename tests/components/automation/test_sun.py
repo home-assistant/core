@@ -54,6 +54,18 @@ class TestAutomationSun(unittest.TestCase):
                 }
             })
 
+        automation.turn_off(self.hass)
+        self.hass.pool.block_till_done()
+
+        fire_time_changed(self.hass, trigger_time)
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+        with patch('homeassistant.util.dt.utcnow',
+                   return_value=now):
+            automation.turn_on(self.hass)
+            self.hass.pool.block_till_done()
+
         fire_time_changed(self.hass, trigger_time)
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))

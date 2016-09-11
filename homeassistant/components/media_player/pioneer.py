@@ -7,15 +7,18 @@ https://home-assistant.io/components/media_player.pioneer/
 import logging
 import telnetlib
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
-    DOMAIN, SUPPORT_PAUSE, SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_PAUSE, SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
-    CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN,
-    CONF_NAME)
+    CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_NAME = 'Pioneer AVR'
 
 SUPPORT_PIONEER = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                   SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
@@ -23,20 +26,16 @@ SUPPORT_PIONEER = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 MAX_VOLUME = 185
 MAX_SOURCE_NUMBERS = 60
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Pioneer platform."""
-    if not config.get(CONF_HOST):
-        _LOGGER.error(
-            "Missing required configuration items in %s: %s",
-            DOMAIN,
-            CONF_HOST)
-        return False
+    pioneer = PioneerDevice(config.get(CONF_NAME), config.get(CONF_HOST))
 
-    pioneer = PioneerDevice(
-        config.get(CONF_NAME, "Pioneer AVR"),
-        config.get(CONF_HOST)
-    )
     if pioneer.update():
         add_devices([pioneer])
         return True
@@ -53,7 +52,7 @@ class PioneerDevice(MediaPlayerDevice):
         """Initialize the Pioneer device."""
         self._name = name
         self._host = host
-        self._pwstate = "PWR1"
+        self._pwstate = 'PWR1'
         self._volume = 0
         self._muted = False
         self._selected_source = ''

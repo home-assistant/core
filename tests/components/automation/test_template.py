@@ -45,6 +45,13 @@ class TestAutomationTemplate(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
+        automation.turn_off(self.hass)
+        self.hass.pool.block_till_done()
+
+        self.hass.states.set('test.entity', 'planet')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_if_fires_on_change_str(self):
         """Test for firing on change."""
         assert _setup_component(self.hass, automation.DOMAIN, {
@@ -149,6 +156,9 @@ class TestAutomationTemplate(unittest.TestCase):
             }
         })
 
+        self.hass.pool.block_till_done()
+        self.calls = []
+
         self.hass.states.set('test.entity', 'hello')
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
@@ -209,9 +219,12 @@ class TestAutomationTemplate(unittest.TestCase):
             }
         })
 
+        self.hass.pool.block_till_done()
+        self.calls = []
+
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert len(self.calls) == 0
 
     def test_if_fires_on_change_with_template_advanced(self):
         """Test for firing on change with template advanced."""
@@ -236,6 +249,9 @@ class TestAutomationTemplate(unittest.TestCase):
                 }
             }
         })
+
+        self.hass.pool.block_till_done()
+        self.calls = []
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
@@ -287,29 +303,32 @@ class TestAutomationTemplate(unittest.TestCase):
             }
         })
 
+        self.hass.pool.block_till_done()
+        self.calls = []
+
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        assert len(self.calls) == 0
 
         self.hass.states.set('test.entity', 'home')
         self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert len(self.calls) == 1
 
         self.hass.states.set('test.entity', 'work')
         self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert len(self.calls) == 1
 
         self.hass.states.set('test.entity', 'not_home')
         self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert len(self.calls) == 1
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        assert len(self.calls) == 1
 
         self.hass.states.set('test.entity', 'home')
         self.hass.pool.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        assert len(self.calls) == 2
 
     def test_if_action(self):
         """Test for firing if action."""

@@ -138,6 +138,7 @@ omit =
     homeassistant/components/device_tracker/ubus.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
+    homeassistant/components/fan/mqtt.py
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
     homeassistant/components/garage_door/rpi_gpio.py
@@ -205,6 +206,7 @@ omit =
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/bitcoin.py
+    homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
@@ -223,6 +225,7 @@ omit =
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/lastfm.py
+    homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/mhz19.py
     homeassistant/components/sensor/mqtt_room.py
@@ -232,6 +235,7 @@ omit =
     homeassistant/components/sensor/onewire.py
     homeassistant/components/sensor/openexchangerates.py
     homeassistant/components/sensor/openweathermap.py
+    homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/sabnzbd.py
@@ -250,6 +254,7 @@ omit =
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/worldclock.py
+    homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/arest.py

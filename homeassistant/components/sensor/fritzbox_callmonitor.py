@@ -1,35 +1,49 @@
 """
 A sensor to monitor incoming and outgoing phone calls on a Fritz!Box router.
 
-To activate the call monitor on your Fritz!Box, dial #96*5* from any phone
-connected to it.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.fritzbox_callmonitor/
 """
 import logging
 import socket
 import threading
 import datetime
 import time
+
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME)
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Phone'
 DEFAULT_HOST = '169.254.1.1'  # IP valid for all Fritz!Box routers
 DEFAULT_PORT = 1012
-# sensor values
-VALUE_DEFAULT = 'idle'  # initial value
+
+VALUE_DEFAULT = 'idle'
 VALUE_RING = 'ringing'
 VALUE_CALL = 'dialing'
 VALUE_CONNECT = 'talking'
 VALUE_DISCONNECT = 'idle'
+
 INTERVAL_RECONNECT = 60
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Fritz!Box call monitor sensor platform."""
-    host = config.get('host', DEFAULT_HOST)
-    port = config.get('port', DEFAULT_PORT)
+    name = config.get(CONF_NAME)
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
 
-    sensor = FritzBoxCallSensor(name=config.get('name', DEFAULT_NAME))
+    sensor = FritzBoxCallSensor(name=name)
 
     add_devices([sensor])
 

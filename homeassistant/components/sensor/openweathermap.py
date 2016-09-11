@@ -9,14 +9,24 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-                                 CONF_PLATFORM, CONF_MONITORED_CONDITIONS)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_API_KEY, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    CONF_MONITORED_CONDITIONS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.3.2']
+REQUIREMENTS = ['pyowm==2.4.0']
+
 _LOGGER = logging.getLogger(__name__)
+
+CONF_FORECAST = 'forecast'
+
+DEFAULT_NAME = 'OWM'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+
 SENSOR_TYPES = {
     'weather': ['Condition', None],
     'temperature': ['Temperature', None],
@@ -28,16 +38,13 @@ SENSOR_TYPES = {
     'snow': ['Snow', 'mm']
 }
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'openweathermap',
-    vol.Required(CONF_API_KEY): vol.Coerce(str),
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-        [vol.In(SENSOR_TYPES.keys())],
-    vol.Optional('forecast', default=False): cv.boolean
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_FORECAST, default=False): cv.boolean
 })
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -49,32 +56,29 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from pyowm import OWM
 
     SENSOR_TYPES['temperature'][1] = hass.config.units.temperature_unit
-    forecast = config.get('forecast')
-    owm = OWM(config.get(CONF_API_KEY, None))
+
+    name = config.get(CONF_NAME)
+    forecast = config.get(CONF_FORECAST)
+
+    owm = OWM(config.get(CONF_API_KEY))
 
     if not owm:
         _LOGGER.error(
             "Connection error "
-            "Please check your settings for OpenWeatherMap.")
+            "Please check your settings for OpenWeatherMap")
         return False
 
     data = WeatherData(owm, forecast, hass.config.latitude,
                        hass.config.longitude)
     dev = []
-    try:
-        for variable in config['monitored_conditions']:
-            if variable not in SENSOR_TYPES:
-                _LOGGER.error('Sensor type: "%s" does not exist', variable)
-            else:
-                dev.append(OpenWeatherMapSensor(data, variable,
-                                                SENSOR_TYPES[variable][1]))
-    except KeyError:
-        pass
+    for variable in config[CONF_MONITORED_CONDITIONS]:
+        dev.append(OpenWeatherMapSensor(
+            name, data, variable, SENSOR_TYPES[variable][1]))
 
     if forecast:
         SENSOR_TYPES['forecast'] = ['Forecast', None]
-        dev.append(OpenWeatherMapSensor(data, 'forecast',
-                                        SENSOR_TYPES['temperature'][1]))
+        dev.append(OpenWeatherMapSensor(
+            name, data, 'forecast', SENSOR_TYPES['temperature'][1]))
 
     add_devices(dev)
 
@@ -83,9 +87,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OpenWeatherMapSensor(Entity):
     """Implementation of an OpenWeatherMap sensor."""
 
-    def __init__(self, weather_data, sensor_type, temp_unit):
+    def __init__(self, name, weather_data, sensor_type, temp_unit):
         """Initialize the sensor."""
-        self.client_name = 'Weather'
+        self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.owa_client = weather_data
         self.temp_unit = temp_unit

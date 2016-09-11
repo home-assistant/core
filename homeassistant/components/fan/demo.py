@@ -1,5 +1,5 @@
 """
-Demo garage door platform that has a fake fan.
+Demo fan platform that has a fake fan.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
@@ -19,7 +19,7 @@ DEMO_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup demo garage door platform."""
+    """Setup demo fan platform."""
     add_devices_callback([
         DemoFan(hass, FAN_NAME, STATE_OFF),
     ])

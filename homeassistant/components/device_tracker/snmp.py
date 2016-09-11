@@ -9,9 +9,11 @@ import logging
 import threading
 from datetime import timedelta
 
-from homeassistant.components.device_tracker import DOMAIN
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago.
@@ -23,15 +25,16 @@ REQUIREMENTS = ['pysnmp==4.3.2']
 CONF_COMMUNITY = "community"
 CONF_BASEOID = "baseoid"
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_COMMUNITY): cv.string,
+    vol.Required(CONF_BASEOID): cv.string
+})
+
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return an snmp scanner."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_COMMUNITY, CONF_BASEOID]},
-                           _LOGGER):
-        return None
-
     scanner = SnmpScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None

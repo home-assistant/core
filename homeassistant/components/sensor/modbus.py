@@ -114,12 +114,11 @@ class ModbusSensor(Entity):
     def update(self):
         """Update the state of the sensor."""
         if self._coil:
-            result = modbus.NETWORK.read_coils(self.register, 1)
+            result = modbus.HUB.read_coils(self.slave, self.register, 1)
             self._value = result.bits[0]
         else:
-            result = modbus.NETWORK.read_holding_registers(
-                unit=self.slave, address=self.register,
-                count=1)
+            result = modbus.HUB.read_holding_registers(
+                self.slave, self.register, 1)
             val = 0
             for i, res in enumerate(result.registers):
                 val += res * (2**(i*16))

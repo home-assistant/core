@@ -42,8 +42,6 @@ def trigger(hass, config, action):
 
     # Do something to call action
     if event == SUN_EVENT_SUNRISE:
-        track_sunrise(hass, call_action, offset)
+        return track_sunrise(hass, call_action, offset)
     else:
-        track_sunset(hass, call_action, offset)
-
-    return True
+        return track_sunset(hass, call_action, offset)
