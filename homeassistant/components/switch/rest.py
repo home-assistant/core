@@ -7,7 +7,6 @@ https://home-assistant.io/components/switch.rest/
 import logging
 
 import requests
-import traceback
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
@@ -88,8 +87,6 @@ class RestSwitch(SwitchDevice):
         if request.status_code == 200:
             self._state = True
         else:
-            _LOGGER.info("Can't turn on %s. Is resource/endpoint offline?",
-                          self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -99,20 +96,16 @@ class RestSwitch(SwitchDevice):
         if request.status_code == 200:
             self._state = False
         else:
-            _LOGGER.info("Can't turn off %s. Is resource/endpoint offline?",
-                          self._resource)
 
     def update(self):
         """Get the latest data from REST API and update the state."""
         request = requests.get(self._resource, timeout=50)
 
-        _LOGGER.info("request text %s." ,
-                          request.text)
         if self._value_template is not None:
             response = template.render_with_possible_json_value(
                 self._hass, self._value_template, request.text , False)
             
-        if response == 'False':
-            self._state = False
-        else:
+        if response == 'True':
             self._state = True
+        else:
+            self._state = False
