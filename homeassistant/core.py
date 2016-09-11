@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import signal
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 
@@ -204,6 +205,17 @@ class HomeAssistant(object):
         """
         self.pool.add_job(priority, (target,) + args)
 
+    def _loop_empty(self):
+        """Python 3.4.2 empty loop compatibility function"""
+        if sys.version_info < (3, 4, 3):
+            # pylint: disable=protected-access
+            return len(self.loop._scheduled) == 0 and \
+                   len(self.loop._ready) == 0
+        else:
+            # pylint: disable=protected-access
+            return self.loop._current_handle is None and \
+                   len(self.loop._ready) == 0
+
     def block_till_done(self):
         """Block till all pending work is done."""
         import threading
@@ -222,11 +234,7 @@ class HomeAssistant(object):
                 self.pool.block_till_done()
 
                 # Verify the loop is empty
-                # pylint: disable=protected-access
-                loop_empty = self.loop._current_handle is None and \
-                    len(self.loop._ready) == 0
-
-                if loop_empty:
+                if self._loop_empty():
                     break
 
                 # sleep in the loop executor, this forces execution back into
