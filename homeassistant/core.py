@@ -207,12 +207,11 @@ class HomeAssistant(object):
 
     def _loop_empty(self):
         """Python 3.4.2 empty loop compatibility function."""
+        # pylint: disable=protected-access
         if sys.version_info < (3, 4, 3):
-            # pylint: disable=protected-access
             return len(self.loop._scheduled) == 0 and \
                    len(self.loop._ready) == 0
         else:
-            # pylint: disable=protected-access
             return self.loop._current_handle is None and \
                    len(self.loop._ready) == 0
 
