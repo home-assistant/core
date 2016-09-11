@@ -22,6 +22,8 @@ class TestMfiSwitchSetup(test_mfi_sensor.TestMfiSensorSetup):
             'port': 6123,
             'username': 'user',
             'password': 'pass',
+            'ssl': True,
+            'verify_ssl': True,
         }
     }
 
@@ -48,8 +50,6 @@ class TestMfiSwitch(unittest.TestCase):
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.latitude = 32.87336
-        self.hass.config.longitude = 117.22743
         self.port = mock.MagicMock()
         self.switch = mfi.MfiSwitch(self.port)
 

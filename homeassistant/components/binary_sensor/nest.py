@@ -6,12 +6,12 @@ https://home-assistant.io/components/binary_sensor.nest/
 """
 import voluptuous as vol
 
-import homeassistant.components.nest as nest
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.sensor.nest import NestSensor
-from homeassistant.const import (
-    CONF_PLATFORM, CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS
-)
+from homeassistant.const import (CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS)
+import homeassistant.components.nest as nest
+import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['nest']
 BINARY_TYPES = ['fan',
@@ -25,11 +25,11 @@ BINARY_TYPES = ['fan',
                 'hvac_emer_heat_state',
                 'online']
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): nest.DOMAIN,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Required(CONF_MONITORED_CONDITIONS): [vol.In(BINARY_TYPES)],
+    vol.Required(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [vol.In(BINARY_TYPES)]),
 })
 
 

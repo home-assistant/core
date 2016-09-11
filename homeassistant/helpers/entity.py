@@ -195,6 +195,10 @@ class Entity(object):
         return self.hass.states.set(
             self.entity_id, state, attr, self.force_update)
 
+    def remove(self) -> None:
+        """Remove entitiy from HASS."""
+        self.hass.states.remove(self.entity_id)
+
     def _attr_setter(self, name, typ, attr, attrs):
         """Helper method to populate attributes based on properties."""
         if attr in attrs:

@@ -7,17 +7,32 @@ https://home-assistant.io/components/sensor.eliqonline/
 import logging
 from urllib.error import URLError
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['eliqonline==1.0.12']
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['eliqonline==1.0.12']
-DEFAULT_NAME = "ELIQ Online"
-UNIT_OF_MEASUREMENT = "W"
-ICON = "mdi:speedometer"
-CONF_CHANNEL_ID = "channel_id"
+CONF_CHANNEL_ID = 'channel_id'
+
+DEFAULT_NAME = 'ELIQ Online'
+
+ICON = 'mdi:speedometer'
+
 SCAN_INTERVAL = 60
+
+UNIT_OF_MEASUREMENT = 'W'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+    vol.Optional(CONF_CHANNEL_ID): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -27,13 +42,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     access_token = config.get(CONF_ACCESS_TOKEN)
     name = config.get(CONF_NAME, DEFAULT_NAME)
     channel_id = config.get(CONF_CHANNEL_ID)
-
-    if access_token is None:
-        _LOGGER.error(
-            "Configuration Error: "
-            "Please make sure you have configured your access token "
-            "that can be aquired from https://my.eliq.se/user/settings/api")
-        return False
 
     api = eliqonline.API(access_token)
 

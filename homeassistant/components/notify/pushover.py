@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TARGET, ATTR_DATA, BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_TARGET, ATTR_DATA,
+    BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
@@ -17,8 +18,10 @@ REQUIREMENTS = ['python-pushover==0.2']
 _LOGGER = logging.getLogger(__name__)
 
 
+CONF_USER_KEY = 'user_key'
+
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required('user_key'): cv.string,
+    vol.Required(CONF_USER_KEY): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
 })
 
@@ -29,7 +32,7 @@ def get_service(hass, config):
     from pushover import InitError
 
     try:
-        return PushoverNotificationService(config['user_key'],
+        return PushoverNotificationService(config[CONF_USER_KEY],
                                            config[CONF_API_KEY])
     except InitError:
         _LOGGER.error(
@@ -56,7 +59,7 @@ class PushoverNotificationService(BaseNotificationService):
         # Make a copy and use empty dict if necessary
         data = dict(kwargs.get(ATTR_DATA) or {})
 
-        data['title'] = kwargs.get(ATTR_TITLE)
+        data['title'] = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         target = kwargs.get(ATTR_TARGET)
         if target is not None:

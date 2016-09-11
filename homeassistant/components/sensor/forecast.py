@@ -6,19 +6,27 @@ https://home-assistant.io/components/sensor.forecast/
 """
 import logging
 from datetime import timedelta
+
 import voluptuous as vol
 from requests.exceptions import ConnectionError as ConnectError, \
     HTTPError, Timeout
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY, CONF_NAME,
-                                 CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (
+    CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-forecastio==1.3.4']
+
 _LOGGER = logging.getLogger(__name__)
+
+CONF_UNITS = 'units'
+
+DEFAULT_NAME = 'Forecast.io'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
@@ -57,20 +65,14 @@ SENSOR_TYPES = {
     'precip_intensity_max': ['Daily Max Precip Intensity',
                              'mm', 'in', 'mm', 'mm', 'mm'],
 }
-DEFAULT_NAME = "Forecast.io"
-CONF_UNITS = 'units'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2'])
 })
-
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -100,7 +102,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     name = config.get(CONF_NAME)
 
-    # Initialize and add all of the sensors.
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(ForeCastSensor(forecast_data, variable, name))
@@ -249,10 +250,8 @@ class ForeCastData(object):
         import forecastio
 
         try:
-            self.data = forecastio.load_forecast(self._api_key,
-                                                 self.latitude,
-                                                 self.longitude,
-                                                 units=self.units)
+            self.data = forecastio.load_forecast(
+                self._api_key, self.latitude, self.longitude, units=self.units)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             raise ValueError("Unable to init Forecast.io. - %s", error)
         self.unit_system = self.data.json['flags']['units']

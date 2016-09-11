@@ -1,5 +1,6 @@
 """Helpers for config validation using voluptuous."""
 from datetime import timedelta
+import os
 from urllib.parse import urlparse
 
 from typing import Any, Union, TypeVar, Callable, Sequence, List, Dict
@@ -65,9 +66,17 @@ def boolean(value: Any) -> bool:
     return bool(value)
 
 
-def isfile(value):
+def isfile(value: Any) -> str:
     """Validate that the value is an existing file."""
-    return vol.IsFile('not a file')(value)
+    if value is None:
+        raise vol.Invalid('None is not file')
+    file_in = os.path.expanduser(str(value))
+
+    if not os.path.isfile(file_in):
+        raise vol.Invalid('not a file')
+    if not os.access(file_in, os.R_OK):
+        raise vol.Invalid('file not readable')
+    return file_in
 
 
 def ensure_list(value: Union[T, Sequence[T]]) -> List[T]:
@@ -235,6 +244,20 @@ def template(value):
         raise vol.Invalid('invalid template ({})'.format(ex))
 
 
+def template_complex(value):
+    """Validate a complex jinja2 template."""
+    if isinstance(value, list):
+        for idx, element in enumerate(value):
+            value[idx] = template_complex(element)
+        return value
+    if isinstance(value, dict):
+        for key, element in value.items():
+            value[key] = template_complex(element)
+        return value
+
+    return template(value)
+
+
 def time(value):
     """Validate time."""
     time_val = dt_util.parse_time(value)
@@ -301,7 +324,7 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service', 'service name'): service,
     vol.Exclusive('service_template', 'service name'): template,
     vol.Optional('data'): dict,
-    vol.Optional('data_template'): {match_all: template},
+    vol.Optional('data_template'): {match_all: template_complex},
     vol.Optional(CONF_ENTITY_ID): entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
 

@@ -7,29 +7,54 @@ https://home-assistant.io/components/cover.command_line/
 import logging
 import subprocess
 
-from homeassistant.components.cover import CoverDevice
-from homeassistant.const import CONF_VALUE_TEMPLATE
+import voluptuous as vol
+
+from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (
+    CONF_COMMAND_CLOSE, CONF_COMMAND_OPEN, CONF_COMMAND_STATE,
+    CONF_COMMAND_STOP, CONF_COVERS, CONF_VALUE_TEMPLATE, CONF_FRIENDLY_NAME)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
+COVER_SCHEMA = vol.Schema({
+    vol.Optional(CONF_COMMAND_CLOSE, default='true'): cv.string,
+    vol.Optional(CONF_COMMAND_OPEN, default='true'): cv.string,
+    vol.Optional(CONF_COMMAND_STATE): cv.string,
+    vol.Optional(CONF_COMMAND_STOP, default='true'): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE, default='{{ value }}'): cv.template,
+})
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
+})
+
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup cover controlled by shell commands."""
-    covers = config.get('covers', {})
-    devices = []
+    devices = config.get(CONF_COVERS, {})
+    covers = []
 
-    for dev_name, properties in covers.items():
-        devices.append(
+    for device_name, device_config in devices.items():
+        covers.append(
             CommandCover(
                 hass,
-                properties.get('name', dev_name),
-                properties.get('opencmd', 'true'),
-                properties.get('closecmd', 'true'),
-                properties.get('stopcmd', 'true'),
-                properties.get('statecmd', False),
-                properties.get(CONF_VALUE_TEMPLATE, '{{ value }}')))
-    add_devices_callback(devices)
+                device_config.get(CONF_FRIENDLY_NAME, device_name),
+                device_config.get(CONF_COMMAND_OPEN),
+                device_config.get(CONF_COMMAND_CLOSE),
+                device_config.get(CONF_COMMAND_STOP),
+                device_config.get(CONF_COMMAND_STATE),
+                device_config.get(CONF_VALUE_TEMPLATE),
+            )
+        )
+
+    if not covers:
+        _LOGGER.error("No covers added")
+        return False
+
+    add_devices(covers)
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
