@@ -23,8 +23,8 @@ CONF_CHANNEL = 'default_channel'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_CHANNEL): cv.string,
-    vol.Optional(CONF_USERNAME, default=None): cv.string,
-    vol.Optional(CONF_ICON, default=None): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_ICON): cv.string,
 })
 
 
@@ -37,8 +37,8 @@ def get_service(hass, config):
         return SlackNotificationService(
             config[CONF_CHANNEL],
             config[CONF_API_KEY],
-            config[CONF_USERNAME],
-            config[CONF_ICON])
+            config.get(CONF_USERNAME, None),
+            config.get(CONF_ICON, None))
 
     except slacker.Error:
         _LOGGER.exception("Slack authentication failed")
