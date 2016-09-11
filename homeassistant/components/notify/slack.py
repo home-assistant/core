@@ -56,6 +56,11 @@ class SlackNotificationService(BaseNotificationService):
         self._api_token = api_token
         self._username = username
         self._icon = icon
+        if self._username or self._icon:
+            self._as_user = False
+        else:
+            self._as_user = True
+
         self.slack = Slacker(self._api_token)
         self.slack.auth.test()
 
@@ -68,17 +73,11 @@ class SlackNotificationService(BaseNotificationService):
         attachments = data.get('attachments') if data else None
 
         try:
-            if self._username or self._icon:
-                self.slack.chat.post_message(channel, message,
-                                             as_user=False,
-                                             username=self._username,
-                                             icon_emoji=self._icon,
-                                             attachments=attachments,
-                                             link_names=True)
-            else:
-                self.slack.chat.post_message(channel, message,
-                                             as_user=True,
-                                             attachments=attachments,
-                                             link_names=True)
+            self.slack.chat.post_message(channel, message,
+                                         as_user=self._as_user,
+                                         username=self._username,
+                                         icon_emoji=self._icon,
+                                         attachments=attachments,
+                                         link_names=True)
         except slacker.Error as err:
             _LOGGER.error("Could not send slack notification. Error: %s", err)
