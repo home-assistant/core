@@ -7,34 +7,59 @@ https://home-assistant.io/components/light.lifx/
 import colorsys
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION, Light)
+    SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 from homeassistant.helpers.event import track_time_change
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['liffylights==0.9.4']
 
-CONF_SERVER = "server"        # server address configuration item
-CONF_BROADCAST = "broadcast"  # broadcast address configuration item
-SHORT_MAX = 65535             # short int maximum
-BYTE_MAX = 255                # byte maximum
-TEMP_MIN = 2500               # lifx minimum temperature
-TEMP_MAX = 9000               # lifx maximum temperature
-TEMP_MIN_HASS = 154           # home assistant minimum temperature
-TEMP_MAX_HASS = 500           # home assistant maximum temperature
+BYTE_MAX = 255
+
+CONF_BROADCAST = 'broadcast'
+CONF_SERVER = 'server'
+
+SHORT_MAX = 65535
+
+TEMP_MAX = 9000
+TEMP_MAX_HASS = 500
+TEMP_MIN = 2500
+TEMP_MIN_HASS = 154
 
 SUPPORT_LIFX = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
                 SUPPORT_TRANSITION)
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_SERVER, default=None): cv.string,
+    vol.Optional(CONF_BROADCAST, default=None): cv.string,
+})
 
-class LIFX():
+
+# pylint: disable=unused-argument
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the LIFX platform."""
+    server_addr = config.get(CONF_SERVER)
+    broadcast_addr = config.get(CONF_BROADCAST)
+
+    lifx_library = LIFX(add_devices, server_addr, broadcast_addr)
+
+    # Register our poll service
+    track_time_change(hass, lifx_library.poll, second=[10, 40])
+
+    lifx_library.probe()
+
+
+class LIFX(object):
     """Representation of a LIFX light."""
 
-    def __init__(self, add_devices_callback,
-                 server_addr=None, broadcast_addr=None):
+    def __init__(self, add_devices_callback, server_addr=None,
+                 broadcast_addr=None):
         """Initialize the light."""
         import liffylights
 
@@ -43,10 +68,7 @@ class LIFX():
         self._add_devices_callback = add_devices_callback
 
         self._liffylights = liffylights.LiffyLights(
-            self.on_device,
-            self.on_power,
-            self.on_color,
-            server_addr,
+            self.on_device, self.on_power, self.on_color, server_addr,
             broadcast_addr)
 
     def find_bulb(self, ipaddr):
@@ -66,8 +88,8 @@ class LIFX():
         if bulb is None:
             _LOGGER.debug("new bulb %s %s %d %d %d %d %d",
                           ipaddr, name, power, hue, sat, bri, kel)
-            bulb = LIFXLight(self._liffylights, ipaddr, name,
-                             power, hue, sat, bri, kel)
+            bulb = LIFXLight(
+                self._liffylights, ipaddr, name, power, hue, sat, bri, kel)
             self._devices.append(bulb)
             self._add_devices_callback([bulb])
         else:
@@ -104,20 +126,6 @@ class LIFX():
         self._liffylights.probe(address)
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the LIFX platform."""
-    server_addr = config.get(CONF_SERVER, None)
-    broadcast_addr = config.get(CONF_BROADCAST, None)
-
-    lifx_library = LIFX(add_devices_callback, server_addr, broadcast_addr)
-
-    # Register our poll service
-    track_time_change(hass, lifx_library.poll, second=[10, 40])
-
-    lifx_library.probe()
-
-
 def convert_rgb_to_hsv(rgb):
     """Convert Home Assistant RGB values to HSV values."""
     red, green, blue = [_ / BYTE_MAX for _ in rgb]
@@ -134,11 +142,10 @@ class LIFXLight(Light):
     """Representation of a LIFX light."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, liffy, ipaddr, name, power, hue,
-                 saturation, brightness, kelvin):
+    def __init__(self, liffy, ipaddr, name, power, hue, saturation, brightness,
+                 kelvin):
         """Initialize the light."""
-        _LOGGER.debug("LIFXLight: %s %s",
-                      ipaddr, name)
+        _LOGGER.debug("LIFXLight: %s %s", ipaddr, name)
 
         self._liffylights = liffy
         self._ip = ipaddr
@@ -164,8 +171,8 @@ class LIFXLight(Light):
     @property
     def rgb_color(self):
         """Return the RGB value."""
-        _LOGGER.debug("rgb_color: [%d %d %d]",
-                      self._rgb[0], self._rgb[1], self._rgb[2])
+        _LOGGER.debug(
+            "rgb_color: [%d %d %d]", self._rgb[0], self._rgb[1], self._rgb[2])
         return self._rgb
 
     @property
