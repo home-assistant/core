@@ -7,44 +7,67 @@ https://home-assistant.io/components/climate.honeywell/
 import logging
 import socket
 
-from homeassistant.components.climate import ClimateDevice
+import voluptuous as vol
+
+from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['evohomeclient==0.2.5',
                 'somecomfort==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_AWAY_TEMP = "away_temperature"
-DEFAULT_AWAY_TEMP = 16
+ATTR_FAN = 'fan'
+ATTR_FANMODE = 'fanmode'
+ATTR_SYSTEM_MODE = 'system_mode'
+
+CONF_AWAY_TEMPERATURE = 'away_temperature'
+CONF_REGION = 'region'
+
+DEFAULT_AWAY_TEMPERATURE = 16
+DEFAULT_REGION = 'eu'
+REGIONS = ['eu', 'us']
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_AWAY_TEMPERATURE, default=DEFAULT_AWAY_TEMPERATURE):
+        vol.Coerce(float),
+    vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(REGIONS),
+})
+
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the HoneywelL thermostat."""
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+    region = config.get(CONF_REGION)
+
+    if region == 'us':
+        return _setup_us(username, password, config, add_devices)
+    else:
+        return _setup_round(username, password, config, add_devices)
 
 
 def _setup_round(username, password, config, add_devices):
     """Setup rounding function."""
     from evohomeclient import EvohomeClient
 
-    try:
-        away_temp = float(config.get(CONF_AWAY_TEMP, DEFAULT_AWAY_TEMP))
-    except ValueError:
-        _LOGGER.error("value entered for item %s should convert to a number",
-                      CONF_AWAY_TEMP)
-        return False
-
+    away_temp = config.get(CONF_AWAY_TEMPERATURE)
     evo_api = EvohomeClient(username, password)
 
     try:
         zones = evo_api.temperatures(force_refresh=True)
         for i, zone in enumerate(zones):
-            add_devices([RoundThermostat(evo_api,
-                                         zone['id'],
-                                         i == 0,
-                                         away_temp)])
+            add_devices(
+                [RoundThermostat(evo_api, zone['id'], i == 0, away_temp)]
+            )
     except socket.error:
         _LOGGER.error(
-            "Connection error logging into the honeywell evohome web service"
-        )
+            "Connection error logging into the honeywell evohome web service")
         return False
     return True
 
@@ -74,26 +97,6 @@ def _setup_us(username, password, config, add_devices):
     return True
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the honeywel thermostat."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    region = config.get('region', 'eu').lower()
-
-    if username is None or password is None:
-        _LOGGER.error("Missing required configuration items %s or %s",
-                      CONF_USERNAME, CONF_PASSWORD)
-        return False
-    if region not in ('us', 'eu'):
-        _LOGGER.error('Region `%s` is invalid (use either us or eu)', region)
-        return False
-
-    if region == 'us':
-        return _setup_us(username, password, config, add_devices)
-    else:
-        return _setup_round(username, password, config, add_devices)
-
-
 class RoundThermostat(ClimateDevice):
     """Representation of a Honeywell Round Connected thermostat."""
 
@@ -103,7 +106,7 @@ class RoundThermostat(ClimateDevice):
         self.device = device
         self._current_temperature = None
         self._target_temperature = None
-        self._name = "round connected"
+        self._name = 'round connected'
         self._id = zone_id
         self._master = master
         self._is_dhw = False
@@ -143,7 +146,7 @@ class RoundThermostat(ClimateDevice):
     @property
     def current_operation(self: ClimateDevice) -> str:
         """Get the current operation of the system."""
-        return getattr(self.device, 'system_mode', None)
+        return getattr(self.device, ATTR_SYSTEM_MODE, None)
 
     @property
     def is_away_mode_on(self):
@@ -152,7 +155,7 @@ class RoundThermostat(ClimateDevice):
 
     def set_operation_mode(self: ClimateDevice, operation_mode: str) -> None:
         """Set the HVAC mode for the thermostat."""
-        if hasattr(self.device, 'system_mode'):
+        if hasattr(self.device, ATTR_SYSTEM_MODE):
             self.device.system_mode = operation_mode
 
     def turn_away_mode_on(self):
@@ -186,8 +189,8 @@ class RoundThermostat(ClimateDevice):
 
         self._current_temperature = data['temp']
         self._target_temperature = data['setpoint']
-        if data['thermostat'] == "DOMESTIC_HOT_WATER":
-            self._name = "Hot Water"
+        if data['thermostat'] == 'DOMESTIC_HOT_WATER':
+            self._name = 'Hot Water'
             self._is_dhw = True
         else:
             self._name = data['name']
@@ -236,7 +239,7 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def current_operation(self: ClimateDevice) -> str:
         """Return current operation ie. heat, cool, idle."""
-        return getattr(self._device, 'system_mode', None)
+        return getattr(self._device, ATTR_SYSTEM_MODE, None)
 
     def set_temperature(self, **kwargs):
         """Set target temperature."""
@@ -255,9 +258,11 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        return {'fan': (self.is_fan_on and 'running' or 'idle'),
-                'fanmode': self._device.fan_mode,
-                'system_mode': self._device.system_mode}
+        return {
+            ATTR_FAN: (self.is_fan_on and 'running' or 'idle'),
+            ATTR_FANMODE: self._device.fan_mode,
+            ATTR_SYSTEM_MODE: self._device.system_mode,
+        }
 
     def turn_away_mode_on(self):
         """Turn away on."""
@@ -269,5 +274,5 @@ class HoneywellUSThermostat(ClimateDevice):
 
     def set_operation_mode(self: ClimateDevice, operation_mode: str) -> None:
         """Set the system mode (Cool, Heat, etc)."""
-        if hasattr(self._device, 'system_mode'):
+        if hasattr(self._device, ATTR_SYSTEM_MODE):
             self._device.system_mode = operation_mode
