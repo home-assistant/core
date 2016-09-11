@@ -1,4 +1,5 @@
 """Helpers for config validation using voluptuous."""
+from collections import OrderedDict
 from datetime import timedelta
 import os
 from urllib.parse import urlparse
@@ -288,6 +289,39 @@ def url(value: Any) -> str:
         return vol.Schema(vol.Url())(url_in)
 
     raise vol.Invalid('invalid url')
+
+
+def ordered_dict(value_validator, key_validator=match_all):
+    """Generate an ordered dict validator that maintains ordering."""
+    def validator(value):
+        """Validate ordered dict."""
+        config = OrderedDict()
+        errors = []
+        for key, val in value.items():
+            try:
+                v_key = key_validator(key)
+            except ValueError:
+                errors.append(vol.ValueInvalid('is not a valid key', [key]))
+            except vol.Invalid as ex:
+                errors.append(ex)
+                continue
+
+            try:
+                val = value_validator(val)
+            except ValueError:
+                errors.append(vol.ValueInvalid('is not a valid value', [key]))
+            except vol.Invalid as ex:
+                errors.append(ex)
+                continue
+
+            config[v_key] = val
+
+        if errors:
+            raise vol.MultipleInvalid(errors)
+
+        return config
+
+    return validator
 
 
 # Validator helpers

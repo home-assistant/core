@@ -1,3 +1,5 @@
+"""Test config validators."""
+from collections import OrderedDict
 from datetime import timedelta
 import os
 import tempfile
@@ -367,3 +369,22 @@ def test_has_at_least_one_key():
 
     for value in ({'beer': None}, {'soda': None}):
         schema(value)
+
+
+def test_ordered_dict():
+    """Test ordered_dict validator."""
+    schema = vol.Schema(cv.ordered_dict(int))
+
+    val = OrderedDict()
+    val['first'] = 1
+    val['second'] = 'hello'
+
+    with pytest.raises(vol.Invalid):
+        print(schema(val))
+
+    val['second'] = 2
+
+    validated = schema(val)
+
+    assert isinstance(validated, OrderedDict)
+    assert ['first', 'second'] == list(validated.keys())
