@@ -50,7 +50,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.error("No route to resource/endpoint: %s", resource)
         return False
 
-    add_devices_callback([RestSwitch(hass, name, resource, body_on, body_off, value_template)])
+    add_devices_callback(
+        [RestSwitch(hass, name, resource, body_on, body_off, value_template)])
 
 
 # pylint: disable=too-many-arguments
@@ -79,29 +80,29 @@ class RestSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        bodyOn = template.render_with_possible_json_value(
-                self._hass, self._body_on, "" , False)
+        body_on_t = template.render_with_possible_json_value(
+            self._hass, self._body_on, "", False)
         request = requests.post(self._resource,
-                                data=bodyOn,
+                                data=body_on_t,
                                 timeout=50)
         if request.status_code == 200:
             self._state = True
         else:
             _LOGGER.info("Can't turn on %s. Is resource/endpoint offline?",
--                          self._resource)
+                         -                          self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        bodyOff = template.render_with_possible_json_value(
-                self._hass, self._body_off, "" , False)
+        body_off_t = template.render_with_possible_json_value(
+            self._hass, self._body_off, "", False)
         request = requests.post(self._resource,
-                                data=bodyOff,
+                                data=body_off_t,
                                 timeout=50)
         if request.status_code == 200:
             self._state = False
         else:
             _LOGGER.info("Can't turn off %s. Is resource/endpoint offline?",
--                          self._resource)
+                         -                          self._resource)
 
     def update(self):
         """Get the latest data from REST API and update the state."""
@@ -109,7 +110,7 @@ class RestSwitch(SwitchDevice):
 
         if self._value_template is not None:
             response = template.render_with_possible_json_value(
-                self._hass, self._value_template, request.text , False)
+                self._hass, self._value_template, request.text, False)
             if response == 'True':
                 self._state = True
             elif response == 'False':
