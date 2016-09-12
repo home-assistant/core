@@ -10,7 +10,6 @@ import socket
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ensure_list
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT,
     CONF_WHITELIST)
@@ -31,7 +30,7 @@ EVENT = 'pilight_received'
 # Thus only require to have the protocol information
 # Ensure that protocol is in a list otherwise segfault in pilight-daemon
 # https://github.com/pilight/pilight/issues/296
-RF_CODE_SCHEMA = vol.Schema({vol.Required(ATTR_PROTOCOL): vol.All(cv.string, cv.ensure_list)},
+RF_CODE_SCHEMA = vol.Schema({vol.Required(ATTR_PROTOCOL): vol.All(cv.ensure_list, [cv.string])},
                             extra=vol.ALLOW_EXTRA)
 SERVICE_NAME = 'send'
 
