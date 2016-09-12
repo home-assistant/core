@@ -142,6 +142,7 @@ class AutomaticDeviceScanner(object):
 
         for vehicle in self.last_results:
             dev_id = vehicle.get('id')
+            host_name = vehicle.get('display_name')
 
             attrs = {
                 'fuel_level': vehicle.get('fuel_level_percent')
@@ -149,6 +150,7 @@ class AutomaticDeviceScanner(object):
 
             kwargs = {
                 'dev_id': dev_id,
+                'host_name': host_name,
                 'mac': dev_id,
                 ATTR_ATTRIBUTES: attrs
             }
