@@ -16,7 +16,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_NAME,
                                  ATTR_ENTITY_ID)
 
-REQUIREMENTS = ["ha-ffmpeg==0.10"]
+REQUIREMENTS = ["ha-ffmpeg==0.12"]
 
 SERVICE_RESTART = 'ffmpeg_restart'
 
@@ -39,12 +39,16 @@ CONF_RESET = 'reset'
 CONF_CHANGES = 'changes'
 CONF_REPEAT = 'repeat'
 CONF_REPEAT_TIME = 'repeat_time'
+CONF_RUN_TEST = 'run_test'
+
+DEFAULT_RUN_TEST = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOOL): vol.In(MAP_FFMPEG_BIN),
     vol.Required(CONF_INPUT): cv.string,
     vol.Optional(CONF_FFMPEG_BIN, default="ffmpeg"): cv.string,
     vol.Optional(CONF_NAME, default="FFmpeg"): cv.string,
+    vol.Optional(CONF_RUN_TEST, default=DEFAULT_RUN_TEST): cv.boolean,
     vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
     vol.Optional(CONF_OUTPUT): cv.string,
     vol.Optional(CONF_PEAK, default=-30): vol.Coerce(int),
@@ -73,8 +77,16 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the binary sensor."""
-    from haffmpeg import SensorNoise, SensorMotion
+    from haffmpeg import Test, SensorNoise, SensorMotion
 
+    # check source
+    if config.get(CONF_RUN_TEST):
+        test = Test(config.get(CONF_FFMPEG_BIN))
+        if not test.run_test(config.get(CONF_INPUT)):
+            _LOGGER.error("FFmpeg '%s' test fails!", config.get(CONF_INPUT))
+            return
+
+    # generate sensor object
     if config.get(CONF_TOOL) == FFMPEG_SENSOR_NOISE:
         entity = FFmpegNoise(SensorNoise, config)
     else:
@@ -88,7 +100,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # exists service?
     if hass.services.has_service(DOMAIN, SERVICE_RESTART):
-        return True
+        return
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
@@ -111,7 +123,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                            _service_handle_restart,
                            descriptions.get(SERVICE_RESTART),
                            schema=SERVICE_RESTART_SCHEMA)
-    return True
 
 
 class FFmpegBinarySensor(BinarySensorDevice):
