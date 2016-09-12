@@ -10,7 +10,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, BaseNotificationService, PLATFORM_SCHEMA)
+    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService,
+    PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_RESOURCE, CONF_METHOD, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
@@ -71,7 +72,8 @@ class RestNotificationService(BaseNotificationService):
         }
 
         if self._title_param_name is not None:
-            data[self._title_param_name] = kwargs.get(ATTR_TITLE)
+            data[self._title_param_name] = kwargs.get(ATTR_TITLE,
+                                                      ATTR_TITLE_DEFAULT)
 
         if self._target_param_name is not None:
             data[self._target_param_name] = kwargs.get(ATTR_TARGET)

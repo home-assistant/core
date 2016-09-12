@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.helpers.entity_component import EntityComponent
 
 from homeassistant.config import load_yaml_config_file
-import homeassistant.util as util
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -44,6 +43,8 @@ STATE_FAN_ONLY = "fan_only"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
+ATTR_TARGET_TEMP_HIGH = "target_temp_high"
+ATTR_TARGET_TEMP_LOW = "target_temp_low"
 ATTR_AWAY_MODE = "away_mode"
 ATTR_AUX_HEAT = "aux_heat"
 ATTR_FAN_MODE = "fan_mode"
@@ -68,8 +69,10 @@ SET_AUX_HEAT_SCHEMA = vol.Schema({
     vol.Required(ATTR_AUX_HEAT): cv.boolean,
 })
 SET_TEMPERATURE_SCHEMA = vol.Schema({
+    vol.Exclusive(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
+    vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
+    vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
 })
 SET_FAN_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -113,14 +116,19 @@ def set_aux_heat(hass, aux_heat, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_AUX_HEAT, data)
 
 
-def set_temperature(hass, temperature, entity_id=None):
+def set_temperature(hass, temperature=None, entity_id=None,
+                    target_temp_high=None, target_temp_low=None):
     """Set new target temperature."""
-    data = {ATTR_TEMPERATURE: temperature}
-
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, data)
+    kwargs = {
+        key: value for key, value in [
+            (ATTR_TEMPERATURE, temperature),
+            (ATTR_TARGET_TEMP_HIGH, target_temp_high),
+            (ATTR_TARGET_TEMP_LOW, target_temp_low),
+            (ATTR_ENTITY_ID, entity_id),
+        ] if value is not None
+    }
+    _LOGGER.debug("set_temperature start data=%s", kwargs)
+    hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, kwargs)
 
 
 def set_humidity(hass, humidity, entity_id=None):
@@ -227,20 +235,9 @@ def setup(hass, config):
     def temperature_set_service(service):
         """Set temperature on the target climate devices."""
         target_climate = component.extract_from_service(service)
-
-        temperature = util.convert(
-            service.data.get(ATTR_TEMPERATURE), float)
-
-        if temperature is None:
-            _LOGGER.error(
-                "Received call to %s without attribute %s",
-                SERVICE_SET_TEMPERATURE, ATTR_TEMPERATURE)
-            return
-
+        kwargs = service.data
         for climate in target_climate:
-            climate.set_temperature(convert_temperature(
-                temperature, hass.config.units.temperature_unit,
-                climate.unit_of_measurement))
+            climate.set_temperature(**kwargs)
 
             if climate.should_poll:
                 climate.update_ha_state(True)
@@ -351,7 +348,7 @@ class ClimateDevice(Entity):
     @property
     def state(self):
         """Return the current state."""
-        return self.target_temperature or STATE_UNKNOWN
+        return self.current_operation or STATE_UNKNOWN
 
     @property
     def state_attributes(self):
@@ -364,6 +361,12 @@ class ClimateDevice(Entity):
             ATTR_TEMPERATURE:
             self._convert_for_display(self.target_temperature),
         }
+        target_temp_high = self.target_temperature_high
+        if target_temp_high is not None:
+            data[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
+                self.target_temperature_high)
+            data[ATTR_TARGET_TEMP_LOW] = self._convert_for_display(
+                self.target_temperature_low)
 
         humidity = self.target_humidity
         if humidity is not None:
@@ -433,6 +436,16 @@ class ClimateDevice(Entity):
         return None
 
     @property
+    def target_temperature_high(self):
+        """Return the highbound target temperature we try to reach."""
+        return None
+
+    @property
+    def target_temperature_low(self):
+        """Return the lowbound target temperature we try to reach."""
+        return None
+
+    @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
         return None
@@ -462,7 +475,7 @@ class ClimateDevice(Entity):
         """List of available swing modes."""
         return None
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
         raise NotImplementedError()
 

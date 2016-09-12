@@ -7,35 +7,43 @@ https://home-assistant.io/components/apcupsd/
 import logging
 from datetime import timedelta
 
+import voluptuous as vol
+
+from homeassistant.const import (CONF_HOST, CONF_PORT)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-DOMAIN = "apcupsd"
-REQUIREMENTS = ("apcaccess==0.0.4",)
+REQUIREMENTS = ['apcaccess==0.0.4']
 
-CONF_HOST = "host"
-CONF_PORT = "port"
-CONF_TYPE = "type"
+_LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HOST = "localhost"
+CONF_TYPE = 'type'
+
+DATA = None
+DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 3551
+DOMAIN = 'apcupsd'
 
-KEY_STATUS = "STATUS"
-
-VALUE_ONLINE = "ONLINE"
+KEY_STATUS = 'STATUS'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-DATA = None
+VALUE_ONLINE = 'ONLINE'
 
-_LOGGER = logging.getLogger(__name__)
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Use config values to set up a function enabling status retrieval."""
     global DATA
-
-    host = config[DOMAIN].get(CONF_HOST, DEFAULT_HOST)
-    port = config[DOMAIN].get(CONF_PORT, DEFAULT_PORT)
+    conf = config[DOMAIN]
+    host = conf.get(CONF_HOST)
+    port = conf.get(CONF_PORT)
 
     DATA = APCUPSdData(host, port)
 

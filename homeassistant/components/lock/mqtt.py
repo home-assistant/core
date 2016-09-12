@@ -8,25 +8,26 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.mqtt as mqtt
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
+from homeassistant.const import (
+    CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE)
 from homeassistant.helpers import template
+import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mqtt']
 
 CONF_PAYLOAD_LOCK = 'payload_lock'
 CONF_PAYLOAD_UNLOCK = 'payload_unlock'
 
 DEFAULT_NAME = 'MQTT Lock'
+DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_LOCK = 'LOCK'
 DEFAULT_PAYLOAD_UNLOCK = 'UNLOCK'
-DEFAULT_OPTIMISTIC = False
+DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -43,15 +44,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MQTT lock."""
     add_devices([MqttLock(
         hass,
-        config[CONF_NAME],
+        config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
-        config[CONF_COMMAND_TOPIC],
-        config[CONF_QOS],
-        config[CONF_RETAIN],
-        config[CONF_PAYLOAD_LOCK],
-        config[CONF_PAYLOAD_UNLOCK],
-        config[CONF_OPTIMISTIC],
-        config.get(CONF_VALUE_TEMPLATE))])
+        config.get(CONF_COMMAND_TOPIC),
+        config.get(CONF_QOS),
+        config.get(CONF_RETAIN),
+        config.get(CONF_PAYLOAD_LOCK),
+        config.get(CONF_PAYLOAD_UNLOCK),
+        config.get(CONF_OPTIMISTIC),
+        config.get(CONF_VALUE_TEMPLATE)
+    )])
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
@@ -88,8 +90,8 @@ class MqttLock(LockDevice):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            mqtt.subscribe(hass, self._state_topic, message_received,
-                           self._qos)
+            mqtt.subscribe(
+                hass, self._state_topic, message_received, self._qos)
 
     @property
     def should_poll(self):

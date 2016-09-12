@@ -10,14 +10,15 @@ import logging
 import requests
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.const import (
+    DEVICE_DEFAULT_NAME, CONF_NAME, CONF_RESOURCE)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the aREST switches."""
-    resource = config.get('resource', None)
+    resource = config.get(CONF_RESOURCE, None)
 
     try:
         response = requests.get(resource, timeout=10)
@@ -34,18 +35,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
     pins = config.get('pins', {})
     for pinnum, pin in pins.items():
-        dev.append(ArestSwitchPin(resource,
-                                  config.get('name', response.json()['name']),
-                                  pin.get('name'),
-                                  pinnum))
+        dev.append(ArestSwitchPin(
+            resource, config.get(CONF_NAME, response.json()['name']),
+            pin.get('name'), pinnum))
 
     functions = config.get('functions', {})
     for funcname, func in functions.items():
-        dev.append(ArestSwitchFunction(resource,
-                                       config.get('name',
-                                                  response.json()['name']),
-                                       func.get('name'),
-                                       funcname))
+        dev.append(ArestSwitchFunction(
+            resource, config.get(CONF_NAME, response.json()['name']),
+            func.get('name'), funcname))
 
     add_devices(dev)
 

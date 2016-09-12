@@ -59,7 +59,7 @@ class TestLocalCamera(unittest.TestCase):
             fp.flush()
 
             with mock.patch('os.access', return_value=False):
-                assert setup_component(self.hass, 'camera', {
+                assert not setup_component(self.hass, 'camera', {
                     'camera': {
                         'name': 'config_test',
                         'platform': 'local_file',

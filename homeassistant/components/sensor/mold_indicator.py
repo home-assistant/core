@@ -7,48 +7,51 @@ https://home-assistant.io/components/sensor.mold_indicator/
 import logging
 import math
 
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
-from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT,
-                                 TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Mold Indicator"
-CONF_INDOOR_TEMP = "indoor_temp_sensor"
-CONF_OUTDOOR_TEMP = "outdoor_temp_sensor"
-CONF_INDOOR_HUMIDITY = "indoor_humidity_sensor"
-CONF_CALIBRATION_FACTOR = "calibration_factor"
+DEFAULT_NAME = 'Mold Indicator'
+CONF_INDOOR_TEMP = 'indoor_temp_sensor'
+CONF_OUTDOOR_TEMP = 'outdoor_temp_sensor'
+CONF_INDOOR_HUMIDITY = 'indoor_humidity_sensor'
+CONF_CALIBRATION_FACTOR = 'calibration_factor'
 
 MAGNUS_K2 = 17.62
 MAGNUS_K3 = 243.12
 
-ATTR_DEWPOINT = "Dewpoint"
-ATTR_CRITICAL_TEMP = "Est. Crit. Temp"
+ATTR_DEWPOINT = 'Dewpoint'
+ATTR_CRITICAL_TEMP = 'Est. Crit. Temp'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_INDOOR_TEMP): cv.entity_id,
+    vol.Required(CONF_OUTDOOR_TEMP): cv.entity_id,
+    vol.Required(CONF_INDOOR_HUMIDITY): cv.entity_id,
+    vol.Optional(CONF_CALIBRATION_FACTOR): vol.Coerce(float),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup MoldIndicator sensor."""
-    name = config.get('name', DEFAULT_NAME)
+    name = config.get(CONF_NAME, DEFAULT_NAME)
     indoor_temp_sensor = config.get(CONF_INDOOR_TEMP)
     outdoor_temp_sensor = config.get(CONF_OUTDOOR_TEMP)
     indoor_humidity_sensor = config.get(CONF_INDOOR_HUMIDITY)
-    calib_factor = util.convert(config.get(CONF_CALIBRATION_FACTOR),
-                                float, None)
+    calib_factor = config.get(CONF_CALIBRATION_FACTOR)
 
-    if None in (indoor_temp_sensor,
-                outdoor_temp_sensor, indoor_humidity_sensor):
-        _LOGGER.error('Missing required key %s, %s or %s',
-                      CONF_INDOOR_TEMP, CONF_OUTDOOR_TEMP,
-                      CONF_INDOOR_HUMIDITY)
-        return False
-
-    add_devices_callback([MoldIndicator(
-        hass, name, indoor_temp_sensor,
-        outdoor_temp_sensor, indoor_humidity_sensor,
-        calib_factor)])
+    add_devices([MoldIndicator(
+        hass, name, indoor_temp_sensor, outdoor_temp_sensor,
+        indoor_humidity_sensor, calib_factor)])
 
 
 # pylint: disable=too-many-instance-attributes
@@ -83,16 +86,14 @@ class MoldIndicator(Entity):
         indoor_hum = hass.states.get(indoor_humidity_sensor)
 
         if indoor_temp:
-            self._indoor_temp = \
-                MoldIndicator._update_temp_sensor(indoor_temp)
+            self._indoor_temp = MoldIndicator._update_temp_sensor(indoor_temp)
 
         if outdoor_temp:
-            self._outdoor_temp = \
-                MoldIndicator._update_temp_sensor(outdoor_temp)
+            self._outdoor_temp = MoldIndicator._update_temp_sensor(
+                outdoor_temp)
 
         if indoor_hum:
-            self._indoor_hum = \
-                MoldIndicator._update_hum_sensor(indoor_hum)
+            self._indoor_hum = MoldIndicator._update_hum_sensor(indoor_hum)
 
         self.update()
 
@@ -130,19 +131,13 @@ class MoldIndicator(Entity):
                           state.state)
             return None
 
-        # check unit
-        if unit != "%":
-            _LOGGER.error(
-                "Humidity sensor has unsupported unit: %s %s",
-                unit,
-                " (allowed: %)")
+        if unit != '%':
+            _LOGGER.error("Humidity sensor has unsupported unit: %s %s",
+                          unit, " (allowed: %)")
 
-        # check range
         if hum > 100 or hum < 0:
-            _LOGGER.error(
-                "Humidity sensor out of range: %s %s",
-                hum,
-                " (allowed: 0-100%)")
+            _LOGGER.error("Humidity sensor out of range: %s %s", hum,
+                          " (allowed: 0-100%)")
 
         return hum
 
@@ -162,15 +157,10 @@ class MoldIndicator(Entity):
             return
 
         if entity_id == self._indoor_temp_sensor:
-            # update the indoor temp sensor
             self._indoor_temp = MoldIndicator._update_temp_sensor(new_state)
-
         elif entity_id == self._outdoor_temp_sensor:
-            # update outdoor temp sensor
             self._outdoor_temp = MoldIndicator._update_temp_sensor(new_state)
-
         elif entity_id == self._indoor_humidity_sensor:
-            # update humidity
             self._indoor_hum = MoldIndicator._update_hum_sensor(new_state)
 
         self.update()
@@ -206,9 +196,8 @@ class MoldIndicator(Entity):
             self._outdoor_temp + (self._indoor_temp - self._outdoor_temp) / \
             self._calib_factor
 
-        _LOGGER.debug(
-            "Estimated Critical Temperature: %f " +
-            TEMP_CELSIUS, self._crit_temp)
+        _LOGGER.debug("Estimated Critical Temperature: %f " +
+                      TEMP_CELSIUS, self._crit_temp)
 
         # Then calculate the humidity at this point
         alpha = MAGNUS_K2 * self._crit_temp / (MAGNUS_K3 + self._crit_temp)
@@ -242,7 +231,7 @@ class MoldIndicator(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"
+        return '%'
 
     @property
     def state(self):
@@ -260,9 +249,7 @@ class MoldIndicator(Entity):
         else:
             return {
                 ATTR_DEWPOINT:
-                    util.temperature.celsius_to_fahrenheit(
-                        self._dewpoint),
+                    util.temperature.celsius_to_fahrenheit(self._dewpoint),
                 ATTR_CRITICAL_TEMP:
-                    util.temperature.celsius_to_fahrenheit(
-                        self._crit_temp),
+                    util.temperature.celsius_to_fahrenheit(self._crit_temp),
             }

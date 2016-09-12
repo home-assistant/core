@@ -7,14 +7,15 @@ https://home-assistant.io/components/notify.telegram/
 import io
 import logging
 import urllib
+
 import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_DATA, BaseNotificationService)
-from homeassistant.const import (CONF_API_KEY, CONF_NAME, ATTR_LOCATION,
-                                 ATTR_LATITUDE, ATTR_LONGITUDE, CONF_PLATFORM)
+    ATTR_TITLE, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import (CONF_API_KEY, ATTR_LOCATION, ATTR_LATITUDE,
+                                 ATTR_LONGITUDE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,12 +24,14 @@ REQUIREMENTS = ['python-telegram-bot==5.0.0']
 ATTR_PHOTO = "photo"
 ATTR_DOCUMENT = "document"
 ATTR_CAPTION = "caption"
+ATTR_URL = 'url'
+ATTR_FILE = 'file'
+ATTR_USERNAME = 'username'
+ATTR_PASSWORD = 'password'
 
 CONF_CHAT_ID = 'chat_id'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): "telegram",
-    vol.Optional(CONF_NAME): cv.string,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_CHAT_ID): cv.string,
 })
@@ -106,10 +109,18 @@ class TelegramNotificationService(BaseNotificationService):
         elif data is not None and ATTR_DOCUMENT in data:
             return self.send_document(data.get(ATTR_DOCUMENT))
 
+        if title:
+            text = '{} {}'.format(title, message)
+        else:
+            text = message
+
+        parse_mode = telegram.parsemode.ParseMode.MARKDOWN
+
         # send message
         try:
             self.bot.sendMessage(chat_id=self._chat_id,
-                                 text=title + "  " + message)
+                                 text=text,
+                                 parse_mode=parse_mode)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending message.")
             return
@@ -117,11 +128,16 @@ class TelegramNotificationService(BaseNotificationService):
     def send_photo(self, data):
         """Send a photo."""
         import telegram
-        caption = data.pop(ATTR_CAPTION, None)
+        caption = data.get(ATTR_CAPTION)
 
         # send photo
         try:
-            photo = load_data(**data)
+            photo = load_data(
+                url=data.get(ATTR_URL),
+                file=data.get(ATTR_FILE),
+                username=data.get(ATTR_USERNAME),
+                password=data.get(ATTR_PASSWORD),
+            )
             self.bot.sendPhoto(chat_id=self._chat_id,
                                photo=photo, caption=caption)
         except telegram.error.TelegramError:
@@ -131,11 +147,16 @@ class TelegramNotificationService(BaseNotificationService):
     def send_document(self, data):
         """Send a document."""
         import telegram
-        caption = data.pop(ATTR_CAPTION, None)
+        caption = data.get(ATTR_CAPTION)
 
         # send photo
         try:
-            document = load_data(**data)
+            document = load_data(
+                url=data.get(ATTR_URL),
+                file=data.get(ATTR_FILE),
+                username=data.get(ATTR_USERNAME),
+                password=data.get(ATTR_PASSWORD),
+            )
             self.bot.sendDocument(chat_id=self._chat_id,
                                   document=document, caption=caption)
         except telegram.error.TelegramError:

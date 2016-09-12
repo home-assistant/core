@@ -7,7 +7,7 @@ https://home-assistant.io/components/knx/
 import logging
 
 from homeassistant.components.climate import ClimateDevice
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
 from homeassistant.components.knx import (
     KNXConfig, KNXMultiAddressDevice)
@@ -71,8 +71,11 @@ class KNXThermostat(KNXMultiAddressDevice, ClimateDevice):
 
         return knx2_to_float(self.value("setpoint"))
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
         from knxip.conversion import float_to_knx2
 
         self.set_value("setpoint", float_to_knx2(temperature))

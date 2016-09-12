@@ -19,12 +19,12 @@ PLATFORM_SCHEMA = rfxtrx.DEFAULT_SCHEMA
 SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the RFXtrx platform."""
     import RFXtrx as rfxtrxmod
 
     lights = rfxtrx.get_devices_from_config(config, RfxtrxLight)
-    add_devices_callback(lights)
+    add_devices(lights)
 
     def light_update(event):
         """Callback for light updates from the RFXtrx gateway."""
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         new_device = rfxtrx.get_new_device(event, config, RfxtrxLight)
         if new_device:
-            add_devices_callback([new_device])
+            add_devices([new_device])
 
         rfxtrx.apply_received_command(event)
 
