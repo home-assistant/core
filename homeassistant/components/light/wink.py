@@ -7,9 +7,9 @@ https://home-assistant.io/components/light.wink/
 import logging
 import colorsys
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
-    ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
-    SUPPORT_RGB_COLOR, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
 from homeassistant.components.wink import WinkDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.util import color as color_util
@@ -21,8 +21,8 @@ REQUIREMENTS = ['python-wink==0.7.14', 'pubnub==3.8.2']
 SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup Wink lights."""
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the Wink lights."""
     import pywink
 
     token = config.get(CONF_ACCESS_TOKEN)
@@ -36,8 +36,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     elif token is not None:
         pywink.set_bearer_token(token)
 
-    add_devices_callback(
-        WinkLight(light) for light in pywink.get_bulbs())
+    add_devices(WinkLight(light) for light in pywink.get_bulbs())
 
 
 class WinkLight(WinkDevice, Light):
