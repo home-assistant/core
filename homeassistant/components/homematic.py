@@ -331,9 +331,11 @@ def _get_devices(device_type, keys):
                 _LOGGER.debug("Handling %s:%i", key, channel)
                 if channel in params:
                     for param in params[channel]:
-                        name = _create_ha_name(name=device.NAME,
-                                               channel=channel,
-                                               param=param)
+                        name = _create_ha_name(
+                            name=device.NAME,
+                            channel=channel,
+                            param=param
+                        )
                         device_dict = {
                             CONF_PLATFORM: "homematic",
                             ATTR_ADDRESS: key,
@@ -354,8 +356,7 @@ def _get_devices(device_type, keys):
                     _LOGGER.debug("Channel %i not in params", channel)
         else:
             _LOGGER.debug("Got no params for %s", key)
-    _LOGGER.debug("%s autodiscovery: %s",
-                  device_type, str(device_arr))
+    _LOGGER.debug("%s autodiscovery: %s", device_type, str(device_arr))
     return device_arr
 
 
@@ -365,9 +366,7 @@ def _create_params_list(hmdevice, metadata, device_type):
     merge = False
 
     # use merge?
-    if device_type == DISCOVER_SENSORS:
-        merge = True
-    elif device_type == DISCOVER_BINARY_SENSORS:
+    if device_type in (DISCOVER_SENSORS, DISCOVER_BINARY_SENSORS):
         merge = True
 
     # Search in sensor and binary metadata per elements
@@ -429,10 +428,9 @@ def setup_hmdevice_discovery_helper(hmdevicetype, discovery_info,
 
         # create object and add to HA
         new_device = hmdevicetype(config)
-        add_callback_devices([new_device])
-
-        # link to HM
         new_device.link_homematic()
+
+        add_callback_devices([new_device])
 
     return True
 
@@ -668,7 +666,7 @@ class HMDevice(Entity):
                 attr[data[0]] = value
 
         # static attributes
-        attr["ID"] = self._hmdevice.ADDRESS
+        attr['ID'] = self._hmdevice.ADDRESS
 
         return attr
 
@@ -678,6 +676,10 @@ class HMDevice(Entity):
         if self._connected:
             return True
 
+        # pyhomematic is loaded
+        if HOMEMATIC is None:
+            return False
+
         # Does a HMDevice from pyhomematic exist?
         if self._address in HOMEMATIC.devices:
             # Init
@@ -686,33 +688,25 @@ class HMDevice(Entity):
 
             # Check if Homematic class is okay for HA class
             _LOGGER.info("Start linking %s to %s", self._address, self._name)
-            if self._check_hm_to_ha_object():
-                try:
-                    # Init datapoints of this object
-                    self._init_data_struct()
-                    if HOMEMATIC_LINK_DELAY:
-                        # We delay / pause loading of data to avoid overloading
-                        # of CCU / Homegear when doing auto detection
-                        time.sleep(HOMEMATIC_LINK_DELAY)
-                    self._load_init_data_from_hm()
-                    _LOGGER.debug("%s datastruct: %s",
-                                  self._name, str(self._data))
+            try:
+                # Init datapoints of this object
+                self._init_data()
+                if HOMEMATIC_LINK_DELAY:
+                    # We delay / pause loading of data to avoid overloading
+                    # of CCU / Homegear when doing auto detection
+                    time.sleep(HOMEMATIC_LINK_DELAY)
+                self._load_data_from_hm()
+                _LOGGER.debug("%s datastruct: %s", self._name, str(self._data))
 
-                    # Link events from pyhomatic
-                    self._subscribe_homematic_events()
-                    self._available = not self._hmdevice.UNREACH
-                # pylint: disable=broad-except
-                except Exception as err:
-                    self._connected = False
-                    _LOGGER.error("Exception while linking %s: %s",
-                                  self._address, str(err))
-            else:
-                _LOGGER.critical("Delink %s object from HM", self._name)
+                # Link events from pyhomatic
+                self._subscribe_homematic_events()
+                self._available = not self._hmdevice.UNREACH
+                _LOGGER.debug("%s linking done", self._name)
+            # pylint: disable=broad-except
+            except Exception as err:
                 self._connected = False
-
-            # Update HA
-            _LOGGER.debug("%s linking done, send update_ha_state", self._name)
-            self.update_ha_state()
+                _LOGGER.error("Exception while linking %s: %s",
+                              self._address, str(err))
         else:
             _LOGGER.debug("%s not found in HOMEMATIC.devices", self._address)
 
@@ -730,7 +724,7 @@ class HMDevice(Entity):
                 have_change = True
 
         # If available it has changed
-        if attribute is "UNREACH":
+        if attribute is 'UNREACH':
             self._available = bool(value)
             have_change = True
 
@@ -771,7 +765,7 @@ class HMDevice(Entity):
                                             bequeath=False,
                                             channel=channel)
 
-    def _load_init_data_from_hm(self):
+    def _load_data_from_hm(self):
         """Load first value from pyhomematic."""
         if not self._connected:
             return False
@@ -800,27 +794,15 @@ class HMDevice(Entity):
             return self._data[self._state]
         return None
 
-    def _check_hm_to_ha_object(self):
-        """Check if it is possible to use the Homematic object as this HA type.
-
-        NEEDS overwrite by inherit!
-        """
-        if not self._connected or self._hmdevice is None:
-            _LOGGER.error("HA object is not linked to homematic.")
-            return False
-
-        # Check if button option is correctly set for this object
-        if self._channel > self._hmdevice.ELEMENT:
-            _LOGGER.critical("Button option is not correct for this object!")
-            return False
-
-        return True
-
-    def _init_data_struct(self):
-        """Generate a data dict (self._data) from the Homematic metadata.
-
-        NEEDS overwrite by inherit!
-        """
+    def _init_data(self):
+        """Generate a data dict (self._data) from the Homematic metadata."""
         # Add all attributes to data dict
         for data_note in self._hmdevice.ATTRIBUTENODE:
             self._data.update({data_note: STATE_UNKNOWN})
+
+        # init device specified data
+        self._init_data_struct()
+
+    def _init_data_struct(self):
+        """Generate a data dict from the Homematic device metadata."""
+        raise NotImplementedError

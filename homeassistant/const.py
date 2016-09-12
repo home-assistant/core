@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 28
+MINOR_VERSION = 29
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -61,6 +61,7 @@ CONF_AUTHENTICATION = 'authentication'
 CONF_BEFORE = 'before'
 CONF_BELOW = 'below'
 CONF_BLACKLIST = 'blacklist'
+CONF_BRIGHTNESS = 'brightness'
 CONF_CODE = 'code'
 CONF_COMMAND = 'command'
 CONF_COMMAND_CLOSE = 'command_close'
@@ -110,6 +111,7 @@ CONF_PREFIX = 'prefix'
 CONF_RECIPIENT = 'recipient'
 CONF_RESOURCE = 'resource'
 CONF_RESOURCES = 'resources'
+CONF_RGB = 'rgb'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_SENDER = 'sender'
 CONF_SENSOR_CLASS = 'sensor_class'
@@ -120,6 +122,7 @@ CONF_STRUCTURE = 'structure'
 CONF_SWITCHES = 'switches'
 CONF_TEMPERATURE_UNIT = 'temperature_unit'
 CONF_TIME_ZONE = 'time_zone'
+CONF_TIMEOUT = 'timeout'
 CONF_TOKEN = 'token'
 CONF_TRIGGER_TIME = 'trigger_time'
 CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'

@@ -72,7 +72,7 @@ class DenonDevice(MediaPlayerDevice):
         """Get the latest details from the device."""
         try:
             telnet = telnetlib.Telnet(self._host)
-        except ConnectionRefusedError:
+        except OSError:
             return False
 
         self._pwstate = self.telnet_request(telnet, 'PW?')

@@ -28,10 +28,10 @@ CONF_PAYLOAD_STOP = 'payload_stop'
 CONF_STATE_OPEN = 'state_open'
 CONF_STATE_CLOSED = 'state_closed'
 
-DEFAULT_NAME = "MQTT Cover"
-DEFAULT_PAYLOAD_OPEN = "OPEN"
-DEFAULT_PAYLOAD_CLOSE = "CLOSE"
-DEFAULT_PAYLOAD_STOP = "STOP"
+DEFAULT_NAME = 'MQTT Cover'
+DEFAULT_PAYLOAD_OPEN = 'OPEN'
+DEFAULT_PAYLOAD_CLOSE = 'CLOSE'
+DEFAULT_PAYLOAD_STOP = 'STOP'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_RETAIN = False
 
@@ -44,25 +44,24 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-
 })
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Add MQTT Cover."""
-    add_devices_callback([MqttCover(
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the MQTT Cover."""
+    add_devices([MqttCover(
         hass,
-        config[CONF_NAME],
+        config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
-        config[CONF_COMMAND_TOPIC],
-        config[CONF_QOS],
-        config[CONF_RETAIN],
-        config[CONF_STATE_OPEN],
-        config[CONF_STATE_CLOSED],
-        config[CONF_PAYLOAD_OPEN],
-        config[CONF_PAYLOAD_CLOSE],
-        config[CONF_PAYLOAD_STOP],
-        config[CONF_OPTIMISTIC],
+        config.get(CONF_COMMAND_TOPIC),
+        config.get(CONF_QOS),
+        config.get(CONF_RETAIN),
+        config.get(CONF_STATE_OPEN),
+        config.get(CONF_STATE_CLOSED),
+        config.get(CONF_PAYLOAD_OPEN),
+        config.get(CONF_PAYLOAD_CLOSE),
+        config.get(CONF_PAYLOAD_STOP),
+        config.get(CONF_OPTIMISTIC),
         config.get(CONF_VALUE_TEMPLATE)
     )])
 
@@ -111,8 +110,8 @@ class MqttCover(CoverDevice):
                 self.update_ha_state()
             else:
                 _LOGGER.warning(
-                    "Payload is not True or False or"
-                    " integer(0-100) %s", payload)
+                    "Payload is not True, False, or integer (0-100): %s",
+                    payload)
         if self._state_topic is None:
             # Force into optimistic mode.
             self._optimistic = True

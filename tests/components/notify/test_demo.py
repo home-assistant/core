@@ -68,7 +68,7 @@ class TestNotifyDemo(unittest.TestCase):
             'data': {'hello': 'world'}
         } == data
 
-    def test_calling_notify_from_script_loaded_from_yaml(self):
+    def test_calling_notify_from_script_loaded_from_yaml_without_title(self):
         """Test if we can call a notify from a script."""
         yaml_conf = """
 service: notify.notify
@@ -92,7 +92,38 @@ data_template:
         assert {
             'message': 'Test 123 4',
             'target': None,
-            'title': 'Home Assistant',
+            'data': {
+                'push': {
+                    'sound':
+                    'US-EN-Morgan-Freeman-Roommate-Is-Arriving.wav'}}
+        } == self.events[0].data
+
+    def test_calling_notify_from_script_loaded_from_yaml_with_title(self):
+        """Test if we can call a notify from a script."""
+        yaml_conf = """
+service: notify.notify
+data:
+  data:
+    push:
+      sound: US-EN-Morgan-Freeman-Roommate-Is-Arriving.wav
+data_template:
+  title: Test
+  message: >
+          Test 123 {{ 2 + 2 }}
+"""
+
+        with tempfile.NamedTemporaryFile() as fp:
+            fp.write(yaml_conf.encode('utf-8'))
+            fp.flush()
+            conf = yaml.load_yaml(fp.name)
+
+        script.call_from_config(self.hass, conf)
+        self.hass.pool.block_till_done()
+        self.assertTrue(len(self.events) == 1)
+        assert {
+            'message': 'Test 123 4',
+            'title': 'Test',
+            'target': None,
             'data': {
                 'push': {
                     'sound':

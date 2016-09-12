@@ -6,43 +6,58 @@ https://home-assistant.io/components/sensor.netatmo/
 """
 import logging
 from datetime import timedelta
+
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
-
-
-DEPENDENCIES = ["netatmo"]
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {
-    'temperature':  ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'co2':          ['CO2', 'ppm', 'mdi:cloud'],
-    'pressure':     ['Pressure', 'mbar', 'mdi:gauge'],
-    'noise':        ['Noise', 'dB', 'mdi:volume-high'],
-    'humidity':     ['Humidity', '%', 'mdi:water-percent'],
-    'rain':         ['Rain', 'mm', 'mdi:weather-rainy'],
-    'sum_rain_1':   ['sum_rain_1', 'mm', 'mdi:weather-rainy'],
-    'sum_rain_24':  ['sum_rain_24', 'mm', 'mdi:weather-rainy'],
-    'battery_vp':   ['Battery', '', 'mdi:battery'],
-    'min_temp':     ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
-    'max_temp':     ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
-    'WindAngle':    ['Angle', '', 'mdi:compass'],
-    'WindStrength': ['Strength', 'km/h', 'mdi:weather-windy'],
-    'GustAngle':    ['Gust Angle', '', 'mdi:compass'],
-    'GustStrength': ['Gust Strength', 'km/h', 'mdi:weather-windy'],
-    'rf_status':    ['Radio', '', 'mdi:signal'],
-    'wifi_status':  ['Wifi', '', 'mdi:wifi']
-}
-
-CONF_STATION = 'station'
 ATTR_MODULE = 'modules'
 
-# Return cached results if last scan was less then this time ago
-# NetAtmo Data is uploaded to server every 10mn
-# so this time should not be under
+CONF_MODULES = 'modules'
+CONF_MODULE_NAME = 'module_name'
+CONF_STATION = 'station'
+
+DEPENDENCIES = ['netatmo']
+
+# NetAtmo Data is uploaded to server every 10 minutes
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
+
+SENSOR_TYPES = {
+    'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    'co2': ['CO2', 'ppm', 'mdi:cloud'],
+    'pressure': ['Pressure', 'mbar', 'mdi:gauge'],
+    'noise': ['Noise', 'dB', 'mdi:volume-high'],
+    'humidity': ['Humidity', '%', 'mdi:water-percent'],
+    'rain': ['Rain', 'mm', 'mdi:weather-rainy'],
+    'sum_rain_1': ['sum_rain_1', 'mm', 'mdi:weather-rainy'],
+    'sum_rain_24': ['sum_rain_24', 'mm', 'mdi:weather-rainy'],
+    'battery_vp': ['Battery', '', 'mdi:battery'],
+    'min_temp': ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
+    'max_temp': ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
+    'WindAngle': ['Angle', '', 'mdi:compass'],
+    'WindStrength': ['Strength', 'km/h', 'mdi:weather-windy'],
+    'GustAngle': ['Gust Angle', '', 'mdi:compass'],
+    'GustStrength': ['Gust Strength', 'km/h', 'mdi:weather-windy'],
+    'rf_status': ['Radio', '', 'mdi:signal'],
+    'wifi_status': ['Wifi', '', 'mdi:wifi']
+}
+
+MODULE_SCHEMA = vol.Schema({
+    vol.Required(CONF_MODULE_NAME, default=[]):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_STATION): cv.string,
+    vol.Required(CONF_MODULES): MODULE_SCHEMA,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -53,18 +68,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
     try:
         # Iterate each module
-        for module_name, monitored_conditions in config[ATTR_MODULE].items():
+        for module_name, monitored_conditions in config[CONF_MODULES].items():
             # Test if module exist """
             if module_name not in data.get_module_names():
                 _LOGGER.error('Module name: "%s" not found', module_name)
                 continue
             # Only create sensor for monitored """
             for variable in monitored_conditions:
-                if variable not in SENSOR_TYPES:
-                    _LOGGER.error('Sensor type: "%s" does not exist', variable)
-                else:
-                    dev.append(
-                        NetAtmoSensor(data, module_name, variable))
+                dev.append(NetAtmoSensor(data, module_name, variable))
     except KeyError:
         pass
 
@@ -77,7 +88,7 @@ class NetAtmoSensor(Entity):
 
     def __init__(self, netatmo_data, module_name, sensor_type):
         """Initialize the sensor."""
-        self._name = "NetAtmo {} {}".format(module_name,
+        self._name = 'NetAtmo {} {}'.format(module_name,
                                             SENSOR_TYPES[sensor_type][0])
         self.netatmo_data = netatmo_data
         self.module_name = module_name
