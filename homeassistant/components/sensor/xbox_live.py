@@ -11,6 +11,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_API_KEY, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ class XboxSensor(Entity):
     @property
     def entity_id(self):
         """Return the entity ID."""
-        return 'sensor.xbox_' + self._gamertag
+        return 'sensor.xbox_' + slugify(self._gamertag)
 
     @property
     def state(self):
