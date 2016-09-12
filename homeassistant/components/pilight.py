@@ -73,8 +73,10 @@ def setup(hass, config):
 
     def send_code(call):
         """Send RF code to the pilight-daemon."""
+        # Change type to dict from mappingproxy
+        # since data has to be JSON serializable
         message_data = dict(call.data)
-
+        
         try:
             pilight_client.send_code(message_data)
         except IOError:
