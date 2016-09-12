@@ -46,12 +46,12 @@ def _conf_preprocess(value):
 
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: {cv.match_all: vol.Schema(vol.All(_conf_preprocess, {
+    DOMAIN: cv.ordered_dict(vol.All(_conf_preprocess, {
         vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
         CONF_VIEW: cv.boolean,
         CONF_NAME: cv.string,
         CONF_ICON: cv.icon,
-    }))}
+    }, cv.match_all))
 }, extra=vol.ALLOW_EXTRA)
 
 # List of ON/OFF state tuples for groupable states
