@@ -24,6 +24,7 @@ def validate_python() -> None:
     major, minor, micro = sys.version_info[:3]
     req_major, req_minor, req_micro = REQUIRED_PYTHON_VER
 
+    # pylint: disable=too-many-boolean-expressions
     if major < req_major or \
        (major == req_major and minor < req_minor) or \
        (major == req_major and minor == req_minor and micro < req_micro):
