@@ -1,5 +1,6 @@
 """The tests for the Group components."""
 # pylint: disable=protected-access,too-many-public-methods
+from collections import OrderedDict
 import unittest
 from unittest.mock import patch
 
@@ -220,16 +221,16 @@ class TestComponentsGroup(unittest.TestCase):
         test_group = group.Group(
             self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
 
-        _setup_component(self.hass, 'group', {'group': {
-                    'second_group': {
+        group_conf = OrderedDict()
+        group_conf['second_group'] = {
                         'entities': 'light.Bowl, ' + test_group.entity_id,
                         'icon': 'mdi:work',
                         'view': True,
-                    },
-                    'test_group': 'hello.world,sensor.happy',
-                    'empty_group': {'name': 'Empty Group', 'entities': None},
-                }
-            })
+                    }
+        group_conf['test_group'] = 'hello.world,sensor.happy'
+        group_conf['empty_group'] = {'name': 'Empty Group', 'entities': None}
+
+        _setup_component(self.hass, 'group', {'group': group_conf})
 
         group_state = self.hass.states.get(
             group.ENTITY_ID_FORMAT.format('second_group'))
@@ -241,6 +242,7 @@ class TestComponentsGroup(unittest.TestCase):
                          group_state.attributes.get(ATTR_ICON))
         self.assertTrue(group_state.attributes.get(group.ATTR_VIEW))
         self.assertTrue(group_state.attributes.get(ATTR_HIDDEN))
+        self.assertEqual(1, group_state.attributes.get(group.ATTR_ORDER))
 
         group_state = self.hass.states.get(
             group.ENTITY_ID_FORMAT.format('test_group'))
@@ -251,6 +253,7 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertIsNone(group_state.attributes.get(ATTR_ICON))
         self.assertIsNone(group_state.attributes.get(group.ATTR_VIEW))
         self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
+        self.assertEqual(2, group_state.attributes.get(group.ATTR_ORDER))
 
     def test_groups_get_unique_names(self):
         """Two groups with same name should both have a unique entity id."""
