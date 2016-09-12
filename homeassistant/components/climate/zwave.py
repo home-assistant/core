@@ -70,8 +70,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     node = zwave.NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
     value = node.values[discovery_info[ATTR_VALUE_ID]]
     value.set_change_verified(False)
-    if value.index != 1:  # Only add 1 device
-        return
     add_devices([ZWaveClimate(value, temp_unit)])
     _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
                   discovery_info, zwave.NETWORK)
