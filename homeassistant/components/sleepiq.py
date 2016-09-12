@@ -8,7 +8,10 @@ https://home-assistant.io/components/sleepiq/
 import logging
 from datetime import timedelta
 
-from homeassistant.helpers import validate_config, discovery
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import  discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
@@ -36,6 +39,12 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA = None
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 # pylint: disable=too-few-public-methods
 class SleepIQData(object):
@@ -97,12 +106,6 @@ def setup(hass, config):
     Will automatically load sensor components to support
     devices discovered on the account.
     """
-    if not validate_config(
-            config,
-            {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]},
-            _LOGGER):
-        return False
-
     # pylint: disable=global-statement
     global DATA
 
