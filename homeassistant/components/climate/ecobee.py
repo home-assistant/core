@@ -230,13 +230,17 @@ class Thermostat(ClimateDevice):
         if self.hold_temp:
             self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
                                            high_temp, "indefinite")
-            _LOGGER.debug("Setting ecobee temp to: low=%s, is=%s, high=%s, "
-                          "is=%s", low_temp, isinstance(
+            _LOGGER.debug("Setting ecobee hold_temp to: low=%s, is=%s, "
+                          "high=%s, is=%s", low_temp, isinstance(
                               low_temp, (int, float)), high_temp,
                           isinstance(high_temp, (int, float)))
         else:
             self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
                                            high_temp)
+            _LOGGER.debug("Setting ecobee temp to: low=%s, is=%s, "
+                          "high=%s, is=%s", low_temp, isinstance(
+                              low_temp, (int, float)), high_temp,
+                          isinstance(high_temp, (int, float)))
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
