@@ -32,6 +32,11 @@ class SleepNumberSensor(sleepiq.SleepIQSensor):
         """Return the state of the sensor."""
         return self._state
 
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return ICON
+
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
         sleepiq.SleepIQSensor.update(self)
