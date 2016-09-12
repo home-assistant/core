@@ -16,7 +16,7 @@ from homeassistant.const import (
     REQUIRED_PYTHON_VER,
     RESTART_EXIT_CODE,
 )
-from homeassistant.helpers.async import run_callback_threadsafe
+from homeassistant.util.async import run_callback_threadsafe
 
 
 def validate_python() -> None:

@@ -32,7 +32,7 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
-from homeassistant.helpers.async import (
+from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
