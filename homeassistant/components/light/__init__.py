@@ -125,8 +125,8 @@ def is_on(hass, entity_id=None):
 
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, color_temp=None, white_value=None, profile=None,
-            flash=None, effect=None, color_name=None):
+            rgb_color=None, xy_color=None, color_temp=None, white_value=None, 
+            profile=None, flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
