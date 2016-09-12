@@ -29,7 +29,9 @@ EVENT = 'pilight_received'
 
 # The pilight code schema depends on the protocol
 # Thus only require to have the protocol information
-RF_CODE_SCHEMA = vol.Schema({vol.Required(ATTR_PROTOCOL): cv.string},
+# Ensure that protocol is in a list otherwise segfault in pilight-daemon
+# https://github.com/pilight/pilight/issues/296
+RF_CODE_SCHEMA = vol.Schema({vol.Required(ATTR_PROTOCOL): vol.All(cv.string, cv.ensure_list)},
                             extra=vol.ALLOW_EXTRA)
 SERVICE_NAME = 'send'
 
@@ -72,11 +74,6 @@ def setup(hass, config):
     def send_code(call):
         """Send RF code to the pilight-daemon."""
         message_data = call.data
-
-        # Patch data because of bug:
-        # https://github.com/pilight/pilight/issues/296
-        # Protocol has to be in a list otherwise segfault in pilight-daemon
-        message_data['protocol'] = ensure_list(message_data['protocol'])
 
         try:
             pilight_client.send_code(message_data)
