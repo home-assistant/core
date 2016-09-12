@@ -30,7 +30,8 @@ EVENT = 'pilight_received'
 # Thus only require to have the protocol information
 # Ensure that protocol is in a list otherwise segfault in pilight-daemon
 # https://github.com/pilight/pilight/issues/296
-RF_CODE_SCHEMA = vol.Schema({vol.Required(ATTR_PROTOCOL): vol.All(cv.ensure_list, [cv.string])},
+RF_CODE_SCHEMA = vol.Schema({vol.Required(ATTR_PROTOCOL):
+                             vol.All(cv.ensure_list, [cv.string])},
                             extra=vol.ALLOW_EXTRA)
 SERVICE_NAME = 'send'
 
@@ -75,7 +76,7 @@ def setup(hass, config):
         # Change type to dict from mappingproxy
         # since data has to be JSON serializable
         message_data = dict(call.data)
-        
+
         try:
             pilight_client.send_code(message_data)
         except IOError:
