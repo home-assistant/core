@@ -1,72 +1,8 @@
 """
 APNS Notification platform.
 
-The APNS platform uses the Apple Push Notification service (APNS) to deliver
-notifications from Home Assistant.
-
-To use the APNS service you will need an apple developer account
-and you will need to create an App to receive push notifications.
-For more information see the apple developer documentation.
-
-Sample Configuration:
-
-    notify:
-      platform: apns
-      name: doorbell_app
-      sandbox: true
-      cert_file: doorbell_app.pem
-
-Configuration Variables:
-
-    name:
-        The name of the app.
-    sandbox:
-        If true notifications will be sent to the sandbox (test) notification
-        service.
-    cert_file:
-        The certificate to use to authenticate with the APNS service.
-
-Usage:
-
-    The APNS platform will register two services, notify/[app_name] and
-    apns/[app_name].
-
-    apns/app_name:
-        This service will register device id's with home assistant. In order to
-        receive a notification a device must be registered. The app on the
-        device can use this service to send its id during startup, the id will
-        be stored in the [app_name]_apns.yaml.
-
-        See didRegisterForRemoteNotificationsWithDeviceToken in the apple
-        developer documentation for more information.
-
-
-    notify/app_name
-        This service will send messages to a registered device. The following
-        parameters can be used:
-
-        message:
-            The message to send
-
-        target:
-            The desired state of the device, only devices that match the state
-            will receive messages. To enable state tracking a registered
-            device must have a device_tracking_id added to the
-            [app_name]_apns.yaml file. If this id matches a device in
-            known_devices.yaml its state will be tracked.
-
-        data:
-            badge:
-                The number to display as the badge of the app ic
-            sound:
-                The name of a sound file in the app bundle or in the
-                Library/Sounds folder.
-            category:
-                Provide this key with a string value that represents the
-                identifier property of the UIMutableUserNotificationCategory
-            content_available:
-                Provide this key with a value of 1 to indicate that new
-                content is available.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.apns/
 """
 import logging
 import os
