@@ -338,7 +338,7 @@ class Device(Entity):
             attr[ATTR_BATTERY] = self.battery
 
         if self.attributes:
-            for key, value in self.attributes:
+            for key, value in self.attributes.items():
                 attr[key] = value
 
         return attr
