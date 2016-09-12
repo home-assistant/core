@@ -21,12 +21,14 @@ from homeassistant.helpers.async import run_callback_threadsafe
 
 def validate_python() -> None:
     """Validate we're running the right Python version."""
-    major, minor = sys.version_info[:2]
-    req_major, req_minor = REQUIRED_PYTHON_VER
+    major, minor, micro = sys.version_info[:3]
+    req_major, req_minor, req_micro = REQUIRED_PYTHON_VER
 
-    if major < req_major or (major == req_major and minor < req_minor):
-        print("Home Assistant requires at least Python {}.{}".format(
-            req_major, req_minor))
+    if major < req_major or \
+       (major == req_major and minor < req_minor) or \
+       (major == req_major and minor == req_minor and micro < req_micro):
+        print("Home Assistant requires at least Python {}.{}.{}".format(
+            req_major, req_minor, req_micro))
         sys.exit(1)
 
 
