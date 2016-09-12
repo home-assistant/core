@@ -8,22 +8,25 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.light import (ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
-                                            Light, PLATFORM_SCHEMA)
+from homeassistant.components.light import (
+    ATTR_RGB_COLOR, SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['blinkstick==1.1.8']
+
+_LOGGER = logging.getLogger(__name__)
+
 CONF_SERIAL = 'serial'
+
 DEFAULT_NAME = 'Blinkstick'
-REQUIREMENTS = ["blinkstick==1.1.8"]
+
 SUPPORT_BLINKSTICK = SUPPORT_RGB_COLOR
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERIAL): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
-
-_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
