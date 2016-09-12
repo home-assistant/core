@@ -65,7 +65,7 @@ class BloomSky(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def refresh_devices(self):
-        """Use the API to retreive a list of devices."""
+        """Use the API to retrieve a list of devices."""
         _LOGGER.debug("Fetching BloomSky update")
         response = requests.get(self.API_URL,
                                 headers={"Authorization": self._api_key},
