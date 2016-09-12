@@ -14,7 +14,7 @@ PyISY==1.0.7
 PyJWT==1.4.2
 
 # homeassistant.components.arduino
-PyMata==2.12
+PyMata==2.13
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
