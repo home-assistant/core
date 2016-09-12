@@ -10,7 +10,7 @@ class RunCoroutineThreadsafeTests(test_utils.TestCase):
 
     def setUp(self):
         self.loop = asyncio.new_event_loop()
-        self.set_event_loop(self.loop) # Will cleanup properly
+        self.set_event_loop(self.loop)  # Will cleanup properly
 
     @asyncio.coroutine
     def add(self, a, b, fail=False, cancel=False):
