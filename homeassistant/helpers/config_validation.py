@@ -297,7 +297,6 @@ def ordered_dict(value_validator, key_validator=match_all):
     value_validator will be applied to each value of the dictionary.
     key_validator (optional) will be applied to each key of the dictionary.
     """
-
     item_validator = vol.Schema({key_validator: value_validator})
 
     def validator(value):
