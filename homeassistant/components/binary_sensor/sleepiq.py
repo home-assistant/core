@@ -8,7 +8,6 @@ from homeassistant.components import sleepiq
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 DEPENDENCIES = ['sleepiq']
-ICON = 'mdi:sleep'
 
 
 # pylint: disable=too-many-instance-attributes
@@ -22,6 +21,7 @@ class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
                                        bed_id,
                                        side)
         self.type = sleepiq.IS_IN_BED
+        self._state = None
         self._name = sleepiq.SENSOR_TYPES[self.type]
         self.update()
 
@@ -29,18 +29,6 @@ class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
     def is_on(self):
         """Return the status of the sensor."""
         return self._state is True
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        # pylint: disable=no-member
-        return BinarySensorDevice.state.fget(self)
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        # pylint: disable=no-member
-        return BinarySensorDevice.icon.fget(self)
 
     @property
     def sensor_class(self):

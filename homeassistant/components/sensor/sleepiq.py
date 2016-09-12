@@ -21,10 +21,16 @@ class SleepNumberSensor(sleepiq.SleepIQSensor):
                                        bed_id,
                                        side)
 
+        self._state = None
         self.type = sleepiq.SLEEP_NUMBER
         self._name = sleepiq.SENSOR_TYPES[self.type]
 
         self.update()
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""

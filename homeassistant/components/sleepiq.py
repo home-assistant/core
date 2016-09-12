@@ -21,8 +21,6 @@ REQUIREMENTS = ['sleepyq==0.6']
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
-ICON = 'mdi:hotel'
-
 IS_IN_BED = 'is_in_bed'
 SLEEP_NUMBER = 'sleep_number'
 SENSOR_TYPES = {
@@ -68,7 +66,6 @@ class SleepIQSensor(Entity):
         self._bed_id = bed_id
         self._side = side
         self.sleepiq_data = sleepiq_data
-        self._state = None
         self.side = None
         self.bed = None
 
@@ -82,16 +79,6 @@ class SleepIQSensor(Entity):
         return 'SleepNumber {} {} {}'.format(self.bed.name,
                                              self.side.sleeper.first_name,
                                              self._name)
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
