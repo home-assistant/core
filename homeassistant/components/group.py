@@ -51,7 +51,7 @@ CONFIG_SCHEMA = vol.Schema({
         CONF_VIEW: cv.boolean,
         CONF_NAME: cv.string,
         CONF_ICON: cv.icon,
-    }, cv.match_all))
+    }), cv.match_all, DOMAIN)
 }, extra=vol.ALLOW_EXTRA)
 
 # List of ON/OFF state tuples for groupable states
