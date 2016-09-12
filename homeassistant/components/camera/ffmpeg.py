@@ -12,27 +12,39 @@ from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
 
-REQUIREMENTS = ['ha-ffmpeg==0.10']
+REQUIREMENTS = ['ha-ffmpeg==0.12']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_INPUT = 'input'
 CONF_FFMPEG_BIN = 'ffmpeg_bin'
 CONF_EXTRA_ARGUMENTS = 'extra_arguments'
+CONF_RUN_TEST = 'run_test'
 
 DEFAULT_BINARY = 'ffmpeg'
 DEFAULT_NAME = 'FFmpeg'
+DEFAULT_RUN_TEST = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_INPUT): cv.string,
     vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
     vol.Optional(CONF_FFMPEG_BIN, default=DEFAULT_BINARY): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_RUN_TEST, default=DEFAULT_RUN_TEST): cv.boolean,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a FFmpeg Camera."""
+    from haffmpeg import Test
+
+    # run Test
+    if config.get(CONF_RUN_TEST):
+        test = Test(config.get(CONF_FFMPEG_BIN))
+        if not test.run_test(config.get(CONF_INPUT)):
+            _LOGGER.error("FFmpeg '%s' test fails!", config.get(CONF_INPUT))
+            return
+
     add_devices([FFmpegCamera(config)])
 
 
