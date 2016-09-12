@@ -220,12 +220,12 @@ class Thermostat(ClimateDevice):
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             temperature = kwargs.get(ATTR_TEMPERATURE)
-            low_temp = temperature
-            high_temp = temperature
+            low_temp = int(temperature)
+            high_temp = int(temperature)
         if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None and \
            kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
-            high_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            low_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+            high_temp = int(kwargs.get(ATTR_TARGET_TEMP_LOW))
+            low_temp = int(kwargs.get(ATTR_TARGET_TEMP_HIGH))
 
         if self.hold_temp:
             self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
