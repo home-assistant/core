@@ -6,22 +6,30 @@ https://home-assistant.io/components/knx/
 """
 import logging
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers.entity import Entity
+import voluptuous as vol
 
-DOMAIN = "knx"
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
+from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
+
 REQUIREMENTS = ['knxip==0.3.3']
 
-EVENT_KNX_FRAME_RECEIVED = "knx_frame_received"
+_LOGGER = logging.getLogger(__name__)
 
-CONF_HOST = "host"
-CONF_PORT = "port"
+DEFAULT_PORT = '3671'
+DOMAIN = 'knx'
 
-DEFAULT_PORT = "3671"
+EVENT_KNX_FRAME_RECEIVED = 'knx_frame_received'
 
 KNXTUNNEL = None
 
-_LOGGER = logging.getLogger(__name__)
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -31,17 +39,11 @@ def setup(hass, config):
     from knxip.ip import KNXIPTunnel
     from knxip.core import KNXException
 
-    host = config[DOMAIN].get(CONF_HOST, None)
+    host = config[DOMAIN].get(CONF_HOST)
+    port = config[DOMAIN].get(CONF_PORT)
 
-    if host is None:
+    if host is "0.0.0.0":
         _LOGGER.debug("Will try to auto-detect KNX/IP gateway")
-        host = "0.0.0.0"
-
-    try:
-        port = int(config[DOMAIN].get(CONF_PORT, DEFAULT_PORT))
-    except ValueError:
-        _LOGGER.exception("Can't parse KNX IP interface port")
-        return False
 
     KNXTUNNEL = KNXIPTunnel(host, port)
     try:
