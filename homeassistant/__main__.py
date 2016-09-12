@@ -21,15 +21,9 @@ from homeassistant.util.async import run_callback_threadsafe
 
 def validate_python() -> None:
     """Validate we're running the right Python version."""
-    major, minor, micro = sys.version_info[:3]
-    req_major, req_minor, req_micro = REQUIRED_PYTHON_VER
-
-    # pylint: disable=too-many-boolean-expressions
-    if major < req_major or \
-       (major == req_major and minor < req_minor) or \
-       (major == req_major and minor == req_minor and micro < req_micro):
+    if sys.version_info[:3] < REQUIRED_PYTHON_VER:
         print("Home Assistant requires at least Python {}.{}.{}".format(
-            req_major, req_minor, req_micro))
+            *REQUIRED_PYTHON_VER))
         sys.exit(1)
 
 
