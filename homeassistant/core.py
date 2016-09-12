@@ -384,14 +384,9 @@ class EventBus(object):
             else:
                 sync_jobs.append((job_priority, (func, event)))
 
-        # Send all the sync jobs at once, since there's a lock involved we
-        # fire this off to a thread as well
+        # Send all the sync jobs at once
         if sync_jobs:
-            try:
-                self._pool.add_many_jobs(sync_jobs)
-            except:
-                _LOGGER.info("Unable to queue: %s", sync_jobs)
-                raise
+            self._pool.add_many_jobs(sync_jobs)
 
     def listen(self, event_type, listener):
         """Listen for all events or events of a specific type.
@@ -473,18 +468,19 @@ class EventBus(object):
             if hasattr(onetime_listener, 'run'):
                 return
             # Set variable so that we will never run twice.
-            # Because the event bus might have to wait till a thread comes
-            # available to execute this listener it might occur that the
-            # listener gets lined up twice to be executed.
+            # Because the event bus loop might have async_fire queued multiple
+            # times, its possible this listener may already be lined up
+            # multiple times as well.
             # This will make sure the second time it does nothing.
             setattr(onetime_listener, 'run', True)
 
             self.async_remove_listener(event_type, onetime_listener)
 
             if asyncio.iscoroutinefunction(listener):
-                self._loop.create_task(listener(event))
+                yield from listener(event)
             else:
-                listener(event)
+                job_priority = JobPriority.from_event_type(event.event_type)
+                self._pool.add_job(job_priority, (listener, event))
 
         self.async_listen(event_type, onetime_listener)
 
