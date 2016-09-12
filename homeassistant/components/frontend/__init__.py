@@ -45,9 +45,9 @@ def register_built_in_panel(hass, component_name, sidebar_title=None,
     else:
         url = None  # use default url generate mechanism
 
-    register_panel(hass, component_name, os.path.join(STATIC_PATH, path),
-                  FINGERPRINTS[path], sidebar_title, sidebar_icon, url_path,
-                  url, config)
+     register_panel(hass, component_name, os.path.join(STATIC_PATH, path),
+                   FINGERPRINTS[path], sidebar_title, sidebar_icon, url_path,
+                   url, config)
 
 
 def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
