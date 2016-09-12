@@ -3,12 +3,13 @@
 import unittest
 
 import voluptuous as vol
+from tests.common import get_test_home_assistant
 
-from homeassistant.components import input_boolean
+from homeassistant.bootstrap import _setup_component
+from homeassistant.components.input_boolean import (
+    DOMAIN, PLATFORM_SCHEMA, is_on, turn_off, turn_on)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ICON, ATTR_FRIENDLY_NAME)
-
-from tests.common import get_test_home_assistant
 
 
 class TestInputBoolean(unittest.TestCase):
@@ -24,38 +25,41 @@ class TestInputBoolean(unittest.TestCase):
 
     def test_config(self):
         """Test config."""
-        with self.assertRaises(vol.Invalid):
-            input_boolean.PLATFORM_SCHEMA(None)
-        with self.assertRaises(vol.Invalid):
-            input_boolean.PLATFORM_SCHEMA({})
-        with self.assertRaises(vol.Invalid):
-            input_boolean.PLATFORM_SCHEMA({'name with space': None})
+        invalid_configs = [
+            None,
+            {},
+            {'name with space': None},
+        ]
+
+        for cfg in invalid_configs:
+            with self.assertRaises(vol.Invalid):
+                PLATFORM_SCHEMA(cfg)
+            self.assertFalse(
+                _setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
 
     def test_methods(self):
         """Test is_on, turn_on, turn_off methods."""
-        self.assertTrue(input_boolean.setup(self.hass, {
-            'input_boolean': {
-                'test_1': None,
-            }
-        }))
+        self.assertTrue(_setup_component(self.hass, DOMAIN, {DOMAIN: {
+            'test_1': None,
+        }}))
         entity_id = 'input_boolean.test_1'
 
         self.assertFalse(
-            input_boolean.is_on(self.hass, entity_id))
+            is_on(self.hass, entity_id))
 
-        input_boolean.turn_on(self.hass, entity_id)
+        turn_on(self.hass, entity_id)
 
         self.hass.block_till_done()
 
         self.assertTrue(
-            input_boolean.is_on(self.hass, entity_id))
+            is_on(self.hass, entity_id))
 
-        input_boolean.turn_off(self.hass, entity_id)
+        turn_off(self.hass, entity_id)
 
         self.hass.block_till_done()
 
         self.assertFalse(
-            input_boolean.is_on(self.hass, entity_id))
+            is_on(self.hass, entity_id))
 
         input_boolean.toggle(self.hass, entity_id)
 
@@ -68,16 +72,14 @@ class TestInputBoolean(unittest.TestCase):
         """Test configuration options."""
         count_start = len(self.hass.states.entity_ids())
 
-        self.assertTrue(input_boolean.setup(self.hass, {
-            'input_boolean': {
-                'test_1': None,
-                'test_2': {
-                    'name': 'Hello World',
-                    'icon': 'work',
-                    'initial': True,
-                },
+        self.assertTrue(_setup_component(self.hass, DOMAIN, {DOMAIN: {
+            'test_1': None,
+            'test_2': {
+                'name': 'Hello World',
+                'icon': 'mdi:work',
+                'initial': True,
             },
-        }))
+        }}))
 
         self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
 
@@ -94,4 +96,32 @@ class TestInputBoolean(unittest.TestCase):
         self.assertEqual(STATE_ON, state_2.state)
         self.assertEqual('Hello World',
                          state_2.attributes.get(ATTR_FRIENDLY_NAME))
-        self.assertEqual('work', state_2.attributes.get(ATTR_ICON))
+        self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
+
+    def test_multiple_platform_style(self):
+        """Load from multiple sub components."""
+        count_start = len(self.hass.states.entity_ids())
+
+        self.assertTrue(_setup_component(self.hass, DOMAIN, {
+            DOMAIN: {
+                'test_1': None,
+                'test_2': {
+                    'name': 'Hello World',
+                    'icon': 'mdi:work',
+                    'initial': True,
+                },
+            },
+            DOMAIN+" 2": {
+                'test_3': None,
+            }
+        }))
+
+        self.assertEqual(count_start + 3, len(self.hass.states.entity_ids()))
+
+        state_1 = self.hass.states.get('input_boolean.test_1')
+        state_2 = self.hass.states.get('input_boolean.test_2')
+        state_3 = self.hass.states.get('input_boolean.test_3')
+
+        self.assertIsNotNone(state_1)
+        self.assertIsNotNone(state_2)
+        self.assertIsNotNone(state_3)

@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import dict_items_from_list
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -35,17 +36,30 @@ SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
     vol.Required(ATTR_VALUE): vol.Coerce(float),
 })
 
+
+def _cv_input_slider(cfg):
+    """Volutuous helper input_slider."""
+    minimum = cfg.get(CONF_MIN)
+    maximum = cfg.get(CONF_MAX)
+    if minimum >= maximum:
+        raise vol.Invalid('Maximum ({}) is not greater than minimum ({})'
+                          .format(minimum, maximum))
+    state = cfg.get(CONF_INITIAL, minimum)
+    state = max(min(state, maximum), minimum)
+    cfg[CONF_INITIAL] = state
+    return cfg
+
 PLATFORM_SCHEMA = vol.Schema({
-    cv.slug: {
+    cv.slug: vol.All({
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_MIN): vol.Coerce(float),
-        vol.Optional(CONF_MAX): vol.Coerce(float),
+        vol.Required(CONF_MIN): vol.Coerce(float),
+        vol.Required(CONF_MAX): vol.Coerce(float),
         vol.Optional(CONF_INITIAL): vol.Coerce(float),
         vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float),
                                                     vol.Range(min=1e-3)),
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
-    }}, required=True)
+    }, _cv_input_slider)}, required=True)
 
 
 def select_value(hass, entity_id, value):
@@ -58,11 +72,16 @@ def select_value(hass, entity_id, value):
 
 def setup(hass, config):
     """Set up input slider."""
+    # pylint: disable=too-many-locals
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
 
-    for object_id, cfg in config[DOMAIN].items():
+    for object_id, cfg, duplicate in dict_items_from_list(config[DOMAIN]):
+        if duplicate:
+            _LOGGER.warning('Duplicate values for %s: %s and %s', object_id,
+                            str(duplicate), str(cfg))
+            continue
         name = cfg.get(CONF_NAME)
         minimum = cfg.get(CONF_MIN)
         maximum = cfg.get(CONF_MAX)
@@ -70,15 +89,6 @@ def setup(hass, config):
         step = cfg.get(CONF_STEP)
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
-
-        if state < minimum:
-            state = minimum
-        if state > maximum:
-            state = maximum
-        if minimum >= maximum:
-            _LOGGER.warning('Maximum (%s) is not greater than minimum (%s)'
-                            ' for %s', minimum, maximum, object_id)
-            continue
 
         entities.append(InputSlider(object_id, name, state, minimum, maximum,
                                     step, icon, unit))

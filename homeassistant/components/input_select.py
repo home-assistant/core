@@ -9,9 +9,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
+from homeassistant.helpers import dict_items_from_list
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+
 
 DOMAIN = 'input_select'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -30,13 +32,25 @@ SERVICE_SELECT_OPTION_SCHEMA = vol.Schema({
     vol.Required(ATTR_OPTION): cv.string,
 })
 
+
+def _cv_input_select(cfg):
+    """Voluptuous helper for input_select."""
+    options = cfg[CONF_OPTIONS]
+    state = cfg.get(CONF_INITIAL, options[0])
+    if state not in options:
+        raise vol.Invalid('initial state "{}" is not part of the options: {}'
+                          .format(state, ','.join(options)))
+    return cfg
+
+
 PLATFORM_SCHEMA = vol.Schema({
-    cv.slug: {
+    cv.slug: vol.All({
         vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1),
+                                            [cv.string]),
         vol.Optional(CONF_INITIAL): cv.string,
         vol.Optional(CONF_ICON): cv.icon,
-    }}, required=True)
+    }, _cv_input_select)}, required=True)
 
 
 def select_option(hass, entity_id, option):
@@ -53,20 +67,19 @@ def setup(hass, config):
 
     entities = []
 
-    for object_id, cfg in config[DOMAIN].items():
+    for object_id, cfg, duplicate in dict_items_from_list(config[DOMAIN]):
+        if duplicate:
+            _LOGGER.warning('Duplicate values for %s: %s and %s', object_id,
+                            str(duplicate), str(cfg))
+            continue
         name = cfg.get(CONF_NAME)
         options = cfg.get(CONF_OPTIONS)
-        state = cfg.get(CONF_INITIAL)
-
-        if state not in options:
-            state = options[0]
-            if state is not None:
-                _LOGGER.warning('Initial state %s is not in the options %s',
-                                state, ','.join(options))
-
+        state = cfg.get(CONF_INITIAL, options[0])
         icon = cfg.get(CONF_ICON)
-
         entities.append(InputSelect(object_id, name, state, options, icon))
+
+    if not entities:
+        return False
 
     def select_option_service(call):
         """Handle a calls to the input select services."""

@@ -10,7 +10,12 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+<<<<<<< HEAD
     SERVICE_TOGGLE, STATE_ON)
+=======
+    STATE_ON)
+from homeassistant.helpers import dict_items_from_list
+>>>>>>> _setup_component
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -61,7 +66,11 @@ def setup(hass, config):
 
     entities = []
 
-    for object_id, cfg in config[DOMAIN].items():
+    for object_id, cfg, duplicate in dict_items_from_list(config[DOMAIN]):
+        if duplicate:
+            _LOGGER.warning('Duplicate values for %s: %s and %s', object_id,
+                            str(duplicate), str(cfg))
+            continue
         if not cfg:
             cfg = {}
 
