@@ -73,7 +73,7 @@ def setup(hass, config):
 
     def send_code(call):
         """Send RF code to the pilight-daemon."""
-        message_data = call.data
+        message_data = dict(call.data)
 
         try:
             pilight_client.send_code(message_data)
