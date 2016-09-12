@@ -303,16 +303,10 @@ def ordered_dict(value_validator, key_validator=match_all):
     def validator(value):
         """Validate ordered dict."""
         config = OrderedDict()
-        errors = []
-        for key, val in value.items():
-            try:
-                v_res = item_validator({key: val})
-                config.update(v_res)
-            except vol.Invalid as ex:
-                errors.append(ex)
 
-        if errors:
-            raise vol.MultipleInvalid(errors)
+        for key, val in value.items():
+            v_res = item_validator({key: val})
+            config.update(v_res)
 
         return config
 
