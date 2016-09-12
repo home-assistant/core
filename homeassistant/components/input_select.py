@@ -34,7 +34,7 @@ SERVICE_SELECT_OPTION_SCHEMA = vol.Schema({
 
 
 def _cv_input_select(cfg):
-    """Voluptuous helper for input_select."""
+    """Config validation helper for input select (Voluptuous)."""
     options = cfg[CONF_OPTIONS]
     state = cfg.get(CONF_INITIAL, options[0])
     if state not in options:

@@ -38,7 +38,7 @@ SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
 
 
 def _cv_input_slider(cfg):
-    """Volutuous helper input_slider."""
+    """Config validation helper for input slider (Voluptuous)."""
     minimum = cfg.get(CONF_MIN)
     maximum = cfg.get(CONF_MAX)
     if minimum >= maximum:
