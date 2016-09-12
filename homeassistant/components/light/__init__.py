@@ -290,7 +290,7 @@ class Light(ToggleEntity):
 
     @property
     def white_value(self):
-        """Return the CT color value in mireds."""
+        """Return the white value of this light between 0..255."""
         return None
 
     @property
