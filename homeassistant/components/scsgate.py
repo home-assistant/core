@@ -9,7 +9,7 @@ from threading import Lock
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_DEVICE, CONF_DEVICES, CONF_NAME)
+from homeassistant.const import (CONF_DEVICE, CONF_NAME)
 from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
@@ -34,10 +34,6 @@ CONFIG_SCHEMA = vol.Schema({
 SCSGATE_SCHEMA = vol.Schema({
     vol.Required(CONF_SCS_ID): cv.string,
     vol.Optional(CONF_NAME): cv.string,
-})
-
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_DEVICES): vol.Schema({cv.slug: SCSGATE_SCHEMA}),
 })
 
 

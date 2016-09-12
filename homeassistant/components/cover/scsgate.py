@@ -6,15 +6,20 @@ https://home-assistant.io/components/cover.scsgate/
 """
 import logging
 
+import voluptuous as vol
+
 import homeassistant.components.scsgate as scsgate
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_DEVICES, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['scsgate']
 
-PLATFORM_SCHEMA = scsgate.PLATFORM_SCHEMA
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_DEVICES): vol.Schema({cv.slug: scsgate.SCSGATE_SCHEMA}),
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -92,5 +97,5 @@ class SCSGateCover(CoverDevice):
 
     def process_event(self, message):
         """Handle a SCSGate message related with this cover."""
-        self._logger.debug("Rollershutter %s, got message %s",
+        self._logger.debug("Cover %s, got message %s",
                            self._scs_id, message.toggled)
