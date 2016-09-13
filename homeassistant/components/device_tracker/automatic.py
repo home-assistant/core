@@ -12,7 +12,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (PLATFORM_SCHEMA,
-                                                     ATTR_ATTRIBUTES)
+                                                     ATTR_ATTRIBUTES,
+                                                     DEFAULT_SCAN_INTERVAL)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
@@ -60,7 +61,7 @@ def setup_scanner(hass, config: dict, see):
         return False
 
     track_utc_time_change(hass, scanner.scan_devices(),
-                          second=MIN_TIME_BETWEEN_SCANS)
+                          second=range(0, 6, DEFAULT_SCAN_INTERVAL))
 
     return True
 
