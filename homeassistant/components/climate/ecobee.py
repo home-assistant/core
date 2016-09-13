@@ -116,9 +116,6 @@ class Thermostat(ClimateDevice):
             return self.target_temperature_low
         elif self.operation_mode == 'cool':
             return self.target_temperature_high
-        else:
-            return (self.target_temperature_low +
-                    self.target_temperature_high) / 2
 
     @property
     def target_temperature_low(self):
@@ -223,19 +220,27 @@ class Thermostat(ClimateDevice):
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             temperature = kwargs.get(ATTR_TEMPERATURE)
-            low_temp = temperature - 1
-            high_temp = temperature + 1
+            low_temp = int(temperature)
+            high_temp = int(temperature)
         if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None and \
            kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
-            low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+            high_temp = int(kwargs.get(ATTR_TARGET_TEMP_LOW))
+            low_temp = int(kwargs.get(ATTR_TARGET_TEMP_HIGH))
 
         if self.hold_temp:
             self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
                                            high_temp, "indefinite")
+            _LOGGER.debug("Setting ecobee hold_temp to: low=%s, is=%s, "
+                          "high=%s, is=%s", low_temp, isinstance(
+                              low_temp, (int, float)), high_temp,
+                          isinstance(high_temp, (int, float)))
         else:
             self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
                                            high_temp)
+            _LOGGER.debug("Setting ecobee temp to: low=%s, is=%s, "
+                          "high=%s, is=%s", low_temp, isinstance(
+                              low_temp, (int, float)), high_temp,
+                          isinstance(high_temp, (int, float)))
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
