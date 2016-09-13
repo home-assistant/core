@@ -108,7 +108,7 @@ class AutomaticDeviceScanner(object):
 
     def _update_info(self, now=None) -> None:
         """Update the device info."""
-        _LOGGER.info('Updating devices %s', now)
+        _LOGGER.debug('Updating devices %s', now)
         self._update_headers()
 
         response = requests.get(URL_VEHICLES, headers=self._headers)
