@@ -23,7 +23,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.util import Throttle
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ["pyhomematic==0.1.13"]
+REQUIREMENTS = ["pyhomematic==0.1.14"]
 
 HOMEMATIC = None
 HOMEMATIC_LINK_DELAY = 0.5
