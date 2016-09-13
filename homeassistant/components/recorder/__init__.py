@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
                                  EVENT_TIME_CHANGED, MATCH_ALL)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, QueryType
 import homeassistant.util.dt as dt_util
@@ -40,10 +41,9 @@ QUERY_RETRY_WAIT = 0.1
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_PURGE_DAYS): vol.All(vol.Coerce(int),
-                                               vol.Range(min=1)),
-        # pylint: disable=no-value-for-parameter
-        vol.Optional(CONF_DB_URL): vol.Url(),
+        vol.Optional(CONF_PURGE_DAYS):
+            vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional(CONF_DB_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
