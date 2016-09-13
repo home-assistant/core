@@ -86,7 +86,7 @@ class AutomaticDeviceScanner(object):
 
         self.scan_devices()
 
-        track_point_in_utc_time(self.hass, self._update_info(),
+        track_point_in_utc_time(self.hass, self._update_info,
                                 dt_util.now() + MIN_TIME_BETWEEN_SCANS);
 
     def scan_devices(self):
