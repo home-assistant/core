@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
     STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_SCAN_INTERVAL, ATTR_TEMPERATURE)
+from homeassistant.util.temperature import convert as convert_temperature
 
 DEPENDENCIES = ['nest']
 
@@ -22,7 +23,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest thermostat."""
-    add_devices([NestThermostat(structure, device)
+    temp_unit = hass.config.units.temperature_unit
+    add_devices([NestThermostat(structure, device, temp_unit)
                  for structure, device in nest.devices()])
 
 
@@ -30,8 +32,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class NestThermostat(ClimateDevice):
     """Representation of a Nest thermostat."""
 
-    def __init__(self, structure, device):
+    def __init__(self, structure, device, temp_unit):
         """Initialize the thermostat."""
+        self._unit = temp_unit
         self.structure = structure
         self.device = device
 
@@ -134,7 +137,8 @@ class NestThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        temperature = convert_temperature(kwargs.get(ATTR_TEMPERATURE),
+                                          TEMP_CELSIUS, self._unit)
         if temperature is None:
             return
         if self.device.mode == 'range':
