@@ -17,6 +17,7 @@ REQUIREMENTS = ['knxip==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_HOST = '0.0.0.0'
 DEFAULT_PORT = '3671'
 DOMAIN = 'knx'
 
@@ -26,7 +27,7 @@ KNXTUNNEL = None
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -42,7 +43,7 @@ def setup(hass, config):
     host = config[DOMAIN].get(CONF_HOST)
     port = config[DOMAIN].get(CONF_PORT)
 
-    if host is "0.0.0.0":
+    if host is '0.0.0.0':
         _LOGGER.debug("Will try to auto-detect KNX/IP gateway")
 
     KNXTUNNEL = KNXIPTunnel(host, port)
@@ -80,21 +81,21 @@ class KNXConfig(object):
         from knxip.core import parse_group_address
 
         self.config = config
-        self.should_poll = config.get("poll", True)
-        if config.get("address"):
-            self._address = parse_group_address(config.get("address"))
+        self.should_poll = config.get('poll', True)
+        if config.get('address'):
+            self._address = parse_group_address(config.get('address'))
         else:
             self._address = None
-        if self.config.get("state_address"):
+        if self.config.get('state_address'):
             self._state_address = parse_group_address(
-                self.config.get("state_address"))
+                self.config.get('state_address'))
         else:
             self._state_address = None
 
     @property
     def name(self):
         """The name given to the entity."""
-        return self.config["name"]
+        return self.config['name']
 
     @property
     def address(self):
@@ -177,7 +178,7 @@ class KNXGroupAddress(Entity):
     @property
     def cache(self):
         """The name given to the entity."""
-        return self._config.config.get("cache", True)
+        return self._config.config.get('cache', True)
 
     def group_write(self, value):
         """Write to the group address."""
@@ -189,22 +190,21 @@ class KNXGroupAddress(Entity):
 
         try:
             if self.state_address:
-                res = KNXTUNNEL.group_read(self.state_address,
-                                           use_cache=self.cache)
+                res = KNXTUNNEL.group_read(
+                    self.state_address, use_cache=self.cache)
             else:
-                res = KNXTUNNEL.group_read(self.address,
-                                           use_cache=self.cache)
+                res = KNXTUNNEL.group_read(self.address, use_cache=self.cache)
 
             if res:
                 self._state = res[0]
                 self._data = res
             else:
-                _LOGGER.debug("Unable to read from KNX address: %s (None)",
-                              self.address)
+                _LOGGER.debug(
+                    "Unable to read from KNX address: %s (None)", self.address)
 
         except KNXException:
-            _LOGGER.exception("Unable to read from KNX address: %s",
-                              self.address)
+            _LOGGER.exception(
+                "Unable to read from KNX address: %s", self.address)
             return False
 
 
@@ -236,19 +236,19 @@ class KNXMultiAddressDevice(Entity):
         # parse required addresses
         for name in required:
             _LOGGER.info(name)
-            paramname = name + "_address"
+            paramname = '{}{}'.format(name, '_address')
             addr = self._config.config.get(paramname)
             if addr is None:
-                _LOGGER.exception("Required KNX group address %s missing",
-                                  paramname)
-                raise KNXException("Group address for %s missing "
-                                   "in configuration", paramname)
+                _LOGGER.exception(
+                    "Required KNX group address %s missing", paramname)
+                raise KNXException(
+                    "Group address for %s missing in configuration", paramname)
             addr = parse_group_address(addr)
             self.names[addr] = name
 
         # parse optional addresses
         for name in optional:
-            paramname = name + "_address"
+            paramname = '{}{}'.format(name, '_address')
             addr = self._config.config.get(paramname)
             if addr:
                 try:
@@ -275,7 +275,7 @@ class KNXMultiAddressDevice(Entity):
     @property
     def cache(self):
         """The name given to the entity."""
-        return self._config.config.get("cache", True)
+        return self._config.config.get('cache', True)
 
     def has_attribute(self, name):
         """Check if the attribute with the given name is defined.
@@ -303,8 +303,7 @@ class KNXMultiAddressDevice(Entity):
         try:
             res = KNXTUNNEL.group_read(addr, use_cache=self.cache)
         except KNXException:
-            _LOGGER.exception("Unable to read from KNX address: %s",
-                              addr)
+            _LOGGER.exception("Unable to read from KNX address: %s", addr)
             return False
 
         return res
@@ -325,8 +324,7 @@ class KNXMultiAddressDevice(Entity):
         try:
             KNXTUNNEL.group_write(addr, value)
         except KNXException:
-            _LOGGER.exception("Unable to write to KNX address: %s",
-                              addr)
+            _LOGGER.exception("Unable to write to KNX address: %s", addr)
             return False
 
         return True
