@@ -61,12 +61,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     devices.append(new_sensor)
         else:
             new_sensor = OctoPrintSensor(octoprint.OCTOPRINT,
-                                        octo_type,
-                                        SENSOR_TYPES[octo_type][2],
-                                        name,
-                                        SENSOR_TYPES[octo_type][3],
-                                        SENSOR_TYPES[octo_type][0],
-                                        SENSOR_TYPES[octo_type][1])
+                                         octo_type,
+                                         SENSOR_TYPES[octo_type][2],
+                                         name,
+                                         SENSOR_TYPES[octo_type][3],
+                                         SENSOR_TYPES[octo_type][0],
+                                         SENSOR_TYPES[octo_type][1])
             devices.append(new_sensor)
     add_devices(devices)
 
