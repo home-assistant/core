@@ -9,6 +9,8 @@ from homeassistant.components.device_tracker.automatic import (
     URL_AUTHORIZE, URL_VEHICLES, URL_TRIPS, setup_scanner,
     AutomaticDeviceScanner)
 
+from tests.common import get_test_home_assistant
+
 _LOGGER = logging.getLogger(__name__)
 
 INVALID_USERNAME = 'bob'
@@ -205,6 +207,7 @@ class TestAutomatic(unittest.TestCase):
 
     def setUp(self):
         """Set up test data."""
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):
         """Tear down test data."""
@@ -221,7 +224,7 @@ class TestAutomatic(unittest.TestCase):
             'secret': CLIENT_SECRET
         }
 
-        self.assertFalse(setup_scanner(None, config, self.see_mock))
+        self.assertFalse(setup_scanner(self.hass, config, self.see_mock))
 
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)
@@ -235,7 +238,7 @@ class TestAutomatic(unittest.TestCase):
             'secret': CLIENT_SECRET
         }
 
-        self.assertTrue(setup_scanner(None, config, self.see_mock))
+        self.assertTrue(setup_scanner(self.hass, config, self.see_mock))
 
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)
@@ -249,6 +252,6 @@ class TestAutomatic(unittest.TestCase):
             'secret': CLIENT_SECRET
         }
 
-        scanner = AutomaticDeviceScanner(config, self.see_mock)
+        scanner = AutomaticDeviceScanner(self.hass, config, self.see_mock)
 
         self.assertEqual(DISPLAY_NAME, scanner.get_device_name('vid'))
