@@ -15,12 +15,10 @@ from homeassistant.components.device_tracker import (PLATFORM_SCHEMA,
                                                      ATTR_ATTRIBUTES)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.util import Throttle, datetime as dt_util
+from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.util import datetime as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 CONF_CLIENT_ID = 'client_id'
 CONF_SECRET = 'secret'
@@ -84,20 +82,10 @@ class AutomaticDeviceScanner(object):
         self.last_trips = {}
         self.see = see
 
-        self.scan_devices()
-
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
-        return [item['id'] for item in self.last_results]
-
-    def get_device_name(self, device):
-        """Get the device name from id."""
-        vehicle = [item['display_name'] for item in self.last_results
-                   if item['id'] == device]
-
-        return vehicle[0]
+        track_utc_time_change(self.hass, self._update_info,
+                              second=range(0, 60, 30))
 
     def _update_headers(self):
         """Get the access token from automatic."""
@@ -163,6 +151,3 @@ class AutomaticDeviceScanner(object):
                 kwargs['gps_accuracy'] = end_location['accuracy_m']
 
             self.see(**kwargs)
-
-        track_point_in_utc_time(self.hass, self._update_info,
-                                dt_util.now() + MIN_TIME_BETWEEN_SCANS)
