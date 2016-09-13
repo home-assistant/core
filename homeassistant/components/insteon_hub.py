@@ -6,13 +6,26 @@ https://home-assistant.io/components/insteon_hub/
 """
 import logging
 
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config, discovery
+import voluptuous as vol
 
-DOMAIN = "insteon_hub"
+from homeassistant.const import (CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
+
 REQUIREMENTS = ['insteon_hub==0.4.5']
-INSTEON = None
+
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'insteon_hub'
+INSTEON = None
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -20,12 +33,6 @@ def setup(hass, config):
 
     This will automatically import associated lights.
     """
-    if not validate_config(
-            config,
-            {DOMAIN: [CONF_USERNAME, CONF_PASSWORD, CONF_API_KEY]},
-            _LOGGER):
-        return False
-
     import insteon
 
     username = config[DOMAIN][CONF_USERNAME]
@@ -36,8 +43,8 @@ def setup(hass, config):
     INSTEON = insteon.Insteon(username, password, api_key)
 
     if INSTEON is None:
-        _LOGGER.error("Could not connect to Insteon service.")
-        return
+        _LOGGER.error("Could not connect to Insteon service")
+        return False
 
     discovery.load_platform(hass, 'light', DOMAIN, {}, config)
 
