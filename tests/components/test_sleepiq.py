@@ -2,6 +2,7 @@
 import unittest
 import requests_mock
 
+from homeassistant import bootstrap
 import homeassistant.components.sleepiq as sleepiq
 from homeassistant import core as ha
 
@@ -57,13 +58,13 @@ class TestSleepIQ(unittest.TestCase):
         response = sleepiq.setup(self.hass, self.config)
         self.assertFalse(response)
 
-    def test_setup_no_login(self):
+    def test_setup_component_no_login(self):
         """Test the setup when no login is configured."""
         del self.config['sleepiq']['username']
-        sleepiq.setup(self.hass, self.config)
-        self.assertFalse(sleepiq.setup(self.hass, self.config))
+        assert not bootstrap._setup_component(self.hass, sleepiq.DOMAIN, self.config)
 
-    def test_setup_no_password(self):
+    def test_setup_component_no_password(self):
         """Test the setup when no password is configured."""
         del self.config['sleepiq']['password']
-        self.assertFalse(sleepiq.setup(self.hass, self.config))
+
+        assert not bootstrap._setup_component(self.hass, sleepiq.DOMAIN, self.config)
