@@ -61,6 +61,7 @@ def setup_scanner(hass, config: dict, see):
 
 
 # pylint: disable=too-many-instance-attributes
+# pylint: disable=too-few-public-methods
 class AutomaticDeviceScanner(object):
     """A class representing an Automatic device."""
 
