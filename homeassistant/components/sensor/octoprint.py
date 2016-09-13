@@ -84,7 +84,7 @@ class OctoPrintSensor(Entity):
             self._name = '{} {}'.format(sensor_name, condition)
         else:
             self._name = '{} {} {} {}'.format(
-                sensor_name, condition, tool, ' temp')
+                sensor_name, condition, tool, 'temp')
         self.sensor_type = sensor_type
         self.api = api
         self._state = None
