@@ -1,10 +1,12 @@
 """Test the helper method for writing tests."""
+import asyncio
 import os
 from datetime import timedelta
 from unittest import mock
 from unittest.mock import patch
 from io import StringIO
 import logging
+import threading
 
 from homeassistant import core as ha, loader
 from homeassistant.bootstrap import setup_component
@@ -29,11 +31,13 @@ def get_test_config_dir(*add_path):
 
 def get_test_home_assistant(num_threads=None):
     """Return a Home Assistant object pointing at test config dir."""
+    loop = asyncio.new_event_loop()
+
     if num_threads:
         orig_num_threads = ha.MIN_WORKER_THREAD
         ha.MIN_WORKER_THREAD = num_threads
 
-    hass = ha.HomeAssistant()
+    hass = ha.HomeAssistant(loop)
 
     if num_threads:
         ha.MIN_WORKER_THREAD = orig_num_threads
@@ -48,6 +52,26 @@ def get_test_home_assistant(num_threads=None):
 
     if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
         loader.prepare(hass)
+
+    # FIXME should not be a daemon. Means hass.stop() not called in teardown
+    threading.Thread(name="LoopThread", target=loop.run_forever,
+                     daemon=True).start()
+
+    orig_start = hass.start
+
+    @asyncio.coroutine
+    def fake_stop():
+        yield None
+
+    def start_hass():
+        """Helper to start hass."""
+        with patch.object(hass.loop, 'run_forever', return_value=None):
+            with patch.object(hass, 'async_stop', return_value=fake_stop()):
+                with patch.object(ha, 'create_timer', return_value=None):
+                    orig_start()
+                    hass.block_till_done()
+
+    hass.start = start_hass
 
     return hass
 

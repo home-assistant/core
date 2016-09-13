@@ -67,17 +67,17 @@ class TestEventDecoratorHelpers(unittest.TestCase):
 
         # Run tests
         self._send_time_changed(next_rising - offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(runs))
         self.assertEqual(0, len(offset_runs))
 
         self._send_time_changed(next_rising)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(runs))
         self.assertEqual(0, len(offset_runs))
 
         self._send_time_changed(next_rising + offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(runs))
         self.assertEqual(1, len(offset_runs))
 
@@ -115,17 +115,17 @@ class TestEventDecoratorHelpers(unittest.TestCase):
 
         # run tests
         self._send_time_changed(next_setting - offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(runs))
         self.assertEqual(0, len(offset_runs))
 
         self._send_time_changed(next_setting)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(runs))
         self.assertEqual(0, len(offset_runs))
 
         self._send_time_changed(next_setting + offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(runs))
         self.assertEqual(1, len(offset_runs))
 
@@ -141,17 +141,17 @@ class TestEventDecoratorHelpers(unittest.TestCase):
         decor(lambda x, y: specific_runs.append(1))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(1, len(wildcard_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 15))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(2, len(wildcard_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
 
@@ -169,25 +169,25 @@ class TestEventDecoratorHelpers(unittest.TestCase):
 
         # Set same state should not trigger a state change/listener
         self.hass.states.set('light.Bowl', 'on')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(specific_runs))
         self.assertEqual(0, len(wildcard_runs))
 
         # State change off -> on
         self.hass.states.set('light.Bowl', 'off')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(1, len(wildcard_runs))
 
         # State change off -> off
         self.hass.states.set('light.Bowl', 'off', {"some_attr": 1})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(2, len(wildcard_runs))
 
         # State change off -> on
         self.hass.states.set('light.Bowl', 'on')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
 

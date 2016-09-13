@@ -43,14 +43,14 @@ class TestAutomationTime(unittest.TestCase):
         })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(hour=0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
         automation.turn_off(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(hour=0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_when_minute_matches(self):
@@ -69,7 +69,7 @@ class TestAutomationTime(unittest.TestCase):
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(minute=0))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_when_second_matches(self):
@@ -88,7 +88,7 @@ class TestAutomationTime(unittest.TestCase):
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_when_all_matches(self):
@@ -110,7 +110,7 @@ class TestAutomationTime(unittest.TestCase):
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=1, minute=2, second=3))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_periodic_seconds(self):
@@ -130,7 +130,7 @@ class TestAutomationTime(unittest.TestCase):
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=0, minute=0, second=2))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_periodic_minutes(self):
@@ -150,7 +150,7 @@ class TestAutomationTime(unittest.TestCase):
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=0, minute=2, second=0))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_periodic_hours(self):
@@ -170,7 +170,7 @@ class TestAutomationTime(unittest.TestCase):
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=2, minute=0, second=0))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_using_after(self):
@@ -194,7 +194,7 @@ class TestAutomationTime(unittest.TestCase):
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=5, minute=0, second=0))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.assertEqual('time - 5', self.calls[0].data['some'])
 
@@ -214,7 +214,7 @@ class TestAutomationTime(unittest.TestCase):
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=5, minute=0, second=0))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_not_fires_using_wrong_after(self):
@@ -238,7 +238,7 @@ class TestAutomationTime(unittest.TestCase):
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=1, minute=0, second=5))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_action_before(self):
@@ -265,14 +265,14 @@ class TestAutomationTime(unittest.TestCase):
         with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=before_10):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
         with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=after_10):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
@@ -300,14 +300,14 @@ class TestAutomationTime(unittest.TestCase):
         with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=before_10):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(0, len(self.calls))
 
         with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=after_10):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
@@ -336,14 +336,14 @@ class TestAutomationTime(unittest.TestCase):
         with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=monday):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
         with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=tuesday):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
@@ -373,20 +373,20 @@ class TestAutomationTime(unittest.TestCase):
         with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=monday):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
         with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=tuesday):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(2, len(self.calls))
 
         with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=wednesday):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(2, len(self.calls))

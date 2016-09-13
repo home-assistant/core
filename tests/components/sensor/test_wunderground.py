@@ -3,7 +3,8 @@ import unittest
 
 from homeassistant.components.sensor import wunderground
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant import core as ha
+
+from tests.common import get_test_home_assistant
 
 VALID_CONFIG_PWS = {
     'platform': 'wunderground',
@@ -90,7 +91,7 @@ class TestWundergroundSetup(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.DEVICES = []
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.key = 'foo'
         self.config = VALID_CONFIG_PWS
         self.lat = 37.8267

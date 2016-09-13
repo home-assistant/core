@@ -42,7 +42,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_arm_home(self.hass, CODE)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_HOME,
                          self.hass.states.get(entity_id).state)
@@ -64,7 +64,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_arm_home(self.hass, CODE, entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
@@ -73,7 +73,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         with patch(('homeassistant.components.alarm_control_panel.manual.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_HOME,
                          self.hass.states.get(entity_id).state)
@@ -95,7 +95,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_arm_home(self.hass, CODE + '2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
@@ -117,7 +117,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_arm_away(self.hass, CODE, entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
                          self.hass.states.get(entity_id).state)
@@ -139,7 +139,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_arm_away(self.hass, CODE)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
@@ -148,7 +148,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         with patch(('homeassistant.components.alarm_control_panel.manual.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
                          self.hass.states.get(entity_id).state)
@@ -170,7 +170,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_arm_away(self.hass, CODE + '2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
@@ -191,7 +191,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_TRIGGERED,
                          self.hass.states.get(entity_id).state)
@@ -213,7 +213,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_trigger(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
@@ -222,7 +222,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         with patch(('homeassistant.components.alarm_control_panel.manual.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_TRIGGERED,
                          self.hass.states.get(entity_id).state)
@@ -231,7 +231,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         with patch(('homeassistant.components.alarm_control_panel.manual.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
@@ -253,7 +253,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_TRIGGERED,
                          self.hass.states.get(entity_id).state)
@@ -262,7 +262,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         with patch(('homeassistant.components.alarm_control_panel.manual.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
@@ -283,13 +283,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_trigger(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_disarm(self.hass, entity_id=entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
@@ -298,7 +298,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         with patch(('homeassistant.components.alarm_control_panel.manual.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
@@ -320,13 +320,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_trigger(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
 
         alarm_control_panel.alarm_disarm(self.hass, entity_id=entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
@@ -335,7 +335,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         with patch(('homeassistant.components.alarm_control_panel.manual.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_TRIGGERED,
                          self.hass.states.get(entity_id).state)
