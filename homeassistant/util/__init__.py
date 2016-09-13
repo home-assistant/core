@@ -377,6 +377,26 @@ class ThreadPool(object):
                     self.worker_count, self.current_jobs,
                     self._work_queue.qsize())
 
+    def add_many_jobs(self, jobs):
+        """Add a list of jobs to the queue."""
+        with self._lock:
+            if not self.running:
+                raise RuntimeError("ThreadPool not running")
+
+            for priority, job in jobs:
+                self._work_queue.put(PriorityQueueItem(priority, job))
+
+            # Check if our queue is getting too big.
+            if self._work_queue.qsize() > self.busy_warning_limit \
+               and self._busy_callback is not None:
+
+                # Increase limit we will issue next warning.
+                self.busy_warning_limit *= 2
+
+                self._busy_callback(
+                    self.worker_count, self.current_jobs,
+                    self._work_queue.qsize())
+
     def block_till_done(self):
         """Block till current work is done."""
         self._work_queue.join()

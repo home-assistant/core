@@ -52,19 +52,19 @@ class TestInputSlider(unittest.TestCase):
         self.assertEqual(50, float(state.state))
 
         input_slider.select_value(self.hass, entity_id, '30.4')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
         self.assertEqual(30.4, float(state.state))
 
         input_slider.select_value(self.hass, entity_id, '70')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
         self.assertEqual(70, float(state.state))
 
         input_slider.select_value(self.hass, entity_id, '110')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
         self.assertEqual(70, float(state.state))

@@ -32,7 +32,7 @@ class TestAutomationState(unittest.TestCase):
     def test_if_fires_on_entity_change(self):
         """Test for firing on entity change."""
         self.hass.states.set('test.entity', 'hello')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
@@ -53,16 +53,16 @@ class TestAutomationState(unittest.TestCase):
         })
 
         self.hass.states.set('test.entity', 'world')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.assertEqual(
             'state - test.entity - hello - world - None',
             self.calls[0].data['some'])
 
         automation.turn_off(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('test.entity', 'planet')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_entity_change_with_from_filter(self):
@@ -81,7 +81,7 @@ class TestAutomationState(unittest.TestCase):
         })
 
         self.hass.states.set('test.entity', 'world')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_entity_change_with_to_filter(self):
@@ -100,7 +100,7 @@ class TestAutomationState(unittest.TestCase):
         })
 
         self.hass.states.set('test.entity', 'world')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_entity_change_with_state_filter(self):
@@ -119,7 +119,7 @@ class TestAutomationState(unittest.TestCase):
         })
 
         self.hass.states.set('test.entity', 'world')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_entity_change_with_both_filters(self):
@@ -139,7 +139,7 @@ class TestAutomationState(unittest.TestCase):
         })
 
         self.hass.states.set('test.entity', 'world')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_not_fires_if_to_filter_not_match(self):
@@ -159,7 +159,7 @@ class TestAutomationState(unittest.TestCase):
         })
 
         self.hass.states.set('test.entity', 'moon')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_not_fires_if_from_filter_not_match(self):
@@ -181,7 +181,7 @@ class TestAutomationState(unittest.TestCase):
         })
 
         self.hass.states.set('test.entity', 'world')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_not_fires_if_entity_not_match(self):
@@ -199,7 +199,7 @@ class TestAutomationState(unittest.TestCase):
         })
 
         self.hass.states.set('test.entity', 'world')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_action(self):
@@ -225,13 +225,13 @@ class TestAutomationState(unittest.TestCase):
 
         self.hass.states.set(entity_id, test_state)
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
         self.hass.states.set(entity_id, test_state + 'something')
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
@@ -315,11 +315,11 @@ class TestAutomationState(unittest.TestCase):
         })
 
         self.hass.states.set('test.entity', 'world')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('test.entity', 'not_world')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_fires_on_entity_change_with_for(self):
@@ -341,9 +341,9 @@ class TestAutomationState(unittest.TestCase):
         })
 
         self.hass.states.set('test.entity', 'world')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_for_condition(self):
@@ -373,13 +373,13 @@ class TestAutomationState(unittest.TestCase):
 
             # not enough time has passed
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
             # Time travel 10 secs into the future
             mock_utcnow.return_value = point2
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(1, len(self.calls))
 
     def test_if_fails_setup_for_without_time(self):

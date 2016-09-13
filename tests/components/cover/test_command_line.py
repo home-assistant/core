@@ -5,10 +5,11 @@ import tempfile
 import unittest
 from unittest import mock
 
-import homeassistant.core as ha
 import homeassistant.components.cover as cover
 from homeassistant.components.cover import (
     command_line as cmd_rs)
+
+from tests.common import get_test_home_assistant
 
 
 class TestCommandCover(unittest.TestCase):
@@ -16,7 +17,7 @@ class TestCommandCover(unittest.TestCase):
 
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.rs = cmd_rs.CommandCover(self.hass, 'foo',
                                       'command_open', 'command_close',
                                       'command_stop', 'command_state',
@@ -64,19 +65,19 @@ class TestCommandCover(unittest.TestCase):
             self.assertEqual('unknown', state.state)
 
             cover.open_cover(self.hass, 'cover.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('cover.test')
             self.assertEqual('open', state.state)
 
             cover.close_cover(self.hass, 'cover.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('cover.test')
             self.assertEqual('open', state.state)
 
             cover.stop_cover(self.hass, 'cover.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('cover.test')
             self.assertEqual('closed', state.state)

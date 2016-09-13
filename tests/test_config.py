@@ -206,6 +206,8 @@ class TestConfig(unittest.TestCase):
         entity.hass = self.hass
         entity.update_ha_state()
 
+        self.hass.block_till_done()
+
         state = self.hass.states.get('test.test')
 
         assert state.attributes['hidden']

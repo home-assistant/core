@@ -53,13 +53,13 @@ class TestGarageDoorMQTT(unittest.TestCase):
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'state-topic', '1')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('garage_door.test')
         self.assertEqual(STATE_OPEN, state.state)
 
         fire_mqtt_message(self.hass, 'state-topic', '0')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('garage_door.test')
         self.assertEqual(STATE_CLOSED, state.state)
@@ -84,7 +84,7 @@ class TestGarageDoorMQTT(unittest.TestCase):
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         garage_door.open_door(self.hass, 'garage_door.test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'beer open', 2, False),
                          self.mock_publish.mock_calls[-1][1])
@@ -92,7 +92,7 @@ class TestGarageDoorMQTT(unittest.TestCase):
         self.assertEqual(STATE_OPEN, state.state)
 
         garage_door.close_door(self.hass, 'garage_door.test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'beer close', 2, False),
                          self.mock_publish.mock_calls[-1][1])
@@ -119,13 +119,13 @@ class TestGarageDoorMQTT(unittest.TestCase):
         self.assertEqual(STATE_CLOSED, state.state)
 
         fire_mqtt_message(self.hass, 'state-topic', '{"val":"beer open"}')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('garage_door.test')
         self.assertEqual(STATE_OPEN, state.state)
 
         fire_mqtt_message(self.hass, 'state-topic', '{"val":"beer closed"}')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('garage_door.test')
         self.assertEqual(STATE_CLOSED, state.state)

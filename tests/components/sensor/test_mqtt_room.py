@@ -73,7 +73,7 @@ class TestMQTTRoomSensor(unittest.TestCase):
         """Test the sending of a message."""
         fire_mqtt_message(
             self.hass, topic, json.dumps(message))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
     def assert_state(self, room):
         """Test the assertion of a room state."""

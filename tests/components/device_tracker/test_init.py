@@ -194,7 +194,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         with patch('homeassistant.components.device_tracker.dt_util.utcnow',
                    return_value=scan_time):
             fire_time_changed(self.hass, scan_time)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(STATE_NOT_HOME,
                          self.hass.states.get('device_tracker.dev1').state)
@@ -266,7 +266,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             'gps': [.3, .8]
         }
         device_tracker.see(self.hass, **params)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert mock_see.call_count == 1
         mock_see.assert_called_once_with(**params)
 
@@ -274,7 +274,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         params['dev_id'] += chr(233)  # e' acute accent from icloud
 
         device_tracker.see(self.hass, **params)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert mock_see.call_count == 1
         mock_see.assert_called_once_with(**params)
 
@@ -286,7 +286,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         device_tracker.see(self.hass, 'mac_1', host_name='hello')
         device_tracker.see(self.hass, 'mac_2', host_name='hello')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0))

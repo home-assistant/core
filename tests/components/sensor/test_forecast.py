@@ -8,9 +8,8 @@ from requests.exceptions import HTTPError
 import requests_mock
 
 from homeassistant.components.sensor import forecast
-from homeassistant import core as ha
 
-from tests.common import load_fixture
+from tests.common import load_fixture, get_test_home_assistant
 
 
 class TestForecastSetup(unittest.TestCase):
@@ -18,7 +17,7 @@ class TestForecastSetup(unittest.TestCase):
 
     def setUp(self):
         """Initialize values for this testcase class."""
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.key = 'foo'
         self.config = {
             'api_key': 'foo',
