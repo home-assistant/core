@@ -10,7 +10,6 @@ import socket
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ensure_list
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT,
     CONF_WHITELIST)
@@ -29,7 +28,10 @@ EVENT = 'pilight_received'
 
 # The pilight code schema depends on the protocol
 # Thus only require to have the protocol information
-RF_CODE_SCHEMA = vol.Schema({vol.Required(ATTR_PROTOCOL): cv.string},
+# Ensure that protocol is in a list otherwise segfault in pilight-daemon
+# https://github.com/pilight/pilight/issues/296
+RF_CODE_SCHEMA = vol.Schema({vol.Required(ATTR_PROTOCOL):
+                             vol.All(cv.ensure_list, [cv.string])},
                             extra=vol.ALLOW_EXTRA)
 SERVICE_NAME = 'send'
 
@@ -71,12 +73,9 @@ def setup(hass, config):
 
     def send_code(call):
         """Send RF code to the pilight-daemon."""
-        message_data = call.data
-
-        # Patch data because of bug:
-        # https://github.com/pilight/pilight/issues/296
-        # Protocol has to be in a list otherwise segfault in pilight-daemon
-        message_data['protocol'] = ensure_list(message_data['protocol'])
+        # Change type to dict from mappingproxy
+        # since data has to be JSON serializable
+        message_data = dict(call.data)
 
         try:
             pilight_client.send_code(message_data)
