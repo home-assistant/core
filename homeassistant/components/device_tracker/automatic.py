@@ -87,7 +87,7 @@ class AutomaticDeviceScanner(object):
         self.scan_devices()
 
         track_point_in_utc_time(self.hass, self._update_info(),
-                                dt_util.now + MIN_TIME_BETWEEN_SCANS);
+                                dt_util.now() + MIN_TIME_BETWEEN_SCANS);
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
