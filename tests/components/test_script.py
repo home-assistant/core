@@ -73,13 +73,13 @@ class TestScriptComponent(unittest.TestCase):
         })
 
         script.turn_on(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
 
         # Calling turn_on a second time should not advance the script
         script.turn_on(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(events))
 
     def test_toggle_service(self):
@@ -108,12 +108,12 @@ class TestScriptComponent(unittest.TestCase):
         })
 
         script.toggle(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
 
         script.toggle(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertFalse(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
 
@@ -144,7 +144,7 @@ class TestScriptComponent(unittest.TestCase):
             'greeting': 'world'
         })
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[-1].data['hello'] == 'world'
@@ -153,7 +153,7 @@ class TestScriptComponent(unittest.TestCase):
             'greeting': 'universe',
         })
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 2
         assert calls[-1].data['hello'] == 'universe'

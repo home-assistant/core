@@ -22,7 +22,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.states.set('test.indoorhumidity', '50',
                              {ATTR_UNIT_OF_MEASUREMENT: '%'})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
     def tearDown(self):
         """Stop down everything that was started."""
@@ -112,15 +112,15 @@ class TestSensorMoldIndicator(unittest.TestCase):
 
         self.hass.states.set('test.indoortemp', '30',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert self.hass.states.get('sensor.mold_indicator').state == '90'
 
         self.hass.states.set('test.outdoortemp', '25',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert self.hass.states.get('sensor.mold_indicator').state == '57'
 
         self.hass.states.set('test.indoorhumidity', '20',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert self.hass.states.get('sensor.mold_indicator').state == '23'

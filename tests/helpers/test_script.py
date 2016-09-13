@@ -45,7 +45,7 @@ class TestScriptHelper(unittest.TestCase):
 
         script_obj.run()
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[0].data.get('hello') == 'world'
@@ -69,7 +69,7 @@ class TestScriptHelper(unittest.TestCase):
         })
 
         script_obj.run()
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[0].data.get('hello') == 'world'
@@ -104,7 +104,7 @@ class TestScriptHelper(unittest.TestCase):
 
         script_obj.run()
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[0].data.get('hello') == 'world'
@@ -127,7 +127,7 @@ class TestScriptHelper(unittest.TestCase):
 
         script_obj.run()
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert script_obj.is_running
         assert script_obj.can_cancel
@@ -136,7 +136,7 @@ class TestScriptHelper(unittest.TestCase):
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         fire_time_changed(self.hass, future)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert not script_obj.is_running
         assert len(events) == 2
@@ -159,7 +159,7 @@ class TestScriptHelper(unittest.TestCase):
 
         script_obj.run()
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert script_obj.is_running
         assert script_obj.can_cancel
@@ -168,7 +168,7 @@ class TestScriptHelper(unittest.TestCase):
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         fire_time_changed(self.hass, future)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert not script_obj.is_running
         assert len(events) == 2
@@ -190,7 +190,7 @@ class TestScriptHelper(unittest.TestCase):
 
         script_obj.run()
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert script_obj.is_running
         assert len(events) == 0
@@ -202,7 +202,7 @@ class TestScriptHelper(unittest.TestCase):
         # Make sure the script is really stopped.
         future = dt_util.utcnow() + timedelta(seconds=5)
         fire_time_changed(self.hass, future)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert not script_obj.is_running
         assert len(events) == 0
@@ -237,7 +237,7 @@ class TestScriptHelper(unittest.TestCase):
             'greeting2': 'universe',
         })
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert script_obj.is_running
         assert len(calls) == 1
@@ -245,7 +245,7 @@ class TestScriptHelper(unittest.TestCase):
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         fire_time_changed(self.hass, future)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert not script_obj.is_running
         assert len(calls) == 2
@@ -274,11 +274,11 @@ class TestScriptHelper(unittest.TestCase):
         ])
 
         script_obj.run()
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(events) == 2
 
         self.hass.states.set('test.entity', 'goodbye')
 
         script_obj.run()
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(events) == 3

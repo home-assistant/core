@@ -4,6 +4,7 @@ Rest API for Home Assistant.
 For more details about the RESTful API, please refer to the documentation at
 https://home-assistant.io/developers/api/
 """
+import asyncio
 import json
 import logging
 import queue
@@ -79,6 +80,7 @@ class APIEventStream(HomeAssistantView):
         if restrict:
             restrict = restrict.split(',') + [EVENT_HOMEASSISTANT_STOP]
 
+        @asyncio.coroutine
         def forward_events(event):
             """Forward events to the open request."""
             if event.event_type == EVENT_TIME_CHANGED:

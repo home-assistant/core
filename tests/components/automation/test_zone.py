@@ -40,7 +40,7 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.881011,
             'longitude': -117.234758
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
@@ -67,7 +67,7 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.880586,
             'longitude': -117.237564
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
         self.assertEqual(
@@ -79,16 +79,16 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.881011,
             'longitude': -117.234758
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         automation.turn_off(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.hass.states.set('test.entity', 'hello', {
             'latitude': 32.880586,
             'longitude': -117.237564
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
@@ -98,7 +98,7 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.880586,
             'longitude': -117.237564
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
@@ -118,7 +118,7 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.881011,
             'longitude': -117.234758
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(0, len(self.calls))
 
@@ -128,7 +128,7 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.880586,
             'longitude': -117.237564
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
@@ -148,7 +148,7 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.881011,
             'longitude': -117.234758
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
@@ -158,7 +158,7 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.881011,
             'longitude': -117.234758
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
@@ -178,7 +178,7 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.880586,
             'longitude': -117.237564
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(0, len(self.calls))
 
@@ -188,7 +188,7 @@ class TestAutomationZone(unittest.TestCase):
             'latitude': 32.880586,
             'longitude': -117.237564
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
@@ -208,5 +208,5 @@ class TestAutomationZone(unittest.TestCase):
         })
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))

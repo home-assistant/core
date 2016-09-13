@@ -66,7 +66,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
                       STATE_ALARM_ARMED_AWAY, STATE_ALARM_PENDING,
                       STATE_ALARM_TRIGGERED):
             fire_mqtt_message(self.hass, 'alarm/state', state)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(state, self.hass.states.get(entity_id).state)
 
     def test_ignore_update_state_if_unknown_via_state_topic(self):
@@ -87,7 +87,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         fire_mqtt_message(self.hass, 'alarm/state', 'unsupported state')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(STATE_UNKNOWN, self.hass.states.get(entity_id).state)
 
     def test_arm_home_publishes_mqtt(self):
@@ -103,7 +103,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         })
 
         alarm_control_panel.alarm_arm_home(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(('alarm/command', 'ARM_HOME', 0, False),
                          self.mock_publish.mock_calls[-1][1])
 
@@ -122,7 +122,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         call_count = self.mock_publish.call_count
         alarm_control_panel.alarm_arm_home(self.hass, 'abcd')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(call_count, self.mock_publish.call_count)
 
     def test_arm_away_publishes_mqtt(self):
@@ -138,7 +138,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         })
 
         alarm_control_panel.alarm_arm_away(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(('alarm/command', 'ARM_AWAY', 0, False),
                          self.mock_publish.mock_calls[-1][1])
 
@@ -157,7 +157,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         call_count = self.mock_publish.call_count
         alarm_control_panel.alarm_arm_away(self.hass, 'abcd')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(call_count, self.mock_publish.call_count)
 
     def test_disarm_publishes_mqtt(self):
@@ -173,7 +173,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         })
 
         alarm_control_panel.alarm_disarm(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(('alarm/command', 'DISARM', 0, False),
                          self.mock_publish.mock_calls[-1][1])
 
@@ -192,5 +192,5 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         call_count = self.mock_publish.call_count
         alarm_control_panel.alarm_disarm(self.hass, 'abcd')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(call_count, self.mock_publish.call_count)

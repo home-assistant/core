@@ -39,7 +39,7 @@ class TestComponentLogbook(unittest.TestCase):
             logbook.ATTR_DOMAIN: 'switch',
             logbook.ATTR_ENTITY_ID: 'switch.test_switch'
         }, True)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(calls))
         last_call = calls[-1]
@@ -60,7 +60,7 @@ class TestComponentLogbook(unittest.TestCase):
 
         self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
         self.hass.services.call(logbook.DOMAIN, 'log', {}, True)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(0, len(calls))
 

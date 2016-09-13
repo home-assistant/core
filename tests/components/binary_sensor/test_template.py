@@ -110,11 +110,11 @@ class TestBinarySensorTemplate(unittest.TestCase):
         vs = template.BinarySensorTemplate(hass, 'parent', 'Parent',
                                            'motion', '{{ 1 > 1 }}', MATCH_ALL)
         vs.update_ha_state()
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
         with mock.patch.object(vs, 'update') as mock_update:
             hass.bus.fire(EVENT_STATE_CHANGED)
-            hass.pool.block_till_done()
+            hass.block_till_done()
             try:
                 assert mock_update.call_count == 1
             finally:
