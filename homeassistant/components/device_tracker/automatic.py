@@ -117,7 +117,6 @@ class AutomaticDeviceScanner(object):
                 'Authorization': 'Bearer {}'.format(access_token)
             }
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self, now=None) -> None:
         """Update the device info."""
         _LOGGER.info('Updating devices %s', now)
