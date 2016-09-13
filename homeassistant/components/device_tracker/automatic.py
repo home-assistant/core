@@ -165,4 +165,4 @@ class AutomaticDeviceScanner(object):
             self.see(**kwargs)
 
         track_point_in_utc_time(self.hass, self._update_info,
-                                dt_util.now() + MIN_TIME_BETWEEN_SCANS);
+                                dt_util.now() + MIN_TIME_BETWEEN_SCANS)
