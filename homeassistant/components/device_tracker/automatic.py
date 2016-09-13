@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_scanner(hass, config: dict, see):
     """Validate the configuration and return an Automatic scanner."""
     try:
-        AutomaticDeviceScanner(config, see)
+        AutomaticDeviceScanner(hass, config, see)
     except requests.HTTPError as err:
         _LOGGER.error(str(err))
         return False
@@ -66,8 +66,9 @@ def setup_scanner(hass, config: dict, see):
 class AutomaticDeviceScanner(object):
     """A class representing an Automatic device."""
 
-    def __init__(self, config: dict, see) -> None:
+    def __init__(self, hass, config: dict, see) -> None:
         """Initialize the automatic device scanner."""
+        self.hass = hass
         self._devices = config.get(CONF_DEVICES, None)
         self._access_token_payload = {
             'username': config.get(CONF_USERNAME),
