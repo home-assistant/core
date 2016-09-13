@@ -20,7 +20,7 @@ VALUE_TO_STATE = {
 }
 
 UOM = ['2', '78']
-STATES = [STATE_OFF, STATE_ON, 'true', 'false']
+STATES = [STATE_OFF, STATE_ON, 'true', 'false', '%']
 
 
 # pylint: disable=unused-argument
