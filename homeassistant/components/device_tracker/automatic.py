@@ -16,7 +16,7 @@ from homeassistant.components.device_tracker import (PLATFORM_SCHEMA,
                                                      DEFAULT_SCAN_INTERVAL)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util import Throttle, datetime as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,13 +55,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_scanner(hass, config: dict, see):
     """Validate the configuration and return an Automatic scanner."""
     try:
-        scanner = AutomaticDeviceScanner(config, see)
+        AutomaticDeviceScanner(config, see)
     except requests.HTTPError as err:
         _LOGGER.error(str(err))
         return False
-
-    track_utc_time_change(hass, scanner.scan_devices(),
-                          second=range(0, 6, DEFAULT_SCAN_INTERVAL))
 
     return True
 
@@ -91,6 +88,9 @@ class AutomaticDeviceScanner(object):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
+
+        track_point_in_utc_time(self.hass, self.scan_devices(),
+                                dt_util.now + MIN_TIME_BETWEEN_SCANS);
 
         return [item['id'] for item in self.last_results]
 
