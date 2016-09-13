@@ -118,7 +118,7 @@ class AutomaticDeviceScanner(object):
             }
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
-    def _update_info(self, now) -> None:
+    def _update_info(self, now=None) -> None:
         """Update the device info."""
         _LOGGER.info('Updating devices %s', now)
         self._update_headers()
