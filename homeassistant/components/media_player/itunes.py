@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING, CONF_NAME,
-    CONF_HOST, CONF_PORT)
+    CONF_HOST, CONF_PORT, CONF_SSL)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'iTunes'
 DEFAULT_PORT = 8181
 DEFAULT_TIMEOUT = 10
+DEFAULT_SSL = False
 DOMAIN = 'itunes'
 
 SUPPORT_ITUNES = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -32,32 +33,38 @@ SUPPORT_ITUNES = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 SUPPORT_AIRPLAY = SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
 })
 
 
 class Itunes(object):
-    """iTunes API client."""
+    """The iTunes API client."""
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, use_ssl):
         """Initialize the iTunes device."""
         self.host = host
         self.port = port
+        self.use_ssl = use_ssl
 
     @property
     def _base_url(self):
         """Return the base url for endpoints."""
-        if self.port:
-            return 'http://{}:{}'.format(self.host, self.port)
+        if self.use_ssl:
+            uri_scheme = 'https://'
         else:
-            return 'http://{}'.format(self.host)
+            uri_scheme = 'http://'
+
+        if self.port:
+            return '{}{}:{}'.format(uri_scheme, self.host, self.port)
+        else:
+            return '{}{}'.format(uri_scheme, self.host)
 
     def _request(self, method, path, params=None):
-        """Make the actual request and returns the parsed response."""
+        """Make the actual request and return the parsed response."""
         url = '{}{}'.format(self._base_url, path)
 
         try:
@@ -149,12 +156,14 @@ class Itunes(object):
 # pylint: disable=unused-argument, abstract-method
 # pylint: disable=too-many-instance-attributes
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the itunes platform."""
+    """Setup the iTunes platform."""
     add_devices([
         ItunesDevice(
             config.get(CONF_NAME),
             config.get(CONF_HOST),
             config.get(CONF_PORT),
+            config.get(CONF_SSL),
+
             add_devices
         )
     ])
@@ -163,15 +172,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ItunesDevice(MediaPlayerDevice):
     """Representation of an iTunes API instance."""
 
-    # pylint: disable=too-many-public-methods
-    def __init__(self, name, host, port, add_devices):
+    # pylint: disable=too-many-public-methods, too-many-arguments
+    def __init__(self, name, host, port, use_ssl, add_devices):
         """Initialize the iTunes device."""
         self._name = name
         self._host = host
         self._port = port
+        self._use_ssl = use_ssl
         self._add_devices = add_devices
 
-        self.client = Itunes(self._host, self._port)
+        self.client = Itunes(self._host, self._port, self._use_ssl)
 
         self.current_volume = None
         self.muted = None
