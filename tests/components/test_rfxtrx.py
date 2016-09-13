@@ -94,6 +94,7 @@ class TestRFXTRX(unittest.TestCase):
             calls.append(event)
 
         self.hass.bus.listen(rfxtrx.EVENT_BUTTON_PRESSED, record_event)
+        self.hass.block_till_done()
 
         entity = rfxtrx.RFX_DEVICES['213c7f216']
         self.assertEqual('Test', entity.name)
@@ -104,7 +105,7 @@ class TestRFXTRX(unittest.TestCase):
         event.data = bytearray([0x0b, 0x11, 0x00, 0x10, 0x01, 0x18,
                                 0xcd, 0xea, 0x01, 0x01, 0x0f, 0x70])
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(event.values['Command'], "On")
         self.assertEqual('on', entity.state)
@@ -138,11 +139,12 @@ class TestRFXTRX(unittest.TestCase):
             calls.append(event)
 
         self.hass.bus.listen("signal_received", record_event)
+        self.hass.block_till_done()
         event = rfxtrx.get_rfx_object('0a520802060101ff0f0269')
         event.data = bytearray(b'\nR\x08\x01\x07\x01\x00\xb8\x1b\x02y')
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS[0](event)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(rfxtrx.RFX_DEVICES))
         self.assertEqual(1, len(calls))
         self.assertEqual(calls[0].data,

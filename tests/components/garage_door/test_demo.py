@@ -37,13 +37,13 @@ class TestGarageDoorDemo(unittest.TestCase):
     def test_open_door(self):
         """Test opeing of the door."""
         gd.open_door(self.hass, LEFT)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertFalse(gd.is_closed(self.hass, LEFT))
 
     def test_close_door(self):
         """Test closing ot the door."""
         gd.close_door(self.hass, RIGHT)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(gd.is_closed(self.hass, RIGHT))

@@ -41,7 +41,7 @@ class TestNotifyDemo(unittest.TestCase):
     def test_sending_none_message(self):
         """Test send with None as message."""
         notify.send_message(self.hass, None)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(len(self.events) == 0)
 
     def test_sending_templated_message(self):
@@ -49,7 +49,7 @@ class TestNotifyDemo(unittest.TestCase):
         self.hass.states.set('sensor.temperature', 10)
         notify.send_message(self.hass, '{{ states.sensor.temperature.state }}',
                             '{{ states.sensor.temperature.name }}')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         last_event = self.events[-1]
         self.assertEqual(last_event.data[notify.ATTR_TITLE], 'temperature')
         self.assertEqual(last_event.data[notify.ATTR_MESSAGE], '10')
@@ -58,7 +58,7 @@ class TestNotifyDemo(unittest.TestCase):
         """Test that all data from the service gets forwarded to service."""
         notify.send_message(self.hass, 'my message', 'my title',
                             {'hello': 'world'})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(len(self.events) == 1)
         data = self.events[0].data
         assert {
@@ -87,7 +87,7 @@ data_template:
             conf = yaml.load_yaml(fp.name)
 
         script.call_from_config(self.hass, conf)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(len(self.events) == 1)
         assert {
             'message': 'Test 123 4',
@@ -145,7 +145,7 @@ data_template:
                                  'title': 'my title',
                                  'data': {'hello': 'world'}})
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         data = self.calls[0][0].data
 

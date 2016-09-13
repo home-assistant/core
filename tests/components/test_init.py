@@ -42,28 +42,28 @@ class TestComponentsCore(unittest.TestCase):
         """Test turn_on method without entities."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
         comps.turn_on(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(calls))
 
     def test_turn_on(self):
         """Test turn_on method."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
         comps.turn_on(self.hass, 'light.Ceiling')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(calls))
 
     def test_turn_off(self):
         """Test turn_off method."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_OFF)
         comps.turn_off(self.hass, 'light.Bowl')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(calls))
 
     def test_toggle(self):
         """Test toggle method."""
         calls = mock_service(self.hass, 'light', SERVICE_TOGGLE)
         comps.toggle(self.hass, 'light.Bowl')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(calls))
 
     @patch('homeassistant.core.ServiceRegistry.call')
@@ -118,7 +118,7 @@ class TestComponentsCore(unittest.TestCase):
                 }))
 
             comps.reload_core_config(self.hass)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         assert 10 == self.hass.config.latitude
         assert 20 == self.hass.config.longitude
@@ -142,7 +142,7 @@ class TestComponentsCore(unittest.TestCase):
                 fp.write(yaml.dump(['invalid', 'config']))
 
             comps.reload_core_config(self.hass)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         assert mock_error.called
         assert mock_process.called is False

@@ -68,7 +68,7 @@ class TestAutomation(unittest.TestCase):
         with patch('homeassistant.components.automation.utcnow',
                    return_value=time):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
         assert len(self.calls) == 1
         assert 'event - test_event' == self.calls[0].data['some']
         state = self.hass.states.get('automation.hello')
@@ -91,7 +91,7 @@ class TestAutomation(unittest.TestCase):
         })
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.assertEqual(['hello.world'],
                          self.calls[0].data.get(ATTR_ENTITY_ID))
@@ -112,7 +112,7 @@ class TestAutomation(unittest.TestCase):
         })
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.assertEqual(['hello.world', 'hello.world2'],
                          self.calls[0].data.get(ATTR_ENTITY_ID))
@@ -138,10 +138,10 @@ class TestAutomation(unittest.TestCase):
         })
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.hass.states.set('test.entity', 'hello')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(self.calls))
 
     def test_two_conditions_with_and(self):
@@ -175,17 +175,17 @@ class TestAutomation(unittest.TestCase):
 
         self.hass.states.set(entity_id, 100)
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
         self.hass.states.set(entity_id, 101)
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
         self.hass.states.set(entity_id, 151)
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_two_conditions_with_or(self):
@@ -220,17 +220,17 @@ class TestAutomation(unittest.TestCase):
 
         self.hass.states.set(entity_id, 200)
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
         self.hass.states.set(entity_id, 100)
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(self.calls))
 
         self.hass.states.set(entity_id, 250)
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(self.calls))
 
     def test_using_trigger_as_condition(self):
@@ -259,19 +259,19 @@ class TestAutomation(unittest.TestCase):
         })
 
         self.hass.states.set(entity_id, 100)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
         self.hass.states.set(entity_id, 120)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
         self.hass.states.set(entity_id, 100)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(self.calls))
 
         self.hass.states.set(entity_id, 151)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(self.calls))
 
     def test_using_trigger_as_condition_with_invalid_condition(self):
@@ -299,7 +299,7 @@ class TestAutomation(unittest.TestCase):
         })
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_automation_list_setting(self):
@@ -326,11 +326,11 @@ class TestAutomation(unittest.TestCase):
         }))
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
         self.hass.bus.fire('test_event_2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(self.calls))
 
     def test_automation_calling_two_actions(self):
@@ -353,7 +353,7 @@ class TestAutomation(unittest.TestCase):
         }))
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(self.calls) == 2
         assert self.calls[0].data['position'] == 0
@@ -383,37 +383,37 @@ class TestAutomation(unittest.TestCase):
         assert automation.is_on(self.hass, entity_id)
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(self.calls) == 1
 
         automation.turn_off(self.hass, entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert not automation.is_on(self.hass, entity_id)
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(self.calls) == 1
 
         automation.toggle(self.hass, entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert automation.is_on(self.hass, entity_id)
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(self.calls) == 2
 
         automation.trigger(self.hass, entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(self.calls) == 3
 
         automation.turn_off(self.hass, entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         automation.trigger(self.hass, entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(self.calls) == 4
 
         automation.turn_on(self.hass, entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert automation.is_on(self.hass, entity_id)
 
     @patch('homeassistant.config.load_yaml_config_file', return_value={
@@ -455,13 +455,13 @@ class TestAutomation(unittest.TestCase):
         assert listeners.get('test_event2') is None
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(self.calls) == 1
         assert self.calls[0].data.get('event') == 'test_event'
 
         automation.reload(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert self.hass.states.get('automation.hello') is None
         assert self.hass.states.get('automation.bye') is not None
@@ -470,11 +470,11 @@ class TestAutomation(unittest.TestCase):
         assert listeners.get('test_event2') == 1
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(self.calls) == 1
 
         self.hass.bus.fire('test_event2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(self.calls) == 2
         assert self.calls[1].data.get('event') == 'test_event2'
 
@@ -501,18 +501,18 @@ class TestAutomation(unittest.TestCase):
         assert self.hass.states.get('automation.hello') is not None
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(self.calls) == 1
         assert self.calls[0].data.get('event') == 'test_event'
 
         automation.reload(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert self.hass.states.get('automation.hello') is not None
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(self.calls) == 2
 
     def test_reload_config_handles_load_fails(self):
@@ -535,7 +535,7 @@ class TestAutomation(unittest.TestCase):
         assert self.hass.states.get('automation.hello') is not None
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(self.calls) == 1
         assert self.calls[0].data.get('event') == 'test_event'
@@ -543,10 +543,10 @@ class TestAutomation(unittest.TestCase):
         with patch('homeassistant.config.load_yaml_config_file',
                    side_effect=HomeAssistantError('bla')):
             automation.reload(self.hass)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         assert self.hass.states.get('automation.hello') is not None
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(self.calls) == 2

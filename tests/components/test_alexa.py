@@ -104,7 +104,7 @@ class TestAlexa(unittest.TestCase):
 
     def tearDown(self):
         """Stop everything that was started."""
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
     def test_launch_request(self):
         """Test the launch of a request."""

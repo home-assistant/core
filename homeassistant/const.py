@@ -5,7 +5,7 @@ MINOR_VERSION = 29
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
-REQUIRED_PYTHON_VER = (3, 4)
+REQUIRED_PYTHON_VER = (3, 4, 2)
 
 PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'

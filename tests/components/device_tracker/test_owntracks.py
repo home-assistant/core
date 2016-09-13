@@ -252,7 +252,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         else:
             mod_message = str_message
         fire_mqtt_message(self.hass, topic, mod_message)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
     def assert_location_state(self, location):
         """Test the assertion of a location state."""
@@ -574,7 +574,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         fire_mqtt_message(
             self.hass, EVENT_TOPIC, json.dumps(enter_message))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.send_message(EVENT_TOPIC, exit_message)
         self.assertEqual(owntracks.MOBILE_BEACONS_ACTIVE['greg_phone'], [])
 

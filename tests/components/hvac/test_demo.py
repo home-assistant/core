@@ -53,13 +53,13 @@ class TestDemoHvac(unittest.TestCase):
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual(21, state.attributes.get('temperature'))
         hvac.set_temperature(self.hass, None, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(21, state.attributes.get('temperature'))
 
     def test_set_target_temp(self):
         """Test the setting of the target temperature."""
         hvac.set_temperature(self.hass, 30, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual(30.0, state.attributes.get('temperature'))
 
@@ -68,13 +68,13 @@ class TestDemoHvac(unittest.TestCase):
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual(67, state.attributes.get('humidity'))
         hvac.set_humidity(self.hass, None, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(67, state.attributes.get('humidity'))
 
     def test_set_target_humidity(self):
         """Test the setting of the target humidity."""
         hvac.set_humidity(self.hass, 64, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual(64.0, state.attributes.get('humidity'))
 
@@ -83,13 +83,13 @@ class TestDemoHvac(unittest.TestCase):
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual("On High", state.attributes.get('fan_mode'))
         hvac.set_fan_mode(self.hass, None, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual("On High", state.attributes.get('fan_mode'))
 
     def test_set_fan_mode(self):
         """Test setting of new fan mode."""
         hvac.set_fan_mode(self.hass, "On Low", ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual("On Low", state.attributes.get('fan_mode'))
 
@@ -98,13 +98,13 @@ class TestDemoHvac(unittest.TestCase):
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual("Off", state.attributes.get('swing_mode'))
         hvac.set_swing_mode(self.hass, None, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual("Off", state.attributes.get('swing_mode'))
 
     def test_set_swing(self):
         """Test setting of new swing mode."""
         hvac.set_swing_mode(self.hass, "Auto", ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual("Auto", state.attributes.get('swing_mode'))
 
@@ -112,13 +112,13 @@ class TestDemoHvac(unittest.TestCase):
         """Test setting operation mode without required attribute."""
         self.assertEqual("Cool", self.hass.states.get(ENTITY_HVAC).state)
         hvac.set_operation_mode(self.hass, None, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual("Cool", self.hass.states.get(ENTITY_HVAC).state)
 
     def test_set_operation(self):
         """Test setting of new operation mode."""
         hvac.set_operation_mode(self.hass, "Heat", ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual("Heat", self.hass.states.get(ENTITY_HVAC).state)
 
     def test_set_away_mode_bad_attr(self):
@@ -126,20 +126,20 @@ class TestDemoHvac(unittest.TestCase):
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual('on', state.attributes.get('away_mode'))
         hvac.set_away_mode(self.hass, None, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual('on', state.attributes.get('away_mode'))
 
     def test_set_away_mode_on(self):
         """Test setting the away mode on/true."""
         hvac.set_away_mode(self.hass, True, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual('on', state.attributes.get('away_mode'))
 
     def test_set_away_mode_off(self):
         """Test setting the away mode off/false."""
         hvac.set_away_mode(self.hass, False, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual('off', state.attributes.get('away_mode'))
 
@@ -148,19 +148,19 @@ class TestDemoHvac(unittest.TestCase):
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual('off', state.attributes.get('aux_heat'))
         hvac.set_aux_heat(self.hass, None, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual('off', state.attributes.get('aux_heat'))
 
     def test_set_aux_heat_on(self):
         """Test setting the axillary heater on/true."""
         hvac.set_aux_heat(self.hass, True, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual('on', state.attributes.get('aux_heat'))
 
     def test_set_aux_heat_off(self):
         """Test setting the auxillary heater off/false."""
         hvac.set_aux_heat(self.hass, False, ENTITY_HVAC)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_HVAC)
         self.assertEqual('off', state.attributes.get('aux_heat'))
