@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.util import convert
 from homeassistant.components.climate import ClimateDevice
-from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 
 from homeassistant.components.vera import (
     VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
@@ -115,6 +115,11 @@ class VeraThermostat(VeraDevice, ClimateDevice):
     def set_temperature(self, temperature):
         """Set new target temperature."""
         self.vera_device.set_temperature(temperature)
+
+    def set_temperature(self, **kwargs):
+        """Set new target temperatures."""
+        if kwargs.get(ATTR_TEMPERATURE) is not None:
+            self.vera_device.set_temperature(kwargs.get(ATTR_TEMPERATURE))
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, cool, heat, off)."""
