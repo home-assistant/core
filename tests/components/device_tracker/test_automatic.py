@@ -6,8 +6,7 @@ import unittest
 from unittest.mock import patch
 
 from homeassistant.components.device_tracker.automatic import (
-    URL_AUTHORIZE, URL_VEHICLES, URL_TRIPS, setup_scanner,
-    AutomaticDeviceScanner)
+    URL_AUTHORIZE, URL_VEHICLES, URL_TRIPS, setup_scanner)
 
 from tests.common import get_test_home_assistant
 
