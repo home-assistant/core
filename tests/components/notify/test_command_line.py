@@ -51,8 +51,10 @@ class TestCommandLine(unittest.TestCase):
                 }
             }))
 
-            self.hass.services.call('notify', 'test', {'message': message},
-                                    blocking=True)
+            self.assertTrue(
+                self.hass.services.call('notify', 'test', {'message': message},
+                                        blocking=True)
+            )
 
             result = open(filename).read()
             # the echo command adds a line break
@@ -69,6 +71,8 @@ class TestCommandLine(unittest.TestCase):
             }
         }))
 
-        self.hass.services.call('notify', 'test', {'message': 'error'},
-                                blocking=True)
+        self.assertTrue(
+            self.hass.services.call('notify', 'test', {'message': 'error'},
+                                    blocking=True)
+        )
         self.assertEqual(1, mock_error.call_count)

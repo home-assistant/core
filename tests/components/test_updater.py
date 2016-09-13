@@ -55,7 +55,7 @@ class TestUpdater(unittest.TestCase):
         fire_time_changed(self.hass,
                           dt_util.utcnow().replace(hour=0, minute=0, second=0))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(self.hass.states.is_state(updater.ENTITY_ID,
                                                   NEW_VERSION))

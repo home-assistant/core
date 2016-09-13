@@ -37,13 +37,13 @@ class TestLockDemo(unittest.TestCase):
     def test_locking(self):
         """Test the locking of a lock."""
         lock.lock(self.hass, KITCHEN)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(lock.is_locked(self.hass, KITCHEN))
 
     def test_unlocking(self):
         """Test the unlocking of a lock."""
         lock.unlock(self.hass, FRONT)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertFalse(lock.is_locked(self.hass, FRONT))

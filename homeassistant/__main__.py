@@ -16,16 +16,14 @@ from homeassistant.const import (
     REQUIRED_PYTHON_VER,
     RESTART_EXIT_CODE,
 )
+from homeassistant.util.async import run_callback_threadsafe
 
 
 def validate_python() -> None:
     """Validate we're running the right Python version."""
-    major, minor = sys.version_info[:2]
-    req_major, req_minor = REQUIRED_PYTHON_VER
-
-    if major < req_major or (major == req_major and minor < req_minor):
-        print("Home Assistant requires at least Python {}.{}".format(
-            req_major, req_minor))
+    if sys.version_info[:3] < REQUIRED_PYTHON_VER:
+        print("Home Assistant requires at least Python {}.{}.{}".format(
+            *REQUIRED_PYTHON_VER))
         sys.exit(1)
 
 
@@ -256,12 +254,14 @@ def setup_and_run_hass(config_dir: str,
                 import webbrowser
                 webbrowser.open(hass.config.api.base_url)
 
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, open_browser)
+        run_callback_threadsafe(
+            hass.loop,
+            hass.bus.async_listen_once,
+            EVENT_HOMEASSISTANT_START, open_browser
+        )
 
     hass.start()
-    exit_code = int(hass.block_till_stopped())
-
-    return exit_code
+    return hass.exit_code
 
 
 def try_to_restart() -> None:

@@ -76,10 +76,10 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
         ensure_sun_risen(self.hass)
         light.turn_off(self.hass)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         ensure_sun_set(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(light.is_on(self.hass))
 
@@ -88,7 +88,7 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
         """Test lights turn off when everyone leaves the house."""
         light.turn_on(self.hass)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(device_sun_light_trigger.setup(
             self.hass, {device_sun_light_trigger.DOMAIN: {}}))
@@ -96,7 +96,7 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
         self.hass.states.set(device_tracker.ENTITY_ID_ALL_DEVICES,
                              STATE_NOT_HOME)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertFalse(light.is_on(self.hass))
 
@@ -106,7 +106,7 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
         light.turn_off(self.hass)
         ensure_sun_set(self.hass)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(device_sun_light_trigger.setup(
             self.hass, {device_sun_light_trigger.DOMAIN: {}}))
@@ -114,5 +114,5 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
         self.hass.states.set(
             device_tracker.ENTITY_ID_FORMAT.format('device_2'), STATE_HOME)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(light.is_on(self.hass))

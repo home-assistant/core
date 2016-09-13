@@ -30,9 +30,9 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', '1')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', '2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'on'
 
@@ -51,9 +51,9 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', '2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', '1')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 
@@ -73,9 +73,9 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', '1')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', '2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 
@@ -95,9 +95,9 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', '2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', '1')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'on'
 
@@ -116,9 +116,9 @@ class TestTrendBinarySensor:
             }
         })
         self.hass.states.set('sensor.test_state', 'State', {'attr': '1'})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', 'State', {'attr': '2'})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'on'
 
@@ -138,10 +138,10 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', 'State', {'attr': '2'})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', 'State', {'attr': '1'})
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 
@@ -160,9 +160,9 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', 'Non')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', 'Numeric')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 
@@ -182,10 +182,10 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', 'State', {'attr': '2'})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', 'State', {'attr': '1'})
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 

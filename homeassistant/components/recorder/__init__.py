@@ -7,6 +7,7 @@ to query this database.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/recorder/
 """
+import asyncio
 import logging
 import queue
 import threading
@@ -230,6 +231,7 @@ class Recorder(threading.Thread):
 
             self.queue.task_done()
 
+    @asyncio.coroutine
     def event_listener(self, event):
         """Listen for new events and put them in the process queue."""
         self.queue.put(event)
