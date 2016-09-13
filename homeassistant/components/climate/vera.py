@@ -112,10 +112,6 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         """Return the temperature we try to reach."""
         return self.vera_device.get_current_goal_temperature()
 
-    def set_temperature(self, temperature):
-        """Set new target temperature."""
-        self.vera_device.set_temperature(temperature)
-
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
