@@ -263,6 +263,7 @@ ATTR_GPS_ACCURACY = 'gps_accuracy'
 
 # If state is assumed
 ATTR_ASSUMED_STATE = 'assumed_state'
+ATTR_STATE = 'state'
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
