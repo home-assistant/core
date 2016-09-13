@@ -86,9 +86,6 @@ class AutomaticDeviceScanner(object):
 
         self.scan_devices()
 
-        track_point_in_utc_time(self.hass, self._update_info,
-                                dt_util.now() + MIN_TIME_BETWEEN_SCANS);
-
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
@@ -121,9 +118,9 @@ class AutomaticDeviceScanner(object):
             }
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
-    def _update_info(self) -> None:
+    def _update_info(self, now) -> None:
         """Update the device info."""
-        _LOGGER.info('Updating devices')
+        _LOGGER.info('Updating devices %s', now)
         self._update_headers()
 
         response = requests.get(URL_VEHICLES, headers=self._headers)
@@ -167,3 +164,6 @@ class AutomaticDeviceScanner(object):
                 kwargs['gps_accuracy'] = end_location['accuracy_m']
 
             self.see(**kwargs)
+
+        track_point_in_utc_time(self.hass, self._update_info,
+                                dt_util.now() + MIN_TIME_BETWEEN_SCANS);
