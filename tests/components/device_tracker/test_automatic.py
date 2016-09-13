@@ -239,19 +239,3 @@ class TestAutomatic(unittest.TestCase):
         }
 
         self.assertTrue(setup_scanner(self.hass, config, self.see_mock))
-
-    @patch('requests.get', side_effect=mocked_requests)
-    @patch('requests.post', side_effect=mocked_requests)
-    def test_device_attributes(self, mock_get, mock_post):
-        """Test device attributes are set on load."""
-        config = {
-            'platform': 'automatic',
-            'username': VALID_USERNAME,
-            'password': PASSWORD,
-            'client_id': CLIENT_ID,
-            'secret': CLIENT_SECRET
-        }
-
-        scanner = AutomaticDeviceScanner(self.hass, config, self.see_mock)
-
-        self.assertEqual(DISPLAY_NAME, scanner.get_device_name('vid'))
