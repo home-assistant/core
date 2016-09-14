@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 # pylint: disable=too-many-arguments, too-many-public-methods
-# pylint: too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes
 class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     """Representation of a MySensorsHVAC hvac."""
 
