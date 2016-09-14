@@ -73,8 +73,7 @@ class RadioThermostat(ClimateDevice):
         self._name = None
         self.hold_temp = hold_temp
         self.update()
-        self._operation_list = ['auto', 'cool', 'heat', 'off']
-
+        self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
 
     @property
     def name(self):
