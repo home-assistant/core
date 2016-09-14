@@ -1,5 +1,6 @@
 """
 mysensors platform that offers a Climate(MySensors-HVAC) component.
+
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/#climate
 
