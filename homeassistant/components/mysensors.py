@@ -158,7 +158,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals
             'No devices could be setup as gateways, check your configuration')
         return False
 
-    for component in 'sensor', 'switch', 'light', 'binary_sensor':
+    for component in 'sensor', 'switch', 'light', 'binary_sensor', 'climate':
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
