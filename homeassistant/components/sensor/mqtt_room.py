@@ -6,13 +6,14 @@ https://home-assistant.io/components/sensor.mqtt_room/
 """
 import logging
 import json
+from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, STATE_UNKNOWN, CONF_TIMEOUT)
+    CONF_NAME, CONF_TIMEOUT)
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -29,16 +30,21 @@ ATTR_ROOM = 'room'
 
 CONF_DEVICE_ID = 'device_id'
 CONF_ROOM = 'room'
+CONF_AWAY_TIMEOUT = 'away_timeout'
 
 DEFAULT_NAME = 'Room Sensor'
 DEFAULT_TIMEOUT = 5
+DEFAULT_AWAY_TIMEOUT = 0
 DEFAULT_TOPIC = 'room_presence'
-DEPENDENCIES = ['mqtt']
+
+STATE_AWAY = 'away'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE_ID): cv.string,
     vol.Required(CONF_STATE_TOPIC, default=DEFAULT_TOPIC): cv.string,
     vol.Required(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_AWAY_TIMEOUT,
+                 default=DEFAULT_AWAY_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
@@ -56,7 +62,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_DEVICE_ID),
-        config.get(CONF_TIMEOUT)
+        config.get(CONF_TIMEOUT),
+        config.get(CONF_AWAY_TIMEOUT)
     )])
 
 
@@ -64,14 +71,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MQTTRoomSensor(Entity):
     """Representation of a room sensor that is updated via MQTT."""
 
-    def __init__(self, hass, name, state_topic, device_id, timeout):
+    def __init__(self, hass, name, state_topic, device_id, timeout,
+                 consider_home):
         """Initialize the sensor."""
-        self._state = STATE_UNKNOWN
+        self._state = STATE_AWAY
         self._hass = hass
         self._name = name
         self._state_topic = '{}{}'.format(state_topic, '/+')
         self._device_id = slugify(device_id).upper()
         self._timeout = timeout
+        self._consider_home = \
+            timedelta(seconds=consider_home) if consider_home \
+            else None
         self._distance = None
         self._updated = None
 
@@ -110,11 +121,6 @@ class MQTTRoomSensor(Entity):
         mqtt.subscribe(hass, self._state_topic, message_received, 1)
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
@@ -130,6 +136,13 @@ class MQTTRoomSensor(Entity):
     def state(self):
         """Return the current room of the entity."""
         return self._state
+
+    def update(self):
+        """Update the state for absent devices."""
+        if self._updated \
+                and self._consider_home \
+                and dt.utcnow() - self._updated > self._consider_home:
+            self._state = STATE_AWAY
 
 
 def _parse_update_data(topic, data):
