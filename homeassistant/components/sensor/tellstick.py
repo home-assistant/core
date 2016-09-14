@@ -30,7 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ONLY_NAMED, default=DEFAULT_ONLY_NAMED): cv.boolean,
     vol.Optional(CONF_TEMPERATURE_SCALE, default=DEFAULT_TEMPERATURE_SCALE):
         cv.string,
-    vol.Optional(CONF_DATATYPE_MASK, default=DEFAULT_DATATYPE_MASK): cv.positive_int,
+    vol.Optional(CONF_DATATYPE_MASK, default=DEFAULT_DATATYPE_MASK):
+        cv.positive_int,
 })
 
 
