@@ -1,5 +1,5 @@
 ## First
-- [ ] I have read and understand the [Contributor](https://github.com/home-assistant/home-assistant/CONTRIBUTING.md) documentation.
+- [ ] I have read and understand the [Contributing](https://github.com/home-assistant/home-assistant/CONTRIBUTING.md) documentation.
 
 ## Description
 <!--- Describe your changes. -->
