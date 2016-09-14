@@ -451,7 +451,7 @@ speedtest-cli==0.3.4
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.0.14
+sqlalchemy==1.0.15
 
 # homeassistant.components.http
 static3==0.7.0
