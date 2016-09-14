@@ -104,11 +104,6 @@ def setup(hass, config):
             icon = entry.get(CONF_ICON)
             passive = entry.get(CONF_PASSIVE)
 
-            if None in (latitude, longitude):
-                logging.getLogger(__name__).error(
-                    'Each zone needs a latitude and longitude.')
-                continue
-
             zone = Zone(
                 hass, name, latitude, longitude, radius, icon, passive, False)
             add_zone(hass, name, zone, entities)
