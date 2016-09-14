@@ -34,7 +34,7 @@ Component/Platform:
 <!-- Please explain the results that your were expecting -->
 
 
-## Screenshots (if applicable):
+## Screenshots (if applicable)
 <!-- Paste your screenshots here -->
 
 ## Additional Info
