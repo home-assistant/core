@@ -30,10 +30,10 @@
 ## Checklist
 - [ ] Local tests with `tox` run successfully. **Your PR cannot be merged unless tests pass**
 - [ ] Tests have been added to verify that the new code works.
-- [ ] Changes add/change user functionality or configuration variables. (requires items below)
+- [ ] Changes add/change user functionality or configuration variables. **Requires additional items**
   - [ ] Documentation has been updated and pull request has been submitted.
   - [ ] Pull request link is listed in Pull Requests section above.
-- [ ] New code communicates with devices or webservices. (requires items below)
+- [ ] New code communicates with devices or webservices. **Requires additional items**
   - [ ] New dependencies have been added to the `REQUIREMENTS` variable ([example][ex-requir]).
   - [ ] New dependencies are only imported inside functions that use them ([example][ex-import]).
   - [ ] New dependencies have been added to `requirements_all.txt` by running `script/gen_requirements_all.py`.
