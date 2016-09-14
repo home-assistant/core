@@ -1,30 +1,42 @@
-**Description:**
+## Description
+<!--- Describe your changes. -->
 
+## Types of changes
+<!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply. -->
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to change)
 
-**Related issue (if applicable):** fixes #
+## Issues
+<!-- List all issues that your change addresses ex( - home-assistant/home-assistant/issues/3745 ) -->
 
-**Pull request in [home-assistant.io](https://github.com/home-assistant/home-assistant.io) with documentation (if applicable):** home-assistant/home-assistant.io#
+## Pull Requests
+<!-- List your related pull requests here. Put an 'x' in all the boxes that apply. -->
+- [ ] Frontend in [home-assistant-polymer](https://github.com/home-assistant/home-assistant-polymer):
+- [ ] Documentation in [home-assistant.io](https://github.com/home-assistant/home-assistant.io):
+- [ ] Javascript in [home-assistant-js](https://github.com/home-assistant/home-assistant-js):
 
-**Example entry for `configuration.yaml` (if applicable):**
+## Configuration.yaml Example
 ```yaml
-
+[your-code]
 ```
 
-**Checklist:**
+## Screenshots (if appropriate):
+<!-- Paste your screenshots here -->
 
-If user exposed functionality or configuration variables are added/changed:
-  - [ ] Documentation added/updated in [home-assistant.io](https://github.com/home-assistant/home-assistant.io)
-
-If code communicates with devices, web services, or a:
-  - [ ] Local tests with `tox` run successfully. **Your PR cannot be merged unless tests pass**
+## Checklist
+- [ ] I have read and understand the [Contributor](https://github.com/home-assistant/home-assistant/CONTRIBUTING.md) documentation.
+- [ ] Local tests with `tox` run successfully. **Your PR cannot be merged unless tests pass**
+- [ ] Tests have been added to verify that the new code works.
+- [ ] Changes add/change user functionality or configuration variables. (requires items below)
+  - [ ] Documentation has been updated and pull request has been submitted.
+  - [ ] Pull request link is listed in Pull Requests section above.
+- [ ] New code communicates with devices or webservices. (requires items below)
   - [ ] New dependencies have been added to the `REQUIREMENTS` variable ([example][ex-requir]).
   - [ ] New dependencies are only imported inside functions that use them ([example][ex-import]).
   - [ ] New dependencies have been added to `requirements_all.txt` by running `script/gen_requirements_all.py`.
   - [ ] New files were added to `.coveragerc`.
 
-If the code does not interact with devices:
-  - [ ] Local tests with `tox` run successfully. **Your PR cannot be merged unless tests pass**
-  - [ ] Tests have been added to verify that the new code works.
 
 [ex-requir]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L16
 [ex-import]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L51
