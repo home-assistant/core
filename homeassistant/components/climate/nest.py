@@ -88,8 +88,8 @@ class NestThermostat(ClimateDevice):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         if self.device.mode == 'range':
-            low, high = self.target_temperature_low, \
-                        self.target_temperature_high
+            low, high = self.target_temp_low, \
+                        self.target_temp_high
             if self.operation == STATE_COOL:
                 temp = high
             elif self.operation == STATE_HEAT:
@@ -114,7 +114,7 @@ class NestThermostat(ClimateDevice):
         return temp
 
     @property
-    def target_temperature_low(self):
+    def target_temp_low(self):
         """Return the lower bound temperature we try to reach."""
         if self.is_away_mode_on and self.device.away_temperature[0]:
             # away_temperature is always a low, high tuple
@@ -124,7 +124,7 @@ class NestThermostat(ClimateDevice):
         return self.target_temperature
 
     @property
-    def target_temperature_high(self):
+    def target_temp_high(self):
         """Return the upper bound temperature we try to reach."""
         if self.is_away_mode_on and self.device.away_temperature[1]:
             # away_temperature is always a low, high tuple
@@ -146,10 +146,10 @@ class NestThermostat(ClimateDevice):
         if temperature is None:
             return
         if self.device.mode == 'range':
-            if self.target_temperature == self.target_temperature_low:
-                temperature = (temperature, self.target_temperature_high)
-            elif self.target_temperature == self.target_temperature_high:
-                temperature = (self.target_temperature_low, temperature)
+            if self.target_temperature == self.target_temp_low:
+                temperature = (temperature, self.target_temp_high)
+            elif self.target_temperature == self.target_temp_high:
+                temperature = (self.target_temp_low, temperature)
         _LOGGER.debug("Nest set_temperature-output-value=%s", temperature)
         self.device.target = temperature
 
