@@ -115,15 +115,6 @@ class Thermostat(ClimateDevice):
         return self.thermostat['runtime']['actualTemperature'] / 10
 
     @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        if (self.operation_mode == 'heat' or
-                self.operation_mode == 'auxHeatOnly'):
-            return self.target_temperature_low
-        elif self.operation_mode == 'cool':
-            return self.target_temperature_high
-
-    @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
         return int(self.thermostat['runtime']['desiredHeat'] / 10)
@@ -226,10 +217,8 @@ class Thermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            temperature = kwargs.get(ATTR_TEMPERATURE)
-            low_temp = int(temperature)
-            high_temp = int(temperature)
+        if kwargs.get(ATTR_TEMPERATURE) is None:
+            return
         if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None and \
            kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
             high_temp = int(kwargs.get(ATTR_TARGET_TEMP_LOW))
