@@ -2,12 +2,10 @@
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
-import voluptuous as vol
 from tests.common import get_test_home_assistant
 
 from homeassistant.bootstrap import _setup_component
-from homeassistant.components.input_slider import (
-    DOMAIN, PLATFORM_SCHEMA, select_value)
+from homeassistant.components.input_slider import (DOMAIN, select_value)
 
 
 class TestInputSlider(unittest.TestCase):
@@ -33,8 +31,6 @@ class TestInputSlider(unittest.TestCase):
             }},
         ]
         for cfg in invalid_configs:
-            with self.assertRaises(vol.Invalid):
-                PLATFORM_SCHEMA(cfg)
             self.assertFalse(
                 _setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
 
@@ -64,13 +60,8 @@ class TestInputSlider(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual(70, float(state.state))
 
-<<<<<<< HEAD
-        input_slider.select_value(self.hass, entity_id, '110')
-        self.hass.block_till_done()
-=======
         select_value(self.hass, entity_id, '110')
-        self.hass.pool.block_till_done()
->>>>>>> _setup_component
+        self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
         self.assertEqual(70, float(state.state))

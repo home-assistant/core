@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import dict_items_from_list
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -49,7 +48,7 @@ def _cv_input_slider(cfg):
     cfg[CONF_INITIAL] = state
     return cfg
 
-PLATFORM_SCHEMA = vol.Schema({
+CONFIG_SCHEMA = vol.Schema({DOMAIN: {
     cv.slug: vol.All({
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_MIN): vol.Coerce(float),
@@ -59,7 +58,7 @@ PLATFORM_SCHEMA = vol.Schema({
                                                     vol.Range(min=1e-3)),
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
-    }, _cv_input_slider)}, required=True)
+    }, _cv_input_slider)}}, required=True)
 
 
 def select_value(hass, entity_id, value):
@@ -72,16 +71,11 @@ def select_value(hass, entity_id, value):
 
 def setup(hass, config):
     """Set up input slider."""
-    # pylint: disable=too-many-locals
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
 
-    for object_id, cfg, duplicate in dict_items_from_list(config[DOMAIN]):
-        if duplicate:
-            _LOGGER.warning('Duplicate values for %s: %s and %s', object_id,
-                            str(duplicate), str(cfg))
-            continue
+    for object_id, cfg in config[DOMAIN].items():
         name = cfg.get(CONF_NAME)
         minimum = cfg.get(CONF_MIN)
         maximum = cfg.get(CONF_MAX)

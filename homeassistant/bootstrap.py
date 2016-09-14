@@ -402,7 +402,13 @@ def log_exception(ex, domain, config):
                    .format(ex.path[-1], domain, domain,
                            '->'.join('%s' % m for m in ex.path))
     else:
-        message += humanize_error(config, ex)
+        try:
+            message += humanize_error(config, ex)
+        except TypeError:
+            # Shorten ex.path - can be caused by a vol.All(ensure_list, <fail>)
+            # On failure the original config do not contain a list
+            ex.path.pop()
+            message += humanize_error(config, ex)
 
     if hasattr(config, '__line__'):
         message += " (See {}:{})".format(config.__config_file__,

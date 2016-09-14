@@ -9,7 +9,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
-from homeassistant.helpers import dict_items_from_list
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -43,14 +42,14 @@ def _cv_input_select(cfg):
     return cfg
 
 
-PLATFORM_SCHEMA = vol.Schema({
+CONFIG_SCHEMA = vol.Schema({DOMAIN: {
     cv.slug: vol.All({
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1),
                                             [cv.string]),
         vol.Optional(CONF_INITIAL): cv.string,
         vol.Optional(CONF_ICON): cv.icon,
-    }, _cv_input_select)}, required=True)
+    }, _cv_input_select)}}, required=True)
 
 
 def select_option(hass, entity_id, option):
@@ -67,11 +66,7 @@ def setup(hass, config):
 
     entities = []
 
-    for object_id, cfg, duplicate in dict_items_from_list(config[DOMAIN]):
-        if duplicate:
-            _LOGGER.warning('Duplicate values for %s: %s and %s', object_id,
-                            str(duplicate), str(cfg))
-            continue
+    for object_id, cfg in config[DOMAIN].items():
         name = cfg.get(CONF_NAME)
         options = cfg.get(CONF_OPTIONS)
         state = cfg.get(CONF_INITIAL, options[0])

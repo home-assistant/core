@@ -2,12 +2,11 @@
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
-import voluptuous as vol
 from tests.common import get_test_home_assistant
 
 from homeassistant.bootstrap import _setup_component
 from homeassistant.components.input_select import (
-    ATTR_OPTIONS, DOMAIN, PLATFORM_SCHEMA, select_option)
+    ATTR_OPTIONS, DOMAIN, select_option)
 from homeassistant.const import (
     ATTR_ICON, ATTR_FRIENDLY_NAME)
 
@@ -37,8 +36,6 @@ class TestInputSelect(unittest.TestCase):
         ]
 
         for cfg in invalid_configs:
-            with self.assertRaises(vol.Invalid):
-                PLATFORM_SCHEMA(cfg)
             self.assertFalse(
                 _setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
 

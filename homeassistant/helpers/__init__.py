@@ -38,15 +38,3 @@ def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
     """Extract keys from config for given domain name."""
     pattern = re.compile(r'^{}(| .+)$'.format(domain))
     return [key for key in config.keys() if pattern.match(key)]
-
-
-def dict_items_from_list(list_of_dicts: Sequence[dict]) \
-        -> Iterable[Tuple[Any, Any]]:
-    """Iterate over all dicts' items in a list."""
-    if not isinstance(list_of_dicts, list):
-        list_of_dicts = [list_of_dicts]
-    seen = {}
-    for a_dict in list_of_dicts:
-        for key, val in a_dict.items():
-            yield key, val, seen.get(key)
-            seen[key] = val

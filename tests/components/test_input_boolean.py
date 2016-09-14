@@ -2,12 +2,11 @@
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
-import voluptuous as vol
 from tests.common import get_test_home_assistant
 
 from homeassistant.bootstrap import _setup_component
 from homeassistant.components.input_boolean import (
-    DOMAIN, PLATFORM_SCHEMA, is_on, turn_off, turn_on)
+    DOMAIN, is_on, turn_off, turn_on)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ICON, ATTR_FRIENDLY_NAME)
 
@@ -32,8 +31,6 @@ class TestInputBoolean(unittest.TestCase):
         ]
 
         for cfg in invalid_configs:
-            with self.assertRaises(vol.Invalid):
-                PLATFORM_SCHEMA(cfg)
             self.assertFalse(
                 _setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
 
@@ -97,31 +94,3 @@ class TestInputBoolean(unittest.TestCase):
         self.assertEqual('Hello World',
                          state_2.attributes.get(ATTR_FRIENDLY_NAME))
         self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
-
-    def test_multiple_platform_style(self):
-        """Load from multiple sub components."""
-        count_start = len(self.hass.states.entity_ids())
-
-        self.assertTrue(_setup_component(self.hass, DOMAIN, {
-            DOMAIN: {
-                'test_1': None,
-                'test_2': {
-                    'name': 'Hello World',
-                    'icon': 'mdi:work',
-                    'initial': True,
-                },
-            },
-            DOMAIN+" 2": {
-                'test_3': None,
-            }
-        }))
-
-        self.assertEqual(count_start + 3, len(self.hass.states.entity_ids()))
-
-        state_1 = self.hass.states.get('input_boolean.test_1')
-        state_2 = self.hass.states.get('input_boolean.test_2')
-        state_3 = self.hass.states.get('input_boolean.test_3')
-
-        self.assertIsNotNone(state_1)
-        self.assertIsNotNone(state_2)
-        self.assertIsNotNone(state_3)
