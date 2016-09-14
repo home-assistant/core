@@ -7,7 +7,7 @@ from platform import system
 from unittest.mock import patch
 
 from typing import Dict, List, Sequence
-
+from collections import OrderedDict
 import homeassistant.bootstrap as bootstrap
 import homeassistant.config as config_util
 import homeassistant.loader as loader
@@ -152,11 +152,11 @@ def run(script_args: List) -> int:
 def check(config_path):
     """Perform a check by mocking hass load functions."""
     res = {
-        'yaml_files': {},  # yaml_files loaded
-        'secrets': {},  # secret cache and secrets loaded
-        'except': {},  # exceptions raised (with config)
-        'components': {},  # successful components
-        'secret_cache': {},
+        'yaml_files': OrderedDict(),  # yaml_files loaded
+        'secrets': OrderedDict(),  # secret cache and secrets loaded
+        'except': OrderedDict(),  # exceptions raised (with config)
+        'components': OrderedDict(),  # successful components
+        'secret_cache': OrderedDict(),
     }
 
     def mock_load(filename):  # pylint: disable=unused-variable
