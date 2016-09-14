@@ -5,17 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.knx/
 """
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.knx import (
-    KNXConfig, KNXGroupAddress)
+from homeassistant.components.knx import (KNXConfig, KNXGroupAddress)
 
-DEPENDENCIES = ["knx"]
+DEPENDENCIES = ['knx']
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the KNX binary sensor platform."""
-    add_entities([
-        KNXSwitch(hass, KNXConfig(config))
-    ])
+    add_devices([KNXSwitch(hass, KNXConfig(config))])
 
 
 class KNXSwitch(KNXGroupAddress, BinarySensorDevice):
