@@ -38,7 +38,7 @@ def setup(hass, config):
 
     for link in links.get(CONF_ENTITIES):
         Link(hass, link.get(CONF_NAME), link.get(CONF_URL),
-             link.get(CONF_URL))
+             link.get(CONF_ICON))
 
     return True
 
