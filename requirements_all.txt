@@ -511,7 +511,7 @@ xboxapi==0.1.1
 xmltodict==0.10.2
 
 # homeassistant.components.sensor.yweather
-yahooweather==0.7
+yahooweather==0.8
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.6
