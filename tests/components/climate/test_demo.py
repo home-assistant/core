@@ -71,13 +71,14 @@ class TestDemoClimate(unittest.TestCase):
     def test_set_target_temp_range(self):
         """Test the setting of the target temperature with range."""
         state = self.hass.states.get(ENTITY_ECOBEE)
-        self.assertEqual(23.0, state.attributes.get('temperature'))
+        self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(21.0, state.attributes.get('target_temp_low'))
         self.assertEqual(24.0, state.attributes.get('target_temp_high'))
-        climate.set_temperature(self.hass, 30, ENTITY_ECOBEE, 25, 20)
+        climate.set_temperature(self.hass, target_temp_high=25,
+                                target_temp_low=20, entity_id=ENTITY_ECOBEE)
         self.hass.pool.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
-        self.assertEqual(30.0, state.attributes.get('temperature'))
+        self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(20.0, state.attributes.get('target_temp_low'))
         self.assertEqual(25.0, state.attributes.get('target_temp_high'))
 
@@ -85,13 +86,15 @@ class TestDemoClimate(unittest.TestCase):
         """Test setting the target temperature range without required
            attribute."""
         state = self.hass.states.get(ENTITY_ECOBEE)
-        self.assertEqual(23, state.attributes.get('temperature'))
+        self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(21.0, state.attributes.get('target_temp_low'))
         self.assertEqual(24.0, state.attributes.get('target_temp_high'))
-        climate.set_temperature(self.hass, None, ENTITY_ECOBEE, None, None)
+        climate.set_temperature(self.hass, temperature=None,
+                                entity_id=ENTITY_ECOBEE, target_temp_low=None,
+                                target_temp_high=None)
         self.hass.pool.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
-        self.assertEqual(23, state.attributes.get('temperature'))
+        self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(21.0, state.attributes.get('target_temp_low'))
         self.assertEqual(24.0, state.attributes.get('target_temp_high'))
 
