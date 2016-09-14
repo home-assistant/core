@@ -34,7 +34,7 @@ SERVICE_SET_HVAC_MODE = "set_hvac_mode"
 STATE_HEAT = "heat"
 STATE_COOL = "cool"
 STATE_IDLE = "idle"
-STATE_AUTO = 'auto'
+STATE_AUTO = "auto"
 
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_AWAY_MODE = "away_mode"
