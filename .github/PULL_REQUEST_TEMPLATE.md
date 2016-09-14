@@ -24,7 +24,7 @@
 [your-code]
 ```
 
-## Screenshots (if appropriate):
+## Screenshots (if applicable)
 <!-- Paste your screenshots here -->
 
 ## Checklist
