@@ -1,3 +1,6 @@
+## First
+- [ ] I have read and understand the [Contributor](https://github.com/home-assistant/home-assistant/CONTRIBUTING.md) documentation.
+
 ## Description
 <!--- Describe your changes. -->
 
@@ -25,7 +28,6 @@
 <!-- Paste your screenshots here -->
 
 ## Checklist
-- [ ] I have read and understand the [Contributor](https://github.com/home-assistant/home-assistant/CONTRIBUTING.md) documentation.
 - [ ] Local tests with `tox` run successfully. **Your PR cannot be merged unless tests pass**
 - [ ] Tests have been added to verify that the new code works.
 - [ ] Changes add/change user functionality or configuration variables. (requires items below)
