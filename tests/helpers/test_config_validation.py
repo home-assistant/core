@@ -3,6 +3,7 @@ from collections import OrderedDict
 from datetime import timedelta
 import os
 import tempfile
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -389,15 +390,17 @@ def test_ordered_dict_key_validator():
     """Test ordered_dict key validator."""
     schema = vol.Schema(cv.ordered_dict(cv.match_all, cv.string))
 
-    with pytest.raises(vol.Invalid):
+    with patch('homeassistant.bootstrap.log_exception') as loge:
         schema({None: 1})
+        assert loge.call_count == 1
 
     schema({'hello': 'world'})
 
     schema = vol.Schema(cv.ordered_dict(cv.match_all, int))
 
-    with pytest.raises(vol.Invalid):
+    with patch('homeassistant.bootstrap.log_exception') as loge:
         schema({'hello': 1})
+        assert loge.call_count == 1
 
     schema({1: 'works'})
 
@@ -406,14 +409,16 @@ def test_ordered_dict_value_validator():
     """Test ordered_dict validator."""
     schema = vol.Schema(cv.ordered_dict(cv.string))
 
-    with pytest.raises(vol.Invalid):
+    with patch('homeassistant.bootstrap.log_exception') as loge:
         schema({'hello': None})
+        assert loge.call_count == 1
 
     schema({'hello': 'world'})
 
     schema = vol.Schema(cv.ordered_dict(int))
 
-    with pytest.raises(vol.Invalid):
+    with patch('homeassistant.bootstrap.log_exception') as loge:
         schema({'hello': 'world'})
+        assert loge.call_count == 1
 
     schema({'hello': 5})
