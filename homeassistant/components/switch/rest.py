@@ -81,8 +81,7 @@ class RestSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        body_on_t = template.render_with_possible_json_value(
-            self._hass, self._body_on, "", False)
+        body_on_t = template.render(self._hass, self._body_on)
         request = requests.post(self._resource,
                                 data=body_on_t,
                                 timeout=50)
@@ -94,11 +93,10 @@ class RestSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        body_off_t = template.render_with_possible_json_value(
-            self._hass, self._body_off, "", False)
+        body_off_t = template.render(self._hass, self._body_off)
         request = requests.post(self._resource,
                                 data=body_off_t,
-                                timeout=50)
+                                timeout=10)
         if request.status_code == 200:
             self._state = False
         else:
@@ -107,7 +105,7 @@ class RestSwitch(SwitchDevice):
 
     def update(self):
         """Get the latest data from REST API and update the state."""
-        request = requests.get(self._resource, timeout=50)
+        request = requests.get(self._resource, timeout=10)
 
         if self._value_template is not None:
             response = template.render_with_possible_json_value(
