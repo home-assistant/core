@@ -84,7 +84,7 @@ class RestSwitch(SwitchDevice):
         body_on_t = template.render(self._hass, self._body_on)
         request = requests.post(self._resource,
                                 data=body_on_t,
-                                timeout=50)
+                                timeout=10)
         if request.status_code == 200:
             self._state = True
         else:
