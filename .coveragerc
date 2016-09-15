@@ -95,15 +95,16 @@ omit =
     homeassistant/components/knx.py
     homeassistant/components/*/knx.py
 
+    homeassistant/components/ffmpeg.py
+    homeassistant/components/*/ffmpeg.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
     homeassistant/components/binary_sensor/arest.py
-    homeassistant/components/binary_sensor/ffmpeg.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/bloomsky.py
-    homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py

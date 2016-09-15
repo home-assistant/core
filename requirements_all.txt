@@ -114,8 +114,7 @@ googlemaps==2.4.4
 # homeassistant.components.sensor.gpsd
 gps3==0.33.3
 
-# homeassistant.components.binary_sensor.ffmpeg
-# homeassistant.components.camera.ffmpeg
+# homeassistant.components.ffmpeg
 ha-ffmpeg==0.12
 
 # homeassistant.components.mqtt.server
