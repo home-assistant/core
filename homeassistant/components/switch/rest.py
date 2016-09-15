@@ -10,7 +10,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_RESOURCE, CONF_VALUE_TEMPLATE)
+from homeassistant.const import (
+    CONF_NAME, CONF_RESOURCE, CONF_VALUE_TEMPLATE, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template
 
@@ -19,6 +20,7 @@ CONF_BODY_ON = 'body_on'
 DEFAULT_BODY_OFF = 'OFF'
 DEFAULT_BODY_ON = 'ON'
 DEFAULT_NAME = 'REST Switch'
+DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
@@ -26,6 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +42,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     body_on = config.get(CONF_BODY_ON)
     body_off = config.get(CONF_BODY_OFF)
     value_template = config.get(CONF_VALUE_TEMPLATE)
+    timeout = config.get(CONF_TIMEOUT)
 
     try:
         requests.get(resource, timeout=10)
@@ -51,15 +55,17 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         return False
 
     add_devices_callback(
-        [RestSwitch(hass, name, resource, body_on, body_off, value_template)])
+        [RestSwitch(hass, name, resource,
+                    body_on, body_off, value_template, timeout)])
 
 
 # pylint: disable=too-many-arguments
 class RestSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using REST."""
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, hass, name, resource, body_on, body_off,
-                 value_template):
+                 value_template, timeout):
         """Initialize the REST switch."""
         self._state = None
         self._hass = hass
@@ -68,6 +74,7 @@ class RestSwitch(SwitchDevice):
         self._body_on = body_on
         self._body_off = body_off
         self._value_template = value_template
+        self._timeout = timeout
 
     @property
     def name(self):
@@ -84,7 +91,7 @@ class RestSwitch(SwitchDevice):
         body_on_t = template.render(self._hass, self._body_on)
         request = requests.post(self._resource,
                                 data=body_on_t,
-                                timeout=10)
+                                timeout=self._timeout)
         if request.status_code == 200:
             self._state = True
         else:
@@ -96,7 +103,7 @@ class RestSwitch(SwitchDevice):
         body_off_t = template.render(self._hass, self._body_off)
         request = requests.post(self._resource,
                                 data=body_off_t,
-                                timeout=10)
+                                timeout=self._timeout)
         if request.status_code == 200:
             self._state = False
         else:
@@ -105,7 +112,7 @@ class RestSwitch(SwitchDevice):
 
     def update(self):
         """Get the latest data from REST API and update the state."""
-        request = requests.get(self._resource, timeout=10)
+        request = requests.get(self._resource, timeout=self._timeout)
 
         if self._value_template is not None:
             response = template.render_with_possible_json_value(
