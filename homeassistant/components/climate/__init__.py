@@ -33,6 +33,7 @@ SERVICE_SET_OPERATION_MODE = "set_operation_mode"
 SERVICE_SET_SWING_MODE = "set_swing_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
 
+STATE_ON = "on"
 STATE_HEAT = "heat"
 STATE_COOL = "cool"
 STATE_IDLE = "idle"

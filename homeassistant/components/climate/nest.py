@@ -8,7 +8,7 @@ import logging
 import voluptuous as vol
 import homeassistant.components.nest as nest
 from homeassistant.components.climate import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_ON, ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_SCAN_INTERVAL, ATTR_TEMPERATURE)
 from homeassistant.util.temperature import convert as convert_temperature
@@ -38,7 +38,7 @@ class NestThermostat(ClimateDevice):
         self._unit = temp_unit
         self.structure = structure
         self.device = device
-        self._fan_list = ["On", "Auto"]
+        self._fan_list = [STATE_ON, STATE_AUTO]
 
     @property
     def name(self):
@@ -167,7 +167,7 @@ class NestThermostat(ClimateDevice):
     @property
     def current_fan_mode(self):
         """Return whether the fan is on."""
-        return "On" if self.device.fan else "Auto"
+        return STATE_ON if self.device.fan else STATE_AUTO
 
     @property
     def fan_list(self):
