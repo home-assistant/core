@@ -8,9 +8,9 @@ import logging
 import voluptuous as vol
 import homeassistant.components.nest as nest
 from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_ON, ClimateDevice, PLATFORM_SCHEMA)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_SCAN_INTERVAL, ATTR_TEMPERATURE)
+    TEMP_CELSIUS, CONF_SCAN_INTERVAL, ATTR_TEMPERATURE, STATE_ON)
 from homeassistant.util.temperature import convert as convert_temperature
 
 DEPENDENCIES = ['nest']
