@@ -23,11 +23,10 @@ CONF_SOURCES = 'sources'
 
 DEFAULT_NAME = 'Onkyo Receiver'
 
-KNOWN_HOSTS = []
-
 SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
+KNOWN_HOSTS = []  # type: List[str]
 DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
                    'video1': 'Video 1', 'video2': 'Video 2',
                    'video3': 'Video 3', 'video4': 'Video 4',
@@ -85,17 +84,35 @@ class OnkyoDevice(MediaPlayerDevice):
         self._reverse_mapping = {value: key for key, value in sources.items()}
         self.update()
 
+    def command(self, command):
+        """Run an eiscp command and catch connection errors."""
+        try:
+            result = self._receiver.command(command)
+        except (ValueError, OSError, AttributeError, AssertionError):
+            if self._receiver.command_socket:
+                self._receiver.command_socket = None
+                _LOGGER.info('Reseting connection to %s.', self._name)
+            else:
+                _LOGGER.info('%s is disconnected. Attempting to reconnect.',
+                             self._name)
+            return False
+        return result
+
     def update(self):
         """Get the latest details from the device."""
-        status = self._receiver.command('system-power query')
+        status = self.command('system-power query')
+        if not status:
+            return
         if status[1] == 'on':
             self._pwstate = STATE_ON
         else:
             self._pwstate = STATE_OFF
             return
-        volume_raw = self._receiver.command('volume query')
-        mute_raw = self._receiver.command('audio-muting query')
-        current_source_raw = self._receiver.command('input-selector query')
+        volume_raw = self.command('volume query')
+        mute_raw = self.command('audio-muting query')
+        current_source_raw = self.command('input-selector query')
+        if not (volume_raw and mute_raw and current_source_raw):
+            return
         for source in current_source_raw[1]:
             if source in self._source_mapping:
                 self._current_source = self._source_mapping[source]
@@ -143,18 +160,18 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self._receiver.command('system-power standby')
+        self.command('system-power standby')
 
     def set_volume_level(self, volume):
         """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
-        self._receiver.command('volume {}'.format(int(volume*80)))
+        self.command('volume {}'.format(int(volume*80)))
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         if mute:
-            self._receiver.command('audio-muting on')
+            self.command('audio-muting on')
         else:
-            self._receiver.command('audio-muting off')
+            self.command('audio-muting off')
 
     def turn_on(self):
         """Turn the media player on."""
@@ -164,4 +181,4 @@ class OnkyoDevice(MediaPlayerDevice):
         """Set the input source."""
         if source in self._source_list:
             source = self._reverse_mapping[source]
-        self._receiver.command('input-selector {}'.format(source))
+        self.command('input-selector {}'.format(source))
