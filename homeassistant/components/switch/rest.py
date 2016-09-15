@@ -88,8 +88,8 @@ class RestSwitch(SwitchDevice):
         if request.status_code == 200:
             self._state = True
         else:
-            _LOGGER.info("Can't turn on %s. Is resource/endpoint offline?",
-                         -                          self._resource)
+            _LOGGER.error("Can't turn on %s. Is resource/endpoint offline?",
+                          -                          self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -100,8 +100,8 @@ class RestSwitch(SwitchDevice):
         if request.status_code == 200:
             self._state = False
         else:
-            _LOGGER.info("Can't turn off %s. Is resource/endpoint offline?",
-                         -                          self._resource)
+            _LOGGER.error("Can't turn off %s. Is resource/endpoint offline?",
+                          -                          self._resource)
 
     def update(self):
         """Get the latest data from REST API and update the state."""
