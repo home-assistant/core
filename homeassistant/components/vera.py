@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.16']
+REQUIREMENTS = ['pyvera==0.2.20']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 VERA_COMPONENTS = [
-    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'climate'
+    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'climate', 'cover'
 ]
 
 
@@ -109,12 +109,13 @@ def map_vera_device(vera_device, remap):
         return 'lock'
     if isinstance(vera_device, veraApi.VeraThermostat):
         return 'climate'
+    if isinstance(vera_device, veraApi.VeraCurtain):
+        return 'cover'
     if isinstance(vera_device, veraApi.VeraSwitch):
         if vera_device.device_id in remap:
             return 'light'
         else:
             return 'switch'
-    # VeraCurtain: NOT SUPPORTED YET
     return None
 
 
