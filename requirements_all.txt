@@ -7,6 +7,9 @@ jinja2>=2.8
 voluptuous==0.9.2
 typing>=3,<4
 
+# homeassistant.components.nuimo_controller
+--only-binary=all git+https://github.com/getSenic/nuimo-linux-python#nuimo==1.0.0
+
 # homeassistant.components.isy994
 PyISY==1.0.7
 
