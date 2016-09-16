@@ -3,6 +3,9 @@ import unittest
 import email
 import datetime
 
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 from homeassistant.helpers.event import track_state_change
 from collections import deque
 
@@ -44,6 +47,81 @@ class TestEMail(unittest.TestCase):
         sensor = email_component.EmailSensor(
             self.hass,
             FakeEMailReader(deque([test_message])),
+            "test_emails_sensor",
+            ["sender@test.com"],
+            None)
+
+        sensor.entity_id = "sensor.emailtest"
+        sensor.update()
+        self.assertEqual("Test Message", sensor.state)
+        self.assertEqual("sender@test.com", sensor.state_attributes["from"])
+        self.assertEqual("Test", sensor.state_attributes["subject"])
+        self.assertEqual(datetime.datetime(2016, 1, 1, 12, 44, 57),
+                         sensor.state_attributes["date"])
+
+    def test_multi_part_with_text(self):
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = "Link"
+        msg['From'] = "sender@test.com"
+
+        text = "Test Message"
+        html = "<html><head></head><body>Test Message</body></html>"
+
+        textPart = MIMEText(text, 'plain')
+        htmlPart = MIMEText(html, 'html')
+
+        msg.attach(textPart)
+        msg.attach(htmlPart)
+
+        sensor = email_component.EmailSensor(
+            self.hass,
+            FakeEMailReader(deque([msg])),
+            "test_emails_sensor",
+            ["sender@test.com"],
+            None)
+
+        sensor.entity_id = "sensor.emailtest"
+        sensor.update()
+        self.assertEqual("Test Message", sensor.state)
+
+    def test_multi_part_only_html(self):
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = "Link"
+        msg['From'] = "sender@test.com"
+
+        html = "<html><head></head><body>Test Message</body></html>"
+
+        htmlPart = MIMEText(html, 'html')
+
+        msg.attach(htmlPart)
+
+        sensor = email_component.EmailSensor(
+            self.hass,
+            FakeEMailReader(deque([msg])),
+            "test_emails_sensor",
+            ["sender@test.com"],
+            None)
+
+        sensor.entity_id = "sensor.emailtest"
+        sensor.update()
+        self.assertEqual(
+            "<html><head></head><body>Test Message</body></html>",
+            sensor.state)
+
+    def test_multi_part_only_other_text(self):
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = "Link"
+        msg['From'] = "sender@test.com"
+
+        other = "Test Message"
+
+        htmlPart = MIMEText(other, 'other')
+
+        msg.attach(htmlPart)
+
+        sensor = email_component.EmailSensor(
+            self.hass,
+            FakeEMailReader(deque([msg])),
             "test_emails_sensor",
             ["sender@test.com"],
             None)
@@ -122,10 +200,10 @@ class TestEMail(unittest.TestCase):
             FakeEMailReader(deque([test_message])),
             "test_emails_sensor",
             ["sender@test.com"],
-            "email from {{ from }} with message {{ body }}")
+            "{{ subject }} from {{ from }} with message {{ body }}")
 
         sensor.entity_id = "sensor.emailtest"
         sensor.update()
         self.assertEqual(
-            "email from sender@test.com with message Test Message",
+            "Test from sender@test.com with message Test Message",
             sensor.state)

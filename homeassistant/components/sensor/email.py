@@ -7,20 +7,26 @@ https://home-assistant.io/components/sensor.email/
 import logging
 import datetime
 import email
-import voluptuous as vol
 
+from collections import deque
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template
+import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SERVER = "server"
 CONF_SENDERS = "senders"
 CONF_VALUE_TEMPLATE = "value_template"
+
+ATTR_FROM = "from"
+ATTR_BODY = "body"
+ATTR_DATE = "date"
+ATTR_SUBJECT = "subject"
 
 DEFAULT_PORT = 993
 
@@ -65,6 +71,7 @@ class EmailReader:
         self._server = server
         self._port = port
         self._last_id = None
+        self._unread_ids = deque([])
         self.connection = None
 
     def connect(self):
@@ -93,16 +100,18 @@ class EmailReader:
         """Read the next email from the email server."""
         import imaplib
         try:
-
             self.connection.select()
 
-            search = "SINCE {0:%d-%b-%y}".format(datetime.date.today())
-            if self._last_id is not None:
-                search = "UID {}:*".format(self._last_id)
+            if len(self._unread_ids) == 0:
+                search = "SINCE {0:%d-%b-%y}".format(datetime.date.today())
+                if self._last_id is not None:
+                    search = "UID {}:*".format(self._last_id)
 
-            _, data = self.connection.search(None, search)
-            messages = data[0].split()
-            for message_uid in messages:
+                _, data = self.connection.uid("search", None, search)
+                self._unread_ids = deque(data[0].split())
+
+            while len(self._unread_ids) > 0:
+                message_uid = self._unread_ids.popleft()
                 if self._last_id is None or int(message_uid) > self._last_id:
                     self._last_id = int(message_uid)
                     return self._fetch_message(message_uid)
@@ -111,10 +120,10 @@ class EmailReader:
             _LOGGER.info(
                 "Connection to %s lost, attempting to reconnect",
                 self._server)
-        try:
-            self.connection = self.connect()
-        except imaplib.IMAP4.error:
-            _LOGGER.error("Failed to reconnect.")
+            try:
+                self.connect()
+            except imaplib.IMAP4.error:
+                _LOGGER.error("Failed to reconnect.")
 
 
 class EmailSensor(Entity):
@@ -157,36 +166,81 @@ class EmailSensor(Entity):
     def render_template(self, email_message):
         """Render the message template."""
         variables = {
-            'from': str(email_message['From']),
-            'subject': str(email_message['Subject']),
-            'date': email_message['Date'],
-            'body': email_message.get_payload()
+            ATTR_FROM: EmailSensor.get_msg_sender(email_message),
+            ATTR_SUBJECT: EmailSensor.get_msg_subject(email_message),
+            ATTR_DATE: email_message['Date'],
+            ATTR_BODY: EmailSensor.get_msg_text(email_message)
         }
         return template.render(self.hass, self._value_template, variables)
 
     def sender_allowed(self, email_message):
         """Check if the sender is in the allowed senders list."""
-        return str(email_message['From']).upper() in (
+        return EmailSensor.get_msg_sender(email_message).upper() in (
             sender.upper() for sender in self._allowed_senders)
+
+    @staticmethod
+    def get_msg_sender(email_message):
+        """Get the parsed message sender from the email."""
+        return str(email.utils.parseaddr(email_message['From'])[1])
+
+    @staticmethod
+    def get_msg_subject(email_message):
+        """Decode the message subject."""
+        decoded_header = email.header.decode_header(email_message['Subject'])
+        header = email.header.make_header(decoded_header)
+        return str(header)
+
+    @staticmethod
+    def get_msg_text(email_message):
+        """
+        Get the message text from the email.
+
+        Will look for text/plain or use text/html if not found.
+        """
+        message_text = None
+        message_html = None
+        message_untyped_text = None
+
+        for part in email_message.walk():
+            if part.get_content_type() == 'text/plain':
+                if message_text is None:
+                    message_text = part.get_payload()
+            elif part.get_content_type() == 'text/html':
+                if message_html is None:
+                    message_html = part.get_payload()
+            elif part.get_content_type().startswith('text'):
+                if message_untyped_text is None:
+                    message_untyped_text = part.get_payload()
+
+        if message_text is not None:
+            return message_text
+
+        if message_html is not None:
+            return message_html
+
+        if message_untyped_text is not None:
+            return message_untyped_text
+
+        return email_message.get_payload()
 
     def update(self):
         """Read emails and publish state change."""
         while True:
             email_message = self._email_reader.read_next()
+
             if email_message is None:
                 break
 
             if self.sender_allowed(email_message):
-                message_body = email_message.get_payload()
+                message_body = EmailSensor.get_msg_text(email_message)
 
                 if self._value_template is not None:
                     message_body = self.render_template(email_message)
 
                 self._message = message_body
                 self._state_attributes = {
-                    'from': str(email_message['From']),
-                    'subject': str(email_message['Subject']),
-                    'date': email_message['Date']
+                    ATTR_FROM: EmailSensor.get_msg_sender(email_message),
+                    ATTR_SUBJECT: EmailSensor.get_msg_subject(email_message),
+                    ATTR_DATE: email_message['Date']
                 }
-                self.update_ha_state()
                 self.update_ha_state()
