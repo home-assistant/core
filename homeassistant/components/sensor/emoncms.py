@@ -11,8 +11,6 @@ import voluptuous as vol
 import requests
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
-from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_URL, CONF_VALUE_TEMPLATE,
@@ -20,6 +18,7 @@ from homeassistant.const import (
     STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +26,7 @@ DECIMALS = 2
 CONF_EXCLUDE_FEEDID = "exclude_feed_id"
 CONF_ONLY_INCLUDE_FEEDID = "include_only_feed_id"
 CONF_SENSOR_NAMES = "sensor_names"
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -71,6 +71,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     interval = config.get(CONF_SCAN_INTERVAL)
 
     data = EmonCmsData(hass, url, apikey, interval)
+
+    data.update()
 
     if data.data is None:
         return False
@@ -166,6 +168,8 @@ class EmonCmsSensor(Entity):
         if self._data is None:
             return
 
+        self._data.update()
+
         found = False
         if self._data.data is not None:
             for elem in self._data.data:
@@ -198,9 +202,9 @@ class EmonCmsData(object):
         self._interval = interval
         self._hass = hass
         self.data = None
-        self.update(dt_util.utcnow())
 
-    def update(self, now):
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
         """Get the latest data."""
         try:
             req = requests.get(self._url, params={"apikey": self._apikey},
@@ -216,9 +220,3 @@ class EmonCmsData(object):
                 _LOGGER.error("please verify if the specified config value "
                               "'%s' is correct! (HTTP Status_code = %d)",
                               CONF_URL, req.status_code)
-        finally:
-            if self.data is not None:
-                track_point_in_utc_time(self._hass,
-                                        self.update,
-                                        now +
-                                        timedelta(seconds=self._interval))
