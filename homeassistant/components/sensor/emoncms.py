@@ -167,17 +167,19 @@ class EmonCmsSensor(Entity):
         """Get the latest data and updates the state."""
         self._data.update()
 
+        if self._data.data is None:
+            return
+
         found = False
-        if self._data.data is not None:
-            for elem in self._data.data:
-                elemid = get_id(self._sensorid, elem["tag"], elem["name"],
-                                elem["id"], elem["userid"])
-                if elemid == self._identifier:
-                    found = True
-                    self._lastupdatetime = elem["time"]
-                    self._size = elem["size"]
-                    self._value = elem["value"]
-                    break
+        for elem in self._data.data:
+            elemid = get_id(self._sensorid, elem["tag"], elem["name"],
+                            elem["id"], elem["userid"])
+            if elemid == self._identifier:
+                found = True
+                self._lastupdatetime = elem["time"]
+                self._size = elem["size"]
+                self._value = elem["value"]
+                break
 
         if found:
             if self._value_template is not None:
