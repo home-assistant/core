@@ -165,9 +165,6 @@ class EmonCmsSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        if self._data is None:
-            return
-
         self._data.update()
 
         found = False
