@@ -115,7 +115,7 @@ googlemaps==2.4.4
 gps3==0.33.3
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==0.12
+ha-ffmpeg==0.13
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.7.1
