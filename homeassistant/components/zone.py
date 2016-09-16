@@ -37,16 +37,15 @@ ICON_IMPORT = 'mdi:import'
 
 STATE = 'zoning'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_LATITUDE): cv.latitude,
-        vol.Required(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
-        vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
-        vol.Optional(CONF_ICON): cv.icon,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+# The config that zone accepts is the same as if it has platforms.
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_LATITUDE): cv.latitude,
+    vol.Required(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
+    vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
+    vol.Optional(CONF_ICON): cv.icon,
+})
 
 
 def active_zone(hass, latitude, longitude, radius=0):
