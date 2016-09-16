@@ -8,9 +8,10 @@ import logging
 import voluptuous as vol
 import homeassistant.components.nest as nest
 from homeassistant.components.climate import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice,
+    PLATFORM_SCHEMA)
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_SCAN_INTERVAL, ATTR_TEMPERATURE)
+    TEMP_CELSIUS, CONF_SCAN_INTERVAL, ATTR_TEMPERATURE, STATE_ON)
 from homeassistant.util.temperature import convert as convert_temperature
 
 DEPENDENCIES = ['nest']
@@ -38,6 +39,7 @@ class NestThermostat(ClimateDevice):
         self._unit = temp_unit
         self.structure = structure
         self.device = device
+        self._fan_list = [STATE_ON, STATE_AUTO]
 
     @property
     def name(self):
@@ -164,17 +166,18 @@ class NestThermostat(ClimateDevice):
         self.structure.away = False
 
     @property
-    def is_fan_on(self):
+    def current_fan_mode(self):
         """Return whether the fan is on."""
-        return self.device.fan
+        return STATE_ON if self.device.fan else STATE_AUTO
 
-    def turn_fan_on(self):
-        """Turn fan on."""
-        self.device.fan = True
+    @property
+    def fan_list(self):
+        """List of available fan modes."""
+        return self._fan_list
 
-    def turn_fan_off(self):
-        """Turn fan off."""
-        self.device.fan = False
+    def set_fan_mode(self, fan):
+        """Turn fan on/off."""
+        self.device.fan = fan.lower()
 
     @property
     def min_temp(self):
