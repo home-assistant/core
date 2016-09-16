@@ -4,6 +4,7 @@ import unittest
 import tempfile
 from unittest.mock import patch
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT)
@@ -41,7 +42,7 @@ class TestNotifyFile(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdirname:
             filename = os.path.join(tempdirname, 'notify.txt')
             message = 'one, two, testing, testing'
-            self.assertTrue(notify.setup(self.hass, {
+            self.assertTrue(setup_component(self.hass, notify.DOMAIN, {
                 'notify': {
                     'name': 'test',
                     'platform': 'file',
