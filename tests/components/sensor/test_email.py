@@ -12,9 +12,9 @@ from collections import deque
 from homeassistant.components.sensor import email as email_component
 from tests.common import get_test_home_assistant
 
+
 class FakeEMailReader:
     """A test class for sending test emails"""
-
 
     def __init__(self, messages):
         """Setup the fake email reader"""
