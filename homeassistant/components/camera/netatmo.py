@@ -100,6 +100,7 @@ class WelcomeData(object):
 
     def get_camera_names(self):
         """Return all module available on the API as a list."""
+        self.camera_names = []
         self.update()
         if not self.home:
             for home in self.welcomedata.cameras:

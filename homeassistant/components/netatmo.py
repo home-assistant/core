@@ -50,7 +50,4 @@ def setup(hass, config):
         _LOGGER.error("Unable to connect to NatAtmo API")
         return False
 
-    for component in 'camera', 'sensor':
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
-
     return True
