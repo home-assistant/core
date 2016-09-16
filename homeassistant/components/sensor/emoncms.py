@@ -120,19 +120,14 @@ class EmonCmsSensor(Entity):
         self._value_template = value_template
         self._unit_of_measurement = unit_of_measurement
         self._sensorid = sensorid
-        self._feedid = elem["id"]
-        self._userid = elem["userid"]
-        self._tag = elem["tag"]
-        self._feedname = elem["name"]
-        self._size = elem["size"]
-        self._lastupdatetime = elem["time"]
-        self._value = elem["value"]
+        self._elem = elem
+
         if self._value_template is not None:
             self._state = template.render_with_possible_json_value(
-                self._hass, self._value_template, self._value,
+                self._hass, self._value_template, elem["value"],
                 STATE_UNKNOWN)
         else:
-            self._state = round(float(self._value), DECIMALS)
+            self._state = round(float(elem["value"]), DECIMALS)
 
     @property
     def name(self):
@@ -153,14 +148,14 @@ class EmonCmsSensor(Entity):
     def device_state_attributes(self):
         """Return the atrributes of the sensor."""
         return {
-            ATTR_FEEDID: self._feedid,
-            ATTR_TAG: self._tag,
-            ATTR_FEEDNAME: self._feedname,
-            ATTR_SIZE: self._size,
-            ATTR_USERID: self._userid,
-            ATTR_LASTUPDATETIME: self._lastupdatetime,
+            ATTR_FEEDID: self._elem["id"],
+            ATTR_TAG: self._elem["tag"],
+            ATTR_FEEDNAME: self._elem["name"],
+            ATTR_SIZE: self._elem["size"],
+            ATTR_USERID: self._elem["userid"],
+            ATTR_LASTUPDATETIME: self._elem["time"],
             ATTR_LASTUPDATETIMESTR: template.timestamp_local(
-                float(self._lastupdatetime)),
+                float(self._elem["time"])),
         }
 
     def update(self):
@@ -170,24 +165,23 @@ class EmonCmsSensor(Entity):
         if self._data.data is None:
             return
 
-        found = False
-        for elem in self._data.data:
-            elemid = get_id(self._sensorid, elem["tag"], elem["name"],
-                            elem["id"], elem["userid"])
-            if elemid == self._identifier:
-                found = True
-                self._lastupdatetime = elem["time"]
-                self._size = elem["size"]
-                self._value = elem["value"]
-                break
+        elem = next((elem for elem in self._data.data
+                     if get_id(self._sensorid, elem["tag"],
+                               elem["name"], elem["id"],
+                               elem["userid"]) == self._identifier),
+                    None)
 
-        if found:
-            if self._value_template is not None:
-                self._state = template.render_with_possible_json_value(
-                    self._hass, self._value_template, self._value,
-                    STATE_UNKNOWN)
-            else:
-                self._state = round(float(self._value), DECIMALS)
+        if elem is None:
+            return
+
+        self._elem = elem
+
+        if self._value_template is not None:
+            self._state = template.render_with_possible_json_value(
+                self._hass, self._value_template, elem["value"],
+                STATE_UNKNOWN)
+        else:
+            self._state = round(float(elem["value"]), DECIMALS)
 
 
 # pylint: disable=too-few-public-methods
