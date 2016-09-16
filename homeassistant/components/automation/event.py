@@ -35,10 +35,10 @@ def trigger(hass, config, action):
         if not event_data or all(val == event.data.get(key) for key, val
                                  in event_data.items()):
             hass.add_job(action, {
-                    'trigger': {
-                        'platform': 'event',
-                        'event': event,
-                    },
-                })
+                'trigger': {
+                    'platform': 'event',
+                    'event': event,
+                },
+            })
 
     return hass.bus.listen(event_type, handle_event)
