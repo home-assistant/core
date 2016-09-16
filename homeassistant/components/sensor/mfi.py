@@ -20,7 +20,6 @@ REQUIREMENTS = ['mficlient==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_PORT = 6443
 DEFAULT_SSL = True
 DEFAULT_VERIFY_SSL = True
 
@@ -43,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
@@ -57,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     use_tls = config.get(CONF_SSL)
     verify_tls = config.get(CONF_VERIFY_SSL)
-    default_port = use_tls and DEFAULT_PORT or 6080
+    default_port = use_tls and 6443 or 6080
     port = int(config.get(CONF_PORT, default_port))
 
     from mficlient.client import FailedToLogin, MFiClient
