@@ -15,6 +15,7 @@ from tests.common import get_test_home_assistant
 class FakeEMailReader:
     """A test class for sending test emails"""
 
+
     def __init__(self, messages):
         """Setup the fake email reader"""
         self._messages = messages
