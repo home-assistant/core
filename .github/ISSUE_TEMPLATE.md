@@ -1,35 +1,41 @@
-Make sure you are running the latest version of Home Assistant before reporting an issue.
+## First
+- [ ] I have read and understand the [Contributing](https://github.com/home-assistant/home-assistant/CONTRIBUTING.md) documentation.
 
-You should only file an issue if you found a bug. Feature and enhancement requests should go in [the Feature Requests section](https://community.home-assistant.io/c/feature-requests) of our community forum:
+## Description
+<!--- Describe your changes. -->
 
-**Home Assistant release (`hass --version`):**
+## Platform Details
+Component/Platform: 
+'hass --version': 
+'python --version': 
 
+## Pull Requests
+<!-- List related pull requests here. Put an 'x' in all the boxes that apply. -->
+- [ ] Frontend in [home-assistant-polymer](https://github.com/home-assistant/home-assistant-polymer):
+- [ ] Documentation in [home-assistant.io](https://github.com/home-assistant/home-assistant.io):
+- [ ] Javascript in [home-assistant-js](https://github.com/home-assistant/home-assistant-js):
 
-**Python release (`python3 --version`):**
-
-
-**Component/platform:**
-
-
-**Description of problem:**
-
-
-**Expected:**
-
-
-**Problem-relevant `configuration.yaml` entries and steps to reproduce:**
+## Configuration.yaml Example
 ```yaml
-
+[your-code]
 ```
 
-1. 
-2. 
-3. 
-
-**Traceback (if applicable):**
+## Traceback (if applicable)
+<!-- Add 'logger:' to your configuration.yaml and paste the appropriate results here -->
 ```bash
-
+[your-log]
 ```
 
-**Additional info:**
+## Reproduction
+<!-- List any steps taken to help us reproduce the issue -->
+1. 
 
+## Expected Result
+<!-- Please explain the results that your were expecting -->
+
+
+## Screenshots (if applicable)
+<!-- Paste your screenshots here -->
+
+## Additional Info
+<!-- Please provide any additional information here. -->
