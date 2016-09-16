@@ -27,14 +27,9 @@ LOGSEVERITY = {
 LOGGER_DEFAULT = 'default'
 LOGGER_LOGS = 'logs'
 
-_LOGS_SCHEMA = vol.All(
-    cv.ensure_list,
-    [
-        vol.Schema({
-            cv.string: vol.In(vol.Lower(list(LOGSEVERITY))),
-        })
-    ]
-)
+_LOGS_SCHEMA = vol.Schema({
+    cv.string: vol.In(vol.Lower(list(LOGSEVERITY))),
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
