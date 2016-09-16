@@ -3,6 +3,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
@@ -27,8 +28,9 @@ class TestAlarmControlPanelManual(unittest.TestCase):
 
     def test_arm_home_no_pending(self):
         """Test arm home method."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
                 'code': CODE,
@@ -49,8 +51,9 @@ class TestAlarmControlPanelManual(unittest.TestCase):
 
     def test_arm_home_with_pending(self):
         """Test arm home method."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
                 'code': CODE,
@@ -80,8 +83,9 @@ class TestAlarmControlPanelManual(unittest.TestCase):
 
     def test_arm_home_with_invalid_code(self):
         """Attempt to arm home without a valid code."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
                 'code': CODE,
@@ -102,8 +106,9 @@ class TestAlarmControlPanelManual(unittest.TestCase):
 
     def test_arm_away_no_pending(self):
         """Test arm home method."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
                 'code': CODE,
@@ -124,8 +129,9 @@ class TestAlarmControlPanelManual(unittest.TestCase):
 
     def test_arm_away_with_pending(self):
         """Test arm home method."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
                 'code': CODE,
@@ -155,8 +161,9 @@ class TestAlarmControlPanelManual(unittest.TestCase):
 
     def test_arm_away_with_invalid_code(self):
         """Attempt to arm away without a valid code."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
                 'code': CODE,
@@ -176,12 +183,13 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
     def test_trigger_no_pending(self):
-        """Test arm home method."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        """Test triggering when no pending submitted method."""
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
-                'trigger_time': 0,
+                'trigger_time': 1,
                 'disarm_after_trigger': False
             }}))
 
@@ -193,13 +201,23 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
+        self.assertEqual(STATE_ALARM_PENDING,
+                         self.hass.states.get(entity_id).state)
+
+        future = dt_util.utcnow() + timedelta(seconds=60)
+        with patch(('homeassistant.components.alarm_control_panel.manual.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
         self.assertEqual(STATE_ALARM_TRIGGERED,
                          self.hass.states.get(entity_id).state)
 
     def test_trigger_with_pending(self):
         """Test arm home method."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
                 'pending_time': 2,
@@ -238,8 +256,9 @@ class TestAlarmControlPanelManual(unittest.TestCase):
 
     def test_trigger_with_disarm_after_trigger(self):
         """Test disarm after trigger."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
                 'trigger_time': 5,
@@ -269,8 +288,9 @@ class TestAlarmControlPanelManual(unittest.TestCase):
 
     def test_disarm_while_pending_trigger(self):
         """Test disarming while pending state."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
                 'trigger_time': 5,
@@ -305,8 +325,9 @@ class TestAlarmControlPanelManual(unittest.TestCase):
 
     def test_disarm_during_trigger_with_invalid_code(self):
         """Test disarming while code is invalid."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.assertTrue(setup_component(
+            self.hass, alarm_control_panel.DOMAIN,
+            {'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
                 'pending_time': 5,
