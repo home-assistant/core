@@ -24,14 +24,9 @@ CONF_INVERT_LOGIC = 'invert_logic'
 
 DEFAULT_INVERT_LOGIC = False
 
-_SWITCHES_SCHEMA = vol.All(
-    cv.ensure_list,
-    [
-        vol.Schema({
-            cv.positive_int: cv.string,
-        })
-    ]
-)
+_SWITCHES_SCHEMA = vol.Schema({
+    cv.positive_int: cv.string,
+})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORTS): _SWITCHES_SCHEMA,

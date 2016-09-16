@@ -27,14 +27,9 @@ DEFAULT_PULL_MODE = 'UP'
 
 DEPENDENCIES = ['rpi_gpio']
 
-_SENSORS_SCHEMA = vol.All(
-    cv.ensure_list,
-    [
-        vol.Schema({
-            cv.positive_int: cv.string,
-        })
-    ]
-)
+_SENSORS_SCHEMA = vol.Schema({
+    cv.positive_int: cv.string,
+})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORTS): _SENSORS_SCHEMA,
