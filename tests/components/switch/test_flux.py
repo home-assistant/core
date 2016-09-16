@@ -102,7 +102,7 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         self.assertEqual(0, len(turn_on_calls))
 
     def test_flux_before_sunrise(self):
@@ -141,9 +141,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
@@ -185,9 +185,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 180)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.431, 0.38])
@@ -229,9 +229,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 153)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.496, 0.397])
@@ -273,9 +273,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
@@ -319,9 +319,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 154)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.494, 0.397])
@@ -365,9 +365,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 167)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.461, 0.389])
@@ -410,9 +410,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 255)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.496, 0.397])
@@ -426,9 +426,9 @@ class TestSwitchFlux(unittest.TestCase):
 
         dev1, dev2, dev3 = platform.DEVICES
         light.turn_on(self.hass, entity_id=dev2.entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         light.turn_on(self.hass, entity_id=dev3.entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(dev1.entity_id)
         self.assertEqual(STATE_ON, state.state)
@@ -468,9 +468,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 171)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.452, 0.386])
@@ -517,9 +517,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_COLOR_TEMP], 269)
 
@@ -559,8 +559,8 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_COLOR_TEMP], 3708)

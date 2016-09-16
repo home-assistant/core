@@ -42,7 +42,7 @@ class TestSwitch(unittest.TestCase):
         switch.turn_off(self.hass, self.switch_1.entity_id)
         switch.turn_on(self.hass, self.switch_2.entity_id)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(switch.is_on(self.hass))
         self.assertFalse(switch.is_on(self.hass, self.switch_1.entity_id))
@@ -51,7 +51,7 @@ class TestSwitch(unittest.TestCase):
         # Turn all off
         switch.turn_off(self.hass)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertFalse(switch.is_on(self.hass))
         self.assertEqual(
@@ -64,7 +64,7 @@ class TestSwitch(unittest.TestCase):
         # Turn all on
         switch.turn_on(self.hass)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(switch.is_on(self.hass))
         self.assertEqual(

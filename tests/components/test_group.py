@@ -1,5 +1,6 @@
 """The tests for the Group components."""
 # pylint: disable=protected-access,too-many-public-methods
+from collections import OrderedDict
 import unittest
 from unittest.mock import patch
 
@@ -84,7 +85,7 @@ class TestComponentsGroup(unittest.TestCase):
         test_group = group.Group(
             self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         group_state = self.hass.states.get(test_group.entity_id)
         self.assertEqual(STATE_OFF, group_state.state)
@@ -98,7 +99,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         # Turn one on
         self.hass.states.set('light.Ceiling', STATE_ON)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         group_state = self.hass.states.get(test_group.entity_id)
         self.assertEqual(STATE_ON, group_state.state)
@@ -112,7 +113,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         self.assertTrue(group.is_on(self.hass, test_group.entity_id))
         self.hass.states.set('light.Bowl', STATE_OFF)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertFalse(group.is_on(self.hass, test_group.entity_id))
 
         # Try on non existing state
@@ -192,7 +193,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         self.hass.states.set('light.not_there_1', STATE_ON)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         group_state = self.hass.states.get(test_group.entity_id)
         self.assertEqual(STATE_ON, group_state.state)
@@ -208,7 +209,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         self.hass.states.set('light.not_there_1', STATE_OFF)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         group_state = self.hass.states.get(test_group.entity_id)
         self.assertEqual(STATE_OFF, group_state.state)
@@ -220,16 +221,16 @@ class TestComponentsGroup(unittest.TestCase):
         test_group = group.Group(
             self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
 
-        _setup_component(self.hass, 'group', {'group': {
-                    'second_group': {
+        group_conf = OrderedDict()
+        group_conf['second_group'] = {
                         'entities': 'light.Bowl, ' + test_group.entity_id,
                         'icon': 'mdi:work',
                         'view': True,
-                    },
-                    'test_group': 'hello.world,sensor.happy',
-                    'empty_group': {'name': 'Empty Group', 'entities': None},
-                }
-            })
+                    }
+        group_conf['test_group'] = 'hello.world,sensor.happy'
+        group_conf['empty_group'] = {'name': 'Empty Group', 'entities': None}
+
+        _setup_component(self.hass, 'group', {'group': group_conf})
 
         group_state = self.hass.states.get(
             group.ENTITY_ID_FORMAT.format('second_group'))
@@ -241,6 +242,7 @@ class TestComponentsGroup(unittest.TestCase):
                          group_state.attributes.get(ATTR_ICON))
         self.assertTrue(group_state.attributes.get(group.ATTR_VIEW))
         self.assertTrue(group_state.attributes.get(ATTR_HIDDEN))
+        self.assertEqual(1, group_state.attributes.get(group.ATTR_ORDER))
 
         group_state = self.hass.states.get(
             group.ENTITY_ID_FORMAT.format('test_group'))
@@ -251,6 +253,7 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertIsNone(group_state.attributes.get(ATTR_ICON))
         self.assertIsNone(group_state.attributes.get(group.ATTR_VIEW))
         self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
+        self.assertEqual(2, group_state.attributes.get(group.ATTR_ORDER))
 
     def test_groups_get_unique_names(self):
         """Two groups with same name should both have a unique entity id."""
@@ -285,13 +288,13 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.states.set('light.Bowl', STATE_ON, {
             ATTR_ASSUMED_STATE: True
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(test_group.entity_id)
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         self.hass.states.set('light.Bowl', STATE_ON)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(test_group.entity_id)
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
@@ -300,12 +303,12 @@ class TestComponentsGroup(unittest.TestCase):
         """Test group state when device tracker in group changes zone."""
         self.hass.states.set('device_tracker.Adam', STATE_HOME)
         self.hass.states.set('device_tracker.Eve', STATE_NOT_HOME)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         group.Group(
             self.hass, 'peeps',
             ['device_tracker.Adam', 'device_tracker.Eve'])
         self.hass.states.set('device_tracker.Adam', 'cool_state_not_home')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(STATE_NOT_HOME,
                          self.hass.states.get(
                              group.ENTITY_ID_FORMAT.format('peeps')).state)
@@ -335,7 +338,7 @@ class TestComponentsGroup(unittest.TestCase):
                         'view': True,
                     }}}):
             group.reload(self.hass)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         assert self.hass.states.entity_ids() == ['group.hello']
         assert self.hass.bus.listeners['state_changed'] == 1

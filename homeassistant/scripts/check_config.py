@@ -221,14 +221,18 @@ def check(config_path):
 
     try:
         bootstrap.from_config_file(config_path, skip_pip=True)
-        res['secret_cache'] = yaml.__SECRET_CACHE
-        return res
+        res['secret_cache'] = dict(yaml.__SECRET_CACHE)
+    except Exception as err:  # pylint: disable=broad-except
+        print(color('red', 'Fatal error while loading config:'), str(err))
     finally:
         # Stop all patches
         for pat in PATCHES.values():
             pat.stop()
         # Ensure !secrets point to the original function
         yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
+        bootstrap.clear_secret_cache()
+
+    return res
 
 
 def dump_dict(layer, indent_count=1, listi=False, **kwargs):

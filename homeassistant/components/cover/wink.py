@@ -10,7 +10,7 @@ from homeassistant.components.cover import CoverDevice
 from homeassistant.components.wink import WinkDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['python-wink==0.7.13', 'pubnub==3.8.2']
+REQUIREMENTS = ['python-wink==0.7.14', 'pubnub==3.8.2']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -28,8 +28,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         pywink.set_bearer_token(token)
 
-    add_devices(WinkCoverDevice(shade) for shade, door in
+    add_devices(WinkCoverDevice(shade) for shade in
                 pywink.get_shades())
+    add_devices(WinkCoverDevice(door) for door in
+                pywink.get_garage_doors())
 
 
 class WinkCoverDevice(WinkDevice, CoverDevice):

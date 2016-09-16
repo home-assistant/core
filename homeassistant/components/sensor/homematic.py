@@ -46,9 +46,11 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    return homematic.setup_hmdevice_discovery_helper(HMSensor,
-                                                     discovery_info,
-                                                     add_callback_devices)
+    return homematic.setup_hmdevice_discovery_helper(
+        HMSensor,
+        discovery_info,
+        add_callback_devices
+    )
 
 
 class HMSensor(homematic.HMDevice):
@@ -76,45 +78,8 @@ class HMSensor(homematic.HMDevice):
 
         return HM_UNIT_HA_CAST.get(self._state, None)
 
-    def _check_hm_to_ha_object(self):
-        """Check if possible to use the HM Object as this HA type."""
-        from pyhomematic.devicetypes.sensors import HMSensor as pyHMSensor
-
-        # Check compatibility from HMDevice
-        if not super()._check_hm_to_ha_object():
-            return False
-
-        # Check if the homematic device is correct for this HA device
-        if not isinstance(self._hmdevice, pyHMSensor):
-            _LOGGER.critical("This %s can't be use as sensor!", self._name)
-            return False
-
-        # Does user defined value exist?
-        if self._state and self._state not in self._hmdevice.SENSORNODE:
-            # pylint: disable=logging-too-many-args
-            _LOGGER.critical("This %s have no sensor with %s! Values are",
-                             self._name, self._state,
-                             str(self._hmdevice.SENSORNODE.keys()))
-            return False
-
-        # No param is set and more than 1 sensor nodes are present
-        if self._state is None and len(self._hmdevice.SENSORNODE) > 1:
-            _LOGGER.critical("This %s has multiple sensor nodes. " +
-                             "Please us param. Values are: %s", self._name,
-                             str(self._hmdevice.SENSORNODE.keys()))
-            return False
-
-        _LOGGER.debug("%s is okay for linking", self._name)
-        return True
-
     def _init_data_struct(self):
         """Generate a data dict (self._data) from hm metadata."""
-        super()._init_data_struct()
-
-        if self._state is None and len(self._hmdevice.SENSORNODE) == 1:
-            for value in self._hmdevice.SENSORNODE:
-                self._state = value
-
         # Add state to data dict
         if self._state:
             _LOGGER.debug("%s init datadict with main node '%s'", self._name,

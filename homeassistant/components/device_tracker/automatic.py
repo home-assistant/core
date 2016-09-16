@@ -15,11 +15,10 @@ from homeassistant.components.device_tracker import (PLATFORM_SCHEMA,
                                                      ATTR_ATTRIBUTES)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle, datetime as dt_util
+from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.util import datetime as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 CONF_CLIENT_ID = 'client_id'
 CONF_SECRET = 'secret'
@@ -53,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_scanner(hass, config: dict, see):
     """Validate the configuration and return an Automatic scanner."""
     try:
-        AutomaticDeviceScanner(config, see)
+        AutomaticDeviceScanner(hass, config, see)
     except requests.HTTPError as err:
         _LOGGER.error(str(err))
         return False
@@ -61,11 +60,14 @@ def setup_scanner(hass, config: dict, see):
     return True
 
 
+# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-few-public-methods
 class AutomaticDeviceScanner(object):
     """A class representing an Automatic device."""
 
-    def __init__(self, config: dict, see) -> None:
+    def __init__(self, hass, config: dict, see) -> None:
         """Initialize the automatic device scanner."""
+        self.hass = hass
         self._devices = config.get(CONF_DEVICES, None)
         self._access_token_payload = {
             'username': config.get(CONF_USERNAME),
@@ -81,20 +83,10 @@ class AutomaticDeviceScanner(object):
         self.last_trips = {}
         self.see = see
 
-        self.scan_devices()
-
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
-        return [item['id'] for item in self.last_results]
-
-    def get_device_name(self, device):
-        """Get the device name from id."""
-        vehicle = [item['display_name'] for item in self.last_results
-                   if item['id'] == device]
-
-        return vehicle[0]
+        track_utc_time_change(self.hass, self._update_info,
+                              second=range(0, 60, 30))
 
     def _update_headers(self):
         """Get the access token from automatic."""
@@ -114,10 +106,9 @@ class AutomaticDeviceScanner(object):
                 'Authorization': 'Bearer {}'.format(access_token)
             }
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
-    def _update_info(self) -> None:
+    def _update_info(self, now=None) -> None:
         """Update the device info."""
-        _LOGGER.info('Updating devices')
+        _LOGGER.debug('Updating devices %s', now)
         self._update_headers()
 
         response = requests.get(URL_VEHICLES, headers=self._headers)
@@ -142,6 +133,7 @@ class AutomaticDeviceScanner(object):
 
         for vehicle in self.last_results:
             dev_id = vehicle.get('id')
+            host_name = vehicle.get('display_name')
 
             attrs = {
                 'fuel_level': vehicle.get('fuel_level_percent')
@@ -149,6 +141,7 @@ class AutomaticDeviceScanner(object):
 
             kwargs = {
                 'dev_id': dev_id,
+                'host_name': host_name,
                 'mac': dev_id,
                 ATTR_ATTRIBUTES: attrs
             }

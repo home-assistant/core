@@ -48,7 +48,7 @@ class TestNotifyGroup(unittest.TestCase):
     def test_send_message_to_group(self):
         """Test sending a message to a notify group."""
         self.service.send_message('Hello', title='Test notification')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(len(self.events) == 2)
         last_event = self.events[-1]
         self.assertEqual(last_event.data[notify.ATTR_TITLE],
@@ -60,7 +60,7 @@ class TestNotifyGroup(unittest.TestCase):
         notify_data = {'hello': 'world'}
         self.service.send_message('Hello', title='Test notification',
                                   data=notify_data)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         last_event = self.events[-1]
         self.assertEqual(last_event.data[notify.ATTR_TITLE],
                          'Test notification')
@@ -72,7 +72,7 @@ class TestNotifyGroup(unittest.TestCase):
         notify_data = {'hello': 'world'}
         self.service.send_message('Hello', title='Test notification',
                                   data=notify_data)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         data = self.events[-1].data
         assert {
             'message': 'Hello',

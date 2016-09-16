@@ -24,9 +24,11 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    return homematic.setup_hmdevice_discovery_helper(HMCover,
-                                                     discovery_info,
-                                                     add_callback_devices)
+    return homematic.setup_hmdevice_discovery_helper(
+        HMCover,
+        discovery_info,
+        add_callback_devices
+    )
 
 
 # pylint: disable=abstract-method
@@ -77,25 +79,8 @@ class HMCover(homematic.HMDevice, CoverDevice):
         if self.available:
             self._hmdevice.stop(self._channel)
 
-    def _check_hm_to_ha_object(self):
-        """Check if possible to use the HM Object as this HA type."""
-        from pyhomematic.devicetypes.actors import Blind
-
-        # Check compatibility from HMDevice
-        if not super()._check_hm_to_ha_object():
-            return False
-
-        # Check if the homematic device is correct for this HA device
-        if isinstance(self._hmdevice, Blind):
-            return True
-
-        _LOGGER.critical("This %s can't be use as cover!", self._name)
-        return False
-
     def _init_data_struct(self):
         """Generate a data dict (self._data) from hm metadata."""
-        super()._init_data_struct()
-
         # Add state to data dict
         self._state = "LEVEL"
         self._data.update({self._state: STATE_UNKNOWN})

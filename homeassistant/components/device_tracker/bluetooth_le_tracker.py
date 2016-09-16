@@ -1,4 +1,4 @@
-"""Tracking for bluetooth devices."""
+"""Tracking for bluetooth low energy devices."""
 import logging
 from datetime import timedelta
 

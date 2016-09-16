@@ -1,4 +1,5 @@
 """Helpers for config validation using voluptuous."""
+from collections import OrderedDict
 from datetime import timedelta
 import os
 from urllib.parse import urlparse
@@ -244,6 +245,20 @@ def template(value):
         raise vol.Invalid('invalid template ({})'.format(ex))
 
 
+def template_complex(value):
+    """Validate a complex jinja2 template."""
+    if isinstance(value, list):
+        for idx, element in enumerate(value):
+            value[idx] = template_complex(element)
+        return value
+    if isinstance(value, dict):
+        for key, element in value.items():
+            value[key] = template_complex(element)
+        return value
+
+    return template(value)
+
+
 def time(value):
     """Validate time."""
     time_val = dt_util.parse_time(value)
@@ -274,6 +289,27 @@ def url(value: Any) -> str:
         return vol.Schema(vol.Url())(url_in)
 
     raise vol.Invalid('invalid url')
+
+
+def ordered_dict(value_validator, key_validator=match_all):
+    """Validate an ordered dict validator that maintains ordering.
+
+    value_validator will be applied to each value of the dictionary.
+    key_validator (optional) will be applied to each key of the dictionary.
+    """
+    item_validator = vol.Schema({key_validator: value_validator})
+
+    def validator(value):
+        """Validate ordered dict."""
+        config = OrderedDict()
+
+        for key, val in value.items():
+            v_res = item_validator({key: val})
+            config.update(v_res)
+
+        return config
+
+    return validator
 
 
 # Validator helpers
@@ -310,7 +346,7 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service', 'service name'): service,
     vol.Exclusive('service_template', 'service name'): template,
     vol.Optional('data'): dict,
-    vol.Optional('data_template'): {match_all: template},
+    vol.Optional('data_template'): {match_all: template_complex},
     vol.Optional(CONF_ENTITY_ID): entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
 

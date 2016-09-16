@@ -43,13 +43,13 @@ class TestCommandSwitch(unittest.TestCase):
             self.assertEqual(STATE_OFF, state.state)
 
             switch.turn_on(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
             switch.turn_off(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
@@ -77,13 +77,13 @@ class TestCommandSwitch(unittest.TestCase):
             self.assertEqual(STATE_OFF, state.state)
 
             switch.turn_on(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
             switch.turn_off(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
@@ -113,13 +113,13 @@ class TestCommandSwitch(unittest.TestCase):
             self.assertEqual(STATE_OFF, state.state)
 
             switch.turn_on(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
             switch.turn_off(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
@@ -146,13 +146,13 @@ class TestCommandSwitch(unittest.TestCase):
             self.assertEqual(STATE_OFF, state.state)
 
             switch.turn_on(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
             switch.turn_off(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)

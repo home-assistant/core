@@ -8,14 +8,27 @@ import datetime
 import logging
 from urllib.error import URLError
 
+import voluptuous as vol
+
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_OFF,
-    ClimateDevice)
-from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT
+    ClimateDevice, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['radiotherm==1.2']
-HOLD_TEMP = 'hold_temp'
+
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_FAN = 'fan'
+ATTR_MODE = 'mode'
+
+CONF_HOLD_TEMP = 'hold_temp'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -29,10 +42,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hosts.append(radiotherm.discover.discover_address())
 
     if hosts is None:
-        _LOGGER.error("No radiotherm thermostats detected.")
+        _LOGGER.error("No Radiotherm Thermostats detected")
         return False
 
-    hold_temp = config.get(HOLD_TEMP, False)
+    hold_temp = config.get(CONF_HOLD_TEMP)
     tstats = []
 
     for host in hosts:
@@ -60,6 +73,7 @@ class RadioThermostat(ClimateDevice):
         self._name = None
         self.hold_temp = hold_temp
         self.update()
+        self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
 
     @property
     def name(self):
@@ -75,8 +89,8 @@ class RadioThermostat(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         return {
-            "fan": self.device.fmode['human'],
-            "mode": self.device.tmode['human']
+            ATTR_FAN: self.device.fmode['human'],
+            ATTR_MODE: self.device.tmode['human']
         }
 
     @property
@@ -88,6 +102,11 @@ class RadioThermostat(ClimateDevice):
     def current_operation(self):
         """Return the current operation. head, cool idle."""
         return self._current_operation
+
+    @property
+    def operation_list(self):
+        """Return the operation modes list."""
+        return self._operation_list
 
     @property
     def target_temperature(self):
@@ -107,8 +126,11 @@ class RadioThermostat(ClimateDevice):
         else:
             self._current_operation = STATE_IDLE
 
-    def set_temperature(self, temperature):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
         if self._current_operation == STATE_COOL:
             self.device.t_cool = temperature
         elif self._current_operation == STATE_HEAT:
@@ -121,8 +143,11 @@ class RadioThermostat(ClimateDevice):
     def set_time(self):
         """Set device time."""
         now = datetime.datetime.now()
-        self.device.time = {'day': now.weekday(),
-                            'hour': now.hour, 'minute': now.minute}
+        self.device.time = {
+            'day': now.weekday(),
+            'hour': now.hour,
+            'minute': now.minute
+        }
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode (auto, cool, heat, off)."""

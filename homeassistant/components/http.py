@@ -25,7 +25,7 @@ import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'http'
-REQUIREMENTS = ('cherrypy==7.1.0', 'static3==0.7.0', 'Werkzeug==0.11.11')
+REQUIREMENTS = ('cherrypy==8.1.0', 'static3==0.7.0', 'Werkzeug==0.11.11')
 
 CONF_API_PASSWORD = 'api_password'
 CONF_SERVER_HOST = 'server_host'

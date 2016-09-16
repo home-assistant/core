@@ -23,7 +23,7 @@ class TestRollershutterDemo(unittest.TestCase):
         entity.move_up()
 
         fire_time_changed(self.hass, dt_util.utcnow())
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(90, entity.current_position)
 
     def test_move_down(self):
@@ -32,7 +32,7 @@ class TestRollershutterDemo(unittest.TestCase):
         entity.move_down()
 
         fire_time_changed(self.hass, dt_util.utcnow())
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(10, entity.current_position)
 
     def test_move_position(self):
@@ -41,7 +41,7 @@ class TestRollershutterDemo(unittest.TestCase):
         entity.move_position(10)
 
         fire_time_changed(self.hass, dt_util.utcnow())
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(10, entity.current_position)
 
     def test_stop(self):
@@ -51,5 +51,5 @@ class TestRollershutterDemo(unittest.TestCase):
         entity.stop()
 
         fire_time_changed(self.hass, dt_util.utcnow())
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, entity.current_position)
