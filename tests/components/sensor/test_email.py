@@ -12,15 +12,19 @@ from collections import deque
 from homeassistant.components.sensor import email as email_component
 from tests.common import get_test_home_assistant
 
-
 class FakeEMailReader:
+    """A test class for sending test emails"""
+
     def __init__(self, messages):
+        """Setup the fake email reader"""
         self._messages = messages
 
     def connect(self):
+        """Always connected."""
         return True
 
     def read_next(self):
+        """Get the next email."""
         if len(self._messages) == 0:
             return None
         return self._messages.popleft()
@@ -38,6 +42,7 @@ class TestEMail(unittest.TestCase):
         self.hass.stop()
 
     def test_allowed_sender(self):
+        """Test emails from allowed sender."""
         test_message = email.message.Message()
         test_message['From'] = "sender@test.com"
         test_message['Subject'] = "Test"
@@ -60,6 +65,7 @@ class TestEMail(unittest.TestCase):
                          sensor.state_attributes["date"])
 
     def test_multi_part_with_text(self):
+        """Test multi part emails."""
         msg = MIMEMultipart('alternative')
         msg['Subject'] = "Link"
         msg['From'] = "sender@test.com"
@@ -85,6 +91,7 @@ class TestEMail(unittest.TestCase):
         self.assertEqual("Test Message", sensor.state)
 
     def test_multi_part_only_html(self):
+        """Test multi part emails with only html."""
         msg = MIMEMultipart('alternative')
         msg['Subject'] = "Link"
         msg['From'] = "sender@test.com"
@@ -109,6 +116,7 @@ class TestEMail(unittest.TestCase):
             sensor.state)
 
     def test_multi_part_only_other_text(self):
+        """Test multi part emails with only other text."""
         msg = MIMEMultipart('alternative')
         msg['Subject'] = "Link"
         msg['From'] = "sender@test.com"
@@ -131,6 +139,7 @@ class TestEMail(unittest.TestCase):
         self.assertEqual("Test Message", sensor.state)
 
     def test_multiple_emails(self):
+        """Test multiple emails."""
         states = []
 
         test_message1 = email.message.Message()
@@ -171,6 +180,7 @@ class TestEMail(unittest.TestCase):
         self.assertEqual("Test Message 2", sensor.state)
 
     def test_sender_not_allowed(self):
+        """Test not whitelisted emails."""
         test_message = email.message.Message()
         test_message['From'] = "sender@test.com"
         test_message['Subject'] = "Test"
@@ -189,6 +199,7 @@ class TestEMail(unittest.TestCase):
         self.assertEqual(None, sensor.state)
 
     def test_template(self):
+        """Test value template."""
         test_message = email.message.Message()
         test_message['From'] = "sender@test.com"
         test_message['Subject'] = "Test"
