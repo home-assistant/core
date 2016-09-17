@@ -30,6 +30,7 @@ DICT_HA_TO_MYS = {STATE_COOL: "CoolOn", STATE_HEAT: "HeatOn",
 DICT_MYS_TO_HA = {"CoolOn": STATE_COOL, "HeatOn": STATE_HEAT,
                   "AutoChangeOver": STATE_AUTO, "Off": STATE_OFF}
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors climate."""
     if discovery_info is None:
