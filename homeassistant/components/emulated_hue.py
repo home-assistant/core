@@ -74,7 +74,8 @@ def setup(hass, yaml_config):
         api_password=None,
         ssl_certificate=None,
         ssl_key=None,
-        cors_origins=[]
+        cors_origins=[],
+        approved_ips=[]
     )
 
     server.register_view(DescriptionXmlView(hass, config))
