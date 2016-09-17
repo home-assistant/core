@@ -96,7 +96,7 @@ class RestSwitch(SwitchDevice):
             self._state = True
         else:
             _LOGGER.error("Can't turn on %s. Is resource/endpoint offline?",
-                          -                          self._resource)
+                          self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -108,7 +108,7 @@ class RestSwitch(SwitchDevice):
             self._state = False
         else:
             _LOGGER.error("Can't turn off %s. Is resource/endpoint offline?",
-                          -                          self._resource)
+                          self._resource)
 
     def update(self):
         """Get the latest data from REST API and update the state."""
@@ -116,7 +116,7 @@ class RestSwitch(SwitchDevice):
 
         if self._value_template is not None:
             response = template.render_with_possible_json_value(
-                self._hass, self._value_template, request.text, False)
+                self._hass, self._value_template, request.text, 'None')
             if response == 'True':
                 self._state = True
             elif response == 'False':
