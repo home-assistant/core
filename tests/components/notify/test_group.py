@@ -1,6 +1,7 @@
 """The tests for the notify.group platform."""
 import unittest
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import group
 
@@ -14,17 +15,14 @@ class TestNotifyGroup(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.events = []
-        self.assertTrue(notify.setup(self.hass, {
-            'notify': {
+        self.assertTrue(setup_component(self.hass, notify.DOMAIN, {
+            'notify': [{
                 'name': 'demo1',
                 'platform': 'demo'
-            }
-        }))
-        self.assertTrue(notify.setup(self.hass, {
-            'notify': {
+            }, {
                 'name': 'demo2',
                 'platform': 'demo'
-            }
+            }]
         }))
 
         self.service = group.get_service(self.hass, {'services': [

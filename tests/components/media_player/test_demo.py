@@ -1,7 +1,8 @@
 """The tests for the Demo Media player platform."""
 import unittest
 from unittest.mock import patch
-from homeassistant import bootstrap
+
+from homeassistant.bootstrap import setup_component
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 import homeassistant.components.media_player as mp
 import homeassistant.components.http as http
@@ -27,7 +28,7 @@ def setUpModule():   # pylint: disable=invalid-name
     global hass
 
     hass = get_test_home_assistant()
-    bootstrap.setup_component(hass, http.DOMAIN, {
+    setup_component(hass, http.DOMAIN, {
         http.DOMAIN: {
             http.CONF_SERVER_PORT: SERVER_PORT,
             http.CONF_API_PASSWORD: API_PASSWORD,
@@ -49,13 +50,19 @@ class TestDemoMediaPlayer(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = hass
+        try:
+            self.hass.config.components.remove(mp.DOMAIN)
+        except ValueError:
+            pass
 
     def test_source_select(self):
         """Test the input source service."""
 
         entity_id = 'media_player.lounge_room'
 
-        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        assert setup_component(
+            self.hass, mp.DOMAIN,
+            {'media_player': {'platform': 'demo'}})
         state = self.hass.states.get(entity_id)
         assert 'dvd' == state.attributes.get('source')
 
@@ -71,7 +78,9 @@ class TestDemoMediaPlayer(unittest.TestCase):
 
     def test_clear_playlist(self):
         """Test clear playlist."""
-        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        assert setup_component(
+            self.hass, mp.DOMAIN,
+            {'media_player': {'platform': 'demo'}})
         assert self.hass.states.is_state(entity_id, 'playing')
 
         mp.clear_playlist(self.hass, entity_id)
@@ -80,8 +89,11 @@ class TestDemoMediaPlayer(unittest.TestCase):
 
     def test_volume_services(self):
         """Test the volume service."""
-        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        assert setup_component(
+            self.hass, mp.DOMAIN,
+            {'media_player': {'platform': 'demo'}})
         state = self.hass.states.get(entity_id)
+        print(state)
         assert 1.0 == state.attributes.get('volume_level')
 
         mp.set_volume_level(self.hass, None, entity_id)
@@ -118,7 +130,9 @@ class TestDemoMediaPlayer(unittest.TestCase):
 
     def test_turning_off_and_on(self):
         """Test turn_on and turn_off."""
-        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        assert setup_component(
+            self.hass, mp.DOMAIN,
+            {'media_player': {'platform': 'demo'}})
         assert self.hass.states.is_state(entity_id, 'playing')
 
         mp.turn_off(self.hass, entity_id)
@@ -137,7 +151,9 @@ class TestDemoMediaPlayer(unittest.TestCase):
 
     def test_playing_pausing(self):
         """Test media_pause."""
-        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        assert setup_component(
+            self.hass, mp.DOMAIN,
+            {'media_player': {'platform': 'demo'}})
         assert self.hass.states.is_state(entity_id, 'playing')
 
         mp.media_pause(self.hass, entity_id)
@@ -158,7 +174,9 @@ class TestDemoMediaPlayer(unittest.TestCase):
 
     def test_prev_next_track(self):
         """Test media_next_track and media_previous_track ."""
-        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        assert setup_component(
+            self.hass, mp.DOMAIN,
+            {'media_player': {'platform': 'demo'}})
         state = self.hass.states.get(entity_id)
         assert 1 == state.attributes.get('media_track')
         assert 0 == (mp.SUPPORT_PREVIOUS_TRACK &
@@ -185,7 +203,9 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
                     state.attributes.get('supported_media_commands'))
 
-        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        assert setup_component(
+            self.hass, mp.DOMAIN,
+            {'media_player': {'platform': 'demo'}})
         ent_id = 'media_player.lounge_room'
         state = self.hass.states.get(ent_id)
         assert 1 == state.attributes.get('media_episode')
@@ -212,7 +232,9 @@ class TestDemoMediaPlayer(unittest.TestCase):
         fake_picture_data = 'test.test'
         m.get('https://graph.facebook.com/v2.5/107771475912710/'
               'picture?type=large', text=fake_picture_data)
-        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        assert setup_component(
+            self.hass, mp.DOMAIN,
+            {'media_player': {'platform': 'demo'}})
         assert self.hass.states.is_state(entity_id, 'playing')
         state = self.hass.states.get(entity_id)
         req = requests.get(HTTP_BASE_URL +
@@ -223,7 +245,9 @@ class TestDemoMediaPlayer(unittest.TestCase):
            'media_seek')
     def test_play_media(self, mock_seek):
         """Test play_media ."""
-        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        assert setup_component(
+            self.hass, mp.DOMAIN,
+            {'media_player': {'platform': 'demo'}})
         ent_id = 'media_player.living_room'
         state = self.hass.states.get(ent_id)
         assert 0 < (mp.SUPPORT_PLAY_MEDIA &

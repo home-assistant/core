@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
     vol.Optional(CONF_CODE): cv.string,
     vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
     vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_DISARM_AFTER_TRIGGER,

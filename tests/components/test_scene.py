@@ -1,6 +1,7 @@
 """The tests for the Scene component."""
 import unittest
 
+from homeassistant.bootstrap import setup_component
 from homeassistant import loader
 from homeassistant.components import light, scene
 
@@ -38,7 +39,7 @@ class TestScene(unittest.TestCase):
         test_light = loader.get_component('light.test')
         test_light.init()
 
-        self.assertTrue(light.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {'platform': 'test'}
         }))
 
@@ -52,7 +53,7 @@ class TestScene(unittest.TestCase):
             'state': 'on',
             'brightness': 100,
         }
-        self.assertTrue(scene.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, scene.DOMAIN, {
             'scene': [{
                 'name': 'test',
                 'entities': {
@@ -77,7 +78,7 @@ class TestScene(unittest.TestCase):
         test_light = loader.get_component('light.test')
         test_light.init()
 
-        self.assertTrue(light.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {'platform': 'test'}
         }))
 
@@ -87,7 +88,7 @@ class TestScene(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        self.assertTrue(scene.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, scene.DOMAIN, {
             'scene': [{
                 'name': 'test',
                 'entities': {

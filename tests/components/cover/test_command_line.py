@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from unittest import mock
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.cover as cover
 from homeassistant.components.cover import (
     command_line as cmd_rs)
@@ -52,7 +53,7 @@ class TestCommandCover(unittest.TestCase):
                 'command_stop': 'echo 0 > {}'.format(path),
                 'value_template': '{{ value }}'
             }
-            self.assertTrue(cover.setup(self.hass, {
+            self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
                 'cover': {
                     'platform': 'command_line',
                     'covers': {
