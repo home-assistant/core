@@ -47,9 +47,9 @@ def track_state_change(hass, entity_ids, action, from_state=None,
             new_state = None
 
         if _matcher(old_state, from_state) and _matcher(new_state, to_state):
-            hass.add_job(action, event.data.get('entity_id'),
-                         event.data.get('old_state'),
-                         event.data.get('new_state'))
+            hass.async_add_job(action, event.data.get('entity_id'),
+                               event.data.get('old_state'),
+                               event.data.get('new_state'))
 
     return hass.bus.listen(EVENT_STATE_CHANGED, state_change_listener)
 
@@ -86,8 +86,13 @@ def track_point_in_utc_time(hass, action, point_in_time):
         # listener gets lined up twice to be executed. This will make
         # sure the second time it does nothing.
         point_in_time_listener.run = True
-        hass.add_job(remove)
-        hass.add_job(action, now)
+
+        def fire_action():
+            """Run the point in time listener action."""
+            remove()
+            action(now)
+
+        hass.add_job(fire_action)
 
     remove = hass.bus.listen(EVENT_TIME_CHANGED, point_in_time_listener)
     return remove
@@ -191,7 +196,7 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
            mat(now.minute, minute) and \
            mat(now.second, second):
 
-            hass.add_job(action, now)
+            hass.async_add_job(action, now)
 
     return hass.bus.listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
 
