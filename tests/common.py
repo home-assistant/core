@@ -42,6 +42,7 @@ def get_test_home_assistant(num_threads=None):
     if num_threads:
         ha.MIN_WORKER_THREAD = orig_num_threads
 
+    hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743

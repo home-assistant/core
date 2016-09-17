@@ -5,6 +5,7 @@ import unittest
 
 from collections import defaultdict
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import (STATE_NOT_HOME, CONF_PLATFORM)
 import homeassistant.components.device_tracker.owntracks as owntracks
@@ -191,7 +192,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
-        self.assertTrue(device_tracker.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'owntracks',
                 CONF_MAX_GPS_ACCURACY: 200,

@@ -2,6 +2,7 @@
 import tempfile
 import unittest
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import demo
 from homeassistant.helpers import script
@@ -16,7 +17,7 @@ class TestNotifyDemo(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.assertTrue(notify.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, notify.DOMAIN, {
             'notify': {
                 'platform': 'demo'
             }

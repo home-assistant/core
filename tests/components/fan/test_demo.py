@@ -2,6 +2,7 @@
 
 import unittest
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import fan
 from homeassistant.components.fan.demo import FAN_ENTITY_ID
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -19,7 +20,7 @@ class TestDemoFan(unittest.TestCase):
     def setUp(self):
         """Initialize unit test data."""
         self.hass = get_test_home_assistant()
-        self.assertTrue(fan.setup(self.hass, {'fan': {
+        self.assertTrue(setup_component(self.hass, fan.DOMAIN, {'fan': {
             'platform': 'demo',
         }}))
         self.hass.block_till_done()

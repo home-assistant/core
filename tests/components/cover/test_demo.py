@@ -3,6 +3,7 @@ import unittest
 from datetime import timedelta
 import homeassistant.util.dt as dt_util
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import cover
 from tests.common import get_test_home_assistant, fire_time_changed
 
@@ -15,7 +16,7 @@ class TestCoverDemo(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.assertTrue(cover.setup(self.hass, {'cover': {
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {'cover': {
             'platform': 'demo',
         }}))
 
