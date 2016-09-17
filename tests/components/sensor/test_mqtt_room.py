@@ -4,6 +4,7 @@ import datetime
 import unittest
 from unittest.mock import patch
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.components.mqtt import (CONF_STATE_TOPIC, CONF_QOS,
                                            DEFAULT_QOS)
@@ -52,7 +53,7 @@ class TestMQTTRoomSensor(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
-        self.assertTrue(sensor.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
             sensor.DOMAIN: {
                 CONF_PLATFORM: 'mqtt_room',
                 CONF_NAME: NAME,
