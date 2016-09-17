@@ -25,12 +25,10 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 
 _LOGGER = logging.getLogger(__name__)
 
-DICT_HA_TO_MYS = {STATE_COOL:"CoolOn", STATE_HEAT:"HeatOn",
-                  STATE_AUTO:"AutoChangeOver", STATE_OFF:"Off"}
-DICT_MYS_TO_HA = {"CoolOn":STATE_COOL, "HeatOn":STATE_HEAT,
-                  "AutoChangeOver":STATE_AUTO, "Off":STATE_OFF}
-
-
+DICT_HA_TO_MYS = {STATE_COOL: "CoolOn", STATE_HEAT: "HeatOn",
+                  STATE_AUTO: "AutoChangeOver", STATE_OFF: "Off"}
+DICT_MYS_TO_HA = {"CoolOn": STATE_COOL, "HeatOn": STATE_HEAT,
+                  "AutoChangeOver": STATE_AUTO, "Off": STATE_OFF}
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors climate."""
