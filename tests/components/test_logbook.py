@@ -5,9 +5,11 @@ from datetime import timedelta
 
 import homeassistant.core as ha
 from homeassistant.const import (
-    EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    CONF_CUSTOMIZE, ATTR_HIDDEN)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook
+from homeassistant.bootstrap import setup_component
 
 from tests.common import mock_http_component, get_test_home_assistant
 
@@ -15,11 +17,13 @@ from tests.common import mock_http_component, get_test_home_assistant
 class TestComponentLogbook(unittest.TestCase):
     """Test the History component."""
 
+    EMPTY_CONFIG = {ha.DOMAIN: {}, logbook.DOMAIN: {}}
+
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_http_component(self.hass)
-        self.assertTrue(logbook.setup(self.hass, {}))
+        assert setup_component(self.hass, logbook.DOMAIN, self.EMPTY_CONFIG)
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -76,7 +80,8 @@ class TestComponentLogbook(unittest.TestCase):
         eventB = self.create_state_changed_event(pointB, entity_id, 20)
         eventC = self.create_state_changed_event(pointC, entity_id, 30)
 
-        entries = list(logbook.humanify((eventA, eventB, eventC)))
+        entries = list(logbook.humanify((eventA, eventB, eventC),
+                                        self.EMPTY_CONFIG))
 
         self.assertEqual(2, len(entries))
         self.assert_entry(
@@ -93,9 +98,65 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, entity_id, 10, attributes)
 
-        entries = list(logbook.humanify((eventA,)))
+        entries = list(logbook.humanify((eventA,), self.EMPTY_CONFIG))
 
         self.assertEqual(0, len(entries))
+
+    def test_humanify_hidden(self):
+        """Test if events are excluded if entity is hidden."""
+        entity_id = 'sensor.bla'
+        entity_id2 = 'sensor.blu'
+        pointA = dt_util.utcnow()
+        pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+
+        eventA = self.create_state_changed_event(pointA, entity_id, 10)
+        eventB = self.create_state_changed_event(pointB, entity_id2, 20)
+
+        entries = list(logbook.humanify((eventA, eventB), {
+            ha.DOMAIN: {CONF_CUSTOMIZE: {entity_id: {ATTR_HIDDEN: True}}},
+            logbook.DOMAIN: {}}))
+
+        self.assertEqual(1, len(entries))
+        self.assert_entry(
+            entries[0], pointB, 'blu', domain='sensor', entity_id=entity_id2)
+
+    def test_humanify_exclude_entity(self):
+        """Test if events are filtered if entity is excluded in config."""
+        entity_id = 'sensor.bla'
+        entity_id2 = 'sensor.blu'
+        pointA = dt_util.utcnow()
+        pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+
+        eventA = self.create_state_changed_event(pointA, entity_id, 10)
+        eventB = self.create_state_changed_event(pointB, entity_id2, 20)
+
+        entries = list(logbook.humanify((eventA, eventB), {
+            ha.DOMAIN: {},
+            logbook.DOMAIN: {logbook.CONF_EXCLUDE: {
+                logbook.CONF_ENTITIES: [entity_id, ]}}}))
+
+        self.assertEqual(1, len(entries))
+        self.assert_entry(
+            entries[0], pointB, 'blu', domain='sensor', entity_id=entity_id2)
+
+    def test_humanify_exclude_platform(self):
+        """Test if events are filtered if platform is excluded in config."""
+        entity_id = 'switch.bla'
+        entity_id2 = 'sensor.blu'
+        pointA = dt_util.utcnow()
+        pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+
+        eventA = self.create_state_changed_event(pointA, entity_id, 10)
+        eventB = self.create_state_changed_event(pointB, entity_id2, 20)
+
+        entries = list(logbook.humanify((eventA, eventB), {
+            ha.DOMAIN: {},
+            logbook.DOMAIN: {logbook.CONF_EXCLUDE: {
+                logbook.CONF_PLATFORMS: ['switch', ]}}}))
+
+        self.assertEqual(1, len(entries))
+        self.assert_entry(
+            entries[0], pointB, 'blu', domain='sensor', entity_id=entity_id2)
 
     def test_entry_to_dict(self):
         """Test conversion of entry to dict."""
@@ -116,7 +177,7 @@ class TestComponentLogbook(unittest.TestCase):
         entries = list(logbook.humanify((
             ha.Event(EVENT_HOMEASSISTANT_STOP),
             ha.Event(EVENT_HOMEASSISTANT_START),
-            )))
+            ), self.EMPTY_CONFIG))
 
         self.assertEqual(1, len(entries))
         self.assert_entry(
@@ -135,7 +196,7 @@ class TestComponentLogbook(unittest.TestCase):
                 logbook.ATTR_MESSAGE: message,
                 logbook.ATTR_ENTITY_ID: entity_id,
                 }),
-            )))
+            ), self.EMPTY_CONFIG))
 
         self.assertEqual(1, len(entries))
         self.assert_entry(

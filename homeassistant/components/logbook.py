@@ -17,7 +17,8 @@ from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-                                 STATE_NOT_HOME, STATE_OFF, STATE_ON)
+                                 STATE_NOT_HOME, STATE_OFF, STATE_ON,
+                                 CONF_CUSTOMIZE, ATTR_HIDDEN)
 from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
 from homeassistant.helpers import template
 
@@ -25,6 +26,19 @@ DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'frontend']
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_EXCLUDE = 'exclude'
+CONF_ENTITIES = 'entities'
+CONF_PLATFORMS = 'platforms'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        CONF_EXCLUDE: vol.Schema({
+            vol.Optional(CONF_ENTITIES, default=[]): cv.ensure_list,
+            vol.Optional(CONF_PLATFORMS, default=[]): cv.ensure_list
+        }),
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 
@@ -69,7 +83,7 @@ def setup(hass, config):
         message = template.render(hass, message)
         log_entry(hass, name, message, domain, entity_id)
 
-    hass.wsgi.register_view(LogbookView)
+    hass.wsgi.register_view(LogbookView(hass, config))
 
     register_built_in_panel(hass, 'logbook', 'Logbook',
                             'mdi:format-list-bulleted-type')
@@ -86,6 +100,11 @@ class LogbookView(HomeAssistantView):
     name = 'api:logbook'
     extra_urls = ['/api/logbook/<datetime:datetime>']
 
+    def __init__(self, hass, config):
+        """Initilalize the logbook view."""
+        super().__init__(hass)
+        self.config = config
+
     def get(self, request, datetime=None):
         """Retrieve logbook entries."""
         start_day = dt_util.as_utc(datetime or dt_util.start_of_local_day())
@@ -97,7 +116,7 @@ class LogbookView(HomeAssistantView):
             (events.time_fired < end_day))
         events = recorder.execute(query)
 
-        return self.json(humanify(events))
+        return self.json(humanify(events, self.config))
 
 
 class Entry(object):
@@ -124,7 +143,7 @@ class Entry(object):
         }
 
 
-def humanify(events):
+def humanify(events, config):
     """Generator that converts a list of events into Entry objects.
 
     Will try to group events if possible:
@@ -169,6 +188,7 @@ def humanify(events):
 
                 start_stop_events[event.time_fired.minute] = 2
 
+        excluded_entities, excluded_platforms = _get_excludes(config)
         # Yield entries
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
@@ -188,6 +208,11 @@ def humanify(events):
                     continue
 
                 domain = to_state.domain
+
+                # check if logbook entry is excluded for this entity/platform
+                if domain in excluded_platforms or \
+                   to_state.entity_id in excluded_entities:
+                    continue
 
                 # Skip all but the last sensor state
                 if domain == 'sensor' and \
@@ -237,6 +262,24 @@ def humanify(events):
                     event.time_fired, event.data.get(ATTR_NAME),
                     event.data.get(ATTR_MESSAGE), domain,
                     entity_id)
+
+
+def _get_excludes(config):
+    """Get lists of excluded entities and platforms."""
+    exclude_entities = []
+    exclude_platforms = []
+    exclude = config[DOMAIN].get(CONF_EXCLUDE) if DOMAIN in config else None
+    if exclude:
+        exclude_entities = exclude.get(CONF_ENTITIES) if \
+            CONF_ENTITIES in exclude else []
+        exclude_platforms = exclude.get(CONF_PLATFORMS) if \
+            CONF_PLATFORMS in exclude else []
+    customize = config[HA_DOMAIN].get(CONF_CUSTOMIZE)
+    if customize:
+        hidden_entities = [k for k, v in customize.items()
+                           if ATTR_HIDDEN in v and v[ATTR_HIDDEN]]
+        exclude_entities.extend(hidden_entities)
+    return exclude_entities, exclude_platforms
 
 
 def _entry_message_from_state(domain, state):
