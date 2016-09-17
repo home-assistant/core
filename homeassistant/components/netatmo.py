@@ -11,7 +11,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME)
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [

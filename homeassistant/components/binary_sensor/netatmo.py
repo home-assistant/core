@@ -1,8 +1,10 @@
 """
-Support for the Netatmo Welcome camera.
+Support for the Netatmo binary sensors.
+
+The binary sensors based on events seen by the NetatmoCamera
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.netatmo/
+https://home-assistant.io/components/binary_sensor.netatmo/
 """
 import logging
 from datetime import timedelta
@@ -10,7 +12,8 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.util import Throttle
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.loader import get_component
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers import config_validation as cv
@@ -40,9 +43,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup access to Netatmo Welcome cameras."""
+    """Setup access to Netatmo binary sensor."""
     netatmo = get_component('netatmo')
     home = config.get(CONF_HOME, None)
 
@@ -63,12 +67,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 continue
         for variable in sensors:
             add_devices([WelcomeBinarySensor(data, camera_name, home,
-                         variable)])
+                                             variable)])
+
 
 class WelcomeBinarySensor(BinarySensorDevice):
     """Represent a single binary sensor in a Netatmo Welcome device."""
 
     def __init__(self, data, camera_name, home, sensor):
+        """Setup for access to the Netatmo camera events."""
         self._data = data
         self._camera_name = camera_name
         self._home = home
@@ -102,7 +108,7 @@ class WelcomeBinarySensor(BinarySensorDevice):
         return self._state
 
     def update(self):
-        """Request an update from the Netatmo API"""
+        """Request an update from the Netatmo API."""
         self._data.update()
         self._data.welcomedata.updateEvent(home=self._data.home)
 
@@ -123,7 +129,7 @@ class WelcomeBinarySensor(BinarySensorDevice):
 
 
 class WelcomeData(object):
-    """Get the latest data from NetAtmo."""
+    """Get the latest data from Netatmo."""
 
     def __init__(self, auth, home=None):
         """Initialize the data object."""
@@ -147,6 +153,6 @@ class WelcomeData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Call the NetAtmo API to update the data."""
+        """Call the Netatmo API to update the data."""
         import lnetatmo
         self.welcomedata = lnetatmo.WelcomeData(self.auth)
