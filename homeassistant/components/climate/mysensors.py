@@ -84,38 +84,40 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
         """Return the current temperature."""
         if len(self._values) != 0:
             return self._values[self.gateway.const.SetReq.V_TEMP]
-        else: return None
+        else:
+            return None
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        #return self._target_temperature
         if len(self._values) != 0:
             return self._values[self.gateway.const.SetReq.V_HVAC_SETPOINT_COOL]
-        else: return None
+        else:
+            return None
 
     @property
     def target_temperature_high(self):
         """Return the highbound target temperature we try to reach."""
-        #return self._target_temperature
         if len(self._values) != 0:
             return self._values[self.gateway.const.SetReq.V_HVAC_SETPOINT_COOL]
-        else: return None
+        else:
+            return None
 
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
-        #return self._target_temperature
         if len(self._values) != 0:
             return self._values[self.gateway.const.SetReq.V_HVAC_SETPOINT_COOL]
-        else: return None
+        else:
+            return None
 
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
         if len(self._values) != 0:
             return self._values[self.gateway.const.SetReq.V_HVAC_FLOW_STATE]
-        else: return STATE_OFF
+        else:
+            return STATE_OFF
 
     @property
     def operation_list(self):
@@ -127,7 +129,8 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
         """Return the fan setting."""
         if len(self._values) != 0:
             return self._values[self.gateway.const.SetReq.V_HVAC_SPEED]
-        else: return STATE_OFF
+        else:
+            return STATE_OFF
 
     @property
     def fan_list(self):
@@ -160,7 +163,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
                                              set_req.V_HVAC_SETPOINT_COOL,
                                              kwargs.get(ATTR_TEMPERATURE))
                 self._values[set_req.V_HVAC_SETPOINT_HEAT] = \
-                             kwargs.get(ATTR_TARGET_TEMP_LOW)
+                            kwargs.get(ATTR_TARGET_TEMP_LOW)
                 self.gateway.set_child_value(self.node_id, self.child_id,
                                              set_req.V_HVAC_SETPOINT_HEAT,
                                              kwargs.get(ATTR_TEMPERATURE))
