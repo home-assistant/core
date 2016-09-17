@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_EXCLUDE = 'exclude'
 CONF_ENTITIES = 'entities'
-CONF_PLATFORMS = 'platforms'
+CONF_PLATFORMS = 'domains'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
