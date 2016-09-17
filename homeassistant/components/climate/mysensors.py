@@ -163,8 +163,8 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
                 self.gateway.set_child_value(self.node_id, self.child_id,
                                              set_req.V_HVAC_SETPOINT_COOL,
                                              kwargs.get(ATTR_TEMPERATURE))
-                self._values[set_req.V_HVAC_SETPOINT_HEAT]\
-                             = kwargs.get(ATTR_TARGET_TEMP_LOW)
+                self._values[set_req.V_HVAC_SETPOINT_HEAT] = \
+                    kwargs.get(ATTR_TARGET_TEMP_LOW)
                 self.gateway.set_child_value(self.node_id, self.child_id,
                                              set_req.V_HVAC_SETPOINT_HEAT,
                                              kwargs.get(ATTR_TEMPERATURE))
