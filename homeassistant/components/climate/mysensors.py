@@ -47,27 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 # pylint: disable=too-many-arguments, too-many-public-methods
-# pylint: disable=too-many-instance-attributes
 class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     """Representation of a MySensorsHVAC hvac."""
 
-    # def __init__(self, *args):
-    #     """Setup instance attributes."""
-    #     mysensors.MySensorsDeviceEntity.__init__(self, *args)
-    #     self._state = None
-    #     # Default Target Temperature set to a comfortable value of 24 degrees
-    #     self._target_temperature = 24.0
-    #     self._target_humidity = None
-    #     self._away = None
-    #     self._current_temperature = None
-    #     self._current_humidity = None
-    #     self._current_fan_mode = "Auto"
-    #     self._current_operation = "Off"
-    #     self._aux = None
-    #     self._current_swing_mode = "Off"
-    #     self._fan_list = ["Auto", "Min", "Normal", "Max"]
-    #     self._operation_list = ["CoolOn", "Off"]
-    #     self._swing_list = ["On", "Off"]
+    def __init__(self, *args):
+        """Setup instance attributes."""
+        mysensors.MySensorsDeviceEntity.__init__(self, *args)
 
     @property
     def assumed_state(self):
