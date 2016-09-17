@@ -1,7 +1,7 @@
 """The tests for the location automation."""
 import unittest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import automation, zone
 
 from tests.common import get_test_home_assistant
@@ -14,7 +14,7 @@ class TestAutomationZone(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
-        zone.setup(self.hass, {
+        assert setup_component(self.hass, zone.DOMAIN, {
             'zone': {
                 'name': 'test',
                 'latitude': 32.880837,
@@ -42,7 +42,7 @@ class TestAutomationZone(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'zone',
@@ -100,7 +100,7 @@ class TestAutomationZone(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'zone',
@@ -130,7 +130,7 @@ class TestAutomationZone(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'zone',
@@ -160,7 +160,7 @@ class TestAutomationZone(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'zone',
@@ -190,7 +190,7 @@ class TestAutomationZone(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',

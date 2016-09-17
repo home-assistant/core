@@ -4,7 +4,7 @@ import unittest
 from unittest import mock
 
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_TURN_OFF,
@@ -44,12 +44,12 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
             'name': 'test',
             'target_sensor': ENT_SENSOR
         }
-        self.assertFalse(_setup_component(self.hass, 'climate', {
+        self.assertFalse(setup_component(self.hass, 'climate', {
             'climate': config}))
 
     def test_valid_conf(self):
         """Test set up genreic_thermostat with valid config values."""
-        self.assertTrue(_setup_component(self.hass, 'climate',
+        self.assertTrue(setup_component(self.hass, 'climate',
                         {'climate': {
                             'platform': 'generic_thermostat',
                             'name': 'test',
@@ -61,7 +61,7 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
         self.hass.states.set(ENT_SENSOR, 22.0, {
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS
         })
-        climate.setup(self.hass, {'climate': {
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
@@ -80,7 +80,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
-        climate.setup(self.hass, {'climate': {
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
@@ -104,7 +104,8 @@ class TestClimateGenericThermostat(unittest.TestCase):
 
     def test_custom_setup_params(self):
         """Test the setup with custom parameters."""
-        climate.setup(self.hass, {'climate': {
+        self.hass.config.components.remove(climate.DOMAIN)
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
@@ -229,7 +230,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
-        climate.setup(self.hass, {'climate': {
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
@@ -319,7 +320,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
-        climate.setup(self.hass, {'climate': {
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
@@ -410,7 +411,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
-        climate.setup(self.hass, {'climate': {
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
