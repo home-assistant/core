@@ -137,27 +137,30 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
-        _LOGGER.error(kwargs)
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             # Set HEAT Target temperature
             if self.current_operation == STATE_HEAT:
-                self._values[set_req.V_HVAC_SETPOINT_HEAT] = kwargs.get(ATTR_TEMPERATURE)
+                self._values[set_req.V_HVAC_SETPOINT_HEAT] = \
+                             kwargs.get(ATTR_TEMPERATURE)
                 self.gateway.set_child_value(self.node_id, self.child_id,
                                              set_req.V_HVAC_SETPOINT_HEAT,
                                              kwargs.get(ATTR_TEMPERATURE))
             # Set COOL Target temperature
             elif self.current_operation == STATE_COOL:
-                self._values[set_req.V_HVAC_SETPOINT_COOL] = kwargs.get(ATTR_TEMPERATURE)
+                self._values[set_req.V_HVAC_SETPOINT_COOL] = \
+                             kwargs.get(ATTR_TEMPERATURE)
                 self.gateway.set_child_value(self.node_id, self.child_id,
                                              set_req.V_HVAC_SETPOINT_COOL,
                                              kwargs.get(ATTR_TEMPERATURE))
             # Set Both Target temperature for Auto Mode
             else:
-                self._values[set_req.V_HVAC_SETPOINT_COOL] = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+                self._values[set_req.V_HVAC_SETPOINT_COOL] = \
+                             kwargs.get(ATTR_TARGET_TEMP_HIGH)
                 self.gateway.set_child_value(self.node_id, self.child_id,
                                              set_req.V_HVAC_SETPOINT_COOL,
                                              kwargs.get(ATTR_TEMPERATURE))
-                self._values[set_req.V_HVAC_SETPOINT_HEAT] = kwargs.get(ATTR_TARGET_TEMP_LOW)
+                self._values[set_req.V_HVAC_SETPOINT_HEAT] = \
+                             kwargs.get(ATTR_TARGET_TEMP_LOW)
                 self.gateway.set_child_value(self.node_id, self.child_id,
                                              set_req.V_HVAC_SETPOINT_HEAT,
                                              kwargs.get(ATTR_TEMPERATURE))
@@ -176,13 +179,14 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set new target temperature."""
-        self._values[self.gateway.const.SetReq.V_HVAC_FLOW_STATE] = operation_mode
+        set_req = self.gateway.const.SetReq
+        self._values[set_req.V_HVAC_FLOW_STATE] = operation_mode
         self.gateway.set_child_value(self.node_id, self.child_id,
-                                     self.gateway.const.SetReq.V_HVAC_FLOW_STATE,
+                                     set_req.V_HVAC_FLOW_STATE,
                                      DICT_HA_TO_MYS[operation_mode])
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
-            self._values[self.gateway.const.SetReq.V_HVAC_FLOW_STATE] = operation_mode
+            self._values[set_req.V_HVAC_FLOW_STATE] = operation_mode
         self.update_ha_state()
 
     def update(self):
