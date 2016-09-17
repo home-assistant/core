@@ -404,10 +404,6 @@ class MQTT(object):
         except UnicodeDecodeError:
             _LOGGER.error("Illegal utf-8 unicode payload from "
                           "MQTT topic %s. Payload: %s", msg.topic, msg.paylad)
-        except AttributeError:
-            _LOGGER.error("Non utf encoded payload from "
-                          "MQTT topic %s.", msg.topic)
-            
 
     def _mqtt_on_unsubscribe(self, _mqttc, _userdata, mid, granted_qos):
         """Unsubscribe successful callback."""
