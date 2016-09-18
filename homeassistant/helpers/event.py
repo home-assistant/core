@@ -60,9 +60,10 @@ def track_point_in_time(hass, action, point_in_time):
     utc_point_in_time = dt_util.as_utc(point_in_time)
 
     @ft.wraps(action)
+    @asyncio.coroutine
     def utc_converter(utc_now):
         """Convert passed in UTC now to local now."""
-        action(dt_util.as_local(utc_now))
+        hass.async_add_job(action, dt_util.as_local(utc_now))
 
     return track_point_in_utc_time(hass, utc_converter, utc_point_in_time)
 
