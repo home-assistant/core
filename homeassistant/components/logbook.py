@@ -18,7 +18,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
                                  STATE_NOT_HOME, STATE_OFF, STATE_ON,
-                                 CONF_CUSTOMIZE, ATTR_HIDDEN)
+                                 ATTR_HIDDEN)
 from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
 from homeassistant.helpers import template
 
@@ -29,13 +29,13 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_EXCLUDE = 'exclude'
 CONF_ENTITIES = 'entities'
-CONF_PLATFORMS = 'domains'
+CONF_DOMAINS = 'domains'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         CONF_EXCLUDE: vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.ensure_list,
-            vol.Optional(CONF_PLATFORMS, default=[]): cv.ensure_list
+            vol.Optional(CONF_DOMAINS, default=[]): cv.ensure_list
         }),
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -115,8 +115,9 @@ class LogbookView(HomeAssistantView):
             (events.time_fired > start_day) &
             (events.time_fired < end_day))
         events = recorder.execute(query)
+        events = _exclude_events(events, self.config)
 
-        return self.json(humanify(events, self.config))
+        return self.json(humanify(events))
 
 
 class Entry(object):
@@ -143,7 +144,7 @@ class Entry(object):
         }
 
 
-def humanify(events, config):
+def humanify(events):
     """Generator that converts a list of events into Entry objects.
 
     Will try to group events if possible:
@@ -188,7 +189,6 @@ def humanify(events, config):
 
                 start_stop_events[event.time_fired.minute] = 2
 
-        excluded_entities, excluded_platforms = _get_excludes(config)
         # Yield entries
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
@@ -208,11 +208,6 @@ def humanify(events, config):
                     continue
 
                 domain = to_state.domain
-
-                # check if logbook entry is excluded for this entity/platform
-                if domain in excluded_platforms or \
-                   to_state.entity_id in excluded_entities:
-                    continue
 
                 # Skip all but the last sensor state
                 if domain == 'sensor' and \
@@ -264,22 +259,36 @@ def humanify(events, config):
                     entity_id)
 
 
-def _get_excludes(config):
+def _exclude_events(events, config):
     """Get lists of excluded entities and platforms."""
-    exclude_entities = []
-    exclude_platforms = []
-    exclude = config[DOMAIN].get(CONF_EXCLUDE) if DOMAIN in config else None
+    excluded_entities = []
+    excluded_domains = []
+    exclude = config[DOMAIN].get(CONF_EXCLUDE)
     if exclude:
-        exclude_entities = exclude.get(CONF_ENTITIES) if \
-            CONF_ENTITIES in exclude else []
-        exclude_platforms = exclude.get(CONF_PLATFORMS) if \
-            CONF_PLATFORMS in exclude else []
-    customize = config[HA_DOMAIN].get(CONF_CUSTOMIZE)
-    if customize:
-        hidden_entities = [k for k, v in customize.items()
-                           if ATTR_HIDDEN in v and v[ATTR_HIDDEN]]
-        exclude_entities.extend(hidden_entities)
-    return exclude_entities, exclude_platforms
+        excluded_entities = exclude.get(CONF_ENTITIES, [])
+        excluded_domains = exclude.get(CONF_DOMAINS, [])
+
+    filtered_events = []
+    for event in events:
+        # if no new state exists exclude it anyway
+        to_state = State.from_dict(event.data.get('new_state'))
+        if not to_state:
+            continue
+
+        # exclude entities which are customized hidden
+        hidden = to_state.attributes.get(ATTR_HIDDEN, False)
+        if hidden:
+            continue
+
+        domain = to_state.domain
+        # check if logbook entry is excluded for this domain
+        if domain in excluded_domains:
+            continue
+        # check if logbook entry is excluded for this entity
+        if to_state.entity_id in excluded_entities:
+            continue
+        filtered_events.append(event)
+    return filtered_events
 
 
 def _entry_message_from_state(domain, state):
