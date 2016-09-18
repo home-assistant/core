@@ -314,7 +314,7 @@ pyasn1==0.1.9
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.7.2
+pychromecast==0.7.4
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
