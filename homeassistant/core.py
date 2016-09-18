@@ -6,6 +6,7 @@ of entities and react to changes.
 """
 # pylint: disable=unused-import, too-many-lines
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import enum
 import functools as ft
 import logging
@@ -13,8 +14,8 @@ import os
 import re
 import signal
 import sys
+import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 
 from types import MappingProxyType
 
@@ -205,6 +206,17 @@ class HomeAssistant(object):
         """
         self.pool.add_job(priority, (target,) + args)
 
+    def async_add_job(self, target: Callable[..., None], *args: Any):
+        """Add a job from within the eventloop.
+
+        target: target to call.
+        args: parameters for method to call.
+        """
+        if asyncio.iscoroutinefunction(target):
+            self.loop.create_task(target(*args))
+        else:
+            self.add_job(target, *args)
+
     def _loop_empty(self):
         """Python 3.4.2 empty loop compatibility function."""
         # pylint: disable=protected-access
@@ -217,8 +229,6 @@ class HomeAssistant(object):
 
     def block_till_done(self):
         """Block till all pending work is done."""
-        import threading
-
         complete = threading.Event()
 
         @asyncio.coroutine
