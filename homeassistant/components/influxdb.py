@@ -31,19 +31,20 @@ DOMAIN = 'influxdb'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_BLACKLIST, default=[]):
             vol.All(cv.ensure_list, [cv.entity_id]),
         vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_PORT, default=False): cv.boolean,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_TAGS, default={}):
-            vol.All(cv.ensure_list, {cv.string: [cv.string]}),
-        vol.Optional(CONF_USERNAME): cv.string,
+            vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_WHITELIST, default=[]):
             vol.All(cv.ensure_list, [cv.entity_id]),
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -111,8 +112,7 @@ def setup(hass, config):
             }
         ]
 
-        for tag in tags:
-            json_body[0]['tags'][tag] = tags[tag]
+        json_body[0]['tags'].update(tags)
 
         try:
             influx.write_points(json_body)
