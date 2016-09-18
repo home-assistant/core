@@ -86,10 +86,16 @@ class Thermostat(ClimateDevice):
         self.hold_temp = hold_temp
         self._operation_list = ['auto', 'auxHeatOnly', 'cool',
                                 'heat', 'off']
+        self.update_without_throttle = False
 
     def update(self):
         """Get the latest state from the thermostat."""
-        self.data.update()
+        if self.update_without_throttle:
+            self.data.update(no_throttle=True)
+            self.update_without_throttle = False
+        else:
+            self.data.update()
+
         self.thermostat = self.data.ecobee.get_thermostat(
             self.thermostat_index)
 
@@ -211,10 +217,12 @@ class Thermostat(ClimateDevice):
                                               "away", "indefinite")
         else:
             self.data.ecobee.set_climate_hold(self.thermostat_index, "away")
+        self.update_without_throttle = True
 
     def turn_away_mode_off(self):
         """Turn away off."""
         self.data.ecobee.resume_program(self.thermostat_index)
+        self.update_without_throttle = True
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -241,15 +249,18 @@ class Thermostat(ClimateDevice):
                           "high=%s, is=%s", low_temp, isinstance(
                               low_temp, (int, float)), high_temp,
                           isinstance(high_temp, (int, float)))
+        self.update_without_throttle = True
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         self.data.ecobee.set_hvac_mode(self.thermostat_index, operation_mode)
+        self.update_without_throttle = True
 
     def set_fan_min_on_time(self, fan_min_on_time):
         """Set the minimum fan on time."""
         self.data.ecobee.set_fan_min_on_time(self.thermostat_index,
                                              fan_min_on_time)
+        self.update_without_throttle = True
 
     # Home and Sleep mode aren't used in UI yet:
 
