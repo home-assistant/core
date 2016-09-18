@@ -34,7 +34,7 @@ def trigger(hass, config, action):
         """Listen for events and calls the action when data matches."""
         if not event_data or all(val == event.data.get(key) for key, val
                                  in event_data.items()):
-            hass.add_job(action, {
+            hass.async_add_job(action, {
                 'trigger': {
                     'platform': 'event',
                     'event': event,
