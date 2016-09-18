@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_TOGGLE,
+    STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -25,7 +26,7 @@ CONF_NAME = "name"
 CONF_INITIAL = "initial"
 CONF_ICON = "icon"
 
-TOGGLE_SERVICE_SCHEMA = vol.Schema({
+SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
@@ -43,6 +44,11 @@ def turn_on(hass, entity_id):
 def turn_off(hass, entity_id):
     """Set input_boolean to False."""
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
+
+
+def toggle(hass, entity_id):
+    """Set input_boolean to False."""
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
 
 
 def setup(hass, config):
@@ -72,20 +78,24 @@ def setup(hass, config):
     if not entities:
         return False
 
-    def toggle_service(service):
+    def handler_service(service):
         """Handle a calls to the input boolean services."""
         target_inputs = component.extract_from_service(service)
 
         for input_b in target_inputs:
             if service.service == SERVICE_TURN_ON:
                 input_b.turn_on()
-            else:
+            elif service.service == SERVICE_TURN_OFF:
                 input_b.turn_off()
+            else:
+                input_b.toggle()
 
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF, toggle_service,
-                           schema=TOGGLE_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, toggle_service,
-                           schema=TOGGLE_SERVICE_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_TURN_OFF, handler_service,
+                           schema=SERVICE_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_TURN_ON, handler_service,
+                           schema=SERVICE_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_TOGGLE, handler_service,
+                           schema=SERVICE_SCHEMA)
 
     component.add_entities(entities)
 
