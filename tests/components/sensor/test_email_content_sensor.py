@@ -173,8 +173,10 @@ class EmailContentSensor(unittest.TestCase):
         sensor.entity_id = "sensor.emailtest"
         sensor.update()
 
-        self.hass.pool.block_till_done()
-        self.hass.pool.block_till_done()
+        retries = 0
+        while len(states) < 2 and retries < 50:
+            self.hass.pool.block_till_done()
+            retries += 1
 
         self.assertEqual("Test Message", states[0].state)
         self.assertEqual("Test Message 2", states[1].state)
