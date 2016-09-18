@@ -1,4 +1,5 @@
 """Helpers for listening to events."""
+import asyncio
 import functools as ft
 from datetime import timedelta
 
@@ -28,6 +29,7 @@ def track_state_change(hass, entity_ids, action, from_state=None,
         entity_ids = tuple(entity_id.lower() for entity_id in entity_ids)
 
     @ft.wraps(action)
+    @asyncio.coroutine
     def state_change_listener(event):
         """The listener that listens for specific state changes."""
         if entity_ids != MATCH_ALL and \
@@ -45,9 +47,9 @@ def track_state_change(hass, entity_ids, action, from_state=None,
             new_state = None
 
         if _matcher(old_state, from_state) and _matcher(new_state, to_state):
-            action(event.data.get('entity_id'),
-                   event.data.get('old_state'),
-                   event.data.get('new_state'))
+            hass.async_add_job(action, event.data.get('entity_id'),
+                               event.data.get('old_state'),
+                               event.data.get('new_state'))
 
     return hass.bus.listen(EVENT_STATE_CHANGED, state_change_listener)
 
@@ -70,6 +72,7 @@ def track_point_in_utc_time(hass, action, point_in_time):
     point_in_time = dt_util.as_utc(point_in_time)
 
     @ft.wraps(action)
+    @asyncio.coroutine
     def point_in_time_listener(event):
         """Listen for matching time_changed events."""
         now = event.data[ATTR_NOW]
@@ -83,8 +86,13 @@ def track_point_in_utc_time(hass, action, point_in_time):
         # listener gets lined up twice to be executed. This will make
         # sure the second time it does nothing.
         point_in_time_listener.run = True
-        remove()
-        action(now)
+
+        def fire_action():
+            """Run the point in time listener action."""
+            remove()
+            action(now)
+
+        hass.add_job(fire_action)
 
     remove = hass.bus.listen(EVENT_TIME_CHANGED, point_in_time_listener)
     return remove
@@ -171,6 +179,7 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
     hour, minute, second = pmp(hour), pmp(minute), pmp(second)
 
     @ft.wraps(action)
+    @asyncio.coroutine
     def pattern_time_change_listener(event):
         """Listen for matching time_changed events."""
         now = event.data[ATTR_NOW]
@@ -187,7 +196,7 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
            mat(now.minute, minute) and \
            mat(now.second, second):
 
-            action(now)
+            hass.async_add_job(action, now)
 
     return hass.bus.listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
 
