@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_SERVER),
         config.get(CONF_PORT))
 
-    sensor = EmailSensor(
+    sensor = EmailContentSensor(
         hass,
         reader,
         config.get(CONF_NAME, None) or config.get(CONF_USERNAME),
@@ -126,7 +126,7 @@ class EmailReader:
                 _LOGGER.error("Failed to reconnect.")
 
 
-class EmailSensor(Entity):
+class EmailContentSensor(Entity):
     """Representation of an EMail sensor."""
 
     # pylint: disable=too-many-arguments
@@ -166,16 +166,16 @@ class EmailSensor(Entity):
     def render_template(self, email_message):
         """Render the message template."""
         variables = {
-            ATTR_FROM: EmailSensor.get_msg_sender(email_message),
-            ATTR_SUBJECT: EmailSensor.get_msg_subject(email_message),
+            ATTR_FROM: EmailContentSensor.get_msg_sender(email_message),
+            ATTR_SUBJECT: EmailContentSensor.get_msg_subject(email_message),
             ATTR_DATE: email_message['Date'],
-            ATTR_BODY: EmailSensor.get_msg_text(email_message)
+            ATTR_BODY: EmailContentSensor.get_msg_text(email_message)
         }
         return template.render(self.hass, self._value_template, variables)
 
     def sender_allowed(self, email_message):
         """Check if the sender is in the allowed senders list."""
-        return EmailSensor.get_msg_sender(email_message).upper() in (
+        return EmailContentSensor.get_msg_sender(email_message).upper() in (
             sender.upper() for sender in self._allowed_senders)
 
     @staticmethod
@@ -232,15 +232,18 @@ class EmailSensor(Entity):
                 break
 
             if self.sender_allowed(email_message):
-                message_body = EmailSensor.get_msg_text(email_message)
+                message_body = EmailContentSensor.get_msg_text(email_message)
 
                 if self._value_template is not None:
                     message_body = self.render_template(email_message)
 
                 self._message = message_body
                 self._state_attributes = {
-                    ATTR_FROM: EmailSensor.get_msg_sender(email_message),
-                    ATTR_SUBJECT: EmailSensor.get_msg_subject(email_message),
-                    ATTR_DATE: email_message['Date']
+                    ATTR_FROM:
+                        EmailContentSensor.get_msg_sender(email_message),
+                    ATTR_SUBJECT:
+                        EmailContentSensor.get_msg_subject(email_message),
+                    ATTR_DATE:
+                        email_message['Date']
                 }
                 self.update_ha_state()

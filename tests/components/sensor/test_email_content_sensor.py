@@ -9,7 +9,7 @@ from email.mime.text import MIMEText
 from homeassistant.helpers.event import track_state_change
 from collections import deque
 
-from homeassistant.components.sensor import email as email_component
+from homeassistant.components.sensor import imap_email_content
 from tests.common import get_test_home_assistant
 
 
@@ -31,7 +31,7 @@ class FakeEMailReader:
         return self._messages.popleft()
 
 
-class TestEMail(unittest.TestCase):
+class EmailContentSensor(unittest.TestCase):
     """Test the Command line sensor."""
 
     def setUp(self):
@@ -50,7 +50,7 @@ class TestEMail(unittest.TestCase):
         test_message['Date'] = datetime.datetime(2016, 1, 1, 12, 44, 57)
         test_message.set_payload("Test Message")
 
-        sensor = email_component.EmailSensor(
+        sensor = imap_email_content.EmailContentSensor(
             self.hass,
             FakeEMailReader(deque([test_message])),
             "test_emails_sensor",
@@ -80,7 +80,7 @@ class TestEMail(unittest.TestCase):
         msg.attach(textPart)
         msg.attach(htmlPart)
 
-        sensor = email_component.EmailSensor(
+        sensor = imap_email_content.EmailContentSensor(
             self.hass,
             FakeEMailReader(deque([msg])),
             "test_emails_sensor",
@@ -103,7 +103,7 @@ class TestEMail(unittest.TestCase):
 
         msg.attach(htmlPart)
 
-        sensor = email_component.EmailSensor(
+        sensor = imap_email_content.EmailContentSensor(
             self.hass,
             FakeEMailReader(deque([msg])),
             "test_emails_sensor",
@@ -128,7 +128,7 @@ class TestEMail(unittest.TestCase):
 
         msg.attach(htmlPart)
 
-        sensor = email_component.EmailSensor(
+        sensor = imap_email_content.EmailContentSensor(
             self.hass,
             FakeEMailReader(deque([msg])),
             "test_emails_sensor",
@@ -163,7 +163,7 @@ class TestEMail(unittest.TestCase):
             ["sensor.emailtest"],
             state_changed_listener)
 
-        sensor = email_component.EmailSensor(
+        sensor = imap_email_content.EmailContentSensor(
             self.hass,
             FakeEMailReader(deque([test_message1, test_message2])),
             "test_emails_sensor",
@@ -188,7 +188,7 @@ class TestEMail(unittest.TestCase):
         test_message['Date'] = datetime.datetime(2016, 1, 1, 12, 44, 57)
         test_message.set_payload("Test Message")
 
-        sensor = email_component.EmailSensor(
+        sensor = imap_email_content.EmailContentSensor(
             self.hass,
             FakeEMailReader(deque([test_message])),
             "test_emails_sensor",
@@ -207,7 +207,7 @@ class TestEMail(unittest.TestCase):
         test_message['Date'] = datetime.datetime(2016, 1, 1, 12, 44, 57)
         test_message.set_payload("Test Message")
 
-        sensor = email_component.EmailSensor(
+        sensor = imap_email_content.EmailContentSensor(
             self.hass,
             FakeEMailReader(deque([test_message])),
             "test_emails_sensor",
