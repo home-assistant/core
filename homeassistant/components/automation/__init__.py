@@ -306,7 +306,8 @@ def _process_config(hass, config, component):
 
             attach_triggers = partial(_process_trigger, hass, config,
                                       config_block.get(CONF_TRIGGER, []), name)
-            entity = AutomationEntity(name, attach_triggers, cond_func, action, hidden)
+            entity = AutomationEntity(name, attach_triggers, cond_func, action,
+                                      hidden)
             component.add_entities((entity,))
             success = True
 
