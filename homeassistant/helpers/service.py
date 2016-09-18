@@ -63,9 +63,21 @@ def call_from_config(hass, config, blocking=False, variables=None,
     domain, service_name = domain_service.split('.', 1)
     service_data = dict(config.get(CONF_SERVICE_DATA, {}))
 
+    def _data_template_creator(value):
+        """Recursive template creator helper function."""
+        if isinstance(value, list):
+            for idx, element in enumerate(value):
+                value[idx] = _data_template_creator(element)
+            return value
+        if isinstance(value, dict):
+            for key, element in value.items():
+                value[key] = _data_template_creator(element)
+            return value
+        return template.render(hass, value, variables)
+
     if CONF_SERVICE_DATA_TEMPLATE in config:
         for key, value in config[CONF_SERVICE_DATA_TEMPLATE].items():
-            service_data[key] = template.render(hass, value, variables)
+            service_data[key] = _data_template_creator(value)
 
     if CONF_SERVICE_ENTITY_ID in config:
         service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]

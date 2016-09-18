@@ -5,12 +5,25 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.lastfm/
 """
 import re
+
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_API_KEY
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['pylast==1.6.0']
+
+CONF_USERS = 'users'
 
 ICON = 'mdi:lastfm'
 
-REQUIREMENTS = ['pylast==1.6.0']
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_USERS, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+})
 
 
 # pylint: disable=unused-argument
@@ -18,9 +31,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Last.fm platform."""
     import pylast as lastfm
     network = lastfm.LastFMNetwork(api_key=config.get(CONF_API_KEY))
+
     add_devices(
         [LastfmSensor(username,
-                      network) for username in config.get("users", [])])
+                      network) for username in config.get(CONF_USERS)])
 
 
 class LastfmSensor(Entity):

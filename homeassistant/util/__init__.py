@@ -12,7 +12,7 @@ import string
 from functools import wraps
 from types import MappingProxyType
 
-from typing import Any, Optional, TypeVar, Callable, Sequence
+from typing import Any, Optional, TypeVar, Callable, Sequence, KeysView, Union
 
 from .dt import as_local, utcnow
 
@@ -63,8 +63,8 @@ def convert(value: T, to_type: Callable[[T], U],
         return default
 
 
-def ensure_unique_string(preferred_string: str,
-                         current_strings: Sequence[str]) -> str:
+def ensure_unique_string(preferred_string: str, current_strings:
+                         Union[Sequence[str], KeysView[str]]) -> str:
     """Return a string that is not present in current_strings.
 
     If preferred string exists will append _2, _3, ..
@@ -365,6 +365,26 @@ class ThreadPool(object):
                 raise RuntimeError("ThreadPool not running")
 
             self._work_queue.put(PriorityQueueItem(priority, job))
+
+            # Check if our queue is getting too big.
+            if self._work_queue.qsize() > self.busy_warning_limit \
+               and self._busy_callback is not None:
+
+                # Increase limit we will issue next warning.
+                self.busy_warning_limit *= 2
+
+                self._busy_callback(
+                    self.worker_count, self.current_jobs,
+                    self._work_queue.qsize())
+
+    def add_many_jobs(self, jobs):
+        """Add a list of jobs to the queue."""
+        with self._lock:
+            if not self.running:
+                raise RuntimeError("ThreadPool not running")
+
+            for priority, job in jobs:
+                self._work_queue.put(PriorityQueueItem(priority, job))
 
             # Check if our queue is getting too big.
             if self._work_queue.qsize() > self.busy_warning_limit \

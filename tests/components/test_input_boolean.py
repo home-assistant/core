@@ -51,16 +51,23 @@ class TestInputBoolean(unittest.TestCase):
 
         input_boolean.turn_on(self.hass, entity_id)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(
             input_boolean.is_on(self.hass, entity_id))
 
         input_boolean.turn_off(self.hass, entity_id)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertFalse(
+            input_boolean.is_on(self.hass, entity_id))
+
+        input_boolean.toggle(self.hass, entity_id)
+
+        self.hass.block_till_done()
+
+        self.assertTrue(
             input_boolean.is_on(self.hass, entity_id))
 
     def test_config_options(self):

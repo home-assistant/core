@@ -25,7 +25,7 @@ SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
                 SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup WeMo bridges and register connected lights."""
     import pywemo.discovery as discovery
 
@@ -35,10 +35,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         device = discovery.device_from_description(location, mac)
 
         if device:
-            setup_bridge(device, add_devices_callback)
+            setup_bridge(device, add_devices)
 
 
-def setup_bridge(bridge, add_devices_callback):
+def setup_bridge(bridge, add_devices):
     """Setup a WeMo link."""
     lights = {}
 
@@ -55,7 +55,7 @@ def setup_bridge(bridge, add_devices_callback):
                 new_lights.append(lights[light_id])
 
         if new_lights:
-            add_devices_callback(new_lights)
+            add_devices(new_lights)
 
     update_lights()
 
@@ -73,7 +73,7 @@ class WemoLight(Light):
     def unique_id(self):
         """Return the ID of this light."""
         deviceid = self.device.uniqueID
-        return "{}.{}".format(self.__class__, deviceid)
+        return '{}.{}'.format(self.__class__, deviceid)
 
     @property
     def name(self):

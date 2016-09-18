@@ -14,7 +14,8 @@ COMMENT_REQUIREMENTS = (
     'pybluez',
     'bluepy',
     'python-lirc',
-    'gattlib'
+    'gattlib',
+    'pyuserinput',
 )
 
 IGNORE_PACKAGES = (

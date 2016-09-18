@@ -39,6 +39,11 @@ foursquare:
         description: Vertical accuracy of the user's location, in meters.
         example: 1
 
+group:
+  reload:
+    description: "Reload group configuration."
+    fields:
+
 persistent_notification:
   create:
     description: Show a notification in the frontend
@@ -72,6 +77,18 @@ homematic:
       param:
         description: Event to send i.e. PRESS_LONG, PRESS_SHORT
         example: PRESS_LONG
+
+  set_value:
+    description: Set the name of a node.
+
+    fields:
+      entity_id:
+        description: Name(s) of entities to set value
+        example: 'homematic.my_variable'
+
+      value:
+        description: New value
+        example: 1
 
 zwave:
   add_node:

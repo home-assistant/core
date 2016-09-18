@@ -8,48 +8,53 @@ import logging
 import telnetlib
 import urllib.parse
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
-    DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_IDLE, STATE_OFF,
-    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONF_PORT)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_PORT = 9090
+
+KNOWN_DEVICES = []
 
 SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
-KNOWN_DEVICES = []
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_USERNAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the squeezebox platform."""
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+
     if discovery_info is not None:
         host = discovery_info[0]
-        port = 9090
+        port = DEFAULT_PORT
     else:
         host = config.get(CONF_HOST)
-        port = int(config.get('port', 9090))
-
-    if not host:
-        _LOGGER.error(
-            "Missing required configuration items in %s: %s",
-            DOMAIN,
-            CONF_HOST)
-        return False
+        port = config.get(CONF_PORT)
 
     # Only add a media server once
     if host in KNOWN_DEVICES:
         return False
     KNOWN_DEVICES.append(host)
 
-    lms = LogitechMediaServer(
-        host, port,
-        config.get(CONF_USERNAME),
-        config.get(CONF_PASSWORD))
+    lms = LogitechMediaServer(host, port, username, password)
 
     if not lms.init_success:
         return False
@@ -77,18 +82,13 @@ class LogitechMediaServer(object):
         try:
             http_port = self.query('pref', 'httpport', '?')
             if not http_port:
-                _LOGGER.error(
-                    "Unable to read data from server %s:%s",
-                    self.host,
-                    self.port)
+                _LOGGER.error("Unable to read data from server %s:%s",
+                              self.host, self.port)
                 return
             return http_port
         except ConnectionError as ex:
-            _LOGGER.error(
-                "Failed to connect to server %s:%s - %s",
-                self.host,
-                self.port,
-                ex)
+            _LOGGER.error("Failed to connect to server %s:%s - %s",
+                          self.host, self.port, ex)
             return
 
     def create_players(self):

@@ -199,6 +199,7 @@ class SonosDevice(MediaPlayerDevice):
         self.hass = hass
         self.volume_increment = 5
         self._player = player
+        self._name = None
         self.update()
         self.soco_snapshot = Snapshot(self._player)
 
@@ -215,11 +216,6 @@ class SonosDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return "{}.{}".format(self.__class__, self._player.uid)
 
     @property
     def state(self):

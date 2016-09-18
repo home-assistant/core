@@ -7,6 +7,7 @@ https://home-assistant.io/components/ecobee/
 import logging
 import os
 from datetime import timedelta
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -15,13 +16,22 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.loader import get_component
 from homeassistant.util import Throttle
 
-DOMAIN = "ecobee"
-NETWORK = None
-CONF_HOLD_TEMP = 'hold_temp'
-
 REQUIREMENTS = [
     'https://github.com/nkgilley/python-ecobee-api/archive/'
     '4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6']
+
+_CONFIGURING = {}
+_LOGGER = logging.getLogger(__name__)
+
+CONF_HOLD_TEMP = 'hold_temp'
+
+DOMAIN = 'ecobee'
+
+ECOBEE_CONFIG_FILE = 'ecobee.conf'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
+
+NETWORK = None
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -29,14 +39,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean
     })
 }, extra=vol.ALLOW_EXTRA)
-
-_LOGGER = logging.getLogger(__name__)
-
-ECOBEE_CONFIG_FILE = 'ecobee.conf'
-_CONFIGURING = {}
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
 
 def request_configuration(network, hass, config):
@@ -97,7 +99,7 @@ class EcobeeData(object):
     def update(self):
         """Get the latest data from pyecobee."""
         self.ecobee.update()
-        _LOGGER.info("ecobee data updated successfully.")
+        _LOGGER.info("Ecobee data updated successfully")
 
 
 def setup(hass, config):
@@ -116,9 +118,6 @@ def setup(hass, config):
 
     # Create ecobee.conf if it doesn't exist
     if not os.path.isfile(hass.config.path(ECOBEE_CONFIG_FILE)):
-        if config[DOMAIN].get(CONF_API_KEY) is None:
-            _LOGGER.error("No ecobee api_key found in config.")
-            return
         jsonconfig = {"API_KEY": config[DOMAIN].get(CONF_API_KEY)}
         config_from_file(hass.config.path(ECOBEE_CONFIG_FILE), jsonconfig)
 

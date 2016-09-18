@@ -6,34 +6,40 @@ https://home-assistant.io/components/alarm_control_panel.alarmdotcom/
 """
 import logging
 
+import voluptuous as vol
+
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN)
-
-_LOGGER = logging.getLogger(__name__)
-
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN, CONF_CODE,
+    CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/Xorso/pyalarmdotcom'
                 '/archive/0.1.1.zip'
                 '#pyalarmdotcom==0.1.1']
+
+_LOGGER = logging.getLogger(__name__)
+
 DEFAULT_NAME = 'Alarm.com'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_CODE): cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup an Alarm.com control panel."""
+    name = config.get(CONF_NAME)
+    code = config.get(CONF_CODE)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    if username is None or password is None:
-        _LOGGER.error('Must specify username and password!')
-        return False
-
-    add_devices([AlarmDotCom(hass,
-                             config.get('name', DEFAULT_NAME),
-                             config.get('code'),
-                             username,
-                             password)])
+    add_devices([AlarmDotCom(hass, name, code, username, password)])
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes

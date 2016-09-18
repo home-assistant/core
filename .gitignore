@@ -97,3 +97,9 @@ virtualization/vagrant/config
 
 # Visual Studio Code
 .vscode
+
+# Built docs
+docs/build
+
+# Windows Explorer
+desktop.ini

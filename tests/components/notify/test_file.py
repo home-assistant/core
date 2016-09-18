@@ -4,10 +4,12 @@ import unittest
 import tempfile
 from unittest.mock import patch
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT)
 import homeassistant.util.dt as dt_util
+from homeassistant.bootstrap import _setup_component
 
 from tests.common import get_test_home_assistant
 
@@ -25,11 +27,11 @@ class TestNotifyFile(unittest.TestCase):
 
     def test_bad_config(self):
         """Test set up the platform with bad/missing config."""
-        self.assertFalse(notify.setup(self.hass, {
+        self.assertFalse(_setup_component(self.hass, notify.DOMAIN, {
             'notify': {
                 'name': 'test',
                 'platform': 'file',
-            }
+            },
         }))
 
     @patch('homeassistant.util.dt.utcnow')
@@ -40,12 +42,12 @@ class TestNotifyFile(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdirname:
             filename = os.path.join(tempdirname, 'notify.txt')
             message = 'one, two, testing, testing'
-            self.assertTrue(notify.setup(self.hass, {
+            self.assertTrue(setup_component(self.hass, notify.DOMAIN, {
                 'notify': {
                     'name': 'test',
                     'platform': 'file',
                     'filename': filename,
-                    'timestamp': 0
+                    'timestamp': False,
                 }
             }))
             title = '{} notifications (Log started: {})\n{}\n'.format(

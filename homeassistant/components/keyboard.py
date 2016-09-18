@@ -11,8 +11,9 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP)
 
-DOMAIN = "keyboard"
-REQUIREMENTS = ['pyuserinput==0.1.9']
+REQUIREMENTS = ['pyuserinput==0.1.11']
+
+DOMAIN = 'keyboard'
 
 TAP_KEY_SCHEMA = vol.Schema({})
 
@@ -49,6 +50,7 @@ def media_prev_track(hass):
 
 def setup(hass, config):
     """Listen for keyboard events."""
+    # pylint: disable=import-error
     import pykeyboard
 
     keyboard = pykeyboard.PyKeyboard()

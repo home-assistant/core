@@ -1,6 +1,7 @@
 """The tests for the MoldIndicator sensor."""
 import unittest
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.components.sensor.mold_indicator import (ATTR_DEWPOINT,
                                                             ATTR_CRITICAL_TEMP)
@@ -22,7 +23,6 @@ class TestSensorMoldIndicator(unittest.TestCase):
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.states.set('test.indoorhumidity', '50',
                              {ATTR_UNIT_OF_MEASUREMENT: '%'})
-        self.hass.pool.block_till_done()
 
     def tearDown(self):
         """Stop down everything that was started."""
@@ -30,13 +30,13 @@ class TestSensorMoldIndicator(unittest.TestCase):
 
     def test_setup(self):
         """Test the mold indicator sensor setup."""
-        self.assertTrue(sensor.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
             'sensor': {
                 'platform': 'mold_indicator',
                 'indoor_temp_sensor': 'test.indoortemp',
                 'outdoor_temp_sensor': 'test.outdoortemp',
                 'indoor_humidity_sensor': 'test.indoorhumidity',
-                'calibration_factor': '2.0'
+                'calibration_factor': 2.0
             }
         }))
 
@@ -53,30 +53,28 @@ class TestSensorMoldIndicator(unittest.TestCase):
         self.hass.states.set('test.indoorhumidity', '0',
                              {ATTR_UNIT_OF_MEASUREMENT: '%'})
 
-        self.assertTrue(sensor.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
             'sensor': {
                 'platform': 'mold_indicator',
                 'indoor_temp_sensor': 'test.indoortemp',
                 'outdoor_temp_sensor': 'test.outdoortemp',
                 'indoor_humidity_sensor': 'test.indoorhumidity',
-                'calibration_factor': '2.0'
+                'calibration_factor': 2.0
             }
         }))
         moldind = self.hass.states.get('sensor.mold_indicator')
         assert moldind
-
-        # assert state
         assert moldind.state == '0'
 
     def test_calculation(self):
         """Test the mold indicator internal calculations."""
-        self.assertTrue(sensor.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
             'sensor': {
                 'platform': 'mold_indicator',
                 'indoor_temp_sensor': 'test.indoortemp',
                 'outdoor_temp_sensor': 'test.outdoortemp',
                 'indoor_humidity_sensor': 'test.indoorhumidity',
-                'calibration_factor': '2.0'
+                'calibration_factor': 2.0
             }
         }))
 
@@ -102,30 +100,27 @@ class TestSensorMoldIndicator(unittest.TestCase):
 
     def test_sensor_changed(self):
         """Test the sensor_changed function."""
-        self.assertTrue(sensor.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
             'sensor': {
                 'platform': 'mold_indicator',
                 'indoor_temp_sensor': 'test.indoortemp',
                 'outdoor_temp_sensor': 'test.outdoortemp',
                 'indoor_humidity_sensor': 'test.indoorhumidity',
-                'calibration_factor': '2.0'
+                'calibration_factor': 2.0
             }
         }))
 
-        # Change indoor temp
         self.hass.states.set('test.indoortemp', '30',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert self.hass.states.get('sensor.mold_indicator').state == '90'
 
-        # Change outdoor temp
         self.hass.states.set('test.outdoortemp', '25',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert self.hass.states.get('sensor.mold_indicator').state == '57'
 
-        # Change humidity
         self.hass.states.set('test.indoorhumidity', '20',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert self.hass.states.get('sensor.mold_indicator').state == '23'

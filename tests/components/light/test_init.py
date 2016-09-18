@@ -3,6 +3,7 @@
 import unittest
 import os
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.loader as loader
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
@@ -56,7 +57,7 @@ class TestLight(unittest.TestCase):
             xy_color='xy_color_val',
             profile='profile_val')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(turn_on_calls))
         call = turn_on_calls[-1]
@@ -79,7 +80,7 @@ class TestLight(unittest.TestCase):
         light.turn_off(
             self.hass, entity_id='entity_id_val', transition='transition_val')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(turn_off_calls))
         call = turn_off_calls[-1]
@@ -96,7 +97,7 @@ class TestLight(unittest.TestCase):
         light.toggle(
             self.hass, entity_id='entity_id_val', transition='transition_val')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(toggle_calls))
         call = toggle_calls[-1]
@@ -112,7 +113,8 @@ class TestLight(unittest.TestCase):
 
         platform.init()
         self.assertTrue(
-            light.setup(self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         dev1, dev2, dev3 = platform.DEVICES
 
@@ -125,7 +127,7 @@ class TestLight(unittest.TestCase):
         light.turn_off(self.hass, entity_id=dev1.entity_id)
         light.turn_on(self.hass, entity_id=dev2.entity_id)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertFalse(light.is_on(self.hass, dev1.entity_id))
         self.assertTrue(light.is_on(self.hass, dev2.entity_id))
@@ -133,7 +135,7 @@ class TestLight(unittest.TestCase):
         # turn on all lights
         light.turn_on(self.hass)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(light.is_on(self.hass, dev1.entity_id))
         self.assertTrue(light.is_on(self.hass, dev2.entity_id))
@@ -142,7 +144,7 @@ class TestLight(unittest.TestCase):
         # turn off all lights
         light.turn_off(self.hass)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertFalse(light.is_on(self.hass, dev1.entity_id))
         self.assertFalse(light.is_on(self.hass, dev2.entity_id))
@@ -151,7 +153,7 @@ class TestLight(unittest.TestCase):
         # toggle all lights
         light.toggle(self.hass)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(light.is_on(self.hass, dev1.entity_id))
         self.assertTrue(light.is_on(self.hass, dev2.entity_id))
@@ -160,7 +162,7 @@ class TestLight(unittest.TestCase):
         # toggle all lights
         light.toggle(self.hass)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertFalse(light.is_on(self.hass, dev1.entity_id))
         self.assertFalse(light.is_on(self.hass, dev2.entity_id))
@@ -173,7 +175,7 @@ class TestLight(unittest.TestCase):
             self.hass, dev2.entity_id, rgb_color=(255, 255, 255))
         light.turn_on(self.hass, dev3.entity_id, xy_color=(.4, .6))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         method, data = dev1.last_call('turn_on')
         self.assertEqual(
@@ -197,7 +199,7 @@ class TestLight(unittest.TestCase):
             self.hass, dev2.entity_id,
             profile=prof_name, brightness=100, xy_color=(.4, .6))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         method, data = dev1.last_call('turn_on')
         self.assertEqual(
@@ -217,7 +219,7 @@ class TestLight(unittest.TestCase):
         light.turn_on(self.hass, dev2.entity_id, xy_color=["bla-di-bla", 5])
         light.turn_on(self.hass, dev3.entity_id, rgb_color=[255, None, 2])
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         method, data = dev1.last_call('turn_on')
         self.assertEqual({}, data)
@@ -233,7 +235,7 @@ class TestLight(unittest.TestCase):
             self.hass, dev1.entity_id,
             profile=prof_name, brightness='bright', rgb_color='yellowish')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         method, data = dev1.last_call('turn_on')
         self.assertEqual({}, data)
@@ -250,8 +252,8 @@ class TestLight(unittest.TestCase):
             user_file.write('id,x,y,brightness\n')
             user_file.write('I,WILL,NOT,WORK\n')
 
-        self.assertFalse(light.setup(
-            self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
+        self.assertFalse(setup_component(
+            self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
         ))
 
     def test_light_profiles(self):
@@ -265,15 +267,15 @@ class TestLight(unittest.TestCase):
             user_file.write('id,x,y,brightness\n')
             user_file.write('test,.4,.6,100\n')
 
-        self.assertTrue(light.setup(
-            self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
+        self.assertTrue(setup_component(
+            self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
         ))
 
         dev1, dev2, dev3 = platform.DEVICES
 
         light.turn_on(self.hass, dev1.entity_id, profile='test')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         method, data = dev1.last_call('turn_on')
 

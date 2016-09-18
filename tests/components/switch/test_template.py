@@ -50,13 +50,13 @@ class TestTemplateSwitch:
         })
 
         state = self.hass.states.set('switch.test_state', STATE_ON)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test_template_switch')
         assert state.state == STATE_ON
 
         state = self.hass.states.set('switch.test_state', STATE_OFF)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test_template_switch')
         assert state.state == STATE_OFF
@@ -268,13 +268,13 @@ class TestTemplateSwitch:
             }
         })
         self.hass.states.set('switch.test_state', STATE_OFF)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test_template_switch')
         assert state.state == STATE_OFF
 
         core.switch.turn_on(self.hass, 'switch.test_template_switch')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(self.calls) == 1
 
@@ -300,12 +300,12 @@ class TestTemplateSwitch:
             }
         })
         self.hass.states.set('switch.test_state', STATE_ON)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test_template_switch')
         assert state.state == STATE_ON
 
         core.switch.turn_off(self.hass, 'switch.test_template_switch')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(self.calls) == 1

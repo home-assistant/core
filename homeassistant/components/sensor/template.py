@@ -5,26 +5,26 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.template/
 """
 import logging
+
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
-    ATTR_ENTITY_ID, MATCH_ALL)
+    ATTR_ENTITY_ID, MATCH_ALL, CONF_SENSORS)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers import template
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.event import track_state_change
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-CONF_SENSORS = 'sensors'
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
+    vol.Optional(ATTR_ENTITY_ID, default=MATCH_ALL): cv.entity_ids
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -38,11 +38,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
+        state_template = device_config[CONF_VALUE_TEMPLATE]
+        entity_ids = device_config[ATTR_ENTITY_ID]
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
-        state_template = device_config.get(CONF_VALUE_TEMPLATE)
-
-        entity_ids = device_config.get(ATTR_ENTITY_ID, MATCH_ALL)
 
         sensors.append(
             SensorTemplate(
@@ -81,8 +80,7 @@ class SensorTemplate(Entity):
             """Called when the target device changes state."""
             self.update_ha_state(True)
 
-        track_state_change(hass, entity_ids,
-                           template_sensor_state_listener)
+        track_state_change(hass, entity_ids, template_sensor_state_listener)
 
     @property
     def name(self):

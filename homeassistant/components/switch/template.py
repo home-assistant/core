@@ -5,34 +5,33 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.template/
 """
 import logging
+
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.switch import (
     ENTITY_ID_FORMAT, SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
-    ATTR_ENTITY_ID, MATCH_ALL)
+    ATTR_ENTITY_ID, MATCH_ALL, CONF_SWITCHES)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.script import Script
 from homeassistant.helpers import template
+from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_state_change
-
-CONF_SWITCHES = 'switches'
-
-ON_ACTION = 'turn_on'
-OFF_ACTION = 'turn_off'
+from homeassistant.helpers.script import Script
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, 'true', 'false']
+
+ON_ACTION = 'turn_on'
+OFF_ACTION = 'turn_off'
 
 SWITCH_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Required(ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(OFF_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
+    vol.Optional(ATTR_ENTITY_ID, default=MATCH_ALL): cv.entity_ids
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -50,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         state_template = device_config[CONF_VALUE_TEMPLATE]
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
-        entity_ids = device_config.get(ATTR_ENTITY_ID, MATCH_ALL)
+        entity_ids = device_config[ATTR_ENTITY_ID]
 
         switches.append(
             SwitchTemplate(
@@ -91,8 +90,7 @@ class SwitchTemplate(SwitchDevice):
             """Called when the target device changes state."""
             self.update_ha_state(True)
 
-        track_state_change(hass, entity_ids,
-                           template_switch_state_listener)
+        track_state_change(hass, entity_ids, template_switch_state_listener)
 
     @property
     def name(self):

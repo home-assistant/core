@@ -69,13 +69,13 @@ class TestInputSelect(unittest.TestCase):
         self.assertEqual('some option', state.state)
 
         input_select.select_option(self.hass, entity_id, 'another option')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
         self.assertEqual('another option', state.state)
 
         input_select.select_option(self.hass, entity_id, 'non existing option')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
         self.assertEqual('another option', state.state)

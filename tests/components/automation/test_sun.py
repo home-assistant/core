@@ -54,8 +54,20 @@ class TestAutomationSun(unittest.TestCase):
                 }
             })
 
+        automation.turn_off(self.hass)
+        self.hass.block_till_done()
+
         fire_time_changed(self.hass, trigger_time)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+        with patch('homeassistant.util.dt.utcnow',
+                   return_value=now):
+            automation.turn_on(self.hass)
+            self.hass.block_till_done()
+
+        fire_time_changed(self.hass, trigger_time)
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_sunrise_trigger(self):
@@ -82,7 +94,7 @@ class TestAutomationSun(unittest.TestCase):
             })
 
         fire_time_changed(self.hass, trigger_time)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_sunset_trigger_with_offset(self):
@@ -115,7 +127,7 @@ class TestAutomationSun(unittest.TestCase):
             })
 
         fire_time_changed(self.hass, trigger_time)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.assertEqual('sun - sunset - 0:30:00', self.calls[0].data['some'])
 
@@ -144,7 +156,7 @@ class TestAutomationSun(unittest.TestCase):
             })
 
         fire_time_changed(self.hass, trigger_time)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_action_before(self):
@@ -173,14 +185,14 @@ class TestAutomationSun(unittest.TestCase):
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 10, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(1, len(self.calls))
 
     def test_if_action_after(self):
@@ -209,14 +221,14 @@ class TestAutomationSun(unittest.TestCase):
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 15, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(1, len(self.calls))
 
     def test_if_action_before_with_offset(self):
@@ -246,14 +258,14 @@ class TestAutomationSun(unittest.TestCase):
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 15, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(1, len(self.calls))
 
     def test_if_action_after_with_offset(self):
@@ -283,14 +295,14 @@ class TestAutomationSun(unittest.TestCase):
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 15, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(1, len(self.calls))
 
     def test_if_action_before_and_after_during(self):
@@ -321,21 +333,21 @@ class TestAutomationSun(unittest.TestCase):
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 15, 1, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 12, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(1, len(self.calls))
 
     def test_if_action_after_different_tz(self):
@@ -367,7 +379,7 @@ class TestAutomationSun(unittest.TestCase):
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         # After
@@ -375,5 +387,5 @@ class TestAutomationSun(unittest.TestCase):
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
             self.assertEqual(1, len(self.calls))

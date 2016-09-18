@@ -1,10 +1,12 @@
 """Helpers for listening to events."""
+import asyncio
 import functools as ft
 from datetime import timedelta
 
 from ..const import (
     ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 from ..util import dt as dt_util
+from ..util.async import run_callback_threadsafe
 
 
 def track_state_change(hass, entity_ids, action, from_state=None,
@@ -14,8 +16,7 @@ def track_state_change(hass, entity_ids, action, from_state=None,
     entity_ids, from_state and to_state can be string or list.
     Use list to match multiple.
 
-    Returns the listener that listens on the bus for EVENT_STATE_CHANGED.
-    Pass the return value into hass.bus.remove_listener to remove it.
+    Returns a function that can be called to remove the listener.
     """
     from_state = _process_state_match(from_state)
     to_state = _process_state_match(to_state)
@@ -29,6 +30,7 @@ def track_state_change(hass, entity_ids, action, from_state=None,
         entity_ids = tuple(entity_id.lower() for entity_id in entity_ids)
 
     @ft.wraps(action)
+    @asyncio.coroutine
     def state_change_listener(event):
         """The listener that listens for specific state changes."""
         if entity_ids != MATCH_ALL and \
@@ -46,13 +48,11 @@ def track_state_change(hass, entity_ids, action, from_state=None,
             new_state = None
 
         if _matcher(old_state, from_state) and _matcher(new_state, to_state):
-            action(event.data.get('entity_id'),
-                   event.data.get('old_state'),
-                   event.data.get('new_state'))
+            hass.async_add_job(action, event.data.get('entity_id'),
+                               event.data.get('old_state'),
+                               event.data.get('new_state'))
 
-    hass.bus.listen(EVENT_STATE_CHANGED, state_change_listener)
-
-    return state_change_listener
+    return hass.bus.listen(EVENT_STATE_CHANGED, state_change_listener)
 
 
 def track_point_in_time(hass, action, point_in_time):
@@ -60,9 +60,10 @@ def track_point_in_time(hass, action, point_in_time):
     utc_point_in_time = dt_util.as_utc(point_in_time)
 
     @ft.wraps(action)
+    @asyncio.coroutine
     def utc_converter(utc_now):
         """Convert passed in UTC now to local now."""
-        action(dt_util.as_local(utc_now))
+        hass.async_add_job(action, dt_util.as_local(utc_now))
 
     return track_point_in_utc_time(hass, utc_converter, utc_point_in_time)
 
@@ -73,27 +74,34 @@ def track_point_in_utc_time(hass, action, point_in_time):
     point_in_time = dt_util.as_utc(point_in_time)
 
     @ft.wraps(action)
+    @asyncio.coroutine
     def point_in_time_listener(event):
         """Listen for matching time_changed events."""
         now = event.data[ATTR_NOW]
 
-        if now >= point_in_time and \
-           not hasattr(point_in_time_listener, 'run'):
+        if now < point_in_time or hasattr(point_in_time_listener, 'run'):
+            return
 
-            # Set variable so that we will never run twice.
-            # Because the event bus might have to wait till a thread comes
-            # available to execute this listener it might occur that the
-            # listener gets lined up twice to be executed. This will make
-            # sure the second time it does nothing.
-            point_in_time_listener.run = True
+        # Set variable so that we will never run twice.
+        # Because the event bus might have to wait till a thread comes
+        # available to execute this listener it might occur that the
+        # listener gets lined up twice to be executed. This will make
+        # sure the second time it does nothing.
+        point_in_time_listener.run = True
+        async_remove()
 
-            hass.bus.remove_listener(EVENT_TIME_CHANGED,
-                                     point_in_time_listener)
+        hass.async_add_job(action, now)
 
-            action(now)
+    future = run_callback_threadsafe(
+        hass.loop, hass.bus.async_listen, EVENT_TIME_CHANGED,
+        point_in_time_listener)
+    async_remove = future.result()
 
-    hass.bus.listen(EVENT_TIME_CHANGED, point_in_time_listener)
-    return point_in_time_listener
+    def remove():
+        """Remove listener."""
+        run_callback_threadsafe(hass.loop, async_remove).result()
+
+    return remove
 
 
 def track_sunrise(hass, action, offset=None):
@@ -112,10 +120,19 @@ def track_sunrise(hass, action, offset=None):
 
     def sunrise_automation_listener(now):
         """Called when it's time for action."""
-        track_point_in_utc_time(hass, sunrise_automation_listener, next_rise())
+        nonlocal remove
+        remove = track_point_in_utc_time(hass, sunrise_automation_listener,
+                                         next_rise())
         action()
 
-    track_point_in_utc_time(hass, sunrise_automation_listener, next_rise())
+    remove = track_point_in_utc_time(hass, sunrise_automation_listener,
+                                     next_rise())
+
+    def remove_listener():
+        """Remove sunrise listener."""
+        remove()
+
+    return remove_listener
 
 
 def track_sunset(hass, action, offset=None):
@@ -134,10 +151,19 @@ def track_sunset(hass, action, offset=None):
 
     def sunset_automation_listener(now):
         """Called when it's time for action."""
-        track_point_in_utc_time(hass, sunset_automation_listener, next_set())
+        nonlocal remove
+        remove = track_point_in_utc_time(hass, sunset_automation_listener,
+                                         next_set())
         action()
 
-    track_point_in_utc_time(hass, sunset_automation_listener, next_set())
+    remove = track_point_in_utc_time(hass, sunset_automation_listener,
+                                     next_set())
+
+    def remove_listener():
+        """Remove sunset listener."""
+        remove()
+
+    return remove_listener
 
 
 # pylint: disable=too-many-arguments
@@ -152,14 +178,14 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
             """Fire every time event that comes in."""
             action(event.data[ATTR_NOW])
 
-        hass.bus.listen(EVENT_TIME_CHANGED, time_change_listener)
-        return time_change_listener
+        return hass.bus.listen(EVENT_TIME_CHANGED, time_change_listener)
 
     pmp = _process_time_match
     year, month, day = pmp(year), pmp(month), pmp(day)
     hour, minute, second = pmp(hour), pmp(minute), pmp(second)
 
     @ft.wraps(action)
+    @asyncio.coroutine
     def pattern_time_change_listener(event):
         """Listen for matching time_changed events."""
         now = event.data[ATTR_NOW]
@@ -176,10 +202,9 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
            mat(now.minute, minute) and \
            mat(now.second, second):
 
-            action(now)
+            hass.async_add_job(action, now)
 
-    hass.bus.listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
-    return pattern_time_change_listener
+    return hass.bus.listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
 
 
 # pylint: disable=too-many-arguments

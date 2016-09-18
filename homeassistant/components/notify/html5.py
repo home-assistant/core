@@ -18,8 +18,8 @@ from homeassistant.const import (HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR,
                                  HTTP_UNAUTHORIZED, URL_ROOT)
 from homeassistant.util import ensure_unique_string
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, ATTR_DATA, BaseNotificationService,
-    PLATFORM_SCHEMA)
+    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA,
+    BaseNotificationService, PLATFORM_SCHEMA)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.helpers import config_validation as cv
@@ -144,7 +144,7 @@ def _save_config(filename, config):
     """Save configuration."""
     try:
         with open(filename, 'w') as fdesc:
-            fdesc.write(json.dumps(config, indent=4, sort_keys=True))
+            fdesc.write(json.dumps(config))
     except (IOError, TypeError) as error:
         _LOGGER.error('Saving config file failed: %s', error)
         return False
@@ -332,7 +332,7 @@ class HTML5NotificationService(BaseNotificationService):
             'icon': '/static/icons/favicon-192x192.png',
             ATTR_TAG: tag,
             'timestamp': (timestamp*1000),  # Javascript ms since epoch
-            ATTR_TITLE: kwargs.get(ATTR_TITLE)
+            ATTR_TITLE: kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         }
 
         data = kwargs.get(ATTR_DATA)

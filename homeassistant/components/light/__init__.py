@@ -98,6 +98,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
     ATTR_TRANSITION: VALID_TRANSITION,
+    ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
 })
 
 LIGHT_TOGGLE_SCHEMA = vol.Schema({

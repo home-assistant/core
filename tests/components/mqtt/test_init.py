@@ -36,15 +36,15 @@ class TestMQTT(unittest.TestCase):
     def test_client_starts_on_home_assistant_start(self):
         """"Test if client start on HA launch."""
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(mqtt.MQTT_CLIENT.start.called)
 
     def test_client_stops_on_home_assistant_start(self):
         """Test if client stops on HA launch."""
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(mqtt.MQTT_CLIENT.stop.called)
 
     def test_setup_fails_if_no_connect_broker(self):
@@ -75,7 +75,7 @@ class TestMQTT(unittest.TestCase):
 
         mqtt.publish(self.hass, 'test-topic', 'test-payload')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
         self.assertEqual(
@@ -91,7 +91,7 @@ class TestMQTT(unittest.TestCase):
             ATTR_DOMAIN: mqtt.DOMAIN,
             ATTR_SERVICE: mqtt.SERVICE_PUBLISH
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(not mqtt.MQTT_CLIENT.publish.called)
 
     def test_service_call_with_template_payload_renders_template(self):
@@ -100,7 +100,7 @@ class TestMQTT(unittest.TestCase):
         If 'payload_template' is provided and 'payload' is not, then render it.
         """
         mqtt.publish_template(self.hass, "test/topic", "{{ 1+1 }}")
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
         self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][1], "2")
 
@@ -149,14 +149,21 @@ class TestMQTT(unittest.TestCase):
 
     def test_subscribe_topic(self):
         """Test the subscription of a topic."""
-        mqtt.subscribe(self.hass, 'test-topic', self.record_calls)
+        unsub = mqtt.subscribe(self.hass, 'test-topic', self.record_calls)
 
         fire_mqtt_message(self.hass, 'test-topic', 'test-payload')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.assertEqual('test-topic', self.calls[0][0])
         self.assertEqual('test-payload', self.calls[0][1])
+
+        unsub()
+
+        fire_mqtt_message(self.hass, 'test-topic', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
 
     def test_subscribe_topic_not_match(self):
         """Test if subscribed topic is not a match."""
@@ -164,7 +171,7 @@ class TestMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'another-test-topic', 'test-payload')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_subscribe_topic_level_wildcard(self):
@@ -173,7 +180,7 @@ class TestMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'test-topic/bier/on', 'test-payload')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.assertEqual('test-topic/bier/on', self.calls[0][0])
         self.assertEqual('test-payload', self.calls[0][1])
@@ -184,7 +191,7 @@ class TestMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'test-topic/bier', 'test-payload')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_subscribe_topic_subtree_wildcard_subtree_topic(self):
@@ -193,7 +200,7 @@ class TestMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'test-topic/bier/on', 'test-payload')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.assertEqual('test-topic/bier/on', self.calls[0][0])
         self.assertEqual('test-payload', self.calls[0][1])
@@ -204,7 +211,7 @@ class TestMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'test-topic', 'test-payload')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.assertEqual('test-topic', self.calls[0][0])
         self.assertEqual('test-payload', self.calls[0][1])
@@ -215,7 +222,7 @@ class TestMQTT(unittest.TestCase):
 
         fire_mqtt_message(self.hass, 'another-test-topic', 'test-payload')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
 
@@ -253,7 +260,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         message = MQTTMessage('test_topic', 1, 'Hello World!'.encode('utf-8'))
 
         mqtt.MQTT_CLIENT._mqtt_on_message(None, {'hass': self.hass}, message)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(calls))
         last_event = calls[0]

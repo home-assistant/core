@@ -1,4 +1,4 @@
-"""The tests for UVC camera module."""
+"""The tests for generic camera component."""
 import unittest
 from unittest import mock
 

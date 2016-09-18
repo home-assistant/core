@@ -3,7 +3,8 @@ import unittest
 
 from homeassistant.components.sensor import wunderground
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant import core as ha
+
+from tests.common import get_test_home_assistant
 
 VALID_CONFIG_PWS = {
     'platform': 'wunderground',
@@ -29,9 +30,9 @@ ICON_URL = 'http://icons.wxug.com/i/c/k/clear.gif'
 
 def mocked_requests_get(*args, **kwargs):
     """Mock requests.get invocations."""
-
     class MockResponse:
         """Class to represent a mocked response."""
+
         def __init__(self, json_data, status_code):
             """Initialize the mock response class."""
             self.json_data = json_data
@@ -83,13 +84,14 @@ class TestWundergroundSetup(unittest.TestCase):
     DEVICES = []
 
     def add_devices(self, devices):
+        """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
 
     def setUp(self):
         """Initialize values for this testcase class."""
         self.DEVICES = []
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.key = 'foo'
         self.config = VALID_CONFIG_PWS
         self.lat = 37.8267

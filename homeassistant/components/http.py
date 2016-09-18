@@ -24,21 +24,22 @@ from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "http"
-REQUIREMENTS = ("cherrypy==7.1.0", "static3==0.7.0", "Werkzeug==0.11.10")
+DOMAIN = 'http'
+REQUIREMENTS = ('cherrypy==8.1.0', 'static3==0.7.0', 'Werkzeug==0.11.11')
 
-CONF_API_PASSWORD = "api_password"
-CONF_SERVER_HOST = "server_host"
-CONF_SERVER_PORT = "server_port"
-CONF_DEVELOPMENT = "development"
+CONF_API_PASSWORD = 'api_password'
+CONF_APPROVED_IPS = 'approved_ips'
+CONF_SERVER_HOST = 'server_host'
+CONF_SERVER_PORT = 'server_port'
+CONF_DEVELOPMENT = 'development'
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
 CONF_CORS_ORIGINS = 'cors_allowed_origins'
 
 DATA_API_PASSWORD = 'api_password'
 
-# TLS configuation follows the best-practice guidelines
-# specified here: https://wiki.mozilla.org/Security/Server_Side_TLS
+# TLS configuation follows the best-practice guidelines specified here:
+# https://wiki.mozilla.org/Security/Server_Side_TLS
 # Intermediate guidelines are followed.
 SSL_VERSION = ssl.PROTOCOL_SSLv23
 SSL_OPTS = ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3
@@ -71,7 +72,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DEVELOPMENT): cv.string,
         vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
         vol.Optional(CONF_SSL_KEY): cv.isfile,
-        vol.Optional(CONF_CORS_ORIGINS): cv.ensure_list
+        vol.Optional(CONF_CORS_ORIGINS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_APPROVED_IPS): vol.All(cv.ensure_list, [cv.string])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -108,6 +110,7 @@ def setup(hass, config):
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf.get(CONF_CORS_ORIGINS, [])
+    approved_ips = conf.get(CONF_APPROVED_IPS, [])
 
     server = HomeAssistantWSGI(
         hass,
@@ -117,7 +120,8 @@ def setup(hass, config):
         api_password=api_password,
         ssl_certificate=ssl_certificate,
         ssl_key=ssl_key,
-        cors_origins=cors_origins
+        cors_origins=cors_origins,
+        approved_ips=approved_ips
     )
 
     def start_wsgi_server(event):
@@ -249,7 +253,8 @@ class HomeAssistantWSGI(object):
     # pylint: disable=too-many-arguments
 
     def __init__(self, hass, development, api_password, ssl_certificate,
-                 ssl_key, server_host, server_port, cors_origins):
+                 ssl_key, server_host, server_port, cors_origins,
+                 approved_ips):
         """Initilalize the WSGI Home Assistant server."""
         from werkzeug.wrappers import Response
 
@@ -268,6 +273,7 @@ class HomeAssistantWSGI(object):
         self.server_host = server_host
         self.server_port = server_port
         self.cors_origins = cors_origins
+        self.approved_ips = approved_ips
         self.event_forwarder = None
         self.server = None
 
@@ -468,6 +474,9 @@ class HomeAssistantView(object):
         if self.hass.wsgi.api_password is None:
             authenticated = True
 
+        elif request.remote_addr in self.hass.wsgi.approved_ips:
+            authenticated = True
+
         elif hmac.compare_digest(request.headers.get(HTTP_HEADER_HA_AUTH, ''),
                                  self.hass.wsgi.api_password):
             # A valid auth header has been set
@@ -478,7 +487,7 @@ class HomeAssistantView(object):
             authenticated = True
 
         if self.requires_auth and not authenticated:
-            _LOGGER.warning('Login attempt or request with an invalid'
+            _LOGGER.warning('Login attempt or request with an invalid '
                             'password from %s', request.remote_addr)
             raise Unauthorized()
 

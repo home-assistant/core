@@ -7,6 +7,7 @@ to query this database.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/recorder/
 """
+import asyncio
 import logging
 import queue
 import threading
@@ -20,13 +21,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
                                  EVENT_TIME_CHANGED, MATCH_ALL)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, QueryType
 import homeassistant.util.dt as dt_util
 
 DOMAIN = "recorder"
 
-REQUIREMENTS = ['sqlalchemy==1.0.14']
+REQUIREMENTS = ['sqlalchemy==1.0.15']
 
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
@@ -40,10 +42,9 @@ QUERY_RETRY_WAIT = 0.1
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_PURGE_DAYS): vol.All(vol.Coerce(int),
-                                               vol.Range(min=1)),
-        # pylint: disable=no-value-for-parameter
-        vol.Optional(CONF_DB_URL): vol.Url(),
+        vol.Optional(CONF_PURGE_DAYS):
+            vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional(CONF_DB_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -97,8 +98,7 @@ def run_information(point_in_time: Optional[datetime]=None):
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Setup the recorder."""
-    # pylint: disable=global-statement
-    global _INSTANCE
+    global _INSTANCE  # pylint: disable=global-statement
 
     if _INSTANCE is not None:
         _LOGGER.error('Only a single instance allowed.')
@@ -163,7 +163,6 @@ class Recorder(threading.Thread):
         self.hass = hass
         self.purge_days = purge_days
         self.queue = queue.Queue()  # type: Any
-        self.quit_object = object()
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
         self.db_ready = threading.Event()
@@ -204,12 +203,9 @@ class Recorder(threading.Thread):
         while True:
             event = self.queue.get()
 
-            if event == self.quit_object:
+            if event is None:
                 self._close_run()
                 self._close_connection()
-                # pylint: disable=global-statement
-                global _INSTANCE
-                _INSTANCE = None
                 self.queue.task_done()
                 return
 
@@ -230,14 +226,18 @@ class Recorder(threading.Thread):
 
             self.queue.task_done()
 
+    @asyncio.coroutine
     def event_listener(self, event):
         """Listen for new events and put them in the process queue."""
         self.queue.put(event)
 
     def shutdown(self, event):
         """Tell the recorder to shut down."""
-        self.queue.put(self.quit_object)
-        self.queue.join()
+        global _INSTANCE  # pylint: disable=global-statement
+        _INSTANCE = None
+
+        self.queue.put(None)
+        self.join()
 
     def block_till_done(self):
         """Block till all events processed."""
@@ -249,8 +249,7 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        # pylint: disable=global-statement
-        global Session
+        global Session  # pylint: disable=global-statement
 
         import homeassistant.components.recorder.models as models
         from sqlalchemy import create_engine
@@ -273,8 +272,7 @@ class Recorder(threading.Thread):
 
     def _close_connection(self):
         """Close the connection."""
-        # pylint: disable=global-statement
-        global Session
+        global Session  # pylint: disable=global-statement
         self.engine.dispose()
         self.engine = None
         Session = None

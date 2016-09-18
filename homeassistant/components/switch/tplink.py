@@ -4,25 +4,35 @@ Support for TPLink HS100/HS110 smart switch.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.tplink/
 """
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME)
+import logging
 
-# constants
-DEVICE_DEFAULT_NAME = 'HS100'
+import voluptuous as vol
+
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_HOST, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
+
 REQUIREMENTS = ['https://github.com/gadgetreactor/pyHS100/archive/'
                 'master.zip#pyHS100==0.1.2']
 
+_LOGGER = logging.getLogger(__name__)
+
+DEFAULT_NAME = 'TPLink Switch HS100'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the TPLink switch platform."""
     from pyHS100.pyHS100 import SmartPlug
     host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
+    name = config.get(CONF_NAME)
 
-    add_devices_callback([SmartPlugSwitch(SmartPlug(host),
-                                          name)])
+    add_devices([SmartPlugSwitch(SmartPlug(host), name)])
 
 
 class SmartPlugSwitch(SwitchDevice):

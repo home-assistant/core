@@ -1,5 +1,5 @@
 """
-Component that sends data to aGraphite installation.
+Component that sends data to a Graphite installation.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/graphite/
@@ -10,26 +10,48 @@ import socket
 import threading
 import time
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED)
-from homeassistant.helpers import state
+import voluptuous as vol
 
-DOMAIN = "graphite"
+from homeassistant.const import (
+    CONF_HOST, CONF_PORT, CONF_PREFIX, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED)
+from homeassistant.helpers import state
+import homeassistant.helpers.config_validation as cv
+
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 2003
+DEFAULT_PREFIX = 'ha'
+DOMAIN = 'graphite'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Setup the Graphite feeder."""
-    graphite_config = config.get('graphite', {})
-    host = graphite_config.get('host', 'localhost')
-    prefix = graphite_config.get('prefix', 'ha')
+    conf = config[DOMAIN]
+    host = conf.get(CONF_HOST)
+    prefix = conf.get(CONF_PREFIX)
+    port = conf.get(CONF_PORT)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        port = int(graphite_config.get('port', 2003))
-    except ValueError:
-        _LOGGER.error('Invalid port specified')
+        sock.connect((host, port))
+        sock.shutdown(2)
+        _LOGGER.debug('Connection to Graphite possible')
+    except socket.error:
+        _LOGGER.error('Not able to connect to Graphite')
         return False
 
     GraphiteFeeder(hass, host, port, prefix)
+
     return True
 
 
