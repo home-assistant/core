@@ -13,9 +13,6 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends nmap net-tools cython3 libudev-dev sudo libglib2.0-dev bluetooth libbluetooth-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install pybluez for bluetooth tracker
-RUN pip install pybluez
-
 COPY script/build_python_openzwave script/build_python_openzwave
 RUN script/build_python_openzwave && \
   mkdir -p /usr/local/share/python-openzwave && \
