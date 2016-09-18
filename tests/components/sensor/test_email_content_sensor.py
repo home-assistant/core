@@ -174,6 +174,7 @@ class EmailContentSensor(unittest.TestCase):
         sensor.update()
 
         self.hass.pool.block_till_done()
+        self.hass.pool.block_till_done()
 
         self.assertEqual("Test Message", states[0].state)
         self.assertEqual("Test Message 2", states[1].state)
