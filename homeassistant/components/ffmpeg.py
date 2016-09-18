@@ -11,7 +11,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'ffmpeg'
-REQUIREMENTS = ["ha-ffmpeg==0.12"]
+REQUIREMENTS = ["ha-ffmpeg==0.13"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,15 +32,17 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-FFMPEG_CONFIG = {}
+FFMPEG_CONFIG = {
+    CONF_FFMPEG_BIN: DEFAULT_BINARY,
+    CONF_RUN_TEST: DEFAULT_RUN_TEST,
+}
 FFMPEG_TEST_CACHE = {}
 
 
 def setup(hass, config):
     """Setup the FFmpeg component."""
-    global FFMPEG_CONFIG
-
-    FFMPEG_CONFIG = config.get(DOMAIN)
+    if DOMAIN in config:
+        FFMPEG_CONFIG.update(config.get(DOMAIN))
     return True
 
 
