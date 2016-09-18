@@ -6,6 +6,7 @@ import sys
 from collections import OrderedDict
 from typing import Union, List, Dict
 
+import re
 import yaml
 try:
     import keyring
@@ -221,3 +222,16 @@ yaml.SafeLoader.add_constructor('!include_dir_merge_list',
 yaml.SafeLoader.add_constructor('!include_dir_named', _include_dir_named_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_merge_named',
                                 _include_dir_merge_named_yaml)
+
+
+for (idx, val) in enumerate(yaml.Loader.yaml_implicit_resolvers['0']):
+    (tag, regexp) = val
+    if tag == 'tag:yaml.org,2002:int':
+        _regexp_int = regexp
+        yaml.Loader.yaml_implicit_resolvers['0'][idx] =\
+            (tag, re.compile(r'^(?:0)$', re.X))
+        break
+yaml.add_implicit_resolver(
+    'tag:yaml.org,2002:string',
+    _regexp_int,
+    [0])

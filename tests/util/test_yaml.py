@@ -147,6 +147,26 @@ class TestYaml(unittest.TestCase):
                     "key3": "three"
                 }
 
+    def test_numeric_values(self):
+        """Test simple dict."""
+        conf = "key1: 0710000041030160 \nkey2: 10710000041030160"
+        conf += "\nkey3: 0.0710000041030160"
+        conf += "\nkey4: 04:05"
+        conf += "\nkey5: 0"
+        with io.StringIO(conf) as file:
+            doc = yaml.yaml.safe_load(file)
+        assert type(doc["key1"]) == str
+        assert type(doc["key2"]) == int
+        assert type(doc["key3"]) == float
+        assert type(doc["key4"]) == str
+        assert type(doc["key5"]) == int
+
+        assert doc["key1"] == "0710000041030160"
+        assert doc["key2"] == 10710000041030160
+        assert doc["key3"] == 0.0710000041030160
+        assert doc["key4"] == "04:05"
+        assert doc["key5"] == 0
+
 FILES = {}
 
 
