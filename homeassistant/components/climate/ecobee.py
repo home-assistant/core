@@ -211,10 +211,12 @@ class Thermostat(ClimateDevice):
                                               "away", "indefinite")
         else:
             self.data.ecobee.set_climate_hold(self.thermostat_index, "away")
+        self.data.update(no_throttle=True)
 
     def turn_away_mode_off(self):
         """Turn away off."""
         self.data.ecobee.resume_program(self.thermostat_index)
+        self.data.update(no_throttle=True)
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -241,15 +243,18 @@ class Thermostat(ClimateDevice):
                           "high=%s, is=%s", low_temp, isinstance(
                               low_temp, (int, float)), high_temp,
                           isinstance(high_temp, (int, float)))
+        self.data.update(no_throttle=True)
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         self.data.ecobee.set_hvac_mode(self.thermostat_index, operation_mode)
+        self.data.update(no_throttle=True)
 
     def set_fan_min_on_time(self, fan_min_on_time):
         """Set the minimum fan on time."""
         self.data.ecobee.set_fan_min_on_time(self.thermostat_index,
                                              fan_min_on_time)
+        self.data.update(no_throttle=True)
 
     # Home and Sleep mode aren't used in UI yet:
 
