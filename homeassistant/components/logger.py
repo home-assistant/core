@@ -7,6 +7,10 @@ https://home-assistant.io/components/logger/
 import logging
 from collections import OrderedDict
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+
 DOMAIN = 'logger'
 
 LOGSEVERITY = {
@@ -22,6 +26,17 @@ LOGSEVERITY = {
 
 LOGGER_DEFAULT = 'default'
 LOGGER_LOGS = 'logs'
+
+_LOGS_SCHEMA = vol.Schema({
+    cv.string: vol.In(vol.Lower(list(LOGSEVERITY))),
+})
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(LOGGER_DEFAULT): vol.In(vol.Lower(list(LOGSEVERITY))),
+        vol.Required(LOGGER_LOGS): _LOGS_SCHEMA,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 class HomeAssistantLogFilter(logging.Filter):
