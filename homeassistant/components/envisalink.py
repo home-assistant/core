@@ -108,7 +108,8 @@ def setup(hass, base_config):
                                           _user,
                                           _pass,
                                           _zone_dump,
-                                          _keep_alive)
+                                          _keep_alive,
+                                          hass.loop)
 
     def login_fail_callback(data):
         """Callback for when the evl rejects our login."""
