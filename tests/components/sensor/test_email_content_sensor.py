@@ -2,6 +2,7 @@
 import unittest
 import email
 import datetime
+import time
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -174,8 +175,9 @@ class EmailContentSensor(unittest.TestCase):
         sensor.update()
 
         retries = 0
-        while len(states) < 2 and retries < 50:
+        while len(states) < 2 and retries < 5:
             self.hass.pool.block_till_done()
+            time.sleep(1)
             retries += 1
 
         self.assertEqual("Test Message", states[0].state)
