@@ -63,6 +63,13 @@ class TestInputBoolean(unittest.TestCase):
         self.assertFalse(
             input_boolean.is_on(self.hass, entity_id))
 
+        input_boolean.toggle(self.hass, entity_id)
+
+        self.hass.block_till_done()
+
+        self.assertTrue(
+            input_boolean.is_on(self.hass, entity_id))
+
     def test_config_options(self):
         """Test configuration options."""
         count_start = len(self.hass.states.entity_ids())
