@@ -193,8 +193,8 @@ class HomeAssistant(object):
 
         This method is a coroutine.
         """
-        create_timer(self)
-        create_worker_pool_monitor(self)
+        async_create_timer(self)
+        async_monitor_worker_pool(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
         yield from self.loop.run_in_executor(None, self.pool.block_till_done)
         self.state = CoreState.running
@@ -1079,13 +1079,8 @@ class Config(object):
         }
 
 
-def create_timer(hass, interval=TIMER_INTERVAL):
+def async_create_timer(hass, interval=TIMER_INTERVAL):
     """Create a timer that will start on HOMEASSISTANT_START."""
-    # We want to be able to fire every time a minute starts (seconds=0).
-    # We want this so other modules can use that to make sure they fire
-    # every minute.
-    assert 60 % interval == 0, "60 % TIMER_INTERVAL should be 0!"
-
     stop_event = asyncio.Event(loop=hass.loop)
 
     # Setting the Event inside the loop by marking it as a coroutine
@@ -1167,7 +1162,7 @@ def create_worker_pool(worker_count=None):
     return util.ThreadPool(job_handler, worker_count)
 
 
-def create_worker_pool_monitor(hass):
+def async_monitor_worker_pool(hass):
     """Create a monitor for the thread pool to check if pool is misbehaving."""
     busy_threshold = hass.pool.worker_count * 3
 
