@@ -13,7 +13,7 @@ class TestRFXTRX(unittest.TestCase):
 
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(0)
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -46,6 +46,8 @@ class TestRFXTRX(unittest.TestCase):
                 'device': '/dev/serial/by-id/usb' +
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
                 'dummy': True}}))
+
+        self.hass.config.components.remove('rfxtrx')
 
         self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
