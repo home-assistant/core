@@ -30,7 +30,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 STATE_ATTR_PRICE_SALES = 'Price/Sales (ttm)'
 STATE_ATTR_CHANGE = 'Change'
 STATE_ATTR_OPEN = 'Open'
-STATE_ATTR_PREV_CLOSE  = 'Prev. Close'
+STATE_ATTR_PREV_CLOSE = 'Prev. Close'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SYMBOL, default=DEFAULT_SYMBOL): cv.string,
@@ -110,7 +110,7 @@ class YahooFinanceData(object):
         self._name = name
         self._symbol = symbol
         self.state = None
-        self.stock =  Share(symbol)
+        self.stock = Share(symbol)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
