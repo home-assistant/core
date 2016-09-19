@@ -30,7 +30,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 DEPENDENCIES = ['group']
 
 CONF_ALIAS = 'alias'
-CONF_HIDDEN = 'hidden'
+CONF_HIDE_ENTITY = 'hide_entity'
 
 CONF_CONDITION = 'condition'
 CONF_ACTION = 'action'
@@ -42,6 +42,7 @@ CONDITION_TYPE_AND = 'and'
 CONDITION_TYPE_OR = 'or'
 
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
+DEFAULT_HIDE_ENTITY = False
 
 METHOD_TRIGGER = 'trigger'
 METHOD_IF_ACTION = 'if_action'
@@ -100,7 +101,7 @@ _CONDITION_SCHEMA = vol.Any(
 
 PLATFORM_SCHEMA = vol.Schema({
     CONF_ALIAS: cv.string,
-    CONF_HIDDEN: cv.boolean,
+    vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
     vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
     vol.Required(CONF_CONDITION_TYPE, default=DEFAULT_CONDITION_TYPE):
         vol.All(vol.Lower, vol.Any(CONDITION_TYPE_AND, CONDITION_TYPE_OR)),
@@ -290,7 +291,7 @@ def _process_config(hass, config, component):
             name = config_block.get(CONF_ALIAS) or "{} {}".format(config_key,
                                                                   list_no)
 
-            hidden = config_block.get(CONF_HIDDEN) or False
+            hidden = config_block[CONF_HIDE_ENTITY]
 
             action = _get_action(hass, config_block.get(CONF_ACTION, {}), name)
 
