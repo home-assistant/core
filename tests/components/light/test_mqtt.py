@@ -186,9 +186,9 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(100,
                          light_state.attributes['brightness'])
 
-        fire_mqtt_message(self.hass, 'test_lgith_rgb/color_temp/status', '300')
+        fire_mqtt_message(self.hass, 'test_light_rgb/color_temp/status', '300')
         self.hass.block_till_done()
-        light_state = self.hass.states.get('light-test')
+        light_state = self.hass.states.get('light.test')
         self.hass.block_till_done()
         self.assertEqual(300, light_state.attributes['color_temp'])
 
@@ -260,6 +260,7 @@ class TestLightMQTT(unittest.TestCase):
                 'state_topic': 'test_light_rgb/status',
                 'command_topic': 'test_light_rgb/set',
                 'brightness_state_topic': 'test_light_rgb/brightness/status',
+                'color_temp_state_topic': 'test_light_rgb/color_temp/status',
                 'rgb_state_topic': 'test_light_rgb/rgb/status',
                 'state_value_template': '{{ value_json.hello }}',
                 'brightness_value_template': '{{ value_json.hello }}',
@@ -280,7 +281,7 @@ class TestLightMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'test_light_rgb/brightness/status',
                           '{"hello": "50"}')
         fire_mqtt_message(self.hass, 'test_light_rgb/color_temp/status',
-                          '{"hello": "300}')
+                          '{"hello": "300"}')
         self.hass.block_till_done()
 
         state = self.hass.states.get('light.test')
@@ -377,15 +378,15 @@ class TestLightMQTT(unittest.TestCase):
         """Test the color temp only if a command topic is present."""
         self.hass.config.components = ['mqtt']
         assert _setup_component(self.hass, light.DOMAIN, {
-            light.DOMAIN:{
+            light.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'color_temp_command_topic': 'test_light_rgb/brightness/set',
                 'command_topic': 'test_light_rgb/set',
                 'state_topic': 'test_light_rgb/status'
               }
-          })
-        
+            })
+
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
         self.assertIsNone(state.attributes.get('color_temp'))

@@ -11,11 +11,11 @@ import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP, SUPPORT_BRIGHTNESS, 
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP, SUPPORT_BRIGHTNESS,
     SUPPORT_RGB_COLOR, SUPPORT_COLOR_TEMP, Light)
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
-    CONF_PAYLOAD_ON, CONF_STATE, CONF_BRIGHTNESS, CONF_RGB, 
+    CONF_PAYLOAD_ON, CONF_STATE, CONF_BRIGHTNESS, CONF_RGB,
     CONF_COLOR_TEMP)
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
@@ -129,7 +129,7 @@ class MqttLight(Light):
             topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None
             and SUPPORT_BRIGHTNESS)
         self._supported_features |= (
-            topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None 
+            topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None
             and SUPPORT_COLOR_TEMP)
 
         templates = {key: ((lambda value: value) if tpl is None else
@@ -210,7 +210,6 @@ class MqttLight(Light):
     @property
     def color_temp(self):
         return self._color_temp
-    
 
     @property
     def should_poll(self):
