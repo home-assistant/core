@@ -153,13 +153,15 @@ def setup(hass, config):
 
     if dummy_connection:
         RFXOBJECT =\
-            rfxtrxmod.Core(device, handle_receive, debug=debug,
-                           transport_protocol=rfxtrxmod.DummyTransport2)
+            rfxtrxmod.Connect(device, handle_receive, debug=debug,
+                              transport_protocol=rfxtrxmod.DummyTransport2)
     else:
-        RFXOBJECT = rfxtrxmod.Core(device, handle_receive, debug=debug)
+        RFXOBJECT = rfxtrxmod.Connect(device, handle_receive, debug=debug)
 
     def _shutdown_rfxtrx(event):
+        """Close connection with RFXtrx."""
         RFXOBJECT.close_connection()
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
 
     return True
