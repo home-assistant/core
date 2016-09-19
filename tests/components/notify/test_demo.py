@@ -131,6 +131,32 @@ data_template:
                     'US-EN-Morgan-Freeman-Roommate-Is-Arriving.wav'}}
         } == self.events[0].data
 
+    def test_calling_notify_from_script_loaded_from_yaml_with_only_data(self):
+        """Test if we can call a notify from a script."""
+        yaml_conf = """
+service: notify.notify
+data:
+  data:
+    photo:
+      file: /tmp/photo_cam.png
+"""
+
+        with tempfile.NamedTemporaryFile() as fp:
+            fp.write(yaml_conf.encode('utf-8'))
+            fp.flush()
+            conf = yaml.load_yaml(fp.name)
+
+        script.call_from_config(self.hass, conf)
+        self.hass.pool.block_till_done()
+        self.assertTrue(len(self.events) == 1)
+        assert {
+            'message': '',
+            'target': None,
+            'data': {
+                'photo': {
+                    'file': '/tmp/photo_cam.png'}}
+        } == self.events[0].data
+
     def test_targets_are_services(self):
         """Test that all targets are exposed as individual services."""
         self.assertIsNotNone(self.hass.services.has_service("notify", "demo"))

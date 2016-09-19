@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 NOTIFY_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_MESSAGE): cv.template,
+    vol.Optional(ATTR_MESSAGE): cv.template,
     vol.Optional(ATTR_TITLE): cv.string,
     vol.Optional(ATTR_TARGET): cv.string,
     vol.Optional(ATTR_DATA): dict,
@@ -92,7 +92,7 @@ def setup(hass, config):
         def notify_message(notify_service, call):
             """Handle sending notification message service calls."""
             kwargs = {}
-            message = call.data[ATTR_MESSAGE]
+            message = call.data.get(ATTR_MESSAGE)
             title = call.data.get(ATTR_TITLE)
 
             if title:
@@ -103,7 +103,11 @@ def setup(hass, config):
             else:
                 kwargs[ATTR_TARGET] = call.data.get(ATTR_TARGET)
 
-            kwargs[ATTR_MESSAGE] = template.render(hass, message)
+            if message:
+                kwargs[ATTR_MESSAGE] = template.render(hass, message)
+            else:
+                kwargs[ATTR_MESSAGE] = ""
+
             kwargs[ATTR_DATA] = call.data.get(ATTR_DATA)
 
             notify_service.send_message(**kwargs)
