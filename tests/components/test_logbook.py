@@ -17,7 +17,7 @@ from tests.common import mock_http_component, get_test_home_assistant
 class TestComponentLogbook(unittest.TestCase):
     """Test the History component."""
 
-    EMPTY_CONFIG = {ha.DOMAIN: {}, logbook.DOMAIN: {}}
+    EMPTY_CONFIG = logbook.CONFIG_SCHEMA({ha.DOMAIN: {}, logbook.DOMAIN: {}})
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -112,12 +112,16 @@ class TestComponentLogbook(unittest.TestCase):
                                                  {ATTR_HIDDEN: 'true'})
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
-        events = logbook._exclude_events((eventA, eventB), self.EMPTY_CONFIG)
+        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
+                                          eventA, eventB), self.EMPTY_CONFIG)
         entries = list(logbook.humanify(events))
 
-        self.assertEqual(1, len(entries))
+        self.assertEqual(2, len(entries))
         self.assert_entry(
-            entries[0], pointB, 'blu', domain='sensor', entity_id=entity_id2)
+            entries[0], name='Home Assistant', message='stopped',
+            domain=ha.DOMAIN)
+        self.assert_entry(
+            entries[1], pointB, 'blu', domain='sensor', entity_id=entity_id2)
 
     def test_exclude_events_entity(self):
         """Test if events are filtered if entity is excluded in config."""
@@ -129,18 +133,23 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(pointA, entity_id, 10)
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
-        events = logbook._exclude_events((eventA, eventB), {
+        config = logbook.CONFIG_SCHEMA({
             ha.DOMAIN: {},
             logbook.DOMAIN: {logbook.CONF_EXCLUDE: {
                 logbook.CONF_ENTITIES: [entity_id, ]}}})
+        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
+                                          eventA, eventB), config)
         entries = list(logbook.humanify(events))
 
-        self.assertEqual(1, len(entries))
+        self.assertEqual(2, len(entries))
         self.assert_entry(
-            entries[0], pointB, 'blu', domain='sensor', entity_id=entity_id2)
+            entries[0], name='Home Assistant', message='stopped',
+            domain=ha.DOMAIN)
+        self.assert_entry(
+            entries[1], pointB, 'blu', domain='sensor', entity_id=entity_id2)
 
-    def test_exclude_events_platform(self):
-        """Test if events are filtered if platform is excluded in config."""
+    def test_exclude_events_domain(self):
+        """Test if events are filtered if domain is excluded in config."""
         entity_id = 'switch.bla'
         entity_id2 = 'sensor.blu'
         pointA = dt_util.utcnow()
@@ -149,15 +158,19 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(pointA, entity_id, 10)
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
-        events = logbook._exclude_events((eventA, eventB), {
+        config = logbook.CONFIG_SCHEMA({
             ha.DOMAIN: {},
             logbook.DOMAIN: {logbook.CONF_EXCLUDE: {
                 logbook.CONF_DOMAINS: ['switch', ]}}})
+        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
+                                          eventA, eventB), config)
         entries = list(logbook.humanify(events))
 
-        self.assertEqual(1, len(entries))
-        self.assert_entry(
-            entries[0], pointB, 'blu', domain='sensor', entity_id=entity_id2)
+        self.assertEqual(2, len(entries))
+        self.assert_entry(entries[0], name='Home Assistant', message='stopped',
+                          domain=ha.DOMAIN)
+        self.assert_entry(entries[1], pointB, 'blu', domain='sensor',
+                          entity_id=entity_id2)
 
     def test_entry_to_dict(self):
         """Test conversion of entry to dict."""

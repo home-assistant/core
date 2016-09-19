@@ -265,28 +265,29 @@ def _exclude_events(events, config):
     excluded_domains = []
     exclude = config[DOMAIN].get(CONF_EXCLUDE)
     if exclude:
-        excluded_entities = exclude.get(CONF_ENTITIES, [])
-        excluded_domains = exclude.get(CONF_DOMAINS, [])
+        excluded_entities = exclude[CONF_ENTITIES]
+        excluded_domains = exclude[CONF_DOMAINS]
 
     filtered_events = []
     for event in events:
-        # if no new state exists exclude it anyway
-        to_state = State.from_dict(event.data.get('new_state'))
-        if not to_state:
-            continue
+        if event.event_type == EVENT_STATE_CHANGED:
+            # if no new state exists exclude it anyway
+            to_state = State.from_dict(event.data.get('new_state'))
+            if not to_state:
+                continue
 
-        # exclude entities which are customized hidden
-        hidden = to_state.attributes.get(ATTR_HIDDEN, False)
-        if hidden:
-            continue
+            # exclude entities which are customized hidden
+            hidden = to_state.attributes.get(ATTR_HIDDEN, False)
+            if hidden:
+                continue
 
-        domain = to_state.domain
-        # check if logbook entry is excluded for this domain
-        if domain in excluded_domains:
-            continue
-        # check if logbook entry is excluded for this entity
-        if to_state.entity_id in excluded_entities:
-            continue
+            domain = to_state.domain
+            # check if logbook entry is excluded for this domain
+            if domain in excluded_domains:
+                continue
+            # check if logbook entry is excluded for this entity
+            if to_state.entity_id in excluded_entities:
+                continue
         filtered_events.append(event)
     return filtered_events
 
