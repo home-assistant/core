@@ -29,6 +29,9 @@ class TestBootstrap:
 
     def teardown_method(self, method):
         """Clean up."""
+        if method == self.test_from_config_file:
+            return
+
         dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE
         self.hass.stop()
         loader._COMPONENT_CACHE = self.backup_cache
