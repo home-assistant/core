@@ -99,7 +99,7 @@ class TelegramNotificationService(BaseNotificationService):
         # exists data for send a photo/location
         if data is None:
             pass
-        if ATTR_PHOTO in data:
+        elif ATTR_PHOTO in data:
             photos = data.get(ATTR_PHOTO, None)
             photos = photos if isinstance(photos, list) else [photos]
 
