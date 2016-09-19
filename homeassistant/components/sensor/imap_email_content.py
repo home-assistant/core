@@ -141,7 +141,8 @@ class EmailContentSensor(Entity):
         self.hass = hass
         self._email_reader = email_reader
         self._name = name
-        self._allowed_senders = allowed_senders
+        self._allowed_senders = \
+            [sender.upper() for sender in allowed_senders]
         self._value_template = value_template
         self._last_id = None
         self._message = None
@@ -155,7 +156,7 @@ class EmailContentSensor(Entity):
 
     @property
     def state(self):
-        """Return the number of unread emails."""
+        """Return the current email state."""
         return self._message
 
     @property
@@ -176,7 +177,7 @@ class EmailContentSensor(Entity):
     def sender_allowed(self, email_message):
         """Check if the sender is in the allowed senders list."""
         return EmailContentSensor.get_msg_sender(email_message).upper() in (
-            sender.upper() for sender in self._allowed_senders)
+            sender for sender in self._allowed_senders)
 
     @staticmethod
     def get_msg_sender(email_message):

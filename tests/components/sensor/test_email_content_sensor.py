@@ -2,10 +2,10 @@
 import unittest
 import email
 import datetime
-import time
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from threading import Event
 
 from homeassistant.helpers.event import track_state_change
 from collections import deque
@@ -156,8 +156,12 @@ class EmailContentSensor(unittest.TestCase):
         test_message2['Date'] = datetime.datetime(2016, 1, 1, 12, 44, 57)
         test_message2.set_payload("Test Message 2")
 
+        states_received = Event()
+
         def state_changed_listener(entity_id, from_s, to_s):
             states.append(to_s)
+            if len(states) == 2:
+                states_received.set()
 
         track_state_change(
             self.hass,
@@ -174,11 +178,8 @@ class EmailContentSensor(unittest.TestCase):
         sensor.entity_id = "sensor.emailtest"
         sensor.update()
 
-        retries = 0
-        while len(states) < 2 and retries < 5:
-            self.hass.pool.block_till_done()
-            time.sleep(1)
-            retries += 1
+        self.hass.pool.block_till_done()
+        states_received.wait(5)
 
         self.assertEqual("Test Message", states[0].state)
         self.assertEqual("Test Message 2", states[1].state)
