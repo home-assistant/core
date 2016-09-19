@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 NOTIFY_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MESSAGE): cv.template,
-    vol.Optional(ATTR_TITLE): cv.string,
+    vol.Optional(ATTR_TITLE): cv.template,
     vol.Optional(ATTR_TARGET): cv.string,
     vol.Optional(ATTR_DATA): dict,
 })
