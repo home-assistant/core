@@ -209,6 +209,7 @@ class MqttLight(Light):
 
     @property
     def color_temp(self):
+        """Return the color temperature in mired."""
         return self._color_temp
 
     @property
