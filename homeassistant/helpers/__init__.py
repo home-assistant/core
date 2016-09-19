@@ -14,31 +14,6 @@ if False:
 ConfigType = Dict[str, Any]
 
 
-def validate_config(config: ConfigType, items: Dict, logger: 'Logger') -> bool:
-    """Validate if all items are available in the configuration.
-
-    config is the general dictionary with all the configurations.
-    items is a dict with per domain which attributes we require.
-    logger is the logger from the caller to log the errors to.
-
-    Return True if all required items were found.
-    """
-    errors_found = False
-    for domain in items.keys():
-        config.setdefault(domain, {})
-
-        errors = [item for item in items[domain] if item not in config[domain]]
-
-        if errors:
-            logger.error(
-                "Missing required configuration items in {}: {}".format(
-                    domain, ", ".join(errors)))
-
-            errors_found = True
-
-    return not errors_found
-
-
 def config_per_platform(config: ConfigType,
                         domain: str) -> Iterable[Tuple[Any, Any]]:
     """Generator to break a component config into different platforms.
