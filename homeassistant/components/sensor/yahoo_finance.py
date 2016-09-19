@@ -40,7 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yahoo Finance sensor."""
-
     name = config.get(CONF_NAME)
     symbol = config.get(CONF_SYMBOL)
 
@@ -99,7 +98,7 @@ class YahooFinanceSensor(Entity):
         self._state = self.data.state
 
 class YahooFinanceData(object):
-    """Get data from Yahoo Finance"""
+    """Get data from Yahoo Finance."""
 
     def __init__(self, name, symbol):
         """Initialize the data object."""
