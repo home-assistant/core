@@ -4,7 +4,7 @@
 import os
 import signal
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 
 import pytz
@@ -459,3 +459,41 @@ class TestWorkerPool(unittest.TestCase):
         pool.add_job(ha.JobPriority.EVENT_DEFAULT, (register_call, None))
         pool.block_till_done()
         self.assertEqual(1, len(calls))
+
+
+class TestWorkerPoolMonitor(object):
+    """Test create_worker_pool_monitor."""
+
+    @patch('homeassistant.core._LOGGER.warning')
+    def test_above_threshold(self, mock_warning):
+        """Test we log an error and increase threshold."""
+        hass = MagicMock()
+        hass.pool.worker_count = 3
+
+        ha.create_worker_pool_monitor(hass)
+        assert hass.loop.call_later.called
+        assert hass.bus.async_listen_once.called
+
+        check_threshold = hass.loop.call_later.mock_calls[0][1][1]
+
+        hass.pool.queue_size = 8
+        check_threshold()
+        assert not mock_warning.called
+
+        hass.pool.queue_size = 9
+        check_threshold()
+        assert mock_warning.called
+
+        mock_warning.reset_mock()
+        assert not mock_warning.called
+
+        check_threshold()
+        assert not mock_warning.called
+
+        hass.pool.queue_size = 17
+        check_threshold()
+        assert not mock_warning.called
+
+        hass.pool.queue_size = 18
+        check_threshold()
+        assert mock_warning.called
