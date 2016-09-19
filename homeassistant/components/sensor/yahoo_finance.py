@@ -40,7 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yahoo Finance sensor."""
-    from yahoo_finance import Share
 
     name = config.get(CONF_NAME)
     symbol = config.get(CONF_SYMBOL)
@@ -75,7 +74,6 @@ class YahooFinanceSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        #self.update()
         return self._state
 
     @property
@@ -117,4 +115,3 @@ class YahooFinanceData(object):
         """Get the latest data and updates the states."""
         self.stock.refresh()
         self.state = self.stock.get_price()
-
