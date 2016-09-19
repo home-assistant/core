@@ -55,10 +55,17 @@ def get_test_home_assistant(num_threads=None):
         loader.prepare(hass)
 
     # FIXME should not be a daemon. Means hass.stop() not called in teardown
-    threading.Thread(name="LoopThread", target=loop.run_forever,
-                     daemon=True).start()
+    stop_event = threading.Event()
+
+    def run_loop():
+        loop.run_forever()
+        loop.close()
+        stop_event.set()
+
+    threading.Thread(name="LoopThread", target=run_loop, daemon=True).start()
 
     orig_start = hass.start
+    orig_stop = hass.stop
 
     @asyncio.coroutine
     def fake_stop():
@@ -72,7 +79,12 @@ def get_test_home_assistant(num_threads=None):
                     orig_start()
                     hass.block_till_done()
 
+    def stop_hass():
+        orig_stop()
+        stop_event.wait()
+
     hass.start = start_hass
+    hass.stop = stop_hass
 
     return hass
 
