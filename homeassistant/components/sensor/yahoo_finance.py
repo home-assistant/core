@@ -2,7 +2,7 @@
 Currency exchange rate support that comes from Yahoo Finance.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.yahoo-finance/
+https://home-assistant.io/components/sensor.yahoo_finance/
 """
 import logging
 from datetime import timedelta
@@ -27,10 +27,10 @@ ICON = 'mdi:currency-usd'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
-STATE_ATTR_PRICE_SALES = 'Price/Sales (ttm)'
-STATE_ATTR_CHANGE = 'Change'
-STATE_ATTR_OPEN = 'Open'
-STATE_ATTR_PREV_CLOSE = 'Prev. Close'
+ATTR_PRICE_SALES = 'Price/Sales (ttm)'
+ATTR_CHANGE = 'Change'
+ATTR_OPEN = 'Open'
+ATTR_PREV_CLOSE = 'Prev. Close'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SYMBOL, default=DEFAULT_SYMBOL): cv.string,
@@ -80,10 +80,9 @@ class YahooFinanceSensor(Entity):
         """Return the state attributes."""
         if self._state is not None:
             return {
-                STATE_ATTR_CHANGE: self.data.stock.get_change(),
-                STATE_ATTR_PRICE_SALES: self.data.stock.get_price_sales(),
-                STATE_ATTR_OPEN: self.data.stock.get_open(),
-                STATE_ATTR_PREV_CLOSE: self.data.stock.get_prev_close(),
+                ATTR_CHANGE: self.data._price_change,
+                ATTR_OPEN: self.data._price_open,
+                ATTR_PREV_CLOSE: self.data._prev_close,
             }
 
     @property
@@ -107,6 +106,9 @@ class YahooFinanceData(object):
         self._name = name
         self._symbol = symbol
         self.state = None
+        self._price_change = None
+        self._price_open = None
+        self._prev_close = None
         self.stock = Share(symbol)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -114,3 +116,6 @@ class YahooFinanceData(object):
         """Get the latest data and updates the states."""
         self.stock.refresh()
         self.state = self.stock.get_price()
+        self._price_change = self.stock.get_change()
+        self._price_open = self.stock.get_open()
+        self._prev_close = self.stock.get_prev_close()
