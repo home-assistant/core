@@ -7,7 +7,6 @@ import unittest
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 
-import pytest
 import pytz
 
 import homeassistant.core as ha
@@ -505,3 +504,39 @@ class TestWorkerPoolMonitor(object):
         event_loop.run_until_complete(
             hass.bus.async_listen_once.mock_calls[0][1][1](None))
         assert schedule_handle.cancel.called
+
+
+class TestAsyncCreateTimer(object):
+    """Test create timer."""
+
+    @patch('homeassistant.core.asyncio.Event')
+    @patch('homeassistant.core.dt_util.utcnow')
+    def test_create_timer(self, mock_utcnow, mock_event, event_loop):
+        """Test create timer fires correctly."""
+        hass = MagicMock()
+        now = mock_utcnow()
+        event = mock_event()
+        now.second = 1
+        mock_utcnow.reset_mock()
+
+        ha.async_create_timer(hass)
+        assert len(hass.bus.async_listen_once.mock_calls) == 2
+        start_timer = hass.bus.async_listen_once.mock_calls[1][1][1]
+
+        event_loop.run_until_complete(start_timer(None))
+        assert hass.loop.create_task.called
+
+        timer = hass.loop.create_task.mock_calls[0][1][0]
+        event.is_set.side_effect = False, False, True
+        event_loop.run_until_complete(timer)
+        assert len(mock_utcnow.mock_calls) == 1
+
+        assert hass.loop.call_soon.called
+        event_type, event_data = hass.loop.call_soon.mock_calls[0][1][1:]
+
+        assert ha.EVENT_TIME_CHANGED == event_type
+        assert {ha.ATTR_NOW: now} == event_data
+
+        stop_timer = hass.bus.async_listen_once.mock_calls[0][1][1]
+        event_loop.run_until_complete(stop_timer(None))
+        assert event.set.called
