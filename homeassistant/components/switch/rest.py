@@ -117,9 +117,10 @@ class RestSwitch(SwitchDevice):
         if self._value_template is not None:
             response = template.render_with_possible_json_value(
                 self._hass, self._value_template, request.text, 'None')
-            if response == 'True':
+            response = response.lower()
+            if response == 'true':
                 self._state = True
-            elif response == 'False':
+            elif response == 'false':
                 self._state = False
             else:
                 self._state = None
