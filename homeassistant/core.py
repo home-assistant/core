@@ -273,6 +273,7 @@ class HomeAssistant(object):
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         yield from self.loop.run_in_executor(None, self.pool.block_till_done)
         yield from self.loop.run_in_executor(None, self.pool.stop)
+        self.executer.shutdown()
         self.state = CoreState.not_running
         self.loop.stop()
 
