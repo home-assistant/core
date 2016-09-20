@@ -30,6 +30,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 DEPENDENCIES = ['group']
 
 CONF_ALIAS = 'alias'
+CONF_HIDE_ENTITY = 'hide_entity'
 
 CONF_CONDITION = 'condition'
 CONF_ACTION = 'action'
@@ -41,6 +42,7 @@ CONDITION_TYPE_AND = 'and'
 CONDITION_TYPE_OR = 'or'
 
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
+DEFAULT_HIDE_ENTITY = False
 
 METHOD_TRIGGER = 'trigger'
 METHOD_IF_ACTION = 'if_action'
@@ -99,6 +101,7 @@ _CONDITION_SCHEMA = vol.Any(
 
 PLATFORM_SCHEMA = vol.Schema({
     CONF_ALIAS: cv.string,
+    vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
     vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
     vol.Required(CONF_CONDITION_TYPE, default=DEFAULT_CONDITION_TYPE):
         vol.All(vol.Lower, vol.Any(CONDITION_TYPE_AND, CONDITION_TYPE_OR)),
@@ -206,7 +209,8 @@ def setup(hass, config):
 class AutomationEntity(ToggleEntity):
     """Entity to show status of entity."""
 
-    def __init__(self, name, attach_triggers, cond_func, action):
+    # pylint: disable=too-many-arguments, too-many-instance-attributes
+    def __init__(self, name, attach_triggers, cond_func, action, hidden):
         """Initialize an automation entity."""
         self._name = name
         self._attach_triggers = attach_triggers
@@ -215,6 +219,7 @@ class AutomationEntity(ToggleEntity):
         self._action = action
         self._enabled = True
         self._last_triggered = None
+        self._hidden = hidden
 
     @property
     def name(self):
@@ -232,6 +237,11 @@ class AutomationEntity(ToggleEntity):
         return {
             ATTR_LAST_TRIGGERED: self._last_triggered
         }
+
+    @property
+    def hidden(self) -> bool:
+        """Return True if the automation entity should be hidden from UIs."""
+        return self._hidden
 
     @property
     def is_on(self) -> bool:
@@ -281,6 +291,8 @@ def _process_config(hass, config, component):
             name = config_block.get(CONF_ALIAS) or "{} {}".format(config_key,
                                                                   list_no)
 
+            hidden = config_block[CONF_HIDE_ENTITY]
+
             action = _get_action(hass, config_block.get(CONF_ACTION, {}), name)
 
             if CONF_CONDITION in config_block:
@@ -295,7 +307,8 @@ def _process_config(hass, config, component):
 
             attach_triggers = partial(_process_trigger, hass, config,
                                       config_block.get(CONF_TRIGGER, []), name)
-            entity = AutomationEntity(name, attach_triggers, cond_func, action)
+            entity = AutomationEntity(name, attach_triggers, cond_func, action,
+                                      hidden)
             component.add_entities((entity,))
             success = True
 
