@@ -165,7 +165,7 @@ def setup(hass, config):
                 _LOGGER.error("'%s' is not valid ffmpeg input", input_source)
                 continue
 
-            alp_dev = OpenalprDeviceFFmpeg(
+            alpr_dev = OpenalprDeviceFFmpeg(
                 name=device.get(CONF_NAME),
                 interval=device.get(CONF_INTERVAL),
                 api=alpr_api,
@@ -173,7 +173,7 @@ def setup(hass, config):
                 extra_arguments=device.get(CONF_EXTRA_ARGUMENTS),
             )
         else:
-            alp_dev = OpenalprDeviceImage(
+            alpr_dev = OpenalprDeviceImage(
                 name=device.get(CONF_NAME),
                 interval=device.get(CONF_INTERVAL),
                 api=alpr_api,
@@ -272,7 +272,7 @@ class OpenalprDevice(Entity):
         return True
 
 
-class OpenalprDeviceFFmpeg(Entity):
+class OpenalprDeviceFFmpeg(OpenalprDevice):
     """Represent a openalpr device object for processing stream/images."""
 
     # pylint: disable=too-many-arguments
@@ -323,7 +323,7 @@ class OpenalprDeviceFFmpeg(Entity):
         return self._ffmpeg.is_running
 
 
-class OpenalprDeviceImage(Entity):
+class OpenalprDeviceImage(OpenalprDevice):
     """Represent a openalpr device object for processing stream/images."""
 
     # pylint: disable=too-many-arguments
@@ -374,6 +374,7 @@ class OpenalprDeviceImage(Entity):
         self._process_image(image)
 
 
+# pylint: disable=too-few-public-methods
 class OpenalprApi(object):
     """OpenAlpr api class."""
 
@@ -382,6 +383,7 @@ class OpenalprApi(object):
         raise NotImplementedError
 
 
+# pylint: disable=too-few-public-methods
 class OpenalprApiCloud(OpenalprApi):
     """Use local openalpr library to parse licences plate."""
 
