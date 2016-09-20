@@ -110,6 +110,7 @@ def restart(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_RESTART, data)
 
 
+# pylint: disable=too-many-locals
 def setup(hass, config):
     """Setup the OpenAlpr component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
