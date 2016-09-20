@@ -21,7 +21,7 @@ VALUE_TO_STATE = {
 }
 
 UOM = ['97']
-STATES = [STATE_OPEN, STATE_CLOSED, 'closing', 'opening']
+STATES = [STATE_OPEN, STATE_CLOSED, 'closing', 'opening', 'stopped']
 
 
 # pylint: disable=unused-argument
