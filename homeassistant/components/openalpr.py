@@ -25,8 +25,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 DOMAIN = 'openalpr'
 DEPENDENCIES = ['ffmpeg']
 REQUIREMENTS = [
-    'https://github.com/pvizeli/cloudapi/archive/1.0.1.zip'
-    '#cloud_api==1.0.1']
+    'https://github.com/pvizeli/cloudapi/releases/download/1.0.1/'
+    'python-1.0.1.zip#cloud_api==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
