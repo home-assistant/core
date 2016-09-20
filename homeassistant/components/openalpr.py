@@ -25,8 +25,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 DOMAIN = 'openalpr'
 DEPENDENCIES = ['ffmpeg']
 REQUIREMENTS = [
-    'git+https://github.com/pvizeli/cloudapi.git'
-    '#egg=openalpr_api&subdirectory=python']
+    'https://github.com/pvizeli/cloudapi/archive/1.0.1.zip'
+    '#cloud_api==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +68,22 @@ DEFAULT_RENDER = RENDER_FFMPEG
 DEFAULT_INTERVAL = 2
 
 
+def check_api(engine):
+    """Check if valid api and if api exists on computer."""
+    test_schema = vol.Schema(
+        vol.All(cv.string, vol.In([ENGINE_LOCAL, ENGINE_CLOUD])))
+    engine = test_schema(engine)
+
+    if engine == ENGINE_CLOUD:
+        return engine
+    # if local openalpr installation exists
+    try:
+        # pylint: disable=unused-variable
+        from openalpr import Alpr  # NOQA
+    except ImportError:
+        raise vol.Invalid("Local openalpr instalation not exists")
+
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_INPUT): cv.string,
     vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int,
@@ -98,21 +114,6 @@ SERVICE_RESTART_SCHEMA = vol.Schema({
 SERVICE_SCAN_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
-
-
-def check_api(engine):
-    test_schema = vol.Schema(
-        vol.All(cv.string, vol.In([ENGINE_LOCAL, ENGINE_CLOUD])))
-    engine = test_schema(engine)
-
-    if engine == ENGINE_CLOUD:
-        return engine
-    # if local openalpr installation exists
-    try:
-        # pylint: disable=unused-variable
-        from openalpr import Alpr  # NOQA
-    except ImportError:
-        raise vol.Invalid("Local openalpr instalation not exists")
 
 
 def scan(hass, entity_id=None):
@@ -167,7 +168,7 @@ def setup(hass, config):
             alp_dev = OpenalprDeviceFFmpeg(
                 name=device.get(CONF_NAME),
                 interval=device.get(CONF_INTERVAL),
-                api=alpr_api
+                api=alpr_api,
                 input_source=input_source,
                 extra_arguments=device.get(CONF_EXTRA_ARGUMENTS),
             )
@@ -175,7 +176,7 @@ def setup(hass, config):
             alp_dev = OpenalprDeviceImage(
                 name=device.get(CONF_NAME),
                 interval=device.get(CONF_INTERVAL),
-                api=alpr_api
+                api=alpr_api,
                 input_source=input_source,
                 username=device.get(CONF_USERNAME),
                 password=device.get(CONF_PASSWORD),
