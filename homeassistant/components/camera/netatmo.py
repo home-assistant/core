@@ -5,12 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.netatmo/
 """
 import logging
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
 
-from homeassistant.util import Throttle
+from homeassistant.components.netatmo import WelcomeData
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.loader import get_component
 from homeassistant.helpers import config_validation as cv
@@ -21,8 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_HOME = 'home'
 CONF_CAMERAS = 'cameras'
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOME): cv.string,
@@ -43,9 +40,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return None
 
     for camera_name in data.get_camera_names():
-        if config[CONF_CAMERAS] != []:
-            if camera_name not in config[CONF_CAMERAS]:
-                continue
+        if CONF_CAMERAS in config:
+            if config[CONF_CAMERAS] != []:
+                if camera_name not in config[CONF_CAMERAS]:
+                    continue
         add_devices([WelcomeCamera(data, camera_name, home)])
 
 
@@ -86,33 +84,3 @@ class WelcomeCamera(Camera):
     def name(self):
         """Return the name of this Netatmo Welcome device."""
         return self._name
-
-
-class WelcomeData(object):
-    """Get the latest data from NetAtmo."""
-
-    def __init__(self, auth, home=None):
-        """Initialize the data object."""
-        self.auth = auth
-        self.welcomedata = None
-        self.camera_names = []
-        self.home = home
-
-    def get_camera_names(self):
-        """Return all module available on the API as a list."""
-        self.camera_names = []
-        self.update()
-        if not self.home:
-            for home in self.welcomedata.cameras:
-                for camera in self.welcomedata.cameras[home].values():
-                    self.camera_names.append(camera['name'])
-        else:
-            for camera in self.welcomedata.cameras[self.home].values():
-                self.camera_names.append(camera['name'])
-        return self.camera_names
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Call the NetAtmo API to update the data."""
-        import lnetatmo
-        self.welcomedata = lnetatmo.WelcomeData(self.auth)
