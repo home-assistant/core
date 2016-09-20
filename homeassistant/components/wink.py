@@ -14,7 +14,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==0.7.14', 'pubnub==3.8.2']
+REQUIREMENTS = ['python-wink==0.7.15', 'pubnub==3.8.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ SUBSCRIPTION_HANDLER = None
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_ACCESS_TOKEN): cv.string,
+        vol.Required(CONF_ACCESS_TOKEN): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -41,7 +41,7 @@ def setup(hass, config):
         'N/A', pywink.get_subscription_key(), ssl_on=True)
     SUBSCRIPTION_HANDLER.set_heartbeat(120)
 
-    # Load components for the devices in the Wink that we support
+    # Load components for the devices in Wink that we support
     for component_name, func_exists in (
             ('light', pywink.get_bulbs),
             ('switch', lambda: pywink.get_switches or pywink.get_sirens or
