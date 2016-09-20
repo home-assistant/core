@@ -19,7 +19,7 @@ VALUE_TO_STATE = {
     True: STATE_ON,
 }
 
-UOM = ['2', '78']
+UOM = ['2', '51', '78']
 STATES = [STATE_OFF, STATE_ON, 'true', 'false', '%']
 
 
@@ -35,7 +35,7 @@ def setup_platform(hass, config: ConfigType,
 
     for node in isy.filter_nodes(isy.NODES, units=UOM,
                                  states=STATES):
-        if node.dimmable:
+        if node.dimmable or node.uom == '51':
             devices.append(ISYLightDevice(node))
 
     add_devices(devices)
