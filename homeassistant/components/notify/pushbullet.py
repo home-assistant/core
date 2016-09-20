@@ -83,7 +83,10 @@ class PushBulletNotificationService(BaseNotificationService):
 
         if not targets:
             # Backward compatebility, notify all devices in own account
-            self.pushbullet.push_note(title, message)
+            if message.startswith('http://') or message.startswith('https://'):
+                self.pushbullet.push_link(title, message)
+            else:
+                self.pushbullet.push_note(title, message)
             _LOGGER.info('Sent notification to self')
             return
 
@@ -102,7 +105,11 @@ class PushBulletNotificationService(BaseNotificationService):
             # Target is email, send directly, don't use a target object
             # This also seems works to send to all devices in own account
             if ttype == 'email':
-                self.pushbullet.push_note(title, message, email=tname)
+                if message.startswith('http://') or \
+                        message.startswith('https://'):
+                    self.pushbullet.push_link(title, message, email=tname)
+                else:
+                    self.pushbullet.push_note(title, message, email=tname)
                 _LOGGER.info('Sent notification to email %s', tname)
                 continue
 
@@ -121,7 +128,11 @@ class PushBulletNotificationService(BaseNotificationService):
             # Attempt push_note on a dict value. Keys are types & target
             # name. Dict pbtargets has all *actual* targets.
             try:
-                self.pbtargets[ttype][tname].push_note(title, message)
+                if message.startswith('http://') or \
+                        message.startswith('https://'):
+                    self.pbtargets[ttype][tname].push_link(title, message)
+                else:
+                    self.pbtargets[ttype][tname].push_note(title, message)
                 _LOGGER.info('Sent notification to %s/%s', ttype, tname)
             except KeyError:
                 _LOGGER.error('No such target: %s/%s', ttype, tname)
