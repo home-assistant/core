@@ -154,7 +154,7 @@ def setup(hass, base_config):
 
     def start_envisalink(event):
         """Startup process for the Envisalink."""
-        EVL_CONTROLLER.start()
+        hass.loop.run_in_executor(None, EVL_CONTROLLER.start)
         for _ in range(10):
             if 'success' in _connect_status:
                 hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
