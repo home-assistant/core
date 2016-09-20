@@ -143,7 +143,7 @@ class HomeAssistant(ha.HomeAssistant):
                     'Unable to setup local API to receive events')
 
         self.state = ha.CoreState.starting
-        ha.create_timer(self)
+        ha.async_create_timer(self)
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
                       origin=ha.EventOrigin.remote)
