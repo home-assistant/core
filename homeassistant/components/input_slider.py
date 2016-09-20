@@ -44,7 +44,9 @@ def _cv_input_slider(cfg):
         raise vol.Invalid('Maximum ({}) is not greater than minimum ({})'
                           .format(minimum, maximum))
     state = cfg.get(CONF_INITIAL, minimum)
-    state = max(min(state, maximum), minimum)
+    if state < minimum or state > maximum:
+        raise vol.Invalid('Initial value {} not in range {}-{}'
+                          .format(state, minimum, maximum))
     cfg[CONF_INITIAL] = state
     return cfg
 

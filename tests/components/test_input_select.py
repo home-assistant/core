@@ -4,7 +4,7 @@ import unittest
 
 from tests.common import get_test_home_assistant
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.components.input_select import (
     ATTR_OPTIONS, DOMAIN, select_option)
 from homeassistant.const import (
@@ -37,12 +37,12 @@ class TestInputSelect(unittest.TestCase):
 
         for cfg in invalid_configs:
             self.assertFalse(
-                _setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
 
     def test_select_option(self):
         """Test select_option methods."""
         self.assertTrue(
-            _setup_component(self.hass, DOMAIN, {DOMAIN: {
+            setup_component(self.hass, DOMAIN, {DOMAIN: {
                 'test_1': {
                     'options': [
                         'some option',
@@ -77,7 +77,7 @@ class TestInputSelect(unittest.TestCase):
             'Best Option',
         ]
 
-        self.assertTrue(_setup_component(self.hass, DOMAIN, {
+        self.assertTrue(setup_component(self.hass, DOMAIN, {
             DOMAIN: {
                 'test_1': {
                     'options': [

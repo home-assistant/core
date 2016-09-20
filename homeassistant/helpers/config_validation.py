@@ -82,7 +82,8 @@ def isfile(value: Any) -> str:
 
 def ensure_list(value: Union[T, Sequence[T]]) -> List[T]:
     """Wrap value in list if it is not one."""
-    return value if isinstance(value, list) else [value]
+    return (value if isinstance(value, list) else
+            [] if value is None else [value])
 
 
 def entity_id(value: Any) -> str:

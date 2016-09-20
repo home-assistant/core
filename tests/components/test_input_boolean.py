@@ -4,7 +4,7 @@ import unittest
 
 from tests.common import get_test_home_assistant
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.components.input_boolean import (
     DOMAIN, is_on, turn_off, turn_on)
 from homeassistant.const import (
@@ -26,17 +26,18 @@ class TestInputBoolean(unittest.TestCase):
         """Test config."""
         invalid_configs = [
             None,
+            1,
             {},
             {'name with space': None},
         ]
 
         for cfg in invalid_configs:
             self.assertFalse(
-                _setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+                setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
 
     def test_methods(self):
         """Test is_on, turn_on, turn_off methods."""
-        self.assertTrue(_setup_component(self.hass, DOMAIN, {DOMAIN: {
+        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
             'test_1': None,
         }}))
         entity_id = 'input_boolean.test_1'
@@ -69,7 +70,7 @@ class TestInputBoolean(unittest.TestCase):
         """Test configuration options."""
         count_start = len(self.hass.states.entity_ids())
 
-        self.assertTrue(_setup_component(self.hass, DOMAIN, {DOMAIN: {
+        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
             'test_1': None,
             'test_2': {
                 'name': 'Hello World',
