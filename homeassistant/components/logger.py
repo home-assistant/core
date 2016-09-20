@@ -27,14 +27,12 @@ LOGSEVERITY = {
 LOGGER_DEFAULT = 'default'
 LOGGER_LOGS = 'logs'
 
-_LOGS_SCHEMA = vol.Schema({
-    cv.string: vol.In(vol.Lower(list(LOGSEVERITY))),
-})
+_VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(LOGGER_DEFAULT): vol.In(vol.Lower(list(LOGSEVERITY))),
-        vol.Required(LOGGER_LOGS): _LOGS_SCHEMA,
+        vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
+        vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -65,19 +63,19 @@ class HomeAssistantLogFilter(logging.Filter):
 
 def setup(hass, config=None):
     """Setup the logger component."""
-    logfilter = dict()
+    logfilter = {}
 
     # Set default log severity
     logfilter[LOGGER_DEFAULT] = LOGSEVERITY['DEBUG']
     if LOGGER_DEFAULT in config.get(DOMAIN):
         logfilter[LOGGER_DEFAULT] = LOGSEVERITY[
-            config.get(DOMAIN)[LOGGER_DEFAULT].upper()
+            config.get(DOMAIN)[LOGGER_DEFAULT]
         ]
 
     # Compute log severity for components
     if LOGGER_LOGS in config.get(DOMAIN):
         for key, value in config.get(DOMAIN)[LOGGER_LOGS].items():
-            config.get(DOMAIN)[LOGGER_LOGS][key] = LOGSEVERITY[value.upper()]
+            config.get(DOMAIN)[LOGGER_LOGS][key] = LOGSEVERITY[value]
 
         logs = OrderedDict(
             sorted(
