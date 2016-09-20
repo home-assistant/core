@@ -6,37 +6,34 @@ at https://home-assistant.io/components/sensor.wink/
 """
 import logging
 
-from homeassistant.const import (CONF_ACCESS_TOKEN, STATE_CLOSED,
+from homeassistant.const import (STATE_CLOSED,
                                  STATE_OPEN, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.wink import WinkDevice
 from homeassistant.loader import get_component
 
-REQUIREMENTS = ['python-wink==0.7.14', 'pubnub==3.8.2']
+DEPENDENCIES = ['wink']
 
-SENSOR_TYPES = ['temperature', 'humidity']
+SENSOR_TYPES = ['temperature', 'humidity', 'balance']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink platform."""
     import pywink
 
-    if discovery_info is None:
-        token = config.get(CONF_ACCESS_TOKEN)
-
-        if token is None:
-            logging.getLogger(__name__).error(
-                "Missing wink access_token. "
-                "Get one at https://winkbearertoken.appspot.com/")
-            return
-
-        pywink.set_bearer_token(token)
-
     for sensor in pywink.get_sensors():
         if sensor.capability() in SENSOR_TYPES:
             add_devices([WinkSensorDevice(sensor)])
 
     add_devices(WinkEggMinder(eggtray) for eggtray in pywink.get_eggtrays())
+
+    for piggy_bank in pywink.get_piggy_banks():
+        try:
+            if piggy_bank.capability() in SENSOR_TYPES:
+                add_devices([WinkSensorDevice(piggy_bank)])
+        except AttributeError:
+            logging.getLogger(__name__).error(
+                "Device is not a sensor.")
 
 
 class WinkSensorDevice(WinkDevice, Entity):
@@ -59,8 +56,22 @@ class WinkSensorDevice(WinkDevice, Entity):
             return round(self.wink.humidity_percentage())
         elif self.capability == "temperature":
             return round(self.wink.temperature_float(), 1)
+        elif self.capability == "balance":
+            return round(self.wink.balance() / 100, 2)
         else:
             return STATE_OPEN if self.is_open else STATE_CLOSED
+
+    @property
+    def available(self):
+        """
+        True if connection == True.
+
+        Always return true for Wink porkfolio due to
+        bug in API.
+        """
+        if self.capability == "balance":
+            return True
+        return self.wink.available
 
     @property
     def unit_of_measurement(self):
