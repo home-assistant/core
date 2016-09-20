@@ -25,11 +25,10 @@ CONF_SOURCE_NAMES = 'source_names'
 CONF_SOURCE_IGNORE = 'source_ignore'
 
 DEFAULT_NAME = 'Yamaha Receiver'
-DEFAULT_HOST = 'DISCO'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_SOURCE_IGNORE, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
@@ -45,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     source_ignore = config.get(CONF_SOURCE_IGNORE)
     source_names = config.get(CONF_SOURCE_NAMES)
 
-    if host == 'DISCO':
+    if host is None:
         add_devices(
             YamahaDevice(name, receiver, source_ignore, source_names)
             for receiver in rxv.find())
