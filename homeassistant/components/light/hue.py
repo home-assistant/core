@@ -94,7 +94,7 @@ def setup_bridge(host, hass, add_devices_callback, filename,
             host,
             config_file_path=hass.config.path(filename))
     except ConnectionRefusedError:  # Wrong host was given
-        _LOGGER.exception("Error connecting to the Hue bridge at %s", host)
+        _LOGGER.error("Error connecting to the Hue bridge at %s", host)
 
         return
 

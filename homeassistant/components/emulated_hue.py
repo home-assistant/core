@@ -17,7 +17,7 @@ from homeassistant import util, core
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    STATE_ON
+    STATE_ON, HTTP_BAD_REQUEST
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_SUPPORTED_FEATURES, SUPPORT_BRIGHTNESS
@@ -202,11 +202,10 @@ class HueUsernameView(HomeAssistantView):
         data = request.json
 
         if 'devicetype' not in data:
-            return self.Response("devicetype not specified", status=400)
+            return self.json_message('devicetype not specified',
+                                     HTTP_BAD_REQUEST)
 
-        json_response = [{'success': {'username': '12345678901234567890'}}]
-
-        return self.json(json_response)
+        return self.json([{'success': {'username': '12345678901234567890'}}])
 
 
 class HueLightsView(HomeAssistantView):
