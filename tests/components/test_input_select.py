@@ -28,7 +28,7 @@ class TestInputSelect(unittest.TestCase):
             None,
             {},
             {'name with space': None},
-            {'hello': {'options': None}},
+            # {'bad_options': {'options': None}},
             {'bad_initial': {
                 'options': [1, 2],
                 'initial': 3,
