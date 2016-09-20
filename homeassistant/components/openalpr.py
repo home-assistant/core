@@ -67,6 +67,7 @@ DEFAULT_ENGINE = ENGINE_LOCAL
 DEFAULT_RENDER = RENDER_FFMPEG
 DEFAULT_INTERVAL = 2
 
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_INPUT): cv.string,
     vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int,
@@ -78,9 +79,10 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_PASSWORD): cv.string,
 })
 
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_ENGINE): vol.In([ENGINE_LOCAL, ENGINE_CLOUD]),
+        vol.Required(CONF_ENGINE): check_api,
         vol.Required(CONF_REGION): vol.In(OPENALPR_REGIONS),
         vol.Optional(CONF_API_KEY): cv.string,
         vol.Optional(CONF_RUNTIME): vol.IsDir,
@@ -98,6 +100,21 @@ SERVICE_SCAN_SCHEMA = vol.Schema({
 })
 
 
+def check_api(engine):
+    test_schema = vol.Schema(
+        vol.All(cv.string, vol.In([ENGINE_LOCAL, ENGINE_CLOUD])))
+    engine = test_schema(engine)
+
+    if engine == ENGINE_CLOUD:
+        return engine
+    # if local openalpr installation exists
+    try:
+        # pylint: disable=unused-variable
+        from openalpr import Alpr  # NOQA
+    except ImportError:
+        raise vol.Invalid("Local openalpr instalation not exists")
+
+
 def scan(hass, entity_id=None):
     """Scan a image immediately."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -113,17 +130,15 @@ def restart(hass, entity_id=None):
 # pylint: disable=too-many-locals
 def setup(hass, config):
     """Setup the OpenAlpr component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
-    openalpr_device = []
-
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     engine = config[DOMAIN].get(CONF_ENGINE)
     region = config[DOMAIN].get(CONF_REGION)
     api_key = config[DOMAIN].get(CONF_API_KEY)
     runtime = config[DOMAIN].get(CONF_RUNTIME)
     use_render_fffmpeg = False
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    openalpr_device = []
+
     for device in config[DOMAIN].get(CONF_ENTITIES):
         input_source = device.get(CONF_INPUT)
         render = device.get(CONF_RENDER)
@@ -135,15 +150,8 @@ def setup(hass, config):
                 _LOGGER.error("'%s' is not valid ffmpeg input", input_source)
                 continue
 
-        # if local openalpr engine, check if exists
+        # create device
         if engine == ENGINE_LOCAL:
-            try:
-                # pylint: disable=unused-variable
-                from openalpr import Alpr  # NOQA
-            except ImportError:
-                _LOGGER.error("Local openalpr instalation not exists")
-                continue
-
             alpr_dev = OpenalprDeviceLocal(
                 name=device.get(CONF_NAME),
                 render=render,
@@ -155,7 +163,6 @@ def setup(hass, config):
                 username=device.get(CONF_USERNAME),
                 password=device.get(CONF_PASSWORD),
             )
-
         else:
             alpr_dev = OpenalprDeviceCloud(
                 name=device.get(CONF_NAME),
@@ -174,6 +181,9 @@ def setup(hass, config):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, alpr_dev.shutdown)
 
     component.add_entities(openalpr_device)
+
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     def _handle_service_scan(service):
         """Handle service for immediately scan."""
