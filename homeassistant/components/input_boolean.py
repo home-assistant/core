@@ -27,21 +27,12 @@ SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-<<<<<<< HEAD
 CONFIG_SCHEMA = vol.Schema({
     cv.slug: {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_INITIAL, default=False): cv.boolean,
         vol.Optional(CONF_ICON): cv.icon,
     }}, required=True, extra=vol.ALLOW_EXTRA)
-=======
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {
-    cv.slug: vol.Any(None, {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_INITIAL, default=False): cv.boolean,
-        vol.Optional(CONF_ICON): cv.icon,
-    })}}, required=True)
->>>>>>> CONFIG_SCHEMA
 
 
 def is_on(hass, entity_id):

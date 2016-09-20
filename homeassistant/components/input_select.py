@@ -49,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {
                                             [cv.string]),
         vol.Optional(CONF_INITIAL): cv.string,
         vol.Optional(CONF_ICON): cv.icon,
-    }, _cv_input_select)}}, required=True)
+    }, _cv_input_select)}}, required=True, extra=vol.ALLOW_EXTRA)
 
 
 def select_option(hass, entity_id, option):

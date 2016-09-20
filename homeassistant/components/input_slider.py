@@ -60,7 +60,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {
                                                     vol.Range(min=1e-3)),
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
-    }, _cv_input_slider)}}, required=True)
+    }, _cv_input_slider)}}, required=True, extra=vol.ALLOW_EXTRA)
 
 
 def select_value(hass, entity_id, value):
