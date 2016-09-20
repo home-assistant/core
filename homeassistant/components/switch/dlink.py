@@ -12,10 +12,10 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
 REQUIREMENTS = ['https://github.com/LinuxChristian/pyW215/archive/'
-                'v0.3.4.zip#pyW215==0.3.4']
+                'v0.3.5.zip#pyW215==0.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,11 +72,25 @@ class SmartPlugSwitch(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        ui_temp = self.units.temperature(int(self.smartplug.temperature),
-                                         TEMP_CELSIUS)
-        temperature = "{} {}".format(ui_temp, self.units.temperature_unit)
-        current_consumption = "{} W".format(self.smartplug.current_consumption)
-        total_consumption = "{} W".format(self.smartplug.total_consumption)
+        try:
+            ui_temp = self.units.temperature(int(self.smartplug.temperature),
+                                             TEMP_CELSIUS)
+            temperature = "%i %s" % \
+                          (ui_temp, self.units.temperature_unit)
+        except ValueError:
+            temperature = STATE_UNKNOWN
+
+        try:
+            current_consumption = "%.2f W" % \
+                                  float(self.smartplug.current_consumption)
+        except ValueError:
+            current_consumption = STATE_UNKNOWN
+
+        try:
+            total_consumption = "%.1f W" % \
+                                float(self.smartplug.total_consumption)
+        except ValueError:
+            total_consumption = STATE_UNKNOWN
 
         attrs = {
             ATTR_CURRENT_CONSUMPTION: current_consumption,
