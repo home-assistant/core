@@ -101,7 +101,11 @@ class TestInfluxDB(unittest.TestCase):
                  STATE_OFF: 0,
                  'foo': 'foo'}
         for in_, out in valid.items():
-            attrs = {'unit_of_measurement': 'foobars'}
+            attrs = {
+                        'unit_of_measurement': 'foobars',
+                        'longitude': '1.1',
+                        'latitude': '2.2'
+                    }
             state = mock.MagicMock(state=in_,
                                    domain='fake',
                                    object_id='entity',
@@ -117,6 +121,8 @@ class TestInfluxDB(unittest.TestCase):
                 'time': 12345,
                 'fields': {
                     'value': out,
+                    'longitude': '1.1',
+                    'latitude': '2.2'
                 },
             }]
             self.handler_method(event)
