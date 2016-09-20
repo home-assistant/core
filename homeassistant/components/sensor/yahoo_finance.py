@@ -27,7 +27,6 @@ ICON = 'mdi:currency-usd'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
-ATTR_PRICE_SALES = 'Price/Sales (ttm)'
 ATTR_CHANGE = 'Change'
 ATTR_OPEN = 'Open'
 ATTR_PREV_CLOSE = 'Prev. Close'
