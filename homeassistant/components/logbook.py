@@ -193,10 +193,6 @@ def humanify(events):
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
 
-                # Do not report on new entities
-                if 'old_state' not in event.data:
-                    continue
-
                 to_state = State.from_dict(event.data.get('new_state'))
 
                 # If last_changed != last_updated only attributes have changed
@@ -271,8 +267,8 @@ def _exclude_events(events, config):
     filtered_events = []
     for event in events:
         if event.event_type == EVENT_STATE_CHANGED:
-            # if no new state exists exclude it anyway
             to_state = State.from_dict(event.data.get('new_state'))
+            # Do not report on new entities
             if not to_state:
                 continue
 
