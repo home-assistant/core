@@ -79,9 +79,13 @@ class YahooFinanceSensor(Entity):
         """Return the state attributes."""
         if self._state is not None:
             return {
-                ATTR_CHANGE: self.data._price_change,
-                ATTR_OPEN: self.data._price_open,
-                ATTR_PREV_CLOSE: self.data._prev_close,
+                ATTR_CHANGE: self.data.price_change,
+                ATTR_OPEN: self.data.price_open,
+                ATTR_PREV_CLOSE: self.data.prev_close,
+                'About': "Stock market information delivered by Yahoo!"
+                         " Inc. are provided free of charge for use"
+                         " by individuals and non-profit organizations"
+                         " for personal, non-commercial uses."
             }
 
     @property
@@ -95,6 +99,7 @@ class YahooFinanceSensor(Entity):
         self.data.update()
         self._state = self.data.state
 
+
 class YahooFinanceData(object):
     """Get data from Yahoo Finance."""
 
@@ -105,9 +110,9 @@ class YahooFinanceData(object):
         self._name = name
         self._symbol = symbol
         self.state = None
-        self._price_change = None
-        self._price_open = None
-        self._prev_close = None
+        self.price_change = None
+        self.price_open = None
+        self.prev_close = None
         self.stock = Share(symbol)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -115,6 +120,6 @@ class YahooFinanceData(object):
         """Get the latest data and updates the states."""
         self.stock.refresh()
         self.state = self.stock.get_price()
-        self._price_change = self.stock.get_change()
-        self._price_open = self.stock.get_open()
-        self._prev_close = self.stock.get_prev_close()
+        self.price_change = self.stock.get_change()
+        self.price_open = self.stock.get_open()
+        self.prev_close = self.stock.get_prev_close()
