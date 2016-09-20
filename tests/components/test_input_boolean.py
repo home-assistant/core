@@ -1,14 +1,17 @@
 """The tests for the input_boolean component."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
+import logging
 
 from tests.common import get_test_home_assistant
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.components.input_boolean import (
-    DOMAIN, is_on, turn_off, turn_on)
+    DOMAIN, is_on, toggle, turn_off, turn_on)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ICON, ATTR_FRIENDLY_NAME)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TestInputBoolean(unittest.TestCase):
@@ -59,16 +62,17 @@ class TestInputBoolean(unittest.TestCase):
         self.assertFalse(
             is_on(self.hass, entity_id))
 
-        input_boolean.toggle(self.hass, entity_id)
+        toggle(self.hass, entity_id)
 
         self.hass.block_till_done()
 
-        self.assertTrue(
-            input_boolean.is_on(self.hass, entity_id))
+        self.assertTrue(is_on(self.hass, entity_id))
 
     def test_config_options(self):
         """Test configuration options."""
         count_start = len(self.hass.states.entity_ids())
+
+        _LOGGER.debug('ENTITIES @ start: %s', self.hass.states.entity_ids())
 
         self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
             'test_1': None,
@@ -78,6 +82,8 @@ class TestInputBoolean(unittest.TestCase):
                 'initial': True,
             },
         }}))
+
+        _LOGGER.debug('ENTITIES: %s', self.hass.states.entity_ids())
 
         self.assertEqual(count_start + 2, len(self.hass.states.entity_ids()))
 
