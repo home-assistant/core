@@ -73,8 +73,6 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_RENDER, default=DEFAULT_RENDER):
         vol.In([RENDER_IMAGE, RENDER_FFMPEG]),
-    vol.Optional(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_RUNTIME): vol.IsDir,
     vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
@@ -84,6 +82,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_ENGINE): vol.In([ENGINE_LOCAL, ENGINE_CLOUD]),
         vol.Required(CONF_REGION): vol.In(OPENALPR_REGIONS),
+        vol.Optional(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_RUNTIME): vol.IsDir,
         vol.Required(CONF_ENTITIES): vol.All(cv.ensure_list, [DEVICE_SCHEMA]),
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -120,6 +120,8 @@ def setup(hass, config):
 
     engine = config[DOMAIN].get(CONF_ENGINE)
     region = config[DOMAIN].get(CONF_REGION)
+    api_key = config[DOMAIN].get(CONF_API_KEY)
+    runtime = config[DOMAIN].get(CONF_RUNTIME)
     use_render_fffmpeg = False
     for device in config[DOMAIN].get(CONF_ENTITIES):
         input_source = device.get(CONF_INPUT)
@@ -146,7 +148,7 @@ def setup(hass, config):
                 render=render,
                 interval=device.get(CONF_INTERVAL),
                 input_source=input_source,
-                runtime=device.get(CONF_RUNTIME),
+                runtime=runtime,
                 region=region,
                 extra_arguments=device.get(CONF_EXTRA_ARGUMENTS),
                 username=device.get(CONF_USERNAME),
@@ -159,7 +161,7 @@ def setup(hass, config):
                 render=render,
                 interval=device.get(CONF_INTERVAL),
                 input_source=input_source,
-                api_key=device.get(CONF_RUNTIME),
+                api_key=api_key,
                 region=region,
                 extra_arguments=device.get(CONF_EXTRA_ARGUMENTS),
                 username=device.get(CONF_USERNAME),
