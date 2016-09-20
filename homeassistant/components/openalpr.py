@@ -143,35 +143,40 @@ def setup(hass, config):
         input_source = device.get(CONF_INPUT)
         render = device.get(CONF_RENDER)
 
-        # if render ffmpeg, test input
+        ##
+        # create api
+        if engine == ENGINE_LOCAL:
+            alpr_api = OpenalprApiLocal(
+                runtime=runtime,
+                region=region,
+            )
+        else:
+            alpr_api = OpenalprApiCloud(
+                api_key=api_key,
+                region=region,
+            )
+
+        ##
+        # Create Alpr device / render engine
         if render == RENDER_FFMPEG:
             use_render_fffmpeg = True
             if not run_test(input_source):
                 _LOGGER.error("'%s' is not valid ffmpeg input", input_source)
                 continue
 
-        # create device
-        if engine == ENGINE_LOCAL:
-            alpr_dev = OpenalprDeviceLocal(
+            alp_dev = OpenalprDeviceFFmpeg(
                 name=device.get(CONF_NAME),
-                render=render,
                 interval=device.get(CONF_INTERVAL),
+                api=alpr_api
                 input_source=input_source,
-                runtime=runtime,
-                region=region,
                 extra_arguments=device.get(CONF_EXTRA_ARGUMENTS),
-                username=device.get(CONF_USERNAME),
-                password=device.get(CONF_PASSWORD),
             )
         else:
-            alpr_dev = OpenalprDeviceCloud(
+            alp_dev = OpenalprDeviceImage(
                 name=device.get(CONF_NAME),
-                render=render,
                 interval=device.get(CONF_INTERVAL),
+                api=alpr_api
                 input_source=input_source,
-                api_key=api_key,
-                region=region,
-                extra_arguments=device.get(CONF_EXTRA_ARGUMENTS),
                 username=device.get(CONF_USERNAME),
                 password=device.get(CONF_PASSWORD),
             )
@@ -216,48 +221,28 @@ def setup(hass, config):
     return True
 
 
-# pylint: disable=too-many-instance-attributes
 class OpenalprDevice(Entity):
     """Represent a openalpr device object for processing stream/images."""
 
-    # pylint: disable=too-many-arguments
-    def __init__(self, name, render, interval, input_source,
-                 extra_arguments=None, username=None, password=None):
+    def __init__(self, name, interval, api):
         """Init image processing."""
-        from haffmpeg import ImageStream
-
         self._name = name
-        self._render = render
         self._interval = interval
+        self._api = api
         self._last = set()
 
-        # generade input source
-        if self._render == RENDER_FFMPEG:
-            self._ffmpeg = ImageStream(get_binary(), self._process_image)
-            self._input_source = input_source
-            self._extra_arguments = extra_arguments
-            self._start_ffmpeg()
-        else:
-            self._ffmpeg = None
-            self._next = time()
-            self._username = username
-            self._password = password
-            self._url = input_source
-
     def shutdown(self, event):
-        """Close ffmpeg stream."""
-        if self._render == RENDER_FFMPEG:
-            self._ffmpeg.close()
+        """Close stream."""
+        if hasattr(self._api, "shutdown"):
+            self._api.shutdown(event)
 
     def restart(self):
-        """Restart ffmpeg stream."""
-        if self._render == RENDER_FFMPEG:
-            self._ffmpeg.close()
-            self._start_ffmpeg()
+        """Restart stream."""
+        pass
 
     def _process_image(self, image):
         """Callback for processing image."""
-        raise NotImplementedError
+        self._api.process_image(image, self._process_event)
 
     def _process_event(self, plates):
         """Send event with new plates."""
@@ -273,23 +258,7 @@ class OpenalprDevice(Entity):
 
     def scan(self):
         """Immediately scan a image."""
-        if self._render == RENDER_FFMPEG:
-            self._ffmpeg.push_image()
-        else:
-            self._next = time()
-            self.update()
-
-    def _start_ffmpeg(self):
-        """Start a ffmpeg image stream."""
-        from haffmpeg import IMAGE_PNG
-
-        if self._render == RENDER_FFMPEG:
-            self._ffmpeg.open_stream(
-                input_source=self._input_source,
-                interval=self._interval,
-                output_format=IMAGE_PNG,
-                extra_cmd=self._extra_arguments,
-            )
+        pass
 
     @property
     def name(self):
@@ -301,25 +270,94 @@ class OpenalprDevice(Entity):
         """Return True if the entity should be hidden from UIs."""
         return True
 
+
+class OpenalprDeviceFFmpeg(Entity):
+    """Represent a openalpr device object for processing stream/images."""
+
+    # pylint: disable=too-many-arguments
+    def __init__(self, name, interval, api, input_source,
+                 extra_arguments=None):
+        """Init image processing."""
+        from haffmpeg import ImageStream
+
+        super().__init__(name, interval, api)
+        self._ffmpeg = ImageStream(get_binary(), self._process_image)
+        self._input_source = input_source
+        self._extra_arguments = extra_arguments
+
+        self._start_ffmpeg()
+
+    def shutdown(self, event):
+        """Close ffmpeg stream."""
+        self._ffmpeg.close()
+
+    def restart(self):
+        """Restart ffmpeg stream."""
+        self._ffmpeg.close()
+        self._start_ffmpeg()
+
+    def scan(self):
+        """Immediately scan a image."""
+        self._ffmpeg.push_image()
+
+    def _start_ffmpeg(self):
+        """Start a ffmpeg image stream."""
+        from haffmpeg import IMAGE_PNG
+
+        self._ffmpeg.open_stream(
+            input_source=self._input_source,
+            interval=self._interval,
+            output_format=IMAGE_PNG,
+            extra_cmd=self._extra_arguments,
+        )
+
     @property
     def should_poll(self):
         """Return True if render is be 'image' or False if 'ffmpeg'."""
-        if self._render == RENDER_IMAGE:
-            return True
         return False
 
     @property
     def available(self):
         """Return True if entity is available."""
-        if self._render == RENDER_IMAGE:
-            return True
-
-        # ffmpeg process
         return self._ffmpeg.is_running
+
+
+class OpenalprDeviceImage(Entity):
+    """Represent a openalpr device object for processing stream/images."""
+
+    # pylint: disable=too-many-arguments
+    def __init__(self, name, interval, api, input_source,
+                 username=None, password=None):
+        """Init image processing."""
+        super().__init__(name, interval, api)
+
+        self._next = time()
+        self._username = username
+        self._password = password
+        self._url = input_source
+
+    def restart(self):
+        """Restart ffmpeg stream."""
+        self.scan()
+
+    def scan(self):
+        """Immediately scan a image."""
+        self._next = time()
+        self.update()
+
+    @property
+    def should_poll(self):
+        """Return True if render is be 'image' or False if 'ffmpeg'."""
+        return True
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return True
 
     def update(self):
         """Retrieve latest state."""
-        if self._render != RENDER_IMAGE or self._next > time():
+        if self._next > time():
             return
 
         # send request
@@ -335,12 +373,18 @@ class OpenalprDevice(Entity):
         self._process_image(image)
 
 
-class OpenalprDeviceCloud(OpenalprDevice):
+class OpenalprApi(Object):
+    """OpenAlpr api class."""
+
+    def process_image(self, image, event_callback):
+        """Callback for processing image."""
+        raise NotImplementedError
+
+
+class OpenalprApiCloud(OpenalprApi):
     """Use local openalpr library to parse licences plate."""
 
-    # pylint: disable=too-many-arguments
-    def __init__(self, name, render, interval, input_source, api_key, region,
-                 extra_arguments=None, username=None, password=None):
+    def __init__(self, api_key, region):
         """Init image processing."""
         import openalpr_api
 
@@ -348,13 +392,7 @@ class OpenalprDeviceCloud(OpenalprDevice):
         self._api_key = api_key
         self._region = region
 
-        # init render
-        super().__init__(
-            name=name, render=render, interval=interval,
-            input_source=input_source, extra_arguments=extra_arguments,
-            username=username, password=password)
-
-    def _process_image(self, image):
+    def process_image(self, image, event_callback):
         """Callback for processing image."""
         result = self._api.recognize_post(
             self._api_key,
@@ -369,33 +407,24 @@ class OpenalprDeviceCloud(OpenalprDevice):
         # pylint: disable=no-member
         for object_plate in result.plate.results:
             f_plates.add(object_plate.plate)
-        self._process_event(f_plates)
+        event_callback(f_plates)
 
 
-class OpenalprDeviceLocal(OpenalprDevice):
+class OpenalprApiLocal(OpenalprApi):
     """Use the cloud openalpr api to parse licences plate."""
 
-    # pylint: disable=too-many-arguments
-    def __init__(self, name, render, interval, input_source, runtime, region,
-                 extra_arguments=None, username=None, password=None):
+    def __init__(self, runtime, region):
         """Init image processing."""
         # pylint: disable=import-error
         from openalpr import Alpr
 
         self._api = Alpr(region, "", runtime)
 
-        # init render
-        super().__init__(
-            name=name, render=render, interval=interval,
-            input_source=input_source, extra_arguments=extra_arguments,
-            username=username, password=password)
-
     def shutdown(self, event):
         """Close api stuff."""
-        super().shutdown(event)
         self._api.unload()
 
-    def _process_image(self, image):
+    def process_image(self, image, event_callback):
         """Callback for processing image."""
         result = self._api.recognize_array(image)
 
@@ -405,4 +434,4 @@ class OpenalprDeviceLocal(OpenalprDevice):
             for candidate in plate.get('candidates'):
                 f_plates.add(candidate.get('plate'))
                 break
-        self._process_event(f_plates)
+        event_callback(f_plates)
