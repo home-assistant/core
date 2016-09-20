@@ -136,7 +136,7 @@ def setup(hass, config):
         if engine == ENGINE_LOCAL:
             try:
                 # pylint: disable=unused-variable
-                from openalpr import Alpr # NOQA
+                from openalpr import Alpr  # NOQA
             except ImportError:
                 _LOGGER.error("Local openalpr instalation not exists")
                 continue
