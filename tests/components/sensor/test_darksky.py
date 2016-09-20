@@ -57,12 +57,12 @@ class TestDarkSkySetup(unittest.TestCase):
 
     @requests_mock.Mocker()
     @patch('forecastio.api.get_forecast', wraps=forecastio.api.get_forecast)
-    def test_setup(self, m, mock_get_forecast):
+    def test_setup(self, mock_req, mock_get_forecast):
         """Test for successfully setting up the forecast.io platform."""
-        uri = ('https://api.darksky.net\/forecast\/(\w+)\/'
-               '(-?\d+\.?\d*),(-?\d+\.?\d*)')
-        m.get(re.compile(uri),
-              text=load_fixture('darksky.json'))
+        uri = (r'https://api.(darksky.net|forecast.io)\/forecast\/(\w+)\/'
+               r'(-?\d+\.?\d*),(-?\d+\.?\d*)')
+        mock_req.get(re.compile(uri),
+                     text=load_fixture('darksky.json'))
         darksky.setup_platform(self.hass, self.config, MagicMock())
         self.assertTrue(mock_get_forecast.called)
         self.assertEqual(mock_get_forecast.call_count, 1)
