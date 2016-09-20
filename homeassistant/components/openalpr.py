@@ -374,7 +374,7 @@ class OpenalprDeviceImage(Entity):
         self._process_image(image)
 
 
-class OpenalprApi(Object):
+class OpenalprApi(object):
     """OpenAlpr api class."""
 
     def process_image(self, image, event_callback):

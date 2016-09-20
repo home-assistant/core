@@ -108,9 +108,6 @@ fuzzywuzzy==0.11.1
 # homeassistant.components.device_tracker.bluetooth_le_tracker
 # gattlib==0.20150805
 
-# homeassistant.components.openalpr
-git+https://github.com/pvizeli/cloudapi.git#egg=openalpr_api&subdirectory=python
-
 # homeassistant.components.notify.gntp
 gntp==1.0.3
 
@@ -189,6 +186,9 @@ https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a8
 # homeassistant.components.joaoapps_join
 # homeassistant.components.notify.joaoapps_join
 https://github.com/nkgilley/python-join-api/archive/3e1e849f1af0b4080f551b62270c6d244d5fbcbd.zip#python-join-api==0.0.1
+
+# homeassistant.components.openalpr
+https://github.com/pvizeli/cloudapi/archive/1.0.1.zip#cloud_api==1.0.1
 
 # homeassistant.components.switch.edimax
 https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
