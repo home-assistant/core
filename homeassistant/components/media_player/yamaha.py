@@ -45,15 +45,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     source_names = config.get(CONF_SOURCE_NAMES)
 
     if host is None:
-        add_devices(
-            YamahaDevice(name, receiver, source_ignore, source_names)
-            for receiver in rxv.find())
+    	receivers = rxv.find()
     else:
         receivers = \
             [rxv.RXV("http://{}:80/YamahaRemoteControl/ctrl".format(host), name)]
-        add_devices(
-            YamahaDevice(name, receiver, source_ignore, source_names)
-            for receiver in receivers)
+            
+    add_devices(
+        YamahaDevice(name, receiver, source_ignore, source_names)
+        for receiver in receivers)
 
 
 class YamahaDevice(MediaPlayerDevice):
