@@ -137,7 +137,7 @@ hikvision==0.4
 https://github.com/Danielhiversen/flux_led/archive/0.6.zip#flux_led==0.6
 
 # homeassistant.components.switch.dlink
-https://github.com/LinuxChristian/pyW215/archive/v0.3.4.zip#pyW215==0.3.4
+https://github.com/LinuxChristian/pyW215/archive/v0.3.5.zip#pyW215==0.3.5
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
