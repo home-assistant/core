@@ -2,7 +2,9 @@
 from collections import namedtuple
 import logging
 import unittest
+from unittest.mock import MagicMock
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import logger
 
 RECORD = namedtuple('record', ('name', 'levelno'))
@@ -22,7 +24,7 @@ class TestUpdater(unittest.TestCase):
 
     def test_logger_setup(self):
         """Use logger to create a logging filter."""
-        logger.setup(None, self.log_config)
+        setup_component(MagicMock(), logger.DOMAIN, self.log_config)
 
         self.assertTrue(len(logging.root.handlers) > 0)
         handler = logging.root.handlers[-1]
@@ -35,7 +37,7 @@ class TestUpdater(unittest.TestCase):
 
     def test_logger_test_filters(self):
         """Test resulting filter operation."""
-        logger.setup(None, self.log_config)
+        setup_component(MagicMock(), logger.DOMAIN, self.log_config)
 
         log_filter = logging.root.handlers[-1].filters[0]
 
