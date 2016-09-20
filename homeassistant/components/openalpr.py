@@ -401,7 +401,7 @@ class OpenalprApiCloud(OpenalprApi):
             self._api_key,
             'plate',
             image="",
-            image_bytes=b64encode(image),
+            image_bytes=str(b64encode(image), 'utf-8'),
             country=self._region
         )
 
