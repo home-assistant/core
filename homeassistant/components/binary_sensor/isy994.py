@@ -59,7 +59,7 @@ class ISYBinarySensorDevice(isy.ISYDevice, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 binary sensor device is on."""
-        return bool(self.state)
+        return bool(self.value)
 
 
 class ISYBinarySensorProgram(ISYBinarySensorDevice):
@@ -69,8 +69,3 @@ class ISYBinarySensorProgram(ISYBinarySensorDevice):
         """Initialize the ISY994 binary sensor program."""
         ISYBinarySensorDevice.__init__(self, node)
         self._name = name
-
-    @property
-    def is_on(self):
-        """Get whether the ISY994 binary sensor program is on."""
-        return bool(self.value)
