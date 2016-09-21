@@ -128,7 +128,7 @@ class AnthemMrx(MediaPlayerDevice):
             self._volume = max(min((int(response.group(3))
                                     + (0 - self._config[CONF_MINVOL]))
                                    / (self._config[CONF_MAXVOL]
-                                   - self._config[CONF_MINVOL]), 1), 0)
+                                      - self._config[CONF_MINVOL]), 1), 0)
 
             # check if it is muted
             if int(response.group(4)) == 0:
@@ -264,7 +264,7 @@ class AnthemMrx(MediaPlayerDevice):
         """Set volume level, range 0..1."""
         mrxvol = int(((self._config[CONF_MAXVOL]
                        - self._config[CONF_MINVOL])
-                     * volume) - (0 - self._config[CONF_MINVOL]))
+                      * volume) - (0 - self._config[CONF_MINVOL]))
 
         mrx_payload = "P{}V{};".format(self._config[CONF_MRXZONE], mrxvol)
         self.send_command(mrx_payload)
