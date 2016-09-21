@@ -4,6 +4,7 @@ Component that will help set the openalpr for video streams.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/openalpr/
 """
+import asyncio
 from base64 import b64encode
 import logging
 import os
@@ -26,7 +27,8 @@ DOMAIN = 'openalpr'
 DEPENDENCIES = ['ffmpeg']
 REQUIREMENTS = [
     'https://github.com/pvizeli/cloudapi/releases/download/1.0.2/'
-    'python-1.0.2.zip#cloud_api==1.0.2']
+    'python-1.0.2.zip#cloud_api==1.0.2',
+    'ha-alpr==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,34 +60,17 @@ OPENALPR_REGIONS = [
 CONF_RENDER = 'render'
 CONF_ENGINE = 'engine'
 CONF_REGION = 'region'
-CONF_RUNTIME = 'runtime'
 CONF_INTERVAL = 'interval'
 CONF_ENTITIES = 'entities'
 CONF_CONFIDENCE = 'confidence'
+CONF_ALPR_BINARY = 'alpr_binary'
 
 DEFAULT_NAME = 'OpenAlpr'
 DEFAULT_ENGINE = ENGINE_LOCAL
 DEFAULT_RENDER = RENDER_FFMPEG
+DEFAULT_BINARY = 'alpr'
 DEFAULT_INTERVAL = 2
 DEFAULT_CONFIDENCE = 80.0
-
-
-def check_api(engine):
-    """Check if valid api and if api exists on computer."""
-    test_schema = vol.Schema(
-        vol.All(cv.string, vol.In([ENGINE_LOCAL, ENGINE_CLOUD])))
-    engine = test_schema(engine)
-
-    if engine == ENGINE_CLOUD:
-        return engine
-    # if local openalpr installation exists
-    try:
-        # pylint: disable=unused-variable
-        from openalpr import Alpr  # NOQA
-        return engine
-    except ImportError:
-        raise vol.Invalid("Local openalpr instalation not exists")
-
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_INPUT): cv.string,
@@ -98,15 +83,14 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_PASSWORD): cv.string,
 })
 
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_ENGINE): check_api,
+        vol.Required(CONF_ENGINE): vol.In([ENGINE_LOCAL, ENGINE_CLOUD]),
         vol.Required(CONF_REGION): vol.In(OPENALPR_REGIONS),
         vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
             vol.Coerce(float),
         vol.Optional(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_RUNTIME): vol.IsDir,
+        vol.Optional(CONF_ALPR_BINARY, default=DEFAULT_BINARY), cv.string,
         vol.Required(CONF_ENTITIES):
             vol.All(cv.ensure_list, [DEVICE_SCHEMA]),
     })
@@ -141,7 +125,7 @@ def setup(hass, config):
     region = config[DOMAIN].get(CONF_REGION)
     confidence = config[DOMAIN].get(CONF_CONFIDENCE)
     api_key = config[DOMAIN].get(CONF_API_KEY)
-    runtime = config[DOMAIN].get(CONF_RUNTIME)
+    binary = config[DOMAIN].get(CONF_ALPR_BINARY)
     use_render_fffmpeg = False
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -157,7 +141,7 @@ def setup(hass, config):
             alpr_api = OpenalprApiLocal(
                 confidence=confidence,
                 region=region,
-                runtime=runtime,
+                binary=binary,
             )
         else:
             alpr_api = OpenalprApiCloud(
@@ -462,28 +446,22 @@ class OpenalprApiCloud(OpenalprApi):
 class OpenalprApiLocal(OpenalprApi):
     """Use local openalpr library to parse licences plate."""
 
-    def __init__(self, region, confidence, runtime):
+    def __init__(self, region, confidence, binary):
         """Init local api processing."""
         # pylint: disable=import-error
-        from openalpr import Alpr
+        from haalpr import HAAlpr
 
         super().__init__(region=region, confidence=confidence)
-        self._api = Alpr(region, "", runtime)
-
-    def shutdown(self, event):
-        """Close api stuff."""
-        self._api.unload()
+        self._api = HAAlpr(binary=binary, country=region)
 
     def process_image(self, image, event_callback):
         """Callback for processing image."""
-        result = self._api.recognize_array(image)
+        result = yield from self._api.recognize(image)
 
         # process result
         f_plates = {}
-        for plate in result.get('results'):
-            for candidate in plate.get('candidates'):
-                plate = candidate.get('plate')
-                confidence = candidate.get('confidence')
+        for found in result:
+            for plate, confidence in found.items():
                 if confidence >= self._confidence:
                     f_plates[plate] = confidence
         event_callback(f_plates)

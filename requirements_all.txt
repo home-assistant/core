@@ -117,6 +117,9 @@ googlemaps==2.4.4
 # homeassistant.components.sensor.gpsd
 gps3==0.33.3
 
+# homeassistant.components.openalpr
+ha-alpr==0.1
+
 # homeassistant.components.ffmpeg
 ha-ffmpeg==0.13
 
