@@ -25,8 +25,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 DOMAIN = 'openalpr'
 DEPENDENCIES = ['ffmpeg']
 REQUIREMENTS = [
-    'https://github.com/pvizeli/cloudapi/releases/download/1.0.1/'
-    'python-1.0.1.zip#cloud_api==1.0.1']
+    'https://github.com/pvizeli/cloudapi/releases/download/1.0.2/'
+    'python-1.0.2.zip#cloud_api==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,11 +61,13 @@ CONF_REGION = 'region'
 CONF_RUNTIME = 'runtime'
 CONF_INTERVAL = 'interval'
 CONF_ENTITIES = 'entities'
+CONF_CONFIDENCE = 'CONF_CONFIDENCE'
 
 DEFAULT_NAME = 'OpenAlpr'
 DEFAULT_ENGINE = ENGINE_LOCAL
 DEFAULT_RENDER = RENDER_FFMPEG
 DEFAULT_INTERVAL = 2
+DEFAULT_CONFIDENCE = 80.0
 
 
 def check_api(engine):
@@ -100,9 +102,12 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_ENGINE): check_api,
         vol.Required(CONF_REGION): vol.In(OPENALPR_REGIONS),
+        vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
+            vol.Coerce(float),
         vol.Optional(CONF_API_KEY): cv.string,
         vol.Optional(CONF_RUNTIME): vol.IsDir,
-        vol.Required(CONF_ENTITIES): vol.All(cv.ensure_list, [DEVICE_SCHEMA]),
+        vol.Required(CONF_ENTITIES):
+            vol.All(cv.ensure_list, [DEVICE_SCHEMA]),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -133,6 +138,7 @@ def setup(hass, config):
     """Setup the OpenAlpr component."""
     engine = config[DOMAIN].get(CONF_ENGINE)
     region = config[DOMAIN].get(CONF_REGION)
+    confidence = config[DOMAIN].get(CONF_CONFIDENCE)
     api_key = config[DOMAIN].get(CONF_API_KEY)
     runtime = config[DOMAIN].get(CONF_RUNTIME)
     use_render_fffmpeg = False
@@ -148,13 +154,15 @@ def setup(hass, config):
         # create api
         if engine == ENGINE_LOCAL:
             alpr_api = OpenalprApiLocal(
-                runtime=runtime,
+                confidence=confidence,
                 region=region,
+                runtime=runtime,
             )
         else:
             alpr_api = OpenalprApiCloud(
-                api_key=api_key,
+                confidence=confidence,
                 region=region,
+                api_key=api_key,
             )
 
         ##
@@ -232,6 +240,11 @@ class OpenalprDevice(Entity):
         self._api = api
         self._last = set()
 
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        return len(self._last)
+
     def shutdown(self, event):
         """Close stream."""
         if hasattr(self._api, "shutdown"):
@@ -247,6 +260,7 @@ class OpenalprDevice(Entity):
 
     def _process_event(self, plates):
         """Send event with new plates."""
+        state_change = False
         new_plates = plates - self._last
 
         # send events
@@ -255,7 +269,20 @@ class OpenalprDevice(Entity):
                 ATTR_PLATE: i_plate,
                 ATTR_ENTITY_ID: self.entity_id
             })
+
+        # update entity store
+        if self._last <= plates:
+            state_change = True
         self._last = plates.copy()
+
+        # update HA state
+        if state_change:
+            self.update_ha_state()
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return {'plates': list(self._last)}
 
     def scan(self):
         """Immediately scan a image."""
@@ -378,6 +405,11 @@ class OpenalprDeviceImage(OpenalprDevice):
 class OpenalprApi(object):
     """OpenAlpr api class."""
 
+    def __init__(region, confidence):
+        """Init basic api processing."""
+        self._region = region
+        self._confidence = confidence
+
     def process_image(self, image, event_callback):
         """Callback for processing image."""
         raise NotImplementedError
@@ -385,15 +417,15 @@ class OpenalprApi(object):
 
 # pylint: disable=too-few-public-methods
 class OpenalprApiCloud(OpenalprApi):
-    """Use local openalpr library to parse licences plate."""
+    """Use the cloud openalpr api to parse licences plate."""
 
-    def __init__(self, api_key, region):
-        """Init image processing."""
+    def __init__(self, region, confidence, api_key):
+        """Init cloud api processing."""
         import openalpr_api
 
+        super().__init__(region=region, confidence=confidence)
         self._api = openalpr_api.DefaultApi()
         self._api_key = api_key
-        self._region = region
 
     def process_image(self, image, event_callback):
         """Callback for processing image."""
@@ -401,7 +433,7 @@ class OpenalprApiCloud(OpenalprApi):
             self._api_key,
             'plate',
             image="",
-            image_bytes=str(b64encode(image), 'utf-8'),
+            image_bytes=b64encode(image),
             country=self._region
         )
 
@@ -409,18 +441,20 @@ class OpenalprApiCloud(OpenalprApi):
         f_plates = set()
         # pylint: disable=no-member
         for object_plate in result.plate.results:
-            f_plates.add(object_plate.plate)
+            if object_plate.confidence >= self._confidence:
+                f_plates.add(object_plate.plate)
         event_callback(f_plates)
 
 
 class OpenalprApiLocal(OpenalprApi):
-    """Use the cloud openalpr api to parse licences plate."""
+    """Use local openalpr library to parse licences plate."""
 
-    def __init__(self, runtime, region):
-        """Init image processing."""
+    def __init__(self, region, confidence, runtime):
+        """Init local api processing."""
         # pylint: disable=import-error
         from openalpr import Alpr
 
+        super().__init__(region=region, confidence=confidence)
         self._api = Alpr(region, "", runtime)
 
     def shutdown(self, event):
@@ -435,6 +469,6 @@ class OpenalprApiLocal(OpenalprApi):
         f_plates = set()
         for plate in result.get('results'):
             for candidate in plate.get('candidates'):
-                f_plates.add(candidate.get('plate'))
-                break
+                if candidate.get('confidence') >= self._confidence:
+                    f_plates.add(candidate.get('plate'))
         event_callback(f_plates)
