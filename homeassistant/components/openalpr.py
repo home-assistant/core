@@ -82,6 +82,7 @@ def check_api(engine):
     try:
         # pylint: disable=unused-variable
         from openalpr import Alpr  # NOQA
+        return engine
     except ImportError:
         raise vol.Invalid("Local openalpr instalation not exists")
 
