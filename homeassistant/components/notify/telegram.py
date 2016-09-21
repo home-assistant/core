@@ -97,16 +97,18 @@ class TelegramNotificationService(BaseNotificationService):
         data = kwargs.get(ATTR_DATA)
 
         # exists data for send a photo/location
-        if data is not None and ATTR_PHOTO in data:
+        if data is None:
+            pass
+        elif ATTR_PHOTO in data:
             photos = data.get(ATTR_PHOTO, None)
             photos = photos if isinstance(photos, list) else [photos]
 
             for photo_data in photos:
                 self.send_photo(photo_data)
             return
-        elif data is not None and ATTR_LOCATION in data:
+        elif ATTR_LOCATION in data:
             return self.send_location(data.get(ATTR_LOCATION))
-        elif data is not None and ATTR_DOCUMENT in data:
+        elif ATTR_DOCUMENT in data:
             return self.send_document(data.get(ATTR_DOCUMENT))
 
         if title:
