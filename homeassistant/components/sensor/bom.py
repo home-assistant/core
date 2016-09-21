@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         rest.update()
     except ValueError as err:
-        _LOGGER.error("Received error from BOM_Current: {}".format(err))
+        _LOGGER.error("Received error from BOM_Current: %s", err)
         return False
 
     add_devices(sensors)
@@ -159,7 +159,7 @@ class BOMCurrentData(object):
 
     def _build_url(self):
         url = _RESOURCE.format(self._zone_id, self._zone_id, self._wmo_id)
-        _LOGGER.info("BOM url {}".format(url))
+        _LOGGER.info("BOM url %s", url)
         return url
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -169,9 +169,8 @@ class BOMCurrentData(object):
                 and ((datetime.datetime.now() - self._lastupdate)) <
                 datetime.timedelta(minutes=35)):
             _LOGGER.info(
-                "BOM was updated {} minutes ago, skipping update as"
-                " < 35 minutes".format((datetime.datetime.now()
-                                        - self._lastupdate)))
+                "BOM was updated %s minutes ago, skipping update as"
+                " < 35 minutes", (datetime.datetime.now() - self._lastupdate))
             return self._lastupdate
 
         try:
@@ -181,6 +180,6 @@ class BOMCurrentData(object):
                 str(self.data['local_date_time_full']), '%Y%m%d%H%M%S')
             return self._lastupdate
         except ValueError as err:
-            _LOGGER.error("Check BOM {}".format(err.args))
+            _LOGGER.error("Check BOM %s", err.args)
             self.data = None
             raise
