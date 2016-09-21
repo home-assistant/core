@@ -42,6 +42,7 @@ def get_test_home_assistant(num_threads=None):
     if num_threads:
         ha.MIN_WORKER_THREAD = orig_num_threads
 
+    hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
@@ -54,10 +55,17 @@ def get_test_home_assistant(num_threads=None):
         loader.prepare(hass)
 
     # FIXME should not be a daemon. Means hass.stop() not called in teardown
-    threading.Thread(name="LoopThread", target=loop.run_forever,
-                     daemon=True).start()
+    stop_event = threading.Event()
+
+    def run_loop():
+        loop.run_forever()
+        loop.close()
+        stop_event.set()
+
+    threading.Thread(name="LoopThread", target=run_loop, daemon=True).start()
 
     orig_start = hass.start
+    orig_stop = hass.stop
 
     @asyncio.coroutine
     def fake_stop():
@@ -67,11 +75,18 @@ def get_test_home_assistant(num_threads=None):
         """Helper to start hass."""
         with patch.object(hass.loop, 'run_forever', return_value=None):
             with patch.object(hass, 'async_stop', return_value=fake_stop()):
-                with patch.object(ha, 'create_timer', return_value=None):
-                    orig_start()
-                    hass.block_till_done()
+                with patch.object(ha, 'async_create_timer', return_value=None):
+                    with patch.object(ha, 'async_monitor_worker_pool',
+                                      return_value=None):
+                        orig_start()
+                        hass.block_till_done()
+
+    def stop_hass():
+        orig_stop()
+        stop_event.wait()
 
     hass.start = start_hass
+    hass.stop = stop_hass
 
     return hass
 

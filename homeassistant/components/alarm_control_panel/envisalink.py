@@ -10,6 +10,7 @@ from homeassistant.components.envisalink import (EVL_CONTROLLER,
                                                  EnvisalinkDevice,
                                                  PARTITION_SCHEMA,
                                                  CONF_CODE,
+                                                 CONF_PANIC,
                                                  CONF_PARTITIONNAME,
                                                  SIGNAL_PARTITION_UPDATE,
                                                  SIGNAL_KEYPAD_UPDATE)
@@ -26,6 +27,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink alarm panels."""
     _configured_partitions = discovery_info['partitions']
     _code = discovery_info[CONF_CODE]
+    _panic_type = discovery_info[CONF_PANIC]
     for part_num in _configured_partitions:
         _device_config_data = PARTITION_SCHEMA(
             _configured_partitions[part_num])
@@ -33,6 +35,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             part_num,
             _device_config_data[CONF_PARTITIONNAME],
             _code,
+            _panic_type,
             EVL_CONTROLLER.alarm_state['partition'][part_num],
             EVL_CONTROLLER)
         add_devices_callback([_device])
@@ -44,11 +47,13 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     """Represents the Envisalink-based alarm panel."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, partition_number, alarm_name, code, info, controller):
+    def __init__(self, partition_number, alarm_name,
+                 code, panic_type, info, controller):
         """Initialize the alarm panel."""
         from pydispatch import dispatcher
         self._partition_number = partition_number
         self._code = code
+        self._panic_type = panic_type
         _LOGGER.debug('Setting up alarm: ' + alarm_name)
         EnvisalinkDevice.__init__(self, alarm_name, info, controller)
         dispatcher.connect(self._update_callback,
@@ -61,7 +66,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     def _update_callback(self, partition):
         """Update HA state, if needed."""
         if partition is None or int(partition) == self._partition_number:
-            self.update_ha_state()
+            self.hass.async_add_job(self.update_ha_state)
 
     @property
     def code_format(self):
@@ -101,5 +106,6 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
                                               self._partition_number)
 
     def alarm_trigger(self, code=None):
-        """Alarm trigger command. Not possible for us."""
-        raise NotImplementedError()
+        """Alarm trigger command. Will be used to trigger a panic alarm."""
+        if self._code:
+            EVL_CONTROLLER.panic_alarm(self._panic_type)

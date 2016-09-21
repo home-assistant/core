@@ -10,11 +10,13 @@ import subprocess
 from collections import namedtuple
 from datetime import timedelta
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOSTS
-from homeassistant.helpers import validate_config
-from homeassistant.util import Throttle, convert
+from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
@@ -27,18 +29,21 @@ CONF_EXCLUDE = 'exclude'
 
 REQUIREMENTS = ['python-nmap==0.6.1']
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
+    vol.Optional(CONF_EXCLUDE, default=[]):
+        vol.All(cv.ensure_list, vol.Length(min=1))
+})
+
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Nmap scanner."""
-    if not validate_config(config, {DOMAIN: [CONF_HOSTS]},
-                           _LOGGER):
-        return None
-
     scanner = NmapDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
-Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
+Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
 
 
 def _arp(ip_address):
@@ -49,12 +54,14 @@ def _arp(ip_address):
     match = re.search(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})', str(out))
     if match:
         return match.group(0)
-    _LOGGER.info("No MAC address found for %s", ip_address)
+    _LOGGER.info('No MAC address found for %s', ip_address)
     return None
 
 
 class NmapDeviceScanner(object):
     """This class scans for devices using nmap."""
+
+    exclude = []
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -62,11 +69,11 @@ class NmapDeviceScanner(object):
 
         self.hosts = config[CONF_HOSTS]
         self.exclude = config.get(CONF_EXCLUDE, [])
-        minutes = convert(config.get(CONF_HOME_INTERVAL), int, 0)
+        minutes = config[CONF_HOME_INTERVAL]
         self.home_interval = timedelta(minutes=minutes)
 
         self.success_init = self._update_info()
-        _LOGGER.info("nmap scanner initialized")
+        _LOGGER.info('nmap scanner initialized')
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -90,21 +97,18 @@ class NmapDeviceScanner(object):
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.info("Scanning")
+        _LOGGER.info('Scanning')
 
         from nmap import PortScanner, PortScannerError
         scanner = PortScanner()
 
-        options = "-F --host-timeout 5s "
-        exclude = "--exclude "
+        options = '-F --host-timeout 5s '
 
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval
             last_results = [device for device in self.last_results
                             if device.last_update > boundary]
             if last_results:
-                # Pylint is confused here.
-                # pylint: disable=no-member
                 exclude_hosts = self.exclude + [device.ip for device
                                                 in last_results]
             else:
@@ -113,8 +117,7 @@ class NmapDeviceScanner(object):
             last_results = []
             exclude_hosts = self.exclude
         if exclude_hosts:
-            exclude = " --exclude {}".format(",".join(exclude_hosts))
-            options += exclude
+            options += ' --exclude {}'.format(','.join(exclude_hosts))
 
         try:
             result = scanner.scan(hosts=self.hosts, arguments=options)
@@ -134,5 +137,5 @@ class NmapDeviceScanner(object):
 
         self.last_results = last_results
 
-        _LOGGER.info("nmap scan successful")
+        _LOGGER.info('nmap scan successful')
         return True

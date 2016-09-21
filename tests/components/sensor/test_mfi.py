@@ -4,6 +4,7 @@ import unittest.mock as mock
 
 import requests
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.mfi as mfi
 from homeassistant.const import TEMP_CELSIUS
@@ -69,7 +70,7 @@ class TestMfiSensorSetup(unittest.TestCase):
         """Test setup with minimum configuration."""
         config = dict(self.GOOD_CONFIG)
         del config[self.THING]['port']
-        assert self.COMPONENT.setup(self.hass, config)
+        assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
         mock_client.assert_called_once_with(
             'foo', 'user', 'pass', port=6443, use_tls=True, verify=True)
 
@@ -78,7 +79,7 @@ class TestMfiSensorSetup(unittest.TestCase):
         """Test setup with port."""
         config = dict(self.GOOD_CONFIG)
         config[self.THING]['port'] = 6123
-        assert self.COMPONENT.setup(self.hass, config)
+        assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
         mock_client.assert_called_once_with(
             'foo', 'user', 'pass', port=6123, use_tls=True, verify=True)
 
@@ -89,7 +90,7 @@ class TestMfiSensorSetup(unittest.TestCase):
         del config[self.THING]['port']
         config[self.THING]['ssl'] = False
         config[self.THING]['verify_ssl'] = False
-        assert self.COMPONENT.setup(self.hass, config)
+        assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
         mock_client.assert_called_once_with(
             'foo', 'user', 'pass', port=6080, use_tls=False, verify=False)
 

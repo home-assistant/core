@@ -4,7 +4,7 @@
 import os
 import signal
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 
 import pytz
@@ -459,3 +459,84 @@ class TestWorkerPool(unittest.TestCase):
         pool.add_job(ha.JobPriority.EVENT_DEFAULT, (register_call, None))
         pool.block_till_done()
         self.assertEqual(1, len(calls))
+
+
+class TestWorkerPoolMonitor(object):
+    """Test monitor_worker_pool."""
+
+    @patch('homeassistant.core._LOGGER.warning')
+    def test_worker_pool_monitor(self, mock_warning, event_loop):
+        """Test we log an error and increase threshold."""
+        hass = MagicMock()
+        hass.pool.worker_count = 3
+        schedule_handle = MagicMock()
+        hass.loop.call_later.return_value = schedule_handle
+
+        ha.async_monitor_worker_pool(hass)
+        assert hass.loop.call_later.called
+        assert hass.bus.async_listen_once.called
+        assert not schedule_handle.called
+
+        check_threshold = hass.loop.call_later.mock_calls[0][1][1]
+
+        hass.pool.queue_size = 8
+        check_threshold()
+        assert not mock_warning.called
+
+        hass.pool.queue_size = 9
+        check_threshold()
+        assert mock_warning.called
+
+        mock_warning.reset_mock()
+        assert not mock_warning.called
+
+        check_threshold()
+        assert not mock_warning.called
+
+        hass.pool.queue_size = 17
+        check_threshold()
+        assert not mock_warning.called
+
+        hass.pool.queue_size = 18
+        check_threshold()
+        assert mock_warning.called
+
+        event_loop.run_until_complete(
+            hass.bus.async_listen_once.mock_calls[0][1][1](None))
+        assert schedule_handle.cancel.called
+
+
+class TestAsyncCreateTimer(object):
+    """Test create timer."""
+
+    @patch('homeassistant.core.asyncio.Event')
+    @patch('homeassistant.core.dt_util.utcnow')
+    def test_create_timer(self, mock_utcnow, mock_event, event_loop):
+        """Test create timer fires correctly."""
+        hass = MagicMock()
+        now = mock_utcnow()
+        event = mock_event()
+        now.second = 1
+        mock_utcnow.reset_mock()
+
+        ha.async_create_timer(hass)
+        assert len(hass.bus.async_listen_once.mock_calls) == 2
+        start_timer = hass.bus.async_listen_once.mock_calls[1][1][1]
+
+        event_loop.run_until_complete(start_timer(None))
+        assert hass.loop.create_task.called
+
+        timer = hass.loop.create_task.mock_calls[0][1][0]
+        event.is_set.side_effect = False, False, True
+        event_loop.run_until_complete(timer)
+        assert len(mock_utcnow.mock_calls) == 1
+
+        assert hass.loop.call_soon.called
+        event_type, event_data = hass.loop.call_soon.mock_calls[0][1][1:]
+
+        assert ha.EVENT_TIME_CHANGED == event_type
+        assert {ha.ATTR_NOW: now} == event_data
+
+        stop_timer = hass.bus.async_listen_once.mock_calls[0][1][1]
+        event_loop.run_until_complete(stop_timer(None))
+        assert event.set.called

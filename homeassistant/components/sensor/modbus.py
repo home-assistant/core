@@ -1,100 +1,80 @@
 """
-Support for Modbus sensors.
+Support for Modbus Register sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.modbus/
 """
 import logging
+import voluptuous as vol
 
 import homeassistant.components.modbus as modbus
 from homeassistant.const import (
-    STATE_OFF, STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    CONF_NAME, CONF_OFFSET, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']
 
+CONF_COUNT = "count"
+CONF_PRECISION = "precision"
+CONF_REGISTER = "register"
+CONF_REGISTERS = "registers"
+CONF_SCALE = "scale"
+CONF_SLAVE = "slave"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_REGISTERS): [{
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_REGISTER): cv.positive_int,
+        vol.Optional(CONF_COUNT, default=1): cv.positive_int,
+        vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
+        vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
+        vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
+        vol.Optional(CONF_SLAVE): cv.positive_int,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string
+    }]
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Modbus devices."""
+    """Setup Modbus sensors."""
     sensors = []
-    slave = config.get("slave", None)
-    if modbus.TYPE == "serial" and not slave:
-        _LOGGER.error("No slave number provided for serial Modbus")
-        return False
-    registers = config.get("registers")
-    if registers:
-        for regnum, register in registers.items():
-            if register.get("name"):
-                sensors.append(
-                    ModbusSensor(register.get("name"),
-                                 slave,
-                                 regnum,
-                                 None,
-                                 register.get("unit"),
-                                 scale=register.get("scale", 1),
-                                 offset=register.get("offset", 0),
-                                 precision=register.get("precision", 0)))
-            if register.get("bits"):
-                bits = register.get("bits")
-                for bitnum, bit in bits.items():
-                    if bit.get("name"):
-                        sensors.append(ModbusSensor(bit.get("name"),
-                                                    slave,
-                                                    regnum,
-                                                    bitnum))
-    coils = config.get("coils")
-    if coils:
-        for coilnum, coil in coils.items():
-            sensors.append(ModbusSensor(coil.get("name"),
-                                        slave,
-                                        coilnum,
-                                        coil=True))
-
+    for register in config.get(CONF_REGISTERS):
+        sensors.append(ModbusRegisterSensor(
+            register.get(CONF_NAME),
+            register.get(CONF_SLAVE),
+            register.get(CONF_REGISTER),
+            register.get(CONF_UNIT_OF_MEASUREMENT),
+            register.get(CONF_COUNT),
+            register.get(CONF_SCALE),
+            register.get(CONF_OFFSET),
+            register.get(CONF_PRECISION)))
     add_devices(sensors)
 
 
-class ModbusSensor(Entity):
-    """Representation of a Modbus Sensor."""
+class ModbusRegisterSensor(Entity):
+    """Modbus resgister sensor."""
 
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self, name, slave, register, bit=None, unit=None, coil=False,
-                 scale=1, offset=0, precision=0):
-        """Initialize the sensor."""
+    # pylint: disable=too-many-instance-attributes, too-many-arguments
+    def __init__(self, name, slave, register, unit_of_measurement, count,
+                 scale, offset, precision):
+        """Initialize the modbus register sensor."""
         self._name = name
-        self.slave = int(slave) if slave else 1
-        self.register = int(register)
-        self.bit = int(bit) if bit else None
-        self._value = None
-        self._unit = unit
-        self._coil = coil
+        self._slave = int(slave) if slave else None
+        self._register = int(register)
+        self._unit_of_measurement = unit_of_measurement
+        self._count = int(count)
         self._scale = scale
         self._offset = offset
         self._precision = precision
-
-    def __str__(self):
-        """Return the name and the state of the sensor."""
-        return "%s: %s" % (self.name, self.state)
-
-    @property
-    def should_poll(self):
-        """Polling needed."""
-        return True
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return "MODBUS-SENSOR-{}-{}-{}".format(self.slave,
-                                               self.register,
-                                               self.bit)
+        self._value = None
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.bit:
-            return STATE_ON if self._value else STATE_OFF
-        else:
-            return self._value
+        return self._value
 
     @property
     def name(self):
@@ -103,28 +83,18 @@ class ModbusSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        if self._unit == "C":
-            return TEMP_CELSIUS
-        elif self._unit == "F":
-            return TEMP_FAHRENHEIT
-        else:
-            return self._unit
+        """Return the unit of measurement."""
+        return self._unit_of_measurement
 
     def update(self):
         """Update the state of the sensor."""
-        if self._coil:
-            result = modbus.HUB.read_coils(self.slave, self.register, 1)
-            self._value = result.bits[0]
-        else:
-            result = modbus.HUB.read_holding_registers(
-                self.slave, self.register, 1)
-            val = 0
-            for i, res in enumerate(result.registers):
-                val += res * (2**(i*16))
-            if self.bit:
-                self._value = val & (0x0001 << self.bit)
-            else:
-                self._value = format(
-                    self._scale * val + self._offset,
-                    ".{}f".format(self._precision))
+        result = modbus.HUB.read_holding_registers(
+            self._slave,
+            self._register,
+            self._count)
+        val = 0
+        for i, res in enumerate(result.registers):
+            val += res * (2**(i*16))
+        self._value = format(
+            self._scale * val + self._offset,
+            ".{}f".format(self._precision))

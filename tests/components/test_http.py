@@ -72,6 +72,15 @@ class TestHttp:
 
         assert req.status_code == 401
 
+    def test_access_denied_with_ip_no_in_approved_ips(self, caplog):
+        """Test access deniend with ip not in approved ip."""
+        hass.wsgi.approved_ips = ['134.4.56.1']
+
+        req = requests.get(_url(const.URL_API),
+                           params={'api_password': ''})
+
+        assert req.status_code == 401
+
     def test_access_with_password_in_header(self, caplog):
         """Test access with password in URL."""
         # Hide logging from requests package that we use to test logging
@@ -111,6 +120,15 @@ class TestHttp:
 
         # assert const.URL_API in logs
         assert API_PASSWORD not in logs
+
+    def test_access_with_ip_in_approved_ips(self, caplog):
+        """Test access with approved ip."""
+        hass.wsgi.approved_ips = ['127.0.0.1', '134.4.56.1']
+
+        req = requests.get(_url(const.URL_API),
+                           params={'api_password': ''})
+
+        assert req.status_code == 200
 
     def test_cors_allowed_with_password_in_url(self):
         """Test cross origin resource sharing with password in url."""

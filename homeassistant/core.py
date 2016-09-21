@@ -6,6 +6,7 @@ of entities and react to changes.
 """
 # pylint: disable=unused-import, too-many-lines
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import enum
 import functools as ft
 import logging
@@ -13,8 +14,8 @@ import os
 import re
 import signal
 import sys
+import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 
 from types import MappingProxyType
 
@@ -39,6 +40,12 @@ import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
 from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
 
+try:
+    import uvloop
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+except ImportError:
+    pass
+
 DOMAIN = "homeassistant"
 
 # How often time_changed event should fire
@@ -54,6 +61,9 @@ MIN_WORKER_THREAD = 2
 
 # Pattern for validating entity IDs (format: <domain>.<entity>)
 ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
+
+# Interval at which we check if the pool is getting busy
+MONITOR_POOL_INTERVAL = 30
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -189,7 +199,8 @@ class HomeAssistant(object):
 
         This method is a coroutine.
         """
-        create_timer(self)
+        async_create_timer(self)
+        async_monitor_worker_pool(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
         yield from self.loop.run_in_executor(None, self.pool.block_till_done)
         self.state = CoreState.running
@@ -205,6 +216,17 @@ class HomeAssistant(object):
         """
         self.pool.add_job(priority, (target,) + args)
 
+    def async_add_job(self, target: Callable[..., None], *args: Any):
+        """Add a job from within the eventloop.
+
+        target: target to call.
+        args: parameters for method to call.
+        """
+        if asyncio.iscoroutinefunction(target):
+            self.loop.create_task(target(*args))
+        else:
+            self.add_job(target, *args)
+
     def _loop_empty(self):
         """Python 3.4.2 empty loop compatibility function."""
         # pylint: disable=protected-access
@@ -217,8 +239,6 @@ class HomeAssistant(object):
 
     def block_till_done(self):
         """Block till all pending work is done."""
-        import threading
-
         complete = threading.Event()
 
         @asyncio.coroutine
@@ -263,6 +283,7 @@ class HomeAssistant(object):
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         yield from self.loop.run_in_executor(None, self.pool.block_till_done)
         yield from self.loop.run_in_executor(None, self.pool.stop)
+        self.executer.shutdown()
         self.state = CoreState.not_running
         self.loop.stop()
 
@@ -1064,13 +1085,8 @@ class Config(object):
         }
 
 
-def create_timer(hass, interval=TIMER_INTERVAL):
+def async_create_timer(hass, interval=TIMER_INTERVAL):
     """Create a timer that will start on HOMEASSISTANT_START."""
-    # We want to be able to fire every time a minute starts (seconds=0).
-    # We want this so other modules can use that to make sure they fire
-    # every minute.
-    assert 60 % interval == 0, "60 % TIMER_INTERVAL should be 0!"
-
     stop_event = asyncio.Event(loop=hass.loop)
 
     # Setting the Event inside the loop by marking it as a coroutine
@@ -1149,14 +1165,48 @@ def create_worker_pool(worker_count=None):
             # We do not want to crash our ThreadPool
             _LOGGER.exception("BusHandler:Exception doing job")
 
-    def busy_callback(worker_count, current_jobs, pending_jobs_count):
-        """Callback to be called when the pool queue gets too big."""
+    return util.ThreadPool(job_handler, worker_count)
+
+
+def async_monitor_worker_pool(hass):
+    """Create a monitor for the thread pool to check if pool is misbehaving."""
+    busy_threshold = hass.pool.worker_count * 3
+
+    handle = None
+
+    def schedule():
+        """Schedule the monitor."""
+        nonlocal handle
+        handle = hass.loop.call_later(MONITOR_POOL_INTERVAL,
+                                      check_pool_threshold)
+
+    def check_pool_threshold():
+        """Check pool size."""
+        nonlocal busy_threshold
+
+        pending_jobs = hass.pool.queue_size
+
+        if pending_jobs < busy_threshold:
+            schedule()
+            return
+
         _LOGGER.warning(
             "WorkerPool:All %d threads are busy and %d jobs pending",
-            worker_count, pending_jobs_count)
+            hass.pool.worker_count, pending_jobs)
 
-        for start, job in current_jobs:
-            _LOGGER.warning("WorkerPool:Current job from %s: %s",
+        for start, job in hass.pool.current_jobs:
+            _LOGGER.warning("WorkerPool:Current job started at %s: %s",
                             dt_util.as_local(start).isoformat(), job)
 
-    return util.ThreadPool(job_handler, worker_count, busy_callback)
+        busy_threshold *= 2
+
+        schedule()
+
+    schedule()
+
+    @asyncio.coroutine
+    def stop_monitor(event):
+        """Stop the monitor."""
+        handle.cancel()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_monitor)

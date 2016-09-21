@@ -53,13 +53,13 @@ class TestCheckConfig(unittest.TestCase):
     def test_config_platform_valid(self, mock_get_loop):
         """Test a valid platform setup."""
         files = {
-            'light.yaml': BASE_CONFIG + 'light:\n  platform: hue',
+            'light.yaml': BASE_CONFIG + 'light:\n  platform: demo',
         }
         with patch_yaml_files(files):
             res = check_config.check(get_test_config_dir('light.yaml'))
             change_yaml_files(res)
             self.assertDictEqual({
-                'components': {'light': [{'platform': 'hue'}]},
+                'components': {'light': [{'platform': 'demo'}]},
                 'except': {},
                 'secret_cache': {},
                 'secrets': {},

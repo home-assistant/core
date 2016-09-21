@@ -5,6 +5,7 @@ from unittest import mock
 
 import influxdb as influx_client
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.influxdb as influxdb
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 
@@ -31,7 +32,7 @@ class TestInfluxDB(unittest.TestCase):
                 'verify_ssl': 'False',
             }
         }
-        self.assertTrue(influxdb.setup(self.hass, config))
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
         self.assertTrue(self.hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
                          self.hass.bus.listen.call_args_list[0][0][0])
@@ -46,7 +47,7 @@ class TestInfluxDB(unittest.TestCase):
                 'password': 'pass',
             }
         }
-        self.assertTrue(influxdb.setup(self.hass, config))
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
         self.assertTrue(self.hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
                          self.hass.bus.listen.call_args_list[0][0][0])
@@ -55,7 +56,6 @@ class TestInfluxDB(unittest.TestCase):
         """Test the setup with missing keys."""
         config = {
             'influxdb': {
-                'host': 'host',
                 'username': 'user',
                 'password': 'pass',
             }
@@ -63,7 +63,7 @@ class TestInfluxDB(unittest.TestCase):
         for missing in config['influxdb'].keys():
             config_copy = copy.deepcopy(config)
             del config_copy['influxdb'][missing]
-            self.assertFalse(influxdb.setup(self.hass, config_copy))
+            assert not setup_component(self.hass, influxdb.DOMAIN, config_copy)
 
     def test_setup_query_fail(self, mock_client):
         """Test the setup for query failures."""
@@ -76,7 +76,7 @@ class TestInfluxDB(unittest.TestCase):
         }
         mock_client.return_value.query.side_effect = \
             influx_client.exceptions.InfluxDBClientError('fake')
-        self.assertFalse(influxdb.setup(self.hass, config))
+        assert not setup_component(self.hass, influxdb.DOMAIN, config)
 
     def _setup(self):
         """Setup the client."""
@@ -88,7 +88,7 @@ class TestInfluxDB(unittest.TestCase):
                 'blacklist': ['fake.blacklisted']
             }
         }
-        influxdb.setup(self.hass, config)
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
     def test_event_listener(self, mock_client):
@@ -101,7 +101,11 @@ class TestInfluxDB(unittest.TestCase):
                  STATE_OFF: 0,
                  'foo': 'foo'}
         for in_, out in valid.items():
-            attrs = {'unit_of_measurement': 'foobars'}
+            attrs = {
+                        'unit_of_measurement': 'foobars',
+                        'longitude': '1.1',
+                        'latitude': '2.2'
+                    }
             state = mock.MagicMock(state=in_,
                                    domain='fake',
                                    object_id='entity',
@@ -117,6 +121,8 @@ class TestInfluxDB(unittest.TestCase):
                 'time': 12345,
                 'fields': {
                     'value': out,
+                    'longitude': '1.1',
+                    'latitude': '2.2'
                 },
             }]
             self.handler_method(event)

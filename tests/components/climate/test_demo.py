@@ -4,6 +4,7 @@ import unittest
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
 )
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import climate
 
 from tests.common import get_test_home_assistant
@@ -20,9 +21,10 @@ class TestDemoClimate(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
-        self.assertTrue(climate.setup(self.hass, {'climate': {
-            'platform': 'demo',
-        }}))
+        self.assertTrue(setup_component(self.hass, climate.DOMAIN, {
+            'climate': {
+                'platform': 'demo',
+            }}))
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down everything that was started."""

@@ -4,15 +4,18 @@ Support for Nest thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.nest/
 """
+import logging
 import voluptuous as vol
-
 import homeassistant.components.nest as nest
 from homeassistant.components.climate import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice,
+    PLATFORM_SCHEMA)
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_SCAN_INTERVAL, ATTR_TEMPERATURE)
+    TEMP_CELSIUS, CONF_SCAN_INTERVAL, ATTR_TEMPERATURE, STATE_ON)
+from homeassistant.util.temperature import convert as convert_temperature
 
 DEPENDENCIES = ['nest']
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL):
@@ -22,7 +25,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest thermostat."""
-    add_devices([NestThermostat(structure, device)
+    temp_unit = hass.config.units.temperature_unit
+    add_devices([NestThermostat(structure, device, temp_unit)
                  for structure, device in nest.devices()])
 
 
@@ -30,10 +34,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class NestThermostat(ClimateDevice):
     """Representation of a Nest thermostat."""
 
-    def __init__(self, structure, device):
+    def __init__(self, structure, device, temp_unit):
         """Initialize the thermostat."""
+        self._unit = temp_unit
         self.structure = structure
         self.device = device
+        self._fan_list = [STATE_ON, STATE_AUTO]
 
     @property
     def name(self):
@@ -134,7 +140,9 @@ class NestThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        temperature = convert_temperature(kwargs.get(ATTR_TEMPERATURE),
+                                          self._unit, TEMP_CELSIUS)
+        _LOGGER.debug("Nest set_temperature-input-value=%s", temperature)
         if temperature is None:
             return
         if self.device.mode == 'range':
@@ -142,6 +150,7 @@ class NestThermostat(ClimateDevice):
                 temperature = (temperature, self.target_temperature_high)
             elif self.target_temperature == self.target_temperature_high:
                 temperature = (self.target_temperature_low, temperature)
+        _LOGGER.debug("Nest set_temperature-output-value=%s", temperature)
         self.device.target = temperature
 
     def set_operation_mode(self, operation_mode):
@@ -157,17 +166,18 @@ class NestThermostat(ClimateDevice):
         self.structure.away = False
 
     @property
-    def is_fan_on(self):
+    def current_fan_mode(self):
         """Return whether the fan is on."""
-        return self.device.fan
+        return STATE_ON if self.device.fan else STATE_AUTO
 
-    def turn_fan_on(self):
-        """Turn fan on."""
-        self.device.fan = True
+    @property
+    def fan_list(self):
+        """List of available fan modes."""
+        return self._fan_list
 
-    def turn_fan_off(self):
-        """Turn fan off."""
-        self.device.fan = False
+    def set_fan_mode(self, fan):
+        """Turn fan on/off."""
+        self.device.fan = fan.lower()
 
     @property
     def min_temp(self):

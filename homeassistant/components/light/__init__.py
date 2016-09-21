@@ -39,6 +39,7 @@ SUPPORT_FLASH = 8
 SUPPORT_RGB_COLOR = 16
 SUPPORT_TRANSITION = 32
 SUPPORT_XY_COLOR = 64
+SUPPORT_WHITE_VALUE = 128
 
 # Integer that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
@@ -48,6 +49,7 @@ ATTR_RGB_COLOR = "rgb_color"
 ATTR_XY_COLOR = "xy_color"
 ATTR_COLOR_TEMP = "color_temp"
 ATTR_COLOR_NAME = "color_name"
+ATTR_WHITE_VALUE = "white_value"
 
 # int with value 0 .. 255 representing brightness of the light.
 ATTR_BRIGHTNESS = "brightness"
@@ -73,6 +75,7 @@ PROP_TO_ATTR = {
     'color_temp': ATTR_COLOR_TEMP,
     'rgb_color': ATTR_RGB_COLOR,
     'xy_color': ATTR_XY_COLOR,
+    'white_value': ATTR_WHITE_VALUE,
     'supported_features': ATTR_SUPPORTED_FEATURES,
 }
 
@@ -91,6 +94,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
                            vol.Coerce(tuple)),
     ATTR_COLOR_TEMP: vol.All(int, vol.Range(min=154, max=500)),
+    ATTR_WHITE_VALUE: vol.All(int, vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: vol.In([EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_WHITE]),
 })
@@ -121,8 +125,8 @@ def is_on(hass, entity_id=None):
 
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, color_temp=None, profile=None,
-            flash=None, effect=None, color_name=None):
+            rgb_color=None, xy_color=None, color_temp=None, white_value=None,
+            profile=None, flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -133,6 +137,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_RGB_COLOR, rgb_color),
             (ATTR_XY_COLOR, xy_color),
             (ATTR_COLOR_TEMP, color_temp),
+            (ATTR_WHITE_VALUE, white_value),
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
@@ -281,6 +286,11 @@ class Light(ToggleEntity):
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
+        return None
+
+    @property
+    def white_value(self):
+        """Return the white value of this light between 0..255."""
         return None
 
     @property
