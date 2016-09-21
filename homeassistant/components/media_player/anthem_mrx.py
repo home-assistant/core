@@ -34,7 +34,7 @@ CONF_TIMEOUT = "timeout"
 CONF_BUFFER_SIZE = "buffer_size"
 DEFAULT_TIMEOUT = 10
 DEFAULT_BUFFER_SIZE = 1024
-CONF_PAYLOAD = "payload"
+# mrx_payload = "payload"
 # CONF_MRXMODEL = "mrxmodel"
 
 SUPPORT_ANTHEMMRX = SUPPORT_SELECT_SOURCE | SUPPORT_VOLUME_STEP | \
@@ -102,8 +102,8 @@ class AnthemMrx(MediaPlayerDevice):
 
     def update(self):
         """Retrieve the latest data."""
-        CONF_PAYLOAD = "P{}?;".format(self._config[CONF_MRXZONE])
-        response = self.send_command(CONF_PAYLOAD)
+        mrx_payload = "P{}?;".format(self._config[CONF_MRXZONE])
+        response = self.send_command(mrx_payload)
         self._response = response
         # self._state = response
 
@@ -147,7 +147,7 @@ class AnthemMrx(MediaPlayerDevice):
             self._state = STATE_OFF
 
     def send_command(self, payload):
-        """Send a command to the AnthemMRX and return the response"""
+        """Send a command to the AnthemMRX and return the response."""
         _LOGGER.info("Payload: {}".format(payload))
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(self._config[CONF_TIMEOUT])
@@ -201,10 +201,10 @@ class AnthemMrx(MediaPlayerDevice):
         """Select input source."""
         _LOGGER.info("Select Source: {}".format(
                         self._source_name_to_number.get(source)))
-        CONF_PAYLOAD = "P{}S{};".format(self._config[CONF_MRXZONE],
-                                        self._source_name_to_number
-                                        .get(source))
-        self.send_command(CONF_PAYLOAD)
+        mrx_payload = "P{}S{};".format(self._config[CONF_MRXZONE],
+                                       self._source_name_to_number
+                                       .get(source))
+        self.send_command(mrx_payload)
 
     @property
     def name(self):
@@ -234,32 +234,32 @@ class AnthemMrx(MediaPlayerDevice):
     def turn_off(self):
         """Turn off media player."""
         mrxcmd = "P0"
-        CONF_PAYLOAD = "P{}{};".format(self._config[CONF_MRXZONE], mrxcmd)
-        self.send_command(CONF_PAYLOAD)
+        mrx_payload = "P{}{};".format(self._config[CONF_MRXZONE], mrxcmd)
+        self.send_command(mrx_payload)
 
     def turn_on(self):
         """Turn off media player."""
         mrxcmd = "P1"
-        CONF_PAYLOAD = "P{}{};".format(self._config[CONF_MRXZONE], mrxcmd)
-        self.send_command(CONF_PAYLOAD)
+        mrx_payload = "P{}{};".format(self._config[CONF_MRXZONE], mrxcmd)
+        self.send_command(mrx_payload)
 
     def volume_up(self):
         """Volume up the media player."""
         mrxcmd = "VU"
-        CONF_PAYLOAD = "P{}{};".format(self._config[CONF_MRXZONE], mrxcmd)
-        self.send_command(CONF_PAYLOAD)
+        mrx_payload = "P{}{};".format(self._config[CONF_MRXZONE], mrxcmd)
+        self.send_command(mrx_payload)
 
     def volume_down(self):
         """Volume down media player."""
         mrxcmd = "VD"
-        CONF_PAYLOAD = "P{}{};".format(self._config[CONF_MRXZONE], mrxcmd)
-        self.send_command(CONF_PAYLOAD)
+        mrx_payload = "P{}{};".format(self._config[CONF_MRXZONE], mrxcmd)
+        self.send_command(mrx_payload)
 
     def mute_volume(self, mute):
         """Send mute command."""
         mrxcmd = "MT"
-        CONF_PAYLOAD = "P{}{};".format(self._config[CONF_MRXZONE], mrxcmd)
-        self.send_command(CONF_PAYLOAD)
+        mrx_payload = "P{}{};".format(self._config[CONF_MRXZONE], mrxcmd)
+        self.send_command(mrx_payload)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -267,5 +267,5 @@ class AnthemMrx(MediaPlayerDevice):
                        - self._config[CONF_MINVOL])
                      * volume) - (0 - self._config[CONF_MINVOL]))
 
-        CONF_PAYLOAD = "P{}V{};".format(self._config[CONF_MRXZONE], mrxvol)
-        self.send_command(CONF_PAYLOAD)
+        mrx_payload = "P{}V{};".format(self._config[CONF_MRXZONE], mrxvol)
+        self.send_command(mrx_payload)
