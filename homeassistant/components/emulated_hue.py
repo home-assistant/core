@@ -191,6 +191,7 @@ class HueUsernameView(HomeAssistantView):
 
     url = '/api'
     name = 'hue:api'
+    extra_urls = ['/api/']
     requires_auth = False
 
     def __init__(self, hass):
