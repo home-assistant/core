@@ -35,7 +35,7 @@ def setup_platform(hass, config: ConfigType,
 
     for node in isy.filter_nodes(isy.NODES, units=UOM,
                                  states=STATES):
-        if node.dimmable or node.uom == '51':
+        if node.dimmable or '51' in node.uom:
             devices.append(ISYLightDevice(node))
 
     add_devices(devices)
