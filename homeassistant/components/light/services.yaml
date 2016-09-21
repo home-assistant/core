@@ -28,6 +28,10 @@ turn_on:
       description: Color temperature for the light in mireds (154-500)
       example: '250'
 
+    white_value:
+      description: Number between 0..255 indicating level of white
+      example: '250'
+
     brightness:
       description: Number between 0..255 indicating brightness
       example: 120

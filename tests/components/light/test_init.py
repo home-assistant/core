@@ -55,7 +55,9 @@ class TestLight(unittest.TestCase):
             brightness='brightness_val',
             rgb_color='rgb_color_val',
             xy_color='xy_color_val',
-            profile='profile_val')
+            profile='profile_val',
+            color_name='color_name_val',
+            white_value='white_val')
 
         self.hass.block_till_done()
 
@@ -72,6 +74,9 @@ class TestLight(unittest.TestCase):
         self.assertEqual('rgb_color_val', call.data.get(light.ATTR_RGB_COLOR))
         self.assertEqual('xy_color_val', call.data.get(light.ATTR_XY_COLOR))
         self.assertEqual('profile_val', call.data.get(light.ATTR_PROFILE))
+        self.assertEqual(
+            'color_name_val', call.data.get(light.ATTR_COLOR_NAME))
+        self.assertEqual('white_val', call.data.get(light.ATTR_WHITE_VALUE))
 
         # Test turn_off
         turn_off_calls = mock_service(
@@ -170,23 +175,28 @@ class TestLight(unittest.TestCase):
 
         # Ensure all attributes process correctly
         light.turn_on(self.hass, dev1.entity_id,
-                      transition=10, brightness=20)
+                      transition=10, brightness=20, color_name='blue')
         light.turn_on(
-            self.hass, dev2.entity_id, rgb_color=(255, 255, 255))
+            self.hass, dev2.entity_id, rgb_color=(255, 255, 255),
+            white_value=255)
         light.turn_on(self.hass, dev3.entity_id, xy_color=(.4, .6))
 
         self.hass.block_till_done()
 
-        method, data = dev1.last_call('turn_on')
+        _, data = dev1.last_call('turn_on')
         self.assertEqual(
             {light.ATTR_TRANSITION: 10,
-             light.ATTR_BRIGHTNESS: 20},
+             light.ATTR_BRIGHTNESS: 20,
+             light.ATTR_RGB_COLOR: (0, 0, 255)},
             data)
 
-        method, data = dev2.last_call('turn_on')
-        self.assertEquals(data[light.ATTR_RGB_COLOR], (255, 255, 255))
+        _, data = dev2.last_call('turn_on')
+        self.assertEqual(
+            {light.ATTR_RGB_COLOR: (255, 255, 255),
+             light.ATTR_WHITE_VALUE: 255},
+            data)
 
-        method, data = dev3.last_call('turn_on')
+        _, data = dev3.last_call('turn_on')
         self.assertEqual({light.ATTR_XY_COLOR: (.4, .6)}, data)
 
         # One of the light profiles
@@ -201,13 +211,13 @@ class TestLight(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        method, data = dev1.last_call('turn_on')
+        _, data = dev1.last_call('turn_on')
         self.assertEqual(
             {light.ATTR_BRIGHTNESS: prof_bri,
              light.ATTR_XY_COLOR: (prof_x, prof_y)},
             data)
 
-        method, data = dev2.last_call('turn_on')
+        _, data = dev2.last_call('turn_on')
         self.assertEqual(
             {light.ATTR_BRIGHTNESS: 100,
              light.ATTR_XY_COLOR: (.4, .6)},
@@ -221,23 +231,29 @@ class TestLight(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        method, data = dev1.last_call('turn_on')
+        _, data = dev1.last_call('turn_on')
         self.assertEqual({}, data)
 
-        method, data = dev2.last_call('turn_on')
+        _, data = dev2.last_call('turn_on')
         self.assertEqual({}, data)
 
-        method, data = dev3.last_call('turn_on')
+        _, data = dev3.last_call('turn_on')
         self.assertEqual({}, data)
 
         # faulty attributes will not trigger a service call
         light.turn_on(
             self.hass, dev1.entity_id,
             profile=prof_name, brightness='bright', rgb_color='yellowish')
+        light.turn_on(
+            self.hass, dev2.entity_id,
+            white_value='high')
 
         self.hass.block_till_done()
 
-        method, data = dev1.last_call('turn_on')
+        _, data = dev1.last_call('turn_on')
+        self.assertEqual({}, data)
+
+        _, data = dev2.last_call('turn_on')
         self.assertEqual({}, data)
 
     def test_broken_light_profiles(self):
@@ -271,13 +287,13 @@ class TestLight(unittest.TestCase):
             self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
         ))
 
-        dev1, dev2, dev3 = platform.DEVICES
+        dev1, _, _ = platform.DEVICES
 
         light.turn_on(self.hass, dev1.entity_id, profile='test')
 
         self.hass.block_till_done()
 
-        method, data = dev1.last_call('turn_on')
+        _, data = dev1.last_call('turn_on')
 
         self.assertEqual(
             {light.ATTR_XY_COLOR: (.4, .6), light.ATTR_BRIGHTNESS: 100},

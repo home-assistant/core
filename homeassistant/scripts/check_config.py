@@ -1,17 +1,18 @@
 """Script to ensure a configuration file exists."""
 import argparse
+import logging
 import os
 from glob import glob
-import logging
-from typing import List, Dict, Sequence
-from unittest.mock import patch
 from platform import system
+from unittest.mock import patch
 
-from homeassistant.exceptions import HomeAssistantError
+from typing import Dict, List, Sequence
+
 import homeassistant.bootstrap as bootstrap
 import homeassistant.config as config_util
 import homeassistant.loader as loader
 import homeassistant.util.yaml as yaml
+from homeassistant.exceptions import HomeAssistantError
 
 REQUIREMENTS = ('colorlog>2.1,<3',)
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
@@ -96,7 +97,7 @@ def run(script_args: List) -> int:
 
     if args.files:
         print(color(C_HEAD, 'yaml files'), '(used /',
-              color('red', 'not used')+')')
+              color('red', 'not used') + ')')
         # Python 3.5 gets a recursive, but not in 3.4
         for yfn in sorted(glob(os.path.join(config_dir, '*.yaml')) +
                           glob(os.path.join(config_dir, '*/*.yaml'))):
@@ -250,12 +251,12 @@ def dump_dict(layer, indent_count=1, listi=False, **kwargs):
 
     indent_str = indent_count * ' '
     if listi or isinstance(layer, list):
-        indent_str = indent_str[:-1]+'-'
+        indent_str = indent_str[:-1] + '-'
     if isinstance(layer, Dict):
         for key, value in layer.items():
             if isinstance(value, dict) or isinstance(value, list):
                 print(indent_str, key + ':', line_src(value))
-                dump_dict(value, indent_count+2)
+                dump_dict(value, indent_count + 2)
             else:
                 print(indent_str, key + ':', value)
             indent_str = indent_count * ' '
