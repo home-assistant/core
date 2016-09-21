@@ -61,7 +61,7 @@ CONF_REGION = 'region'
 CONF_RUNTIME = 'runtime'
 CONF_INTERVAL = 'interval'
 CONF_ENTITIES = 'entities'
-CONF_CONFIDENCE = 'CONF_CONFIDENCE'
+CONF_CONFIDENCE = 'confidence'
 
 DEFAULT_NAME = 'OpenAlpr'
 DEFAULT_ENGINE = ENGINE_LOCAL
@@ -405,7 +405,7 @@ class OpenalprDeviceImage(OpenalprDevice):
 class OpenalprApi(object):
     """OpenAlpr api class."""
 
-    def __init__(region, confidence):
+    def __init__(self, region, confidence):
         """Init basic api processing."""
         self._region = region
         self._confidence = confidence
