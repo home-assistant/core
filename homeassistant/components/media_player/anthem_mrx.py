@@ -62,7 +62,7 @@ class AnthemMrx(MediaPlayerDevice):
     """Representation of a Anthem MRX Receiver."""
     def __init__(self, hass, config):
         """Initialize the Anthem MRX device."""
-        DEFAULT_MRX_SOURCE = {
+        mrx_sources = {
             '1': 'BDP',
             '2': 'CD',
             '3': 'TV',
@@ -85,8 +85,8 @@ class AnthemMrx(MediaPlayerDevice):
         self._lastupdatetime = None
         self._selected_source = ''
         self._source_name_to_number = {v: k for k,
-                                       v in DEFAULT_MRX_SOURCE.items()}
-        self._source_number_to_name = DEFAULT_MRX_SOURCE
+                                       v in mrx_sources.items()}
+        self._source_number_to_name = mrx_sources
         self._config = {
             CONF_NAME: config.get(CONF_NAME),
             CONF_HOST: config[CONF_HOST],
@@ -119,27 +119,27 @@ class AnthemMrx(MediaPlayerDevice):
                 return
 
             # regex the response
-            responseObj = re.match(r'P(.)S(.)V(.*)M(.)D(.)', response)
+            response = re.match(r'P(.)S(.)V(.*)M(.)D(.)', response)
 
             # check if the correct zone has been returned
-            if int(responseObj.group(1)) != self._config[CONF_MRXZONE]:
+            if int(response.group(1)) != self._config[CONF_MRXZONE]:
                 return
 
-            self._volume = max(min((int(responseObj.group(3))
+            self._volume = max(min((int(response.group(3))
                                     + (0 - self._config[CONF_MINVOL]))
-                               / (self._config[CONF_MAXVOL]
-                               - self._config[CONF_MINVOL]), 1), 0)
+                                   / (self._config[CONF_MAXVOL]
+                                   - self._config[CONF_MINVOL]), 1), 0)
 
             # check if it is muted
-            if int(responseObj.group(4)) == 0:
+            if int(response.group(4)) == 0:
                 self._muted = False
             else:
                 self._muted = True
 
             self._selected_source = self._source_number_to_name.get(
-                                            responseObj.group(2))
-            _LOGGER.info("SourceNum: {} SourceName: {}".format(
-                                responseObj.group(2), self._selected_source))
+                response.group(2))
+            _LOGGER.info("SourceNum: %s SourceName: %s",
+                         response.group(2), self._selected_source)
 
             # if the try is passed then make the state on
             self._state = STATE_ON
@@ -148,43 +148,42 @@ class AnthemMrx(MediaPlayerDevice):
 
     def send_command(self, payload):
         """Send a command to the AnthemMRX and return the response."""
-        _LOGGER.info("Payload: {}".format(payload))
+        _LOGGER.info("Payload: %s", payload)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(self._config[CONF_TIMEOUT])
             try:
                 sock.connect(
                     (self._config[CONF_HOST], self._config[CONF_PORT]))
             except socket.error as err:
-                _LOGGER.error(
-                    "Unable to connect to {} on port {}: {}".format(
-                                    self._config[CONF_HOST],
-                                    self._config[CONF_PORT],
-                                    err))
+                _LOGGER.error("Unable to connect to %s on port %s: %s",
+                              self._config[CONF_HOST],
+                              self._config[CONF_PORT],
+                              err)
                 return
 
             try:
                 sock.send(payload.encode())
             except socket.error as err:
-                _LOGGER.error(
-                    "Unable to send payload {} to {} on port {}: {}".format(
-                                    payload,
-                                    self._config[CONF_HOST],
-                                    self._config[CONF_PORT],
-                                    err))
+                _LOGGER.error("Unable to send payload %s to %s on port %s: %s",
+                              payload,
+                              self._config[CONF_HOST],
+                              self._config[CONF_PORT],
+                              err)
                 return
 
             readable, _, _ = select.select(
                 [sock], [], [], self._config[CONF_TIMEOUT])
             if not readable:
                 _LOGGER.warning(
-                    "Timeout ({} second(s)) waiting for a response after "
-                    "sending {} to {} on port {}.".format(
-                        self._config[CONF_TIMEOUT], payload,
-                        self._config[CONF_HOST], self._config[CONF_PORT]))
+                    "Timeout (%s second(s)) waiting for a response after "
+                    "sending %s to %s on port %s.",
+                    self._config[CONF_TIMEOUT], payload,
+                    self._config[CONF_HOST],
+                    self._config[CONF_PORT])
                 return
             self._lastupdatetime = time.time()
             value = sock.recv(self._config[CONF_BUFFER_SIZE]).decode()
-            _LOGGER.info("Response: {}".format(value))
+            _LOGGER.info("Response: %s", value)
         return value
 
     @property
@@ -199,8 +198,8 @@ class AnthemMrx(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        _LOGGER.info("Select Source: {}".format(
-                        self._source_name_to_number.get(source)))
+        _LOGGER.info("Select Source: %s",
+                     self._source_name_to_number.get(source))
         mrx_payload = "P{}S{};".format(self._config[CONF_MRXZONE],
                                        self._source_name_to_number
                                        .get(source))
