@@ -455,7 +455,7 @@ class OpenalprApiLocal(OpenalprApi):
 
     def process_image(self, image, event_callback):
         """Callback for processing image."""
-        result = yield from self._api.recognize(image)
+        result = yield from self._api.recognize_byte(image)
 
         # process result
         f_plates = {}
