@@ -132,8 +132,8 @@ class BOMCurrentSensor(Entity):
         attr['Station Id'] = self.rest.data['wmo']
         attr['Station Name'] = self.rest.data['name']
         attr['Last Update'] = datetime.datetime.strptime(str(
-                                self.rest.data['local_date_time_full']),
-                                '%Y%m%d%H%M%S')
+            self.rest.data['local_date_time_full']),
+            '%Y%m%d%H%M%S')
         return attr
 
     @property
@@ -170,17 +170,17 @@ class BOMCurrentData(object):
                 and ((datetime.datetime.now() - self._lastupdate)) <
                 datetime.timedelta(minutes=35)):
             _LOGGER.info(
-                        "BOM was updated {} minutes ago, skipping update as"
-                        " < 35 minutes".format((datetime.datetime.now()
-                                                - self._lastupdate)))
+                "BOM was updated {} minutes ago, skipping update as"
+                " < 35 minutes".format((datetime.datetime.now()
+                                        - self._lastupdate)))
             return self._lastupdate
 
         try:
             result = requests.get(self._build_url(), timeout=10).json()
             self.data = result['observations']['data'][0]
             self._lastupdate = datetime.datetime.strptime(
-                                    str(self.data['local_date_time_full']),
-                                    '%Y%m%d%H%M%S')
+                str(self.data['local_date_time_full']),
+                '%Y%m%d%H%M%S')
             return self._lastupdate
         except ValueError as err:
             _LOGGER.error("Check BOM {}".format(err.args))
