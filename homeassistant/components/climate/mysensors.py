@@ -3,17 +3,6 @@ mysensors platform that offers a Climate(MySensors-HVAC) component.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.mysensors
-
-Curently supported operations:
-
-set_temperature()    --> V_HVAC_SETPOINT_COOL, V_HVAC_SETPOINT_HEAT
-set_operation_mode() --> V_HVAC_FLOW_STATE
-set_fan_mode()       --> V_HVAC_SPEED
-
-Pending:
-humidity, away_mode, aux_heat, swing_mode
-
-home-assistant/components/climate/mysensors.py
 """
 import logging
 
@@ -50,10 +39,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     """Representation of a MySensorsHVAC hvac."""
 
-    def __init__(self, *args):
-        """Setup instance attributes."""
-        mysensors.MySensorsDeviceEntity.__init__(self, *args)
-
     @property
     def assumed_state(self):
         """Return True if unable to access real state of entity."""
@@ -68,42 +53,38 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if len(self._values) != 0:
-            return self._values[self.gateway.const.SetReq.V_TEMP]
-        else:
-            return None
+        return self._values.get(self.gateway.const.SetReq.V_TEMP)
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if len(self._values) != 0:
-            return self._values[self.gateway.const.SetReq.V_HVAC_SETPOINT_COOL]
-        else:
+        set_req = self.gateway.const.SetReq
+        if set_req.V_HVAC_SETPOINT_COOL in self._values and \
+                set_req.V_HVAC_SETPOINT_HEAT in self._values:
             return None
+        temp = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
+        if temp is None:
+            temp = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
+        return temp
 
     @property
     def target_temperature_high(self):
         """Return the highbound target temperature we try to reach."""
-        if len(self._values) != 0:
-            return self._values[self.gateway.const.SetReq.V_HVAC_SETPOINT_COOL]
-        else:
-            return None
+        set_req = self.gateway.const.SetReq
+        if set_req.V_HVAC_SETPOINT_COOL in self._values:
+            return self._values.get(set_req.V_HVAC_SETPOINT_COOL)
 
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
-        if len(self._values) != 0:
-            return self._values[self.gateway.const.SetReq.V_HVAC_SETPOINT_COOL]
-        else:
-            return None
+        set_req = self.gateway.const.SetReq
+        if set_req.V_HVAC_SETPOINT_HEAT in self._values:
+            return self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
 
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if len(self._values) != 0:
-            return self._values[self.gateway.const.SetReq.V_HVAC_FLOW_STATE]
-        else:
-            return STATE_OFF
+        return self._values.get(self.gateway.const.SetReq.V_HVAC_FLOW_STATE)
 
     @property
     def operation_list(self):
@@ -113,10 +94,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     @property
     def current_fan_mode(self):
         """Return the fan setting."""
-        if len(self._values) != 0:
-            return self._values[self.gateway.const.SetReq.V_HVAC_SPEED]
-        else:
-            return STATE_OFF
+        return self._values.get(self.gateway.const.SetReq.V_HVAC_SPEED)
 
     @property
     def fan_list(self):
@@ -126,57 +104,53 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            # Set HEAT Target temperature
-            if self.current_operation == STATE_HEAT:
-                self._values[set_req.V_HVAC_SETPOINT_HEAT] = \
-                             kwargs.get(ATTR_TEMPERATURE)
-                self.gateway.set_child_value(self.node_id, self.child_id,
-                                             set_req.V_HVAC_SETPOINT_HEAT,
-                                             kwargs.get(ATTR_TEMPERATURE))
-            # Set COOL Target temperature
-            elif self.current_operation == STATE_COOL:
-                self._values[set_req.V_HVAC_SETPOINT_COOL] = \
-                             kwargs.get(ATTR_TEMPERATURE)
-                self.gateway.set_child_value(self.node_id, self.child_id,
-                                             set_req.V_HVAC_SETPOINT_COOL,
-                                             kwargs.get(ATTR_TEMPERATURE))
-            # Set Both Target temperature for Auto Mode
-            else:
-                self._values[set_req.V_HVAC_SETPOINT_COOL] = \
-                             kwargs.get(ATTR_TARGET_TEMP_HIGH)
-                self.gateway.set_child_value(self.node_id, self.child_id,
-                                             set_req.V_HVAC_SETPOINT_COOL,
-                                             kwargs.get(ATTR_TEMPERATURE))
-                self._values[set_req.V_HVAC_SETPOINT_HEAT] = \
-                    kwargs.get(ATTR_TARGET_TEMP_LOW)
-                self.gateway.set_child_value(self.node_id, self.child_id,
-                                             set_req.V_HVAC_SETPOINT_HEAT,
-                                             kwargs.get(ATTR_TEMPERATURE))
-        self.update_ha_state()
+        temp = kwargs.get(ATTR_TEMPERATURE)
+        low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        heat = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
+        cool = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
+        updates = ()
+        if temp is not None:
+            if heat is not None:
+                # Set HEAT Target temperature
+                value_type = set_req.V_HVAC_SETPOINT_HEAT
+            elif cool is not None:
+                # Set COOL Target temperature
+                value_type = set_req.V_HVAC_SETPOINT_COOL
+            if heat is not None or cool is not None:
+                updates = [(value_type, temp)]
+        elif all(val is not None for val in (low, high, heat, cool)):
+            updates = [
+                (set_req.V_HVAC_SETPOINT_HEAT, low),
+                (set_req.V_HVAC_SETPOINT_COOL, high)]
+        for value_type, value in updates:
+            self.gateway.set_child_value(
+                self.node_id, self.child_id, value_type, value)
+            if self.gateway.optimistic:
+                # optimistically assume that switch has changed state
+                self._values[value_type] = value
+                self.update_ha_state()
 
     def set_fan_mode(self, fan):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
-        self._values[set_req.V_HVAC_SPEED] = fan
         self.gateway.set_child_value(self.node_id, self.child_id,
                                      set_req.V_HVAC_SPEED, fan)
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[set_req.V_HVAC_SPEED] = fan
-        self.update_ha_state()
+            self.update_ha_state()
 
     def set_operation_mode(self, operation_mode):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
-        self._values[set_req.V_HVAC_FLOW_STATE] = operation_mode
         self.gateway.set_child_value(self.node_id, self.child_id,
                                      set_req.V_HVAC_FLOW_STATE,
                                      DICT_HA_TO_MYS[operation_mode])
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[set_req.V_HVAC_FLOW_STATE] = operation_mode
-        self.update_ha_state()
+            self.update_ha_state()
 
     def update(self):
         """Update the controller with the latest value from a sensor."""
