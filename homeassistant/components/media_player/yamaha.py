@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, STATE_OFF, STATE_ON)
+from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['rxv==0.1.11']
@@ -28,6 +28,7 @@ DEFAULT_NAME = 'Yamaha Receiver'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_SOURCE_IGNORE, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
@@ -39,12 +40,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import rxv
 
     name = config.get(CONF_NAME)
+    host = config.get(CONF_HOST)
     source_ignore = config.get(CONF_SOURCE_IGNORE)
     source_names = config.get(CONF_SOURCE_NAMES)
 
+    if host is None:
+        receivers = rxv.find()
+    else:
+        receivers = \
+            [rxv.RXV("http://{}:80/YamahaRemoteControl/ctrl".format(host),
+                     name)]
+
     add_devices(
         YamahaDevice(name, receiver, source_ignore, source_names)
-        for receiver in rxv.find())
+        for receiver in receivers)
 
 
 class YamahaDevice(MediaPlayerDevice):
