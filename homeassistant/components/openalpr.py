@@ -15,7 +15,7 @@ import voluptuous as vol
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.components.ffmpeg import (
     get_binary, run_test, CONF_INPUT, CONF_EXTRA_ARGUMENTS)
 import homeassistant.helpers.config_validation as cv
@@ -238,12 +238,20 @@ class OpenalprDevice(Entity):
         self._name = name
         self._interval = interval
         self._api = api
-        self._last = set()
+        self._last = {}
 
     @property
     def state(self):
         """Return the state of the entity."""
-        return len(self._last)
+        confidence = 0
+        plate = STATE_UNKNOWN
+
+        # search high plate
+        for i_pl, i_co in self._last.items():
+            if i_co > confidence:
+                confidence = i_co
+                plate = i_pl
+        return plate
 
     def shutdown(self, event):
         """Close stream."""
@@ -261,7 +269,9 @@ class OpenalprDevice(Entity):
     def _process_event(self, plates):
         """Send event with new plates."""
         state_change = False
-        new_plates = plates - self._last
+        plates_set = set(plates)
+        last_set = set(self._last)
+        new_plates = plates_set - last_set
 
         # send events
         for i_plate in new_plates:
@@ -271,9 +281,9 @@ class OpenalprDevice(Entity):
             })
 
         # update entity store
-        if self._last <= plates:
+        if last_set <= plates_set:
             state_change = True
-        self._last = plates.copy()
+        self._last = plates
 
         # update HA state
         if state_change:
@@ -282,7 +292,7 @@ class OpenalprDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        return {'plates': list(self._last)}
+        return {'plates': self._last}
 
     def scan(self):
         """Immediately scan a image."""
@@ -438,11 +448,13 @@ class OpenalprApiCloud(OpenalprApi):
         )
 
         # process result
-        f_plates = set()
+        f_plates = {}
         # pylint: disable=no-member
         for object_plate in result.plate.results:
-            if object_plate.confidence >= self._confidence:
-                f_plates.add(object_plate.plate)
+            plate = object_plate.plate
+            confidence = object_plate.confidence
+            if confidence >= self._confidence:
+                f_plates[plate] = confidence
         event_callback(f_plates)
 
 
@@ -466,9 +478,11 @@ class OpenalprApiLocal(OpenalprApi):
         result = self._api.recognize_array(image)
 
         # process result
-        f_plates = set()
+        f_plates = {}
         for plate in result.get('results'):
             for candidate in plate.get('candidates'):
-                if candidate.get('confidence') >= self._confidence:
-                    f_plates.add(candidate.get('plate'))
+                plate = candidate.get('plate')
+                confidence = candidate.get('confidence')
+                if confidence >= self._confidence:
+                    f_plates[plate] = confidence
         event_callback(f_plates)
