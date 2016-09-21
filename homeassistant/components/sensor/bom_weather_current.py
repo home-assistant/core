@@ -2,14 +2,14 @@
 Support for bom.gov.au current condition weather service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bom_weather_current
+https://home-assistant.io/components/sensor.bom_weather_current/
 """
 
+import datetime
 import logging
 import requests
-import voluptuous as vol
-import datetime
 
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
@@ -46,11 +46,11 @@ SENSOR_TYPES = {
     'cloud_type_id': ['Cloud Type ID', None],
     'cloud_type': ['Cloud Type', None],
     'delta_t': ['Delta Temp C', TEMP_CELSIUS],
-    'gust_kmh': ['Wind Gust kmh', 'kmh'],
+    'gust_kmh': ['Wind Gust kmh', 'km/h'],
     'gust_kt': ['Wind Gust kt', 'kt'],
     'air_temp': ['Air Temp C', TEMP_CELSIUS],
     'dewpt': ['Dew Point C', TEMP_CELSIUS],
-    'press': ['Pressure mb', 'mb'],
+    'press': ['Pressure mb', 'mbar'],
     'press_qnh': ['Pressure qnh', 'qnh'],
     'press_msl': ['Pressure msl', 'msl'],
     'press_tend': ['Pressure Tend', None],
@@ -63,7 +63,7 @@ SENSOR_TYPES = {
     'vis_km': ['Visability km', 'km'],
     'weather': ['Weather', None],
     'wind_dir': ['Wind Direction', None],
-    'wind_spd_kmh': ['Wind Speed kmh', 'kmh'],
+    'wind_spd_kmh': ['Wind Speed kmh', 'km/h'],
     'wind_spd_kt': ['Wind Direction kt', 'kt']
 }
 
