@@ -58,6 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
+# pylint: disable=abstract-method
 class AnthemMrx(MediaPlayerDevice):
     """Representation of a Anthem MRX Receiver."""
     def __init__(self, hass, config):
