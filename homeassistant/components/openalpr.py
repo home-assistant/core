@@ -27,7 +27,7 @@ DEPENDENCIES = ['ffmpeg']
 REQUIREMENTS = [
     'https://github.com/pvizeli/cloudapi/releases/download/1.0.2/'
     'python-1.0.2.zip#cloud_api==1.0.2',
-    'ha-alpr==0.1']
+    'ha-alpr==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -455,7 +455,7 @@ class OpenalprApiLocal(OpenalprApi):
 
     def process_image(self, image, event_callback):
         """Callback for processing image."""
-        result = yield from self._api.recognize_byte(image)
+        result = self._api.recognize_byte(image)
 
         # process result
         f_plates = {}
