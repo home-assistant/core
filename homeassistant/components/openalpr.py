@@ -275,7 +275,7 @@ class OpenalprDevice(Entity):
 
         # send events
         for i_plate in new_plates:
-            self.hass.buss.fire(EVENT_FOUND, {
+            self.hass.bus.fire(EVENT_FOUND, {
                 ATTR_PLATE: i_plate,
                 ATTR_ENTITY_ID: self.entity_id
             })
@@ -443,7 +443,7 @@ class OpenalprApiCloud(OpenalprApi):
             self._api_key,
             'plate',
             image="",
-            image_bytes=b64encode(image),
+            image_bytes=str(b64encode(image), 'utf-8'),
             country=self._region
         )
 
