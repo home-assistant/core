@@ -58,9 +58,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-# pylint: disable=abstract-method
+# pylint: disable=abstract-method, too-many-instance-attributes
 class AnthemMrx(MediaPlayerDevice):
     """Representation of a Anthem MRX Receiver."""
+
     def __init__(self, hass, config):
         """Initialize the Anthem MRX device."""
         mrx_sources = {
