@@ -90,7 +90,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
             vol.Coerce(float),
         vol.Optional(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_ALPR_BINARY, default=DEFAULT_BINARY), cv.string,
+        vol.Optional(CONF_ALPR_BINARY, default=DEFAULT_BINARY): cv.string,
         vol.Required(CONF_ENTITIES):
             vol.All(cv.ensure_list, [DEVICE_SCHEMA]),
     })
