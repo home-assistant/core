@@ -17,7 +17,8 @@ from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-                                 STATE_NOT_HOME, STATE_OFF, STATE_ON)
+                                 STATE_NOT_HOME, STATE_OFF, STATE_ON,
+                                 ATTR_HIDDEN)
 from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
 from homeassistant.helpers import template
 
@@ -25,6 +26,19 @@ DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'frontend']
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_EXCLUDE = 'exclude'
+CONF_ENTITIES = 'entities'
+CONF_DOMAINS = 'domains'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        CONF_EXCLUDE: vol.Schema({
+            vol.Optional(CONF_ENTITIES, default=[]): cv.ensure_list,
+            vol.Optional(CONF_DOMAINS, default=[]): cv.ensure_list
+        }),
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 
@@ -69,7 +83,7 @@ def setup(hass, config):
         message = template.render(hass, message)
         log_entry(hass, name, message, domain, entity_id)
 
-    hass.wsgi.register_view(LogbookView)
+    hass.wsgi.register_view(LogbookView(hass, config))
 
     register_built_in_panel(hass, 'logbook', 'Logbook',
                             'mdi:format-list-bulleted-type')
@@ -86,6 +100,11 @@ class LogbookView(HomeAssistantView):
     name = 'api:logbook'
     extra_urls = ['/api/logbook/<datetime:datetime>']
 
+    def __init__(self, hass, config):
+        """Initilalize the logbook view."""
+        super().__init__(hass)
+        self.config = config
+
     def get(self, request, datetime=None):
         """Retrieve logbook entries."""
         start_day = dt_util.as_utc(datetime or dt_util.start_of_local_day())
@@ -96,6 +115,7 @@ class LogbookView(HomeAssistantView):
             (events.time_fired > start_day) &
             (events.time_fired < end_day))
         events = recorder.execute(query)
+        events = _exclude_events(events, self.config)
 
         return self.json(humanify(events))
 
@@ -173,10 +193,6 @@ def humanify(events):
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
 
-                # Do not report on new entities
-                if 'old_state' not in event.data:
-                    continue
-
                 to_state = State.from_dict(event.data.get('new_state'))
 
                 # If last_changed != last_updated only attributes have changed
@@ -237,6 +253,39 @@ def humanify(events):
                     event.time_fired, event.data.get(ATTR_NAME),
                     event.data.get(ATTR_MESSAGE), domain,
                     entity_id)
+
+
+def _exclude_events(events, config):
+    """Get lists of excluded entities and platforms."""
+    excluded_entities = []
+    excluded_domains = []
+    exclude = config[DOMAIN].get(CONF_EXCLUDE)
+    if exclude:
+        excluded_entities = exclude[CONF_ENTITIES]
+        excluded_domains = exclude[CONF_DOMAINS]
+
+    filtered_events = []
+    for event in events:
+        if event.event_type == EVENT_STATE_CHANGED:
+            to_state = State.from_dict(event.data.get('new_state'))
+            # Do not report on new entities
+            if not to_state:
+                continue
+
+            # exclude entities which are customized hidden
+            hidden = to_state.attributes.get(ATTR_HIDDEN, False)
+            if hidden:
+                continue
+
+            domain = to_state.domain
+            # check if logbook entry is excluded for this domain
+            if domain in excluded_domains:
+                continue
+            # check if logbook entry is excluded for this entity
+            if to_state.entity_id in excluded_entities:
+                continue
+        filtered_events.append(event)
+    return filtered_events
 
 
 def _entry_message_from_state(domain, state):
