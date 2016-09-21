@@ -53,15 +53,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-
+    """Setup the Anthem MRX platform."""
     add_devices([AnthemMrx(hass, config)])
     return True
 
 
 class AnthemMrx(MediaPlayerDevice):
-
+    """Representation of a Anthem MRX Receiver."""
     def __init__(self, hass, config):
-
+        """Initialize the Anthem MRX device."""
         DEFAULT_MRX_SOURCE = {
             '1': 'BDP',
             '2': 'CD',
@@ -101,6 +101,7 @@ class AnthemMrx(MediaPlayerDevice):
         self.update()
 
     def update(self):
+        """Retrieve the latest data."""
         CONF_PAYLOAD = "P{}?;".format(self._config[CONF_MRXZONE])
         response = self.send_command(CONF_PAYLOAD)
         self._response = response
@@ -146,8 +147,8 @@ class AnthemMrx(MediaPlayerDevice):
             self._state = STATE_OFF
 
     def send_command(self, payload):
-        _LOGGER.info("Payload: {}".format(payload))
         """Send a command to the AnthemMRX and return the response"""
+        _LOGGER.info("Payload: {}".format(payload))
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(self._config[CONF_TIMEOUT])
             try:
