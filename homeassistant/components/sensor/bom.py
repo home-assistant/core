@@ -146,6 +146,7 @@ class BOMCurrentSensor(Entity):
         self.rest.update()
 
 
+# pylint: disable=too-few-public-methods
 class BOMCurrentData(object):
     """Get data from BOM."""
 
@@ -165,7 +166,6 @@ class BOMCurrentData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from BOM."""
-
         if ((self._lastupdate != 0)
                 and ((datetime.datetime.now() - self._lastupdate)) <
                 datetime.timedelta(minutes=35)):
