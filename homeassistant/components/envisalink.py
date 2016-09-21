@@ -12,7 +12,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.discovery import load_platform
 
-REQUIREMENTS = ['pyenvisalink==1.6', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyenvisalink==1.7', 'pydispatcher==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'envisalink'
@@ -154,7 +154,7 @@ def setup(hass, base_config):
 
     def start_envisalink(event):
         """Startup process for the Envisalink."""
-        hass.loop.run_in_executor(None, EVL_CONTROLLER.start)
+        hass.loop.call_soon_threadsafe(EVL_CONTROLLER.start)
         for _ in range(10):
             if 'success' in _connect_status:
                 hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
