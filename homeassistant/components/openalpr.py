@@ -4,7 +4,6 @@ Component that will help set the openalpr for video streams.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/openalpr/
 """
-import asyncio
 from base64 import b64encode
 import logging
 import os
