@@ -20,7 +20,7 @@ REQUIREMENTS = ['messagebird==1.2.0']
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_SENDER, default='HA'):
-        vol.Match(r"^(\+?[1-9]\d{1,14}|\w{1,11})$"),
+        vol.All(cv.string, vol.Match(r"^(\+?[1-9]\d{1,14}|\w{1,11})$")),
 })
 
 
