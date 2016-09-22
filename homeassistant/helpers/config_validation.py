@@ -80,6 +80,17 @@ def isfile(value: Any) -> str:
     return file_in
 
 
+def isdevice(value: Any) -> str:
+    """Validate that the value is an existing device."""
+    if value is None:
+        raise vol.Invalid('None is not device')
+    device_in = str(value)
+
+    if not os.path.isfile(device_in) and not os.path.islink(device_in):
+        raise vol.Invalid('not a device')
+    return device_in
+
+
 def ensure_list(value: Union[T, Sequence[T]]) -> List[T]:
     """Wrap value in list if it is not one."""
     return value if isinstance(value, list) else [value]
