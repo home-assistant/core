@@ -312,14 +312,15 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the current playlist.
         """
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
-            self.add_uri_to_playlist(media_id)
+            self._add_uri_to_playlist(media_id)
         else:
-            self.play_uri(media_id)
+            self._play_uri(media_id)
 
-    def play_uri(self, media_id):
+    def _play_uri(self, media_id):
         """
         Replace the current play list with the uri.
-
+        
+        Telnet Command Strucutre:
         <playerid> playlist play <item> <title> <fadeInSecs>
 
         The "playlist play" command puts the specified song URL,
@@ -339,10 +340,11 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         self._lms.query(self._id, 'playlist', 'play', media_id)
         self.update_ha_state()
 
-    def add_uri_to_playlist(self, media_id):
+    def _add_uri_to_playlist(self, media_id):
         """
         Add a items to the existing playlist.
 
+        Telnet Command Strucutre:
         <playerid> playlist add <item>
 
         The "playlist add" command adds the specified song URL, playlist or
