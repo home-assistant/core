@@ -30,7 +30,7 @@ CONF_EXCLUDE = 'exclude'
 REQUIREMENTS = ['python-nmap==0.6.1']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_HOSTS): cv.string,
     vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
     vol.Optional(CONF_EXCLUDE, default=[]):
         vol.All(cv.ensure_list, vol.Length(min=1))
