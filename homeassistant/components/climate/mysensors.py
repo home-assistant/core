@@ -71,21 +71,15 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     def target_temperature_high(self):
         """Return the highbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
-        if set_req.V_HVAC_SETPOINT_COOL in self._values and \
-                set_req.V_HVAC_SETPOINT_HEAT in self._values:
+        if set_req.V_HVAC_SETPOINT_HEAT in self._values:
             return self._values.get(set_req.V_HVAC_SETPOINT_COOL)
-        else:
-            return None
 
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
-        if set_req.V_HVAC_SETPOINT_COOL in self._values and \
-                set_req.V_HVAC_SETPOINT_HEAT in self._values:
+        if set_req.V_HVAC_SETPOINT_COOL in self._values:
             return self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
-        else:
-            return None
 
     @property
     def current_operation(self):
