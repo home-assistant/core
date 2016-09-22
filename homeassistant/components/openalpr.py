@@ -300,31 +300,51 @@ class OpenalprDeviceFFmpeg(OpenalprDevice):
     def __init__(self, name, interval, api, input_source,
                  extra_arguments=None):
         """Init image processing."""
-        from haffmpeg import ImageStream
+        from haffmpeg import ImageStream, ImageSingle
 
         super().__init__(name, interval, api)
-        self._ffmpeg = ImageStream(get_binary(), self._process_image)
         self._input_source = input_source
         self._extra_arguments = extra_arguments
+
+        if self._interval > 0:
+            self._ffmpeg = ImageStream(get_binary(), self._process_image)
+        else:
+            self._ffmpeg = ImageSingle(get_binary())
 
         self._start_ffmpeg()
 
     def shutdown(self, event):
         """Close ffmpeg stream."""
-        self._ffmpeg.close()
+        if self._interval > 0:
+            self._ffmpeg.close()
 
     def restart(self):
         """Restart ffmpeg stream."""
-        self._ffmpeg.close()
-        self._start_ffmpeg()
+        if self._interval > 0:
+            self._ffmpeg.close()
+            self._start_ffmpeg()
 
     def scan(self):
         """Immediately scan a image."""
+        from haffmpeg import IMAGE_PNG
+
+        # process single image
+        if self._interval == 0:
+            image = self._ffmpeg.get_image(
+                self._input_source,
+                output_format=IMAGE_PNG,
+                extra_cmd=self._extra_arguments
+            )
+            return self._process_image(image)
+
+        # stream
         self._ffmpeg.push_image()
 
     def _start_ffmpeg(self):
         """Start a ffmpeg image stream."""
         from haffmpeg import IMAGE_PNG
+        if self._interval == 0:
+            return
 
         self._ffmpeg.open_stream(
             input_source=self._input_source,
@@ -341,6 +361,8 @@ class OpenalprDeviceFFmpeg(OpenalprDevice):
     @property
     def available(self):
         """Return True if entity is available."""
+        if self._interval == 0:
+            return True
         return self._ffmpeg.is_running
 
 
@@ -364,13 +386,23 @@ class OpenalprDeviceImage(OpenalprDevice):
 
     def scan(self):
         """Immediately scan a image."""
-        self._next = time()
-        self.update()
+        # send request
+        if self._username is not None and self._password is not None:
+            req = requests.get(
+                self._url, auth=(self._username, self._password), timeout=15)
+        else:
+            req = requests.get(self._url, timeout=15)
+
+        # process image
+        image = req.content
+        self._process_image(image)
 
     @property
     def should_poll(self):
         """Return True if render is be 'image' or False if 'ffmpeg'."""
-        return True
+        if self._interval > 0:
+            return True
+        return False
 
     @property
     def available(self):
@@ -381,18 +413,8 @@ class OpenalprDeviceImage(OpenalprDevice):
         """Retrieve latest state."""
         if self._next > time():
             return
-
-        # send request
-        if self._username is not None and self._password is not None:
-            req = requests.get(
-                self._url, auth=(self._username, self._password), timeout=15)
-        else:
-            req = requests.get(self._url, timeout=15)
-
-        # process image
-        image = req.content
+        self.scan()
         self._next = time() + self._interval
-        self._process_image(image)
 
 
 # pylint: disable=too-few-public-methods
