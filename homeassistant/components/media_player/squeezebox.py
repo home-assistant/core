@@ -319,7 +319,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     def _play_uri(self, media_id):
         """
         Replace the current play list with the uri.
-        
+
         Telnet Command Strucutre:
         <playerid> playlist play <item> <title> <fadeInSecs>
 
