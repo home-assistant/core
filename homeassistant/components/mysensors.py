@@ -172,7 +172,7 @@ def setup(hass, config):
     return True
 
 
-def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
+def pf_callback_factory(map_sv_types, devices, entity_class, add_devices=None):
     """Return a new callback for the platform."""
     def mysensors_callback(gateway, node_id):
         """Callback for mysensors platform."""
@@ -187,7 +187,10 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
                         value_type not in map_sv_types[child.type]:
                     continue
                 if key in devices:
-                    devices[key].update_ha_state(True)
+                    if add_devices:
+                        devices[key].update_ha_state(True)
+                    else:
+                        devices[key].update()
                     continue
                 name = '{} {} {}'.format(
                     gateway.sensors[node_id].sketch_name, node_id, child.id)
@@ -197,11 +200,12 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
                     device_class = entity_class
                 devices[key] = device_class(
                     gateway, node_id, child.id, name, value_type, child.type)
-
-                _LOGGER.info('Adding new devices: %s', devices[key])
-                add_devices([devices[key]])
-                if key in devices:
+                if add_devices:
+                    _LOGGER.info('Adding new devices: %s', devices[key])
+                    add_devices([devices[key]])
                     devices[key].update_ha_state(True)
+                else:
+                    devices[key].update()
     return mysensors_callback
 
 

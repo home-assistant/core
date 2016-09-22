@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             })
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, add_devices, MySensorsCover))
+            map_sv_types, devices, MySensorsCover, add_devices))
 
 
 class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
