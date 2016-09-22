@@ -106,7 +106,7 @@ def run(script_args: List) -> int:
 
     if len(res['except']) > 0:
         print(color('bold_white', 'Failed config'))
-        for domain, config in sorted(res['except'].items()):
+        for domain, config in res['except'].items():
             domain_info.append(domain)
             print(' ', color('bold_red', domain + ':'),
                   color('red', '', reset='red'))
@@ -116,7 +116,7 @@ def run(script_args: List) -> int:
     if domain_info:
         if 'all' in domain_info:
             print(color('bold_white', 'Successful config (all)'))
-            for domain, config in sorted(res['components'].items()):
+            for domain, config in res['components'].items():
                 print(' ', color(C_HEAD, domain + ':'))
                 dump_dict(config)
         else:
