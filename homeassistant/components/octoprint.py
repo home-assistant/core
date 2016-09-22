@@ -40,9 +40,9 @@ def setup(hass, config):
         OCTOPRINT = OctoPrintAPI(base_url, api_key)
         OCTOPRINT.get('printer')
         OCTOPRINT.get('job')
-    except requests.exceptions.RequestException as conn_err:
-        _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
-        return False
+    except (requests.exceptions.HTTPError,
+            requests.exceptions.ConnectionError) as conn_exc:
+        _LOGGER.error("Error setting up OctoPrint API: %r", conn_exc)
 
     for component, discovery_service in (
             ('sensor', DISCOVER_SENSORS),
@@ -95,7 +95,8 @@ class OctoPrintAPI(object):
                 self.printer_last_reading[0] = response.json()
                 self.printer_last_reading[1] = time.time()
             return response.json()
-        except requests.exceptions.ConnectionError as conn_exc:
+        except (requests.exceptions.HTTPError,
+                requests.exceptions.ConnectionError) as conn_exc:
             _LOGGER.error("Failed to update OctoPrint status.  Error: %s",
                           conn_exc)
             raise
