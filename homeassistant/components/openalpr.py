@@ -244,7 +244,7 @@ class OpenalprDevice(Entity):
 
     def restart(self):
         """Restart stream."""
-        pass
+        raise NotImplementedError()
 
     def _process_image(self, image):
         """Callback for processing image."""
@@ -280,17 +280,12 @@ class OpenalprDevice(Entity):
 
     def scan(self):
         """Immediately scan a image."""
-        pass
+        raise NotImplementedError()
 
     @property
     def name(self):
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def hidden(self):
-        """Return True if the entity should be hidden from UIs."""
-        return True
 
 
 class OpenalprDeviceFFmpeg(OpenalprDevice):
@@ -361,9 +356,7 @@ class OpenalprDeviceFFmpeg(OpenalprDevice):
     @property
     def available(self):
         """Return True if entity is available."""
-        if self._interval == 0:
-            return True
-        return self._ffmpeg.is_running
+        return self._interval == 0 or self._ffmpeg.is_running:
 
 
 class OpenalprDeviceImage(OpenalprDevice):
@@ -381,7 +374,7 @@ class OpenalprDeviceImage(OpenalprDevice):
         self._url = input_source
 
     def restart(self):
-        """Restart ffmpeg stream."""
+        """Fake restart with scan a picture."""
         self.scan()
 
     def scan(self):
@@ -400,14 +393,7 @@ class OpenalprDeviceImage(OpenalprDevice):
     @property
     def should_poll(self):
         """Return True if render is be 'image' or False if 'ffmpeg'."""
-        if self._interval > 0:
-            return True
-        return False
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return True
+        return self._interval > 0:
 
     def update(self):
         """Retrieve latest state."""
@@ -428,7 +414,7 @@ class OpenalprApi(object):
 
     def process_image(self, image, event_callback):
         """Callback for processing image."""
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 # pylint: disable=too-few-public-methods
