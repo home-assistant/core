@@ -393,7 +393,7 @@ class OpenalprDeviceImage(OpenalprDevice):
     @property
     def should_poll(self):
         """Return True if render is be 'image' or False if 'ffmpeg'."""
-        return self._interval > 0:
+        return self._interval > 0
 
     def update(self):
         """Retrieve latest state."""
