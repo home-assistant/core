@@ -1,10 +1,9 @@
 """
-Support for bom.gov.au current condition weather service.
+Support for Australian BOM (Bureau of Meteorology) weather service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bom_weather_current/
+https://home-assistant.io/components/sensor.bom/
 """
-
 import datetime
 import logging
 import requests
@@ -27,7 +26,6 @@ CONF_WMO_ID = 'wmo_id'
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=60)
 LAST_UPDATE = 0
-
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
@@ -78,13 +76,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the BOM sensor."""
-    rest = BOMCurrentData(hass, config.get(CONF_ZONE_ID),
-                          config.get(CONF_WMO_ID))
+    rest = BOMCurrentData(
+        hass, config.get(CONF_ZONE_ID), config.get(CONF_WMO_ID))
+
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(BOMCurrentSensor(rest,
-                                        variable,
-                                        config.get(CONF_NAME)))
+        sensors.append(BOMCurrentSensor(
+            rest, variable, config.get(CONF_NAME)))
 
     try:
         rest.update()
@@ -110,10 +108,10 @@ class BOMCurrentSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         if self.stationname is None:
-            return "BOM {}".format(SENSOR_TYPES[self._condition][0])
+            return 'BOM {}'.format(SENSOR_TYPES[self._condition][0])
         else:
-            return "BOM {} {}".format(self.stationname,
-                                      SENSOR_TYPES[self._condition][0])
+            return 'BOM {} {}'.format(
+                self.stationname, SENSOR_TYPES[self._condition][0])
 
     @property
     def state(self):
@@ -165,9 +163,9 @@ class BOMCurrentData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from BOM."""
-        if ((self._lastupdate != 0)
-                and ((datetime.datetime.now() - self._lastupdate)) <
-                datetime.timedelta(minutes=35)):
+        if self._lastupdate != 0 and \
+            ((datetime.datetime.now() - self._lastupdate) <
+             datetime.timedelta(minutes=35)):
             _LOGGER.info(
                 "BOM was updated %s minutes ago, skipping update as"
                 " < 35 minutes", (datetime.datetime.now() - self._lastupdate))
