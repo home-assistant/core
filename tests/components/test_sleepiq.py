@@ -28,7 +28,7 @@ class TestSleepIQ(unittest.TestCase):
     """Tests the SleepIQ component."""
 
     def setUp(self):
-        """Initialize values for this testcase class."""
+        """Initialize values for this test case class."""
         self.hass = get_test_home_assistant()
         self.username = 'foo'
         self.password = 'bar'
