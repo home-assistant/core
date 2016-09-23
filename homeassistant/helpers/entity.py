@@ -138,10 +138,11 @@ class Entity(object):
 
     hass = None  # type: Optional[HomeAssistant]
 
-    def update_ha_state(self, force_refresh=False):
+    def update_ha_state(self, force_refresh=False, soft_update=False):
         """Update Home Assistant with current state of entity.
 
         If force_refresh == True will update entity before setting state.
+        If soft_update == True will update entitiy but not force StateMachine
         """
         if self.hass is None:
             raise RuntimeError("Attribute hass is None for {}".format(self))
@@ -150,7 +151,7 @@ class Entity(object):
             raise NoEntitySpecifiedError(
                 "No entity id specified for entity {}".format(self.name))
 
-        if force_refresh:
+        if force_refresh or soft_update:
             self.update()
 
         state = STATE_UNKNOWN if self.state is None else str(self.state)
