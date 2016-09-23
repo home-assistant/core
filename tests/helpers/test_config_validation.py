@@ -81,6 +81,28 @@ def test_isfile():
         schema(tmp_file)
 
 
+def test_isdevice():
+    """Validate that the value is an existing device."""
+    schema = vol.Schema(cv.isdevice)
+
+    with tempfile.NamedTemporaryFile() as fp:
+        pass
+
+    for value in ('invalid', None, -1, 0, 80000, fp.name):
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    with tempfile.TemporaryDirectory() as tmp_path:
+        tmp_file = os.path.join(tmp_path, "test.txt")
+        with open(tmp_file, "w") as tmp_handl:
+            tmp_handl.write("test file")
+        schema(tmp_file)
+
+        tmp_link = os.path.join(tmp_path, "test.lnk")
+        os.symlink(tmp_file, tmp_link)
+        schema(tmp_link)
+
+
 def test_url():
     """Test URL."""
     schema = vol.Schema(cv.url)
