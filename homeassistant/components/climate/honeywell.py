@@ -16,7 +16,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['evohomeclient==0.2.5',
-                'somecomfort==0.2.1']
+                'somecomfort==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
