@@ -145,7 +145,7 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
     if hasattr(component, 'CONFIG_SCHEMA'):
         try:
             config = component.CONFIG_SCHEMA(config)
-        except vol.MultipleInvalid as ex:
+        except vol.Invalid as ex:
             log_exception(ex, domain, config)
             return None
 
@@ -155,8 +155,8 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
             # Validate component specific platform schema
             try:
                 p_validated = component.PLATFORM_SCHEMA(p_config)
-            except vol.MultipleInvalid as ex:
-                log_exception(ex, domain, p_config)
+            except vol.Invalid as ex:
+                log_exception(ex, domain, config)
                 return None
 
             # Not all platform components follow same pattern for platforms
@@ -176,7 +176,7 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
             if hasattr(platform, 'PLATFORM_SCHEMA'):
                 try:
                     p_validated = platform.PLATFORM_SCHEMA(p_validated)
-                except vol.MultipleInvalid as ex:
+                except vol.Invalid as ex:
                     log_exception(ex, '{}.{}'.format(domain, p_name),
                                   p_validated)
                     return None

@@ -4,7 +4,7 @@ from datetime import timedelta
 import os
 from urllib.parse import urlparse
 
-from typing import Any, Union, TypeVar, Callable, Sequence, List, Dict
+from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
 import jinja2
 import voluptuous as vol
@@ -80,7 +80,7 @@ def isfile(value: Any) -> str:
     return file_in
 
 
-def ensure_list(value: Union[T, Sequence[T]]) -> List[T]:
+def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
     """Wrap value in list if it is not one."""
     return value if isinstance(value, list) else [value]
 
@@ -93,7 +93,7 @@ def entity_id(value: Any) -> str:
     raise vol.Invalid('Entity ID {} is an invalid entity id'.format(value))
 
 
-def entity_ids(value: Union[str, Sequence]) -> List[str]:
+def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
     """Validate Entity IDs."""
     if value is None:
         raise vol.Invalid('Entity IDs can not be None')
