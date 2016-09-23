@@ -114,8 +114,8 @@ class MqttLight(Light):
         self._supported_features |= (
             topic[CONF_RGB_STATE_TOPIC] is not None and SUPPORT_RGB_COLOR)
         self._supported_features |= (
-            topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None
-            and SUPPORT_BRIGHTNESS)
+            topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None and
+            SUPPORT_BRIGHTNESS)
 
         templates = {key: ((lambda value: value) if tpl is None else
                            partial(render_with_possible_json_value, hass, tpl))
