@@ -356,7 +356,7 @@ class OpenalprDeviceFFmpeg(OpenalprDevice):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._interval == 0 or self._ffmpeg.is_running:
+        return self._interval == 0 or self._ffmpeg.is_running
 
 
 class OpenalprDeviceImage(OpenalprDevice):
