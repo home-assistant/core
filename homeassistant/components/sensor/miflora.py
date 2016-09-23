@@ -16,13 +16,17 @@ from homeassistant.util import Throttle
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 
 
-REQUIREMENTS = ['miflora==0.1.6']
+REQUIREMENTS = ['miflora==0.1.9']
 
 LOGGER = logging.getLogger(__name__)
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=900)
+UPDATE_INTERVAL = 1200
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=UPDATE_INTERVAL)
 CONF_MAC = 'mac'
 CONF_FORCE_UPDATE = 'force_update'
 CONF_MEDIAN = 'median'
+CONF_TIMEOUT = 'timeout'
+CONF_RETRIES = 'retries'
+CONF_CACHE = 'cache_value'
 DEFAULT_NAME = 'Mi Flora'
 
 # Sensor types are defined like: Name, units
@@ -40,6 +44,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MEDIAN, default=3): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=False): cv.boolean,
+    vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
+    vol.Optional(CONF_RETRIES, default=2): cv.positive_int,
+    vol.Optional(CONF_CACHE, default=UPDATE_INTERVAL): cv.positive_int,
 })
 
 
@@ -47,9 +54,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MiFlora sensor."""
     from miflora import miflora_poller
 
-    poller = miflora_poller.MiFloraPoller(config.get(CONF_MAC))
+    cache = config.get(CONF_CACHE)
+    poller = miflora_poller.MiFloraPoller(config.get(CONF_MAC),
+                                          cache_timeout=cache)
     force_update = config.get(CONF_FORCE_UPDATE)
     median = config.get(CONF_MEDIAN)
+    poller.ble_timeout = config.get(CONF_TIMEOUT)
+    poller.retries = config.get(CONF_RETRIES)
 
     devs = []
 
@@ -58,7 +69,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         unit = SENSOR_TYPES[parameter][1]
 
         prefix = config.get(CONF_NAME)
-
         if len(prefix) > 0:
             name = "{} {}".format(prefix, name)
 
