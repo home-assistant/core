@@ -25,6 +25,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
     for gateway in mysensors.GATEWAYS.values():
+        if float(gateway.protocol_version) < 1.5:
+            continue
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
