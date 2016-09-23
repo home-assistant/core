@@ -2,7 +2,7 @@
 Support for SleepIQ sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sleepiq/
+https://home-assistant.io/components/sleepiq/
 """
 from homeassistant.components import sleepiq
 
@@ -31,10 +31,7 @@ class SleepNumberSensor(sleepiq.SleepIQSensor):
 
     def __init__(self, sleepiq_data, bed_id, side):
         """Initialize the sensor."""
-        sleepiq.SleepIQSensor.__init__(self,
-                                       sleepiq_data,
-                                       bed_id,
-                                       side)
+        sleepiq.SleepIQSensor.__init__(self, sleepiq_data, bed_id, side)
 
         self._state = None
         self.type = sleepiq.SLEEP_NUMBER
