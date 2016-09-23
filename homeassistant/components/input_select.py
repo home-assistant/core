@@ -8,19 +8,17 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.util import slugify
+
 
 DOMAIN = 'input_select'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NAME = 'name'
 CONF_INITIAL = 'initial'
-CONF_ICON = 'icon'
 CONF_OPTIONS = 'options'
 
 ATTR_OPTION = 'option'
@@ -34,6 +32,26 @@ SERVICE_SELECT_OPTION_SCHEMA = vol.Schema({
 })
 
 
+def _cv_input_select(cfg):
+    """Config validation helper for input select (Voluptuous)."""
+    options = cfg[CONF_OPTIONS]
+    state = cfg.get(CONF_INITIAL, options[0])
+    if state not in options:
+        raise vol.Invalid('initial state "{}" is not part of the options: {}'
+                          .format(state, ','.join(options)))
+    return cfg
+
+
+CONFIG_SCHEMA = vol.Schema({DOMAIN: {
+    cv.slug: vol.All({
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1),
+                                            [cv.string]),
+        vol.Optional(CONF_INITIAL): cv.string,
+        vol.Optional(CONF_ICON): cv.icon,
+    }, _cv_input_select)}}, required=True, extra=vol.ALLOW_EXTRA)
+
+
 def select_option(hass, entity_id, option):
     """Set input_select to False."""
     hass.services.call(DOMAIN, SERVICE_SELECT_OPTION, {
@@ -44,39 +62,15 @@ def select_option(hass, entity_id, option):
 
 def setup(hass, config):
     """Setup input select."""
-    if not isinstance(config.get(DOMAIN), dict):
-        _LOGGER.error('Expected %s config to be a dictionary', DOMAIN)
-        return False
-
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
-        if object_id != slugify(object_id):
-            _LOGGER.warning("Found invalid key for boolean input: %s. "
-                            "Use %s instead", object_id, slugify(object_id))
-            continue
-        if not cfg:
-            _LOGGER.warning("No configuration specified for %s", object_id)
-            continue
-
         name = cfg.get(CONF_NAME)
         options = cfg.get(CONF_OPTIONS)
-
-        if not isinstance(options, list) or len(options) == 0:
-            _LOGGER.warning('Key %s should be a list of options', CONF_OPTIONS)
-            continue
-
-        options = [str(val) for val in options]
-
-        state = cfg.get(CONF_INITIAL)
-
-        if state not in options:
-            state = options[0]
-
+        state = cfg.get(CONF_INITIAL, options[0])
         icon = cfg.get(CONF_ICON)
-
         entities.append(InputSelect(object_id, name, state, options, icon))
 
     if not entities:

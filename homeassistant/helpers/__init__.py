@@ -1,12 +1,12 @@
 """Helper methods for components within Home Assistant."""
 import re
 
-from typing import Any, Iterable, Tuple, List, Dict
+from typing import Any, Iterable, Tuple, Sequence, Dict
 
 from homeassistant.const import CONF_PLATFORM
 
 # Typing Imports and TypeAlias
-# pylint: disable=using-constant-test,unused-import
+# pylint: disable=using-constant-test,unused-import,wrong-import-order
 if False:
     from logging import Logger  # NOQA
 
@@ -34,7 +34,7 @@ def config_per_platform(config: ConfigType,
             yield platform, item
 
 
-def extract_domain_configs(config: ConfigType, domain: str) -> List[str]:
+def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
     """Extract keys from config for given domain name."""
     pattern = re.compile(r'^{}(| .+)$'.format(domain))
     return [key for key in config.keys() if pattern.match(key)]
