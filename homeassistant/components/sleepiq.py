@@ -21,7 +21,6 @@ DOMAIN = 'sleepiq'
 
 REQUIREMENTS = ['sleepyq==0.6']
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 IS_IN_BED = 'is_in_bed'
