@@ -32,7 +32,7 @@ class TestSleepIQSensorSetup(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_setup(self, mock):
-        """Test for succesfully setting up the SleepIQ platform."""
+        """Test for successfully setting up the SleepIQ platform."""
         mock_responses(mock)
 
         sleepiq.setup_platform(self.hass,
