@@ -1,4 +1,4 @@
-"""The tests for the Command line sensor platform."""
+"""The tests for the IMAP email content sensor platform."""
 import unittest
 import email
 import datetime
@@ -15,14 +15,14 @@ from tests.common import get_test_home_assistant
 
 
 class FakeEMailReader:
-    """A test class for sending test emails"""
+    """A test class for sending test emails."""
 
     def __init__(self, messages):
-        """Setup the fake email reader"""
+        """Setup the fake email reader."""
         self._messages = messages
 
     def connect(self):
-        """Always connected."""
+        """Stay always Connected."""
         return True
 
     def read_next(self):
@@ -33,7 +33,7 @@ class FakeEMailReader:
 
 
 class EmailContentSensor(unittest.TestCase):
-    """Test the Command line sensor."""
+    """Test the IMAP email content sensor."""
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -93,7 +93,7 @@ class EmailContentSensor(unittest.TestCase):
         self.assertEqual("Test Message", sensor.state)
 
     def test_multi_part_only_html(self):
-        """Test multi part emails with only html."""
+        """Test multi part emails with only HTML."""
         msg = MIMEMultipart('alternative')
         msg['Subject'] = "Link"
         msg['From'] = "sender@test.com"
