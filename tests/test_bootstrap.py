@@ -111,14 +111,6 @@ class TestBootstrap:
             'platform_conf.whatever', MockPlatform('whatever'))
 
         assert not bootstrap._setup_component(self.hass, 'platform_conf', {
-            'platform_conf': None
-        })
-
-        assert not bootstrap._setup_component(self.hass, 'platform_conf', {
-            'platform_conf': {}
-        })
-
-        assert not bootstrap._setup_component(self.hass, 'platform_conf', {
             'platform_conf': {
                 'hello': 'world',
                 'invalid': 'extra',
@@ -150,11 +142,26 @@ class TestBootstrap:
             }
         })
 
+        self.hass.config.components.remove('platform_conf')
+
         assert bootstrap._setup_component(self.hass, 'platform_conf', {
             'platform_conf': [{
                 'platform': 'whatever',
                 'hello': 'world',
             }]
+        })
+
+        self.hass.config.components.remove('platform_conf')
+
+        # Any falsey paltform config will be ignored (None, {}, etc)
+        assert bootstrap._setup_component(self.hass, 'platform_conf', {
+            'platform_conf': None
+        })
+
+        self.hass.config.components.remove('platform_conf')
+
+        assert bootstrap._setup_component(self.hass, 'platform_conf', {
+            'platform_conf': {}
         })
 
     def test_component_not_found(self):
