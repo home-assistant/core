@@ -1,6 +1,4 @@
-"""
-Z-Wave Constants.
-"""
+"""Z-Wave Constants."""
 NETWORK_READY_WAIT_SECS = 30
 
 SERVICE_ADD_NODE = "add_node"

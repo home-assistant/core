@@ -19,7 +19,8 @@ from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
-from .const import *
+# pylint: disable=wildcard-import
+from .const import * # noqa F403
 
 DOMAIN = "zwave"
 REQUIREMENTS = ['pydispatcher==2.0.5']
@@ -37,80 +38,80 @@ DEFAULT_CONF_AUTOHEAL = True
 # value type, genre type, specific device class).
 DISCOVERY_COMPONENTS = [
     ('sensor',
-     [GENERIC_TYPE_WHATEVER],
-     [SPECIFIC_TYPE_WHATEVER],
-     [COMMAND_CLASS_SENSOR_MULTILEVEL,
-      COMMAND_CLASS_METER,
-      COMMAND_CLASS_ALARM,
-      COMMAND_CLASS_SENSOR_ALARM],
-     TYPE_WHATEVER,
-     GENRE_USER),
+     [GENERIC_TYPE_WHATEVER], # noqa F405
+     [SPECIFIC_TYPE_WHATEVER], # noqa F405
+     [COMMAND_CLASS_SENSOR_MULTILEVEL, # noqa F405
+      COMMAND_CLASS_METER, # noqa F405
+      COMMAND_CLASS_ALARM, # noqa F405
+      COMMAND_CLASS_SENSOR_ALARM], # noqa F405
+     TYPE_WHATEVER, # noqa F405
+     GENRE_USER), # noqa F405
     ('light',
-     [GENERIC_TYPE_SWITCH_MULTILEVEL,
-      GENERIC_TYPE_SWITCH_REMOTE],
-     [SPECIFIC_TYPE_POWER_SWITCH_MULTILEVEL,
-      SPECIFIC_TYPE_SCENE_SWITCH_MULTILEVEL,
-      SPECIFIC_TYPE_NOT_USED],
-     [COMMAND_CLASS_SWITCH_MULTILEVEL],
-     TYPE_BYTE,
-     GENRE_USER),
+     [GENERIC_TYPE_SWITCH_MULTILEVEL, # noqa F405
+      GENERIC_TYPE_SWITCH_REMOTE], # noqa F405
+     [SPECIFIC_TYPE_POWER_SWITCH_MULTILEVEL, # noqa F405
+      SPECIFIC_TYPE_SCENE_SWITCH_MULTILEVEL, # noqa F405
+      SPECIFIC_TYPE_NOT_USED], # noqa F405
+     [COMMAND_CLASS_SWITCH_MULTILEVEL], # noqa F405
+     TYPE_BYTE, # noqa F405
+     GENRE_USER), # noqa F405
     ('switch',
-     [GENERIC_TYPE_SENSOR_ALARM,
-      GENERIC_TYPE_SENSOR_BINARY,
-      GENERIC_TYPE_SWITCH_BINARY,
-      GENERIC_TYPE_ENTRY_CONTROL,
-      GENERIC_TYPE_SENSOR_MULTILEVEL,
-      GENERIC_TYPE_SWITCH_MULTILEVEL,
-      GENERIC_TYPE_SENSOR_NOTIFICATION,
-      GENERIC_TYPE_GENERIC_CONTROLLER,
-      GENERIC_TYPE_SWITCH_REMOTE,
-      GENERIC_TYPE_REPEATER_SLAVE,
-      GENERIC_TYPE_THERMOSTAT,
-      GENERIC_TYPE_WALL_CONTROLLER],
-     [SPECIFIC_TYPE_WHATEVER],
-     [COMMAND_CLASS_SWITCH_BINARY],
-     TYPE_BOOL,
-     GENRE_USER),
+     [GENERIC_TYPE_SENSOR_ALARM, # noqa F405
+      GENERIC_TYPE_SENSOR_BINARY, # noqa F405
+      GENERIC_TYPE_SWITCH_BINARY, # noqa F405
+      GENERIC_TYPE_ENTRY_CONTROL, # noqa F405
+      GENERIC_TYPE_SENSOR_MULTILEVEL, # noqa F405
+      GENERIC_TYPE_SWITCH_MULTILEVEL, # noqa F405
+      GENERIC_TYPE_SENSOR_NOTIFICATION, # noqa F405
+      GENERIC_TYPE_GENERIC_CONTROLLER, # noqa F405
+      GENERIC_TYPE_SWITCH_REMOTE, # noqa F405
+      GENERIC_TYPE_REPEATER_SLAVE, # noqa F405
+      GENERIC_TYPE_THERMOSTAT, # noqa F405
+      GENERIC_TYPE_WALL_CONTROLLER], # noqa F405
+     [SPECIFIC_TYPE_WHATEVER], # noqa F405
+     [COMMAND_CLASS_SWITCH_BINARY], # noqa F405
+     TYPE_BOOL, # noqa F405
+     GENRE_USER), # noqa F405
     ('binary_sensor',
-     [GENERIC_TYPE_SENSOR_ALARM,
-      GENERIC_TYPE_SENSOR_BINARY,
-      GENERIC_TYPE_SWITCH_BINARY,
-      GENERIC_TYPE_METER,
-      GENERIC_TYPE_SENSOR_MULTILEVEL,
-      GENERIC_TYPE_SWITCH_MULTILEVEL,
-      GENERIC_TYPE_SENSOR_NOTIFICATION,
-      GENERIC_TYPE_THERMOSTAT],
-     [SPECIFIC_TYPE_WHATEVER],
-     [COMMAND_CLASS_SENSOR_BINARY],
-     TYPE_BOOL,
-     GENRE_USER),
+     [GENERIC_TYPE_SENSOR_ALARM, # noqa F405
+      GENERIC_TYPE_SENSOR_BINARY, # noqa F405
+      GENERIC_TYPE_SWITCH_BINARY, # noqa F405
+      GENERIC_TYPE_METER, # noqa F405
+      GENERIC_TYPE_SENSOR_MULTILEVEL, # noqa F405
+      GENERIC_TYPE_SWITCH_MULTILEVEL, # noqa F405
+      GENERIC_TYPE_SENSOR_NOTIFICATION, # noqa F405
+      GENERIC_TYPE_THERMOSTAT], # noqa F405
+     [SPECIFIC_TYPE_WHATEVER], # noqa F405
+     [COMMAND_CLASS_SENSOR_BINARY], # noqa F405
+     TYPE_BOOL, # noqa F405
+     GENRE_USER), # noqa F405
     ('lock',
-     [GENERIC_TYPE_ENTRY_CONTROL],
-     [SPECIFIC_TYPE_ADVANCED_DOOR_LOCK,
-      SPECIFIC_TYPE_SECURE_KEYPAD_DOOR_LOCK],
-     [COMMAND_CLASS_DOOR_LOCK],
-     TYPE_BOOL,
-     GENRE_USER),
+     [GENERIC_TYPE_ENTRY_CONTROL], # noqa F405
+     [SPECIFIC_TYPE_ADVANCED_DOOR_LOCK, # noqa F405
+      SPECIFIC_TYPE_SECURE_KEYPAD_DOOR_LOCK], # noqa F405
+     [COMMAND_CLASS_DOOR_LOCK], # noqa F405
+     TYPE_BOOL, # noqa F405
+     GENRE_USER), # noqa F405
     ('cover',
-     [GENERIC_TYPE_SWITCH_MULTILEVEL,
-      GENERIC_TYPE_ENTRY_CONTROL],
-     [SPECIFIC_TYPE_CLASS_A_MOTOR_CONTROL,
-      SPECIFIC_TYPE_CLASS_B_MOTOR_CONTROL,
-      SPECIFIC_TYPE_CLASS_C_MOTOR_CONTROL,
-      SPECIFIC_TYPE_MOTOR_MULTIPOSITION,
-      SPECIFIC_TYPE_SECURE_BARRIER_ADDON,
-      SPECIFIC_TYPE_SECURE_DOOR],
-     [COMMAND_CLASS_SWITCH_BINARY,
-      COMMAND_CLASS_BARRIER_OPERATOR,
-      COMMAND_CLASS_SWITCH_MULTILEVEL],
-     TYPE_WHATEVER,
-     GENRE_USER),
+     [GENERIC_TYPE_SWITCH_MULTILEVEL, # noqa F405
+      GENERIC_TYPE_ENTRY_CONTROL], # noqa F405
+     [SPECIFIC_TYPE_CLASS_A_MOTOR_CONTROL, # noqa F405
+      SPECIFIC_TYPE_CLASS_B_MOTOR_CONTROL, # noqa F405
+      SPECIFIC_TYPE_CLASS_C_MOTOR_CONTROL, # noqa F405
+      SPECIFIC_TYPE_MOTOR_MULTIPOSITION, # noqa F405
+      SPECIFIC_TYPE_SECURE_BARRIER_ADDON, # noqa F405
+      SPECIFIC_TYPE_SECURE_DOOR], # noqa F405
+     [COMMAND_CLASS_SWITCH_BINARY, # noqa F405
+      COMMAND_CLASS_BARRIER_OPERATOR, # noqa F405
+      COMMAND_CLASS_SWITCH_MULTILEVEL], # noqa F405
+     TYPE_WHATEVER, # noqa F405
+     GENRE_USER), # noqa F405
     ('climate',
-     [GENERIC_TYPE_THERMOSTAT],
-     [SPECIFIC_TYPE_WHATEVER],
-     [COMMAND_CLASS_THERMOSTAT_SETPOINT],
-     TYPE_WHATEVER,
-     GENRE_WHATEVER),
+     [GENERIC_TYPE_THERMOSTAT], # noqa F405
+     [SPECIFIC_TYPE_WHATEVER], # noqa F405
+     [COMMAND_CLASS_THERMOSTAT_SETPOINT], # noqa F405
+     TYPE_WHATEVER, # noqa F405
+     GENRE_WHATEVER), # noqa F405
 ]
 
 
@@ -321,7 +322,7 @@ def setup(hass, config):
 
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""
-        hass.bus.fire(EVENT_SCENE_ACTIVATED, {
+        hass.bus.fire(EVENT_SCENE_ACTIVATED, { # noqa F405
             ATTR_ENTITY_ID: _node_object_id(node),
             ATTR_OBJECT_ID: _node_object_id(node),
             ATTR_SCENE_ID: scene_id
@@ -329,7 +330,7 @@ def setup(hass, config):
 
     def node_event_activated(node, value):
         """Called when a nodeevent is activated on any node in the network."""
-        hass.bus.fire(EVENT_NODE_EVENT, {
+        hass.bus.fire(EVENT_NODE_EVENT, { # noqa F405
             ATTR_OBJECT_ID: _node_object_id(node),
             ATTR_BASIC_LEVEL: value
         })
@@ -339,13 +340,13 @@ def setup(hass, config):
         _LOGGER.info("Zwave network is ready for use. All awake nodes"
                      " have been queried. Sleeping nodes will be"
                      " queried when they awake.")
-        hass.bus.fire(EVENT_NETWORK_READY)
+        hass.bus.fire(EVENT_NETWORK_READY)  # noqa F405
 
     def network_complete():
         """Called when all nodes on network have been queried."""
         _LOGGER.info("Zwave network is complete. All nodes on the network"
                      " have been queried")
-        hass.bus.fire(EVENT_NETWORK_COMPLETE)
+        hass.bus.fire(EVENT_NETWORK_COMPLETE)  # noqa F405
 
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
@@ -397,7 +398,7 @@ def setup(hass, config):
         """Stop Z-Wave network."""
         _LOGGER.info("Stopping ZWave network.")
         NETWORK.stop()
-        hass.bus.fire(EVENT_NETWORK_STOP)
+        hass.bus.fire(EVENT_NETWORK_STOP) # noqa F405
 
     def rename_node(service):
         """Rename a node."""
@@ -413,12 +414,12 @@ def setup(hass, config):
         """Startup Z-Wave network."""
         _LOGGER.info("Starting ZWave network.")
         NETWORK.start()
-        hass.bus.fire(EVENT_NETWORK_START)
+        hass.bus.fire(EVENT_NETWORK_START) # noqa F405
 
         # Need to be in STATE_AWAKED before talking to nodes.
         # Wait up to NETWORK_READY_WAIT_SECS seconds for the zwave network
         # to be ready.
-        for i in range(NETWORK_READY_WAIT_SECS):
+        for i in range(NETWORK_READY_WAIT_SECS): # noqa F405
             _LOGGER.debug(
                 "network state: %d %s", NETWORK.state, NETWORK.state_str)
             if NETWORK.state >= NETWORK.STATE_AWAKED:
@@ -428,7 +429,7 @@ def setup(hass, config):
         else:
             _LOGGER.warning(
                 "zwave not ready after %d seconds, continuing anyway",
-                NETWORK_READY_WAIT_SECS)
+                NETWORK_READY_WAIT_SECS) # noqa F405
             _LOGGER.info(
                 "final network state: %d %s", NETWORK.state, NETWORK.state_str)
 
@@ -443,18 +444,18 @@ def setup(hass, config):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
         # Register node services for Z-Wave network
-        hass.services.register(DOMAIN, SERVICE_ADD_NODE, add_node)
-        hass.services.register(DOMAIN, SERVICE_ADD_NODE_SECURE,
+        hass.services.register(DOMAIN, SERVICE_ADD_NODE, add_node) # noqa F405
+        hass.services.register(DOMAIN, SERVICE_ADD_NODE_SECURE, # noqa F405
                                add_node_secure)
-        hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node)
-        hass.services.register(DOMAIN, SERVICE_CANCEL_COMMAND, cancel_command)
-        hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network)
-        hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset)
-        hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network)
-        hass.services.register(DOMAIN, SERVICE_STOP_NETWORK, stop_zwave)
-        hass.services.register(DOMAIN, SERVICE_START_NETWORK, start_zwave)
-        hass.services.register(DOMAIN, SERVICE_RENAME_NODE, rename_node,
-                               descriptions[DOMAIN][SERVICE_RENAME_NODE],
+        hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node) # noqa F405
+        hass.services.register(DOMAIN, SERVICE_CANCEL_COMMAND, cancel_command) # noqa F405
+        hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network) # noqa F405
+        hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset) # noqa F405
+        hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network) # noqa F405
+        hass.services.register(DOMAIN, SERVICE_STOP_NETWORK, stop_zwave) # noqa F405
+        hass.services.register(DOMAIN, SERVICE_START_NETWORK, start_zwave) # noqa F405
+        hass.services.register(DOMAIN, SERVICE_RENAME_NODE, rename_node, # noqa F405
+                               descriptions[DOMAIN][SERVICE_RENAME_NODE], # noqa F405
                                schema=RENAME_NODE_SCHEMA)
 
     # Setup autoheal
