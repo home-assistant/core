@@ -33,7 +33,7 @@ class TestStatsd(unittest.TestCase):
             'statsd': {
                 'host': 'host',
                 'port': 123,
-                'sample_rate': 1,
+                'rate': 1,
                 'prefix': 'foo',
             }
         }
