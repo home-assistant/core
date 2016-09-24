@@ -64,6 +64,7 @@ ALERTS_ATTRS = [
     'date',
     'description',
     'expires',
+    'message',
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

@@ -61,7 +61,15 @@ def mocked_requests_get(*args, **kwargs):
                 "feelslike_c": FEELS_LIKE,
                 "weather": WEATHER,
                 "icon_url": ICON_URL
-            }
+            }, "alerts": [
+                {
+                    "type": "FLO",
+                    "description": "Areal Flood Warning",
+                    "date": "9:36 PM CDT on September 22, 2016",
+                    "expires": "10:00 AM CDT on September 23, 2016",
+                    "message": "This is a test message",
+                }
+            ],
         }, 200)
     else:
         return MockResponse({
