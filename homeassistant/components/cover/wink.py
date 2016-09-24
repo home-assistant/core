@@ -15,7 +15,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink cover platform."""
     import pywink
 
-    add_devices(WinkCoverDevice(shade) for shade, door in
+    add_devices(WinkCoverDevice(shade) for shade in
                 pywink.get_shades())
     add_devices(WinkCoverDevice(door) for door in
                 pywink.get_garage_doors())
