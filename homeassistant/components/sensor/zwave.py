@@ -4,6 +4,8 @@ Interfaces with Z-Wave sensors.
 For more details about this platform, please refer to the documentation
 at https://home-assistant.io/components/sensor.zwave/
 """
+import logging
+
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 from homeassistant.components.sensor import DOMAIN
@@ -34,6 +36,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     #   platform: zwave
     #
     # `setup_platform` will be called without `discovery_info`.
+    logger = logging.getLogger(__name__)
+
     if discovery_info is None or zwave.NETWORK is None:
         return
 
@@ -56,7 +60,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # Check workaround mappings for specific devices.
         if specific_sensor_key in DEVICE_MAPPINGS:
             if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
+                logger.info('Ignoring device: %s, Index: %s',
+                            zwave._value_name(value), value.index)
                 return
+
+    if value.label == 'Previous Reading':
+        # Power measurement devices may export a 'Previous Reading' value
+        # This can be problematic, as can be seen here:
+        # https://github.com/home-assistant/home-assistant/issues/3509
+        logger.info('Ignoring device: %s', zwave._value_name(value))
+        return
 
     # Generic Device mappings
     if value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
