@@ -138,19 +138,22 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         rgb = self._rgb
         white = self._white
         hex_color = self._values.get(self.value_type)
+        new_rgb = kwargs.get(ATTR_RGB_COLOR)
+        new_white = kwargs.get(ATTR_WHITE_VALUE)
 
-        if ATTR_WHITE_VALUE in kwargs and \
-                kwargs[ATTR_WHITE_VALUE] != self._white:
-            white = kwargs[ATTR_WHITE_VALUE]
-
-        if ATTR_RGB_COLOR in kwargs and \
-                kwargs[ATTR_RGB_COLOR] != self._rgb:
-            rgb = list(kwargs[ATTR_RGB_COLOR])
-            if white is not None and hex_template == '%02x%02x%02x%02x':
-                rgb.append(white)
-            hex_color = hex_template % tuple(rgb)
-            self.gateway.set_child_value(
-                self.node_id, self.child_id, self.value_type, hex_color)
+        if new_rgb is None and new_white is None:
+            return
+        if new_rgb is not None:
+            rgb = list(new_rgb)
+        if rgb is None:
+            return
+        if new_white is not None and hex_template == '%02x%02x%02x%02x':
+            rgb.append(new_white)
+        hex_color = hex_template % tuple(rgb)
+        if len(rgb) > 3:
+            white = rgb.pop()
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, self.value_type, hex_color)
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
