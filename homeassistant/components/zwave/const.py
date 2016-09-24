@@ -1,4 +1,11 @@
 """Z-Wave Constants."""
+
+ATTR_NODE_ID = "node_id"
+ATTR_VALUE_ID = "value_id"
+ATTR_OBJECT_ID = "object_id"
+ATTR_NAME = "name"
+ATTR_SCENE_ID = "scene_id"
+ATTR_BASIC_LEVEL = "basic_level"
 NETWORK_READY_WAIT_SECS = 30
 
 SERVICE_ADD_NODE = "add_node"
