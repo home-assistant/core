@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_LATITUDE,
     CONF_LONGITUDE, CONF_ICON)
-from homeassistant.helpers import extract_domain_configs
+from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.util.location import distance
 import homeassistant.helpers.config_validation as cv
@@ -90,60 +90,30 @@ def in_zone(zone, latitude, longitude, radius=0):
 def setup(hass, config):
     """Setup zone."""
     entities = set()
-    for key in extract_domain_configs(config, DOMAIN):
-        entries = config[key]
-        if not isinstance(entries, list):
-            entries = entries,
-
-        for entry in entries:
-            name = entry.get(CONF_NAME)
-            latitude = entry.get(CONF_LATITUDE)
-            longitude = entry.get(CONF_LONGITUDE)
-            radius = entry.get(CONF_RADIUS)
-            icon = entry.get(CONF_ICON)
-            passive = entry.get(CONF_PASSIVE)
-
-            zone = Zone(
-                hass, name, latitude, longitude, radius, icon, passive, False)
-            add_zone(hass, name, zone, entities)
-            entities.add(zone.entity_id)
+    for _, entry in config_per_platform(config, DOMAIN):
+        name = entry.get(CONF_NAME)
+        zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
+                    entry.get(CONF_RADIUS), entry.get(CONF_ICON),
+                    entry.get(CONF_PASSIVE))
+        zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, entities)
+        zone.update_ha_state()
+        entities.add(zone.entity_id)
 
     if ENTITY_ID_HOME not in entities:
         zone = Zone(hass, hass.config.location_name,
                     hass.config.latitude, hass.config.longitude,
-                    DEFAULT_RADIUS, ICON_HOME, False, False)
-        add_zone(hass, hass.config.location_name, zone, entities)
+                    DEFAULT_RADIUS, ICON_HOME, False)
         zone.entity_id = ENTITY_ID_HOME
         zone.update_ha_state()
 
     return True
 
 
-# Add a zone to the existing set
-def add_zone(hass, name, zone, entities=None):
-    """Add a zone from other components."""
-    _LOGGER.info("Adding new zone %s", name)
-    if entities is None:
-        _entities = set()
-    else:
-        _entities = entities
-    zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, _entities)
-    zone_exists = hass.states.get(zone.entity_id)
-    if zone_exists is None:
-        zone.update_ha_state()
-        _entities.add(zone.entity_id)
-        return zone
-    else:
-        _LOGGER.info("Zone already exists")
-        return zone_exists
-
-
 class Zone(Entity):
     """Representation of a Zone."""
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self, hass, name, latitude, longitude, radius, icon, passive,
-                 imported):
+    def __init__(self, hass, name, latitude, longitude, radius, icon, passive):
         """Initialize the zone."""
         self.hass = hass
         self._name = name
@@ -152,7 +122,6 @@ class Zone(Entity):
         self._radius = radius
         self._icon = icon
         self._passive = passive
-        self._imported = imported
 
     @property
     def name(self):
