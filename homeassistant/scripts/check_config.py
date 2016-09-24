@@ -2,12 +2,13 @@
 import argparse
 import logging
 import os
+from collections import OrderedDict
 from glob import glob
 from platform import system
 from unittest.mock import patch
 
 from typing import Dict, List, Sequence
-from collections import OrderedDict
+
 import homeassistant.bootstrap as bootstrap
 import homeassistant.config as config_util
 import homeassistant.loader as loader
@@ -270,6 +271,6 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     if isinstance(layer, Sequence):
         for i in layer:
             if isinstance(i, dict):
-                dump_dict(i, indent_count+2, True)
+                dump_dict(i, indent_count + 2, True)
             else:
                 print(' ', indent_str, i)
