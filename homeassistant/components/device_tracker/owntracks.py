@@ -218,9 +218,18 @@ def setup_scanner(hass, config, see):
             lat = wayp[WAYPOINT_LAT_KEY]
             lon = wayp[WAYPOINT_LON_KEY]
             rad = wayp['rad']
+
+            # check zone exists
+            entity_id = zone_comp.ENTITY_ID_FORMAT.format(slugify(pretty_name))
+
+            # Check if state already exists
+            if hass.states.get(entity_id) is not None:
+                continue
+
             zone = zone_comp.Zone(hass, pretty_name, lat, lon, rad,
-                                  zone_comp.ICON_IMPORT, False, True)
-            zone_comp.add_zone(hass, pretty_name, zone)
+                                  zone_comp.ICON_IMPORT, False)
+            zone.entity_id = entity_id
+            zone.update_ha_state()
 
     def see_beacons(dev_id, kwargs_param):
         """Set active beacons to the current location."""

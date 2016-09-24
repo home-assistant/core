@@ -18,6 +18,18 @@ class TestComponentZone(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
+    def test_setup_no_zones_still_adds_home_zone(self):
+        """Test if no config is passed in we still get the home zone."""
+        assert bootstrap.setup_component(self.hass, zone.DOMAIN,
+                                         {'zone': None})
+
+        assert len(self.hass.states.entity_ids('zone')) == 1
+        state = self.hass.states.get('zone.home')
+        assert self.hass.config.location_name == state.name
+        assert self.hass.config.latitude == state.attributes['latitude']
+        assert self.hass.config.longitude == state.attributes['longitude']
+        assert not state.attributes.get('passive', False)
+
     def test_setup(self):
         """Test setup."""
         info = {
