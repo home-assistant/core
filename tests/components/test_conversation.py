@@ -3,6 +3,7 @@
 import unittest
 from unittest.mock import patch
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components as core_components
 from homeassistant.components import conversation
 from homeassistant.const import ATTR_ENTITY_ID
@@ -19,8 +20,8 @@ class TestConversation(unittest.TestCase):
         self.hass = get_test_home_assistant(3)
         self.hass.states.set(self.ent_id, 'on')
         self.assertTrue(core_components.setup(self.hass, {}))
-        self.assertTrue(
-            conversation.setup(self.hass, {conversation.DOMAIN: {}}))
+        self.assertTrue(setup_component(self.hass, conversation.DOMAIN, {
+            conversation.DOMAIN: {}}))
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""

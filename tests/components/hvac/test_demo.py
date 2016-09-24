@@ -1,10 +1,11 @@
 """The tests for the demo hvac."""
 import unittest
 
+from homeassistant.bootstrap import setup_component
+from homeassistant.components import hvac
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
 )
-from homeassistant.components import hvac
 
 from tests.common import get_test_home_assistant
 
@@ -19,7 +20,7 @@ class TestDemoHvac(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
-        self.assertTrue(hvac.setup(self.hass, {'hvac': {
+        self.assertTrue(setup_component(self.hass, hvac.DOMAIN, {'hvac': {
             'platform': 'demo',
         }}))
 
