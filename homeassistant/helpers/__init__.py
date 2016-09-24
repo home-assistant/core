@@ -22,7 +22,10 @@ def config_per_platform(config: ConfigType,
     """
     for config_key in extract_domain_configs(config, domain):
         platform_config = config[config_key]
-        if not isinstance(platform_config, list):
+
+        if not platform_config:
+            continue
+        elif not isinstance(platform_config, list):
             platform_config = [platform_config]
 
         for item in platform_config:
