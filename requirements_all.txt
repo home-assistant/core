@@ -434,7 +434,7 @@ snapcast==1.2.2
 
 # homeassistant.components.climate.honeywell
 # homeassistant.components.thermostat.honeywell
-somecomfort==0.2.1
+somecomfort==0.3.2
 
 # homeassistant.components.sensor.speedtest
 speedtest-cli==0.3.4
