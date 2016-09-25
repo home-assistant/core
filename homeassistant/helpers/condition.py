@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_BELOW, CONF_ABOVE)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import render
+from homeassistant.helpers.template import render, compile_template
 import homeassistant.util.dt as dt_util
 
 FROM_CONFIG_FORMAT = '{}_from_config'
@@ -125,9 +125,18 @@ def numeric_state_from_config(config, config_validation=True):
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
+    cache = {}
+
     def if_numeric_state(hass, variables=None):
         """Test numeric state condition."""
-        return numeric_state(hass, entity_id, below, above, value_template,
+        if value_template is None:
+            tmpl = None
+        elif hass in cache:
+            tmpl = cache[hass]
+        else:
+            cache[hass] = tmpl = compile_template(hass, value_template)
+
+        return numeric_state(hass, entity_id, below, above, tmpl,
                              variables)
 
     return if_numeric_state
@@ -222,9 +231,16 @@ def template_from_config(config, config_validation=True):
         config = cv.TEMPLATE_CONDITION_SCHEMA(config)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
+    cache = {}
+
     def template_if(hass, variables=None):
         """Validate template based if-condition."""
-        return template(hass, value_template, variables)
+        if hass in cache:
+            tmpl = cache[hass]
+        else:
+            cache[hass] = tmpl = compile_template(hass, value_template)
+
+        return template(hass, tmpl, variables)
 
     return template_if
 

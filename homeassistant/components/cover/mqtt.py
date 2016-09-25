@@ -44,11 +44,17 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MQTT Cover."""
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+
+    if value_template is not None:
+        value_template = template.compile_template(hass, value_template)
+
     add_devices([MqttCover(
         hass,
         config.get(CONF_NAME),
@@ -62,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_CLOSE),
         config.get(CONF_PAYLOAD_STOP),
         config.get(CONF_OPTIMISTIC),
-        config.get(CONF_VALUE_TEMPLATE)
+        value_template,
     )])
 
 

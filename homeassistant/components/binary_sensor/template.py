@@ -73,7 +73,7 @@ class BinarySensorTemplate(BinarySensorDevice):
                                             hass=hass)
         self._name = friendly_name
         self._sensor_class = sensor_class
-        self._template = value_template
+        self._template = template.compile_template(hass, value_template)
         self._state = None
 
         self.update()
