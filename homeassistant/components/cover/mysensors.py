@@ -40,7 +40,6 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
 
     def update(self):
         """Update the controller with the latest value from a sensor."""
-        set_req = self.gateway.const.SetReq
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
         for value_type, value in child.values.items():
@@ -51,6 +50,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
     @property
     def is_closed(self):
         """Return True if cover is closed."""
+        set_req = self.gateway.const.SetReq
         return self._values.get(set_req.V_PERCENTAGE) == 0
 
     @property
@@ -59,6 +59,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
+        set_req = self.gateway.const.SetReq
         return self._values.get(set_req.V_PERCENTAGE)
 
     def open_cover(self, **kwargs):
