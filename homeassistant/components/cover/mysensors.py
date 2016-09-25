@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
-            pres.S_COVER: [set_req.V_UP],
+            pres.S_COVER: [set_req.V_PERCENTAGE],
         }
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
@@ -45,13 +45,16 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
         for value_type, value in child.values.items():
             _LOGGER.debug(
                 '%s: value_type %s, value = %s', self._name, value_type, value)
-            self._values[value_type] = value
+            if value_type == set_req.V_PERCENTAGE:
+                self._values[value_type] = int(value)
+            else:
+                self._values[value_type] = value
 
     @property
     def is_closed(self):
         """Return True if cover is closed."""
         set_req = self.gateway.const.SetReq
-        return self._values.get(set_req.V_PERCENTAGE) == '0'
+        return self._values.get(set_req.V_PERCENTAGE) == 0
 
     @property
     def current_cover_position(self):
