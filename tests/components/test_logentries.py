@@ -15,7 +15,6 @@ class TestLogentries(unittest.TestCase):
         """Test setup with all data."""
         config = {
             'logentries': {
-                'host': 'host',
                 'token': 'secret',
             }
         }
@@ -29,7 +28,6 @@ class TestLogentries(unittest.TestCase):
         """Test setup with defaults."""
         config = {
             'logentries': {
-                'host': 'host',
                 'token': 'token',
             }
         }
@@ -46,7 +44,6 @@ class TestLogentries(unittest.TestCase):
         mock_requests.exceptions.RequestException = self.mock_request_exception
         config = {
             'logentries': {
-                'host': 'https://webhook.logentries.com/noformat/logs/token',
                 'token': 'token'
             }
         }
