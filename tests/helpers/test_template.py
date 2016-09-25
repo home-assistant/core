@@ -33,14 +33,14 @@ class TestUtilTemplate(unittest.TestCase):
         self.hass.stop()
 
     def test_referring_states_by_entity_id(self):
-        """."""
+        """Test referring states by entity id."""
         self.hass.states.set('test.object', 'happy')
         self.assertEqual(
             'happy',
             template.render(self.hass, '{{ states.test.object.state }}'))
 
     def test_iterating_all_states(self):
-        """."""
+        """Test iterating all states."""
         self.hass.states.set('test.object', 'happy')
         self.hass.states.set('sensor.temperature', 10)
 
@@ -51,7 +51,7 @@ class TestUtilTemplate(unittest.TestCase):
                 '{% for state in states %}{{ state.state }}{% endfor %}'))
 
     def test_iterating_domain_states(self):
-        """."""
+        """Test iterating domain states."""
         self.hass.states.set('test.object', 'happy')
         self.hass.states.set('sensor.back_door', 'open')
         self.hass.states.set('sensor.temperature', 10)
@@ -65,7 +65,7 @@ class TestUtilTemplate(unittest.TestCase):
                 """))
 
     def test_float(self):
-        """."""
+        """Test float."""
         self.hass.states.set('sensor.temperature', '12')
 
         self.assertEqual(
@@ -81,7 +81,7 @@ class TestUtilTemplate(unittest.TestCase):
                 '{{ float(states.sensor.temperature.state) > 11 }}'))
 
     def test_rounding_value(self):
-        """."""
+        """Test rounding value."""
         self.hass.states.set('sensor.temperature', 12.78)
 
         self.assertEqual(
@@ -98,7 +98,7 @@ class TestUtilTemplate(unittest.TestCase):
             ))
 
     def test_rounding_value_get_original_value_on_error(self):
-        """."""
+        """Test rounding value get original value on error."""
         self.assertEqual(
             'None',
             template.render(
@@ -114,7 +114,7 @@ class TestUtilTemplate(unittest.TestCase):
             ))
 
     def test_multiply(self):
-        """."""
+        """Test multiply."""
         tests = {
             None: 'None',
             10: '100',
@@ -180,50 +180,50 @@ class TestUtilTemplate(unittest.TestCase):
                                 '{{ %s | timestamp_utc }}' % inp))
 
     def test_passing_vars_as_keywords(self):
-        """."""
+        """Test passing variables as keywords."""
         self.assertEqual(
             '127', template.render(self.hass, '{{ hello }}', hello=127))
 
     def test_passing_vars_as_vars(self):
-        """."""
+        """Test passing variables as variables."""
         self.assertEqual(
             '127', template.render(self.hass, '{{ hello }}', {'hello': 127}))
 
     def test_render_with_possible_json_value_with_valid_json(self):
-        """."""
+        """Render with possible JSON value with valid JSON."""
         self.assertEqual(
             'world',
             template.render_with_possible_json_value(
                 self.hass, '{{ value_json.hello }}', '{"hello": "world"}'))
 
     def test_render_with_possible_json_value_with_invalid_json(self):
-        """."""
+        """Render with possible JSON value with invalid JSON."""
         self.assertEqual(
             '',
             template.render_with_possible_json_value(
                 self.hass, '{{ value_json }}', '{ I AM NOT JSON }'))
 
     def test_render_with_possible_json_value_with_template_error(self):
-        """."""
+        """Render with possible JSON value with template error."""
         self.assertEqual(
             'hello',
             template.render_with_possible_json_value(
                 self.hass, '{{ value_json', 'hello'))
 
     def test_render_with_possible_json_value_with_template_error_value(self):
-        """."""
+        """Render with possible JSON value with template error value."""
         self.assertEqual(
             '-',
             template.render_with_possible_json_value(
                 self.hass, '{{ value_json', 'hello', '-'))
 
     def test_raise_exception_on_error(self):
-        """."""
+        """Test raising an exception on error."""
         with self.assertRaises(TemplateError):
             template.render(self.hass, '{{ invalid_syntax')
 
     def test_if_state_exists(self):
-        """."""
+        """Test if state exists works."""
         self.hass.states.set('test.object', 'available')
         self.assertEqual(
             'exists',
@@ -234,7 +234,7 @@ class TestUtilTemplate(unittest.TestCase):
                 """))
 
     def test_is_state(self):
-        """."""
+        """Test is_state method."""
         self.hass.states.set('test.object', 'available')
         self.assertEqual(
             'yes',
@@ -245,7 +245,7 @@ class TestUtilTemplate(unittest.TestCase):
                 """))
 
     def test_is_state_attr(self):
-        """."""
+        """Test is_state_attr method."""
         self.hass.states.set('test.object', 'available', {'mode': 'on'})
         self.assertEqual(
             'yes',
@@ -256,7 +256,7 @@ class TestUtilTemplate(unittest.TestCase):
                 """))
 
     def test_states_function(self):
-        """."""
+        """Test using states as a function."""
         self.hass.states.set('test.object', 'available')
         self.assertEqual(
             'available',
@@ -265,32 +265,26 @@ class TestUtilTemplate(unittest.TestCase):
             'unknown',
             template.render(self.hass, '{{ states("test.object2") }}'))
 
-    @patch('homeassistant.core.dt_util.utcnow', return_value=dt_util.utcnow())
+    @patch('homeassistant.core.dt_util.now', return_value=dt_util.now())
     @patch('homeassistant.helpers.template.TemplateEnvironment.'
            'is_safe_callable', return_value=True)
     def test_now(self, mock_is_safe, mock_utcnow):
-        """."""
+        """Test now method."""
         self.assertEqual(
-            dt_util.utcnow().isoformat(),
-            template.render(self.hass, '{{ now.isoformat() }}'))
+            dt_util.now().isoformat(),
+            template.render(self.hass, '{{ now().isoformat() }}'))
 
     @patch('homeassistant.core.dt_util.utcnow', return_value=dt_util.utcnow())
     @patch('homeassistant.helpers.template.TemplateEnvironment.'
            'is_safe_callable', return_value=True)
     def test_utcnow(self, mock_is_safe, mock_utcnow):
-        """."""
+        """Test utcnow method."""
         self.assertEqual(
             dt_util.utcnow().isoformat(),
-            template.render(self.hass, '{{ utcnow.isoformat() }}'))
-
-    def test_utcnow_is_exactly_now(self):
-        """."""
-        self.assertEqual(
-            'True',
-            template.render(self.hass, '{{ utcnow == now }}'))
+            template.render(self.hass, '{{ utcnow().isoformat() }}'))
 
     def test_distance_function_with_1_state(self):
-        """."""
+        """Test distance function with 1 state."""
         self.hass.states.set('test.object', 'happy', {
             'latitude': 32.87336,
             'longitude': -117.22943,
@@ -302,7 +296,7 @@ class TestUtilTemplate(unittest.TestCase):
                 self.hass, '{{ distance(states.test.object) | round }}'))
 
     def test_distance_function_with_2_states(self):
-        """."""
+        """Test distance function with 2 states."""
         self.hass.states.set('test.object', 'happy', {
             'latitude': 32.87336,
             'longitude': -117.22943,
@@ -321,14 +315,14 @@ class TestUtilTemplate(unittest.TestCase):
                 '| round }}'))
 
     def test_distance_function_with_1_coord(self):
-        """."""
+        """Test distance function with 1 coord."""
         self.assertEqual(
             '187',
             template.render(
                 self.hass, '{{ distance("32.87336", "-117.22943") | round }}'))
 
     def test_distance_function_with_2_coords(self):
-        """."""
+        """Test distance function with 2 coords."""
         self.assertEqual(
             '187',
             template.render(
@@ -337,7 +331,7 @@ class TestUtilTemplate(unittest.TestCase):
                 % (self.hass.config.latitude, self.hass.config.longitude)))
 
     def test_distance_function_with_1_state_1_coord(self):
-        """."""
+        """Test distance function with 1 state 1 coord."""
         self.hass.states.set('test.object_2', 'happy', {
             'latitude': self.hass.config.latitude,
             'longitude': self.hass.config.longitude,
@@ -358,7 +352,7 @@ class TestUtilTemplate(unittest.TestCase):
                 '| round }}'))
 
     def test_distance_function_return_None_if_invalid_state(self):
-        """."""
+        """Test distance function return None if invalid state."""
         self.hass.states.set('test.object_2', 'happy', {
             'latitude': 10,
         })
@@ -370,7 +364,7 @@ class TestUtilTemplate(unittest.TestCase):
                 '{{ distance(states.test.object_2) | round }}'))
 
     def test_distance_function_return_None_if_invalid_coord(self):
-        """."""
+        """Test distance function return None if invalid coord."""
         self.assertEqual(
             'None',
             template.render(
@@ -395,7 +389,7 @@ class TestUtilTemplate(unittest.TestCase):
                 '{{ distance("123", states.test_object_2) }}'))
 
     def test_closest_function_home_vs_domain(self):
-        """."""
+        """Test closest function home vs domain."""
         self.hass.states.set('test_domain.object', 'happy', {
             'latitude': self.hass.config.latitude + 0.1,
             'longitude': self.hass.config.longitude + 0.1,
@@ -412,7 +406,7 @@ class TestUtilTemplate(unittest.TestCase):
                             '{{ closest(states.test_domain).entity_id }}'))
 
     def test_closest_function_home_vs_all_states(self):
-        """."""
+        """Test closest function home vs all states."""
         self.hass.states.set('test_domain.object', 'happy', {
             'latitude': self.hass.config.latitude + 0.1,
             'longitude': self.hass.config.longitude + 0.1,
@@ -429,7 +423,7 @@ class TestUtilTemplate(unittest.TestCase):
                             '{{ closest(states).entity_id }}'))
 
     def test_closest_function_home_vs_group_entity_id(self):
-        """."""
+        """Test closest function home vs group entity id."""
         self.hass.states.set('test_domain.object', 'happy', {
             'latitude': self.hass.config.latitude + 0.1,
             'longitude': self.hass.config.longitude + 0.1,
@@ -448,7 +442,7 @@ class TestUtilTemplate(unittest.TestCase):
                             '{{ closest("group.location_group").entity_id }}'))
 
     def test_closest_function_home_vs_group_state(self):
-        """."""
+        """Test closest function home vs group state."""
         self.hass.states.set('test_domain.object', 'happy', {
             'latitude': self.hass.config.latitude + 0.1,
             'longitude': self.hass.config.longitude + 0.1,
@@ -468,7 +462,7 @@ class TestUtilTemplate(unittest.TestCase):
                 '{{ closest(states.group.location_group).entity_id }}'))
 
     def test_closest_function_to_coord(self):
-        """."""
+        """Test closest function to coord."""
         self.hass.states.set('test_domain.closest_home', 'happy', {
             'latitude': self.hass.config.latitude + 0.1,
             'longitude': self.hass.config.longitude + 0.1,
@@ -494,7 +488,7 @@ class TestUtilTemplate(unittest.TestCase):
         )
 
     def test_closest_function_to_entity_id(self):
-        """."""
+        """Test closest function to entity id."""
         self.hass.states.set('test_domain.closest_home', 'happy', {
             'latitude': self.hass.config.latitude + 0.1,
             'longitude': self.hass.config.longitude + 0.1,
@@ -518,7 +512,7 @@ class TestUtilTemplate(unittest.TestCase):
         )
 
     def test_closest_function_to_state(self):
-        """."""
+        """Test closest function to state."""
         self.hass.states.set('test_domain.closest_home', 'happy', {
             'latitude': self.hass.config.latitude + 0.1,
             'longitude': self.hass.config.longitude + 0.1,
@@ -543,7 +537,7 @@ class TestUtilTemplate(unittest.TestCase):
         )
 
     def test_closest_function_invalid_state(self):
-        """."""
+        """Test closest function invalid state."""
         self.hass.states.set('test_domain.closest_home', 'happy', {
             'latitude': self.hass.config.latitude + 0.1,
             'longitude': self.hass.config.longitude + 0.1,
@@ -556,7 +550,7 @@ class TestUtilTemplate(unittest.TestCase):
                     self.hass, '{{ closest(%s, states) }}' % state))
 
     def test_closest_function_state_with_invalid_location(self):
-        """."""
+        """Test closest function state with invalid location."""
         self.hass.states.set('test_domain.closest_home', 'happy', {
             'latitude': 'invalid latitude',
             'longitude': self.hass.config.longitude + 0.1,
@@ -570,7 +564,7 @@ class TestUtilTemplate(unittest.TestCase):
                 'states) }}'))
 
     def test_closest_function_invalid_coordinates(self):
-        """."""
+        """Test closest function invalid coordinates."""
         self.hass.states.set('test_domain.closest_home', 'happy', {
             'latitude': self.hass.config.latitude + 0.1,
             'longitude': self.hass.config.longitude + 0.1,
@@ -582,6 +576,16 @@ class TestUtilTemplate(unittest.TestCase):
                             '{{ closest("invalid", "coord", states) }}'))
 
     def test_closest_function_no_location_states(self):
-        """."""
+        """Test closest function without location states."""
         self.assertEqual('None',
                          template.render(self.hass, '{{ closest(states) }}'))
+
+    def test_compiling_template(self):
+        """Test compiling a template."""
+        self.hass.states.set('test_domain.hello', 'world')
+        compiled = template.compile_template(
+            self.hass, '{{ states.test_domain.hello.state }}')
+
+        with patch('homeassistant.helpers.template.compile_template',
+                   side_effect=Exception('Should not be called')):
+            assert 'world' == template.render(self.hass, compiled)

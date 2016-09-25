@@ -24,7 +24,7 @@ COVER_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_STATE): cv.string,
     vol.Optional(CONF_COMMAND_STOP, default='true'): cv.string,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE, default='{{ value }}'): cv.template,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -38,6 +38,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     covers = []
 
     for device_name, device_config in devices.items():
+        value_template = device_config.get(CONF_VALUE_TEMPLATE)
+
+        if value_template is not None:
+            value_template = template.compile_template(hass, value_template)
+
         covers.append(
             CommandCover(
                 hass,
@@ -46,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device_config.get(CONF_COMMAND_CLOSE),
                 device_config.get(CONF_COMMAND_STOP),
                 device_config.get(CONF_COMMAND_STATE),
-                device_config.get(CONF_VALUE_TEMPLATE),
+                value_template,
             )
         )
 
