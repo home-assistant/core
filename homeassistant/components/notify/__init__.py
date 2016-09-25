@@ -112,8 +112,8 @@ def setup(hass, config):
 
         if hasattr(notify_service, 'targets'):
             platform_name = (p_config.get(CONF_NAME) or platform)
-            for target in notify_service.targets:
-                target_name = slugify("{}_{}".format(platform_name, target))
+            for name, target in notify_service.targets.items():
+                target_name = slugify("{}_{}".format(platform_name, name))
                 targets[target_name] = target
                 hass.services.register(DOMAIN, target_name,
                                        service_call_handler,

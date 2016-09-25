@@ -134,14 +134,14 @@ data_template:
     def test_targets_are_services(self):
         """Test that all targets are exposed as individual services."""
         self.assertIsNotNone(self.hass.services.has_service("notify", "demo"))
-        service = "demo_test_target"
+        service = "demo_test_target_name"
         self.assertIsNotNone(self.hass.services.has_service("notify", service))
 
     def test_messages_to_targets_route(self):
         """Test message routing to specific target services."""
         self.hass.bus.listen_once("notify", self.record_calls)
 
-        self.hass.services.call("notify", "demo_test_target",
+        self.hass.services.call("notify", "demo_test_target_name",
                                 {'message': 'my message',
                                  'title': 'my title',
                                  'data': {'hello': 'world'}})
@@ -152,7 +152,7 @@ data_template:
 
         assert {
             'message': 'my message',
-            'target': 'test target',
+            'target': 'test target id',
             'title': 'my title',
             'data': {'hello': 'world'}
         } == data
