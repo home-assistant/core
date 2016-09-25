@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_BELOW, CONF_ABOVE)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import render
+from homeassistant.helpers.template import render, compile_template
 import homeassistant.util.dt as dt_util
 
 FROM_CONFIG_FORMAT = '{}_from_config'
@@ -222,9 +222,16 @@ def template_from_config(config, config_validation=True):
         config = cv.TEMPLATE_CONDITION_SCHEMA(config)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
+    cache = {}
+
     def template_if(hass, variables=None):
         """Validate template based if-condition."""
-        return template(hass, value_template, variables)
+        if hass in cache:
+            tmpl = cache[hass]
+        else:
+            cache[hass] = tmpl = compile_template(hass, value_template)
+
+        return template(hass, tmpl, variables)
 
     return template_if
 

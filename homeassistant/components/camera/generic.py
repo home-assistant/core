@@ -38,18 +38,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a generic IP Camera."""
-    add_devices([GenericCamera(config)])
+    add_devices([GenericCamera(hass, config)])
 
 
 # pylint: disable=too-many-instance-attributes
 class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
-    def __init__(self, device_info):
+    def __init__(self, hass, device_info):
         """Initialize a generic camera."""
         super().__init__()
+        self.hass = hass
         self._name = device_info.get(CONF_NAME)
-        self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
+        self._still_image_url = template.compile_template(
+            hass, device_info[CONF_STILL_IMAGE_URL])
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
 
         username = device_info.get(CONF_USERNAME)

@@ -18,6 +18,24 @@ _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
+def compile_template(hass, template):
+    """Compile a template."""
+    location_methods = LocationMethods(hass)
+
+    return ENV.from_string(template, {
+        'closest': location_methods.closest,
+        'distance': location_methods.distance,
+        'float': forgiving_float,
+        'is_state': hass.states.is_state,
+        'is_state_attr': hass.states.is_state_attr,
+        'now': dt_util.now,
+        'states': AllStates(hass),
+        'utcnow': dt_util.utcnow,
+        'as_timestamp': dt_util.as_timestamp,
+        'relative_time': dt_util.get_age
+    })
+
+
 def render_with_possible_json_value(hass, template, value,
                                     error_value=_SENTINEL):
     """Render template with value exposed.
@@ -44,22 +62,11 @@ def render(hass, template, variables=None, **kwargs):
     if variables is not None:
         kwargs.update(variables)
 
-    location_methods = LocationMethods(hass)
-    utcnow = dt_util.utcnow()
-
     try:
-        return ENV.from_string(template, {
-            'closest': location_methods.closest,
-            'distance': location_methods.distance,
-            'float': forgiving_float,
-            'is_state': hass.states.is_state,
-            'is_state_attr': hass.states.is_state_attr,
-            'now': dt_util.as_local(utcnow),
-            'states': AllStates(hass),
-            'utcnow': utcnow,
-            'as_timestamp': dt_util.as_timestamp,
-            'relative_time': dt_util.get_age
-        }).render(kwargs).strip()
+        if not isinstance(template, jinja2.Template):
+            template = compile_template(hass, template)
+
+        return template.render(kwargs).strip()
     except jinja2.TemplateError as err:
         raise TemplateError(err)
 
