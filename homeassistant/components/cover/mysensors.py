@@ -45,10 +45,10 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
     def is_closed(self):
         """Return True if cover is closed."""
         set_req = self.gateway.const.SetReq
-        if set_req.V_PERCENTAGE in self._values:
-            return self._values.get(set_req.V_PERCENTAGE) == 0
+        if set_req.V_DIMMER in self._values:
+            return self._values.get(set_req.V_DIMMER) == 0
         else:
-            return self._values.get(set_req.V_STATUS) == STATE_OFF
+            return self._values.get(set_req.V_LIGHT) == STATE_OFF
 
     @property
     def current_cover_position(self):
@@ -57,7 +57,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
         None is unknown, 0 is closed, 100 is fully open.
         """
         set_req = self.gateway.const.SetReq
-        return self._values.get(set_req.V_PERCENTAGE)
+        return self._values.get(set_req.V_DIMMER)
 
     def open_cover(self, **kwargs):
         """Move the cover up."""
@@ -66,10 +66,10 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
             self.node_id, self.child_id, set_req.V_UP, 1)
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
-            if set_req.V_PERCENTAGE in self._values:
-                self._values[set_req.V_PERCENTAGE] = 100
+            if set_req.V_DIMMER in self._values:
+                self._values[set_req.V_DIMMER] = 100
             else:
-                self._values[set_req.V_STATUS] = STATE_ON
+                self._values[set_req.V_LIGHT] = STATE_ON
             self.update_ha_state()
 
     def close_cover(self, **kwargs):
@@ -79,10 +79,10 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
             self.node_id, self.child_id, set_req.V_DOWN, 1)
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
-            if set_req.V_PERCENTAGE in self._values:
-                self._values[set_req.V_PERCENTAGE] = 0
+            if set_req.V_DIMMER in self._values:
+                self._values[set_req.V_DIMMER] = 0
             else:
-                self._values[set_req.V_STATUS] = STATE_OFF
+                self._values[set_req.V_LIGHT] = STATE_OFF
             self.update_ha_state()
 
     def set_cover_position(self, **kwargs):
@@ -90,10 +90,10 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
         position = kwargs.get(ATTR_POSITION)
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_PERCENTAGE, position)
+            self.node_id, self.child_id, set_req.V_DIMMER, position)
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
-            self._values[set_req.V_PERCENTAGE] = position
+            self._values[set_req.V_DIMMER] = position
             self.update_ha_state()
 
     def stop_cover(self, **kwargs):
