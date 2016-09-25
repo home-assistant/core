@@ -79,7 +79,7 @@ class SwitchTemplate(SwitchDevice):
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id,
                                             hass=hass)
         self._name = friendly_name
-        self._template = state_template
+        self._template = template.compile_template(hass, state_template)
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
         self._state = False
