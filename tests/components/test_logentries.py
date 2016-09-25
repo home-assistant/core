@@ -3,6 +3,7 @@
 import unittest
 from unittest import mock
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.logentries as logentries
 from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
 
@@ -14,12 +15,11 @@ class TestLogentries(unittest.TestCase):
         """Test setup with all data."""
         config = {
             'logentries': {
-                'host': 'host',
                 'token': 'secret',
             }
         }
         hass = mock.MagicMock()
-        self.assertTrue(logentries.setup(hass, config))
+        self.assertTrue(setup_component(hass, logentries.DOMAIN, config))
         self.assertTrue(hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
                          hass.bus.listen.call_args_list[0][0][0])
@@ -28,12 +28,11 @@ class TestLogentries(unittest.TestCase):
         """Test setup with defaults."""
         config = {
             'logentries': {
-                'host': 'host',
                 'token': 'token',
             }
         }
         hass = mock.MagicMock()
-        self.assertTrue(logentries.setup(hass, config))
+        self.assertTrue(setup_component(hass, logentries.DOMAIN, config))
         self.assertTrue(hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
                          hass.bus.listen.call_args_list[0][0][0])
@@ -45,12 +44,11 @@ class TestLogentries(unittest.TestCase):
         mock_requests.exceptions.RequestException = self.mock_request_exception
         config = {
             'logentries': {
-                'host': 'https://webhook.logentries.com/noformat/logs/token',
                 'token': 'token'
             }
         }
         self.hass = mock.MagicMock()
-        logentries.setup(self.hass, config)
+        setup_component(self.hass, logentries.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
     @mock.patch.object(logentries, 'requests')

@@ -4,6 +4,7 @@ from unittest import mock
 
 import voluptuous as vol
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.core as ha
 import homeassistant.components.statsd as statsd
 from homeassistant.const import (STATE_ON, STATE_OFF, EVENT_STATE_CHANGED)
@@ -32,12 +33,12 @@ class TestStatsd(unittest.TestCase):
             'statsd': {
                 'host': 'host',
                 'port': 123,
-                'sample_rate': 1,
+                'rate': 1,
                 'prefix': 'foo',
             }
         }
         hass = mock.MagicMock()
-        self.assertTrue(statsd.setup(hass, config))
+        self.assertTrue(setup_component(hass, statsd.DOMAIN, config))
         mock_connection.assert_called_once_with(
             host='host',
             port=123,
@@ -60,7 +61,7 @@ class TestStatsd(unittest.TestCase):
         config['statsd'][statsd.CONF_PREFIX] = statsd.DEFAULT_PREFIX
 
         hass = mock.MagicMock()
-        self.assertTrue(statsd.setup(hass, config))
+        self.assertTrue(setup_component(hass, statsd.DOMAIN, config))
         mock_connection.assert_called_once_with(
             host='host',
             port=8125,
@@ -79,7 +80,7 @@ class TestStatsd(unittest.TestCase):
         config['statsd'][statsd.CONF_RATE] = statsd.DEFAULT_RATE
 
         hass = mock.MagicMock()
-        statsd.setup(hass, config)
+        setup_component(hass, statsd.DOMAIN, config)
         self.assertTrue(hass.bus.listen.called)
         handler_method = hass.bus.listen.call_args_list[0][0][1]
 
@@ -120,7 +121,7 @@ class TestStatsd(unittest.TestCase):
         config['statsd'][statsd.CONF_RATE] = statsd.DEFAULT_RATE
 
         hass = mock.MagicMock()
-        statsd.setup(hass, config)
+        setup_component(hass, statsd.DOMAIN, config)
         self.assertTrue(hass.bus.listen.called)
         handler_method = hass.bus.listen.call_args_list[0][0][1]
 

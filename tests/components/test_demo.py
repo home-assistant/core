@@ -3,6 +3,7 @@ import json
 import os
 import unittest
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import demo, device_tracker
 from homeassistant.remote import JSONEncoder
 
@@ -28,19 +29,21 @@ class TestDemo(unittest.TestCase):
 
     def test_if_demo_state_shows_by_default(self):
         """Test if demo state shows if we give no configuration."""
-        demo.setup(self.hass, {demo.DOMAIN: {}})
+        setup_component(self.hass, demo.DOMAIN, {demo.DOMAIN: {}})
 
         self.assertIsNotNone(self.hass.states.get('a.Demo_Mode'))
 
     def test_hiding_demo_state(self):
         """Test if you can hide the demo card."""
-        demo.setup(self.hass, {demo.DOMAIN: {'hide_demo_state': 1}})
+        setup_component(self.hass, demo.DOMAIN, {
+            demo.DOMAIN: {'hide_demo_state': 1}})
 
         self.assertIsNone(self.hass.states.get('a.Demo_Mode'))
 
     def test_all_entities_can_be_loaded_over_json(self):
         """Test if you can hide the demo card."""
-        demo.setup(self.hass, {demo.DOMAIN: {'hide_demo_state': 1}})
+        setup_component(self.hass, demo.DOMAIN, {
+            demo.DOMAIN: {'hide_demo_state': 1}})
 
         try:
             json.dumps(self.hass.states.all(), cls=JSONEncoder)
