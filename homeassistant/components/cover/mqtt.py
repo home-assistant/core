@@ -43,8 +43,6 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
     vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 
@@ -154,7 +152,7 @@ class MqttCover(CoverDevice):
                      self._qos, self._retain)
         if self._optimistic:
             # Optimistically assume that cover has changed state.
-            self._state = 100
+            self._state = False
             self.update_ha_state()
 
     def close_cover(self, **kwargs):
@@ -163,7 +161,7 @@ class MqttCover(CoverDevice):
                      self._qos, self._retain)
         if self._optimistic:
             # Optimistically assume that cover has changed state.
-            self._state = 0
+            self._state = True
             self.update_ha_state()
 
     def stop_cover(self, **kwargs):
