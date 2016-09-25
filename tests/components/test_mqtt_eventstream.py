@@ -3,6 +3,7 @@ import json
 import unittest
 from unittest.mock import ANY, patch
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import State
@@ -38,7 +39,8 @@ class TestMqttEventStream(unittest.TestCase):
             config['subscribe_topic'] = sub_topic
         if pub_topic:
             config['publish_topic'] = pub_topic
-        return eventstream.setup(self.hass, {eventstream.DOMAIN: config})
+        return setup_component(self.hass, eventstream.DOMAIN, {
+            eventstream.DOMAIN: config})
 
     def test_setup_succeeds(self):
         """"Test the success of the setup."""
