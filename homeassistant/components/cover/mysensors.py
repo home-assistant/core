@@ -19,13 +19,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
     for gateway in mysensors.GATEWAYS.values():
-        if float(gateway.protocol_version) < 1.5:
-            continue
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
-            pres.S_COVER: [set_req.V_PERCENTAGE, set_req.V_STATUS],
+            pres.S_COVER: [set_req.V_DIMMER, set_req.V_LIGHT],
         }
+        if float(gateway.protocol_version) >= 1.5:
+            map_sv_types.update({
+                pres.S_COVER: [set_req.V_PERCENTAGE, set_req.V_STATUS],
+            })
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
             map_sv_types, devices, add_devices, MySensorsCover))
