@@ -104,7 +104,7 @@ class TestMfiSensorSetup(unittest.TestCase):
         print(ports['bad'].model)
         mock_client.return_value.get_devices.return_value = \
             [mock.MagicMock(ports=ports)]
-        assert sensor.setup(self.hass, self.GOOD_CONFIG)
+        assert setup_component(self.hass, sensor.DOMAIN, self.GOOD_CONFIG)
         for ident, port in ports.items():
             if ident != 'bad':
                 mock_sensor.assert_any_call(port, self.hass)
