@@ -8,6 +8,7 @@ import logging
 
 from homeassistant.components import mysensors
 from homeassistant.components.cover import CoverDevice, ATTR_POSITION
+from homeassistant.const import STATE_ON, STATE_OFF
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
@@ -23,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
-            pres.S_COVER: [set_req.V_PERCENTAGE],
+            pres.S_COVER: [set_req.V_PERCENTAGE, set_req.V_STATUS],
         }
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
@@ -38,24 +39,14 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
         """Return True if unable to access real state of entity."""
         return self.gateway.optimistic
 
-    def update(self):
-        """Update the controller with the latest value from a sensor."""
-        node = self.gateway.sensors[self.node_id]
-        child = node.children[self.child_id]
-        set_req = self.gateway.const.SetReq
-        for value_type, value in child.values.items():
-            _LOGGER.debug(
-                '%s: value_type %s, value = %s', self._name, value_type, value)
-            if value_type == set_req.V_PERCENTAGE:
-                self._values[value_type] = int(value)
-            else:
-                self._values[value_type] = value
-
     @property
     def is_closed(self):
         """Return True if cover is closed."""
         set_req = self.gateway.const.SetReq
-        return self._values.get(set_req.V_PERCENTAGE) == 0
+        if set_req.V_PERCENTAGE in self._values:
+            return self._values.get(set_req.V_PERCENTAGE) == 0
+        else:
+            return self._values.get(set_req.V_STATUS) == STATE_OFF
 
     @property
     def current_cover_position(self):
@@ -73,7 +64,10 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
             self.node_id, self.child_id, set_req.V_UP, 1)
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
-            self._values[set_req.V_PERCENTAGE] = 100
+            if set_req.V_PERCENTAGE in self._values:
+                self._values[set_req.V_PERCENTAGE] = 100
+            else:
+                self._values[set_req.V_STATUS] = STATE_ON
             self.update_ha_state()
 
     def close_cover(self, **kwargs):
@@ -83,7 +77,10 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
             self.node_id, self.child_id, set_req.V_DOWN, 1)
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
-            self._values[set_req.V_PERCENTAGE] = 0
+            if set_req.V_PERCENTAGE in self._values:
+                self._values[set_req.V_PERCENTAGE] = 0
+            else:
+                self._values[set_req.V_STATUS] = STATE_OFF
             self.update_ha_state()
 
     def set_cover_position(self, **kwargs):

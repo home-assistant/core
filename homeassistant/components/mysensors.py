@@ -338,7 +338,8 @@ class MySensorsDeviceEntity(object):
             _LOGGER.debug(
                 "%s: value_type %s, value = %s", self._name, value_type, value)
             if value_type in (set_req.V_ARMED, set_req.V_LIGHT,
-                              set_req.V_LOCK_STATUS, set_req.V_TRIPPED):
+                              set_req.V_LOCK_STATUS, set_req.V_TRIPPED,
+                              set_req.V_DIMMER):
                 self._values[value_type] = (
                     STATE_ON if int(value) == 1 else STATE_OFF)
             else:
