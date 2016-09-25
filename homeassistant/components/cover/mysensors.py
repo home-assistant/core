@@ -85,6 +85,17 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
             self._values[set_req.V_PERCENTAGE] = 0
             self.update_ha_state()
 
+    def set_cover_position(self, **kwargs):
+        """Move the cover to a specific position."""
+        position = kwargs.get(ATTR_POSITION)
+        set_req = self.gateway.const.SetReq
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_PERCENTAGE, position)
+        if self.gateway.optimistic:
+            # Optimistically assume that cover has changed state.
+            self._values[set_req.V_PERCENTAGE] = position
+            self.update_ha_state()
+
     def stop_cover(self, **kwargs):
         """Stop the device."""
         set_req = self.gateway.const.SetReq
