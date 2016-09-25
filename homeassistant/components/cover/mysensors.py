@@ -7,7 +7,7 @@ https://home-assistant.io/components/cover.mysensors/
 import logging
 
 from homeassistant.components import mysensors
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverDevice, ATTR_POSITION
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
@@ -42,6 +42,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
+        set_req = self.gateway.const.SetReq
         for value_type, value in child.values.items():
             _LOGGER.debug(
                 '%s: value_type %s, value = %s', self._name, value_type, value)
