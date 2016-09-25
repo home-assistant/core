@@ -61,14 +61,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if specific_sensor_key in DEVICE_MAPPINGS:
             if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
                 logger.info('Ignoring device: %s, Index: %s',
-                            zwave._value_name(value), value.index)
+                            zwave.value_name(value), value.index)
                 return
 
     if value.label == 'Previous Reading':
         # Power measurement devices may export a 'Previous Reading' value
         # This can be problematic, as can be seen here:
         # https://github.com/home-assistant/home-assistant/issues/3509
-        logger.info('Ignoring device: %s', zwave._value_name(value))
+        logger.info('Ignoring device: %s', zwave.value_name(value))
         return
 
     # Generic Device mappings

@@ -209,39 +209,37 @@ def _obj_to_dict(obj):
             if key[0] != '_' and not hasattr(getattr(obj, key), '__call__')}
 
 
-def _node_name(node):
+def node_name(node):
     """Return the name of the node."""
     return node.name or "{} {}".format(
         node.manufacturer_name, node.product_name)
 
 
-def _value_name(value):
+def value_name(value):
     """Return the name of the value."""
-    return "{} {}".format(_node_name(value.node), value.label)
+    return "{} {}".format(node_name(value.node), value.label)
 
 
-def _node_object_id(node):
+def node_object_id(node):
     """Return the object_id of the node."""
-    node_object_id = "{}_{}".format(slugify(_node_name(node)),
-                                    node.node_id)
-
-    return node_object_id
+    return "{}_{}".format(slugify(node_name(node)),
+                          node.node_id)
 
 
-def _object_id(value):
+def object_id(value):
     """Return the object_id of the device value.
 
     The object_id contains node_id and value instance id
     to not collide with other entity_ids.
     """
-    object_id = "{}_{}".format(slugify(_value_name(value)),
-                               value.node.node_id)
+    obj_id = "{}_{}".format(slugify(value_name(value)),
+                            value.node.node_id)
 
     # Add the instance id if there is more than one instance for the value
     if value.instance > 1:
-        return "{}_{}".format(object_id, value.instance)
+        return "{}_{}".format(obj_id, value.instance)
 
-    return object_id
+    return obj_id
 
 
 def nice_print_node(node):
@@ -375,7 +373,7 @@ def setup(hass, config):
                           node.generic, node.specific,
                           value.command_class, value.type,
                           value.genre)
-            name = "{}.{}".format(component, _object_id(value))
+            name = "{}.{}".format(component, object_id(value))
 
             node_config = customize.get(name, {})
             polling_intensity = convert(
@@ -393,15 +391,15 @@ def setup(hass, config):
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""
         hass.bus.fire(EVENT_SCENE_ACTIVATED, {
-            ATTR_ENTITY_ID: _node_object_id(node),
-            ATTR_OBJECT_ID: _node_object_id(node),
+            ATTR_ENTITY_ID: node_object_id(node),
+            ATTR_OBJECT_ID: node_object_id(node),
             ATTR_SCENE_ID: scene_id
         })
 
     def node_event_activated(node, value):
         """Called when a nodeevent is activated on any node in the network."""
         hass.bus.fire(EVENT_NODE_EVENT, {
-            ATTR_OBJECT_ID: _node_object_id(node),
+            ATTR_OBJECT_ID: node_object_id(node),
             ATTR_BASIC_LEVEL: value
         })
 
@@ -560,7 +558,7 @@ class ZWaveDeviceEntity:
     @property
     def name(self):
         """Return the name of the device."""
-        return _value_name(self._value)
+        return value_name(self._value)
 
     def _object_id(self):
         """Return the object_id of the device value.
@@ -568,7 +566,7 @@ class ZWaveDeviceEntity:
         The object_id contains node_id and value instance id to not collide
         with other entity_ids.
         """
-        return _object_id(self._value)
+        return object_id(self._value)
 
     @property
     def device_state_attributes(self):
