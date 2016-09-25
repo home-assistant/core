@@ -51,7 +51,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
     def is_closed(self):
         """Return True if cover is closed."""
         set_req = self.gateway.const.SetReq
-        return self._values.get(set_req.V_PERCENTAGE) == 0
+        return self._values.get(set_req.V_PERCENTAGE) == '0'
 
     @property
     def current_cover_position(self):
