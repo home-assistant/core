@@ -7,7 +7,7 @@ https://home-assistant.io/components/cover.mysensors/
 import logging
 
 from homeassistant.components import mysensors
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION
+from homeassistant.components.cover import CoverDevice
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
