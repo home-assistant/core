@@ -314,7 +314,10 @@ class HTML5NotificationService(BaseNotificationService):
     @property
     def targets(self):
         """Return a dictionary of registered targets."""
-        return self.registrations.keys()
+        targets = {}
+        for registration in self.registrations:
+            targets[registration] = registration
+        return targets
 
     # pylint: disable=too-many-locals
     def send_message(self, message="", **kwargs):
