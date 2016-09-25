@@ -4,13 +4,13 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.core as ha
 import homeassistant.components.graphite as graphite
 from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     STATE_ON, STATE_OFF)
 from tests.common import get_test_home_assistant
-from homeassistant import bootstrap
 
 
 class TestGraphite(unittest.TestCase):
@@ -28,8 +28,7 @@ class TestGraphite(unittest.TestCase):
     @patch('socket.socket')
     def test_setup(self, mock_socket):
         """Test setup."""
-        assert bootstrap.setup_component(self.hass, 'graphite',
-                                         {'graphite': {}})
+        assert setup_component(self.hass, graphite.DOMAIN, {'graphite': {}})
         mock_socket.assert_called_once_with(socket.AF_INET, socket.SOCK_STREAM)
 
     @patch('socket.socket')
@@ -44,7 +43,7 @@ class TestGraphite(unittest.TestCase):
             }
         }
 
-        self.assertTrue(graphite.setup(self.hass, config))
+        self.assertTrue(setup_component(self.hass, graphite.DOMAIN, config))
         mock_gf.assert_called_once_with(self.hass, 'foo', 123, 'me')
         mock_socket.assert_called_once_with(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -59,7 +58,7 @@ class TestGraphite(unittest.TestCase):
             }
         }
 
-        self.assertTrue(graphite.setup(self.hass, config))
+        self.assertTrue(setup_component(self.hass, graphite.DOMAIN, config))
         self.assertTrue(mock_gf.called)
         mock_socket.assert_called_once_with(socket.AF_INET, socket.SOCK_STREAM)
 

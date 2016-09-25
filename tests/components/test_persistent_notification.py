@@ -1,4 +1,5 @@
 """The tests for the persistent notification component."""
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.persistent_notification as pn
 
 from tests.common import get_test_home_assistant
@@ -10,7 +11,7 @@ class TestPersistentNotification:
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        pn.setup(self.hass, {})
+        setup_component(self.hass, pn.DOMAIN, {})
 
     def teardown_method(self, method):
         """Stop everything that was started."""
