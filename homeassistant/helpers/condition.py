@@ -125,9 +125,18 @@ def numeric_state_from_config(config, config_validation=True):
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
+    cache = {}
+
     def if_numeric_state(hass, variables=None):
         """Test numeric state condition."""
-        return numeric_state(hass, entity_id, below, above, value_template,
+        if value_template is None:
+            tmpl = None
+        elif hass in cache:
+            tmpl = cache[hass]
+        else:
+            cache[hass] = tmpl = compile_template(hass, value_template)
+
+        return numeric_state(hass, entity_id, below, above, tmpl,
                              variables)
 
     return if_numeric_state
