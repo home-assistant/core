@@ -71,7 +71,7 @@ class SensorTemplate(Entity):
                                             hass=hass)
         self._name = friendly_name
         self._unit_of_measurement = unit_of_measurement
-        self._template = state_template
+        self._template = template.compile_template(hass, state_template)
         self._state = None
 
         self.update()
