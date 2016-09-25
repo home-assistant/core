@@ -433,22 +433,31 @@ def setup(hass, config):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
         # Register node services for Z-Wave network
-        hass.services.register(DOMAIN, const.SERVICE_ADD_NODE, add_node)
+        hass.services.register(DOMAIN, const.SERVICE_ADD_NODE, add_node,
+                               descriptions[const.SERVICE_ADD_NODE])
         hass.services.register(DOMAIN, const.SERVICE_ADD_NODE_SECURE,
-                               add_node_secure)
-        hass.services.register(DOMAIN, const.SERVICE_REMOVE_NODE, remove_node)
+                               add_node_secure,
+                               descriptions[const.SERVICE_ADD_NODE_SECURE])
+        hass.services.register(DOMAIN, const.SERVICE_REMOVE_NODE, remove_node,
+                               descriptions[const.SERVICE_REMOVE_NODE])
         hass.services.register(DOMAIN, const.SERVICE_CANCEL_COMMAND,
-                               cancel_command)
+                               cancel_command,
+                               descriptions[const.SERVICE_CANCEL_COMMAND])
         hass.services.register(DOMAIN, const.SERVICE_HEAL_NETWORK,
-                               heal_network)
-        hass.services.register(DOMAIN, const.SERVICE_SOFT_RESET, soft_reset)
+                               heal_network,
+                               descriptions[const.SERVICE_HEAL_NETWORK])
+        hass.services.register(DOMAIN, const.SERVICE_SOFT_RESET, soft_reset,
+                               descriptions[const.SERVICE_SOFT_RESET])
         hass.services.register(DOMAIN, const.SERVICE_TEST_NETWORK,
-                               test_network)
-        hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK, stop_zwave)
+                               test_network,
+                               descriptions[const.SERVICE_TEST_NETWORK])
+        hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK, stop_zwave,
+                               descriptions[const.SERVICE_STOP_NETWORK])
         hass.services.register(DOMAIN, const.SERVICE_START_NETWORK,
-                               start_zwave)
+                               start_zwave,
+                               descriptions[const.SERVICE_START_NETWORK])
         hass.services.register(DOMAIN, const.SERVICE_RENAME_NODE, rename_node,
-                               descriptions[DOMAIN][const.SERVICE_RENAME_NODE],
+                               descriptions[const.SERVICE_RENAME_NODE],
                                schema=RENAME_NODE_SCHEMA)
 
     # Setup autoheal
