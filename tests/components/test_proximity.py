@@ -34,7 +34,7 @@ class TestProximity:
 
     def test_proximities(self):
         """Test a list of proximities."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': [{
                 'zone': 'home',
                 'ignored_zones': {
@@ -69,7 +69,7 @@ class TestProximity:
 
     def test_proximities_missing_devices(self):
         """Test a list of proximities with one missing devices."""
-        assert not setup_component(self.hass, proximity.DOMAIN, {
+        assert not setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': [{
                 'zone': 'home',
                 'ignored_zones': {
@@ -88,7 +88,7 @@ class TestProximity:
 
     def test_proximity(self):
         """Test the proximity."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -114,7 +114,7 @@ class TestProximity:
 
     def test_no_devices_in_config(self):
         """Test for missing devices in configuration."""
-        assert not setup_component(self.hass, proximity.DOMAIN, {
+        assert not setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -126,7 +126,7 @@ class TestProximity:
 
     def test_no_tolerance_in_config(self):
         """Test for missing tolerance in configuration ."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -141,7 +141,7 @@ class TestProximity:
 
     def test_no_ignored_zones_in_config(self):
         """Test for ignored zones in configuration."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'devices': {
@@ -154,7 +154,7 @@ class TestProximity:
 
     def test_no_zone_in_config(self):
         """Test for missing zone in configuration."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'ignored_zones': {
                     'work'
@@ -169,7 +169,7 @@ class TestProximity:
 
     def test_device_tracker_test1_in_zone(self):
         """Test for tracker in zone."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -197,7 +197,7 @@ class TestProximity:
 
     def test_device_trackers_in_zone(self):
         """Test for trackers in zone."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -235,7 +235,7 @@ class TestProximity:
 
     def test_device_tracker_test1_away(self):
         """Test for tracker state away."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -262,7 +262,7 @@ class TestProximity:
 
     def test_device_tracker_test1_awayfurther(self):
         """Test for tracker state away further."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -299,7 +299,7 @@ class TestProximity:
 
     def test_device_tracker_test1_awaycloser(self):
         """Test for tracker state away closer."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -336,7 +336,7 @@ class TestProximity:
 
     def test_all_device_trackers_in_ignored_zone(self):
         """Test for tracker in ignored zone."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -361,7 +361,7 @@ class TestProximity:
 
     def test_device_tracker_test1_no_coordinates(self):
         """Test for tracker with no coordinates."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -398,7 +398,7 @@ class TestProximity:
                 'friendly_name': 'test2'
             })
         self.hass.block_till_done()
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -448,7 +448,7 @@ class TestProximity:
                 'friendly_name': 'test2'
             })
         self.hass.block_till_done()
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -498,7 +498,7 @@ class TestProximity:
                 'friendly_name': 'test2'
             })
         self.hass.block_till_done()
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -537,7 +537,7 @@ class TestProximity:
                 'friendly_name': 'test2'
             })
         self.hass.block_till_done()
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -595,7 +595,7 @@ class TestProximity:
 
     def test_device_tracker_test1_awayfurther_a_bit(self):
         """Test for tracker states."""
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
@@ -645,7 +645,7 @@ class TestProximity:
                 'friendly_name': 'test2'
             })
         self.hass.block_till_done()
-        assert setup_component(self.hass, proximity.DOMAIN, {
+        assert setup_component(self.hass, proximity.DOMAIN, self.hass, {
             'proximity': {
                 'zone': 'home',
                 'ignored_zones': {
