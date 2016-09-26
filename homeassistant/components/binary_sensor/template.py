@@ -107,8 +107,7 @@ class BinarySensorTemplate(BinarySensorDevice):
     def update(self):
         """Get the latest data and update the state."""
         try:
-            self._state = template.render(
-                self.hass, self._template).lower() == 'true'
+            self._state = template.render(self._template).lower() == 'true'
         except TemplateError as ex:
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):

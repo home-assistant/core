@@ -20,6 +20,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     devices = []
 
     for dev_name, properties in rollershutters.items():
+        value_template = properties.get(CONF_VALUE_TEMPLATE)
+
+        if value_template is not None:
+            value_template = template.compile_template(hass, value_template)
+
         devices.append(
             CommandRollershutter(
                 hass,
@@ -28,7 +33,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 properties.get('downcmd', 'true'),
                 properties.get('stopcmd', 'true'),
                 properties.get('statecmd', False),
-                properties.get(CONF_VALUE_TEMPLATE, '{{ value }}')))
+                value_template))
     add_devices_callback(devices)
 
 

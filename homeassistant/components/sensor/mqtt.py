@@ -30,13 +30,18 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup MQTT Sensor."""
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+
+    if value_template is not None:
+        value_template = template.compile_template(hass, value_template)
+
     add_devices([MqttSensor(
         hass,
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_QOS),
         config.get(CONF_UNIT_OF_MEASUREMENT),
-        config.get(CONF_VALUE_TEMPLATE),
+        value_template,
     )])
 
 

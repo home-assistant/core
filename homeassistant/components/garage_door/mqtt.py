@@ -45,6 +45,11 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Add MQTT Garage Door."""
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+
+    if value_template is not None:
+        value_template = template.compile_template(hass, value_template)
+
     add_devices_callback([MqttGarageDoor(
         hass,
         config[CONF_NAME],
@@ -57,7 +62,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config[CONF_SERVICE_OPEN],
         config[CONF_SERVICE_CLOSE],
         config[CONF_OPTIMISTIC],
-        config.get(CONF_VALUE_TEMPLATE))])
+        value_template)])
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes

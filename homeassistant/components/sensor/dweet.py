@@ -46,15 +46,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
 
+    if value_template is not None:
+        value_template = template.compile_template(hass, value_template)
+
     try:
         content = json.dumps(dweepy.get_latest_dweet_for(device)[0]['content'])
     except dweepy.DweepyError:
         _LOGGER.error("Device/thing '%s' could not be found", device)
         return False
 
-    if template.render_with_possible_json_value(hass,
-                                                value_template,
-                                                content) is '':
+    if template.render_with_possible_json_value(value_template, content) == '':
         _LOGGER.error("'%s' was not found", value_template)
         return False
 
@@ -95,7 +96,7 @@ class DweetSensor(Entity):
         else:
             values = json.dumps(self.dweet.data[0]['content'])
             value = template.render_with_possible_json_value(
-                self.hass, self._value_template, values)
+                self._value_template, values)
             return value
 
     def update(self):

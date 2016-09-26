@@ -38,6 +38,11 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MQTT switch."""
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+
+    if value_template is not None:
+        value_template = template.compile_template(hass, value_template)
+
     add_devices([MqttSwitch(
         hass,
         config.get(CONF_NAME),
@@ -48,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_ON),
         config.get(CONF_PAYLOAD_OFF),
         config.get(CONF_OPTIMISTIC),
-        config.get(CONF_VALUE_TEMPLATE)
+        value_template,
     )])
 
 

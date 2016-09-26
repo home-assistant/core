@@ -40,6 +40,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
+    if value_template is not None:
+        value_template = template.compile_template(hass, value_template)
+
     data = CommandSensorData(command)
 
     add_devices([CommandSensor(hass, data, name, unit, value_template)])
@@ -81,7 +84,7 @@ class CommandSensor(Entity):
 
         if self._value_template is not None:
             self._state = template.render_with_possible_json_value(
-                self._hass, self._value_template, value, 'N/A')
+                self._value_template, value, 'N/A')
         else:
             self._state = value
 

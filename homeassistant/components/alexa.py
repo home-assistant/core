@@ -4,6 +4,7 @@ Support for Alexa skill service end point.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
 """
+import copy
 import enum
 import logging
 
@@ -42,10 +43,20 @@ class AlexaView(HomeAssistantView):
         """Initialize Alexa view."""
         super().__init__(hass)
 
+        intents = copy.deepcopy(intents)
+
         for name, intent in intents.items():
             if CONF_ACTION in intent:
                 intent[CONF_ACTION] = script.Script(
                     hass, intent[CONF_ACTION], "Alexa intent {}".format(name))
+            if CONF_CARD in intent:
+                intent[CONF_CARD]['title'] = template.compile_template(
+                    hass, intent[CONF_CARD]['title'])
+                intent[CONF_CARD]['content'] = template.compile_template(
+                    hass, intent[CONF_CARD]['content'])
+            if CONF_SPEECH in intent:
+                intent[CONF_SPEECH]['text'] = template.compile_template(
+                    hass, intent[CONF_SPEECH]['text'])
 
         self.intents = intents
 
@@ -204,4 +215,4 @@ class AlexaResponse(object):
 
     def _render(self, template_string):
         """Render a response, adding data from intent if available."""
-        return template.render(self.hass, template_string, self.variables)
+        return template.render(template_string, self.variables)

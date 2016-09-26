@@ -45,6 +45,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
+    if value_template is not None:
+        value_template = template.compile_template(hass, value_template)
+
     rest = RestData(method, resource, payload, verify_ssl)
     rest.update()
 
@@ -93,7 +96,7 @@ class RestSensor(Entity):
             value = STATE_UNKNOWN
         elif self._value_template is not None:
             value = template.render_with_possible_json_value(
-                self._hass, self._value_template, value, STATE_UNKNOWN)
+                self._value_template, value, STATE_UNKNOWN)
 
         self._state = value
 

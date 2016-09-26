@@ -95,7 +95,7 @@ class CommandBinarySensor(BinarySensorDevice):
 
         if self._value_template is not None:
             value = template.render_with_possible_json_value(
-                self._hass, self._value_template, value, False)
+                self._value_template, value, False)
         if value == self._payload_on:
             self._state = True
         elif value == self._payload_off:

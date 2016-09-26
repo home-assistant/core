@@ -123,7 +123,7 @@ class SwitchTemplate(SwitchDevice):
     def update(self):
         """Update the state from the template."""
         try:
-            state = template.render(self.hass, self._template).lower()
+            state = template.render(self._template).lower()
 
             if state in _VALID_STATES:
                 self._state = state in ('true', STATE_ON)

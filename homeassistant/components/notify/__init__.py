@@ -96,14 +96,16 @@ def setup(hass, config):
             title = call.data.get(ATTR_TITLE)
 
             if title:
-                kwargs[ATTR_TITLE] = template.render(hass, title)
+                kwargs[ATTR_TITLE] = template.render(
+                    hass, template.compile_template(hass, title))
 
             if targets.get(call.service) is not None:
                 kwargs[ATTR_TARGET] = targets[call.service]
             else:
                 kwargs[ATTR_TARGET] = call.data.get(ATTR_TARGET)
 
-            kwargs[ATTR_MESSAGE] = template.render(hass, message)
+            kwargs[ATTR_MESSAGE] = template.render(
+                hass, template.compile_template(hass, message))
             kwargs[ATTR_DATA] = call.data.get(ATTR_DATA)
 
             notify_service.send_message(**kwargs)

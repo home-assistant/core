@@ -18,7 +18,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import get_test_home_assistant
 
 
-class TestUtilTemplate(unittest.TestCase):
+class TestHelpersTemplate(unittest.TestCase):
     """Test the Template."""
 
     def setUp(self):  # pylint: disable=invalid-name
@@ -37,7 +37,8 @@ class TestUtilTemplate(unittest.TestCase):
         self.hass.states.set('test.object', 'happy')
         self.assertEqual(
             'happy',
-            template.render(self.hass, '{{ states.test.object.state }}'))
+            template.render(template.compile_template(
+                self.hass, '{{ states.test.object.state }}')))
 
     def test_iterating_all_states(self):
         """Test iterating all states."""
@@ -46,9 +47,9 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             '10happy',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
-                '{% for state in states %}{{ state.state }}{% endfor %}'))
+                '{% for state in states %}{{ state.state }}{% endfor %}')))
 
     def test_iterating_domain_states(self):
         """Test iterating domain states."""
@@ -59,10 +60,9 @@ class TestUtilTemplate(unittest.TestCase):
         self.assertEqual(
             'open10',
             template.render(
-                self.hass,
-                """
+                template.compile_template(self.hass, """
 {% for state in states.sensor %}{{ state.state }}{% endfor %}
-                """))
+                """)))
 
     def test_float(self):
         """Test float."""
@@ -71,14 +71,16 @@ class TestUtilTemplate(unittest.TestCase):
         self.assertEqual(
             '12.0',
             template.render(
-                self.hass,
-                '{{ float(states.sensor.temperature.state) }}'))
+                template.compile_template(
+                    self.hass,
+                    '{{ float(states.sensor.temperature.state) }}')))
 
         self.assertEqual(
             'True',
             template.render(
-                self.hass,
-                '{{ float(states.sensor.temperature.state) > 11 }}'))
+                template.compile_template(
+                    self.hass,
+                    '{{ float(states.sensor.temperature.state) > 11 }}')))
 
     def test_rounding_value(self):
         """Test rounding value."""
@@ -86,32 +88,32 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             '12.8',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
-                '{{ states.sensor.temperature.state | round(1) }}'))
+                '{{ states.sensor.temperature.state | round(1) }}')))
 
         self.assertEqual(
             '128',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 '{{ states.sensor.temperature.state | multiply(10) | round }}'
-            ))
+            )))
 
     def test_rounding_value_get_original_value_on_error(self):
         """Test rounding value get original value on error."""
         self.assertEqual(
             'None',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 '{{ None | round }}'
-            ))
+            )))
 
         self.assertEqual(
             'no_number',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 '{{ "no_number" | round }}'
-            ))
+            )))
 
     def test_multiply(self):
         """Test multiply."""
@@ -124,8 +126,8 @@ class TestUtilTemplate(unittest.TestCase):
         for inp, out in tests.items():
             self.assertEqual(
                 out,
-                template.render(self.hass,
-                                '{{ %s | multiply(10) | round }}' % inp))
+                template.render(template.compile_template(self.hass,
+                                '{{ %s | multiply(10) | round }}' % inp)))
 
     def test_timestamp_custom(self):
         """Test the timestamps to custom filter."""
@@ -148,7 +150,8 @@ class TestUtilTemplate(unittest.TestCase):
 
             self.assertEqual(
                     out,
-                    template.render(self.hass, '{{ %s | %s }}' % (inp, fil))
+                    template.render(template.compile_template(
+                        self.hass, '{{ %s | %s }}' % (inp, fil)))
                 )
 
     def test_timestamp_local(self):
@@ -161,8 +164,8 @@ class TestUtilTemplate(unittest.TestCase):
         for inp, out in tests.items():
             self.assertEqual(
                 out,
-                template.render(self.hass,
-                                '{{ %s | timestamp_local }}' % inp))
+                template.render(template.compile_template(self.hass,
+                                '{{ %s | timestamp_local }}' % inp)))
 
     def test_timestamp_utc(self):
         """Test the timestamps to local filter."""
@@ -176,94 +179,91 @@ class TestUtilTemplate(unittest.TestCase):
         for inp, out in tests.items():
             self.assertEqual(
                 out,
-                template.render(self.hass,
-                                '{{ %s | timestamp_utc }}' % inp))
+                template.render(template.compile_template(self.hass,
+                                '{{ %s | timestamp_utc }}' % inp)))
 
     def test_passing_vars_as_keywords(self):
         """Test passing variables as keywords."""
         self.assertEqual(
-            '127', template.render(self.hass, '{{ hello }}', hello=127))
+            '127', template.render(template.compile_template(
+                self.hass, '{{ hello }}'), hello=127))
 
     def test_passing_vars_as_vars(self):
         """Test passing variables as variables."""
         self.assertEqual(
-            '127', template.render(self.hass, '{{ hello }}', {'hello': 127}))
+            '127', template.render(template.compile_template(
+                self.hass, '{{ hello }}'), {'hello': 127}))
 
     def test_render_with_possible_json_value_with_valid_json(self):
         """Render with possible JSON value with valid JSON."""
         self.assertEqual(
             'world',
-            template.render_with_possible_json_value(
-                self.hass, '{{ value_json.hello }}', '{"hello": "world"}'))
+            template.render_with_possible_json_value(template.compile_template(
+                self.hass, '{{ value_json.hello }}'), '{"hello": "world"}'))
 
     def test_render_with_possible_json_value_with_invalid_json(self):
         """Render with possible JSON value with invalid JSON."""
         self.assertEqual(
             '',
-            template.render_with_possible_json_value(
-                self.hass, '{{ value_json }}', '{ I AM NOT JSON }'))
-
-    def test_render_with_possible_json_value_with_template_error(self):
-        """Render with possible JSON value with template error."""
-        self.assertEqual(
-            'hello',
-            template.render_with_possible_json_value(
-                self.hass, '{{ value_json', 'hello'))
+            template.render_with_possible_json_value(template.compile_template(
+                self.hass, '{{ value_json }}'), '{ I AM NOT JSON }'))
 
     def test_render_with_possible_json_value_with_template_error_value(self):
         """Render with possible JSON value with template error value."""
         self.assertEqual(
             '-',
-            template.render_with_possible_json_value(
-                self.hass, '{{ value_json', 'hello', '-'))
+            template.render_with_possible_json_value(template.compile_template(
+                self.hass, '{{ non_existing.variable }}'), 'hello', '-'))
 
     def test_raise_exception_on_error(self):
         """Test raising an exception on error."""
         with self.assertRaises(TemplateError):
-            template.render(self.hass, '{{ invalid_syntax')
+            template.compile_template(self.hass, '{{ invalid_syntax')
 
     def test_if_state_exists(self):
         """Test if state exists works."""
         self.hass.states.set('test.object', 'available')
         self.assertEqual(
             'exists',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 """
 {% if states.test.object %}exists{% else %}not exists{% endif %}
-                """))
+                """)))
 
     def test_is_state(self):
         """Test is_state method."""
         self.hass.states.set('test.object', 'available')
         self.assertEqual(
             'yes',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 """
 {% if is_state("test.object", "available") %}yes{% else %}no{% endif %}
-                """))
+                """)))
 
     def test_is_state_attr(self):
         """Test is_state_attr method."""
         self.hass.states.set('test.object', 'available', {'mode': 'on'})
         self.assertEqual(
             'yes',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 """
 {% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}
-                """))
+                """)))
 
     def test_states_function(self):
         """Test using states as a function."""
         self.hass.states.set('test.object', 'available')
         self.assertEqual(
             'available',
-            template.render(self.hass, '{{ states("test.object") }}'))
+            template.render(template.compile_template(
+                self.hass, '{{ states("test.object") }}')))
         self.assertEqual(
             'unknown',
-            template.render(self.hass, '{{ states("test.object2") }}'))
+            template.render(template.compile_template(
+                self.hass, '{{ states("test.object2") }}')))
 
     @patch('homeassistant.core.dt_util.now', return_value=dt_util.now())
     @patch('homeassistant.helpers.template.TemplateEnvironment.'
@@ -272,7 +272,8 @@ class TestUtilTemplate(unittest.TestCase):
         """Test now method."""
         self.assertEqual(
             dt_util.now().isoformat(),
-            template.render(self.hass, '{{ now().isoformat() }}'))
+            template.render(template.compile_template(
+                self.hass, '{{ now().isoformat() }}')))
 
     @patch('homeassistant.core.dt_util.utcnow', return_value=dt_util.utcnow())
     @patch('homeassistant.helpers.template.TemplateEnvironment.'
@@ -281,7 +282,8 @@ class TestUtilTemplate(unittest.TestCase):
         """Test utcnow method."""
         self.assertEqual(
             dt_util.utcnow().isoformat(),
-            template.render(self.hass, '{{ utcnow().isoformat() }}'))
+            template.render(template.compile_template(
+                self.hass, '{{ utcnow().isoformat() }}')))
 
     def test_distance_function_with_1_state(self):
         """Test distance function with 1 state."""
@@ -292,8 +294,8 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             '187',
-            template.render(
-                self.hass, '{{ distance(states.test.object) | round }}'))
+            template.render(template.compile_template(
+                self.hass, '{{ distance(states.test.object) | round }}')))
 
     def test_distance_function_with_2_states(self):
         """Test distance function with 2 states."""
@@ -309,26 +311,27 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             '187',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 '{{ distance(states.test.object, states.test.object_2)'
-                '| round }}'))
+                '| round }}')))
 
     def test_distance_function_with_1_coord(self):
         """Test distance function with 1 coord."""
         self.assertEqual(
             '187',
-            template.render(
-                self.hass, '{{ distance("32.87336", "-117.22943") | round }}'))
+            template.render(template.compile_template(
+                self.hass,
+                '{{ distance("32.87336", "-117.22943") | round }}')))
 
     def test_distance_function_with_2_coords(self):
         """Test distance function with 2 coords."""
         self.assertEqual(
             '187',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 '{{ distance("32.87336", "-117.22943", %s, %s) | round }}'
-                % (self.hass.config.latitude, self.hass.config.longitude)))
+                % (self.hass.config.latitude, self.hass.config.longitude))))
 
     def test_distance_function_with_1_state_1_coord(self):
         """Test distance function with 1 state 1 coord."""
@@ -339,17 +342,17 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             '187',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 '{{ distance("32.87336", "-117.22943", states.test.object_2) '
-                '| round }}'))
+                '| round }}')))
 
         self.assertEqual(
             '187',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 '{{ distance(states.test.object_2, "32.87336", "-117.22943") '
-                '| round }}'))
+                '| round }}')))
 
     def test_distance_function_return_None_if_invalid_state(self):
         """Test distance function return None if invalid state."""
@@ -359,23 +362,23 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             'None',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
-                '{{ distance(states.test.object_2) | round }}'))
+                '{{ distance(states.test.object_2) | round }}')))
 
     def test_distance_function_return_None_if_invalid_coord(self):
         """Test distance function return None if invalid coord."""
         self.assertEqual(
             'None',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
-                '{{ distance("123", "abc") }}'))
+                '{{ distance("123", "abc") }}')))
 
         self.assertEqual(
             'None',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
-                '{{ distance("123") }}'))
+                '{{ distance("123") }}')))
 
         self.hass.states.set('test.object_2', 'happy', {
             'latitude': self.hass.config.latitude,
@@ -384,9 +387,9 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             'None',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
-                '{{ distance("123", states.test_object_2) }}'))
+                '{{ distance("123", states.test_object_2) }}')))
 
     def test_closest_function_home_vs_domain(self):
         """Test closest function home vs domain."""
@@ -402,8 +405,8 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             'test_domain.object',
-            template.render(self.hass,
-                            '{{ closest(states.test_domain).entity_id }}'))
+            template.render(template.compile_template(
+                self.hass, '{{ closest(states.test_domain).entity_id }}')))
 
     def test_closest_function_home_vs_all_states(self):
         """Test closest function home vs all states."""
@@ -419,8 +422,8 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             'test_domain_2.and_closer',
-            template.render(self.hass,
-                            '{{ closest(states).entity_id }}'))
+            template.render(template.compile_template(
+                self.hass, '{{ closest(states).entity_id }}')))
 
     def test_closest_function_home_vs_group_entity_id(self):
         """Test closest function home vs group entity id."""
@@ -438,8 +441,8 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             'test_domain.object',
-            template.render(self.hass,
-                            '{{ closest("group.location_group").entity_id }}'))
+            template.render(template.compile_template(
+                self.hass, '{{ closest("group.location_group").entity_id }}')))
 
     def test_closest_function_home_vs_group_state(self):
         """Test closest function home vs group state."""
@@ -457,9 +460,9 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             'test_domain.object',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
-                '{{ closest(states.group.location_group).entity_id }}'))
+                '{{ closest(states.group.location_group).entity_id }}')))
 
     def test_closest_function_to_coord(self):
         """Test closest function to coord."""
@@ -480,11 +483,11 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             'test_domain.closest_zone',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 '{{ closest("%s", %s, states.test_domain).entity_id }}'
                 % (self.hass.config.latitude + 0.3,
-                   self.hass.config.longitude + 0.3))
+                   self.hass.config.longitude + 0.3)))
         )
 
     def test_closest_function_to_entity_id(self):
@@ -506,9 +509,10 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             'test_domain.closest_zone',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
-                '{{ closest("zone.far_away", states.test_domain).entity_id }}')
+                '{{ closest("zone.far_away", '
+                'states.test_domain).entity_id }}'))
         )
 
     def test_closest_function_to_state(self):
@@ -530,10 +534,10 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             'test_domain.closest_zone',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 '{{ closest(states.zone.far_away, '
-                'states.test_domain).entity_id }}')
+                'states.test_domain).entity_id }}'))
         )
 
     def test_closest_function_invalid_state(self):
@@ -546,8 +550,8 @@ class TestUtilTemplate(unittest.TestCase):
         for state in ('states.zone.non_existing', '"zone.non_existing"'):
             self.assertEqual(
                 'None',
-                template.render(
-                    self.hass, '{{ closest(%s, states) }}' % state))
+                template.render(template.compile_template(
+                    self.hass, '{{ closest(%s, states) }}' % state)))
 
     def test_closest_function_state_with_invalid_location(self):
         """Test closest function state with invalid location."""
@@ -558,10 +562,10 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             'None',
-            template.render(
+            template.render(template.compile_template(
                 self.hass,
                 '{{ closest(states.test_domain.closest_home, '
-                'states) }}'))
+                'states) }}')))
 
     def test_closest_function_invalid_coordinates(self):
         """Test closest function invalid coordinates."""
@@ -572,13 +576,13 @@ class TestUtilTemplate(unittest.TestCase):
 
         self.assertEqual(
             'None',
-            template.render(self.hass,
-                            '{{ closest("invalid", "coord", states) }}'))
+            template.render(template.compile_template(
+                self.hass, '{{ closest("invalid", "coord", states) }}')))
 
     def test_closest_function_no_location_states(self):
         """Test closest function without location states."""
-        self.assertEqual('None',
-                         template.render(self.hass, '{{ closest(states) }}'))
+        self.assertEqual('None', template.render(template.compile_template(
+            self.hass, '{{ closest(states) }}')))
 
     def test_compiling_template(self):
         """Test compiling a template."""
@@ -588,4 +592,4 @@ class TestUtilTemplate(unittest.TestCase):
 
         with patch('homeassistant.helpers.template.compile_template',
                    side_effect=Exception('Should not be called')):
-            assert 'world' == template.render(self.hass, compiled)
+            assert 'world' == template.render(compiled)

@@ -12,7 +12,7 @@ from collections import deque
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD)
+    CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_VALUE_TEMPLATE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template
 import voluptuous as vol
@@ -21,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SERVER = "server"
 CONF_SENDERS = "senders"
-CONF_VALUE_TEMPLATE = "value_template"
 
 ATTR_FROM = "from"
 ATTR_BODY = "body"
@@ -48,12 +47,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_SERVER),
         config.get(CONF_PORT))
 
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+
+    if value_template is not None:
+        value_template = template.compile_template(hass, value_template)
+
     sensor = EmailContentSensor(
         hass,
         reader,
         config.get(CONF_NAME, None) or config.get(CONF_USERNAME),
         config.get(CONF_SENDERS),
-        config.get(CONF_VALUE_TEMPLATE))
+        value_template)
 
     if sensor.connected:
         add_devices([sensor])
@@ -172,7 +176,7 @@ class EmailContentSensor(Entity):
             ATTR_DATE: email_message['Date'],
             ATTR_BODY: EmailContentSensor.get_msg_text(email_message)
         }
-        return template.render(self.hass, self._value_template, variables)
+        return template.render(self._value_template, variables)
 
     def sender_allowed(self, email_message):
         """Check if the sender is in the allowed senders list."""

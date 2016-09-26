@@ -50,7 +50,8 @@ def call_from_config(hass, config, blocking=False, variables=None,
     else:
         try:
             domain_service = template.render(
-                hass, config[CONF_SERVICE_TEMPLATE], variables)
+                template.compile_template(hass, config[CONF_SERVICE_TEMPLATE]),
+                variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
             _LOGGER.error('Error rendering service name template: %s', ex)
@@ -73,7 +74,8 @@ def call_from_config(hass, config, blocking=False, variables=None,
             for key, element in value.items():
                 value[key] = _data_template_creator(element)
             return value
-        return template.render(hass, value, variables)
+        return template.render(template.compile_template(hass, value),
+                               variables)
 
     if CONF_SERVICE_DATA_TEMPLATE in config:
         for key, value in config[CONF_SERVICE_DATA_TEMPLATE].items():

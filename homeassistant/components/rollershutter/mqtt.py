@@ -39,6 +39,11 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Add MQTT Rollershutter."""
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+
+    if value_template is not None:
+        value_template = template.compile_template(hass, value_template)
+
     add_devices_callback([MqttRollershutter(
         hass,
         config[CONF_NAME],
@@ -48,7 +53,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config[CONF_PAYLOAD_UP],
         config[CONF_PAYLOAD_DOWN],
         config[CONF_PAYLOAD_STOP],
-        config.get(CONF_VALUE_TEMPLATE)
+        value_template,
     )])
 
 

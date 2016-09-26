@@ -63,14 +63,14 @@ def setup(hass, config):
         attr = {}
         if title is not None:
             try:
-                title = template.render(hass, title)
+                title = template.render(template.compile_template(hass, title))
             except TemplateError as ex:
                 _LOGGER.error('Error rendering title %s: %s', title, ex)
 
             attr[ATTR_TITLE] = title
 
         try:
-            message = template.render(hass, message)
+            message = template.render(template.compile_template(hass, message))
         except TemplateError as ex:
             _LOGGER.error('Error rendering message %s: %s', message, ex)
 

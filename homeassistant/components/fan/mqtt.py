@@ -16,7 +16,8 @@ from homeassistant.const import (
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import render_with_possible_json_value
+from homeassistant.helpers.template import (render_with_possible_json_value,
+                                            compile_template)
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MED, SPEED_MEDIUM,
                                           SPEED_HIGH, FanEntity,
                                           SUPPORT_SET_SPEED, SUPPORT_OSCILLATE,
@@ -139,9 +140,12 @@ class MqttFan(FanEntity):
         self._supported_features |= (topic[CONF_SPEED_STATE_TOPIC]
                                      is not None and SUPPORT_SET_SPEED)
 
-        templates = {key: ((lambda value: value) if tpl is None else
-                           partial(render_with_possible_json_value, hass, tpl))
-                     for key, tpl in templates.items()}
+        for key, tpl in list(templates.items()):
+            if tpl is None:
+                templates[key] = lambda value: value
+            else:
+                templates[key] = partial(render_with_possible_json_value, hass,
+                                         compile_template(hass, tpl))
 
         def state_received(topic, payload, qos):
             """A new MQTT message has been received."""

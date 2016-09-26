@@ -105,7 +105,7 @@ class SensorTemplate(Entity):
     def update(self):
         """Get the latest data and update the states."""
         try:
-            self._state = template.render(self.hass, self._template)
+            self._state = template.render(self._template)
         except TemplateError as ex:
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):

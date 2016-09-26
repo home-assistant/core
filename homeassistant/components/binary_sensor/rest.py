@@ -92,7 +92,7 @@ class RestBinarySensor(BinarySensorDevice):
 
         if self._value_template is not None:
             response = template.render_with_possible_json_value(
-                self._hass, self._value_template, self.rest.data, False)
+                self._value_template, self.rest.data, False)
 
         try:
             return bool(int(response))

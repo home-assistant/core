@@ -38,6 +38,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     switches = []
 
     for device_name, device_config in devices.items():
+        value_template = device_config.get(CONF_VALUE_TEMPLATE)
+
+        if value_template is not None:
+            value_template = template.compile_template(hass, value_template)
+
         switches.append(
             CommandSwitch(
                 hass,
@@ -45,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device_config.get(CONF_COMMAND_ON),
                 device_config.get(CONF_COMMAND_OFF),
                 device_config.get(CONF_COMMAND_STATE),
-                device_config.get(CONF_VALUE_TEMPLATE)
+                value_template,
             )
         )
 

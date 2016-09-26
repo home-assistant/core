@@ -71,7 +71,7 @@ class GenericCamera(Camera):
     def camera_image(self):
         """Return a still image response from the camera."""
         try:
-            url = template.render(self.hass, self._still_image_url)
+            url = template.render(self._still_image_url)
         except TemplateError as err:
             _LOGGER.error('Error parsing template %s: %s',
                           self._still_image_url, err)

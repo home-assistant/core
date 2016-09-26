@@ -22,22 +22,25 @@ def compile_template(hass, template):
     """Compile a template."""
     location_methods = LocationMethods(hass)
 
-    return ENV.from_string(template, {
-        'closest': location_methods.closest,
-        'distance': location_methods.distance,
-        'float': forgiving_float,
-        'is_state': hass.states.is_state,
-        'is_state_attr': hass.states.is_state_attr,
-        'now': dt_util.now,
-        'states': AllStates(hass),
-        'utcnow': dt_util.utcnow,
-        'as_timestamp': dt_util.as_timestamp,
-        'relative_time': dt_util.get_age
-    })
+    try:
+        return ENV.from_string(template, {
+            'closest': location_methods.closest,
+            'distance': location_methods.distance,
+            'float': forgiving_float,
+            'is_state': hass.states.is_state,
+            'is_state_attr': hass.states.is_state_attr,
+            'now': dt_util.now,
+            'states': AllStates(hass),
+            'utcnow': dt_util.utcnow,
+            'as_timestamp': dt_util.as_timestamp,
+            'relative_time': dt_util.get_age
+        })
+    except jinja2.TemplateError as err:
+        _LOGGER.error('Error parsing template: %s', err)
+        raise TemplateError(err)
 
 
-def render_with_possible_json_value(hass, template, value,
-                                    error_value=_SENTINEL):
+def render_with_possible_json_value(template, value, error_value=_SENTINEL):
     """Render template with value exposed.
 
     If valid JSON will expose value_json too.
@@ -51,21 +54,20 @@ def render_with_possible_json_value(hass, template, value,
         pass
 
     try:
-        return render(hass, template, variables)
+        return render(template, variables)
     except TemplateError as ex:
         _LOGGER.error('Error parsing value: %s', ex)
         return value if error_value is _SENTINEL else error_value
 
 
-def render(hass, template, variables=None, **kwargs):
+def render(template, variables=None, **kwargs):
     """Render given template."""
+    assert isinstance(template, jinja2.Template), 'Template should be compiled'
+
     if variables is not None:
         kwargs.update(variables)
 
     try:
-        if not isinstance(template, jinja2.Template):
-            template = compile_template(hass, template)
-
         return template.render(kwargs).strip()
     except jinja2.TemplateError as err:
         raise TemplateError(err)
