@@ -76,7 +76,6 @@ def setup(hass, config):
         _LOGGER.error("Database host is not accessible due to '%s', please "
                       "check your entries in the configuration file and that "
                       "the database exists and is READ/WRITE.", exc)
-        return False
 
     def influx_event_listener(event):
         """Listen for new messages on the bus and sends them to Influx."""
