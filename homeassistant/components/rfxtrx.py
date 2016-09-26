@@ -28,8 +28,15 @@ ATTR_NAME = 'name'
 ATTR_FIREEVENT = 'fire_event'
 ATTR_DATA_TYPE = 'data_type'
 ATTR_DUMMY = 'dummy'
+ATTR_OFF_DELAY = 'off_delay'
+ATTR_SENSOR_CLASS = 'sensor_class'
+ATTR_PT2262_DATABITS = 'data_bits'
+ATTR_CMD_OFF = 'cmd_off'
+ATTR_CMD_ON = 'cmd_on'
+
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_DEVICES = 'devices'
+CONF_SENSOR_CLASS = 'sensor_class'
 EVENT_BUTTON_PRESSED = 'button_pressed'
 
 DATA_TYPES = OrderedDict([
@@ -76,6 +83,8 @@ def _valid_device(value, device_type):
 
         if device_type == 'sensor':
             config[key] = DEVICE_SCHEMA_SENSOR(device)
+        elif device_type == 'binary_sensor':
+            config[key] = DEVICE_SCHEMA_BINARYSENSOR(device)
         elif device_type == 'light_switch':
             config[key] = DEVICE_SCHEMA(device)
         else:
@@ -90,6 +99,9 @@ def valid_sensor(value):
     """Validate sensor configuration."""
     return _valid_device(value, "sensor")
 
+def valid_binary_sensor(value):
+    """Validate binary sensor configuration."""
+    return _valid_device(value, "binary_sensor")
 
 def _valid_light_switch(value):
     return _valid_device(value, "light_switch")
@@ -104,6 +116,16 @@ DEVICE_SCHEMA_SENSOR = vol.Schema({
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
     vol.Optional(ATTR_DATA_TYPE, default=[]):
         vol.All(cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
+})
+
+DEVICE_SCHEMA_BINARYSENSOR = vol.Schema({
+    vol.Optional(ATTR_NAME, default=None): cv.string,
+    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
+	vol.Optional(CONF_SENSOR_CLASS, default=None): cv.string,
+    vol.Optional(ATTR_OFF_DELAY, default=None): cv.positive_int,
+	vol.Optional(ATTR_PT2262_DATABITS, default=None): cv.positive_int,
+    vol.Optional(ATTR_CMD_ON, default=None): cv.byte,
+    vol.Optional(ATTR_CMD_OFF, default=None): cv.byte
 })
 
 DEFAULT_SCHEMA = vol.Schema({
@@ -187,7 +209,40 @@ def get_rfx_object(packetid):
         obj = rfxtrxmod.ControlEvent(pkt)
     return obj
 
+def get_masked_deviceid(device_id, nb_data_bits):
+    import binascii
+    """Extract and return the PT2262 address from a Lighting4 packet (address+data)"""
+    try:
+        data = bytearray.fromhex(device_id)
+    except ValueError:
+        return None
 
+    mask = 0xFF & ~((1 << nb_data_bits) - 1)
+
+    data[len(data)-1] &= mask
+    return binascii.hexlify(data)
+
+def get_masked_cmd(device_id, data_bits):
+    import binascii
+    """Extract and return the PT2262 data bits from a Lighting4 packet (address+data)"""
+    try:
+        data = bytearray.fromhex(device_id)
+    except ValueError:
+        return None
+
+    mask = 0xFF & ((1 << data_bits) - 1)
+
+    return hex(data[-1] & mask);
+    
+    
+def get_pt2262_device(device_id):
+    for id, device in RFX_DEVICES.items():
+        if device.is_pt2262 == True and device.masked_id == get_masked_deviceid(device_id, device.data_bits):
+            _LOGGER.info("rfxtrx: found matching device %s for %s", device_id, get_masked_deviceid(device_id, device.data_bits))
+            return device
+    return None
+
+    
 def get_devices_from_config(config, device):
     """Read rfxtrx configuration."""
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
@@ -306,6 +361,11 @@ class RfxtrxDevice(Entity):
         """Return is the device must fire event."""
         return self._should_fire_event
 
+    @property
+    def is_pt2262(self):
+        """Return true if the device is PT2262-based"""
+        return False
+        
     @property
     def is_on(self):
         """Return true if device is on."""
