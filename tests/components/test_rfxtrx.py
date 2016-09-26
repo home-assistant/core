@@ -10,7 +10,7 @@ from homeassistant.components import rfxtrx as rfxtrx
 from tests.common import get_test_home_assistant
 
 
-@pytest.mark.skip
+@pytest.mark.skipif("os.environ.get('RFXTRX') == 'SKIP'")
 class TestRFXTRX(unittest.TestCase):
     """Test the Rfxtrx component."""
 
