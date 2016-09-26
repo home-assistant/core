@@ -328,16 +328,18 @@ class TestHelpersTemplate(unittest.TestCase):
         self.hass.states.set('test.object_2', 'happy', {
             'latitude': 10,
         })
-
+        tpl = template.Template('{{ distance(states.test.object_2) | round }}',
+                                self.hass)
         self.assertEqual(
             'None',
-            template.Template('{{ distance(states.test.object_2) | round }}', self.hass).render())
+            tpl.render())
 
     def test_distance_function_return_None_if_invalid_coord(self):
         """Test distance function return None if invalid coord."""
         self.assertEqual(
             'None',
-            template.Template('{{ distance("123", "abc") }}', self.hass).render())
+            template.Template(
+                '{{ distance("123", "abc") }}', self.hass).render())
 
         self.assertEqual(
             'None',
@@ -347,10 +349,11 @@ class TestHelpersTemplate(unittest.TestCase):
             'latitude': self.hass.config.latitude,
             'longitude': self.hass.config.longitude,
         })
-
+        tpl = template.Template('{{ distance("123", states.test_object_2) }}',
+                                self.hass)
         self.assertEqual(
             'None',
-            template.Template('{{ distance("123", states.test_object_2) }}', self.hass).render())
+            tpl.render())
 
     def test_closest_function_home_vs_domain(self):
         """Test closest function home vs domain."""
