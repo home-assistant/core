@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import requests
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import updater
 import homeassistant.util.dt as dt_util
 from tests.common import fire_time_changed, get_test_home_assistant
@@ -31,7 +32,7 @@ class TestUpdater(unittest.TestCase):
         mock_get_newest_version.return_value = NEW_VERSION
         updater.CURRENT_VERSION = MOCK_CURRENT_VERSION
 
-        self.assertTrue(updater.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, updater.DOMAIN, {
             'updater': None
         }))
 
@@ -44,7 +45,7 @@ class TestUpdater(unittest.TestCase):
         mock_get_newest_version.return_value = MOCK_CURRENT_VERSION
         updater.CURRENT_VERSION = MOCK_CURRENT_VERSION
 
-        self.assertTrue(updater.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, updater.DOMAIN, {
             'updater': None
         }))
 
@@ -76,6 +77,6 @@ class TestUpdater(unittest.TestCase):
         """Test if the updater component is disabled on dev."""
         updater.CURRENT_VERSION = MOCK_CURRENT_VERSION + 'dev'
 
-        self.assertFalse(updater.setup(self.hass, {
+        self.assertFalse(setup_component(self.hass, updater.DOMAIN, {
             'updater': None
         }))
