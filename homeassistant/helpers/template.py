@@ -19,7 +19,7 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def attach(hass, obj):
-    """Recursively Attach hass to all template instances in list and dict."""
+    """Recursively attach hass to all template instances in list and dict."""
     if isinstance(obj, list):
         for child in obj:
             attach(hass, child)
@@ -34,6 +34,7 @@ class Template(object):
     """Class to hold a template and manage caching and rendering."""
 
     def __init__(self, template, hass=None):
+        """Instantiate a Template."""
         if not isinstance(template, str):
             raise TypeError('Expected template to be a string')
 

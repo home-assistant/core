@@ -425,6 +425,7 @@ def test_enum():
     """Test enum validator."""
     class TestEnum(enum.Enum):
         """Test enum."""
+
         value1 = "Value 1"
         value2 = "Value 2"
 

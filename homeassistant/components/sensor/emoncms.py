@@ -69,7 +69,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
     sensor_names = config.get(CONF_SENSOR_NAMES)
     interval = config.get(CONF_SCAN_INTERVAL)
-    value_template.hass = hass
+
+    if value_template is not None:
+        value_template.hass = hass
+
     data = EmonCmsData(hass, url, apikey, interval)
 
     data.update()
