@@ -13,7 +13,6 @@ from homeassistant.components.rollershutter import RollershutterDevice
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS)
-from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,10 +39,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Add MQTT Rollershutter."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
-
     if value_template is not None:
-        value_template = template.compile_template(hass, value_template)
-
+        value_template.hass = hass
     add_devices_callback([MqttRollershutter(
         hass,
         config[CONF_NAME],
@@ -81,8 +78,8 @@ class MqttRollershutter(RollershutterDevice):
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
             if value_template is not None:
-                payload = template.render_with_possible_json_value(
-                    hass, value_template, payload)
+                payload = value_template.render_with_possible_json_value(
+                    payload)
             if payload.isnumeric() and 0 <= int(payload) <= 100:
                 self._state = int(payload)
                 self.update_ha_state()

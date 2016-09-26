@@ -80,7 +80,7 @@ def setup(hass, config):
         domain = service.data.get(ATTR_DOMAIN)
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
-        message = template.render(template.compile_template(hass, message))
+        message = template.Template(message, hass).render()
         log_entry(hass, name, message, domain, entity_id)
 
     hass.wsgi.register_view(LogbookView(hass, config))

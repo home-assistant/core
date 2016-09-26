@@ -18,59 +18,97 @@ _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def compile_template(hass, template):
-    """Compile a template."""
-    location_methods = LocationMethods(hass)
+def attach(hass, obj):
+    """Recursively Attach hass to all template instances in list and dict."""
+    if isinstance(obj, list):
+        for child in obj:
+            attach(hass, child)
+    elif isinstance(obj, dict):
+        for child in obj.values():
+            attach(hass, child)
+    elif isinstance(obj, Template):
+        obj.hass = hass
 
-    try:
-        return ENV.from_string(template, {
+
+class Template(object):
+    """Class to hold a template and manage caching and rendering."""
+
+    def __init__(self, template, hass=None):
+        if not isinstance(template, str):
+            raise TypeError('Expected template to be a string')
+
+        self.template = template
+        self._compiled_code = None
+        self._compiled = None
+        self.hass = hass
+
+    def ensure_valid(self):
+        """Return if template is valid."""
+        if self._compiled_code is not None:
+            return
+
+        try:
+            self._compiled_code = ENV.compile(self.template)
+        except jinja2.exceptions.TemplateSyntaxError as err:
+            raise TemplateError(err)
+
+    def render(self, variables=None, **kwargs):
+        """Render given template."""
+        self._ensure_compiled()
+
+        if variables is not None:
+            kwargs.update(variables)
+
+        try:
+            return self._compiled.render(kwargs).strip()
+        except jinja2.TemplateError as err:
+            raise TemplateError(err)
+
+    def render_with_possible_json_value(self, value, error_value=_SENTINEL):
+        """Render template with value exposed.
+
+        If valid JSON will expose value_json too.
+        """
+        self._ensure_compiled()
+
+        variables = {
+            'value': value
+        }
+        try:
+            variables['value_json'] = json.loads(value)
+        except ValueError:
+            pass
+
+        try:
+            return self._compiled.render(variables).strip()
+        except jinja2.TemplateError as ex:
+            _LOGGER.error('Error parsing value: %s (value: %s, template: %s)',
+                          ex, value, self.template)
+            return value if error_value is _SENTINEL else error_value
+
+    def _ensure_compiled(self):
+        """Bind a template to a specific hass instance."""
+        if self._compiled is not None:
+            return
+
+        self.ensure_valid()
+
+        assert self.hass is not None, 'hass variable not set on template'
+
+        location_methods = LocationMethods(self.hass)
+
+        global_vars = ENV.make_globals({
             'closest': location_methods.closest,
             'distance': location_methods.distance,
-            'float': forgiving_float,
-            'is_state': hass.states.is_state,
-            'is_state_attr': hass.states.is_state_attr,
-            'now': dt_util.now,
-            'states': AllStates(hass),
-            'utcnow': dt_util.utcnow,
-            'as_timestamp': dt_util.as_timestamp,
-            'relative_time': dt_util.get_age
+            'is_state': self.hass.states.is_state,
+            'is_state_attr': self.hass.states.is_state_attr,
+            'states': AllStates(self.hass),
         })
-    except jinja2.TemplateError as err:
-        _LOGGER.error('Error parsing template: %s', err)
-        raise TemplateError(err)
 
+        self._compiled = jinja2.Template.from_code(
+            ENV, self._compiled_code, global_vars, None)
 
-def render_with_possible_json_value(template, value, error_value=_SENTINEL):
-    """Render template with value exposed.
-
-    If valid JSON will expose value_json too.
-    """
-    variables = {
-        'value': value
-    }
-    try:
-        variables['value_json'] = json.loads(value)
-    except ValueError:
-        pass
-
-    try:
-        return render(template, variables)
-    except TemplateError as ex:
-        _LOGGER.error('Error parsing value: %s', ex)
-        return value if error_value is _SENTINEL else error_value
-
-
-def render(template, variables=None, **kwargs):
-    """Render given template."""
-    assert isinstance(template, jinja2.Template), 'Template should be compiled'
-
-    if variables is not None:
-        kwargs.update(variables)
-
-    try:
-        return template.render(kwargs).strip()
-    except jinja2.TemplateError as err:
-        raise TemplateError(err)
+        return self._compiled
 
 
 class AllStates(object):
@@ -315,3 +353,8 @@ ENV.filters['multiply'] = multiply
 ENV.filters['timestamp_custom'] = timestamp_custom
 ENV.filters['timestamp_local'] = timestamp_local
 ENV.filters['timestamp_utc'] = timestamp_utc
+ENV.globals['float'] = forgiving_float
+ENV.globals['now'] = dt_util.now
+ENV.globals['utcnow'] = dt_util.utcnow
+ENV.globals['as_timestamp'] = dt_util.as_timestamp
+ENV.globals['relative_time'] = dt_util.get_age

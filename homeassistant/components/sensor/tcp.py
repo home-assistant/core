@@ -9,9 +9,9 @@ import socket
 import select
 
 from homeassistant.const import CONF_NAME, CONF_HOST
-from homeassistant.helpers import template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.template import Template
 
 CONF_PORT = "port"
 CONF_TIMEOUT = "timeout"
@@ -44,7 +44,7 @@ class Sensor(Entity):
         value_template = config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
-            template.compile_template(hass, value_template)
+            value_template = Template(value_template, hass)
 
         self._hass = hass
         self._config = {
@@ -127,9 +127,7 @@ class Sensor(Entity):
 
         if self._config[CONF_VALUE_TEMPLATE] is not None:
             try:
-                self._state = template.render(
-                    self._hass,
-                    self._config[CONF_VALUE_TEMPLATE],
+                self._state = self._config[CONF_VALUE_TEMPLATE].render(
                     value=value)
                 return
             except TemplateError as err:

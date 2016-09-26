@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_BELOW, CONF_ABOVE)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import render, compile_template
 import homeassistant.util.dt as dt_util
 
 FROM_CONFIG_FORMAT = '{}_from_config'
@@ -96,7 +95,7 @@ def numeric_state(hass: HomeAssistant, entity, below=None, above=None,
         variables = dict(variables or {})
         variables['state'] = entity
         try:
-            value = render(hass, value_template, variables)
+            value = value_template.render(variables)
         except TemplateError as ex:
             _LOGGER.error("Template error: %s", ex)
             return False
@@ -125,18 +124,12 @@ def numeric_state_from_config(config, config_validation=True):
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
-    cache = {}
-
     def if_numeric_state(hass, variables=None):
         """Test numeric state condition."""
-        if value_template is None:
-            tmpl = None
-        elif hass in cache:
-            tmpl = cache[hass]
-        else:
-            cache[hass] = tmpl = compile_template(hass, value_template)
+        if value_template is not None:
+            value_template.hass = hass
 
-        return numeric_state(hass, entity_id, below, above, tmpl,
+        return numeric_state(hass, entity_id, below, above, value_template,
                              variables)
 
     return if_numeric_state
@@ -217,7 +210,7 @@ def sun_from_config(config, config_validation=True):
 def template(hass, value_template, variables=None):
     """Test if template condition matches."""
     try:
-        value = render(hass, value_template, variables)
+        value = value_template.render(variables)
     except TemplateError as ex:
         _LOGGER.error('Error duriong template condition: %s', ex)
         return False
@@ -231,16 +224,11 @@ def template_from_config(config, config_validation=True):
         config = cv.TEMPLATE_CONDITION_SCHEMA(config)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
-    cache = {}
-
     def template_if(hass, variables=None):
         """Validate template based if-condition."""
-        if hass in cache:
-            tmpl = cache[hass]
-        else:
-            cache[hass] = tmpl = compile_template(hass, value_template)
+        value_template.hass = hass
 
-        return template(hass, tmpl, variables)
+        return template(hass, value_template, variables)
 
     return template_if
 

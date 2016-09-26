@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mqtt/
 """
 import logging
-from functools import partial
 
 import voluptuous as vol
 
@@ -19,8 +18,6 @@ from homeassistant.const import (
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import (render_with_possible_json_value,
-                                            compile_template)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,8 +119,8 @@ class MqttLight(Light):
             if tpl is None:
                 templates[key] = lambda value: value
             else:
-                templates[key] = partial(render_with_possible_json_value, hass,
-                                         compile_template(hass, tpl))
+                tpl.hass = hass
+                templates[key] = tpl.render_with_possible_json_value
 
         def state_received(topic, payload, qos):
             """A new MQTT message has been received."""

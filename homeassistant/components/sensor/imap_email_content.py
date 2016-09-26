@@ -14,7 +14,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_VALUE_TEMPLATE)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import template
 import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,10 +47,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_PORT))
 
     value_template = config.get(CONF_VALUE_TEMPLATE)
-
     if value_template is not None:
-        value_template = template.compile_template(hass, value_template)
-
+        value_template.hass = hass
     sensor = EmailContentSensor(
         hass,
         reader,
@@ -176,7 +173,7 @@ class EmailContentSensor(Entity):
             ATTR_DATE: email_message['Date'],
             ATTR_BODY: EmailContentSensor.get_msg_text(email_message)
         }
-        return template.render(self._value_template, variables)
+        return self._value_template.render(variables)
 
     def sender_allowed(self, email_message):
         """Check if the sender is in the allowed senders list."""

@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        cv.slug: vol.Any(cv.template, cv.string),
+        cv.slug: cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -37,16 +37,24 @@ def setup(hass, config):
 
         if cmd in cache:
             prog, args, args_compiled = cache[cmd]
+        elif ' ' not in cmd:
+            prog = cmd
+            args = None
+            args_compiled = None
+            cache[cmd] = prog, args, args_compiled
         else:
             prog, args = cmd.split(' ', 1)
-            args_compiled = template.compile_template(hass, args)
+            args_compiled = template.Template(args, hass)
             cache[cmd] = prog, args, args_compiled
 
-        try:
-            rendered_args = template.render(args_compiled, variables=call.data)
-        except TemplateError as ex:
-            _LOGGER.exception('Error rendering command template: %s', ex)
-            return
+        if args_compiled:
+            try:
+                rendered_args = args_compiled.render(call.data)
+            except TemplateError as ex:
+                _LOGGER.exception('Error rendering command template: %s', ex)
+                return
+        else:
+            rendered_args = None
 
         if rendered_args == args:
             # no template used. default behavior

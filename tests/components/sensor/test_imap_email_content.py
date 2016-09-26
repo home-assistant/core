@@ -1,16 +1,16 @@
 """The tests for the IMAP email content sensor platform."""
-import unittest
+from collections import deque
 import email
-import datetime
-
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import datetime
 from threading import Event
+import unittest
 
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.event import track_state_change
-from collections import deque
-
 from homeassistant.components.sensor import imap_email_content
+
 from tests.common import get_test_home_assistant
 
 
@@ -218,7 +218,8 @@ class EmailContentSensor(unittest.TestCase):
             FakeEMailReader(deque([test_message])),
             "test_emails_sensor",
             ["sender@test.com"],
-            "{{ subject }} from {{ from }} with message {{ body }}")
+            Template("{{ subject }} from {{ from }} with message {{ body }}",
+                     self.hass))
 
         sensor.entity_id = "sensor.emailtest"
         sensor.update()

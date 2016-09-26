@@ -14,7 +14,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
     ATTR_ENTITY_ID, MATCH_ALL, CONF_SWITCHES)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.script import Script
@@ -79,7 +78,8 @@ class SwitchTemplate(SwitchDevice):
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id,
                                             hass=hass)
         self._name = friendly_name
-        self._template = template.compile_template(hass, state_template)
+        self._template = state_template
+        state_template.hass = hass
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
         self._state = False
@@ -123,7 +123,7 @@ class SwitchTemplate(SwitchDevice):
     def update(self):
         """Update the state from the template."""
         try:
-            state = template.render(self._template).lower()
+            state = self._template.render().lower()
 
             if state in _VALID_STATES:
                 self._state = state in ('true', STATE_ON)

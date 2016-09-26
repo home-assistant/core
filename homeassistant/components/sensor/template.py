@@ -13,7 +13,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
     ATTR_ENTITY_ID, MATCH_ALL, CONF_SENSORS)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.event import track_state_change
 import homeassistant.helpers.config_validation as cv
@@ -43,6 +42,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
 
+        state_template.hass = hass
+
         sensors.append(
             SensorTemplate(
                 hass,
@@ -71,7 +72,7 @@ class SensorTemplate(Entity):
                                             hass=hass)
         self._name = friendly_name
         self._unit_of_measurement = unit_of_measurement
-        self._template = template.compile_template(hass, state_template)
+        self._template = state_template
         self._state = None
 
         self.update()
@@ -105,7 +106,7 @@ class SensorTemplate(Entity):
     def update(self):
         """Get the latest data and update the states."""
         try:
-            self._state = template.render(self._template)
+            self._state = self._template.render()
         except TemplateError as ex:
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):
