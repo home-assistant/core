@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 from astral import Astral
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.core as ha
 from homeassistant.const import MATCH_ALL
 from homeassistant.helpers.event import (
@@ -186,7 +187,8 @@ class TestEventHelpers(unittest.TestCase):
         # Setup sun component
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
-        sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+        setup_component(self.hass, sun.DOMAIN, {
+            sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
         # Get next sunrise/sunset
         astral = Astral()
@@ -241,7 +243,8 @@ class TestEventHelpers(unittest.TestCase):
         # Setup sun component
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
-        sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+        setup_component(self.hass, sun.DOMAIN, {
+            sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
         # Get next sunrise/sunset
         astral = Astral()
