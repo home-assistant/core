@@ -211,8 +211,13 @@ class IndexView(HomeAssistantView):
 
         panel_url = PANELS[panel]['url'] if panel != 'states' else ''
 
-        # auto login if no password was set
-        no_auth = 'false' if self.hass.config.api.api_password else 'true'
+        no_auth = 'true'
+        if self.hass.config.api.api_password:
+            # require password if set
+            no_auth = 'false'
+            if self.hass.wsgi.is_trusted_ip(request.remote_addr):
+                # bypass for trusted networks
+                no_auth = 'true'
 
         icons_url = '/static/mdi-{}.html'.format(FINGERPRINTS['mdi.html'])
         template = self.templates.get_template('index.html')
