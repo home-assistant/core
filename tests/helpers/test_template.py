@@ -652,26 +652,26 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
             """))
 
         self.assertListEqual(
-            [
+            sorted([
                 'device_tracker.phone_1',
                 'device_tracker.phone_2',
-            ],
-            template.extract_entities("""
+            ]),
+            sorted(template.extract_entities("""
 {% if is_state('device_tracker.phone_1', 'home') %}
     Ha, Hercules is home!
 {% elif states.device_tracker.phone_2.attributes.battery < 40 %}
     Hercules you power goes done!.
 {% endif %}
-            """))
+            """)))
 
         self.assertListEqual(
-            [
+            sorted([
                 'sensor.pick_humidity',
                 'sensor.pick_temperature',
-            ],
-            template.extract_entities("""
+            ]),
+            sorted(template.extract_entities("""
 {{
     states.sensor.pick_temperature.state ~ „°C (“ ~
     states.sensor.pick_humidity.state ~ „ %“
 }}
-            """))
+            """)))
