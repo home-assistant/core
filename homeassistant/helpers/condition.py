@@ -40,7 +40,7 @@ def and_from_config(config: ConfigType, config_validation: bool=True):
     """Create multi condition matcher using 'AND'."""
     if config_validation:
         config = cv.AND_CONDITION_SCHEMA(config)
-    checks = [from_config(entry) for entry in config['conditions']]
+    checks = [from_config(entry, False) for entry in config['conditions']]
 
     def if_and_condition(hass: HomeAssistant,
                          variables=None) -> bool:
@@ -62,7 +62,7 @@ def or_from_config(config: ConfigType, config_validation: bool=True):
     """Create multi condition matcher using 'OR'."""
     if config_validation:
         config = cv.OR_CONDITION_SCHEMA(config)
-    checks = [from_config(entry) for entry in config['conditions']]
+    checks = [from_config(entry, False) for entry in config['conditions']]
 
     def if_or_condition(hass: HomeAssistant,
                         variables=None) -> bool:
