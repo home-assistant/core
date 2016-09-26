@@ -2,11 +2,13 @@
 # pylint: disable=too-few-public-methods
 import json
 import logging
+import re
 
 import jinja2
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
-from homeassistant.const import STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import (
+    STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL)
 from homeassistant.core import State
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
@@ -16,6 +18,12 @@ from homeassistant.util import convert, dt as dt_util, location as loc_util
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+_RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
+_RE_GET_ENTITIES = re.compile(
+    r"(?:(?:states\.|(?:is_state|is_state_attr|states)\(.)([\w]+\.[\w]+))",
+    re.I | re.M
+)
 
 
 def attach(hass, obj):
@@ -110,6 +118,17 @@ class Template(object):
             ENV, self._compiled_code, global_vars, None)
 
         return self._compiled
+
+
+def extract_entities(template):
+    """Extract all entities for state_changed listener from template string."""
+    if template is None or _RE_NONE_ENTITIES.search(template):
+        return MATCH_ALL
+
+    extraction = _RE_GET_ENTITIES.findall(template)
+    if len(extraction) > 0:
+        return list(set(extraction))
+    return MATCH_ALL
 
 
 class AllStates(object):
