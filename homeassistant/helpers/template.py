@@ -14,6 +14,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
 from homeassistant.loader import get_component
 from homeassistant.util import convert, dt as dt_util, location as loc_util
+from homeassistant.util.async import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
@@ -63,6 +64,17 @@ class Template(object):
 
     def render(self, variables=None, **kwargs):
         """Render given template."""
+        if variables is not None:
+            kwargs.update(variables)
+
+        return run_callback_threadsafe(
+            self.hass.loop, self.async_render, kwargs).result()
+
+    def async_render(self, variables=None, **kwargs):
+        """Render given template.
+
+        This method must be run in the event loop.
+        """
         self._ensure_compiled()
 
         if variables is not None:
@@ -77,6 +89,18 @@ class Template(object):
         """Render template with value exposed.
 
         If valid JSON will expose value_json too.
+        """
+        return run_callback_threadsafe(
+            self.hass.loop, self.async_render_with_possible_json_value, value,
+            error_value).result()
+
+    def async_render_with_possible_json_value(self, value,
+                                              error_value=_SENTINEL):
+        """Render template with value exposed.
+
+        If valid JSON will expose value_json too.
+
+        This method must be run in the event loop.
         """
         self._ensure_compiled()
 
@@ -109,8 +133,8 @@ class Template(object):
         global_vars = ENV.make_globals({
             'closest': location_methods.closest,
             'distance': location_methods.distance,
-            'is_state': self.hass.states.is_state,
-            'is_state_attr': self.hass.states.is_state_attr,
+            'is_state': self.hass.states.async_is_state,
+            'is_state_attr': self.hass.states.async_is_state_attr,
             'states': AllStates(self.hass),
         })
 
@@ -144,7 +168,7 @@ class AllStates(object):
 
     def __iter__(self):
         """Return all states."""
-        return iter(sorted(self._hass.states.all(),
+        return iter(sorted(self._hass.states.async_all(),
                            key=lambda state: state.entity_id))
 
     def __call__(self, entity_id):
@@ -168,7 +192,7 @@ class DomainStates(object):
     def __iter__(self):
         """Return the iteration over all the states."""
         return iter(sorted(
-            (state for state in self._hass.states.all()
+            (state for state in self._hass.states.async_all()
              if state.domain == self._domain),
             key=lambda state: state.entity_id))
 

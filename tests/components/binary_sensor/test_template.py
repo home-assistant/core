@@ -15,11 +15,18 @@ from tests.common import get_test_home_assistant
 class TestBinarySensorTemplate(unittest.TestCase):
     """Test for Binary sensor template platform."""
 
+    def setup_method(self, method):
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+    def teardown_method(self, method):
+        """Stop everything that was started."""
+        self.hass.stop()
+
     @mock.patch.object(template, 'BinarySensorTemplate')
     def test_setup(self, mock_template):
         """"Test the setup."""
-        hass = mock.MagicMock()
-        tpl = template_hlpr.Template('{{ foo }}', hass)
+        tpl = template_hlpr.Template('{{ foo }}', self.hass)
         config = PLATFORM_SCHEMA({
             'platform': 'template',
             'sensors': {
@@ -32,16 +39,15 @@ class TestBinarySensorTemplate(unittest.TestCase):
             }
         })
         add_devices = mock.MagicMock()
-        result = template.setup_platform(hass, config, add_devices)
+        result = template.setup_platform(self.hass, config, add_devices)
         self.assertTrue(result)
-        mock_template.assert_called_once_with(hass, 'test', 'virtual thingy',
+        mock_template.assert_called_once_with(self.hass, 'test', 'virtual thingy',
                                               'motion', tpl, 'test')
         add_devices.assert_called_once_with([mock_template.return_value])
 
     def test_setup_no_sensors(self):
         """"Test setup with no sensors."""
-        hass = mock.MagicMock()
-        result = bootstrap.setup_component(hass, 'sensor', {
+        result = bootstrap.setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'template'
             }
@@ -50,8 +56,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_setup_invalid_device(self):
         """"Test the setup with invalid devices."""
-        hass = mock.MagicMock()
-        result = bootstrap.setup_component(hass, 'sensor', {
+        result = bootstrap.setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'template',
                 'sensors': {
@@ -63,8 +68,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_setup_invalid_sensor_class(self):
         """"Test setup with invalid sensor class."""
-        hass = mock.MagicMock()
-        result = bootstrap.setup_component(hass, 'sensor', {
+        result = bootstrap.setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'template',
                 'sensors': {
@@ -79,8 +83,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_setup_invalid_missing_template(self):
         """"Test setup with invalid and missing template."""
-        hass = mock.MagicMock()
-        result = bootstrap.setup_component(hass, 'sensor', {
+        result = bootstrap.setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'template',
                 'sensors': {
@@ -94,10 +97,9 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_attributes(self):
         """"Test the attributes."""
-        hass = mock.MagicMock()
         vs = template.BinarySensorTemplate(
-            hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', hass), MATCH_ALL)
+            self.hass, 'parent', 'Parent', 'motion',
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL)
         self.assertFalse(vs.should_poll)
         self.assertEqual('motion', vs.sensor_class)
         self.assertEqual('Parent', vs.name)
@@ -105,34 +107,29 @@ class TestBinarySensorTemplate(unittest.TestCase):
         vs.update()
         self.assertFalse(vs.is_on)
 
-        vs._template = template_hlpr.Template("{{ 2 > 1 }}", hass)
+        vs._template = template_hlpr.Template("{{ 2 > 1 }}", self.hass)
         vs.update()
         self.assertTrue(vs.is_on)
 
     def test_event(self):
         """"Test the event."""
-        hass = get_test_home_assistant()
         vs = template.BinarySensorTemplate(
-            hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', hass), MATCH_ALL)
+            self.hass, 'parent', 'Parent', 'motion',
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL)
         vs.update_ha_state()
-        hass.block_till_done()
+        self.hass.block_till_done()
 
         with mock.patch.object(vs, 'update') as mock_update:
-            hass.bus.fire(EVENT_STATE_CHANGED)
-            hass.block_till_done()
-            try:
-                assert mock_update.call_count == 1
-            finally:
-                hass.stop()
+            self.hass.bus.fire(EVENT_STATE_CHANGED)
+            self.hass.block_till_done()
+            assert mock_update.call_count == 1
 
     @mock.patch('homeassistant.helpers.template.Template.render')
     def test_update_template_error(self, mock_render):
         """"Test the template update error."""
-        hass = mock.MagicMock()
         vs = template.BinarySensorTemplate(
-            hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', hass), MATCH_ALL)
+            self.hass, 'parent', 'Parent', 'motion',
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL)
         mock_render.side_effect = TemplateError('foo')
         vs.update()
         mock_render.side_effect = TemplateError(
