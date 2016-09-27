@@ -12,6 +12,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     MASS_GRAMS,
     VOLUME_LITERS,
+    MATCH_ALL,
 )
 import homeassistant.util.dt as dt_util
 
@@ -589,3 +590,88 @@ class TestUtilTemplate(unittest.TestCase):
         with patch('homeassistant.helpers.template.compile_template',
                    side_effect=Exception('Should not be called')):
             assert 'world' == template.render(self.hass, compiled)
+
+    def test_extract_entities_none_exclude_stuff(self):
+        """Test extract entities function with none or exclude stuff."""
+        self.assertEqual(MATCH_ALL, template.extract_entities(None))
+
+        self.assertEqual(
+            MATCH_ALL,
+            template.extract_entities(
+                '{{ closest(states.zone.far_away, '
+                'states.test_domain).entity_id }}'))
+
+        self.assertEqual(
+            MATCH_ALL,
+            template.extract_entities(
+                '{{ distance("123", states.test_object_2) }}'))
+
+    def test_extract_entities_no_match_entities(self):
+        """Test extract entities function with none entities stuff."""
+        self.assertEqual(
+            MATCH_ALL,
+            template.extract_entities(
+                "{{ value_json.tst | timestamp_custom('%Y' True) }}"))
+
+        self.assertEqual(
+            MATCH_ALL,
+            template.extract_entities("""
+{% for state in states.sensor %}
+  {{ state.entity_id }}={{ state.state }},
+{% endfor %}
+            """))
+
+    def test_extract_entities_match_entities(self):
+        """Test extract entities function with entities stuff."""
+        self.assertListEqual(
+            ['device_tracker.phone_1'],
+            template.extract_entities("""
+{% if is_state('device_tracker.phone_1', 'home') %}
+    Ha, Hercules is home!
+{% else %}
+    Hercules is at {{ states('device_tracker.phone_1') }}.
+{% endif %}
+            """))
+
+        self.assertListEqual(
+            ['binary_sensor.garage_door'],
+            template.extract_entities("""
+{{ as_timestamp(states.binary_sensor.garage_door.last_changed) }}
+            """))
+
+        self.assertListEqual(
+            ['binary_sensor.garage_door'],
+            template.extract_entities("""
+{{ states("binary_sensor.garage_door") }}
+            """))
+
+        self.assertListEqual(
+            ['device_tracker.phone_2'],
+            template.extract_entities("""
+is_state_attr('device_tracker.phone_2', 'battery', 40)
+            """))
+
+        self.assertListEqual(
+            sorted([
+                'device_tracker.phone_1',
+                'device_tracker.phone_2',
+            ]),
+            sorted(template.extract_entities("""
+{% if is_state('device_tracker.phone_1', 'home') %}
+    Ha, Hercules is home!
+{% elif states.device_tracker.phone_2.attributes.battery < 40 %}
+    Hercules you power goes done!.
+{% endif %}
+            """)))
+
+        self.assertListEqual(
+            sorted([
+                'sensor.pick_humidity',
+                'sensor.pick_temperature',
+            ]),
+            sorted(template.extract_entities("""
+{{
+    states.sensor.pick_temperature.state ~ „°C (“ ~
+    states.sensor.pick_humidity.state ~ „ %“
+}}
+            """)))
