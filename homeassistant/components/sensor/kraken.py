@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional('tentacles', default=1): cv.positive_int,
+    vol.Optional('templates', default=True): cv.boolean,
 })
 
 SCAN_INTERVAL = 1
@@ -39,13 +40,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None): \
                               '.state) + float(' + str(idx) + ') }}'}
 
     add_devices(devs)
+    
+    if config.get('templates'):
 
-    platform = bootstrap.loader.get_platform('sensor', 'template')
+        platform = bootstrap.loader.get_platform('sensor', 'template')
 
-    conf = {'platform': 'template', 'sensors': sen}
-    conf = platform.PLATFORM_SCHEMA(conf)
+        conf = {'platform': 'template', 'sensors': sen}
+        conf = platform.PLATFORM_SCHEMA(conf)
 
-    platform.setup_platform(hass, conf, add_devices)
+        platform.setup_platform(hass, conf, add_devices)
 
 
 def _seconds():
