@@ -29,6 +29,10 @@ SERVICE_PROCESS_SCHEMA = vol.Schema({
     vol.Required(ATTR_TEXT): vol.All(cv.string, vol.Lower),
 })
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({}),
+}, extra=vol.ALLOW_EXTRA)
+
 
 def setup(hass, config):
     """Register the process service."""
@@ -48,8 +52,8 @@ def setup(hass, config):
 
         name, command = match.groups()
         entities = {state.entity_id: state.name for state in hass.states.all()}
-        entity_ids = fuzzyExtract.extractOne(name, entities,
-                                             score_cutoff=65)[2]
+        entity_ids = fuzzyExtract.extractOne(
+            name, entities, score_cutoff=65)[2]
 
         if not entity_ids:
             logger.error(
@@ -70,6 +74,7 @@ def setup(hass, config):
             logger.error('Got unsupported command %s from text %s',
                          command, text)
 
-    hass.services.register(DOMAIN, SERVICE_PROCESS, process,
-                           schema=SERVICE_PROCESS_SCHEMA)
+    hass.services.register(
+        DOMAIN, SERVICE_PROCESS, process, schema=SERVICE_PROCESS_SCHEMA)
+
     return True
