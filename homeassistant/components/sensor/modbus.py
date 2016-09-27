@@ -93,6 +93,12 @@ class ModbusRegisterSensor(Entity):
             self._register,
             self._count)
         val = 0
+        if not result:
+            _LOGGER.error(
+                'No response from modbus slave %s register %s',
+                self._slave,
+                self._register)
+            return
         for i, res in enumerate(result.registers):
             val += res * (2**(i*16))
         self._value = format(
