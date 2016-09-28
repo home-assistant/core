@@ -1,12 +1,15 @@
 """The tests for the Rfxtrx light platform."""
 import unittest
 
+import pytest
+
 from homeassistant.bootstrap import _setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
 
 from tests.common import get_test_home_assistant
 
 
+@pytest.mark.skipif("os.environ.get('RFXTRX') == 'SKIP'")
 class TestLightRfxtrx(unittest.TestCase):
     """Test the Rfxtrx light platform."""
 
