@@ -21,9 +21,12 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_MIN_VALUE = 'min_value'
 ATTR_MAX_VALUE = 'max_value'
 ATTR_COUNT = 'count'
-ATTR_AVERAGE = 'average'
+ATTR_MEAN = 'mean'
 ATTR_MEDIAN = 'median'
+ATTR_VARIANCE = 'variance'
+ATTR_STANDARD_DEVIATION = 'standard_deviation'
 ATTR_SAMPLING_SIZE = 'sampling_size'
+ATTR_TOTAL = 'total'
 
 CONF_SAMPLING_SIZE = 'sampling_size'
 DEFAULT_NAME = 'Stats'
@@ -55,16 +58,16 @@ class StatisticsSensor(Entity):
         self._hass = hass
         self._entity_id = entity_id
         self.is_binary = True if self._entity_id.split('.')[0] == \
-                         'binary_sensor' else False
+            'binary_sensor' else False
         if not self.is_binary:
-            self._name = '{} {}'.format(name, 'Mean')
+            self._name = '{} {}'.format(name, ATTR_MEAN)
         else:
-            self._name = '{} {}'.format(name, 'Count')
+            self._name = '{} {}'.format(name, ATTR_COUNT)
         self._sampling_size = sampling_size
         self._unit_of_measurement = None
         self.states = []
-        self.count = -1
-        self.median = self.average = self.min = self.max = 0
+        self.median = self.mean = self.variance = self.standard_deviation = 0
+        self.min = self.max = self.total = self.count = 0
         self.update()
 
         def calculate_sensor_state_listener(entity, old_state, new_state):
@@ -97,7 +100,7 @@ class StatisticsSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.average if not self.is_binary else self.count
+        return self.mean if not self.is_binary else self.count
 
     @property
     def unit_of_measurement(self):
@@ -114,13 +117,16 @@ class StatisticsSensor(Entity):
         """Return the state attributes of the sensor."""
         if not self.is_binary:
             return {
-                ATTR_MIN_VALUE: self.min,
-                ATTR_MAX_VALUE: self.max,
+                ATTR_MEAN: self.mean,
                 ATTR_COUNT: self.count,
-                ATTR_AVERAGE: self.average,
+                ATTR_MAX_VALUE: self.max,
                 ATTR_MEDIAN: self.median,
-                ATTR_SAMPLING_SIZE: 'unlimited' if self._sampling_size is 0
-                                    else self._sampling_size,
+                ATTR_MIN_VALUE: self.min,
+                ATTR_SAMPLING_SIZE: 'unlimited' if self._sampling_size is
+                                    0 else self._sampling_size,
+                ATTR_STANDARD_DEVIATION: self.standard_deviation,
+                ATTR_TOTAL: self.total,
+                ATTR_VARIANCE: self.variance,
             }
 
     @property
@@ -131,10 +137,14 @@ class StatisticsSensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         try:
-            self.average = round(statistics.mean(self.states), 2)
+            self.mean = round(statistics.mean(self.states), 2)
             self.median = round(statistics.median(self.states), 2)
-        except statistics.StatisticsError:
-            self.average = STATE_UNKNOWN
+            self.standard_deviation = round(statistics.stdev(self.states), 2)
+            self.total = round(sum(self.states), 2)
+            self.variance = round(statistics.variance(self.states), 2)
+        except statistics.StatisticsError as err:
+            _LOGGER.warning(err)
+            self.mean = STATE_UNKNOWN
         try:
             self.min = min(self.states)
             self.max = max(self.states)
