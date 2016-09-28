@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES, CONF_NAME, STATE_UNKNOWN)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers import template
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -70,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if value_template is None:
             return lambda value: value
 
-        value_template = template.Template(value_template, hass)
+        value_template.hass = hass
 
         def _render(value):
             try:
