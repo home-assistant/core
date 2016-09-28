@@ -4,6 +4,7 @@ Offer template automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#template-trigger
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -30,15 +31,16 @@ def trigger(hass, config, action):
     # Local variable to keep track of if the action has already been triggered
     already_triggered = False
 
+    @asyncio.coroutine
     def state_changed_listener(entity_id, from_s, to_s):
         """Listen for state changes and calls action."""
         nonlocal already_triggered
-        template_result = condition.template(hass, value_template)
+        template_result = condition.async_template(hass, value_template)
 
         # Check to see if template returns true
         if template_result and not already_triggered:
             already_triggered = True
-            action({
+            hass.async_add_job(action, {
                 'trigger': {
                     'platform': 'template',
                     'entity_id': entity_id,

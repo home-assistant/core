@@ -17,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
+from homeassistant.util.async import run_callback_threadsafe
 
 FROM_CONFIG_FORMAT = '{}_from_config'
 
@@ -209,8 +210,15 @@ def sun_from_config(config, config_validation=True):
 
 def template(hass, value_template, variables=None):
     """Test if template condition matches."""
+    return run_callback_threadsafe(
+        hass.loop, async_template, hass, value_template, variables,
+    ).result()
+
+
+def async_template(hass, value_template, variables=None):
+    """Test if template condition matches."""
     try:
-        value = value_template.render(variables)
+        value = value_template.async_render(variables)
     except TemplateError as ex:
         _LOGGER.error('Error duriong template condition: %s', ex)
         return False
