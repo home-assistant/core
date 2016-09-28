@@ -12,7 +12,7 @@ from homeassistant.components.switch import (
     ENTITY_ID_FORMAT, SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
-    ATTR_ENTITY_ID, MATCH_ALL, CONF_SWITCHES)
+    ATTR_ENTITY_ID, CONF_SWITCHES)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_state_change
@@ -30,7 +30,7 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Required(ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(OFF_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-    vol.Optional(ATTR_ENTITY_ID, default=MATCH_ALL): cv.entity_ids
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -48,7 +48,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         state_template = device_config[CONF_VALUE_TEMPLATE]
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
-        entity_ids = device_config[ATTR_ENTITY_ID]
+        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
+                      state_template.extract_entities())
 
         switches.append(
             SwitchTemplate(

@@ -39,6 +39,17 @@ def attach(hass, obj):
         obj.hass = hass
 
 
+def extract_entities(template):
+    """Extract all entities for state_changed listener from template string."""
+    if template is None or _RE_NONE_ENTITIES.search(template):
+        return MATCH_ALL
+
+    extraction = _RE_GET_ENTITIES.findall(template)
+    if len(extraction) > 0:
+        return list(set(extraction))
+    return MATCH_ALL
+
+
 class Template(object):
     """Class to hold a template and manage caching and rendering."""
 
@@ -61,6 +72,10 @@ class Template(object):
             self._compiled_code = ENV.compile(self.template)
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
+
+    def extract_entities(self):
+        """Extract all entities for state_changed listener."""
+        return extract_entities(self.template)
 
     def render(self, variables=None, **kwargs):
         """Render given template."""
@@ -143,17 +158,6 @@ class Template(object):
             ENV, self._compiled_code, global_vars, None)
 
         return self._compiled
-
-
-def extract_entities(template):
-    """Extract all entities for state_changed listener from template string."""
-    if template is None or _RE_NONE_ENTITIES.search(template):
-        return MATCH_ALL
-
-    extraction = _RE_GET_ENTITIES.findall(template)
-    if len(extraction) > 0:
-        return list(set(extraction))
-    return MATCH_ALL
 
 
 class AllStates(object):
