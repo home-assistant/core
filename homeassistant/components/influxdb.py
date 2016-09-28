@@ -71,7 +71,7 @@ def setup(hass, config):
     try:
         influx = InfluxDBClient(
             host=host, port=port, username=username, password=password,
-            database=database, ssl=ssl, verify_ssl=verify_ssl, 
+            database=database, ssl=ssl, verify_ssl=verify_ssl,
             timeout=TIMEOUT)
         influx.query("select * from /.*/ LIMIT 1;")
     except exceptions.InfluxDBClientError as exc:
