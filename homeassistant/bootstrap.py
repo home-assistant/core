@@ -397,16 +397,21 @@ def _ensure_loader_prepared(hass: core.HomeAssistant) -> None:
 def log_exception(ex, domain, config):
     """Generate log exception for config validation."""
     message = 'Invalid config for [{}]: '.format(domain)
+
     if 'extra keys not allowed' in ex.error_message:
         message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
                    .format(ex.path[-1], domain, domain,
                            '->'.join('%s' % m for m in ex.path))
     else:
-        message += humanize_error(config, ex)
+        message += '{}.'.format(humanize_error(config, ex))
 
     if hasattr(config, '__line__'):
-        message += " (See {}:{})".format(config.__config_file__,
-                                         config.__line__ or '?')
+        message += " (See {}:{})".format(
+            config.__config_file__, config.__line__ or '?')
+
+    if domain != 'homeassistant':
+        message += (' Please check the docs at '
+                    'https://home-assistant.io/components/{}/'.format(domain))
 
     _LOGGER.error(message)
 
