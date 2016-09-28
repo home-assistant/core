@@ -2,7 +2,7 @@
 A sensor that monitors trands in other components.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.template/
+https://home-assistant.io/components/sensor.trend/
 """
 import logging
 import voluptuous as vol
@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SensorTrend(BinarySensorDevice):
-    """Representation of a Template Sensor."""
+    """Representation of a trend Sensor."""
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, hass, device_id, friendly_name,
@@ -90,14 +90,14 @@ class SensorTrend(BinarySensorDevice):
 
         self.update()
 
-        def template_sensor_state_listener(entity, old_state, new_state):
+        def trend_sensor_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
             self.from_state = old_state
             self.to_state = new_state
             self.update_ha_state(True)
 
         track_state_change(hass, target_entity,
-                           template_sensor_state_listener)
+                           trend_sensor_state_listener)
 
     @property
     def name(self):

@@ -15,7 +15,6 @@ from homeassistant.const import (
     STATE_CLOSED)
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
-from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,10 +48,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MQTT Cover."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
-
     if value_template is not None:
-        value_template = template.compile_template(hass, value_template)
-
+        value_template.hass = hass
     add_devices([MqttCover(
         hass,
         config.get(CONF_NAME),
@@ -96,8 +93,8 @@ class MqttCover(CoverDevice):
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
             if value_template is not None:
-                payload = template.render_with_possible_json_value(
-                    hass, value_template, payload)
+                payload = value_template.render_with_possible_json_value(
+                    payload)
             if payload == self._state_open:
                 self._state = False
                 _LOGGER.warning("state=%s", int(self._state))

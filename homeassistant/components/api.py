@@ -378,8 +378,8 @@ class APITemplateView(HomeAssistantView):
     def post(self, request):
         """Render a template."""
         try:
-            return template.render(self.hass, request.json['template'],
-                                   request.json.get('variables'))
+            tpl = template.Template(request.json['template'], self.hass)
+            return tpl.render(request.json.get('variables'))
         except TemplateError as ex:
             return self.json_message('Error rendering template: {}'.format(ex),
                                      HTTP_BAD_REQUEST)

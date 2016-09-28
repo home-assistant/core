@@ -264,8 +264,8 @@ def setup(hass, config):
         qos = call.data[ATTR_QOS]
         retain = call.data[ATTR_RETAIN]
         try:
-            payload = (payload if payload_template is None else
-                       template.render(hass, payload_template)) or ''
+            if payload_template is not None:
+                payload = template.Template(payload_template, hass).render()
         except template.jinja2.TemplateError as exc:
             _LOGGER.error(
                 "Unable to publish to '%s': rendering payload template of "

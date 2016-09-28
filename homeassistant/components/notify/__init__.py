@@ -12,7 +12,7 @@ import voluptuous as vol
 
 import homeassistant.bootstrap as bootstrap
 from homeassistant.config import load_yaml_config_file
-from homeassistant.helpers import config_per_platform, template
+from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.util import slugify
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 NOTIFY_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.template,
-    vol.Optional(ATTR_TITLE): cv.string,
+    vol.Optional(ATTR_TITLE): cv.template,
     vol.Optional(ATTR_TARGET): cv.string,
     vol.Optional(ATTR_DATA): dict,
 })
@@ -96,14 +96,16 @@ def setup(hass, config):
             title = call.data.get(ATTR_TITLE)
 
             if title:
-                kwargs[ATTR_TITLE] = template.render(hass, title)
+                title.hass = hass
+                kwargs[ATTR_TITLE] = title.render()
 
             if targets.get(call.service) is not None:
                 kwargs[ATTR_TARGET] = targets[call.service]
             else:
                 kwargs[ATTR_TARGET] = call.data.get(ATTR_TARGET)
 
-            kwargs[ATTR_MESSAGE] = template.render(hass, message)
+            message.hass = hass
+            kwargs[ATTR_MESSAGE] = message.render()
             kwargs[ATTR_DATA] = call.data.get(ATTR_DATA)
 
             notify_service.send_message(**kwargs)
