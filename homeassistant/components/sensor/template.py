@@ -11,9 +11,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
-    ATTR_ENTITY_ID, MATCH_ALL, CONF_SENSORS)
+    ATTR_ENTITY_ID, CONF_SENSORS)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.event import track_state_change
 import homeassistant.helpers.config_validation as cv
@@ -24,7 +23,7 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(ATTR_ENTITY_ID, default=MATCH_ALL): cv.entity_ids
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -39,9 +38,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for device, device_config in config[CONF_SENSORS].items():
         state_template = device_config[CONF_VALUE_TEMPLATE]
-        entity_ids = device_config[ATTR_ENTITY_ID]
+        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
+                      state_template.extract_entities())
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        state_template.hass = hass
 
         sensors.append(
             SensorTemplate(
@@ -71,7 +73,7 @@ class SensorTemplate(Entity):
                                             hass=hass)
         self._name = friendly_name
         self._unit_of_measurement = unit_of_measurement
-        self._template = template.compile_template(hass, state_template)
+        self._template = state_template
         self._state = None
 
         self.update()
@@ -105,7 +107,7 @@ class SensorTemplate(Entity):
     def update(self):
         """Get the latest data and update the states."""
         try:
-            self._state = template.render(self.hass, self._template)
+            self._state = self._template.render()
         except TemplateError as ex:
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):

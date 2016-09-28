@@ -15,7 +15,6 @@ from homeassistant.components.sensor.command_line import CommandSensorData
 from homeassistant.const import (
     CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_NAME, CONF_VALUE_TEMPLATE,
     CONF_SENSOR_CLASS, CONF_COMMAND)
-from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,10 +44,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     payload_on = config.get(CONF_PAYLOAD_ON)
     sensor_class = config.get(CONF_SENSOR_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
-
     if value_template is not None:
-        value_template = template.compile_template(hass, value_template)
-
+        value_template.hass = hass
     data = CommandSensorData(command)
 
     add_devices([CommandBinarySensor(
@@ -94,8 +91,8 @@ class CommandBinarySensor(BinarySensorDevice):
         value = self.data.value
 
         if self._value_template is not None:
-            value = template.render_with_possible_json_value(
-                self._hass, self._value_template, value, False)
+            value = self._value_template.render_with_possible_json_value(
+                value, False)
         if value == self._payload_on:
             self._state = True
         elif value == self._payload_off:

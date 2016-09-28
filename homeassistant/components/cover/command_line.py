@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_COMMAND_CLOSE, CONF_COMMAND_OPEN, CONF_COMMAND_STATE,
     CONF_COMMAND_STOP, CONF_COVERS, CONF_VALUE_TEMPLATE, CONF_FRIENDLY_NAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,9 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for device_name, device_config in devices.items():
         value_template = device_config.get(CONF_VALUE_TEMPLATE)
-
-        if value_template is not None:
-            value_template = template.compile_template(hass, value_template)
+        value_template.hass = hass
 
         covers.append(
             CommandCover(
@@ -141,8 +138,8 @@ class CommandCover(CoverDevice):
         if self._command_state:
             payload = str(self._query_state())
             if self._value_template:
-                payload = template.render_with_possible_json_value(
-                    self._hass, self._value_template, payload)
+                payload = self._value_template.render_with_possible_json_value(
+                    payload)
             self._state = int(payload)
 
     def open_cover(self, **kwargs):

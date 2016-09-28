@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
@@ -63,16 +63,20 @@ def setup(hass, config):
         attr = {}
         if title is not None:
             try:
-                title = template.render(hass, title)
+                title.hass = hass
+                title = title.render()
             except TemplateError as ex:
                 _LOGGER.error('Error rendering title %s: %s', title, ex)
+                title = title.template
 
             attr[ATTR_TITLE] = title
 
         try:
-            message = template.render(hass, message)
+            message.hass = hass
+            message = message.render()
         except TemplateError as ex:
             _LOGGER.error('Error rendering message %s: %s', message, ex)
+            message = message.template
 
         hass.states.set(entity_id, message, attr)
 

@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE, CONF_PLATFORM, CONF_ENTITY_ID,
     CONF_BELOW, CONF_ABOVE)
 from homeassistant.helpers.event import track_state_change
-from homeassistant.helpers import condition, config_validation as cv, template
+from homeassistant.helpers import condition, config_validation as cv
 
 TRIGGER_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_PLATFORM): 'numeric_state',
@@ -32,7 +32,7 @@ def trigger(hass, config, action):
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
-        value_template = template.compile_template(hass, value_template)
+        value_template.hass = hass
 
     # pylint: disable=unused-argument
     def state_automation_listener(entity, from_s, to_s):
