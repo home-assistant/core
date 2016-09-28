@@ -6,8 +6,6 @@ https://home-assistant.io/components/switch.rfxtrx/
 """
 import logging
 
-import pytest
-
 import homeassistant.components.rfxtrx as rfxtrx
 from homeassistant.components.switch import SwitchDevice
 
@@ -18,7 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = rfxtrx.DEFAULT_SCHEMA
 
 
-@pytest.mark.skipif("os.environ.get('RFXTRX') == 'SKIP'")
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the RFXtrx platform."""
     import RFXtrx as rfxtrxmod
