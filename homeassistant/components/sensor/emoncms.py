@@ -70,6 +70,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensor_names = config.get(CONF_SENSOR_NAMES)
     interval = config.get(CONF_SCAN_INTERVAL)
 
+    if value_template is not None:
+        value_template.hass = hass
+
     data = EmonCmsData(hass, url, apikey, interval)
 
     data.update()
@@ -123,9 +126,8 @@ class EmonCmsSensor(Entity):
         self._elem = elem
 
         if self._value_template is not None:
-            self._state = template.render_with_possible_json_value(
-                self._hass, self._value_template, elem["value"],
-                STATE_UNKNOWN)
+            self._state = self._value_template.render_with_possible_json_value(
+                elem["value"], STATE_UNKNOWN)
         else:
             self._state = round(float(elem["value"]), DECIMALS)
 
@@ -177,9 +179,8 @@ class EmonCmsSensor(Entity):
         self._elem = elem
 
         if self._value_template is not None:
-            self._state = template.render_with_possible_json_value(
-                self._hass, self._value_template, elem["value"],
-                STATE_UNKNOWN)
+            self._state = self._value_template.render_with_possible_json_value(
+                elem["value"], STATE_UNKNOWN)
         else:
             self._state = round(float(elem["value"]), DECIMALS)
 

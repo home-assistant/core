@@ -1,6 +1,7 @@
 """The tests for the Command line sensor platform."""
 import unittest
 
+from homeassistant.helpers.template import Template
 from homeassistant.components.sensor import command_line
 from homeassistant import bootstrap
 from tests.common import get_test_home_assistant
@@ -53,7 +54,8 @@ class TestCommandSensorSensor(unittest.TestCase):
         data = command_line.CommandSensorData('echo 50')
 
         entity = command_line.CommandSensor(
-            self.hass, data, 'test', 'in', '{{ value | multiply(0.1) }}')
+            self.hass, data, 'test', 'in',
+            Template('{{ value | multiply(0.1) }}', self.hass))
 
         self.assertEqual(5, float(entity.state))
 

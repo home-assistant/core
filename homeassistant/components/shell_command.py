@@ -29,12 +29,41 @@ def setup(hass, config):
     """Setup the shell_command component."""
     conf = config.get(DOMAIN, {})
 
+    cache = {}
+
     def service_handler(call):
         """Execute a shell command service."""
         cmd = conf[call.service]
-        cmd, shell = _parse_command(hass, cmd, call.data)
-        if cmd is None:
-            return
+
+        if cmd in cache:
+            prog, args, args_compiled = cache[cmd]
+        elif ' ' not in cmd:
+            prog = cmd
+            args = None
+            args_compiled = None
+            cache[cmd] = prog, args, args_compiled
+        else:
+            prog, args = cmd.split(' ', 1)
+            args_compiled = template.Template(args, hass)
+            cache[cmd] = prog, args, args_compiled
+
+        if args_compiled:
+            try:
+                rendered_args = args_compiled.render(call.data)
+            except TemplateError as ex:
+                _LOGGER.exception('Error rendering command template: %s', ex)
+                return
+        else:
+            rendered_args = None
+
+        if rendered_args == args:
+            # no template used. default behavior
+            shell = True
+        else:
+            # template used. Break into list and use shell=False for security
+            cmd = [prog] + shlex.split(rendered_args)
+            shell = False
+
         try:
             subprocess.call(cmd, shell=shell,
                             stdout=subprocess.DEVNULL,
@@ -45,23 +74,3 @@ def setup(hass, config):
     for name in conf.keys():
         hass.services.register(DOMAIN, name, service_handler)
     return True
-
-
-def _parse_command(hass, cmd, variables):
-    """Parse command and fill in any template arguments if necessary."""
-    cmds = cmd.split()
-    prog = cmds[0]
-    args = ' '.join(cmds[1:])
-    try:
-        rendered_args = template.render(hass, args, variables=variables)
-    except TemplateError as ex:
-        _LOGGER.exception('Error rendering command template: %s', ex)
-        return None, None
-    if rendered_args == args:
-        # no template used. default behavior
-        shell = True
-    else:
-        # template used. Must break into list and use shell=False for security
-        cmd = [prog] + shlex.split(rendered_args)
-        shell = False
-    return cmd, shell

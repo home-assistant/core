@@ -14,7 +14,6 @@ from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
     CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE,
     CONF_SENSOR_CLASS, CONF_VERIFY_SSL)
-from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,10 +43,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     verify_ssl = config.get(CONF_VERIFY_SSL)
     sensor_class = config.get(CONF_SENSOR_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
-
     if value_template is not None:
-        value_template = template.compile_template(hass, value_template)
-
+        value_template.hass = hass
     rest = RestData(method, resource, payload, verify_ssl)
     rest.update()
 
@@ -91,8 +88,8 @@ class RestBinarySensor(BinarySensorDevice):
             return False
 
         if self._value_template is not None:
-            response = template.render_with_possible_json_value(
-                self._hass, self._value_template, self.rest.data, False)
+            response = self._value_template.render_with_possible_json_value(
+                self.rest.data, False)
 
         try:
             return bool(int(response))
