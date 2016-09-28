@@ -52,9 +52,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if value_template is None:
             return lambda value: value
 
+        value_template = template.Template(value_template, hass)
+
         def _render(value):
             try:
-                return template.render(hass, value_template, {'value': value})
+                return value_template.render({'value': value})
             except TemplateError:
                 _LOGGER.exception('Error parsing value')
                 return value

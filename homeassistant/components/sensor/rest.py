@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE,
     CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, CONF_VERIFY_SSL)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +43,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     verify_ssl = config.get(CONF_VERIFY_SSL)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template = config.get(CONF_VALUE_TEMPLATE)
-
+    if value_template is not None:
+        value_template.hass = hass
     rest = RestData(method, resource, payload, verify_ssl)
     rest.update()
 
@@ -92,8 +92,8 @@ class RestSensor(Entity):
         if value is None:
             value = STATE_UNKNOWN
         elif self._value_template is not None:
-            value = template.render_with_possible_json_value(
-                self._hass, self._value_template, value, STATE_UNKNOWN)
+            value = self._value_template.render_with_possible_json_value(
+                value, STATE_UNKNOWN)
 
         self._state = value
 

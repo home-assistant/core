@@ -3,11 +3,14 @@
 import unittest
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.bootstrap import _setup_component
 from homeassistant.components import rfxtrx as rfxtrx
 from tests.common import get_test_home_assistant
 
 
+@pytest.mark.skipif("os.environ.get('RFXTRX') == 'SKIP'")
 class TestRFXTRX(unittest.TestCase):
     """Test the Rfxtrx component."""
 

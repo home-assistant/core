@@ -4,11 +4,14 @@ Support for Alexa skill service end point.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
 """
+import copy
 import enum
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import HTTP_BAD_REQUEST
-from homeassistant.helpers import template, script
+from homeassistant.helpers import template, script, config_validation as cv
 from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,8 +23,47 @@ CONF_CARD = 'card'
 CONF_INTENTS = 'intents'
 CONF_SPEECH = 'speech'
 
+CONF_TYPE = 'type'
+CONF_TITLE = 'title'
+CONF_CONTENT = 'content'
+CONF_TEXT = 'text'
+
 DOMAIN = 'alexa'
 DEPENDENCIES = ['http']
+
+
+class SpeechType(enum.Enum):
+    """The Alexa speech types."""
+
+    plaintext = "PlainText"
+    ssml = "SSML"
+
+
+class CardType(enum.Enum):
+    """The Alexa card types."""
+
+    simple = "Simple"
+    link_account = "LinkAccount"
+
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: {
+        CONF_INTENTS: {
+            cv.string: {
+                vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
+                vol.Optional(CONF_CARD): {
+                    vol.Required(CONF_TYPE): cv.enum(CardType),
+                    vol.Required(CONF_TITLE): cv.template,
+                    vol.Required(CONF_CONTENT): cv.template,
+                },
+                vol.Optional(CONF_SPEECH): {
+                    vol.Required(CONF_TYPE): cv.enum(SpeechType),
+                    vol.Required(CONF_TEXT): cv.template,
+                }
+            }
+        }
+    }
+})
 
 
 def setup(hass, config):
@@ -41,6 +83,9 @@ class AlexaView(HomeAssistantView):
     def __init__(self, hass, intents):
         """Initialize Alexa view."""
         super().__init__(hass)
+
+        intents = copy.deepcopy(intents)
+        template.attach(hass, intents)
 
         for name, intent in intents.items():
             if CONF_ACTION in intent:
@@ -101,27 +146,13 @@ class AlexaView(HomeAssistantView):
 
         # pylint: disable=unsubscriptable-object
         if speech is not None:
-            response.add_speech(SpeechType[speech['type']], speech['text'])
+            response.add_speech(speech[CONF_TYPE], speech[CONF_TEXT])
 
         if card is not None:
-            response.add_card(CardType[card['type']], card['title'],
-                              card['content'])
+            response.add_card(card[CONF_TYPE], card[CONF_TITLE],
+                              card[CONF_CONTENT])
 
         return self.json(response)
-
-
-class SpeechType(enum.Enum):
-    """The Alexa speech types."""
-
-    plaintext = "PlainText"
-    ssml = "SSML"
-
-
-class CardType(enum.Enum):
-    """The Alexa card types."""
-
-    simple = "Simple"
-    link_account = "LinkAccount"
 
 
 class AlexaResponse(object):
@@ -153,8 +184,8 @@ class AlexaResponse(object):
             self.card = card
             return
 
-        card["title"] = self._render(title),
-        card["content"] = self._render(content)
+        card["title"] = title.render(self.variables)
+        card["content"] = content.render(self.variables)
         self.card = card
 
     def add_speech(self, speech_type, text):
@@ -163,9 +194,12 @@ class AlexaResponse(object):
 
         key = 'ssml' if speech_type == SpeechType.ssml else 'text'
 
+        if isinstance(text, template.Template):
+            text = text.render(self.variables)
+
         self.speech = {
             'type': speech_type.value,
-            key: self._render(text)
+            key: text
         }
 
     def add_reprompt(self, speech_type, text):
@@ -176,7 +210,7 @@ class AlexaResponse(object):
 
         self.reprompt = {
             'type': speech_type.value,
-            key: self._render(text)
+            key: text.render(self.variables)
         }
 
     def as_dict(self):
@@ -201,7 +235,3 @@ class AlexaResponse(object):
             'sessionAttributes': self.session_attributes,
             'response': response,
         }
-
-    def _render(self, template_string):
-        """Render a response, adding data from intent if available."""
-        return template.render(self.hass, template_string, self.variables)

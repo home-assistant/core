@@ -1,6 +1,7 @@
 """Test config validators."""
 from collections import OrderedDict
 from datetime import timedelta
+import enum
 import os
 import tempfile
 
@@ -302,7 +303,8 @@ def test_template():
     schema = vol.Schema(cv.template)
 
     for value in (None, '{{ partial_print }', '{% if True %}Hello', ['test']):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(vol.Invalid,
+                           message='{} not considered invalid'.format(value)):
             schema(value)
 
     for value in (
@@ -417,3 +419,19 @@ def test_ordered_dict_value_validator():
         schema({'hello': 'world'})
 
     schema({'hello': 5})
+
+
+def test_enum():
+    """Test enum validator."""
+    class TestEnum(enum.Enum):
+        """Test enum."""
+
+        value1 = "Value 1"
+        value2 = "Value 2"
+
+    schema = vol.Schema(cv.enum(TestEnum))
+
+    with pytest.raises(vol.Invalid):
+        schema('value3')
+
+    TestEnum['value1']

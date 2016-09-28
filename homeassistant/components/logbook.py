@@ -20,7 +20,6 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  STATE_NOT_HOME, STATE_OFF, STATE_ON,
                                  ATTR_HIDDEN)
 from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
-from homeassistant.helpers import template
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'frontend']
@@ -51,7 +50,7 @@ ATTR_ENTITY_ID = 'entity_id'
 
 LOG_MESSAGE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
-    vol.Required(ATTR_MESSAGE): cv.string,
+    vol.Required(ATTR_MESSAGE): cv.template,
     vol.Optional(ATTR_DOMAIN): cv.slug,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
 })
@@ -80,7 +79,8 @@ def setup(hass, config):
         domain = service.data.get(ATTR_DOMAIN)
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
-        message = template.render(hass, message)
+        message.hass = hass
+        message = message.render()
         log_entry(hass, name, message, domain, entity_id)
 
     hass.wsgi.register_view(LogbookView(hass, config))
