@@ -22,6 +22,7 @@ class TestSplunk(unittest.TestCase):
         }
 
         hass = mock.MagicMock()
+        hass.pool.worker_count = 2
         self.assertTrue(setup_component(hass, splunk.DOMAIN, config))
         self.assertTrue(hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
@@ -37,6 +38,7 @@ class TestSplunk(unittest.TestCase):
         }
 
         hass = mock.MagicMock()
+        hass.pool.worker_count = 2
         self.assertTrue(setup_component(hass, splunk.DOMAIN, config))
         self.assertTrue(hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
@@ -56,6 +58,7 @@ class TestSplunk(unittest.TestCase):
         }
 
         self.hass = mock.MagicMock()
+        self.hass.pool.worker_count = 2
         setup_component(self.hass, splunk.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
