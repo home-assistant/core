@@ -26,6 +26,8 @@ _RE_GET_ENTITIES = re.compile(
     re.I | re.M
 )
 
+TEMPLATE_CACHE = {}
+
 
 def attach(hass, obj):
     """Recursively attach hass to all template instances in list and dict."""
@@ -68,8 +70,14 @@ class Template(object):
         if self._compiled_code is not None:
             return
 
+        store_key = hash(self.template)
+        if store_key in TEMPLATE_CACHE:
+            self._compiled_code = TEMPLATE_CACHE.get(store_key)
+            return
+
         try:
             self._compiled_code = ENV.compile(self.template)
+            TEMPLATE_CACHE[store_key] = self._compiled_code
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
 
