@@ -15,7 +15,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['fuzzywuzzy==0.11.1']
+REQUIREMENTS = ['fuzzywuzzy==0.12.0']
 
 ATTR_TEXT = 'text'
 
