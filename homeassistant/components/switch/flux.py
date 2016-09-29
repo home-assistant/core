@@ -17,7 +17,7 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy,
-    color_temperature_kelvin_to_mired)
+    color_temperature_kelvin_to_mired, HASS_COLOR_MIN, HASS_COLOR_MAX)
 from homeassistant.util.dt import now as dt_now
 from homeassistant.util.dt import as_local
 import homeassistant.helpers.config_validation as cv
@@ -68,9 +68,8 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness):
                     transition=30)
 
 
-def set_lights_temp(hass, lights, kelvin, brightness):
+def set_lights_temp(hass, lights, mired, brightness):
     """Set color of array of lights."""
-    mired = color_temperature_kelvin_to_mired(kelvin)
     for light in lights:
         if is_on(hass, light):
             turn_on(hass, light,
@@ -204,9 +203,12 @@ class FluxSwitch(SwitchDevice):
                              percentage_complete * 100), time_state,
                          as_local(now))
         else:
-            set_lights_temp(self.hass, self._lights, temp, brightness)
-            _LOGGER.info("Lights updated to temp:%s brightness:%s, %s%%"
-                         " of %s cycle complete at %s", temp, brightness,
+            # Convert to mired and clamp to allowed values
+            mired = color_temperature_kelvin_to_mired(temp)
+            mired = max(HASS_COLOR_MIN, min(mired, HASS_COLOR_MAX))
+            set_lights_temp(self.hass, self._lights, mired, brightness)
+            _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%%"
+                         " of %s cycle complete at %s", mired, brightness,
                          round(percentage_complete * 100),
                          time_state, as_local(now))
 
