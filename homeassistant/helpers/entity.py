@@ -167,8 +167,8 @@ class Entity(object):
             raise NoEntitySpecifiedError(
                 "No entity id specified for entity {}".format(self.name))
 
-        # if force_refresh:
-        #     yield from self.hass.loop.run_in_executor(None, self.update)
+        if force_refresh:
+            yield from self.hass.loop.run_in_executor(None, self.update)
 
         state = STATE_UNKNOWN if self.state is None else str(self.state)
         attr = self.state_attributes or {}
