@@ -1,10 +1,12 @@
 """Test the helper method for writing tests."""
+import asyncio
 import os
 from datetime import timedelta
 from unittest import mock
 from unittest.mock import patch
 from io import StringIO
 import logging
+import threading
 
 from homeassistant import core as ha, loader
 from homeassistant.bootstrap import setup_component
@@ -29,15 +31,18 @@ def get_test_config_dir(*add_path):
 
 def get_test_home_assistant(num_threads=None):
     """Return a Home Assistant object pointing at test config dir."""
+    loop = asyncio.new_event_loop()
+
     if num_threads:
         orig_num_threads = ha.MIN_WORKER_THREAD
         ha.MIN_WORKER_THREAD = num_threads
 
-    hass = ha.HomeAssistant()
+    hass = ha.HomeAssistant(loop)
 
     if num_threads:
         ha.MIN_WORKER_THREAD = orig_num_threads
 
+    hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
@@ -48,6 +53,40 @@ def get_test_home_assistant(num_threads=None):
 
     if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
         loader.prepare(hass)
+
+    # FIXME should not be a daemon. Means hass.stop() not called in teardown
+    stop_event = threading.Event()
+
+    def run_loop():
+        loop.run_forever()
+        loop.close()
+        stop_event.set()
+
+    threading.Thread(name="LoopThread", target=run_loop, daemon=True).start()
+
+    orig_start = hass.start
+    orig_stop = hass.stop
+
+    @asyncio.coroutine
+    def fake_stop():
+        yield None
+
+    def start_hass():
+        """Helper to start hass."""
+        with patch.object(hass.loop, 'run_forever', return_value=None):
+            with patch.object(hass, 'async_stop', return_value=fake_stop()):
+                with patch.object(ha, 'async_create_timer', return_value=None):
+                    with patch.object(ha, 'async_monitor_worker_pool',
+                                      return_value=None):
+                        orig_start()
+                        hass.block_till_done()
+
+    def stop_hass():
+        orig_stop()
+        stop_event.wait()
+
+    hass.start = start_hass
+    hass.stop = stop_hass
 
     return hass
 

@@ -11,26 +11,28 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
+    TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_NAME, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ["yahooweather==0.7"]
+REQUIREMENTS = ["yahooweather==0.8"]
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FORECAST = 'forecast'
 CONF_WOEID = 'woeid'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+DEFAULT_NAME = 'Yweather'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
 SENSOR_TYPES = {
     'weather_current': ['Current', None],
     'weather': ['Condition', None],
     'temperature': ['Temperature', "temperature"],
-    'temp_min': ['Temperature', "temperature"],
-    'temp_max': ['Temperature', "temperature"],
+    'temp_min': ['Temperature min', "temperature"],
+    'temp_max': ['Temperature max', "temperature"],
     'wind_speed': ['Wind speed', "speed"],
     'humidity': ['Humidity', "%"],
     'pressure': ['Pressure', "pressure"],
@@ -39,6 +41,7 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_WOEID, default=None): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_FORECAST, default=0):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
@@ -53,6 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     unit = hass.config.units.temperature_unit
     woeid = config.get(CONF_WOEID)
     forecast = config.get(CONF_FORECAST)
+    name = config.get(CONF_NAME)
 
     # convert unit
     yunit = UNIT_C if unit == TEMP_CELSIUS else UNIT_F
@@ -86,7 +90,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(YahooWeatherSensor(yahoo_api, forecast, variable))
+        dev.append(YahooWeatherSensor(yahoo_api, name, forecast, variable))
 
     add_devices(dev)
 
@@ -95,9 +99,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class YahooWeatherSensor(Entity):
     """Implementation of an Yahoo! weather sensor."""
 
-    def __init__(self, weather_data, forecast, sensor_type):
+    def __init__(self, weather_data, name, forecast, sensor_type):
         """Initialize the sensor."""
-        self._client = 'Weather'
+        self._client = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self._type = sensor_type
         self._state = STATE_UNKNOWN

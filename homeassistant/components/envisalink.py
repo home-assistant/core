@@ -12,7 +12,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.discovery import load_platform
 
-REQUIREMENTS = ['pyenvisalink==1.0', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyenvisalink==1.7', 'pydispatcher==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'envisalink'
@@ -34,12 +34,14 @@ CONF_PARTITIONS = 'partitions'
 CONF_ZONENAME = 'name'
 CONF_ZONETYPE = 'type'
 CONF_PARTITIONNAME = 'name'
+CONF_PANIC = 'panic_type'
 
 DEFAULT_PORT = 4025
 DEFAULT_EVL_VERSION = 3
 DEFAULT_KEEPALIVE = 60
 DEFAULT_ZONEDUMP_INTERVAL = 30
 DEFAULT_ZONETYPE = 'opening'
+DEFAULT_PANIC = 'Police'
 
 SIGNAL_ZONE_UPDATE = 'zones_updated'
 SIGNAL_PARTITION_UPDATE = 'partition_updated'
@@ -60,6 +62,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASS): cv.string,
         vol.Required(CONF_CODE): cv.string,
+        vol.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
         vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
         vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
         vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): cv.port,
@@ -89,6 +92,7 @@ def setup(hass, base_config):
     _port = config.get(CONF_EVL_PORT)
     _code = config.get(CONF_CODE)
     _panel_type = config.get(CONF_PANEL_TYPE)
+    _panic_type = config.get(CONF_PANIC)
     _version = config.get(CONF_EVL_VERSION)
     _user = config.get(CONF_USERNAME)
     _pass = config.get(CONF_PASS)
@@ -104,7 +108,8 @@ def setup(hass, base_config):
                                           _user,
                                           _pass,
                                           _zone_dump,
-                                          _keep_alive)
+                                          _keep_alive,
+                                          hass.loop)
 
     def login_fail_callback(data):
         """Callback for when the evl rejects our login."""
@@ -149,7 +154,7 @@ def setup(hass, base_config):
 
     def start_envisalink(event):
         """Startup process for the Envisalink."""
-        EVL_CONTROLLER.start()
+        hass.loop.call_soon_threadsafe(EVL_CONTROLLER.start)
         for _ in range(10):
             if 'success' in _connect_status:
                 hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
@@ -177,14 +182,15 @@ def setup(hass, base_config):
     # Load sub-components for Envisalink
     if _partitions:
         load_platform(hass, 'alarm_control_panel', 'envisalink',
-                      {'partitions': _partitions,
-                       'code': _code}, config)
+                      {CONF_PARTITIONS: _partitions,
+                       CONF_CODE: _code,
+                       CONF_PANIC: _panic_type}, config)
         load_platform(hass, 'sensor', 'envisalink',
-                      {'partitions': _partitions,
-                       'code': _code}, config)
+                      {CONF_PARTITIONS: _partitions,
+                       CONF_CODE: _code}, config)
     if _zones:
         load_platform(hass, 'binary_sensor', 'envisalink',
-                      {'zones': _zones}, config)
+                      {CONF_ZONES: _zones}, config)
 
     return True
 

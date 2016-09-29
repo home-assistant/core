@@ -5,6 +5,7 @@ import unittest
 
 from collections import defaultdict
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import (STATE_NOT_HOME, CONF_PLATFORM)
 import homeassistant.components.device_tracker.owntracks as owntracks
@@ -191,7 +192,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
-        self.assertTrue(device_tracker.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'owntracks',
                 CONF_MAX_GPS_ACCURACY: 200,
@@ -252,7 +253,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         else:
             mod_message = str_message
         fire_mqtt_message(self.hass, topic, mod_message)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
     def assert_location_state(self, location):
         """Test the assertion of a location state."""
@@ -574,7 +575,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         fire_mqtt_message(
             self.hass, EVENT_TOPIC, json.dumps(enter_message))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.send_message(EVENT_TOPIC, exit_message)
         self.assertEqual(owntracks.MOBILE_BEACONS_ACTIVE['greg_phone'], [])
 

@@ -7,6 +7,7 @@ HomeAssistantError will be raised.
 For more details about the Python API, please refer to the documentation at
 https://home-assistant.io/developers/python_api/
 """
+import asyncio
 from datetime import datetime
 import enum
 import json
@@ -113,7 +114,7 @@ class HomeAssistant(ha.HomeAssistant):
     """Home Assistant that forwards work."""
 
     # pylint: disable=super-init-not-called,too-many-instance-attributes
-    def __init__(self, remote_api, local_api=None):
+    def __init__(self, remote_api, local_api=None, loop=None):
         """Initalize the forward instance."""
         if not remote_api.validate_api():
             raise HomeAssistantError(
@@ -122,11 +123,12 @@ class HomeAssistant(ha.HomeAssistant):
 
         self.remote_api = remote_api
 
+        self.loop = loop or asyncio.get_event_loop()
         self.pool = pool = ha.create_worker_pool()
 
-        self.bus = EventBus(remote_api, pool)
-        self.services = ha.ServiceRegistry(self.bus, pool)
-        self.states = StateMachine(self.bus, self.remote_api)
+        self.bus = EventBus(remote_api, pool, self.loop)
+        self.services = ha.ServiceRegistry(self.bus, self.add_job, self.loop)
+        self.states = StateMachine(self.bus, self.loop, self.remote_api)
         self.config = ha.Config()
         self.state = ha.CoreState.not_running
 
@@ -141,13 +143,13 @@ class HomeAssistant(ha.HomeAssistant):
                     'Unable to setup local API to receive events')
 
         self.state = ha.CoreState.starting
-        ha.create_timer(self)
+        ha.async_create_timer(self)
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
                       origin=ha.EventOrigin.remote)
 
         # Ensure local HTTP is started
-        self.pool.block_till_done()
+        self.block_till_done()
         self.state = ha.CoreState.running
         time.sleep(0.05)
 
@@ -178,9 +180,9 @@ class EventBus(ha.EventBus):
     """EventBus implementation that forwards fire_event to remote API."""
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, api, pool=None):
+    def __init__(self, api, pool, loop):
         """Initalize the eventbus."""
-        super().__init__(pool)
+        super().__init__(pool, loop)
         self._api = api
 
     def fire(self, event_type, event_data=None, origin=ha.EventOrigin.local):
@@ -256,9 +258,9 @@ class EventForwarder(object):
 class StateMachine(ha.StateMachine):
     """Fire set events to an API. Uses state_change events to track states."""
 
-    def __init__(self, bus, api):
+    def __init__(self, bus, loop, api):
         """Initalize the statemachine."""
-        super().__init__(None)
+        super().__init__(bus, loop)
         self._api = api
         self.mirror()
 

@@ -17,9 +17,11 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['enocean']
-DEFAULT_NAME = 'EnOcean Light'
 CONF_SENDER_ID = 'sender_id'
+
+DEFAULT_NAME = 'EnOcean Light'
+
+DEPENDENCIES = ['enocean']
 
 SUPPORT_ENOCEAN = SUPPORT_BRIGHTNESS
 
@@ -50,7 +52,7 @@ class EnOceanLight(enocean.EnOceanDevice, Light):
         self._sender_id = sender_id
         self.dev_id = dev_id
         self._devname = devname
-        self.stype = "dimmer"
+        self.stype = 'dimmer'
 
     @property
     def name(self):

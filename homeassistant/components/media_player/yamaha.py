@@ -6,10 +6,13 @@ https://home-assistant.io/components/media_player.yamaha/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
-from homeassistant.const import STATE_OFF, STATE_ON
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['rxv==0.1.11']
 
@@ -21,17 +24,36 @@ SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 CONF_SOURCE_NAMES = 'source_names'
 CONF_SOURCE_IGNORE = 'source_ignore'
 
+DEFAULT_NAME = 'Yamaha Receiver'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_SOURCE_IGNORE, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yamaha platform."""
     import rxv
 
-    source_ignore = config.get(CONF_SOURCE_IGNORE, [])
-    source_names = config.get(CONF_SOURCE_NAMES, {})
+    name = config.get(CONF_NAME)
+    host = config.get(CONF_HOST)
+    source_ignore = config.get(CONF_SOURCE_IGNORE)
+    source_names = config.get(CONF_SOURCE_NAMES)
+
+    if host is None:
+        receivers = rxv.find()
+    else:
+        receivers = \
+            [rxv.RXV("http://{}:80/YamahaRemoteControl/ctrl".format(host),
+                     name)]
 
     add_devices(
-        YamahaDevice(config.get("name"), receiver, source_ignore, source_names)
-        for receiver in rxv.find())
+        YamahaDevice(name, receiver, source_ignore, source_names)
+        for receiver in receivers)
 
 
 class YamahaDevice(MediaPlayerDevice):
@@ -66,8 +88,8 @@ class YamahaDevice(MediaPlayerDevice):
             self.build_source_list()
 
         current_source = self._receiver.input
-        self._current_source = self._source_names.get(current_source,
-                                                      current_source)
+        self._current_source = self._source_names.get(
+            current_source, current_source)
 
     def build_source_list(self):
         """Build the source list."""
@@ -135,5 +157,4 @@ class YamahaDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self._receiver.input = self._reverse_mapping.get(source,
-                                                         source)
+        self._receiver.input = self._reverse_mapping.get(source, source)

@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF,
     CONF_SENSOR_CLASS)
 from homeassistant.components.mqtt import (CONF_STATE_TOPIC, CONF_QOS)
-from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +36,9 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MQTT binary sensor."""
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+    if value_template is not None:
+        value_template.hass = hass
     add_devices([MqttBinarySensor(
         hass,
         config.get(CONF_NAME),
@@ -45,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_QOS),
         config.get(CONF_PAYLOAD_ON),
         config.get(CONF_PAYLOAD_OFF),
-        config.get(CONF_VALUE_TEMPLATE)
+        value_template
     )])
 
 
@@ -68,8 +70,8 @@ class MqttBinarySensor(BinarySensorDevice):
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
             if value_template is not None:
-                payload = template.render_with_possible_json_value(
-                    hass, value_template, payload)
+                payload = value_template.render_with_possible_json_value(
+                    payload)
             if payload == self._payload_on:
                 self._state = True
                 self.update_ha_state()

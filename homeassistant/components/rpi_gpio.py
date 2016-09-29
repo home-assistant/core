@@ -1,7 +1,7 @@
 """
 Support for controlling GPIO pins of a Raspberry Pi.
 
-For more details about this platform, please refer to the documentation at
+For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rpi_gpio/
 """
 # pylint: disable=import-error
@@ -11,8 +11,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['RPi.GPIO==0.6.1']
-DOMAIN = "rpi_gpio"
+
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'rpi_gpio'
 
 
 # pylint: disable=no-member

@@ -38,12 +38,12 @@ class TestSensorMQTT(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         fire_mqtt_message(self.hass, 'test-topic', 'ON')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test')
         self.assertEqual(STATE_ON, state.state)
 
         fire_mqtt_message(self.hass, 'test-topic', 'OFF')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test')
         self.assertEqual(STATE_OFF, state.state)
 
