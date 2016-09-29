@@ -36,10 +36,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup access to Netatmo Welcome cameras."""
     netatmo = get_component('netatmo')
     home = config.get(CONF_HOME)
-    data = WelcomeData(netatmo.NETATMO_AUTH, home)
+    import lnetatmo
+    try:
+        data = WelcomeData(netatmo.NETATMO_AUTH, home)
+    except lnetatmo.NoDevice:
+        return None
 
     for camera_name in data.get_camera_names():
-        if CONF_CAMERAS in config:
+        if config[CONF_CAMERAS] != []:
             if camera_name not in config[CONF_CAMERAS]:
                 continue
         add_devices([WelcomeCamera(data, camera_name, home)])
@@ -49,7 +53,7 @@ class WelcomeCamera(Camera):
     """Representation of the images published from Welcome camera."""
 
     def __init__(self, data, camera_name, home):
-        """Setup for access to the BloomSky camera images."""
+        """Setup for access to the Netatmo camera images."""
         super(WelcomeCamera, self).__init__()
         self._data = data
         self._camera_name = camera_name
