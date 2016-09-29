@@ -109,7 +109,6 @@ class NestThermostat(ClimateDevice):
         if self.device.hvac_ac_state:
             return self.device.target
 
-
     @property
     def is_away_mode_on(self):
         """Return if away mode is on."""
@@ -124,7 +123,12 @@ class NestThermostat(ClimateDevice):
             target_temp_low = convert_temperature(kwargs.get(
                 ATTR_TARGET_TEMP_LOW), self._unit, TEMP_CELSIUS)
 
-        temp = (target_temp_low, target_temp_high)
+        if self.device.hvac_heater_state:
+            temp = target_temp_low
+        if self.device.hvac_ac_state:
+            temp = target_temp_high
+        if self.device.mode == 'range':
+            temp = (target_temp_low, target_temp_high)
         _LOGGER.debug("Nest set_temperature-output-value=%s", temp)
         self.device.target = temp
 
