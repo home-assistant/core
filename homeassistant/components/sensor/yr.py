@@ -4,8 +4,8 @@ Support for Yr.no weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.yr/
 """
+import asyncio
 import logging
-import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_ELEVATION, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
+from homeassistant.util.aiohttp import fetch, HTTPException
 
 REQUIREMENTS = ['xmltodict==0.10.2']
 
@@ -124,7 +125,9 @@ class YrSensor(Entity):
         if self._update is not None and now <= self._update:
             return
 
-        self._weather.update()
+        # Where do we schedule this update? should it be called by this update,
+        # and make this a coroutine itself, or be schedued on a times?
+        self._weather.update()  #
 
         # Find sensor
         for time_entry in self._weather.data['product']['time']:
@@ -173,19 +176,19 @@ class YrData(object):
         self.data = {}
         self.update()
 
+    @asyncio.coroutine
     def update(self):
         """Get the latest data from yr.no."""
         # Check if new will be available
         if self._nextrun is not None and dt_util.utcnow() <= self._nextrun:
             return
+
         try:
-            with requests.Session() as sess:
-                response = sess.get(self._url)
-        except requests.RequestException:
+            status_code, data = yield from fetch(self._url)
+        except HTTPException:
             return
-        if response.status_code != 200:
+        if status_code != 200:
             return
-        data = response.text
 
         import xmltodict
         self.data = xmltodict.parse(data)['weatherdata']
