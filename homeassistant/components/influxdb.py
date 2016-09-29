@@ -38,8 +38,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.ensure_list, [cv.entity_id]),
         vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PORT, default=False): cv.boolean,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
         vol.Optional(CONF_TAGS, default={}):
             vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_WHITELIST, default=[]):
