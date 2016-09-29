@@ -95,7 +95,8 @@ class NestThermostat(ClimateDevice):
             return self.device.away_temperature[0]
         if self.device.mode == 'range':
             return self.device.target[0]
-        return self.target_temperature
+        if self.device.hvac_ac_state:
+            return self.device.target
 
     @property
     def target_temperature_high(self):
@@ -105,7 +106,9 @@ class NestThermostat(ClimateDevice):
             return self.device.away_temperature[1]
         if self.device.mode == 'range':
             return self.device.target[1]
-        return self.target_temperature
+        if self.device.hvac_heater_state:
+            return self.device.target        
+        
 
     @property
     def is_away_mode_on(self):
