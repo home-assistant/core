@@ -354,12 +354,14 @@ class ClimateDevice(Entity):
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
-            ATTR_CURRENT_TEMPERATURE:
-            self._convert_for_display(self.current_temperature),
-            ATTR_MIN_TEMP: self._convert_for_display(self.min_temp),
-            ATTR_MAX_TEMP: self._convert_for_display(self.max_temp),
-            ATTR_TEMPERATURE:
-            self._convert_for_display(self.target_temperature),
+            key: value for key, value in [
+                (ATTR_CURRENT_TEMPERATURE,
+                 self._convert_for_display(self.current_temperature)),
+                (ATTR_MIN_TEMP, self._convert_for_display(self.min_temp)),
+                (ATTR_MAX_TEMP, self._convert_for_display(self.max_temp)),
+                (ATTR_TEMPERATURE,
+                 self._convert_for_display(self.target_temperature)),
+            ] if value is not None
         }
         target_temp_high = self.target_temperature_high
         if target_temp_high is not None:
