@@ -50,7 +50,7 @@ SENSOR_TYPES = {
 }
 
 MODULE_SCHEMA = vol.Schema({
-    vol.Required(CONF_MODULE_NAME, default=[]):
+    vol.Required(cv.string, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
