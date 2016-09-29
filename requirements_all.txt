@@ -340,7 +340,7 @@ pyicloud==0.9.1
 pylast==1.6.0
 
 # homeassistant.components.sensor.loopenergy
-pyloopenergy==0.0.14
+pyloopenergy==0.0.15
 
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.3
