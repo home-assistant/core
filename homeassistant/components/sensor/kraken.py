@@ -28,6 +28,9 @@ SCAN_INTERVAL = 1
 def setup_platform(hass, config, add_devices, discovery_info=None): \
         # pylint: disable=unused-variable
     """Setup the KRAKEN."""
+    if not config.get('i_know_what_i_am_doing'):
+        return
+
     sen = {}
 
     devs = []
@@ -40,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None): \
                               '.state) + float(' + str(idx) + ') }}'}
 
     add_devices(devs)
-    
+
     if config.get('templates'):
 
         platform = bootstrap.loader.get_platform('sensor', 'template')
