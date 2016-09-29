@@ -4,6 +4,7 @@ import os
 import tempfile
 import unittest
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.components.switch as switch
 import homeassistant.components.switch.command_line as command_line
@@ -30,7 +31,7 @@ class TestCommandSwitch(unittest.TestCase):
                 'command_on': 'echo 1 > {}'.format(path),
                 'command_off': 'echo 0 > {}'.format(path),
             }
-            self.assertTrue(switch.setup(self.hass, {
+            self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
                 'switch': {
                     'platform': 'command_line',
                     'switches': {
@@ -43,13 +44,13 @@ class TestCommandSwitch(unittest.TestCase):
             self.assertEqual(STATE_OFF, state.state)
 
             switch.turn_on(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
             switch.turn_off(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
@@ -64,7 +65,7 @@ class TestCommandSwitch(unittest.TestCase):
                 'command_off': 'echo 0 > {}'.format(path),
                 'value_template': '{{ value=="1" }}'
             }
-            self.assertTrue(switch.setup(self.hass, {
+            self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
                 'switch': {
                     'platform': 'command_line',
                     'switches': {
@@ -77,13 +78,13 @@ class TestCommandSwitch(unittest.TestCase):
             self.assertEqual(STATE_OFF, state.state)
 
             switch.turn_on(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
             switch.turn_off(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
@@ -100,7 +101,7 @@ class TestCommandSwitch(unittest.TestCase):
                 'command_off': 'echo \'{}\' > {}'.format(offcmd, path),
                 'value_template': '{{ value_json.status=="ok" }}'
             }
-            self.assertTrue(switch.setup(self.hass, {
+            self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
                 'switch': {
                     'platform': 'command_line',
                     'switches': {
@@ -113,13 +114,13 @@ class TestCommandSwitch(unittest.TestCase):
             self.assertEqual(STATE_OFF, state.state)
 
             switch.turn_on(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
             switch.turn_off(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
@@ -133,7 +134,7 @@ class TestCommandSwitch(unittest.TestCase):
                 'command_on': 'echo 1 > {}'.format(path),
                 'command_off': 'echo 0 > {}'.format(path),
             }
-            self.assertTrue(switch.setup(self.hass, {
+            self.assertTrue(setup_component(self.hass, switch.DOMAIN, {
                 'switch': {
                     'platform': 'command_line',
                     'switches': {
@@ -146,13 +147,13 @@ class TestCommandSwitch(unittest.TestCase):
             self.assertEqual(STATE_OFF, state.state)
 
             switch.turn_on(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
             switch.turn_off(self.hass, 'switch.test')
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)

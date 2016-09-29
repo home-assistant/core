@@ -2,6 +2,7 @@
 import unittest
 import unittest.mock as mock
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.switch as switch
 import homeassistant.components.switch.mfi as mfi
 from tests.components.sensor import test_mfi as test_mfi_sensor
@@ -37,7 +38,7 @@ class TestMfiSwitchSetup(test_mfi_sensor.TestMfiSensorSetup):
         print(ports['bad'].model)
         mock_client.return_value.get_devices.return_value = \
             [mock.MagicMock(ports=ports)]
-        assert self.COMPONENT.setup(self.hass, self.GOOD_CONFIG)
+        assert setup_component(self.hass, switch.DOMAIN, self.GOOD_CONFIG)
         for ident, port in ports.items():
             if ident != 'bad':
                 mock_switch.assert_any_call(port)

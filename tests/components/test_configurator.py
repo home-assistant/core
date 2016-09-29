@@ -70,7 +70,7 @@ class TestConfigurator(unittest.TestCase):
             configurator.DOMAIN, configurator.SERVICE_CONFIGURE,
             {configurator.ATTR_CONFIGURE_ID: request_id})
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(calls), "Callback not called")
 
     def test_state_change_on_notify_errors(self):
@@ -95,7 +95,7 @@ class TestConfigurator(unittest.TestCase):
         self.assertEqual(1, len(self.hass.states.all()))
 
         self.hass.bus.fire(EVENT_TIME_CHANGED)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.hass.states.all()))
 
     def test_request_done_fail_silently_on_bad_request_id(self):

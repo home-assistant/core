@@ -10,13 +10,17 @@ from os import path
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import (BinarySensorDevice,
-                                                    PLATFORM_SCHEMA, DOMAIN)
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA, DOMAIN)
+from homeassistant.components.ffmpeg import (
+    get_binary, run_test, CONF_INPUT, CONF_OUTPUT, CONF_EXTRA_ARGUMENTS)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_NAME,
                                  ATTR_ENTITY_ID)
 
-REQUIREMENTS = ["ha-ffmpeg==0.10"]
+DEPENDENCIES = ['ffmpeg']
+
+_LOGGER = logging.getLogger(__name__)
 
 SERVICE_RESTART = 'ffmpeg_restart'
 
@@ -29,10 +33,6 @@ MAP_FFMPEG_BIN = [
 ]
 
 CONF_TOOL = 'tool'
-CONF_INPUT = 'input'
-CONF_FFMPEG_BIN = 'ffmpeg_bin'
-CONF_EXTRA_ARGUMENTS = 'extra_arguments'
-CONF_OUTPUT = 'output'
 CONF_PEAK = 'peak'
 CONF_DURATION = 'duration'
 CONF_RESET = 'reset'
@@ -40,11 +40,12 @@ CONF_CHANGES = 'changes'
 CONF_REPEAT = 'repeat'
 CONF_REPEAT_TIME = 'repeat_time'
 
+DEFAULT_NAME = 'FFmpeg'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOOL): vol.In(MAP_FFMPEG_BIN),
     vol.Required(CONF_INPUT): cv.string,
-    vol.Optional(CONF_FFMPEG_BIN, default="ffmpeg"): cv.string,
-    vol.Optional(CONF_NAME, default="FFmpeg"): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
     vol.Optional(CONF_OUTPUT): cv.string,
     vol.Optional(CONF_PEAK, default=-30): vol.Coerce(int),
@@ -65,16 +66,25 @@ SERVICE_RESTART_SCHEMA = vol.Schema({
 })
 
 
+def restart(hass, entity_id=None):
+    """Restart a ffmpeg process on entity."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_RESTART, data)
+
+
 # list of all ffmpeg sensors
 DEVICES = []
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the binary sensor."""
     from haffmpeg import SensorNoise, SensorMotion
 
+    # check source
+    if not run_test(config.get(CONF_INPUT)):
+        return
+
+    # generate sensor object
     if config.get(CONF_TOOL) == FFMPEG_SENSOR_NOISE:
         entity = FFmpegNoise(SensorNoise, config)
     else:
@@ -88,7 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # exists service?
     if hass.services.has_service(DOMAIN, SERVICE_RESTART):
-        return True
+        return
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
@@ -105,13 +115,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _devices = DEVICES
 
         for device in _devices:
-            device.reset_ffmpeg()
+            device.restart_ffmpeg()
 
     hass.services.register(DOMAIN, SERVICE_RESTART,
                            _service_handle_restart,
                            descriptions.get(SERVICE_RESTART),
                            schema=SERVICE_RESTART_SCHEMA)
-    return True
 
 
 class FFmpegBinarySensor(BinarySensorDevice):
@@ -122,7 +131,7 @@ class FFmpegBinarySensor(BinarySensorDevice):
         self._state = False
         self._config = config
         self._name = config.get(CONF_NAME)
-        self._ffmpeg = ffobj(config.get(CONF_FFMPEG_BIN), self._callback)
+        self._ffmpeg = ffobj(get_binary(), self._callback)
 
         self._start_ffmpeg(config)
 
@@ -139,7 +148,7 @@ class FFmpegBinarySensor(BinarySensorDevice):
         """For STOP event to shutdown ffmpeg."""
         self._ffmpeg.close()
 
-    def reset_ffmpeg(self):
+    def restart_ffmpeg(self):
         """Restart ffmpeg with new config."""
         self._ffmpeg.close()
         self._start_ffmpeg(self._config)

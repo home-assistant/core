@@ -33,7 +33,7 @@ class TestServiceHelpers(unittest.TestCase):
         decor(lambda x, y: runs.append(1))
 
         self.hass.services.call('test', 'test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(runs))
 
     def test_template_service_call(self):
@@ -56,7 +56,7 @@ class TestServiceHelpers(unittest.TestCase):
         decor(lambda x, y: runs.append(y))
 
         service.call_from_config(self.hass, config)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual('goodbye', runs[0].data['hello'])
         self.assertEqual('complex', runs[0].data['data']['value'])
@@ -81,7 +81,7 @@ class TestServiceHelpers(unittest.TestCase):
             'var_service': 'test_domain.test_service',
             'var_data': 'goodbye',
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual('goodbye', runs[0].data['hello'])
 
@@ -91,7 +91,7 @@ class TestServiceHelpers(unittest.TestCase):
             'service': 'test_domain.test_service',
             'entity_id': 'hello.world, sensor.beer'
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(['hello.world', 'sensor.beer'],
                          self.calls[-1].data.get('entity_id'))
 
@@ -105,7 +105,7 @@ class TestServiceHelpers(unittest.TestCase):
             },
         }
         service.call_from_config(self.hass, orig)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual({
             'service': 'test_domain.test_service',
             'entity_id': 'hello.world, sensor.beer',

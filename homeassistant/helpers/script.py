@@ -28,7 +28,7 @@ CONF_DELAY = "delay"
 def call_from_config(hass: HomeAssistant, config: ConfigType,
                      variables: Optional[Sequence]=None) -> None:
     """Call a script based on a config entry."""
-    Script(hass, config).run(variables)
+    Script(hass, cv.SCRIPT_SCHEMA(config)).run(variables)
 
 
 class Script():
@@ -39,7 +39,8 @@ class Script():
                  change_listener=None) -> None:
         """Initialize the script."""
         self.hass = hass
-        self.sequence = cv.SCRIPT_SCHEMA(sequence)
+        self.sequence = sequence
+        template.attach(hass, self.sequence)
         self.name = name
         self._change_listener = change_listener
         self._cur = -1
@@ -48,6 +49,7 @@ class Script():
                               in self.sequence)
         self._lock = threading.Lock()
         self._unsub_delay_listener = None
+        self._template_cache = {}
 
     @property
     def is_running(self) -> bool:
@@ -77,11 +79,11 @@ class Script():
 
                     delay = action[CONF_DELAY]
 
-                    if isinstance(delay, str):
+                    if isinstance(delay, template.Template):
                         delay = vol.All(
                             cv.time_period,
                             cv.positive_timedelta)(
-                                template.render(self.hass, delay))
+                                delay.render())
 
                     self._unsub_delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
@@ -133,7 +135,7 @@ class Script():
     def _check_condition(self, action, variables):
         """Test if condition is matching."""
         self.last_action = action.get(CONF_ALIAS, action[CONF_CONDITION])
-        check = condition.from_config(action)(self.hass, variables)
+        check = condition.from_config(action, False)(self.hass, variables)
         self._log("Test condition {}: {}".format(self.last_action, check))
         return check
 

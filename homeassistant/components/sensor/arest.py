@@ -10,7 +10,8 @@ from datetime import timedelta
 import requests
 
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE, DEVICE_DEFAULT_NAME)
+    ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE, DEVICE_DEFAULT_NAME,
+    CONF_RESOURCE, CONF_MONITORED_VARIABLES)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
@@ -18,11 +19,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
-
-CONF_RESOURCE = 'resource'
-CONF_MONITORED_VARIABLES = 'monitored_variables'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -55,9 +52,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if value_template is None:
             return lambda value: value
 
+        value_template = template.Template(value_template, hass)
+
         def _render(value):
             try:
-                return template.render(hass, value_template, {'value': value})
+                return value_template.render({'value': value})
             except TemplateError:
                 _LOGGER.exception('Error parsing value')
                 return value

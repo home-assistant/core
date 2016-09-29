@@ -2,7 +2,7 @@
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import script
 
 from tests.common import get_test_home_assistant
@@ -41,7 +41,7 @@ class TestScriptComponent(unittest.TestCase):
                 }
             },
         ):
-            assert not _setup_component(self.hass, 'script', {
+            assert not setup_component(self.hass, 'script', {
                 'script': value
             }), 'Script loaded with wrong config {}'.format(value)
 
@@ -58,7 +58,7 @@ class TestScriptComponent(unittest.TestCase):
 
         self.hass.bus.listen(event, record_event)
 
-        assert _setup_component(self.hass, 'script', {
+        assert setup_component(self.hass, 'script', {
             'script': {
                 'test': {
                     'sequence': [{
@@ -73,13 +73,13 @@ class TestScriptComponent(unittest.TestCase):
         })
 
         script.turn_on(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
 
         # Calling turn_on a second time should not advance the script
         script.turn_on(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(events))
 
     def test_toggle_service(self):
@@ -93,7 +93,7 @@ class TestScriptComponent(unittest.TestCase):
 
         self.hass.bus.listen(event, record_event)
 
-        assert _setup_component(self.hass, 'script', {
+        assert setup_component(self.hass, 'script', {
             'script': {
                 'test': {
                     'sequence': [{
@@ -108,12 +108,12 @@ class TestScriptComponent(unittest.TestCase):
         })
 
         script.toggle(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
 
         script.toggle(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertFalse(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
 
@@ -127,7 +127,7 @@ class TestScriptComponent(unittest.TestCase):
 
         self.hass.services.register('test', 'script', record_call)
 
-        assert _setup_component(self.hass, 'script', {
+        assert setup_component(self.hass, 'script', {
             'script': {
                 'test': {
                     'sequence': {
@@ -144,7 +144,7 @@ class TestScriptComponent(unittest.TestCase):
             'greeting': 'world'
         })
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[-1].data['hello'] == 'world'
@@ -153,7 +153,7 @@ class TestScriptComponent(unittest.TestCase):
             'greeting': 'universe',
         })
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 2
         assert calls[-1].data['hello'] == 'universe'

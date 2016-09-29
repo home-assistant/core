@@ -4,6 +4,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch, sentinel
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 from homeassistant.components import history, recorder
@@ -17,7 +18,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(1)
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -27,7 +28,7 @@ class TestComponentHistory(unittest.TestCase):
         """Initialize the recorder."""
         db_uri = 'sqlite://'
         with patch('homeassistant.core.Config.path', return_value=db_uri):
-            recorder.setup(self.hass, config={
+            setup_component(self.hass, recorder.DOMAIN, {
                 "recorder": {
                     "db_url": db_uri}})
         self.hass.start()
@@ -36,13 +37,13 @@ class TestComponentHistory(unittest.TestCase):
 
     def wait_recording_done(self):
         """Block till recording is done."""
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
 
     def test_setup(self):
         """Test setup method of history."""
         mock_http_component(self.hass)
-        self.assertTrue(history.setup(self.hass, {}))
+        self.assertTrue(setup_component(self.hass, history.DOMAIN, {}))
 
     def test_last_5_states(self):
         """Test retrieving the last 5 states."""
