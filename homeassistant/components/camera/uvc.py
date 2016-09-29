@@ -8,28 +8,33 @@ import logging
 import socket
 
 import requests
+import voluptuous as vol
 
-from homeassistant.components.camera import DOMAIN, Camera
-from homeassistant.helpers import validate_config
+from homeassistant.const import CONF_PORT
+from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['uvcclient==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_NVR = 'nvr'
+CONF_KEY = 'key'
+
+DEFAULT_PORT = 7080
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_NVR): cv.string,
+    vol.Required(CONF_KEY): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Discover cameras on a Unifi NVR."""
-    if not validate_config({DOMAIN: config}, {DOMAIN: ['nvr', 'key']},
-                           _LOGGER):
-        return None
-
-    addr = config.get('nvr')
-    key = config.get('key')
-    try:
-        port = int(config.get('port', 7080))
-    except ValueError:
-        _LOGGER.error('Invalid port number provided')
-        return False
+    addr = config[CONF_NVR]
+    key = config[CONF_KEY]
+    port = config[CONF_PORT]
 
     from uvcclient import nvr
     nvrconn = nvr.UVCRemote(addr, port, key)

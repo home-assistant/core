@@ -45,5 +45,4 @@ class TestHelpers(unittest.TestCase):
             ('hello', config['zone']),
             (None, 1),
             ('hello 2', config['zone Hallo'][1]),
-            (None, None)
         ] == list(helpers.config_per_platform(config, 'zone'))

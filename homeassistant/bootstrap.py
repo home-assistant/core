@@ -118,11 +118,13 @@ def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
 
         # Assumption: if a component does not depend on groups
         # it communicates with devices
-        if 'group' not in getattr(component, 'DEPENDENCIES', []):
+        if 'group' not in getattr(component, 'DEPENDENCIES', []) and \
+           hass.pool.worker_count <= 10:
             hass.pool.add_worker()
 
         hass.bus.fire(
-            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
+            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
+        )
 
         return True
 
@@ -144,7 +146,7 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
     if hasattr(component, 'CONFIG_SCHEMA'):
         try:
             config = component.CONFIG_SCHEMA(config)
-        except vol.MultipleInvalid as ex:
+        except vol.Invalid as ex:
             log_exception(ex, domain, config)
             return None
 
@@ -154,8 +156,8 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
             # Validate component specific platform schema
             try:
                 p_validated = component.PLATFORM_SCHEMA(p_config)
-            except vol.MultipleInvalid as ex:
-                log_exception(ex, domain, p_config)
+            except vol.Invalid as ex:
+                log_exception(ex, domain, config)
                 return None
 
             # Not all platform components follow same pattern for platforms
@@ -175,7 +177,7 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
             if hasattr(platform, 'PLATFORM_SCHEMA'):
                 try:
                     p_validated = platform.PLATFORM_SCHEMA(p_validated)
-                except vol.MultipleInvalid as ex:
+                except vol.Invalid as ex:
                     log_exception(ex, '{}.{}'.format(domain, p_name),
                                   p_validated)
                     return None
@@ -278,23 +280,29 @@ def from_config_dict(config: Dict[str, Any],
     components = set(key.split(' ')[0] for key in config.keys()
                      if key != core.DOMAIN)
 
-    if not core_components.setup(hass, config):
-        _LOGGER.error('Home Assistant core failed to initialize. '
-                      'Further initialization aborted.')
-        return hass
+    # Setup in a thread to avoid blocking
+    def component_setup():
+        """Set up a component."""
+        if not core_components.setup(hass, config):
+            _LOGGER.error('Home Assistant core failed to initialize. '
+                          'Further initialization aborted.')
+            return hass
 
-    persistent_notification.setup(hass, config)
+        persistent_notification.setup(hass, config)
 
-    _LOGGER.info('Home Assistant core initialized')
+        _LOGGER.info('Home Assistant core initialized')
 
-    # Give event decorators access to HASS
-    event_decorators.HASS = hass
-    service.HASS = hass
+        # Give event decorators access to HASS
+        event_decorators.HASS = hass
+        service.HASS = hass
 
-    # Setup the components
-    for domain in loader.load_order_components(components):
-        _setup_component(hass, domain, config)
+        # Setup the components
+        for domain in loader.load_order_components(components):
+            _setup_component(hass, domain, config)
 
+    hass.loop.run_until_complete(
+        hass.loop.run_in_executor(None, component_setup)
+    )
     return hass
 
 
@@ -390,16 +398,21 @@ def _ensure_loader_prepared(hass: core.HomeAssistant) -> None:
 def log_exception(ex, domain, config):
     """Generate log exception for config validation."""
     message = 'Invalid config for [{}]: '.format(domain)
+
     if 'extra keys not allowed' in ex.error_message:
         message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
                    .format(ex.path[-1], domain, domain,
                            '->'.join('%s' % m for m in ex.path))
     else:
-        message += humanize_error(config, ex)
+        message += '{}.'.format(humanize_error(config, ex))
 
     if hasattr(config, '__line__'):
-        message += " (See {}:{})".format(config.__config_file__,
-                                         config.__line__ or '?')
+        message += " (See {}:{})".format(
+            config.__config_file__, config.__line__ or '?')
+
+    if domain != 'homeassistant':
+        message += (' Please check the docs at '
+                    'https://home-assistant.io/components/{}/'.format(domain))
 
     _LOGGER.error(message)
 

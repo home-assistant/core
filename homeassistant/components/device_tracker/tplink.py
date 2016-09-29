@@ -12,10 +12,11 @@ import threading
 from datetime import timedelta
 
 import requests
+import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago
@@ -23,26 +24,22 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
+})
+
 
 def get_scanner(hass, config):
     """Validate the configuration and return a TP-Link scanner."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-        return None
+    for cls in [Tplink4DeviceScanner, Tplink3DeviceScanner,
+                Tplink2DeviceScanner, TplinkDeviceScanner]:
+        scanner = cls(config[DOMAIN])
+        if scanner.success_init:
+            return scanner
 
-    scanner = Tplink4DeviceScanner(config[DOMAIN])
-
-    if not scanner.success_init:
-        scanner = Tplink3DeviceScanner(config[DOMAIN])
-
-    if not scanner.success_init:
-        scanner = Tplink2DeviceScanner(config[DOMAIN])
-
-    if not scanner.success_init:
-        scanner = TplinkDeviceScanner(config[DOMAIN])
-
-    return scanner if scanner.success_init else None
+    return None
 
 
 class TplinkDeviceScanner(object):

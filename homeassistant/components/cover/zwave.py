@@ -139,7 +139,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def set_cover_position(self, position, **kwargs):
         """Move the roller shutter to a specific position."""
-        self._node.set_dimmer(self._value.value_id, 100 - position)
+        self._node.set_dimmer(self._value.value_id, position)
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""

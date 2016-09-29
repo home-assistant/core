@@ -31,6 +31,8 @@ def trigger(hass, config, action):
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
+    if value_template is not None:
+        value_template.hass = hass
 
     # pylint: disable=unused-argument
     def state_automation_listener(entity, from_s, to_s):

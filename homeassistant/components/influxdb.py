@@ -6,35 +6,47 @@ https://home-assistant.io/components/influxdb/
 """
 import logging
 
-import homeassistant.util as util
-from homeassistant.const import (EVENT_STATE_CHANGED, STATE_UNAVAILABLE,
-                                 STATE_UNKNOWN)
+import voluptuous as vol
+
+from homeassistant.const import (
+    EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN, CONF_HOST,
+    CONF_PORT, CONF_SSL, CONF_VERIFY_SSL, CONF_USERNAME, CONF_BLACKLIST,
+    CONF_PASSWORD, CONF_WHITELIST)
 from homeassistant.helpers import state as state_helper
-from homeassistant.helpers import validate_config
-
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "influxdb"
-DEPENDENCIES = []
-
-DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 8086
-DEFAULT_DATABASE = 'home_assistant'
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = False
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['influxdb==3.0.0']
 
-CONF_HOST = 'host'
-CONF_PORT = 'port'
+_LOGGER = logging.getLogger(__name__)
+
 CONF_DB_NAME = 'database'
-CONF_USERNAME = 'username'
-CONF_PASSWORD = 'password'
-CONF_SSL = 'ssl'
-CONF_VERIFY_SSL = 'verify_ssl'
-CONF_BLACKLIST = 'blacklist'
-CONF_WHITELIST = 'whitelist'
 CONF_TAGS = 'tags'
+
+DEFAULT_DATABASE = 'home_assistant'
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 8086
+DEFAULT_SSL = False
+DEFAULT_VERIFY_SSL = False
+DOMAIN = 'influxdb'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_BLACKLIST, default=[]):
+            vol.All(cv.ensure_list, [cv.entity_id]),
+        vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_PORT, default=False): cv.boolean,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_TAGS, default={}):
+            vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_WHITELIST, default=[]):
+            vol.All(cv.ensure_list, [cv.entity_id]),
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 # pylint: disable=too-many-locals
@@ -42,29 +54,23 @@ def setup(hass, config):
     """Setup the InfluxDB component."""
     from influxdb import InfluxDBClient, exceptions
 
-    if not validate_config(config, {DOMAIN: ['host',
-                                             CONF_USERNAME,
-                                             CONF_PASSWORD]}, _LOGGER):
-        return False
-
     conf = config[DOMAIN]
 
-    host = conf[CONF_HOST]
-    port = util.convert(conf.get(CONF_PORT), int, DEFAULT_PORT)
-    database = util.convert(conf.get(CONF_DB_NAME), str, DEFAULT_DATABASE)
-    username = util.convert(conf.get(CONF_USERNAME), str)
-    password = util.convert(conf.get(CONF_PASSWORD), str)
-    ssl = util.convert(conf.get(CONF_SSL), bool, DEFAULT_SSL)
-    verify_ssl = util.convert(conf.get(CONF_VERIFY_SSL), bool,
-                              DEFAULT_VERIFY_SSL)
-    blacklist = conf.get(CONF_BLACKLIST, [])
-    whitelist = conf.get(CONF_WHITELIST, [])
-    tags = conf.get(CONF_TAGS, {})
+    host = conf.get(CONF_HOST)
+    port = conf.get(CONF_PORT)
+    database = conf.get(CONF_DB_NAME)
+    username = conf.get(CONF_USERNAME)
+    password = conf.get(CONF_PASSWORD)
+    ssl = conf.get(CONF_SSL)
+    verify_ssl = conf.get(CONF_VERIFY_SSL)
+    blacklist = conf.get(CONF_BLACKLIST)
+    whitelist = conf.get(CONF_WHITELIST)
+    tags = conf.get(CONF_TAGS)
 
     try:
-        influx = InfluxDBClient(host=host, port=port, username=username,
-                                password=password, database=database,
-                                ssl=ssl, verify_ssl=verify_ssl)
+        influx = InfluxDBClient(
+            host=host, port=port, username=username, password=password,
+            database=database, ssl=ssl, verify_ssl=verify_ssl)
         influx.query("select * from /.*/ LIMIT 1;")
     except exceptions.InfluxDBClientError as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "
@@ -106,8 +112,11 @@ def setup(hass, config):
             }
         ]
 
-        for tag in tags:
-            json_body[0]['tags'][tag] = tags[tag]
+        for key, value in state.attributes.items():
+            if key != 'unit_of_measurement':
+                json_body[0]['fields'][key] = value
+
+        json_body[0]['tags'].update(tags)
 
         try:
             influx.write_points(json_body)

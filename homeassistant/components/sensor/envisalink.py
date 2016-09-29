@@ -9,6 +9,7 @@ from homeassistant.components.envisalink import (EVL_CONTROLLER,
                                                  PARTITION_SCHEMA,
                                                  CONF_PARTITIONNAME,
                                                  EnvisalinkDevice,
+                                                 SIGNAL_PARTITION_UPDATE,
                                                  SIGNAL_KEYPAD_UPDATE)
 
 DEPENDENCIES = ['envisalink']
@@ -42,7 +43,9 @@ class EnvisalinkSensor(EnvisalinkDevice):
                                   partition_name + ' Keypad',
                                   info,
                                   controller)
-
+        dispatcher.connect(self._update_callback,
+                           signal=SIGNAL_PARTITION_UPDATE,
+                           sender=dispatcher.Any)
         dispatcher.connect(self._update_callback,
                            signal=SIGNAL_KEYPAD_UPDATE,
                            sender=dispatcher.Any)
@@ -65,4 +68,4 @@ class EnvisalinkSensor(EnvisalinkDevice):
     def _update_callback(self, partition):
         """Update the partition state in HA, if needed."""
         if partition is None or int(partition) == self._partition_number:
-            self.update_ha_state()
+            self.hass.async_add_job(self.update_ha_state)

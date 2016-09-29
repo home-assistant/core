@@ -144,7 +144,7 @@ def _save_config(filename, config):
     """Save configuration."""
     try:
         with open(filename, 'w') as fdesc:
-            fdesc.write(json.dumps(config, indent=4, sort_keys=True))
+            fdesc.write(json.dumps(config))
     except (IOError, TypeError) as error:
         _LOGGER.error('Saving config file failed: %s', error)
         return False
@@ -314,7 +314,10 @@ class HTML5NotificationService(BaseNotificationService):
     @property
     def targets(self):
         """Return a dictionary of registered targets."""
-        return self.registrations.keys()
+        targets = {}
+        for registration in self.registrations:
+            targets[registration] = registration
+        return targets
 
     # pylint: disable=too-many-locals
     def send_message(self, message="", **kwargs):

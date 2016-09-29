@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
     DOMAIN, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
+    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT, TEMP_CELSIUS)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
@@ -86,10 +86,16 @@ class Thermostat(ClimateDevice):
         self.hold_temp = hold_temp
         self._operation_list = ['auto', 'auxHeatOnly', 'cool',
                                 'heat', 'off']
+        self.update_without_throttle = False
 
     def update(self):
         """Get the latest state from the thermostat."""
-        self.data.update()
+        if self.update_without_throttle:
+            self.data.update(no_throttle=True)
+            self.update_without_throttle = False
+        else:
+            self.data.update()
+
         self.thermostat = self.data.ecobee.get_thermostat(
             self.thermostat_index)
 
@@ -101,21 +107,15 @@ class Thermostat(ClimateDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
+        if self.thermostat['settings']['useCelsius']:
+            return TEMP_CELSIUS
+        else:
+            return TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
         return self.thermostat['runtime']['actualTemperature'] / 10
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        if (self.operation_mode == 'heat' or
-                self.operation_mode == 'auxHeatOnly'):
-            return self.target_temperature_low
-        elif self.operation_mode == 'cool':
-            return self.target_temperature_high
 
     @property
     def target_temperature_low(self):
@@ -211,17 +211,15 @@ class Thermostat(ClimateDevice):
                                               "away", "indefinite")
         else:
             self.data.ecobee.set_climate_hold(self.thermostat_index, "away")
+        self.update_without_throttle = True
 
     def turn_away_mode_off(self):
         """Turn away off."""
         self.data.ecobee.resume_program(self.thermostat_index)
+        self.update_without_throttle = True
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            temperature = kwargs.get(ATTR_TEMPERATURE)
-            low_temp = int(temperature)
-            high_temp = int(temperature)
         if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None and \
            kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
             high_temp = int(kwargs.get(ATTR_TARGET_TEMP_LOW))
@@ -241,15 +239,18 @@ class Thermostat(ClimateDevice):
                           "high=%s, is=%s", low_temp, isinstance(
                               low_temp, (int, float)), high_temp,
                           isinstance(high_temp, (int, float)))
+        self.update_without_throttle = True
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         self.data.ecobee.set_hvac_mode(self.thermostat_index, operation_mode)
+        self.update_without_throttle = True
 
     def set_fan_min_on_time(self, fan_min_on_time):
         """Set the minimum fan on time."""
         self.data.ecobee.set_fan_min_on_time(self.thermostat_index,
                                              fan_min_on_time)
+        self.update_without_throttle = True
 
     # Home and Sleep mode aren't used in UI yet:
 
