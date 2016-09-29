@@ -212,4 +212,4 @@ class HeatControl(ThermostatDevice):
     @property
     def _is_device_active(self):
         """If the toggleable device is currently active."""
-        return switch.is_on(self.hass, self.heater_entity_id)
+        return switch.async_is_on(self.hass, self.heater_entity_id)
