@@ -57,7 +57,7 @@ class NestThermostat(ClimateDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        if self.device.measurment_scale == 'F':
+        if self.device.measurement_scale == 'F':
             return TEMP_FAHRENHEIT
         elif self.device.measurement_scale == 'C':
             return TEMP_CELSIUS
