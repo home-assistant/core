@@ -1,7 +1,9 @@
 """Test check_config script."""
-import unittest
+import asyncio
 import logging
 import os
+import unittest
+from unittest.mock import patch
 
 import homeassistant.scripts.check_config as check_config
 from tests.common import patch_yaml_files, get_test_config_dir
@@ -43,27 +45,28 @@ def tearDownModule(self):  # pylint: disable=invalid-name
         os.remove(path)
 
 
+@patch('asyncio.get_event_loop', return_value=asyncio.new_event_loop())
 class TestCheckConfig(unittest.TestCase):
     """Tests for the homeassistant.scripts.check_config module."""
 
     # pylint: disable=no-self-use,invalid-name
-    def test_config_platform_valid(self):
+    def test_config_platform_valid(self, mock_get_loop):
         """Test a valid platform setup."""
         files = {
-            'light.yaml': BASE_CONFIG + 'light:\n  platform: hue',
+            'light.yaml': BASE_CONFIG + 'light:\n  platform: demo',
         }
         with patch_yaml_files(files):
             res = check_config.check(get_test_config_dir('light.yaml'))
             change_yaml_files(res)
             self.assertDictEqual({
-                'components': {'light': [{'platform': 'hue'}]},
+                'components': {'light': [{'platform': 'demo'}]},
                 'except': {},
                 'secret_cache': {},
                 'secrets': {},
                 'yaml_files': ['.../light.yaml']
             }, res)
 
-    def test_config_component_platform_fail_validation(self):
+    def test_config_component_platform_fail_validation(self, mock_get_loop):
         """Test errors if component & platform not found."""
         files = {
             'component.yaml': BASE_CONFIG + 'http:\n  password: err123',
@@ -95,7 +98,7 @@ class TestCheckConfig(unittest.TestCase):
                 'yaml_files': ['.../platform.yaml']
             }, res)
 
-    def test_component_platform_not_found(self):
+    def test_component_platform_not_found(self, mock_get_loop):
         """Test errors if component or platform not found."""
         files = {
             'badcomponent.yaml': BASE_CONFIG + 'beer:',
@@ -124,7 +127,7 @@ class TestCheckConfig(unittest.TestCase):
                 'yaml_files': ['.../badplatform.yaml']
             }, res)
 
-    def test_secrets(self):
+    def test_secrets(self, mock_get_loop):
         """Test secrets config checking method."""
         files = {
             get_test_config_dir('secret.yaml'): (

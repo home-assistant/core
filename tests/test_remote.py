@@ -1,7 +1,10 @@
 """Test Home Assistant remote methods and classes."""
 # pylint: disable=protected-access,too-many-public-methods
+import asyncio
+import threading
 import time
 import unittest
+from unittest.mock import patch
 
 import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
@@ -52,14 +55,22 @@ def setUpModule():   # pylint: disable=invalid-name
     master_api = remote.API("127.0.0.1", API_PASSWORD, MASTER_PORT)
 
     # Start slave
-    slave = remote.HomeAssistant(master_api)
+    loop = asyncio.new_event_loop()
+
+    # FIXME: should not be a daemon
+    threading.Thread(name="SlaveThread", daemon=True,
+                     target=loop.run_forever).start()
+
+    slave = remote.HomeAssistant(master_api, loop=loop)
     slave.config.config_dir = get_test_config_dir()
+    slave.config.skip_pip = True
     bootstrap.setup_component(
         slave, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
                        http.CONF_SERVER_PORT: SLAVE_PORT}})
 
-    slave.start()
+    with patch.object(ha, 'async_create_timer', return_value=None):
+        slave.start()
 
 
 def tearDownModule():   # pylint: disable=invalid-name
@@ -73,8 +84,8 @@ class TestRemoteMethods(unittest.TestCase):
 
     def tearDown(self):
         """Stop everything that was started."""
-        slave.pool.block_till_done()
-        hass.pool.block_till_done()
+        slave.block_till_done()
+        hass.block_till_done()
 
     def test_validate_api(self):
         """Test Python API validate_api."""
@@ -111,7 +122,7 @@ class TestRemoteMethods(unittest.TestCase):
 
         hass.bus.listen("test.event_no_data", listener)
         remote.fire_event(master_api, "test.event_no_data")
-        hass.pool.block_till_done()
+        hass.block_till_done()
         self.assertEqual(1, len(test_value))
 
         # Should not trigger any exception
@@ -156,12 +167,12 @@ class TestRemoteMethods(unittest.TestCase):
 
         remote.set_state(master_api, 'test.test', 'set_test_2')
         remote.set_state(master_api, 'test.test', 'set_test_2')
-        hass.bus._pool.block_till_done()
+        hass.block_till_done()
         self.assertEqual(1, len(events))
 
         remote.set_state(
             master_api, 'test.test', 'set_test_2', force_update=True)
-        hass.bus._pool.block_till_done()
+        hass.block_till_done()
         self.assertEqual(2, len(events))
 
     def test_is_state(self):
@@ -197,7 +208,7 @@ class TestRemoteMethods(unittest.TestCase):
 
         remote.call_service(master_api, "test_domain", "test_service")
 
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
         self.assertEqual(1, len(test_value))
 
@@ -223,8 +234,8 @@ class TestRemoteClasses(unittest.TestCase):
 
     def tearDown(self):
         """Stop everything that was started."""
-        slave.pool.block_till_done()
-        hass.pool.block_till_done()
+        slave.block_till_done()
+        hass.block_till_done()
 
     def test_home_assistant_init(self):
         """Test HomeAssistant init."""
@@ -248,9 +259,9 @@ class TestRemoteClasses(unittest.TestCase):
         slave.states.set("remote.test", "remote.statemachine test")
 
         # Wait till slave tells master
-        slave.pool.block_till_done()
+        slave.block_till_done()
         # Wait till master gives updated state
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
         self.assertEqual("remote.statemachine test",
                          slave.states.get("remote.test").state)
@@ -258,27 +269,27 @@ class TestRemoteClasses(unittest.TestCase):
     def test_statemachine_remove_from_master(self):
         """Remove statemachine from master."""
         hass.states.set("remote.master_remove", "remove me!")
-        hass.pool.block_till_done()
-        slave.pool.block_till_done()
+        hass.block_till_done()
+        slave.block_till_done()
 
         self.assertIn('remote.master_remove', slave.states.entity_ids())
 
         hass.states.remove("remote.master_remove")
-        hass.pool.block_till_done()
-        slave.pool.block_till_done()
+        hass.block_till_done()
+        slave.block_till_done()
 
         self.assertNotIn('remote.master_remove', slave.states.entity_ids())
 
     def test_statemachine_remove_from_slave(self):
         """Remove statemachine from slave."""
         hass.states.set("remote.slave_remove", "remove me!")
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
         self.assertIn('remote.slave_remove', slave.states.entity_ids())
 
         self.assertTrue(slave.states.remove("remote.slave_remove"))
-        slave.pool.block_till_done()
-        hass.pool.block_till_done()
+        slave.block_till_done()
+        hass.block_till_done()
 
         self.assertNotIn('remote.slave_remove', slave.states.entity_ids())
 
@@ -292,9 +303,9 @@ class TestRemoteClasses(unittest.TestCase):
         slave.bus.fire("test.event_no_data")
 
         # Wait till slave tells master
-        slave.pool.block_till_done()
+        slave.block_till_done()
         # Wait till master gives updated event
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
         self.assertEqual(1, len(hass_call))
         self.assertEqual(1, len(slave_call))

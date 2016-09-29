@@ -9,9 +9,9 @@ import socket
 import select
 
 from homeassistant.const import CONF_NAME, CONF_HOST
-from homeassistant.helpers import template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.template import Template
 
 CONF_PORT = "port"
 CONF_TIMEOUT = "timeout"
@@ -41,6 +41,11 @@ class Sensor(Entity):
 
     def __init__(self, hass, config):
         """Set all the config values if they exist and get initial state."""
+        value_template = config.get(CONF_VALUE_TEMPLATE)
+
+        if value_template is not None:
+            value_template = Template(value_template, hass)
+
         self._hass = hass
         self._config = {
             CONF_NAME: config.get(CONF_NAME),
@@ -49,7 +54,7 @@ class Sensor(Entity):
             CONF_TIMEOUT: config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
             CONF_PAYLOAD: config[CONF_PAYLOAD],
             CONF_UNIT: config.get(CONF_UNIT),
-            CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
+            CONF_VALUE_TEMPLATE: value_template,
             CONF_VALUE_ON: config.get(CONF_VALUE_ON),
             CONF_BUFFER_SIZE: config.get(
                 CONF_BUFFER_SIZE, DEFAULT_BUFFER_SIZE),
@@ -122,9 +127,7 @@ class Sensor(Entity):
 
         if self._config[CONF_VALUE_TEMPLATE] is not None:
             try:
-                self._state = template.render(
-                    self._hass,
-                    self._config[CONF_VALUE_TEMPLATE],
+                self._state = self._config[CONF_VALUE_TEMPLATE].render(
                     value=value)
                 return
             except TemplateError as err:

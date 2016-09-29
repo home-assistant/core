@@ -6,6 +6,7 @@ from unittest.mock import patch
 from datetime import datetime, timedelta
 import os
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.loader import get_component
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
@@ -76,7 +77,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
             away_hide=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
-        self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
+                                        TEST_PLATFORM))
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             device.consider_home)[0]
         self.assertEqual(device.dev_id, config.dev_id)
@@ -120,7 +122,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     def test_setup_without_yaml_file(self):
         """Test with no YAML file."""
-        self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
+                                        TEST_PLATFORM))
 
     def test_adding_unknown_device_to_config(self): \
             # pylint: disable=invalid-name
@@ -129,7 +132,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         scanner.reset()
         scanner.come_home('DEV1')
 
-        self.assertTrue(device_tracker.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}))
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0))
@@ -164,8 +167,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         with patch.dict(device_tracker.DISCOVERY_PLATFORMS, {'test': 'test'}):
             with patch.object(scanner, 'scan_devices') as mock_scan:
-                self.assertTrue(device_tracker.setup(self.hass,
-                                                     TEST_PLATFORM))
+                self.assertTrue(setup_component(
+                    self.hass, device_tracker.DOMAIN, TEST_PLATFORM))
                 fire_service_discovered(self.hass, 'test', {})
                 self.assertTrue(mock_scan.called)
 
@@ -180,7 +183,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         with patch('homeassistant.components.device_tracker.dt_util.utcnow',
                    return_value=register_time):
-            self.assertTrue(device_tracker.setup(self.hass, {
+            self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
                 device_tracker.DOMAIN: {
                     CONF_PLATFORM: 'test',
                     device_tracker.CONF_CONSIDER_HOME: 59,
@@ -194,7 +197,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         with patch('homeassistant.components.device_tracker.dt_util.utcnow',
                    return_value=scan_time):
             fire_time_changed(self.hass, scan_time)
-            self.hass.pool.block_till_done()
+            self.hass.block_till_done()
 
         self.assertEqual(STATE_NOT_HOME,
                          self.hass.states.get('device_tracker.dev1').state)
@@ -211,7 +214,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             friendly_name, picture, away_hide=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
-        self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
+                                        TEST_PLATFORM))
 
         attrs = self.hass.states.get(entity_id).attributes
 
@@ -230,7 +234,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         scanner = get_component('device_tracker.test').SCANNER
         scanner.reset()
 
-        self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
+                                        TEST_PLATFORM))
 
         self.assertTrue(self.hass.states.get(entity_id)
                         .attributes.get(ATTR_HIDDEN))
@@ -247,7 +252,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         scanner = get_component('device_tracker.test').SCANNER
         scanner.reset()
 
-        self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
+                                        TEST_PLATFORM))
 
         state = self.hass.states.get(device_tracker.ENTITY_ID_ALL_DEVICES)
         self.assertIsNotNone(state)
@@ -258,7 +264,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     @patch('homeassistant.components.device_tracker.DeviceTracker.see')
     def test_see_service(self, mock_see):
         """Test the see service with a unicode dev_id and NO MAC."""
-        self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
+                                        TEST_PLATFORM))
         params = {
             'dev_id': 'some_device',
             'host_name': 'example.com',
@@ -266,7 +273,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             'gps': [.3, .8]
         }
         device_tracker.see(self.hass, **params)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert mock_see.call_count == 1
         mock_see.assert_called_once_with(**params)
 
@@ -274,19 +281,20 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         params['dev_id'] += chr(233)  # e' acute accent from icloud
 
         device_tracker.see(self.hass, **params)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert mock_see.call_count == 1
         mock_see.assert_called_once_with(**params)
 
     def test_not_write_duplicate_yaml_keys(self): \
             # pylint: disable=invalid-name
         """Test that the device tracker will not generate invalid YAML."""
-        self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
+                                        TEST_PLATFORM))
 
         device_tracker.see(self.hass, 'mac_1', host_name='hello')
         device_tracker.see(self.hass, 'mac_2', host_name='hello')
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0))
@@ -294,7 +302,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     def test_not_allow_invalid_dev_id(self):  # pylint: disable=invalid-name
         """Test that the device tracker will not allow invalid dev ids."""
-        self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
+                                        TEST_PLATFORM))
 
         device_tracker.see(self.hass, dev_id='hello-world')
 
@@ -329,6 +338,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     @patch('homeassistant.components.device_tracker.log_exception')
     def test_config_failure(self, mock_ex):
         """Test that the device tracker see failures."""
-        device_tracker.setup(self.hass, {device_tracker.DOMAIN: {
-            device_tracker.CONF_CONSIDER_HOME: -1}})
-        assert mock_ex.call_count == 1
+        assert not setup_component(self.hass, device_tracker.DOMAIN,
+                                   {device_tracker.DOMAIN: {
+                                    device_tracker.CONF_CONSIDER_HOME: -1}})

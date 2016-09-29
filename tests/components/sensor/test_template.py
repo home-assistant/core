@@ -33,7 +33,7 @@ class TestTemplateSensor:
         assert state.state == 'It .'
 
         self.hass.states.set('sensor.test_state', 'Works')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == 'It Works.'
 

@@ -6,24 +6,23 @@ https://home-assistant.io/components/light.vera/
 """
 import logging
 
-from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS, Light)
-from homeassistant.const import (
-    STATE_OFF, STATE_ON)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.const import (STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
     VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
 
-DEPENDENCIES = ['vera']
-
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['vera']
 
 SUPPORT_VERA = SUPPORT_BRIGHTNESS
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Vera lights."""
-    add_devices_callback(
+    add_devices(
         VeraLight(device, VERA_CONTROLLER) for device in VERA_DEVICES['light'])
 
 

@@ -6,7 +6,7 @@ import unittest
 # Otherwise can't test just this file (import order issue)
 import homeassistant.components  # noqa
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers import script
+from homeassistant.helpers import script, config_validation as cv
 
 from tests.common import fire_time_changed, get_test_home_assistant
 
@@ -36,16 +36,16 @@ class TestScriptHelper(unittest.TestCase):
 
         self.hass.bus.listen(event, record_event)
 
-        script_obj = script.Script(self.hass, {
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA({
             'event': event,
             'event_data': {
                 'hello': 'world'
             }
-        })
+        }))
 
         script_obj.run()
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[0].data.get('hello') == 'world'
@@ -61,15 +61,14 @@ class TestScriptHelper(unittest.TestCase):
 
         self.hass.services.register('test', 'script', record_call)
 
-        script_obj = script.Script(self.hass, {
+        script.call_from_config(self.hass, {
             'service': 'test.script',
             'data': {
                 'hello': 'world'
             }
         })
 
-        script_obj.run()
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[0].data.get('hello') == 'world'
@@ -84,7 +83,7 @@ class TestScriptHelper(unittest.TestCase):
 
         self.hass.services.register('test', 'script', record_call)
 
-        script_obj = script.Script(self.hass, {
+        script.call_from_config(self.hass, {
             'service_template': """
                 {% if True %}
                     test.script
@@ -102,9 +101,7 @@ class TestScriptHelper(unittest.TestCase):
             }
         })
 
-        script_obj.run()
-
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[0].data.get('hello') == 'world'
@@ -120,14 +117,14 @@ class TestScriptHelper(unittest.TestCase):
 
         self.hass.bus.listen(event, record_event)
 
-        script_obj = script.Script(self.hass, [
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
             {'event': event},
             {'delay': {'seconds': 5}},
-            {'event': event}])
+            {'event': event}]))
 
         script_obj.run()
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert script_obj.is_running
         assert script_obj.can_cancel
@@ -136,7 +133,7 @@ class TestScriptHelper(unittest.TestCase):
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         fire_time_changed(self.hass, future)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert not script_obj.is_running
         assert len(events) == 2
@@ -152,14 +149,14 @@ class TestScriptHelper(unittest.TestCase):
 
         self.hass.bus.listen(event, record_event)
 
-        script_obj = script.Script(self.hass, [
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
             {'event': event},
             {'delay': '00:00:{{ 5 }}'},
-            {'event': event}])
+            {'event': event}]))
 
         script_obj.run()
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert script_obj.is_running
         assert script_obj.can_cancel
@@ -168,7 +165,7 @@ class TestScriptHelper(unittest.TestCase):
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         fire_time_changed(self.hass, future)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert not script_obj.is_running
         assert len(events) == 2
@@ -184,13 +181,13 @@ class TestScriptHelper(unittest.TestCase):
 
         self.hass.bus.listen(event, record_event)
 
-        script_obj = script.Script(self.hass, [
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
             {'delay': {'seconds': 5}},
-            {'event': event}])
+            {'event': event}]))
 
         script_obj.run()
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert script_obj.is_running
         assert len(events) == 0
@@ -202,7 +199,7 @@ class TestScriptHelper(unittest.TestCase):
         # Make sure the script is really stopped.
         future = dt_util.utcnow() + timedelta(seconds=5)
         fire_time_changed(self.hass, future)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert not script_obj.is_running
         assert len(events) == 0
@@ -217,7 +214,7 @@ class TestScriptHelper(unittest.TestCase):
 
         self.hass.services.register('test', 'script', record_call)
 
-        script_obj = script.Script(self.hass, [
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
             {
                 'service': 'test.script',
                 'data_template': {
@@ -230,14 +227,14 @@ class TestScriptHelper(unittest.TestCase):
                 'data_template': {
                     'hello': '{{ greeting2 }}',
                 },
-            }])
+            }]))
 
         script_obj.run({
             'greeting': 'world',
             'greeting2': 'universe',
         })
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert script_obj.is_running
         assert len(calls) == 1
@@ -245,7 +242,7 @@ class TestScriptHelper(unittest.TestCase):
 
         future = dt_util.utcnow() + timedelta(seconds=5)
         fire_time_changed(self.hass, future)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert not script_obj.is_running
         assert len(calls) == 2
@@ -264,21 +261,21 @@ class TestScriptHelper(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'hello')
 
-        script_obj = script.Script(self.hass, [
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
             {'event': event},
             {
                 'condition': 'template',
                 'value_template': '{{ states.test.entity.state == "hello" }}',
             },
             {'event': event},
-        ])
+        ]))
 
         script_obj.run()
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(events) == 2
 
         self.hass.states.set('test.entity', 'goodbye')
 
         script_obj.run()
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert len(events) == 3

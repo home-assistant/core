@@ -1,11 +1,11 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 28
-PATCH_VERSION = '2'
+MINOR_VERSION = 29
+PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
-REQUIRED_PYTHON_VER = (3, 4)
+REQUIRED_PYTHON_VER = (3, 4, 2)
 
 PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
@@ -94,6 +94,8 @@ CONF_LATITUDE = 'latitude'
 CONF_LONGITUDE = 'longitude'
 CONF_MAC = 'mac'
 CONF_METHOD = 'method'
+CONF_MINIMUM = 'minimum'
+CONF_MAXIMUM = 'maximum'
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 CONF_MONITORED_VARIABLES = 'monitored_variables'
 CONF_NAME = 'name'
@@ -125,6 +127,7 @@ CONF_TIME_ZONE = 'time_zone'
 CONF_TIMEOUT = 'timeout'
 CONF_TOKEN = 'token'
 CONF_TRIGGER_TIME = 'trigger_time'
+CONF_TYPE = 'type'
 CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 CONF_UNIT_SYSTEM = 'unit_system'
 CONF_URL = 'url'
@@ -263,6 +266,7 @@ ATTR_GPS_ACCURACY = 'gps_accuracy'
 
 # If state is assumed
 ATTR_ASSUMED_STATE = 'assumed_state'
+ATTR_STATE = 'state'
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
@@ -373,3 +377,5 @@ LENGTH = 'length'  # type: str
 MASS = 'mass'  # type: str
 VOLUME = 'volume'  # type: str
 TEMPERATURE = 'temperature'  # type: str
+SPEED_MS = 'speed_ms'  # type: str
+ILLUMINANCE = 'illuminance'  # type: str
