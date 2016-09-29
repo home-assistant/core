@@ -225,7 +225,7 @@ liffylights==0.9.4
 lightify==1.0.3
 
 # homeassistant.components.light.limitlessled
-limitlessled==1.0.0
+limitlessled==1.0.2
 
 # homeassistant.components.notify.message_bird
 messagebird==1.2.0
