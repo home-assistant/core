@@ -18,6 +18,28 @@ def track_state_change(hass, entity_ids, action, from_state=None,
 
     Returns a function that can be called to remove the listener.
     """
+    async_unsub = run_callback_threadsafe(
+        hass.loop, async_track_state_change, hass, entity_ids, action,
+        from_state, to_state).result()
+
+    def remove():
+        """Remove listener."""
+        run_callback_threadsafe(hass.loop, async_unsub).result()
+
+    return remove
+
+
+def async_track_state_change(hass, entity_ids, action, from_state=None,
+                       to_state=None):
+    """Track specific state changes.
+
+    entity_ids, from_state and to_state can be string or list.
+    Use list to match multiple.
+
+    Returns a function that can be called to remove the listener.
+
+    Must be run within the event loop.
+    """
     from_state = _process_state_match(from_state)
     to_state = _process_state_match(to_state)
 
@@ -52,7 +74,7 @@ def track_state_change(hass, entity_ids, action, from_state=None,
                                event.data.get('old_state'),
                                event.data.get('new_state'))
 
-    return hass.bus.listen(EVENT_STATE_CHANGED, state_change_listener)
+    return hass.bus.async_listen(EVENT_STATE_CHANGED, state_change_listener)
 
 
 def track_point_in_time(hass, action, point_in_time):
