@@ -1,0 +1,36 @@
+add_node:
+  description: Add a new node to the Z-Wave network. Refer to OZW.log for details.
+
+add_node_secure:
+  description: Add a new node to the Z-Wave network with secure communications. Node must support this, and network key must be set. Refer to OZW.log for details.
+
+cancel_command:
+  description: Cancel a running Z-Wave controller command. Use this to exit add_node, if you wasn't going to use it but activated it.
+
+heal_network:
+  description: Start a Z-Wave network heal. This might take a while and will slow down the Z-Wave network greatly while it is being processed. Refer to OZW.log for details.
+
+remove_node:
+  description: Remove a node from the Z-Wave network. Refer to OZW.log for details.
+
+start_network:
+  description: Start the Z-Wave network. This might take a while, depending on how big your Z-Wave network is.
+
+stop_network:
+  description: Stop the Z-Wave network, all updates into HASS will stop.
+
+soft_reset:
+  description: This will reset the controller without removing its data. Use carefully because not all controllers support this. Refer to controllers manual.
+
+test_network:
+  description: This will send test to nodes in the Z-Wave network. This will greatly slow down the Z-Wave network while it is being processed. Refer to OZW.log for details.
+
+rename_node:
+  description: Set the name(s) of a node.
+  fields:
+    entity_id:
+      description: Name(s) of entities to to rename
+      example: 'light.leviton_vrmx11lz_multilevel_scene_switch_level_40'
+    name:
+      description: New Name
+      example: 'kitchen'

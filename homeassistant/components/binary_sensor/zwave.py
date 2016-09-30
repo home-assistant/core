@@ -36,8 +36,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
     value.set_change_verified(False)
 
     # Make sure that we have values for the key before converting to int
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 ])
                 return
 
-    if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
+    if value.command_class == zwave.const.COMMAND_CLASS_SENSOR_BINARY:
         add_devices([ZWaveBinarySensor(value, None)])
 
 
