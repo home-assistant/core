@@ -30,7 +30,7 @@ def track_state_change(hass, entity_ids, action, from_state=None,
 
 
 def async_track_state_change(hass, entity_ids, action, from_state=None,
-                       to_state=None):
+                             to_state=None):
     """Track specific state changes.
 
     entity_ids, from_state and to_state can be string or list.
