@@ -4,6 +4,7 @@ Offer sun based automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#sun-trigger
 """
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -30,9 +31,10 @@ def trigger(hass, config, action):
     event = config.get(CONF_EVENT)
     offset = config.get(CONF_OFFSET)
 
+    @asyncio.coroutine
     def call_action():
         """Call action with right context."""
-        action({
+        hass.async_add_job(action, {
             'trigger': {
                 'platform': 'sun',
                 'event': event,
