@@ -248,12 +248,16 @@ class HomeAssistant(object):
 
         def notify_when_done():
             """Notify event loop when pool done."""
+            count = 0
             while True:
                 # Wait for the work queue to empty
                 self.pool.block_till_done()
 
                 # Verify the loop is empty
                 if self._loop_empty():
+                    count += 1
+
+                if count == 2:
                     break
 
                 # sleep in the loop executor, this forces execution back into
