@@ -126,9 +126,9 @@ class NestThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-       target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-       target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-       if target_temp_low is not None and target_temp_high is not None:
+        target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        if target_temp_low is not None and target_temp_high is not None:
 
             if self.device.mode == 'range':
                 temp = (target_temp_low, target_temp_high)
