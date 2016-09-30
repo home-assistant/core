@@ -4,6 +4,7 @@ Event parser and human readable log generator.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
 """
+import asyncio
 import logging
 from datetime import timedelta
 from itertools import groupby
@@ -20,6 +21,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  STATE_NOT_HOME, STATE_OFF, STATE_ON,
                                  ATTR_HIDDEN)
 from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
+from homeassistant.util.async import run_callback_threadsafe
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'frontend']
@@ -58,6 +60,13 @@ LOG_MESSAGE_SCHEMA = vol.Schema({
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
     """Add an entry to the logbook."""
+    run_callback_threadsafe(
+        hass.loop, async_log_entry, hass, name, message, domain, entity_id
+        ).result()
+
+
+def async_log_entry(hass, name, message, domain=None, entity_id=None):
+    """Add an entry to the logbook."""
     data = {
         ATTR_NAME: name,
         ATTR_MESSAGE: message
@@ -67,11 +76,12 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
         data[ATTR_DOMAIN] = domain
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
-    hass.bus.fire(EVENT_LOGBOOK_ENTRY, data)
+    hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data)
 
 
 def setup(hass, config):
     """Listen for download events to download files."""
+    @asyncio.coroutine
     def log_message(service):
         """Handle sending notification message service calls."""
         message = service.data[ATTR_MESSAGE]
@@ -80,8 +90,8 @@ def setup(hass, config):
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
         message.hass = hass
-        message = message.render()
-        log_entry(hass, name, message, domain, entity_id)
+        message = message.async_render()
+        async_log_entry(hass, name, message, domain, entity_id)
 
     hass.wsgi.register_view(LogbookView(hass, config))
 
