@@ -48,14 +48,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def is_on(hass, entity_id=None):
     """Return if the switch is on based on the statemachine."""
-    return run_callback_threadsafe(
-        hass.loop, async_is_on, hass, entity_id).result()
-
-
-def async_is_on(hass, entity_id=None):
-    """Return if the switch is on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_SWITCHES
-    return hass.states.async_is_state(entity_id, STATE_ON)
+    return hass.states.is_state(entity_id, STATE_ON)
 
 
 def turn_on(hass, entity_id=None):

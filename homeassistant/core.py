@@ -679,40 +679,29 @@ class StateMachine(object):
         return list(self._states.values())
 
     def get(self, entity_id):
-        """Retrieve state of entity_id or None if not found."""
+        """Retrieve state of entity_id or None if not found.
+
+        Async friendly.
+        """
         return self._states.get(entity_id.lower())
 
     def is_state(self, entity_id, state):
-        """Test if entity exists and is specified state."""
-        return run_callback_threadsafe(
-            self._loop, self.async_is_state, entity_id, state
-        ).result()
-
-    def async_is_state(self, entity_id, state):
         """Test if entity exists and is specified state.
 
-        This method must be run in the event loop.
+        Async friendly.
         """
-        entity_id = entity_id.lower()
+        st = self.get(entity_id)
 
-        return (entity_id in self._states and
-                self._states[entity_id].state == state)
+        return st and st.state == state
 
     def is_state_attr(self, entity_id, name, value):
-        """Test if entity exists and has a state attribute set to value."""
-        return run_callback_threadsafe(
-            self._loop, self.async_is_state_attr, entity_id, name, value
-        ).result()
-
-    def async_is_state_attr(self, entity_id, name, value):
         """Test if entity exists and has a state attribute set to value.
 
-        This method must be run in the event loop.
+        Async friendly.
         """
-        entity_id = entity_id.lower()
+        st = self.get(entity_id)
 
-        return (entity_id in self._states and
-                self._states[entity_id].attributes.get(name, None) == value)
+        return st and st.attributes.get(name, None) == value
 
     def remove(self, entity_id):
         """Remove the state of an entity.

@@ -217,4 +217,4 @@ class GenericThermostat(ClimateDevice):
     @property
     def _is_device_active(self):
         """If the toggleable device is currently active."""
-        return switch.async_is_on(self.hass, self.heater_entity_id)
+        return switch.is_on(self.hass, self.heater_entity_id)
