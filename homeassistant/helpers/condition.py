@@ -89,6 +89,7 @@ def numeric_state(hass: HomeAssistant, entity, below=None, above=None,
         value_template, variables,
     ).result()
 
+
 def async_numeric_state(hass: HomeAssistant, entity, below=None, above=None,
                         value_template=None, variables=None):
     """Test a numeric state condition."""
