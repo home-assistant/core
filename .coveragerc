@@ -16,6 +16,9 @@ omit =
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
 
+    homeassistant/components/digital_ocean.py
+    homeassistant/components/*/digital_ocean.py
+
     homeassistant/components/dweet.py
     homeassistant/components/*/dweet.py
 
