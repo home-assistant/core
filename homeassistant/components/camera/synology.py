@@ -11,7 +11,8 @@ import voluptuous as vol
 import requests
 
 from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_URL, CONF_CAMERA_NAME, CONF_STREAM_ID)
+    CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
+    CONF_URL, CONF_CAMERA_NAME, CONF_STREAM_ID)
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
@@ -22,10 +23,13 @@ DEFAULT_STREAM_ID = '0'
 TIMEOUT = 10
 
 # pylint: disable=line-too-long
-MJPEG_URL = '{0}/webapi/SurveillanceStation/streaming.cgi?api=SYNO.SurveillanceStation.Streaming&method=LiveStream&version=1&cameraId={1}'
+MJPEG_URL = '{0}/webapi/SurveillanceStation/streaming.cgi?api=\
+SYNO.SurveillanceStation.Streaming&method=LiveStream&version=1&cameraId={1}'
 STILL_IMAGE_URL = '{0}{1}'
-LOGIN_URL = '{0}/webapi/auth.cgi?api=SYNO.API.Auth&method=Login&version=2&account={1}&passwd={2}&session=SurveillanceStation&format=sid'
-URL = '{0}/webapi/entry.cgi?api=SYNO.SurveillanceStation.Camera&method=List&version=1'
+LOGIN_URL = '{0}/webapi/auth.cgi?api=SYNO.API.Auth&method=\
+Login&version=2&account={1}&passwd={2}&session=SurveillanceStation&format=sid'
+URL = '{0}/webapi/entry.cgi?\
+api=SYNO.SurveillanceStation.Camera&method=List&version=1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -35,6 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CAMERA_NAME): cv.string,
     vol.Optional(CONF_STREAM_ID, default=DEFAULT_STREAM_ID): cv.string,
 })
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a Synology IP Camera."""
@@ -56,12 +61,12 @@ class SynologyCamera(Camera):
         self._camera_name = config.get(CONF_CAMERA_NAME)
         self._stream_id = config.get(CONF_STREAM_ID)
 
-        #We need to get a session id to retrieve the still image path and the images themselves.
         self.get_sid()
 
-        #With our session id (sid) we can get the snapshot path from the disk station.
+        # With our session id (sid) we can get the snapshot path.
         sidurl = URL.format(self._synology_url)
-        req = requests.get(sidurl, timeout=TIMEOUT, verify=False, cookies={'id': self._sid})
+        req = requests.get(
+            sidurl, timeout=TIMEOUT, verify=False, cookies={'id': self._sid})
         cam_resp = loads(req.text)
         cameras = cam_resp['data']['cameras']
 
@@ -69,13 +74,16 @@ class SynologyCamera(Camera):
             if camera['name'] == self._camera_name:
                 snapshot_path = camera['snapshot_path']
                 self._cam_id = str(camera['id'])
-                self._still_image_url = STILL_IMAGE_URL.format(self._synology_url, snapshot_path)
-                self._mjpeg_url = MJPEG_URL.format(self._synology_url, self._cam_id)
+                self._still_image_url = STILL_IMAGE_URL.format(
+                    self._synology_url, snapshot_path)
+                self._mjpeg_url = MJPEG_URL.format(
+                    self._synology_url, self._cam_id)
 
     def get_sid(self):
-        """Get a session id to retrieve the still image path and the images themselves."""
+        """Get a session id."""
         from json import loads
-        login_url = LOGIN_URL.format(self._synology_url, self._username, self._password)
+        login_url = LOGIN_URL.format(
+            self._synology_url, self._username, self._password)
         req = requests.get(login_url, timeout=TIMEOUT, verify=False)
         sid_resp = loads(req.text)
         sids = sid_resp['data']
@@ -84,9 +92,9 @@ class SynologyCamera(Camera):
     def camera_image(self):
         """Return a still image response from the camera."""
         try:
-            #With our session id (sid) we can get the snapshot path from the disk station.
             response = requests.get(
-                self._still_image_url, timeout=TIMEOUT, verify=False, cookies={'id': self._sid})
+                self._still_image_url, timeout=TIMEOUT,
+                verify=False, cookies={'id': self._sid})
         except requests.exceptions.RequestException as error:
             _LOGGER.error('Error getting camera image: %s', error)
             return None
@@ -96,12 +104,15 @@ class SynologyCamera(Camera):
         """Return a MJPEG stream image response directly from the camera."""
         from json import loads
         resp = requests.get(
-            self._mjpeg_url, stream=True, timeout=TIMEOUT, cookies={'id': self._sid})
+            self._mjpeg_url, stream=True, timeout=TIMEOUT,
+            cookies={'id': self._sid})
         if loads(resp.text)['success'] == 'false':
-            _LOGGER.error('Session ID %s expired for Synology NAS, getting new one', self._sid)
+            _LOGGER.error(
+                'Session ID %s expired for NAS, getting new one', self._sid)
             self.get_sid()
             return requests.get(
-                self._mjpeg_url, stream=True, timeout=TIMEOUT, cookies={'id': self._sid})
+                self._mjpeg_url, stream=True,
+                timeout=TIMEOUT, cookies={'id': self._sid})
         else:
             return resp
 
