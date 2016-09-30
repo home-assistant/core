@@ -78,7 +78,7 @@ class NestThermostat(ClimateDevice):
         return self.device.temperature
 
     @property
-    def operation(self):
+    def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
         if self.device.hvac_ac_state is True:
             return STATE_COOL
@@ -95,7 +95,8 @@ class NestThermostat(ClimateDevice):
             return self.device.away_temperature[0]
         if self.device.mode == 'range':
             return self.device.target[0]
-        return self.target_temperature
+        if self.device.hvac_heater_state:
+            return self.device.target
 
     @property
     def target_temperature_high(self):
@@ -105,7 +106,8 @@ class NestThermostat(ClimateDevice):
             return self.device.away_temperature[1]
         if self.device.mode == 'range':
             return self.device.target[1]
-        return self.target_temperature
+        if self.device.hvac_ac_state:
+            return self.device.target
 
     @property
     def is_away_mode_on(self):
@@ -121,7 +123,12 @@ class NestThermostat(ClimateDevice):
             target_temp_low = convert_temperature(kwargs.get(
                 ATTR_TARGET_TEMP_LOW), self._unit, TEMP_CELSIUS)
 
-        temp = (target_temp_low, target_temp_high)
+        if self.device.hvac_heater_state:
+            temp = target_temp_low
+        if self.device.hvac_ac_state:
+            temp = target_temp_high
+        if self.device.mode == 'range':
+            temp = (target_temp_low, target_temp_high)
         _LOGGER.debug("Nest set_temperature-output-value=%s", temp)
         self.device.target = temp
 
