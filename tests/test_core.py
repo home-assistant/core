@@ -1,6 +1,7 @@
 """Test to verify that Home Assistant core works."""
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
+import asyncio
 import os
 import signal
 import unittest
@@ -362,7 +363,6 @@ class TestServiceRegistry(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.services = self.hass.services
         self.services.register("Test_Domain", "TEST_SERVICE", lambda x: None)
-        self.hass.block_till_done()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down stuff we started."""
@@ -387,8 +387,13 @@ class TestServiceRegistry(unittest.TestCase):
     def test_call_with_blocking_done_in_time(self):
         """Test call with blocking."""
         calls = []
+
+        def service_handler(call):
+            """Service handler."""
+            calls.append(call)
+
         self.services.register("test_domain", "register_calls",
-                               lambda x: calls.append(1))
+                               service_handler)
 
         self.assertTrue(
             self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
@@ -403,6 +408,22 @@ class TestServiceRegistry(unittest.TestCase):
                                           blocking=True)
         finally:
             ha.SERVICE_CALL_LIMIT = prior
+
+    def test_async_service(self):
+        """Test registering and calling an async service."""
+        calls = []
+
+        @asyncio.coroutine
+        def service_handler(call):
+            """Service handler coroutine."""
+            calls.append(call)
+
+        self.services.register('test_domain', 'register_calls',
+                               service_handler)
+        self.assertTrue(
+            self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(calls))
 
 
 class TestConfig(unittest.TestCase):

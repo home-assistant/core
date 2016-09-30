@@ -68,7 +68,7 @@ colorlog>2.1,<3
 directpy==0.1
 
 # homeassistant.components.notify.xmpp
-dnspython3==1.12.0
+dnspython3==1.14.0
 
 # homeassistant.components.dweet
 # homeassistant.components.sensor.dweet
@@ -81,7 +81,7 @@ eliqonline==1.0.12
 enocean==0.31
 
 # homeassistant.components.keyboard_remote
-evdev==0.6.1
+# evdev==0.6.1
 
 # homeassistant.components.climate.honeywell
 # homeassistant.components.thermostat.honeywell
@@ -103,7 +103,7 @@ fixerio==0.1.1
 freesms==0.1.0
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.11.1
+fuzzywuzzy==0.12.0
 
 # homeassistant.components.device_tracker.bluetooth_le_tracker
 # gattlib==0.20150805
@@ -340,7 +340,7 @@ pyicloud==0.9.1
 pylast==1.6.0
 
 # homeassistant.components.sensor.loopenergy
-pyloopenergy==0.0.14
+pyloopenergy==0.0.15
 
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.3
@@ -361,6 +361,9 @@ pyserial==3.1.1
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
 pysnmp==4.3.2
+
+# homeassistant.components.digital_ocean
+python-digitalocean==1.9.0
 
 # homeassistant.components.sensor.forecast
 python-forecastio==1.3.4
@@ -387,7 +390,7 @@ python-nmap==0.6.1
 python-pushover==0.2
 
 # homeassistant.components.notify.telegram
-python-telegram-bot==5.0.0
+python-telegram-bot==5.1.0
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0

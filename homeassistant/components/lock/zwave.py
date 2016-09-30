@@ -16,14 +16,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
 
-    if value.command_class != zwave.COMMAND_CLASS_DOOR_LOCK:
+    if value.command_class != zwave.const.COMMAND_CLASS_DOOR_LOCK:
         return
-    if value.type != zwave.TYPE_BOOL:
+    if value.type != zwave.const.TYPE_BOOL:
         return
-    if value.genre != zwave.GENRE_USER:
+    if value.genre != zwave.const.GENRE_USER:
         return
 
     value.set_change_verified(False)

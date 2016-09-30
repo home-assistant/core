@@ -13,7 +13,6 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_VALUE_TEMPLATE, CONF_COMMAND_OFF,
     CONF_COMMAND_ON, CONF_COMMAND_STATE)
-from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +37,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     switches = []
 
     for device_name, device_config in devices.items():
+        value_template = device_config.get(CONF_VALUE_TEMPLATE)
+
+        if value_template is not None:
+            value_template.hass = hass
+
         switches.append(
             CommandSwitch(
                 hass,
@@ -45,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device_config.get(CONF_COMMAND_ON),
                 device_config.get(CONF_COMMAND_OFF),
                 device_config.get(CONF_COMMAND_STATE),
-                device_config.get(CONF_VALUE_TEMPLATE)
+                value_template,
             )
         )
 
@@ -135,8 +139,8 @@ class CommandSwitch(SwitchDevice):
         if self._command_state:
             payload = str(self._query_state())
             if self._value_template:
-                payload = template.render_with_possible_json_value(
-                    self._hass, self._value_template, payload)
+                payload = self._value_template.render_with_possible_json_value(
+                    payload)
             self._state = (payload.lower() == "true")
 
     def turn_on(self, **kwargs):

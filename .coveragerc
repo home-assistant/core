@@ -16,6 +16,9 @@ omit =
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
 
+    homeassistant/components/digital_ocean.py
+    homeassistant/components/*/digital_ocean.py
+
     homeassistant/components/dweet.py
     homeassistant/components/*/dweet.py
 
@@ -77,7 +80,7 @@ omit =
     homeassistant/components/zigbee.py
     homeassistant/components/*/zigbee.py
 
-    homeassistant/components/zwave.py
+    homeassistant/components/zwave/*
     homeassistant/components/*/zwave.py
 
     homeassistant/components/enocean.py

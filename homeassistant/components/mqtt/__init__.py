@@ -4,6 +4,7 @@ Support for MQTT message handling.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/
 """
+import asyncio
 import logging
 import os
 import socket
@@ -11,6 +12,7 @@ import time
 
 import voluptuous as vol
 
+from homeassistant.core import JobPriority
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
@@ -164,11 +166,20 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
 
 def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
     """Subscribe to an MQTT topic."""
+    @asyncio.coroutine
     def mqtt_topic_subscriber(event):
         """Match subscribed MQTT topic."""
-        if _match_topic(topic, event.data[ATTR_TOPIC]):
-            callback(event.data[ATTR_TOPIC], event.data[ATTR_PAYLOAD],
-                     event.data[ATTR_QOS])
+        if not _match_topic(topic, event.data[ATTR_TOPIC]):
+            return
+
+        if asyncio.iscoroutinefunction(callback):
+            yield from callback(
+                event.data[ATTR_TOPIC], event.data[ATTR_PAYLOAD],
+                event.data[ATTR_QOS])
+        else:
+            hass.add_job(callback, event.data[ATTR_TOPIC],
+                         event.data[ATTR_PAYLOAD], event.data[ATTR_QOS],
+                         priority=JobPriority.EVENT_CALLBACK)
 
     remove = hass.bus.listen(EVENT_MQTT_MESSAGE_RECEIVED,
                              mqtt_topic_subscriber)
@@ -264,8 +275,8 @@ def setup(hass, config):
         qos = call.data[ATTR_QOS]
         retain = call.data[ATTR_RETAIN]
         try:
-            payload = (payload if payload_template is None else
-                       template.render(hass, payload_template)) or ''
+            if payload_template is not None:
+                payload = template.Template(payload_template, hass).render()
         except template.jinja2.TemplateError as exc:
             _LOGGER.error(
                 "Unable to publish to '%s': rendering payload template of "

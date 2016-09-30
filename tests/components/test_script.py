@@ -2,7 +2,7 @@
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import script
 
 from tests.common import get_test_home_assistant
@@ -41,7 +41,7 @@ class TestScriptComponent(unittest.TestCase):
                 }
             },
         ):
-            assert not _setup_component(self.hass, 'script', {
+            assert not setup_component(self.hass, 'script', {
                 'script': value
             }), 'Script loaded with wrong config {}'.format(value)
 
@@ -58,7 +58,7 @@ class TestScriptComponent(unittest.TestCase):
 
         self.hass.bus.listen(event, record_event)
 
-        assert _setup_component(self.hass, 'script', {
+        assert setup_component(self.hass, 'script', {
             'script': {
                 'test': {
                     'sequence': [{
@@ -93,7 +93,7 @@ class TestScriptComponent(unittest.TestCase):
 
         self.hass.bus.listen(event, record_event)
 
-        assert _setup_component(self.hass, 'script', {
+        assert setup_component(self.hass, 'script', {
             'script': {
                 'test': {
                     'sequence': [{
@@ -127,7 +127,7 @@ class TestScriptComponent(unittest.TestCase):
 
         self.hass.services.register('test', 'script', record_call)
 
-        assert _setup_component(self.hass, 'script', {
+        assert setup_component(self.hass, 'script', {
             'script': {
                 'test': {
                     'sequence': {
