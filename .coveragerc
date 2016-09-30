@@ -77,7 +77,7 @@ omit =
     homeassistant/components/zigbee.py
     homeassistant/components/*/zigbee.py
 
-    homeassistant/components/zwave.py
+    homeassistant/components/zwave/*
     homeassistant/components/*/zwave.py
 
     homeassistant/components/enocean.py
