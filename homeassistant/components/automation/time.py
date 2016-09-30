@@ -4,6 +4,7 @@ Offer time listening automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#time-trigger
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -38,9 +39,10 @@ def trigger(hass, config, action):
         minutes = config.get(CONF_MINUTES)
         seconds = config.get(CONF_SECONDS)
 
+    @asyncio.coroutine
     def time_automation_listener(now):
         """Listen for time changes and calls action."""
-        action({
+        hass.async_add_job(action, {
             'trigger': {
                 'platform': 'time',
                 'now': now,
