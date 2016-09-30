@@ -1,4 +1,4 @@
-"""Th tests for the Rfxtrx component."""
+"""The tests for the Rfxtrx component."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 from unittest.mock import patch
@@ -10,7 +10,7 @@ from homeassistant.components import rfxtrx as rfxtrx
 from tests.common import get_test_home_assistant
 
 
-@pytest.mark.skipif("os.environ.get('RFXTRX') == 'SKIP'")
+@pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
 class TestRFXTRX(unittest.TestCase):
     """Test the Rfxtrx component."""
 
