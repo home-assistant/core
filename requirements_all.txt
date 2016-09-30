@@ -402,7 +402,7 @@ python-wink==0.7.15
 pyvera==0.2.20
 
 # homeassistant.components.wemo
-pywemo==0.4.6
+pywemo==0.4.7
 
 # homeassistant.components.climate.radiotherm
 # homeassistant.components.thermostat.radiotherm
