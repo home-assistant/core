@@ -87,10 +87,6 @@ class PushBulletNotificationService(BaseNotificationService):
             _LOGGER.info('Sent notification to self')
             return
 
-        # Make list if not so
-        if not isinstance(targets, list):
-            targets = [targets]
-
         # Main loop, Process all targets specified
         for target in targets:
             try:

@@ -63,9 +63,6 @@ class PushoverNotificationService(BaseNotificationService):
 
         targets = kwargs.get(ATTR_TARGET)
 
-        if not isinstance(targets, list):
-            targets = [targets]
-
         for target in targets:
             if target is not None:
                 data['device'] = target

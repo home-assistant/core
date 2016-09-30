@@ -68,14 +68,7 @@ class SlackNotificationService(BaseNotificationService):
         """Send a message to a user."""
         import slacker
 
-        targets = kwargs.get(ATTR_TARGET, self._default_channel)
-
-        if not targets:
-            _LOGGER.info("At least 1 target is required")
-            return
-
-        if not isinstance(targets, list):
-            targets = [targets]
+        targets = kwargs.get(ATTR_TARGET, [self._default_channel])
 
         data = kwargs.get('data')
         attachments = data.get('attachments') if data else None
