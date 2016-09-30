@@ -125,19 +125,21 @@ def track_sunrise(hass, action, offset=None):
 
         return next_time
 
+    @asyncio.coroutine
     def sunrise_automation_listener(now):
         """Called when it's time for action."""
         nonlocal remove
-        remove = track_point_in_utc_time(hass, sunrise_automation_listener,
-                                         next_rise())
-        action()
+        remove = async_track_point_in_utc_time(
+            hass, sunrise_automation_listener, next_rise())
+        hass.async_add_job(action)
 
-    remove = track_point_in_utc_time(hass, sunrise_automation_listener,
-                                     next_rise())
+    remove = run_callback_threadsafe(
+        hass.loop, async_track_point_in_utc_time, hass,
+        sunrise_automation_listener, next_rise()).result()
 
     def remove_listener():
-        """Remove sunrise listener."""
-        remove()
+        """Remove sunset listener."""
+        run_callback_threadsafe(hass.loop, remove).result()
 
     return remove_listener
 
@@ -156,19 +158,21 @@ def track_sunset(hass, action, offset=None):
 
         return next_time
 
+    @asyncio.coroutine
     def sunset_automation_listener(now):
         """Called when it's time for action."""
         nonlocal remove
-        remove = track_point_in_utc_time(hass, sunset_automation_listener,
-                                         next_set())
-        action()
+        remove = async_track_point_in_utc_time(
+            hass, sunset_automation_listener, next_set())
+        hass.async_add_job(action)
 
-    remove = track_point_in_utc_time(hass, sunset_automation_listener,
-                                     next_set())
+    remove = run_callback_threadsafe(
+        hass.loop, async_track_point_in_utc_time, hass,
+        sunset_automation_listener, next_set()).result()
 
     def remove_listener():
         """Remove sunset listener."""
-        remove()
+        run_callback_threadsafe(hass.loop, remove).result()
 
     return remove_listener
 
