@@ -70,6 +70,19 @@ def track_point_in_time(hass, action, point_in_time):
 
 def track_point_in_utc_time(hass, action, point_in_time):
     """Add a listener that fires once after a specific point in UTC time."""
+    async_unsub = run_callback_threadsafe(
+        hass.loop, async_track_point_in_utc_time, hass, action, point_in_time
+    ).result()
+
+    def remove():
+        """Remove listener."""
+        run_callback_threadsafe(hass.loop, async_unsub).result()
+
+    return remove
+
+
+def async_track_point_in_utc_time(hass, action, point_in_time):
+    """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
     point_in_time = dt_util.as_utc(point_in_time)
 
@@ -88,20 +101,14 @@ def track_point_in_utc_time(hass, action, point_in_time):
         # listener gets lined up twice to be executed. This will make
         # sure the second time it does nothing.
         point_in_time_listener.run = True
-        async_remove()
+        async_unsub()
 
         hass.async_add_job(action, now)
 
-    future = run_callback_threadsafe(
-        hass.loop, hass.bus.async_listen, EVENT_TIME_CHANGED,
-        point_in_time_listener)
-    async_remove = future.result()
+    async_unsub = hass.bus.async_listen(EVENT_TIME_CHANGED,
+                                        point_in_time_listener)
 
-    def remove():
-        """Remove listener."""
-        run_callback_threadsafe(hass.loop, async_remove).result()
-
-    return remove
+    return async_unsub
 
 
 def track_sunrise(hass, action, offset=None):
