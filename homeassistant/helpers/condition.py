@@ -84,6 +84,14 @@ def or_from_config(config: ConfigType, config_validation: bool=True):
 def numeric_state(hass: HomeAssistant, entity, below=None, above=None,
                   value_template=None, variables=None):
     """Test a numeric state condition."""
+    return run_callback_threadsafe(
+        hass.loop, async_numeric_state, hass, entity, below, above,
+        value_template, variables,
+    ).result()
+
+def async_numeric_state(hass: HomeAssistant, entity, below=None, above=None,
+                        value_template=None, variables=None):
+    """Test a numeric state condition."""
     if isinstance(entity, str):
         entity = hass.states.get(entity)
 
@@ -96,7 +104,7 @@ def numeric_state(hass: HomeAssistant, entity, below=None, above=None,
         variables = dict(variables or {})
         variables['state'] = entity
         try:
-            value = value_template.render(variables)
+            value = value_template.async_render(variables)
         except TemplateError as ex:
             _LOGGER.error("Template error: %s", ex)
             return False
