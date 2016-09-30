@@ -24,8 +24,7 @@ class TestRFXTRX(unittest.TestCase):
         rfxtrx.RFX_DEVICES = {}
         self.hass.stop()
 
-    @patch('RFXtrx.sleep')
-    def test_default_config(self, mock_sleep):
+    def test_default_config(self):
         """Test configuration."""
         self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
@@ -41,8 +40,7 @@ class TestRFXTRX(unittest.TestCase):
 
         self.assertEqual(len(rfxtrx.RFXOBJECT.sensors()), 2)
 
-    @patch('RFXtrx.sleep')
-    def test_valid_config(self, mock_sleep):
+    def test_valid_config(self):
         """Test configuration."""
         self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
@@ -71,8 +69,7 @@ class TestRFXTRX(unittest.TestCase):
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
                 'invalid_key': True}}))
 
-    @patch('RFXtrx.sleep')
-    def test_fire_event(self, mock_sleep):
+    def test_fire_event(self):
         """Test fire event."""
         self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
@@ -116,8 +113,7 @@ class TestRFXTRX(unittest.TestCase):
         self.assertEqual(calls[0].data,
                          {'entity_id': 'switch.test', 'state': 'on'})
 
-    @patch('RFXtrx.sleep')
-    def test_fire_event_sensor(self, mock_sleep):
+    def test_fire_event_sensor(self):
         """Test fire event."""
         self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
