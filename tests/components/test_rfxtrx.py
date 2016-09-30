@@ -1,7 +1,6 @@
 """The tests for the Rfxtrx component."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
-from unittest.mock import patch
 
 import pytest
 
