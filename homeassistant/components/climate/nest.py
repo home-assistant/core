@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                  for structure, device in nest.devices()])
 
 
-# pylint: disable=abstract-method
+# pylint: disable=abstract-method,too-many-public-methods
 class NestThermostat(ClimateDevice):
     """Representation of a Nest thermostat."""
 
@@ -64,6 +64,7 @@ class NestThermostat(ClimateDevice):
 
     @property
     def state(self):
+        """Return the current state."""
         if self.device.hvac_ac_state:
             return STATE_COOL
         elif self.device.hvac_heater_state:
