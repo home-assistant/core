@@ -12,8 +12,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.digital_ocean import (
     CONF_DROPLETS, ATTR_CREATED_AT, ATTR_DROPLET_ID, ATTR_DROPLET_NAME,
-    ATTR_FEATURES, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_KERNEL,
-    ATTR_MEMORY, ATTR_REGION, ATTR_VCPUS)
+    ATTR_FEATURES, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
+    ATTR_REGION, ATTR_VCPUS)
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
@@ -77,7 +77,6 @@ class DigitalOceanBinarySensor(BinarySensorDevice):
             ATTR_FEATURES: self.data.features,
             ATTR_IPV4_ADDRESS: self.data.ip_address,
             ATTR_IPV6_ADDRESS: self.data.ip_v6_address,
-            ATTR_KERNEL: self.data.kernel,
             ATTR_MEMORY: self.data.memory,
             ATTR_REGION: self.data.region['name'],
             ATTR_VCPUS: self.data.vcpus,
