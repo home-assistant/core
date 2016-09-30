@@ -8,12 +8,11 @@ import logging
 import voluptuous as vol
 import homeassistant.components.nest as nest
 from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice,
+    STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
     PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE)
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
-from homeassistant.util.temperature import convert as convert_temperature
 
 DEPENDENCIES = ['nest']
 _LOGGER = logging.getLogger(__name__)
@@ -127,8 +126,9 @@ class NestThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None and \
-           kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
+       target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+       target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+       if target_temp_low is not None and target_temp_high is not None:
 
             if self.device.mode == 'range':
                 temp = (target_temp_low, target_temp_high)
