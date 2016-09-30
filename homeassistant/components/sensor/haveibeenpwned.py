@@ -29,6 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
 })
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the RESTful sensor."""
@@ -95,6 +96,7 @@ class HaveIBeenPwnedSensor(Entity):
         self._data.update()
         if self._data.email == self._email:
             self._value = self._data.data
+
 
 # pylint: disable=too-few-public-methods
 class HaveIBeenPwnedData(object):
