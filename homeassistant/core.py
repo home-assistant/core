@@ -690,18 +690,18 @@ class StateMachine(object):
 
         Async friendly.
         """
-        st = self.get(entity_id)
+        state_obj = self.get(entity_id)
 
-        return st and st.state == state
+        return state_obj and state_obj.state == state
 
     def is_state_attr(self, entity_id, name, value):
         """Test if entity exists and has a state attribute set to value.
 
         Async friendly.
         """
-        st = self.get(entity_id)
+        state_obj = self.get(entity_id)
 
-        return st and st.attributes.get(name, None) == value
+        return state_obj and state_obj.attributes.get(name, None) == value
 
     def remove(self, entity_id):
         """Remove the state of an entity.
