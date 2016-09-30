@@ -21,11 +21,10 @@ DEFAULT_NAME = 'Synology Camera'
 DEFAULT_STREAM_ID = '0'
 TIMEOUT = 10
 
-MJPEG_URL = '{0}/webapi/SurveillanceStation/streaming.cgi?api=\
-            SYNO.SurveillanceStation.Streaming&method=LiveStream&version=1&cameraId={1}'
+# pylint: disable=line-too-long
+MJPEG_URL = '{0}/webapi/SurveillanceStation/streaming.cgi?api=SYNO.SurveillanceStation.Streaming&method=LiveStream&version=1&cameraId={1}'
 STILL_IMAGE_URL = '{0}{1}'
-LOGIN_URL = '{0}/webapi/auth.cgi?api=SYNO.API.Auth&method=Login&\
-            version=2&account={1}&passwd={2}&session=SurveillanceStation&format=sid'
+LOGIN_URL = '{0}/webapi/auth.cgi?api=SYNO.API.Auth&method=Login&version=2&account={1}&passwd={2}&session=SurveillanceStation&format=sid'
 URL = '{0}/webapi/entry.cgi?api=SYNO.SurveillanceStation.Camera&method=List&version=1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -85,7 +84,6 @@ class SynologyCamera(Camera):
     def get_sid(self):
         """Get a session id to retrieve the still image path and the images themselves."""
         from json import loads
-
         login_url = LOGIN_URL.format(self._synology_url, self._username, self._password)
         req = requests.get(login_url, timeout=TIMEOUT, verify=False)
         sid_resp = loads(req.text)
