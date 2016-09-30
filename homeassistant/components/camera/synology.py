@@ -6,7 +6,6 @@ https://home-assistant.io/components/camera.generic/
 """
 import logging
 
-import json
 from json import loads
 
 import requests
