@@ -19,7 +19,6 @@ from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     ATTR_ENTITY_ID)
 from homeassistant.components import group
-from homeassistant.util.async import run_callback_threadsafe
 
 DOMAIN = 'switch'
 SCAN_INTERVAL = 30
