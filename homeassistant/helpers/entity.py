@@ -1,4 +1,5 @@
 """An abstract class for entities."""
+import asyncio
 import logging
 
 from typing import Any, Optional, List, Dict
@@ -11,6 +12,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
+from homeassistant.util.async import run_coroutine_threadsafe
 
 # Entity attributes that we will overwrite
 _OVERWRITE = {}  # type: Dict[str, Any]
@@ -143,6 +145,23 @@ class Entity(object):
 
         If force_refresh == True will update entity before setting state.
         """
+        # We're already in a thread, do the force refresh here.
+        if force_refresh and not hasattr(self, 'async_update'):
+            self.update()
+            force_refresh = False
+
+        run_coroutine_threadsafe(
+            self.async_update_ha_state(force_refresh), self.hass.loop
+        ).result()
+
+    @asyncio.coroutine
+    def async_update_ha_state(self, force_refresh=False):
+        """Update Home Assistant with current state of entity.
+
+        If force_refresh == True will update entity before setting state.
+
+        This method must be run in the event loop.
+        """
         if self.hass is None:
             raise RuntimeError("Attribute hass is None for {}".format(self))
 
@@ -151,7 +170,13 @@ class Entity(object):
                 "No entity id specified for entity {}".format(self.name))
 
         if force_refresh:
-            self.update()
+            if hasattr(self, 'async_update'):
+                # pylint: disable=no-member
+                self.async_update()
+            else:
+                # PS: Run this in our own thread pool once we have
+                #     future support?
+                yield from self.hass.loop.run_in_executor(None, self.update)
 
         state = STATE_UNKNOWN if self.state is None else str(self.state)
         attr = self.state_attributes or {}
@@ -192,7 +217,7 @@ class Entity(object):
             # Could not convert state to float
             pass
 
-        return self.hass.states.set(
+        self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update)
 
     def remove(self) -> None:
