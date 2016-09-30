@@ -6,16 +6,12 @@ https://home-assistant.io/components/camera.generic/
 """
 import logging
 
-from json import loads
-
 import requests
-from requests.auth import HTTPBasicAuth
 
 from homeassistant.components.camera import DOMAIN, Camera
 from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
-
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -31,6 +27,7 @@ class SynologyCamera(Camera):
     """An implementation of a Synology NAS based IP camera."""
 
     def __init__(self, device_info):
+        from json import loads
         """Initialize a Synology Surveillance Station camera."""
         super().__init__()
         self._name = device_info.get('name', 'Synology Camera')
