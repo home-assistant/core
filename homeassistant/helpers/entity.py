@@ -146,11 +146,13 @@ class Entity(object):
         If force_refresh == True will update entity before setting state.
         """
         # We're already in a thread, do the force refresh here.
-        if force_refresh:
+        if force_refresh and not hasattr(self, 'async_update'):
             self.update()
+            force_refresh = False
 
         run_coroutine_threadsafe(
-            self.async_update_ha_state(), self.hass.loop).result()
+            self.async_update_ha_state(force_refresh), self.hass.loop
+        ).result()
 
     @asyncio.coroutine
     def async_update_ha_state(self, force_refresh=False):
@@ -168,7 +170,12 @@ class Entity(object):
                 "No entity id specified for entity {}".format(self.name))
 
         if force_refresh:
-            yield from self.hass.loop.run_in_executor(None, self.update)
+            if hasattr(self, 'async_update'):
+                self.async_update()
+            else:
+                # TODO PS: Run this in our own thread pool once we have
+                #          future support?
+                yield from self.hass.loop.run_in_executor(None, self.update)
 
         state = STATE_UNKNOWN if self.state is None else str(self.state)
         attr = self.state_attributes or {}
