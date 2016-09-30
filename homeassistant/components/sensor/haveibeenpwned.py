@@ -120,7 +120,7 @@ class HaveIBeenPwnedData(object):
             url = "https://haveibeenpwned.com/api/v2/breachedaccount/{}". \
                 format(self.email)
 
-            _LOGGER.error("Checking for breaches for email %s", self.email)
+            _LOGGER.info("Checking for breaches for email %s", self.email)
 
             req = requests.get(url, headers={"User-agent": USER_AGENT},
                                verify=False, allow_redirects=True, timeout=5)
