@@ -6,6 +6,7 @@ https://home-assistant.io/components/nest/
 """
 import logging
 import socket
+from IPython import embed
 
 import voluptuous as vol
 
@@ -33,6 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Setup the Nest thermostat component."""
     import nest
+
 
     conf = config[DOMAIN]
     username = conf[CONF_USERNAME]
@@ -85,3 +87,16 @@ class NestDevice(object):
         except socket.error:
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
+
+    def camera_devices(self):
+        """Generator returning list of camera devices."""
+        try:
+            for structure in self.nest.structures:
+                if structure.name in self._structure
+                    for device in structure.cameradevices:
+                        yield(structure, device)
+                else:
+                    _LOGGER.info("Ignoring structure %s, not in %s",
+                                 structure.name, STRUCTURES_TO_INCLUDE)
+        except socket.error:
+            _LOGGER.error("Connection error logging into the nest web service.")
