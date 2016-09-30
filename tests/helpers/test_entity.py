@@ -1,7 +1,6 @@
 """Test the entity helper."""
 # pylint: disable=protected-access,too-many-public-methods
 import asyncio
-import unittest
 from unittest.mock import MagicMock
 
 import pytest
@@ -10,6 +9,7 @@ import homeassistant.helpers.entity as entity
 from homeassistant.const import ATTR_HIDDEN
 
 from tests.common import get_test_home_assistant
+
 
 def require_hass(method):
     method.__test_hass = True
@@ -75,8 +75,8 @@ class TestHelpersEntity(object):
                     fmt, 'overwrite hidden true',
                     current_ids=['test.overwrite_hidden_true'])
         assert 'test.overwrite_hidden_true' == \
-                entity.generate_entity_id(fmt, 'overwrite hidden true',
-                                          current_ids=['test.another_entity'])
+               entity.generate_entity_id(fmt, 'overwrite hidden true',
+                                         current_ids=['test.another_entity'])
 
     def test_async_update_support(self, event_loop):
         """Test async update getting called."""

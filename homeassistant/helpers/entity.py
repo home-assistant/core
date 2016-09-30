@@ -171,10 +171,11 @@ class Entity(object):
 
         if force_refresh:
             if hasattr(self, 'async_update'):
+                # pylint: disable=no-member
                 self.async_update()
             else:
-                # TODO PS: Run this in our own thread pool once we have
-                #          future support?
+                # PS: Run this in our own thread pool once we have
+                #     future support?
                 yield from self.hass.loop.run_in_executor(None, self.update)
 
         state = STATE_UNKNOWN if self.state is None else str(self.state)
