@@ -78,7 +78,6 @@ class NestThermostat(ClimateDevice):
         return {
             "humidity": self.device.humidity,
             "target_humidity": self.device.target_humidity,
-            "mode": self.device.mode
         }
 
     @property
