@@ -1,12 +1,18 @@
-#####SWITCH####
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT
+"""
+Support for Harmony activities represented as a switch.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/harmony/
+"""
+
+from homeassistant.components.switch import ToggleEntity
+from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_ON
 import homeassistant.components.harmony as harmony
 import pyharmony
 import logging
 
 
-REQUIREMENTS = ['pyharmony>=0.2.0']
+DEPENDENCIES = ['harmony']
 _LOGGER = logging.getLogger(__name__)
 CONF_IP = 'ip'
 
@@ -26,7 +32,7 @@ def setup_platform(hass, config, add_devices_callback, configData, discovery_inf
     return True
 
 
-class HarmonySwitch(harmony.HarmonyDevice, SwitchDevice):
+class HarmonySwitch(harmony.HarmonyDevice, ToggleEntity):
     """Switch used to start an activity via a Harmony device"""
 
     def __init__(self, activityName, hubName, username, password, ip, port, state, activityID):
@@ -34,20 +40,40 @@ class HarmonySwitch(harmony.HarmonyDevice, SwitchDevice):
         self._name = 'harmony_' + hubName + '_' + self._name
         self._state = state
         self._activityID = activityID
+        self._activityName = activityName
+
 
     @property
     def name(self):
         """Return the name of the activity"""
         return self._name
 
+
     @property
     def activityID(self):
         return self._activityID
 
     @property
-    def is_on(self):
-        return self._state
+    def state(self):
+        """Return the state of the sensor."""
+        if self.get_status() == self._activityName:
+            return STATE_ON
+        else:
+            return STATE_OFF
+
+
+    @property
+    def state_attributes(self):
+        """Overwrite inherited attributes"""
+        return {'activity_id': self._activityID,
+                'activity_name': self._activityName}
+
 
     def turn_on(self):
+        """Turn the switch on."""
         pyharmony.ha_start_activity(self._email, self._password, self._ip, self._port, self._activityID)
+        self.turn_off()
+
+    def turn_off(self):
+        """Turn the switch off."""
         self._state = False
