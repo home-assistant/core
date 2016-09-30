@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 USER_AGENT = "Home Assistant HaveIBeenPwned Sensor Component"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=4)
 SCAN_INTERVAL = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -36,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     emails = config.get(CONF_EMAIL)
 
     data = HaveIBeenPwnedData(emails)
-    data.update = Throttle(MIN_TIME_BETWEEN_UPDATES)(data.update)
+    data.update = Throttle(timedelta(seconds=SCAN_INTERVAL-1))(data.update)
 
     dev = []
     for email in emails:
@@ -108,7 +107,6 @@ class HaveIBeenPwnedData(object):
         self._current_index = -1
         self.data = None
         self.email = None
-        self._current_url = None
         self._emails = emails
 
     def update(self):
@@ -134,7 +132,10 @@ class HaveIBeenPwnedData(object):
             # if he was ok with this abuse protection scheme and it
             # was fine for him like this
             if self._current_index == self._email_count - 1:
-                self.update = Throttle(timedelta(minutes=14))(self.update)
+                global SCAN_INTERVAL
+                SCAN_INTERVAL = 60*15
+                self.update = Throttle(timedelta(
+                    seconds=SCAN_INTERVAL-5))(self.update)
 
         except requests.exceptions.RequestException as exception:
             _LOGGER.error(exception)
