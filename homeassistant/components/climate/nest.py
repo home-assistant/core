@@ -8,7 +8,7 @@ import logging
 import voluptuous as vol
 import homeassistant.components.nest as nest
 from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice,
+    STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
     PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE)
 from homeassistant.const import (
