@@ -290,7 +290,10 @@ def time_from_config(config, config_validation=True):
 
 
 def zone(hass, zone_ent, entity):
-    """Test if zone-condition matches."""
+    """Test if zone-condition matches.
+
+    Can be run async.
+    """
     if isinstance(zone_ent, str):
         zone_ent = hass.states.get(zone_ent)
 

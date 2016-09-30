@@ -4,6 +4,7 @@ Offer zone automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#zone-trigger
 """
+import asyncio
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -31,6 +32,7 @@ def trigger(hass, config, action):
     zone_entity_id = config.get(CONF_ZONE)
     event = config.get(CONF_EVENT)
 
+    @asyncio.coroutine
     def zone_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
         if from_s and not location.has_location(from_s) or \
@@ -47,7 +49,7 @@ def trigger(hass, config, action):
         # pylint: disable=too-many-boolean-expressions
         if event == EVENT_ENTER and not from_match and to_match or \
            event == EVENT_LEAVE and from_match and not to_match:
-            action({
+            hass.async_add_job(action, {
                 'trigger': {
                     'platform': 'zone',
                     'entity_id': entity,
