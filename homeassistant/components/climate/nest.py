@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
     PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE)
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_SCAN_INTERVAL, STATE_ON)
+    TEMP_CELSIUS, CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
 from homeassistant.util.temperature import convert as convert_temperature
 
 DEPENDENCIES = ['nest']
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                  for structure, device in nest.devices()])
 
 
-# pylint: disable=abstract-method
+# pylint: disable=abstract-method,too-many-public-methods
 class NestThermostat(ClimateDevice):
     """Representation of a Nest thermostat."""
 
@@ -41,7 +41,8 @@ class NestThermostat(ClimateDevice):
         self.structure = structure
         self.device = device
         self._fan_list = [STATE_ON, STATE_AUTO]
-        self._operation_list = [STATE_COOL, STATE_IDLE, STATE_HEAT]
+        self._operation_list = [STATE_HEAT, STATE_COOL, STATE_AUTO,
+                                STATE_OFF]
 
     @property
     def name(self):
@@ -68,7 +69,6 @@ class NestThermostat(ClimateDevice):
         return {
             "humidity": self.device.humidity,
             "target_humidity": self.device.target_humidity,
-            "mode": self.device.mode
         }
 
     @property
@@ -79,12 +79,16 @@ class NestThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if self.device.hvac_ac_state:
+        if self.device.mode == 'cool':
             return STATE_COOL
-        elif self.device.hvac_heater_state:
+        elif self.device.mode == 'heat':
             return STATE_HEAT
+        elif self.device.mode == 'range':
+            return STATE_AUTO
+        elif self.device.mode == 'off':
+            return STATE_OFF
         else:
-            return STATE_IDLE
+            return STATE_UNKNOWN
 
     @property
     def target_temperature(self):
@@ -139,7 +143,14 @@ class NestThermostat(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        self.device.mode = operation_mode
+        if operation_mode == STATE_HEAT:
+            self.device.mode = 'heat'
+        elif operation_mode == STATE_COOL:
+            self.device.mode = 'cool'
+        elif operation_mode == STATE_AUTO:
+            self.device.mode = 'range'
+        elif operation_mode == STATE_OFF:
+            self.device.mode = 'off'
 
     @property
     def operation_list(self):
