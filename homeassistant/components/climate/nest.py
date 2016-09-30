@@ -63,16 +63,6 @@ class NestThermostat(ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def state(self):
-        """Return the current state."""
-        if self.device.hvac_ac_state:
-            return STATE_COOL
-        elif self.device.hvac_heater_state:
-            return STATE_HEAT
-        else:
-            return STATE_IDLE
-
-    @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         # Move these to Thermostat Device and make them global
