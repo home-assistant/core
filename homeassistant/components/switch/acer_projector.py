@@ -4,6 +4,7 @@ Use serial protocol of Acer projector to obtain state of the projector.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/switch.acer_projector/
 """
+import os
 import logging
 import re
 
@@ -45,8 +46,18 @@ CMD_DICT = {LAMP: '* 0 Lamp ?\r',
             STATE_ON: '* 0 IR 001\r',
             STATE_OFF: '* 0 IR 002\r'}
 
+
+def isdevice(dev):
+    """Check if dev a real device."""
+    try:
+        os.stat(dev)
+        return str(dev)
+    except OSError:
+        raise vol.Invalid("No device found!")
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILENAME): cv.isfile,
+    vol.Required(CONF_FILENAME): isdevice,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_WRITE_TIMEOUT, default=DEFAULT_WRITE_TIMEOUT):
