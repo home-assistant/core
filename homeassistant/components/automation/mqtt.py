@@ -4,6 +4,7 @@ Offer MQTT listening automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#mqtt-trigger
 """
+import asyncio
 import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
@@ -26,10 +27,11 @@ def trigger(hass, config, action):
     topic = config.get(CONF_TOPIC)
     payload = config.get(CONF_PAYLOAD)
 
+    @asyncio.coroutine
     def mqtt_automation_listener(msg_topic, msg_payload, qos):
         """Listen for MQTT messages."""
         if payload is None or payload == msg_payload:
-            action({
+            hass.async_add_job(action, {
                 'trigger': {
                     'platform': 'mqtt',
                     'topic': msg_topic,

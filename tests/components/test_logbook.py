@@ -1,7 +1,8 @@
 """The tests for the logbook component."""
 # pylint: disable=protected-access,too-many-public-methods
-import unittest
 from datetime import timedelta
+import unittest
+from unittest.mock import patch
 
 from homeassistant.components import sun
 import homeassistant.core as ha
@@ -18,13 +19,17 @@ from tests.common import mock_http_component, get_test_home_assistant
 class TestComponentLogbook(unittest.TestCase):
     """Test the History component."""
 
-    EMPTY_CONFIG = logbook.CONFIG_SCHEMA({ha.DOMAIN: {}, logbook.DOMAIN: {}})
+    EMPTY_CONFIG = logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})
 
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_http_component(self.hass)
-        assert setup_component(self.hass, logbook.DOMAIN, self.EMPTY_CONFIG)
+        self.hass.config.components += ['frontend', 'recorder', 'api']
+        with patch('homeassistant.components.logbook.'
+                   'register_built_in_panel'):
+            assert setup_component(self.hass, logbook.DOMAIN,
+                                   self.EMPTY_CONFIG)
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -44,7 +49,6 @@ class TestComponentLogbook(unittest.TestCase):
             logbook.ATTR_DOMAIN: 'switch',
             logbook.ATTR_ENTITY_ID: 'switch.test_switch'
         }, True)
-        self.hass.block_till_done()
 
         self.assertEqual(1, len(calls))
         last_call = calls[-1]
@@ -65,7 +69,6 @@ class TestComponentLogbook(unittest.TestCase):
 
         self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
         self.hass.services.call(logbook.DOMAIN, 'log', {}, True)
-        self.hass.block_till_done()
 
         self.assertEqual(0, len(calls))
 
