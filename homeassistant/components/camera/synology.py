@@ -36,7 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STREAM_ID, default=DEFAULT_STREAM_ID): cv.string,
 })
 
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a Synology IP Camera."""
     add_devices([SynologyCamera(config)])
@@ -58,11 +57,6 @@ class SynologyCamera(Camera):
         self._stream_id = config.get(CONF_STREAM_ID)
 
         #We need to get a session id to retrieve the still image path and the images themselves.
-#        login_url = LOGIN_URL.format(self._synology_url, self._username, self._password)
-#        r = requests.get(login_url, timeout=TIMEOUT, verify=False)
-#        sidResp = loads(r1.text)
-#        sids = sidResp['data']
-#        self._sid = sids['sid']
         self.get_sid()
 
         #With our session id (sid) we can get the snapshot path from the disk station.
@@ -77,9 +71,6 @@ class SynologyCamera(Camera):
                 self._cam_id = str(camera['id'])
                 self._still_image_url = STILL_IMAGE_URL.format(self._synology_url, snapshot_path)
                 self._mjpeg_url = MJPEG_URL.format(self._synology_url, self._cam_id)
-
-
-
 
     def get_sid(self):
         """Get a session id to retrieve the still image path and the images themselves."""
