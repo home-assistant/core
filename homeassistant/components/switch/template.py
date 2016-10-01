@@ -4,6 +4,7 @@ Support for switches which integrates with other components.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.template/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -87,9 +88,10 @@ class SwitchTemplate(SwitchDevice):
 
         self.update()
 
+        @asyncio.coroutine
         def template_switch_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
-            self.update_ha_state(True)
+            yield from self.async_update_ha_state(True)
 
         track_state_change(hass, entity_ids, template_switch_state_listener)
 
@@ -121,10 +123,11 @@ class SwitchTemplate(SwitchDevice):
         """Fire the off action."""
         self._off_script.run()
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Update the state from the template."""
         try:
-            state = self._template.render().lower()
+            state = self._template.async_render().lower()
 
             if state in _VALID_STATES:
                 self._state = state in ('true', STATE_ON)

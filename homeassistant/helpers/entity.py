@@ -24,12 +24,19 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
                        current_ids: Optional[List[str]]=None,
                        hass: Optional[HomeAssistant]=None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-    name = (name or DEVICE_DEFAULT_NAME).lower()
     if current_ids is None:
         if hass is None:
             raise ValueError("Missing required parameter currentids or hass")
 
         current_ids = hass.states.entity_ids()
+
+    return async_generate_entity_id(entity_id_format, name, current_ids)
+
+
+def async_generate_entity_id(entity_id_format: str, name: Optional[str],
+                             current_ids: Optional[List[str]]=None) -> str:
+    """Generate a unique entity ID based on given entity IDs or used IDs."""
+    name = (name or DEVICE_DEFAULT_NAME).lower()
 
     return ensure_unique_string(
         entity_id_format.format(slugify(name)), current_ids)
@@ -49,6 +56,11 @@ class Entity(object):
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inheriting
     # this class. These may be used to customize the behavior of the entity.
+    entity_id = None  # type: str
+
+    # Owning hass instance. Will be set by EntityComponent
+    hass = None  # type: Optional[HomeAssistant]
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -128,17 +140,21 @@ class Entity(object):
         return False
 
     def update(self):
-        """Retrieve latest state."""
-        pass
+        """Retrieve latest state.
 
-    entity_id = None  # type: str
+        When not implemented, will forward call to async version if available.
+        """
+        async_update = getattr(self, 'async_update', None)
+
+        if async_update is None:
+            return
+
+        run_coroutine_threadsafe(async_update(), self.hass.loop).result()
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
-
-    hass = None  # type: Optional[HomeAssistant]
 
     def update_ha_state(self, force_refresh=False):
         """Update Home Assistant with current state of entity.
@@ -172,7 +188,7 @@ class Entity(object):
         if force_refresh:
             if hasattr(self, 'async_update'):
                 # pylint: disable=no-member
-                self.async_update()
+                yield from self.async_update()
             else:
                 # PS: Run this in our own thread pool once we have
                 #     future support?
