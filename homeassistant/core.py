@@ -122,8 +122,8 @@ class HomeAssistant(object):
     def __init__(self, loop=None):
         """Initialize new Home Assistant object."""
         self.loop = loop or asyncio.get_event_loop()
-        self.executer = ThreadPoolExecutor(max_workers=5)
-        self.loop.set_default_executor(self.executer)
+        self.executor = ThreadPoolExecutor(max_workers=5)
+        self.loop.set_default_executor(self.executor)
         self.pool = pool = create_worker_pool()
         self.bus = EventBus(pool, self.loop)
         self.services = ServiceRegistry(self.bus, self.add_job, self.loop)
@@ -287,7 +287,7 @@ class HomeAssistant(object):
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         yield from self.loop.run_in_executor(None, self.pool.block_till_done)
         yield from self.loop.run_in_executor(None, self.pool.stop)
-        self.executer.shutdown()
+        self.executor.shutdown()
         self.state = CoreState.not_running
         self.loop.stop()
 
