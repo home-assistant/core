@@ -53,7 +53,12 @@ def test_async_update_support(event_loop):
     assert len(sync_update) == 1
     assert len(async_update) == 0
 
-    ent.async_update = lambda: async_update.append(1)
+    @asyncio.coroutine
+    def async_update_func():
+        """Async update."""
+        async_update.append(1)
+
+    ent.async_update = async_update_func
 
     event_loop.run_until_complete(test())
 
@@ -95,3 +100,19 @@ class TestHelpersEntity(object):
         assert entity.generate_entity_id(
             fmt, 'overwrite hidden true',
             hass=self.hass) == 'test.overwrite_hidden_true_2'
+
+    def test_update_calls_async_update_if_available(self):
+        """Test async update getting called."""
+        async_update = []
+
+        class AsyncEntity(entity.Entity):
+            hass = self.hass
+            entity_id = 'sensor.test'
+
+            @asyncio.coroutine
+            def async_update(self):
+                async_update.append([1])
+
+        ent = AsyncEntity()
+        ent.update()
+        assert len(async_update) == 1

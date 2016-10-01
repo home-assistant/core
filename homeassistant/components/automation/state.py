@@ -12,7 +12,6 @@ from homeassistant.const import MATCH_ALL, CONF_PLATFORM
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_point_in_utc_time)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_callback_threadsafe
 
 CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"
@@ -35,7 +34,7 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-def trigger(hass, config, action):
+def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     from_state = config.get(CONF_FROM, MATCH_ALL)
@@ -98,8 +97,4 @@ def trigger(hass, config, action):
         if async_remove_state_for_listener is not None:
             async_remove_state_for_listener()
 
-    def remove():
-        """Remove state listeners."""
-        run_callback_threadsafe(hass.loop, async_remove).result()
-
-    return remove
+    return async_remove
