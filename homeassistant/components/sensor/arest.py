@@ -44,6 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+# pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the aREST sensor."""
     resource = config.get(CONF_RESOURCE)
@@ -83,17 +84,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
 
     if var_conf is not None:
-        for variable in var_conf:
-            if variable[CONF_NAME] not in response['variables']:
-                _LOGGER.error('Variable: "%s" does not exist',
-                              variable[CONF_NAME])
+        for variable, var_data in var_conf.items():
+            if variable not in response['variables']:
+                _LOGGER.error("Variable: '%s' does not exist", variable)
                 continue
 
-            renderer = make_renderer(variable.get(CONF_VALUE_TEMPLATE))
+            renderer = make_renderer(var_data.get(CONF_VALUE_TEMPLATE))
             dev.append(ArestSensor(
                 arest, resource, config.get(CONF_NAME, response[CONF_NAME]),
-                variable[CONF_NAME], variable=variable[CONF_NAME],
-                unit_of_measurement=variable.get(CONF_UNIT_OF_MEASUREMENT),
+                variable, variable=variable,
+                unit_of_measurement=var_data.get(CONF_UNIT_OF_MEASUREMENT),
                 renderer=renderer))
 
     if pins is not None:
