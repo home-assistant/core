@@ -19,9 +19,6 @@ from homeassistant.const import (
 from homeassistant.util.async import run_callback_threadsafe
 
 
-import asyncio.tasks
-
-
 def monkey_patch_asyncio():
     """Replace weakref.WeakSet to address Python 3 bug.
 
@@ -47,6 +44,10 @@ def monkey_patch_asyncio():
     See https://bugs.python.org/issue26617 for details of the Python
     bug.
     """
+    # pylint: disable=no-self-use, too-few-public-methods, protected-access
+    # pylint: disable=bare-except
+    import asyncio.tasks
+
     class IgnoreCalls:
         """Ignore add calls."""
 
