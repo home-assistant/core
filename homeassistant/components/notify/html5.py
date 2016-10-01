@@ -25,8 +25,8 @@ from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.helpers import config_validation as cv
 
 REQUIREMENTS = ['https://github.com/web-push-libs/pywebpush/archive/'
-                'e743dc92558fc62178d255c0018920d74fa778ed.zip#'
-                'pywebpush==0.5.0', 'PyJWT==1.4.2']
+                '7f9f4b8d29634ef6da0c4ec4abf53188982c0204.zip#'
+                'pywebpush==0.6.1', 'PyJWT==1.4.2']
 
 DEPENDENCIES = ['frontend']
 
