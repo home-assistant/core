@@ -1,5 +1,6 @@
 """Offer reusable conditions."""
 from datetime import timedelta
+import functools as ft
 import logging
 import sys
 
@@ -30,6 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _threaded_factory(async_factory):
     """Helper method to create threaded versions of async factories."""
+    @ft.wraps(async_factory)
     def factory(config, config_validation=True):
         """Threaded factory."""
         async_check = async_factory(config, config_validation)
