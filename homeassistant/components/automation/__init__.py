@@ -280,7 +280,7 @@ class AutomationEntity(ToggleEntity):
 @asyncio.coroutine
 def _async_process_config(hass, config, component):
     """Process config and add automations."""
-    success = False
+    entities = []
 
     for config_key in extract_domain_configs(config, DOMAIN):
         conf = config[config_key]
@@ -307,13 +307,13 @@ def _async_process_config(hass, config, component):
             async_attach_triggers = partial(
                 _async_process_trigger, hass, config,
                 config_block.get(CONF_TRIGGER, []), name)
-            entity = AutomationEntity(name, async_attach_triggers, cond_func,
-                                      action, hidden)
-            yield from hass.loop.run_in_executor(
-                None, component.add_entities, [entity])
-            success = True
+            entities.append(AutomationEntity(name, async_attach_triggers,
+                                             cond_func, action, hidden))
 
-    return success
+    yield from hass.loop.run_in_executor(
+        None, component.add_entities, entities)
+
+    return len(entities) > 0
 
 
 def _async_get_action(hass, config, name):
