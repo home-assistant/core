@@ -23,8 +23,8 @@ class TestSensorRfxtrx(unittest.TestCase):
         """Stop everything that was started."""
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx_core.RFX_DEVICES = {}
-        if rfxtrx.RFXOBJECT:
-            rfxtrx.RFXOBJECT.close_connection()
+        if rfxtrx_core.RFXOBJECT:
+            rfxtrx_core.RFXOBJECT.close_connection()
         self.hass.stop()
 
     def test_default_config(self):
