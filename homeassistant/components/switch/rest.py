@@ -13,7 +13,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_NAME, CONF_RESOURCE, CONF_VALUE_TEMPLATE, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import template
+#from homeassistant.helpers import template
 
 CONF_BODY_OFF = 'body_off'
 CONF_BODY_ON = 'body_on'
@@ -24,8 +24,8 @@ DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
-    vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.string,
-    vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.string,
+    vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
+    vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
@@ -41,7 +41,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     resource = config.get(CONF_RESOURCE)
     body_on = config.get(CONF_BODY_ON)
     body_off = config.get(CONF_BODY_OFF)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
+    is_on_template = config.get(CONF_VALUE_TEMPLATE)
+    is_on_template.hass = hass
+    body_on.hass = hass
+    body_off.hass = hass
     timeout = config.get(CONF_TIMEOUT)
 
     try:
@@ -56,7 +59,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     add_devices_callback(
         [RestSwitch(hass, name, resource,
-                    body_on, body_off, value_template, timeout)])
+                    body_on, body_off, is_on_template, timeout)])
 
 
 # pylint: disable=too-many-arguments
@@ -65,7 +68,7 @@ class RestSwitch(SwitchDevice):
 
     # pylint: disable=too-many-instance-attributes
     def __init__(self, hass, name, resource, body_on, body_off,
-                 value_template, timeout):
+                 is_on_template, timeout):
         """Initialize the REST switch."""
         self._state = None
         self._hass = hass
@@ -73,7 +76,7 @@ class RestSwitch(SwitchDevice):
         self._resource = resource
         self._body_on = body_on
         self._body_off = body_off
-        self._value_template = value_template
+        self._is_on_template = is_on_template
         self._timeout = timeout
 
     @property
@@ -88,7 +91,7 @@ class RestSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        body_on_t = template.render(self._hass, self._body_on)
+        body_on_t = self._body_on.render()
         request = requests.post(self._resource,
                                 data=body_on_t,
                                 timeout=self._timeout)
@@ -100,7 +103,7 @@ class RestSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        body_off_t = template.render(self._hass, self._body_off)
+        body_off_t = self._body_off.render()
         request = requests.post(self._resource,
                                 data=body_off_t,
                                 timeout=self._timeout)
@@ -114,9 +117,9 @@ class RestSwitch(SwitchDevice):
         """Get the latest data from REST API and update the state."""
         request = requests.get(self._resource, timeout=self._timeout)
 
-        if self._value_template is not None:
-            response = template.render_with_possible_json_value(
-                self._hass, self._value_template, request.text, 'None')
+        if self._is_on_template is not None:
+            response = self._is_on_template.render_with_possible_json_value(
+                request.text, 'None')
             response = response.lower()
             if response == 'true':
                 self._state = True
