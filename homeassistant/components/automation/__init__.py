@@ -164,13 +164,14 @@ def setup(hass, config):
         for entity in component.extract_from_service(service_call):
             yield from getattr(entity, method)()
 
+    @asyncio.coroutine
     def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
-        conf = component.prepare_reload()
+        conf = yield from hass.loop.run_in_executor(
+            None, component.prepare_reload)
         if conf is None:
             return
-        run_coroutine_threadsafe(
-            _async_process_config(hass, conf, component), hass.loop).result()
+        yield from _async_process_config(hass, conf, component)
 
     hass.services.register(DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
                            descriptions.get(SERVICE_TRIGGER),
