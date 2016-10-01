@@ -2,7 +2,7 @@
 import unittest
 from unittest.mock import patch
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.automation as automation
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
@@ -31,7 +31,7 @@ class TestAutomation(unittest.TestCase):
 
     def test_service_data_not_a_dict(self):
         """Test service data not dict."""
-        assert not _setup_component(self.hass, automation.DOMAIN, {
+        assert not setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -46,7 +46,7 @@ class TestAutomation(unittest.TestCase):
 
     def test_service_specify_data(self):
         """Test service data."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'alias': 'hello',
                 'trigger': {
@@ -77,7 +77,7 @@ class TestAutomation(unittest.TestCase):
 
     def test_service_specify_entity_id(self):
         """Test service data."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -98,7 +98,7 @@ class TestAutomation(unittest.TestCase):
 
     def test_service_specify_entity_id_list(self):
         """Test service data."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -119,7 +119,7 @@ class TestAutomation(unittest.TestCase):
 
     def test_two_triggers(self):
         """Test triggers."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': [
                     {
@@ -147,7 +147,7 @@ class TestAutomation(unittest.TestCase):
     def test_two_conditions_with_and(self):
         """Test two and conditions."""
         entity_id = 'test.entity'
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': [
                     {
@@ -188,123 +188,9 @@ class TestAutomation(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
-    def test_two_conditions_with_or(self):
-        """Test two or conditions."""
-        entity_id = 'test.entity'
-        assert _setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': [
-                    {
-                        'platform': 'event',
-                        'event_type': 'test_event',
-                    },
-                ],
-                'condition_type': 'OR',
-                'condition': [
-                    {
-                        'platform': 'state',
-                        'entity_id': entity_id,
-                        'state': '200'
-                    },
-                    {
-                        'platform': 'numeric_state',
-                        'entity_id': entity_id,
-                        'below': 150
-                    }
-                ],
-                'action': {
-                    'service': 'test.automation',
-                }
-            }
-        })
-
-        self.hass.states.set(entity_id, 200)
-        self.hass.bus.fire('test_event')
-        self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-
-        self.hass.states.set(entity_id, 100)
-        self.hass.bus.fire('test_event')
-        self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
-
-        self.hass.states.set(entity_id, 250)
-        self.hass.bus.fire('test_event')
-        self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
-
-    def test_using_trigger_as_condition(self):
-        """Test triggers as condition."""
-        entity_id = 'test.entity'
-        assert _setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': [
-                    {
-                        'platform': 'state',
-                        'entity_id': entity_id,
-                        'from': '120',
-                        'state': '100'
-                    },
-                    {
-                        'platform': 'numeric_state',
-                        'entity_id': entity_id,
-                        'below': 150
-                    }
-                ],
-                'condition': 'use_trigger_values',
-                'action': {
-                    'service': 'test.automation',
-                }
-            }
-        })
-
-        self.hass.states.set(entity_id, 100)
-        self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-
-        self.hass.states.set(entity_id, 120)
-        self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-
-        self.hass.states.set(entity_id, 100)
-        self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
-
-        self.hass.states.set(entity_id, 151)
-        self.hass.block_till_done()
-        self.assertEqual(2, len(self.calls))
-
-    def test_using_trigger_as_condition_with_invalid_condition(self):
-        """Event is not a valid condition."""
-        entity_id = 'test.entity'
-        self.hass.states.set(entity_id, 100)
-        assert _setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': [
-                    {
-                        'platform': 'event',
-                        'event_type': 'test_event',
-                    },
-                    {
-                        'platform': 'numeric_state',
-                        'entity_id': entity_id,
-                        'below': 150
-                    }
-                ],
-                'condition': 'use_trigger_values',
-                'action': {
-                    'service': 'test.automation',
-                }
-            }
-        })
-
-        self.hass.bus.fire('test_event')
-        self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-
     def test_automation_list_setting(self):
         """Event is not a valid condition."""
-        self.assertTrue(_setup_component(self.hass, automation.DOMAIN, {
+        self.assertTrue(setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: [{
                 'trigger': {
                     'platform': 'event',
@@ -335,7 +221,7 @@ class TestAutomation(unittest.TestCase):
 
     def test_automation_calling_two_actions(self):
         """Test if we can call two actions from automation definition."""
-        self.assertTrue(_setup_component(self.hass, automation.DOMAIN, {
+        self.assertTrue(setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -366,7 +252,7 @@ class TestAutomation(unittest.TestCase):
         assert self.hass.states.get(entity_id) is None
         assert not automation.is_on(self.hass, entity_id)
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'alias': 'hello',
                 'trigger': {
@@ -433,7 +319,7 @@ class TestAutomation(unittest.TestCase):
     })
     def test_reload_config_service(self, mock_load_yaml):
         """Test the reload config service."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'alias': 'hello',
                 'trigger': {
@@ -483,7 +369,7 @@ class TestAutomation(unittest.TestCase):
     })
     def test_reload_config_when_invalid_config(self, mock_load_yaml):
         """Test the reload config service handling invalid config."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'alias': 'hello',
                 'trigger': {
@@ -517,7 +403,7 @@ class TestAutomation(unittest.TestCase):
 
     def test_reload_config_handles_load_fails(self):
         """Test the reload config service."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'alias': 'hello',
                 'trigger': {

@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_VALUE_TEMPLATE, CONF_PLATFORM, CONF_ENTITY_ID,
     CONF_BELOW, CONF_ABOVE)
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers import condition, config_validation as cv
 
 TRIGGER_SCHEMA = vol.All(vol.Schema({
@@ -26,7 +26,7 @@ TRIGGER_SCHEMA = vol.All(vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
-def trigger(hass, config, action):
+def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     below = config.get(CONF_BELOW)
@@ -66,4 +66,4 @@ def trigger(hass, config, action):
 
         hass.async_add_job(action, variables)
 
-    return track_state_change(hass, entity_id, state_automation_listener)
+    return async_track_state_change(hass, entity_id, state_automation_listener)
