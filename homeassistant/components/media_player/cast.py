@@ -90,7 +90,6 @@ class CastDevice(MediaPlayerDevice):
     # pylint: disable=too-many-public-methods
     def __init__(self, chromecast):
         """Initialize the Cast device."""
-        import pychromecast
         self.cast = chromecast
 
         self.cast.socket_client.receiver_controller.register_status_listener(
