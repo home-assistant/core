@@ -159,6 +159,12 @@ class Template(object):
 
         return self._compiled
 
+    def __eq__(self, other):
+        """Compare template with another."""
+        return (self.__class__ == other.__class__ and
+                self.template == other.template and
+                self.hass == other.hass)
+
 
 class AllStates(object):
     """Class to expose all HA states as attributes."""
