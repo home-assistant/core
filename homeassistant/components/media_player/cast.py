@@ -71,7 +71,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     all_chromecasts = pychromecast._get_all_chromecasts()
 
     for host in hosts:
-        found = [device for device in all_chromecasts if device.host == host[0] and device.port == host[1]]
+        found = [device for device in all_chromecasts 
+                if device.host == host[0] and device.port == host[1]]
         if found:
             try:
                 casts.append(CastDevice(found[0]))
@@ -87,10 +88,10 @@ class CastDevice(MediaPlayerDevice):
 
     # pylint: disable=abstract-method
     # pylint: disable=too-many-public-methods
-    def __init__(self, host, port):
+    def __init__(self, chromecast):
         """Initialize the Cast device."""
         import pychromecast
-        self.cast = pychromecast.Chromecast(host, port)
+        self.cast = chromecast
 
         self.cast.socket_client.receiver_controller.register_status_listener(
             self)
