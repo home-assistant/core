@@ -22,7 +22,7 @@ TRIGGER_SCHEMA = vol.Schema({
 })
 
 
-def trigger(hass, config, action):
+def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     topic = config.get(CONF_TOPIC)
     payload = config.get(CONF_PAYLOAD)
@@ -40,4 +40,4 @@ def trigger(hass, config, action):
                 }
             })
 
-    return mqtt.subscribe(hass, topic, mqtt_automation_listener)
+    return mqtt.async_subscribe(hass, topic, mqtt_automation_listener)

@@ -24,12 +24,19 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
                        current_ids: Optional[List[str]]=None,
                        hass: Optional[HomeAssistant]=None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-    name = (name or DEVICE_DEFAULT_NAME).lower()
     if current_ids is None:
         if hass is None:
             raise ValueError("Missing required parameter currentids or hass")
 
         current_ids = hass.states.entity_ids()
+
+    return async_generate_entity_id(entity_id_format, name, current_ids)
+
+
+def async_generate_entity_id(entity_id_format: str, name: Optional[str],
+                             current_ids: Optional[List[str]]=None) -> str:
+    """Generate a unique entity ID based on given entity IDs or used IDs."""
+    name = (name or DEVICE_DEFAULT_NAME).lower()
 
     return ensure_unique_string(
         entity_id_format.format(slugify(name)), current_ids)

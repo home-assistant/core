@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_AFTER, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import track_time_change
+from homeassistant.helpers.event import async_track_time_change
 
 CONF_HOURS = "hours"
 CONF_MINUTES = "minutes"
@@ -29,7 +29,7 @@ TRIGGER_SCHEMA = vol.All(vol.Schema({
                             CONF_SECONDS, CONF_AFTER))
 
 
-def trigger(hass, config, action):
+def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     if CONF_AFTER in config:
         after = config.get(CONF_AFTER)
@@ -49,5 +49,5 @@ def trigger(hass, config, action):
             },
         })
 
-    return track_time_change(hass, time_automation_listener,
-                             hour=hours, minute=minutes, second=seconds)
+    return async_track_time_change(hass, time_automation_listener,
+                                   hour=hours, minute=minutes, second=seconds)
