@@ -118,7 +118,7 @@ def get_service(hass, config):
         add_manifest_json_key(ATTR_GCM_SENDER_ID,
                               config.get(ATTR_GCM_SENDER_ID))
 
-    return HTML5NotificationService(gcm_api_key, registrations)
+    return HTML5NotificationService(gcm_api_key, registrations, json_path)
 
 
 def _load_config(filename):
@@ -306,10 +306,11 @@ class HTML5NotificationService(BaseNotificationService):
     """Implement the notification service for HTML5."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, gcm_key, registrations):
+    def __init__(self, gcm_key, registrations, json_path):
         """Initialize the service."""
         self._gcm_key = gcm_key
         self.registrations = registrations
+        self.json_path = json_path
 
     @property
     def targets(self):
@@ -319,7 +320,7 @@ class HTML5NotificationService(BaseNotificationService):
             targets[registration] = registration
         return targets
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals, too-many-branches
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         import jwt
@@ -369,14 +370,43 @@ class HTML5NotificationService(BaseNotificationService):
                               ' target!', target)
                 continue
 
+            found_sub = info[ATTR_SUBSCRIPTION]
+
             jwt_exp = (datetime.datetime.fromtimestamp(timestamp) +
                        datetime.timedelta(days=JWT_VALID_DAYS))
-            jwt_secret = info[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
+            jwt_secret = found_sub[ATTR_KEYS][ATTR_AUTH]
             jwt_claims = {'exp': jwt_exp, 'nbf': timestamp,
                           'iat': timestamp, ATTR_TARGET: target,
                           ATTR_TAG: payload[ATTR_TAG]}
             jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
             payload[ATTR_DATA][ATTR_JWT] = jwt_token
 
-            WebPusher(info[ATTR_SUBSCRIPTION]).send(
-                json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
+            resp = WebPusher(found_sub).send(
+                json.dumps(payload), gcm_key=self._gcm_key,
+                ttl='86400')
+
+            if resp.status_code == 410:
+                found = None
+
+                for key, registration in self.registrations.items():
+                    if registration.get(ATTR_SUBSCRIPTION) == found_sub:
+                        found = key
+                        break
+
+                if not found:
+                    # If not found, unregistering was already done. Return 200
+                    _LOGGER.error(("Unable to delete registration because",
+                                   "it was not found in the file."))
+                    return
+
+                reg = self.registrations.pop(found)
+
+                if not _save_config(self.json_path, self.registrations):
+                    self.registrations[found] = reg
+                    _LOGGER.error('Error saving registrations file.')
+
+                _LOGGER.info(('Push service notified us that the target',
+                              '(%s) was unregistered so it has been',
+                              'removed from the registrations file.'),
+                             found_sub)
+                return
