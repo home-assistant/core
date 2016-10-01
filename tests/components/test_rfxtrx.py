@@ -1,7 +1,6 @@
-"""Th tests for the Rfxtrx component."""
+"""The tests for the Rfxtrx component."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
-from unittest.mock import patch
 
 import pytest
 
@@ -10,7 +9,7 @@ from homeassistant.components import rfxtrx as rfxtrx
 from tests.common import get_test_home_assistant
 
 
-@pytest.mark.skipif("os.environ.get('RFXTRX') == 'SKIP'")
+@pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
 class TestRFXTRX(unittest.TestCase):
     """Test the Rfxtrx component."""
 
@@ -22,10 +21,11 @@ class TestRFXTRX(unittest.TestCase):
         """Stop everything that was started."""
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx.RFX_DEVICES = {}
+        if rfxtrx.RFXOBJECT:
+            rfxtrx.RFXOBJECT.close_connection()
         self.hass.stop()
 
-    @patch('RFXtrx.sleep')
-    def test_default_config(self, mock_sleep):
+    def test_default_config(self):
         """Test configuration."""
         self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
@@ -41,8 +41,7 @@ class TestRFXTRX(unittest.TestCase):
 
         self.assertEqual(len(rfxtrx.RFXOBJECT.sensors()), 2)
 
-    @patch('RFXtrx.sleep')
-    def test_valid_config(self, mock_sleep):
+    def test_valid_config(self):
         """Test configuration."""
         self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
@@ -71,8 +70,7 @@ class TestRFXTRX(unittest.TestCase):
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
                 'invalid_key': True}}))
 
-    @patch('RFXtrx.sleep')
-    def test_fire_event(self, mock_sleep):
+    def test_fire_event(self):
         """Test fire event."""
         self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
@@ -116,8 +114,7 @@ class TestRFXTRX(unittest.TestCase):
         self.assertEqual(calls[0].data,
                          {'entity_id': 'switch.test', 'state': 'on'})
 
-    @patch('RFXtrx.sleep')
-    def test_fire_event_sensor(self, mock_sleep):
+    def test_fire_event_sensor(self):
         """Test fire event."""
         self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
