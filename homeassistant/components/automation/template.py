@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_VALUE_TEMPLATE, CONF_PLATFORM
 from homeassistant.helpers import condition
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 
 
@@ -23,7 +23,7 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema({
 })
 
 
-def trigger(hass, config, action):
+def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
     value_template.hass = hass
@@ -51,5 +51,5 @@ def trigger(hass, config, action):
         elif not template_result:
             already_triggered = False
 
-    return track_state_change(hass, value_template.extract_entities(),
-                              state_changed_listener)
+    return async_track_state_change(hass, value_template.extract_entities(),
+                                    state_changed_listener)
