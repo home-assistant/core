@@ -49,6 +49,11 @@ class Entity(object):
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inheriting
     # this class. These may be used to customize the behavior of the entity.
+    entity_id = None  # type: str
+
+    # Owning hass instance. Will be set by EntityComponent
+    hass = None  # type: Optional[HomeAssistant]
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -128,17 +133,21 @@ class Entity(object):
         return False
 
     def update(self):
-        """Retrieve latest state."""
-        pass
+        """Retrieve latest state.
 
-    entity_id = None  # type: str
+        When not implemented, will forward call to async version if available.
+        """
+        async_update = getattr(self, 'async_update', None)
+
+        if async_update is None:
+            return
+
+        run_coroutine_threadsafe(async_update(), self.hass.loop).result()
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
-
-    hass = None  # type: Optional[HomeAssistant]
 
     def update_ha_state(self, force_refresh=False):
         """Update Home Assistant with current state of entity.
@@ -172,7 +181,7 @@ class Entity(object):
         if force_refresh:
             if hasattr(self, 'async_update'):
                 # pylint: disable=no-member
-                self.async_update()
+                yield from self.async_update()
             else:
                 # PS: Run this in our own thread pool once we have
                 #     future support?
