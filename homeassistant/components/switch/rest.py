@@ -13,7 +13,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_NAME, CONF_RESOURCE, CONF_VALUE_TEMPLATE, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
-#from homeassistant.helpers import template
+# from homeassistant.helpers import template
 
 CONF_BODY_OFF = 'body_off'
 CONF_BODY_ON = 'body_on'
