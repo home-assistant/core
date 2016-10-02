@@ -58,9 +58,6 @@ class MessageBirdNotificationService(BaseNotificationService):
             _LOGGER.error('No target specified.')
             return
 
-        if not isinstance(targets, list):
-            targets = [targets]
-
         for target in targets:
             try:
                 self.client.message_create(self.sender,
