@@ -250,13 +250,17 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         for value in (self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT)
                       .values()):
-            if operation_mode:
+            _LOGGER.debug("Testing for operation_mode")
+            if operation_mode is not None:
+                _LOGGER.debug("operation_mode present")
                 setpoint_mode = SET_TEMP_TO_INDEX.get(operation_mode)
-                if value.index == setpoint_mode:
-                    _LOGGER.debug("setpoint_mode=%s", setpoint_mode)
-                    value.data = temperature
-                    break
+                if value.index != setpoint_mode:
+                    continue
+                _LOGGER.debug("setpoint_mode=%s", setpoint_mode)
+                value.data = temperature
+                break
 
+            _LOGGER.debug("operation_mode not present")
             if self.current_operation is not None:
                 if self._hrt4_zw and self.current_operation == 'Off':
                     # HRT4-ZW can change setpoint when off.
