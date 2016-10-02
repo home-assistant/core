@@ -23,10 +23,9 @@ REQUIREMENTS = ['python-forecastio==1.3.4']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_UNITS = 'units'
+CONF_UPDATE_INTERVAL = 'update_interval'
 
 DEFAULT_NAME = 'Forecast.io'
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
@@ -84,10 +83,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2'])
+    vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2']),
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=120)): (
+        vol.All(cv.time_period, cv.positive_timedelta)),
 })
 
 
+# pylint: disable=too-many-arguments
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Forecast.io sensor."""
     # Validate the configuration
@@ -106,8 +108,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # the first call to init the data and confirm we can connect.
     try:
         forecast_data = ForeCastData(
-            config.get(CONF_API_KEY, None), hass.config.latitude,
-            hass.config.longitude, units)
+            api_key=config.get(CONF_API_KEY, None),
+            latitude=hass.config.latitude,
+            longitude=hass.config.longitude,
+            units=units,
+            interval=config.get(CONF_UPDATE_INTERVAL))
         forecast_data.update_currently()
     except ValueError as error:
         _LOGGER.error(error)
@@ -247,7 +252,7 @@ class ForeCastData(object):
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, api_key, latitude, longitude, units):
+    def __init__(self, api_key, latitude, longitude, units, interval):
         """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude
@@ -261,10 +266,16 @@ class ForeCastData(object):
         self.data_hourly = None
         self.data_daily = None
 
+        # Apply throttling to methods using configured interval
+        self.update = Throttle(interval)(self._update)
+        self.update_currently = Throttle(interval)(self._update_currently)
+        self.update_minutely = Throttle(interval)(self._update_minutely)
+        self.update_hourly = Throttle(interval)(self._update_hourly)
+        self.update_daily = Throttle(interval)(self._update_daily)
+
         self.update()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def _update(self):
         """Get the latest data from Forecast.io."""
         import forecastio
 
@@ -275,22 +286,18 @@ class ForeCastData(object):
             raise ValueError("Unable to init Forecast.io. - %s", error)
         self.unit_system = self.data.json['flags']['units']
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update_currently(self):
+    def _update_currently(self):
         """Update currently data."""
         self.data_currently = self.data.currently()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update_minutely(self):
+    def _update_minutely(self):
         """Update minutely data."""
         self.data_minutely = self.data.minutely()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update_hourly(self):
+    def _update_hourly(self):
         """Update hourly data."""
         self.data_hourly = self.data.hourly()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update_daily(self):
+    def _update_daily(self):
         """Update daily data."""
         self.data_daily = self.data.daily()
