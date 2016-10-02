@@ -98,7 +98,7 @@ def run_coroutine_threadsafe(coro, loop):
 
     Return a concurrent.futures.Future to access the result.
     """
-    ident = getattr(loop, '_thread_ident', None)
+    ident = loop.__dict__.get("_thread_ident")
     if ident is not None and ident == threading.get_ident():
         raise RuntimeError('Cannot be called from within the event loop')
 
@@ -127,7 +127,7 @@ def fire_coroutine_threadsafe(coro, loop):
     is intended for fire-and-forget use. This reduces the
     work involved to fire the function on the loop.
     """
-    ident = getattr(loop, '_thread_ident', None)
+    ident = loop.__dict__.get("_thread_ident")
     if ident is not None and ident == threading.get_ident():
         raise RuntimeError('Cannot be called from within the event loop')
 
@@ -148,7 +148,7 @@ def run_callback_threadsafe(loop, callback, *args):
 
     Return a concurrent.futures.Future to access the result.
     """
-    ident = getattr(loop, '_thread_ident', None)
+    ident = loop.__dict__.get("_thread_ident")
     if ident is not None and ident == threading.get_ident():
         raise RuntimeError('Cannot be called from within the event loop')
 
