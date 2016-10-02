@@ -41,8 +41,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST, None)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    port_recv = int(config.get(CONF_PORT_RECV))
-    port_send = int(config.get(CONF_PORT_SEND))
+    port_recv = config.get(CONF_PORT_RECV)
+    port_send = config.get(CONF_PORT_SEND)
 
     from anel_pwrctrl import DeviceMaster
 
