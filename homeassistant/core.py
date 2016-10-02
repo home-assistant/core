@@ -199,6 +199,8 @@ class HomeAssistant(object):
 
         This method is a coroutine.
         """
+        # pylint: disable=protected-access
+        self.loop._thread_ident = threading.get_ident()
         async_create_timer(self)
         async_monitor_worker_pool(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
