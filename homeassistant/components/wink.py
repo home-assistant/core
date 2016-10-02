@@ -10,11 +10,12 @@ import json
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
-from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL
+from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL, \
+                                CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==0.7.15', 'pubnub==3.8.2']
+REQUIREMENTS = ['python-wink==0.8.0', 'pubnub==3.8.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,19 +24,54 @@ CHANNELS = []
 DOMAIN = 'wink'
 
 SUBSCRIPTION_HANDLER = None
+CONF_CLIENT_ID = 'client_id'
+CONF_CLIENT_SECRET = 'client_secret'
+CONF_USER_AGENT = 'user_agent'
+CONF_OATH = 'oath'
+CONF_DEFINED_BOTH_MSG = 'Remove access token to use oath2.'
+CONF_MISSING_OATH_MSG = 'Missing oath2 credentials.'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    }),
+        vol.Inclusive(CONF_EMAIL, CONF_OATH,
+                      msg=CONF_MISSING_OATH_MSG): cv.string,
+        vol.Inclusive(CONF_PASSWORD, CONF_OATH,
+                      msg=CONF_MISSING_OATH_MSG): cv.string,
+        vol.Inclusive(CONF_CLIENT_ID, CONF_OATH,
+                      msg=CONF_MISSING_OATH_MSG): cv.string,
+        vol.Inclusive(CONF_CLIENT_SECRET, CONF_OATH,
+                      msg=CONF_MISSING_OATH_MSG): cv.string,
+        vol.Exclusive(CONF_EMAIL, CONF_OATH,
+                      msg=CONF_DEFINED_BOTH_MSG): cv.string,
+        vol.Exclusive(CONF_ACCESS_TOKEN, CONF_OATH,
+                      msg=CONF_DEFINED_BOTH_MSG): cv.string,
+        vol.Optional(CONF_USER_AGENT, default=None): cv.string
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Setup the Wink component."""
     import pywink
+
+    user_agent = config[DOMAIN][CONF_USER_AGENT]
+
+    if user_agent:
+        pywink.set_user_agent(user_agent)
+
     from pubnub import Pubnub
-    pywink.set_bearer_token(config[DOMAIN][CONF_ACCESS_TOKEN])
+    access_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)
+
+    if access_token:
+        pywink.set_bearer_token(access_token)
+    else:
+        email = config[DOMAIN][CONF_EMAIL]
+        password = config[DOMAIN][CONF_PASSWORD]
+        client_id = config[DOMAIN]['client_id']
+        client_secret = config[DOMAIN]['client_secret']
+        pywink.set_wink_credentials(email, password, client_id,
+                                    client_secret)
+
     global SUBSCRIPTION_HANDLER
     SUBSCRIPTION_HANDLER = Pubnub(
         'N/A', pywink.get_subscription_key(), ssl_on=True)
