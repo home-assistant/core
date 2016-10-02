@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND)
+    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Command Sensor'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND): cv.string,
@@ -40,7 +40,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-    data = CommandSensorData(command)
+    scan_interval = config.get(CONF_SCAN_INTERVAL)
+    data = CommandSensorData(command, scan_interval)
 
     add_devices([CommandSensor(hass, data, name, unit, value_template)])
 
@@ -90,9 +91,10 @@ class CommandSensor(Entity):
 class CommandSensorData(object):
     """The class for handling the data retrieval."""
 
-    def __init__(self, command):
+    def __init__(self, command, interval):
         """Initialize the data object."""
         self.command = command
+        self._interval = interval
         self.value = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
