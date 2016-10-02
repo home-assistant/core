@@ -164,6 +164,12 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         for value in (self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT)
                       .values()):
+            if value.data == 0:
+                _LOGGER.debug("Setpoint is 0, setting default to "
+                              "current_temperature=%s",
+                              self._current_temperature)
+                self._target_temperature = int(self._current_temperature)
+                break
             if self.current_operation is not None and \
                self.current_operation != 'Off':
                 if self._index_operation != value.index:
