@@ -58,6 +58,12 @@ ATTR_OPERATION_LIST = "operation_list"
 ATTR_SWING_MODE = "swing_mode"
 ATTR_SWING_LIST = "swing_list"
 
+CONVERTIBLE_ATTRIBUTE = [
+    ATTR_TEMPERATURE,
+    ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_HIGH,
+]
+
 _LOGGER = logging.getLogger(__name__)
 
 SET_AWAY_MODE_SCHEMA = vol.Schema({
@@ -239,11 +245,14 @@ def setup(hass, config):
         for climate in target_climate:
             kwargs = {}
             for value, temp in service.data.items():
-                kwargs[value] = convert_temperature(
-                    temp,
-                    hass.config.units.temperature_unit,
-                    climate.unit_of_measurement
-                )
+                if value in CONVERTIBLE_ATTRIBUTE:
+                    kwargs[value] = convert_temperature(
+                        temp,
+                        hass.config.units.temperature_unit,
+                        climate.unit_of_measurement
+                    )
+                else:
+                    kwargs[value] = temp
 
             climate.set_temperature(**kwargs)
             if climate.should_poll:
