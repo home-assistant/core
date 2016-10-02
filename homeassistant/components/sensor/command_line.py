@@ -12,7 +12,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND, CONF_SCAN_INTERVAL)
+    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND,
+    CONF_SCAN_INTERVAL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
