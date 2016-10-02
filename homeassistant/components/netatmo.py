@@ -11,7 +11,8 @@ from urllib.error import HTTPError
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME)
+    CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_DISCOVERY)
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -26,6 +27,7 @@ CONF_SECRET_KEY = 'secret_key'
 DOMAIN = 'netatmo'
 
 NETATMO_AUTH = None
+DEFAULT_DISCOVERY = True
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
@@ -35,6 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_SECRET_KEY): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -50,8 +53,12 @@ def setup(hass, config):
             config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD],
             'read_station read_camera access_camera')
     except HTTPError:
-        _LOGGER.error("Unable to connect to NatAtmo API")
+        _LOGGER.error("Unable to connect to Netatmo API")
         return False
+
+    if config[DOMAIN][CONF_DISCOVERY]:
+        for component in 'camera', 'sensor', 'binary_sensor':
+            discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 

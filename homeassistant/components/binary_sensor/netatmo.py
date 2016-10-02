@@ -58,8 +58,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = config.get(CONF_MONITORED_CONDITIONS, SENSOR_TYPES)
 
     for camera_name in data.get_camera_names():
-        if config[CONF_CAMERAS] != []:
-            if camera_name not in config[CONF_CAMERAS]:
+        if CONF_CAMERAS in config:
+            if config[CONF_CAMERAS] != [] and \
+               camera_name not in config[CONF_CAMERAS]:
                 continue
         for variable in sensors:
             add_devices([WelcomeBinarySensor(data, camera_name, home,

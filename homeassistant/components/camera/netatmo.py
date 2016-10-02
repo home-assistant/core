@@ -41,9 +41,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for camera_name in data.get_camera_names():
         if CONF_CAMERAS in config:
-            if config[CONF_CAMERAS] != []:
-                if camera_name not in config[CONF_CAMERAS]:
-                    continue
+            if config[CONF_CAMERAS] != [] and \
+               camera_name not in config[CONF_CAMERAS]:
+                continue
         add_devices([WelcomeCamera(data, camera_name, home)])
 
 
@@ -59,6 +59,10 @@ class WelcomeCamera(Camera):
             self._name = home + ' / ' + camera_name
         else:
             self._name = camera_name
+        camera_id = data.welcomedata.cameraByName(camera=camera_name,
+                                                  home=home)['id']
+        self._unique_id = "Welcome_camera {0} - {1}".format(self._name,
+                                                            camera_id)
         self._vpnurl, self._localurl = self._data.welcomedata.cameraUrls(
             camera=camera_name
             )
@@ -84,3 +88,8 @@ class WelcomeCamera(Camera):
     def name(self):
         """Return the name of this Netatmo Welcome device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique ID for this sensor."""
+        return self._unique_id
