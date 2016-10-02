@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.statistics/
 """
 import logging
 import statistics
+from collections import deque
 
 import voluptuous as vol
 
@@ -30,7 +31,7 @@ ATTR_TOTAL = 'total'
 
 CONF_SAMPLING_SIZE = 'sampling_size'
 DEFAULT_NAME = 'Stats'
-DEFAULT_SIZE = 0
+DEFAULT_SIZE = 20
 ICON = 'mdi:calculator'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -65,8 +66,11 @@ class StatisticsSensor(Entity):
             self._name = '{} {}'.format(name, ATTR_COUNT)
         self._sampling_size = sampling_size
         self._unit_of_measurement = None
-        self.states = []
-        self.median = self.mean = self.variance = self.standard_deviation = 0
+        if self._sampling_size == 0:
+            self.states = deque()
+        else:
+            self.states = deque(maxlen=self._sampling_size)
+        self.median = self.mean = self.variance = self.stdev = 0
         self.min = self.max = self.total = self.count = 0
         self.update()
 
@@ -76,15 +80,8 @@ class StatisticsSensor(Entity):
                 ATTR_UNIT_OF_MEASUREMENT)
 
             try:
-                state = float(new_state.state)
-
-                if self._sampling_size is 0:
-                    self.states.append(state)
-                elif len(self.states) is self._sampling_size:
-                    del self.states[0]
-                    self.states.append(state)
-                else:
-                    self.states.append(state)
+                self.states.append(float(new_state.state))
+                self.count = self.count + 1
             except ValueError:
                 self.count = self.count + 1
 
@@ -124,7 +121,7 @@ class StatisticsSensor(Entity):
                 ATTR_MIN_VALUE: self.min,
                 ATTR_SAMPLING_SIZE: 'unlimited' if self._sampling_size is
                                     0 else self._sampling_size,
-                ATTR_STANDARD_DEVIATION: self.standard_deviation,
+                ATTR_STANDARD_DEVIATION: self.stdev,
                 ATTR_TOTAL: self.total,
                 ATTR_VARIANCE: self.variance,
             }
@@ -136,18 +133,19 @@ class StatisticsSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        try:
-            self.mean = round(statistics.mean(self.states), 2)
-            self.median = round(statistics.median(self.states), 2)
-            self.standard_deviation = round(statistics.stdev(self.states), 2)
-            self.total = round(sum(self.states), 2)
-            self.variance = round(statistics.variance(self.states), 2)
-        except statistics.StatisticsError as err:
-            _LOGGER.warning(err)
-            self.mean = STATE_UNKNOWN
-        try:
-            self.min = min(self.states)
-            self.max = max(self.states)
-            self.count = len(self.states)
-        except ValueError:
-            pass
+        if not self.is_binary:
+            try:
+                self.mean = round(statistics.mean(self.states), 2)
+                self.median = round(statistics.median(self.states), 2)
+                self.stdev = round(statistics.stdev(self.states), 2)
+                self.variance = round(statistics.variance(self.states), 2)
+            except statistics.StatisticsError as err:
+                _LOGGER.warning(err)
+                self.mean = self.median = STATE_UNKNOWN
+                self.stdev = self.variance = STATE_UNKNOWN
+            if self.states:
+                self.total = round(sum(self.states), 2)
+                self.min = min(self.states)
+                self.max = max(self.states)
+            else:
+                self.min = self.max = self.total = STATE_UNKNOWN
