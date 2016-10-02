@@ -20,7 +20,8 @@ SENSOR_TYPES = {
     "vibration": "vibration",
     "loudness": "sound",
     "liquid_detected": "moisture",
-    "motion": "motion"
+    "motion": "motion",
+    "presence": "occupancy"
 }
 
 
@@ -58,17 +59,21 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
     def is_on(self):
         """Return true if the binary sensor is on."""
         if self.capability == "loudness":
-            return self.wink.loudness_boolean()
+            state = self.wink.loudness_boolean()
         elif self.capability == "vibration":
-            return self.wink.vibration_boolean()
+            state = self.wink.vibration_boolean()
         elif self.capability == "brightness":
-            return self.wink.brightness_boolean()
+            state = self.wink.brightness_boolean()
         elif self.capability == "liquid_detected":
-            return self.wink.liquid_boolean()
+            state = self.wink.liquid_boolean()
         elif self.capability == "motion":
-            return self.wink.motion_boolean()
+            state = self.wink.motion_boolean()
+        elif self.capability == "presence":
+            state = self.wink.presence_boolean()
         else:
-            return self.wink.state()
+            state = self.wink.state()
+
+        return state
 
     @property
     def sensor_class(self):
