@@ -11,8 +11,7 @@ Ted500 framework from glances plugin.
 """
 import logging
 from datetime import timedelta
-import urllib.error
-import urllib.request
+import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -105,11 +104,11 @@ class Ted5000Gateway(object):
         """Get the latest data from the Ted5000 XML API."""
         import xmltodict
         try:
-            request = urllib.request.urlopen(self.url, timeout=10)
-        except urllib.error.URLError as err:
-            _LOGGER.error("No route to endpoint: %s", err)
+            request = requests.get(self.url)
+        except requests.exceptions.RequestException as err:
+            _LOGGER.error("No connection to endpoint: %s", err)
         else:
-            doc = xmltodict.parse(request.read())
+            doc = xmltodict.parse(request.text)
             mtus = int(doc["LiveData"]["System"]["NumberMTU"])
 
             for mtu in range(1, mtus + 1):
