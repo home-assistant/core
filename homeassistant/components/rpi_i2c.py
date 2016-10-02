@@ -12,6 +12,7 @@ DOMAIN = "rpi_i2c"
 _LOGGER = logging.getLogger(__name__)
 BUS = None
 
+
 # pylint: disable=no-member
 def setup(hass, config):
     import smbus2 as smbus
@@ -21,9 +22,11 @@ def setup(hass, config):
     _LOGGER.debug("RasPi revision is {0}".format((revision)))
     return True
 
+
 def write_byte_data(addr, register, value):
     """Write byte to device."""
     BUS.write_byte_data(addr, register, value)
+
 
 def read_i2c_block_data(addr, register, length):
     """read bytes from device."""

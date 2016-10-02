@@ -13,17 +13,21 @@ import homeassistant.components.rpi_i2c as i2c
 import voluptuous as vol
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 CONF_TEMP_NAME = 'temp_name'
 CONF_PRESS_NAME = 'press_name'
+CONF_TEMP_ADJ   = 'temp_adj'
+CONF_PRESS_ADJ = 'press_adj'
 CONF_ADDRESS = 'address'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_TEMP_NAME): cv.string,
-    vol.Optional(CONF_PRESS_NAME): cv.string,
-    vol.Optional(CONF_ADDRESS): vol.Coerce(int)
+    vol.Optional(CONF_TEMP_NAME, default="Temperature"): cv.string,
+    vol.Optional(CONF_PRESS_NAME, default="Pressure"): cv.string,
+    vol.Optional(CONF_ADDRESS, default=0x76): vol.Coerce(int),
+    vol.Optional(CONF_TEMP_ADJ, default=0.0): vol.Coerce(float),
+    vol.Optional(CONF_PRESS_ADJ, default=0.0): vol.Coerce(float)
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,15 +37,16 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup BMP280 sensor."""
     bmp280_base = Bmp280(config.get(CONF_ADDRESS))
-    add_devices([Bmp280Temperature(bmp280_base, config.get(CONF_TEMP_NAME)),
-                 Bmp280Pressure(bmp280_base, config.get(CONF_PRESS_NAME))])
+    add_devices([Bmp280Temperature(bmp280_base, config.get(CONF_TEMP_NAME), config.get(CONF_TEMP_ADJ)),
+                 Bmp280Pressure(bmp280_base, config.get(CONF_PRESS_NAME), config.get(CONF_PRESS_ADJ))])
 
 
 class Bmp280Temperature(Entity):
     """Implementation of an BMP280 temperature sensor."""
-    def __init__(self, bmp280_base, name):
+    def __init__(self, bmp280_base, name, adj):
         self._bmp280_base = bmp280_base
         self._name = name
+        self._adj = adj
         self._unit_of_measurement = TEMP_CELSIUS
 
     @property
@@ -54,7 +59,7 @@ class Bmp280Temperature(Entity):
 
     @property
     def state(self):
-        return self._bmp280_base.read_temperature()
+        return self._bmp280_base.read_temperature() + self._adj
 
     @property
     def unit_of_measurement(self):
@@ -64,9 +69,10 @@ class Bmp280Temperature(Entity):
 
 class Bmp280Pressure(Entity):
     """Implementation of an BMP280 temperature sensor."""
-    def __init__(self, bmp280_base, name):
+    def __init__(self, bmp280_base, name, adj):
         self._bmp280_base = bmp280_base
         self._name = name
+        self._adj = adj
         self._unit_of_measurement = "hPa"
 
     @property
@@ -79,7 +85,7 @@ class Bmp280Pressure(Entity):
 
     @property
     def state(self):
-        return self._bmp280_base.read_pressure()
+        return self._bmp280_base.read_pressure() + self._adj
 
     @property
     def unit_of_measurement(self):
@@ -112,7 +118,7 @@ class Bmp280:
     DIG_P8 = 0
     DIG_P9 = 0
 
-    def __init__(self, address=0x76):
+    def __init__(self, address):
         self.address = address
         self._bus = i2c
         self._bus.write_byte_data(address, self.CONTROL_ADDR, self.CONTROL)
@@ -121,13 +127,13 @@ class Bmp280:
         self._tfine = 0
 
     @staticmethod
-    def read_signed_16_from_array(a, b):
+    def get_signed_16_from_array(a, b):
         val = a[b + 1] << 8 | a[b]
         mask = 1 << 15
         return (val ^ mask) - mask
 
     @staticmethod
-    def read_unsigned_16_from_array(a, b):
+    def get_unsigned_16_from_array(a, b):
         return a[b + 1] << 8 | a[b]
 
     def read_unsigned_32(self, c):
@@ -136,18 +142,18 @@ class Bmp280:
 
     def read_calibration_data(self):
         a = self._bus.read_i2c_block_data(self.address, self.COMPENSATION_DATA_ADDR, 24)
-        self.DIG_T1 = self.read_unsigned_16_from_array(a, 0)
-        self.DIG_T2 = self.read_signed_16_from_array(a, 2)
-        self.DIG_T3 = self.read_signed_16_from_array(a, 4)
-        self.DIG_P1 = self.read_unsigned_16_from_array(a, 6)
-        self.DIG_P2 = self.read_signed_16_from_array(a, 8)
-        self.DIG_P3 = self.read_signed_16_from_array(a, 10)
-        self.DIG_P4 = self.read_signed_16_from_array(a, 12)
-        self.DIG_P5 = self.read_signed_16_from_array(a, 14)
-        self.DIG_P6 = self.read_signed_16_from_array(a, 16)
-        self.DIG_P7 = self.read_signed_16_from_array(a, 18)
-        self.DIG_P8 = self.read_signed_16_from_array(a, 20)
-        self.DIG_P9 = self.read_signed_16_from_array(a, 22)
+        self.DIG_T1 = self.get_unsigned_16_from_array(a, 0)
+        self.DIG_T2 = self.get_signed_16_from_array(a, 2)
+        self.DIG_T3 = self.get_signed_16_from_array(a, 4)
+        self.DIG_P1 = self.get_unsigned_16_from_array(a, 6)
+        self.DIG_P2 = self.get_signed_16_from_array(a, 8)
+        self.DIG_P3 = self.get_signed_16_from_array(a, 10)
+        self.DIG_P4 = self.get_signed_16_from_array(a, 12)
+        self.DIG_P5 = self.get_signed_16_from_array(a, 14)
+        self.DIG_P6 = self.get_signed_16_from_array(a, 16)
+        self.DIG_P7 = self.get_signed_16_from_array(a, 18)
+        self.DIG_P8 = self.get_signed_16_from_array(a, 20)
+        self.DIG_P9 = self.get_signed_16_from_array(a, 22)
 
     def read_temperature(self):
         adc_T = self.read_unsigned_32(self.TEMPERATURE_ADDR)
@@ -155,7 +161,7 @@ class Bmp280:
         TMP_PART2 = (((((adc_T >> 4) - (self.DIG_T1)) * ((adc_T >> 4) - (self.DIG_T1))) >> 12) * ((self.DIG_T3)) >> 14)
         TMP_FINE = TMP_PART1 + TMP_PART2
         self._tfine = TMP_FINE
-        return ((TMP_FINE * 5 + 128) >> 8) / 100
+        return round(((TMP_FINE * 5 + 128) >> 8) / 100, 1)
 
     def read_pressure(self):
         if self._tfine == 0:
