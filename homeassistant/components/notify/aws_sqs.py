@@ -69,9 +69,6 @@ class AWSSQS(BaseNotificationService):
             _LOGGER.info("At least 1 target is required")
             return
 
-        if not isinstance(targets, list):
-            targets = [targets]
-
         for target in targets:
             cleaned_kwargs = dict((k, v) for k, v in kwargs.items() if v)
             message_body = {"message": message}
