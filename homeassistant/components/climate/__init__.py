@@ -235,10 +235,17 @@ def setup(hass, config):
     def temperature_set_service(service):
         """Set temperature on the target climate devices."""
         target_climate = component.extract_from_service(service)
-        kwargs = service.data
-        for climate in target_climate:
-            climate.set_temperature(**kwargs)
 
+        for climate in target_climate:
+            kwargs = {}
+            for value, temp in service.data.items():
+                kwargs[value] = convert_temperature(
+                    temp,
+                    hass.config.units.temperature_unit,
+                    climate.unit_of_measurement
+                )
+
+            climate.set_temperature(**kwargs)
             if climate.should_poll:
                 climate.update_ha_state(True)
 
