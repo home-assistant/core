@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import forecastio
 from requests.exceptions import HTTPError
 import requests_mock
+from datetime import timedelta
 
 from homeassistant.components.sensor import forecast
 
@@ -21,7 +22,8 @@ class TestForecastSetup(unittest.TestCase):
         self.key = 'foo'
         self.config = {
             'api_key': 'foo',
-            'monitored_conditions': ['summary', 'icon']
+            'monitored_conditions': ['summary', 'icon'],
+            'update_interval': timedelta(seconds=120),
         }
         self.lat = 37.8267
         self.lon = -122.423
