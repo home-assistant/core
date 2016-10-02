@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rest/
 """
 import logging
-import json
 
 import voluptuous as vol
 import requests
@@ -30,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-    vol.Optional(CONF_HEADERS): cv.string,
+    vol.Optional(CONF_HEADERS): {cv.string: cv.string},
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(['POST', 'GET']),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
@@ -52,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     verify_ssl = config.get(CONF_VERIFY_SSL)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    headers = json.loads(config.get(CONF_HEADERS, '{}'))
+    headers = config.get(CONF_HEADERS)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
@@ -65,7 +64,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
 
