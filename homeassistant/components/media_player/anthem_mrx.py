@@ -1,5 +1,5 @@
 """
-Support for interface with a Anthem MRX Receiver.
+Support for interface with a AnthemAV Receiver.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player/
@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Anthem MRX'
+DEFAULT_NAME = 'AnthemAV'
 DEFAULT_PORT = 4999
 DEFAULT_MRXZONE = 1
 CONF_MRXZONE = "mrxzone"
@@ -53,17 +53,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Anthem MRX platform."""
-    add_devices([AnthemMrx(hass, config)])
+    """Setup the AnthemAV platform."""
+    add_devices([AnthemAV(hass, config)])
     return True
 
 
 # pylint: disable=abstract-method, too-many-instance-attributes
-class AnthemMrx(MediaPlayerDevice):
-    """Representation of a Anthem MRX Receiver."""
+class AnthemAV(MediaPlayerDevice):
+    """Representation of a AnthemAV Receiver."""
 
     def __init__(self, hass, config):
-        """Initialize the Anthem MRX device."""
+        """Initialize the AnthemAV device."""
         mrx_sources = {
             '1': 'BDP',
             '2': 'CD',
