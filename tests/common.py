@@ -58,6 +58,7 @@ def get_test_home_assistant(num_threads=None):
     stop_event = threading.Event()
 
     def run_loop():
+        loop._thread_ident = threading.get_ident()
         loop.run_forever()
         loop.close()
         stop_event.set()
