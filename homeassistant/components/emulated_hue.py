@@ -25,6 +25,8 @@ from homeassistant.components.light import (
 from homeassistant.components.http import (
     HomeAssistantView, HomeAssistantWSGI
 )
+# pylint: disable=unused-import
+from homeassistant.components.http import REQUIREMENTS   # noqa
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'emulated_hue'
