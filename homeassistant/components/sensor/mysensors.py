@@ -11,7 +11,6 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -66,6 +65,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             })
             map_sv_types[pres.S_LIGHT_LEVEL].append(set_req.V_LEVEL)
 
+        if float(gateway.protocol_version) >= 2.0:
+            map_sv_types.update({
+                pres.S_INFO: [set_req.V_TEXT],
+                pres.S_GAS: [set_req.V_FLOW, set_req.V_VOLUME],
+                pres.S_GPS: [set_req.V_POSITION],
+                pres.S_WATER_QUALITY: [set_req.V_TEMP, set_req.V_PH,
+                                       set_req.V_ORP, set_req.V_EC]
+            })
+            map_sv_types[pres.S_CUSTOM].append(set_req.V_CUSTOM)
+            map_sv_types[pres.S_POWER].extend(
+                [set_req.V_VAR, set_req.V_VA, set_req.V_POWER_FACTOR])
+
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
             map_sv_types, devices, add_devices, MySensorsSensor))
@@ -104,4 +115,11 @@ class MySensorsSensor(mysensors.MySensorsDeviceEntity, Entity):
                 return self._values[
                     set_req.V_UNIT_PREFIX]
             unit_map.update({set_req.V_PERCENTAGE: '%'})
+        if float(self.gateway.protocol_version) >= 2.0:
+            unit_map.update({
+                set_req.V_ORP: 'mV',
+                set_req.V_EC: 'μS/cm',
+                set_req.V_VAR: 'var',
+                set_req.V_VA: 'VA',
+            })
         return unit_map.get(self.value_type)
