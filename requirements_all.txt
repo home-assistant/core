@@ -302,6 +302,9 @@ pushetta==1.0.15
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==0.2.3
 
+# homeassistant.components.notify.html5
+py-vapid==0.6.0
+
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.13.0
 
