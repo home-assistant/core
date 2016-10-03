@@ -23,7 +23,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.util import Throttle
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ["pyhomematic==0.1.14"]
+REQUIREMENTS = ["pyhomematic==0.1.16"]
 
 HOMEMATIC = None
 HOMEMATIC_LINK_DELAY = 0.5
@@ -52,17 +52,22 @@ SERVICE_VIRTUALKEY = 'virtualkey'
 SERVICE_SET_VALUE = 'set_value'
 
 HM_DEVICE_TYPES = {
-    DISCOVER_SWITCHES: ['Switch', 'SwitchPowermeter'],
-    DISCOVER_LIGHTS: ['Dimmer'],
-    DISCOVER_SENSORS: ['SwitchPowermeter', 'Motion', 'MotionV2',
-                       'RemoteMotion', 'ThermostatWall', 'AreaThermostat',
-                       'RotaryHandleSensor', 'WaterSensor', 'PowermeterGas',
-                       'LuxSensor', 'WeatherSensor', 'WeatherStation'],
-    DISCOVER_CLIMATE: ['Thermostat', 'ThermostatWall', 'MAXThermostat'],
-    DISCOVER_BINARY_SENSORS: ['ShutterContact', 'Smoke', 'SmokeV2', 'Motion',
-                              'MotionV2', 'RemoteMotion', 'WeatherSensor',
-                              'TiltSensor'],
-    DISCOVER_COVER: ['Blind']
+    DISCOVER_SWITCHES: [
+        'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch',
+        'IPSwitchPowermeter', 'KeyMatic'],
+    DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer'],
+    DISCOVER_SENSORS: [
+        'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion',
+        'ThermostatWall', 'AreaThermostat', 'RotaryHandleSensor',
+        'WaterSensor', 'PowermeterGas', 'LuxSensor', 'WeatherSensor',
+        'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
+        'TemperatureSensor', 'CO2Sensor'],
+    DISCOVER_CLIMATE: [
+        'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2'],
+    DISCOVER_BINARY_SENSORS: [
+        'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
+        'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact'],
+    DISCOVER_COVER: ['Blind', 'KeyBlind']
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
@@ -87,11 +92,12 @@ HM_PRESS_EVENTS = [
     'PRESS_SHORT',
     'PRESS_LONG',
     'PRESS_CONT',
-    'PRESS_LONG_RELEASE'
+    'PRESS_LONG_RELEASE',
+    'PRESS',
 ]
 
 HM_IMPULSE_EVENTS = [
-    'SEQUENCE_OK'
+    'SEQUENCE_OK',
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,6 +117,15 @@ CONF_RESOLVENAMES = 'resolvenames'
 CONF_DELAY = 'delay'
 CONF_VARIABLES = 'variables'
 
+DEFAULT_LOCAL_IP = "0.0.0.0"
+DEFAULT_LOCAL_PORT = 0
+DEFAULT_RESOLVENAMES = False
+DEFAULT_REMOTE_PORT = 2001
+DEFAULT_USERNAME = "Admin"
+DEFAULT_PASSWORD = ""
+DEFAULT_VARIABLES = False
+DEFAULT_DELAY = 0.5
+
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): "homematic",
@@ -122,16 +137,16 @@ DEVICE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_LOCAL_IP): cv.string,
-        vol.Optional(CONF_LOCAL_PORT, default=8943): cv.port,
         vol.Required(CONF_REMOTE_IP): cv.string,
-        vol.Optional(CONF_REMOTE_PORT, default=2001): cv.port,
-        vol.Optional(CONF_RESOLVENAMES, default=False):
+        vol.Optional(CONF_LOCAL_IP, default=DEFAULT_LOCAL_IP): cv.string,
+        vol.Optional(CONF_LOCAL_PORT, default=DEFAULT_LOCAL_PORT): cv.port,
+        vol.Optional(CONF_REMOTE_PORT, default=DEFAULT_REMOTE_PORT): cv.port,
+        vol.Optional(CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES):
             vol.In(CONF_RESOLVENAMES_OPTIONS),
-        vol.Optional(CONF_USERNAME, default="Admin"): cv.string,
-        vol.Optional(CONF_PASSWORD, default=""): cv.string,
-        vol.Optional(CONF_DELAY, default=0.5): vol.Coerce(float),
-        vol.Optional(CONF_VARIABLES, default=False): cv.boolean,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): vol.Coerce(float),
+        vol.Optional(CONF_VARIABLES, default=DEFAULT_VARIABLES): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -323,81 +338,43 @@ def _get_devices(device_type, keys):
             metadata.update(device.SENSORNODE)
         elif device_type == DISCOVER_BINARY_SENSORS:
             metadata.update(device.BINARYNODE)
+        else:
+            metadata.update({None: device.ELEMENT})
 
-        params = _create_params_list(device, metadata, device_type)
-        if params:
+        if metadata:
             # Generate options for 1...n elements with 1...n params
-            for channel in range(1, device.ELEMENT + 1):
-                _LOGGER.debug("Handling %s:%i", key, channel)
-                if channel in params:
-                    for param in params[channel]:
-                        name = _create_ha_name(
-                            name=device.NAME,
-                            channel=channel,
-                            param=param
-                        )
-                        device_dict = {
-                            CONF_PLATFORM: "homematic",
-                            ATTR_ADDRESS: key,
-                            ATTR_NAME: name,
-                            ATTR_CHANNEL: channel
-                        }
-                        if param is not None:
-                            device_dict.update({ATTR_PARAM: param})
+            for param, channels in metadata.items():
+                if param in HM_IGNORE_DISCOVERY_NODE:
+                    continue
 
-                        # Add new device
-                        try:
-                            DEVICE_SCHEMA(device_dict)
-                            device_arr.append(device_dict)
-                        except vol.MultipleInvalid as err:
-                            _LOGGER.error("Invalid device config: %s",
-                                          str(err))
-                else:
-                    _LOGGER.debug("Channel %i not in params", channel)
+                # add devices
+                _LOGGER.debug("Handling %s: %s", param, channels)
+                for channel in channels:
+                    name = _create_ha_name(
+                        name=device.NAME,
+                        channel=channel,
+                        param=param
+                    )
+                    device_dict = {
+                        CONF_PLATFORM: "homematic",
+                        ATTR_ADDRESS: key,
+                        ATTR_NAME: name,
+                        ATTR_CHANNEL: channel
+                    }
+                    if param is not None:
+                        device_dict[ATTR_PARAM] = param
+
+                    # Add new device
+                    try:
+                        DEVICE_SCHEMA(device_dict)
+                        device_arr.append(device_dict)
+                    except vol.MultipleInvalid as err:
+                        _LOGGER.error("Invalid device config: %s",
+                                      str(err))
         else:
             _LOGGER.debug("Got no params for %s", key)
     _LOGGER.debug("%s autodiscovery: %s", device_type, str(device_arr))
     return device_arr
-
-
-def _create_params_list(hmdevice, metadata, device_type):
-    """Create a list from HMDevice with all possible parameters in config."""
-    params = {}
-    merge = False
-
-    # use merge?
-    if device_type in (DISCOVER_SENSORS, DISCOVER_BINARY_SENSORS):
-        merge = True
-
-    # Search in sensor and binary metadata per elements
-    for channel in range(1, hmdevice.ELEMENT + 1):
-        param_chan = []
-        for node, meta_chan in metadata.items():
-            try:
-                # Is this attribute ignored?
-                if node in HM_IGNORE_DISCOVERY_NODE:
-                    continue
-                if meta_chan == 'c' or meta_chan is None:
-                    # Only channel linked data
-                    param_chan.append(node)
-                elif channel == 1:
-                    # First channel can have other data channel
-                    param_chan.append(node)
-            except (TypeError, ValueError):
-                _LOGGER.error("Exception generating %s (%s)",
-                              hmdevice.ADDRESS, str(metadata))
-
-        # default parameter is merge is off
-        if len(param_chan) == 0 and not merge:
-            param_chan.append(None)
-
-        # Add to channel
-        if len(param_chan) > 0:
-            params.update({channel: param_chan})
-
-    _LOGGER.debug("Create param list for %s with: %s", hmdevice.ADDRESS,
-                  str(params))
-    return params
 
 
 def _create_ha_name(name, channel, param):
@@ -484,12 +461,12 @@ def _hm_service_virtualkey(call):
     hmdevice = HOMEMATIC.devices.get(address)
 
     # if param exists for this device
-    if param not in hmdevice.ACTIONNODE:
+    if hmdevice is None or param not in hmdevice.ACTIONNODE:
         _LOGGER.error("%s not datapoint in hm device %s", param, address)
         return
 
     # channel exists?
-    if channel > hmdevice.ELEMENT:
+    if channel in hmdevice.ACTIONNODE[param]:
         _LOGGER.error("%i is not a channel in hm device %s", channel, address)
         return
 
@@ -743,19 +720,22 @@ class HMDevice(Entity):
                          self._hmdevice.ATTRIBUTENODE,
                          self._hmdevice.WRITENODE, self._hmdevice.EVENTNODE,
                          self._hmdevice.ACTIONNODE):
-            for node, channel in metadata.items():
+            for node, channels in metadata.items():
                 # Data is needed for this instance
                 if node in self._data:
                     # chan is current channel
-                    if channel == 'c' or channel is None:
+                    if len(channels) == 1:
+                        channel = channels[0]
+                    else:
                         channel = self._channel
+
                     # Prepare for subscription
                     try:
                         if int(channel) >= 0:
                             channels_to_sub.update({int(channel): True})
                     except (ValueError, TypeError):
-                        _LOGGER("Invalid channel in metadata from %s",
-                                self._name)
+                        _LOGGER.error("Invalid channel in metadata from %s",
+                                      self._name)
 
         # Set callbacks
         for channel in channels_to_sub:
