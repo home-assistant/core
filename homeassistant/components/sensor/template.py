@@ -82,7 +82,7 @@ class SensorTemplate(Entity):
         @asyncio.coroutine
         def template_sensor_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
-            yield from self.async_update_ha_state(True)
+            hass.loop.create_task(self.async_update_ha_state(True))
 
         track_state_change(hass, entity_ids, template_sensor_state_listener)
 
