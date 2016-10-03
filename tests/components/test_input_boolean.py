@@ -31,7 +31,6 @@ class TestInputBoolean(unittest.TestCase):
             None,
             1,
             {},
-            {'name with space': None},
         ]
 
         for cfg in invalid_configs:
