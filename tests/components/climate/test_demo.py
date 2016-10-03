@@ -2,7 +2,7 @@
 import unittest
 
 from homeassistant.util.unit_system import (
-    METRIC_SYSTEM,
+    METRIC_SYSTEM
 )
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import climate
@@ -12,6 +12,7 @@ from tests.common import get_test_home_assistant
 
 ENTITY_CLIMATE = 'climate.hvac'
 ENTITY_ECOBEE = 'climate.ecobee'
+ENTITY_HEATPUMP = 'climate.heatpump'
 
 
 class TestDemoClimate(unittest.TestCase):
@@ -67,6 +68,15 @@ class TestDemoClimate(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(30.0, state.attributes.get('temperature'))
+
+    def test_set_only_target_temp_with_convert(self):
+        """Test the setting of the target temperature."""
+        state = self.hass.states.get(ENTITY_HEATPUMP)
+        self.assertEqual(20, state.attributes.get('temperature'))
+        climate.set_temperature(self.hass, 21, ENTITY_HEATPUMP)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_HEATPUMP)
+        self.assertEqual(21.0, state.attributes.get('temperature'))
 
     def test_set_target_temp_range(self):
         """Test the setting of the target temperature with range."""
