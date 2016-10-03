@@ -229,8 +229,7 @@ class TestComponentHistory(unittest.TestCase):
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_include_exclude_domain(self):
-        """Test if significant states are returned when excluding and including
-        domains.
+        """Test if significant states when excluding and including domains.
 
         We should not get back any changes since we include only the
         media_player domain but also exclude it.
@@ -251,8 +250,7 @@ class TestComponentHistory(unittest.TestCase):
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_include_exclude_entity(self):
-        """Test if significant states are returned when excluding and including
-        domains.
+        """Test if significant states when excluding and including domains.
 
         We should not get back any changes since we include only
         media_player.test but also exclude it.
@@ -273,8 +271,7 @@ class TestComponentHistory(unittest.TestCase):
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_include_exclude(self):
-        """Test if significant states are returned when excluding and including
-        domains and entities.
+        """Test if significant states when in/excluding domains and entities.
 
         We should only get back changes of the media_player.test2 entity.
         """
