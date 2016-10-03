@@ -121,7 +121,7 @@ class HaveIBeenPwnedData(object):
             _LOGGER.info("Checking for breaches for email %s", self.email)
 
             req = requests.get(url, headers={"User-agent": USER_AGENT},
-                               verify=False, allow_redirects=True, timeout=5)
+                               allow_redirects=True, timeout=5)
 
             # Intial data for all email addresses have been gathered
             # Throttle the amount of requests made to 1 per 15 minutes to
