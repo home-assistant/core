@@ -55,7 +55,7 @@ MODULE_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATION): cv.string,
-    vol.Required(CONF_MODULES): MODULE_SCHEMA,
+    vol.Optional(CONF_MODULES): MODULE_SCHEMA,
 })
 
 
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = NetAtmoData(netatmo.NETATMO_AUTH, config.get(CONF_STATION, None))
 
     dev = []
-    try:
+    if CONF_MODULES in config:
         # Iterate each module
         for module_name, monitored_conditions in config[CONF_MODULES].items():
             # Test if module exist """
@@ -75,8 +75,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             # Only create sensor for monitored """
             for variable in monitored_conditions:
                 dev.append(NetAtmoSensor(data, module_name, variable))
-    except KeyError:
-        pass
+    else:
+        for module_name in data.get_module_names():
+            for variable in data.stationDatas.monitoredConditions(module_name):
+                dev.append(NetAtmoSensor(data, module_name, variable))
 
     add_devices(dev)
 
@@ -222,6 +224,7 @@ class NetAtmoData(object):
         """Initialize the data object."""
         self.auth = auth
         self.data = None
+        self.stationDatas = None
         self.station = station
 
     def get_module_names(self):
@@ -233,9 +236,9 @@ class NetAtmoData(object):
     def update(self):
         """Call the Netatmo API to update the data."""
         import lnetatmo
-        dev_list = lnetatmo.DeviceList(self.auth)
+        self.stationDatas = lnetatmo.DeviceList(self.auth)
 
         if self.station is not None:
-            self.data = dev_list.lastData(station=self.station, exclude=3600)
+            self.data = self.stationDatas.lastData(station=self.station, exclude=3600)
         else:
-            self.data = dev_list.lastData(exclude=3600)
+            self.data = self.stationDatas.lastData(exclude=3600)
