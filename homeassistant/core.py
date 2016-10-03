@@ -1088,6 +1088,7 @@ class Config(object):
             'location_name': self.location_name,
             'time_zone': time_zone.zone,
             'components': self.components,
+            'config_dir': self.config_dir,
             'version': __version__
         }
 
