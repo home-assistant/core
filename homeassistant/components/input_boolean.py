@@ -13,7 +13,7 @@ from homeassistant.const import (
     SERVICE_TOGGLE, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_component import EntityComponent, generate_entity_id
 from homeassistant.helpers import extract_domain_configs
 
 DOMAIN = 'input_boolean'
@@ -105,7 +105,7 @@ class InputBoolean(ToggleEntity):
 
     def __init__(self, object_id, name, state, icon):
         """Initialize a boolean input."""
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
+        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, object_id)
         self._name = name
         self._state = state
         self._icon = icon
