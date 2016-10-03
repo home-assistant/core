@@ -133,7 +133,8 @@ def async_track_point_in_utc_time(hass, action, point_in_time):
     return async_unsub
 
 
-track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_time)
+track_point_in_utc_time = threaded_listener_factory(
+    async_track_point_in_utc_time)
 
 
 def async_track_sunrise(hass, action, offset=None):
