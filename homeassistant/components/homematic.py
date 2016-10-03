@@ -735,7 +735,7 @@ class HMDevice(Entity):
                             channels_to_sub.update({int(channel): True})
                     except (ValueError, TypeError):
                         _LOGGER.error("Invalid channel in metadata from %s",
-                                self._name)
+                                      self._name)
 
         # Set callbacks
         for channel in channels_to_sub:
