@@ -348,6 +348,8 @@ class TestAutomation(unittest.TestCase):
 
         automation.reload(self.hass)
         self.hass.block_till_done()
+        # De-flake ?!
+        self.hass.block_till_done()
 
         assert self.hass.states.get('automation.hello') is None
         assert self.hass.states.get('automation.bye') is not None
