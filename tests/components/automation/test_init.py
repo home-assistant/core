@@ -144,6 +144,35 @@ class TestAutomation(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(2, len(self.calls))
 
+    def test_trigger_service_ignoring_condition(self):
+        """Test triggers."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': [
+                    {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                ],
+                'condition': {
+                    'condition': 'state',
+                    'entity_id': 'non.existing',
+                    'state': 'beer',
+                },
+                'action': {
+                    'service': 'test.automation',
+                }
+            }
+        })
+
+        self.hass.bus.fire('test_event')
+        self.hass.block_till_done()
+        assert len(self.calls) == 0
+
+        self.hass.services.call('automation', 'trigger', blocking=True)
+        self.hass.block_till_done()
+        assert len(self.calls) == 1
+
     def test_two_conditions_with_and(self):
         """Test two and conditions."""
         entity_id = 'test.entity'
