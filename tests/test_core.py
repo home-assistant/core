@@ -448,6 +448,7 @@ class TestConfig(unittest.TestCase):
 
     def test_as_dict(self):
         """Test as dict."""
+        self.config.config_dir = '/tmp/ha-config'
         expected = {
             'latitude': None,
             'longitude': None,
@@ -455,6 +456,7 @@ class TestConfig(unittest.TestCase):
             'location_name': None,
             'time_zone': 'UTC',
             'components': [],
+            'config_dir': '/tmp/ha-config',
             'version': __version__,
         }
 

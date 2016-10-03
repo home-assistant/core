@@ -199,8 +199,6 @@ class HomeAssistant(object):
 
         This method is a coroutine.
         """
-        # pylint: disable=protected-access
-        self.loop._thread_ident = threading.get_ident()
         async_create_timer(self)
         async_monitor_worker_pool(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1088,6 +1086,7 @@ class Config(object):
             'location_name': self.location_name,
             'time_zone': time_zone.zone,
             'components': self.components,
+            'config_dir': self.config_dir,
             'version': __version__
         }
 
