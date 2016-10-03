@@ -50,6 +50,11 @@ class TestComponentLogbook(unittest.TestCase):
             logbook.ATTR_ENTITY_ID: 'switch.test_switch'
         }, True)
 
+        # Logbook entry service call results in firing an event.
+        # Our service call will unblock when the event listeners have been
+        # scheduled. This means that they may not have been processed yet.
+        self.hass.block_till_done()
+
         self.assertEqual(1, len(calls))
         last_call = calls[-1]
 
