@@ -62,7 +62,7 @@ def setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
-    entity_ids =[]
+    entity_ids = []
 
     for config_key in extract_domain_configs(config, DOMAIN):
         for object_id, cfg in config[config_key].items():
@@ -72,7 +72,8 @@ def setup(hass, config):
             name = cfg.get(CONF_NAME)
             state = cfg.get(CONF_INITIAL, False)
             icon = cfg.get(CONF_ICON)
-            entity_id = generate_entity_id(ENTITY_ID_FORMAT, object_id, entity_ids)
+            entity_id = generate_entity_id(ENTITY_ID_FORMAT,
+                                           object_id, entity_ids)
             entity_ids.append(entity_id)
             entities.append(InputBoolean(entity_id, name, state, icon))
 
