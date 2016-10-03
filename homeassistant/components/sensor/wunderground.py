@@ -125,15 +125,18 @@ class WUndergroundSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
-        if self.rest.alerts and self._condition == 'alerts':
-            for data in self.rest.alerts:
-                for alert in ALERTS_ATTRS:
-                    if data[alert]:
-                        if len(self.rest.alerts) > 1:
-                            dkey = alert.capitalize() + '_' + data['type']
-                        else:
-                            dkey = alert.capitalize()
-                        attrs.update({dkey: data[alert]})
+        if not self.rest.alerts or self._condition != 'alerts':
+            return
+
+        multiple_alerts = len(self.rest.alerts) > 1
+        for data in self.rest.alerts:
+            for alert in ALERTS_ATTRS:
+                if data[alert]:
+                    if multiple_alerts:
+                        dkey = alert.capitalize() + '_' + data['type']
+                    else:
+                        dkey = alert.capitalize()
+                    attrs[dkey] = data[alert]
         return attrs
 
     @property
@@ -192,7 +195,12 @@ class WUndergroundData(object):
                                  ["description"])
             else:
                 self.data = result["current_observation"]
+        except ValueError as err:
+            _LOGGER.error("Check WUnderground API %s", err.args)
+            self.data = None
+            raise
 
+        try:
             result = requests.get(self._build_url(_ALERTS), timeout=10).json()
             if "error" in result['response']:
                 raise ValueError(result['response']["error"]
@@ -201,6 +209,5 @@ class WUndergroundData(object):
                 self.alerts = result["alerts"]
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
-            self.data = None
             self.alerts = None
             raise
