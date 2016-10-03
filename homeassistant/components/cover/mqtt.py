@@ -141,7 +141,12 @@ class MqttCover(CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return self._position
+        if self._position is not None:
+            return self.position
+        elif self.is_closed is not None:
+            return 0 if self.is_closed else 100
+        else:
+            return None
 
     def open_cover(self, **kwargs):
         """Move the cover up."""
