@@ -135,13 +135,13 @@ def setup(hass, config):
         """Start the WSGI server."""
         server.start()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_wsgi_server)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_wsgi_server)
 
     def stop_wsgi_server(event):
         """Stop the WSGI server."""
         server.stop()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wsgi_server)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_wsgi_server)
 
     hass.wsgi = server
     hass.config.api = rem.API(server_host if server_host != '0.0.0.0'
