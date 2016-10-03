@@ -75,6 +75,11 @@ class TestComponentLogbook(unittest.TestCase):
         self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
         self.hass.services.call(logbook.DOMAIN, 'log', {}, True)
 
+        # Logbook entry service call results in firing an event.
+        # Our service call will unblock when the event listeners have been
+        # scheduled. This means that they may not have been processed yet.
+        self.hass.block_till_done()
+
         self.assertEqual(0, len(calls))
 
     def test_humanify_filter_sensor(self):
