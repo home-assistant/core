@@ -16,7 +16,7 @@ from homeassistant.const import (
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
-                'operation_mode',
+                'mode',
                 'last_ip',
                 'local_ip',
                 'last_connection',
