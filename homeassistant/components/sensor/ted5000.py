@@ -104,7 +104,7 @@ class Ted5000Gateway(object):
         """Get the latest data from the Ted5000 XML API."""
         import xmltodict
         try:
-            request = requests.get(self.url)
+            request = requests.get(self.url, timeout=10)
         except requests.exceptions.RequestException as err:
             _LOGGER.error("No connection to endpoint: %s", err)
         else:
