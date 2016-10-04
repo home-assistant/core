@@ -21,7 +21,9 @@ SENSOR_TYPES = {
     "loudness": "sound",
     "liquid_detected": "moisture",
     "motion": "motion",
-    "presence": "occupancy"
+    "presence": "occupancy",
+    "co_detected": "gas",
+    "smoke_detected": "smoke"
 }
 
 
@@ -35,6 +37,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for key in pywink.get_keys():
         add_devices([WinkBinarySensorDevice(key)])
+
+    for sensor in pywink.get_smoke_and_co_detectors():
+        add_devices([WinkBinarySensorDevice(sensor)])
 
 
 class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
@@ -70,6 +75,10 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
             state = self.wink.motion_boolean()
         elif self.capability == "presence":
             state = self.wink.presence_boolean()
+        elif self.capability == "co_detected":
+            state = self.wink.co_detected_boolean()
+        elif self.capability == "smoke_detected":
+            state = self.wink.smoke_detected_boolean()
         else:
             state = self.wink.state()
 
