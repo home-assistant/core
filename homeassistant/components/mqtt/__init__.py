@@ -178,7 +178,7 @@ def async_subscribe(hass, topic, callback, qos=DEFAULT_QOS):
                                          mqtt_topic_subscriber)
 
     # Future: track subscriber count and unsubscribe in remove
-    hass.add_job(MQTT_CLIENT.subscribe, topic, qos)
+    MQTT_CLIENT.subscribe(topic, qos)
 
     return async_remove
 
