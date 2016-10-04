@@ -257,29 +257,33 @@ def _set_filters_in_query(query, states, entity_ids, filters):
     if not filters:
         return query
 
-    # get the included set if specified
-    included = None
-    if filters.included_domains and filters.included_entities:
-        included = (states.domain.in_(filters.included_domains) |
-                    states.entity_id.in_(filters.included_entities))
-    elif filters.included_domains:
-        included = states.domain.in_(filters.included_domains)
-    elif filters.included_entities:
-        included = states.entity_id.in_(filters.included_entities)
-
-    # apply exclude set to include if specified
-    included_excluded = None
-    if filters.excluded_domains and included is not None:
-        included_excluded = (~states.domain.in_(filters.excluded_domains) &
-                             included)
-    # if no include set specified just use include or exclude filter
-    elif filters.excluded_domains:
-        included_excluded = ~states.domain.in_(filters.excluded_domains)
-    elif included is not None:
-        included_excluded = included
-
-    if included_excluded is not None:
-        query = query.filter(included_excluded)
+    filter_query = None
+    # filter if only excluded domain is configured
+    if filters.excluded_domains and not filters.included_domains:
+        filter_query = ~states.domain.in_(filters.excluded_domains)
+        if filters.included_entities:
+            filter_query |= states.entity_id.in_(filters.included_entities)
+    # filter if only included domain is configured
+    elif not filters.excluded_domains and filters.included_domains:
+        filter_query = states.domain.in_(filters.included_domains)
+        if filters.included_entities:
+            filter_query |= states.entity_id.in_(filters.included_entities)
+    # filter if included and excluded domain is configured
+    elif filters.excluded_domains and filters.included_domains:
+        filter_query = ~states.domain.in_(filters.excluded_domains)
+        if filters.included_entities:
+            filter_query &= (states.domain.in_(filters.included_domains) |
+                             states.entity_id.in_(filters.included_entities))
+        else:
+            filter_query &= (states.domain.in_(filters.included_domains) &
+                             ~states.domain.in_(filters.excluded_domains))
+    # no domain filter just included entities
+    elif not filters.excluded_domains and not filters.included_domains and \
+            filters.included_entities:
+        filter_query = states.entity_id.in_(filters.included_entities)
+    if filter_query is not None:
+        query = query.filter(filter_query)
+    # finally apply excluded entities filter if configured
     if filters.excluded_entities:
         query = query.filter(~states.entity_id.in_(filters.excluded_entities))
     return query
