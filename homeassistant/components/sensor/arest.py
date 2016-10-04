@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         def _render(value):
             try:
-                return value_template.render({'value': value})
+                return value_template.async_render({'value': value})
             except TemplateError:
                 _LOGGER.exception('Error parsing value')
                 return value
@@ -157,6 +157,11 @@ class ArestSensor(Entity):
         """Get the latest data from aREST API."""
         self.arest.update()
 
+    @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self.arest.available
+
 
 # pylint: disable=too-few-public-methods
 class ArestData(object):
@@ -167,6 +172,7 @@ class ArestData(object):
         self._resource = resource
         self._pin = pin
         self.data = {}
+        self.available = True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -188,7 +194,8 @@ class ArestData(object):
                     response = requests.get('{}/digital/{}'.format(
                         self._resource, self._pin), timeout=10)
                     self.data = {'value': response.json()['return_value']}
+            self.available = True
         except requests.exceptions.ConnectionError:
             _LOGGER.error("No route to device %s. Is device offline?",
                           self._resource)
-            self.data = {'error': 'error fetching'}
+            self.available = False

@@ -75,6 +75,7 @@ class ArestSwitchBase(SwitchDevice):
         self._resource = resource
         self._name = '{} {}'.format(location.title(), name.title())
         self._state = None
+        self._available = True
 
     @property
     def name(self):
@@ -85,6 +86,11 @@ class ArestSwitchBase(SwitchDevice):
     def is_on(self):
         """Return true if device is on."""
         return self._state
+
+    @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self._available
 
 
 class ArestSwitchFunction(ArestSwitchBase):
@@ -136,9 +142,15 @@ class ArestSwitchFunction(ArestSwitchBase):
 
     def update(self):
         """Get the latest data from aREST API and update the state."""
-        request = requests.get(
-            '{}/{}'.format(self._resource, self._func), timeout=10)
-        self._state = request.json()['return_value'] != 0
+        try:
+            request = requests.get('{}/{}'.format(self._resource,
+                                                  self._func), timeout=10)
+            self._state = request.json()['return_value'] != 0
+            self._available = True
+        except requests.exceptions.ConnectionError:
+            _LOGGER.warning("No route to device %s. Is device offline?",
+                            self._resource)
+            self._available = False
 
 
 class ArestSwitchPin(ArestSwitchBase):
@@ -153,6 +165,7 @@ class ArestSwitchPin(ArestSwitchBase):
             '{}/mode/{}/o'.format(self._resource, self._pin), timeout=10)
         if request.status_code is not 200:
             _LOGGER.error("Can't set mode. Is device offline?")
+            self._available = False
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -176,6 +189,13 @@ class ArestSwitchPin(ArestSwitchBase):
 
     def update(self):
         """Get the latest data from aREST API and update the state."""
-        request = requests.get(
-            '{}/digital/{}'.format(self._resource, self._pin), timeout=10)
-        self._state = request.json()['return_value'] != 0
+        try:
+            request = requests.get('{}/digital/{}'.format(self._resource,
+                                                          self._pin),
+                                   timeout=10)
+            self._state = request.json()['return_value'] != 0
+            self._available = True
+        except requests.exceptions.ConnectionError:
+            _LOGGER.warning("No route to device %s. Is device offline?",
+                            self._resource)
+            self._available = False
