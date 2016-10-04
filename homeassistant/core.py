@@ -167,15 +167,22 @@ class HomeAssistant(object):
         )
 
         # Setup signal handling
-        if sys.platform != "win32":
-            self.loop.add_signal_handler(
-                signal.SIGTERM,
-                stop_homeassistant
-            )
-            self.loop.add_signal_handler(
-                signal.SIGHUP,
-                restart_homeassistant
-            )
+        if sys.platform != 'win32':
+            try:
+                self.loop.add_signal_handler(
+                    signal.SIGTERM,
+                    stop_homeassistant
+                )
+            except ValueError:
+                _LOGGER.warning('Could not bind to SIGTERM.')
+
+            try:
+                self.loop.add_signal_handler(
+                    signal.SIGHUP,
+                    restart_homeassistant
+                )
+            except ValueError:
+                _LOGGER.warning('Could not bind to SIGHUP.')
 
         # Run forever and catch keyboard interrupt
         try:
