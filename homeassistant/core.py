@@ -84,6 +84,11 @@ def async_safe(func):
     return func
 
 
+def is_async_safe(func):
+    """Check if function is safe to be called in the event loop."""
+    return '_hass_async_safe' in func.__dict__
+
+
 class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
@@ -230,7 +235,7 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-        if '_hass_async_safe' in target.__dict__:
+        if is_async_safe(target):
             self.loop.call_soon(target, *args)
         elif asyncio.iscoroutinefunction(target):
             self.loop.create_task(target(*args))
@@ -243,7 +248,7 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-        if '_hass_async_safe' in target.__dict__:
+        if is_async_safe(target):
             target(*args)
         else:
             self.async_add_job(target, *args)
@@ -427,6 +432,8 @@ class EventBus(object):
         for func in listeners:
             if asyncio.iscoroutinefunction(func):
                 self._loop.create_task(func(event))
+            elif is_async_safe(func):
+                self._loop.call_soon(func, event)
             else:
                 sync_jobs.append((job_priority, (func, event)))
 
@@ -814,7 +821,7 @@ class Service(object):
     """Represents a callable service."""
 
     __slots__ = ['func', 'description', 'fields', 'schema',
-                 'isasync', 'iscoroutinefunction']
+                 'is_async', 'is_coroutinefunction']
 
     def __init__(self, func, description, fields, schema):
         """Initialize a service."""
@@ -822,8 +829,8 @@ class Service(object):
         self.description = description or ''
         self.fields = fields or {}
         self.schema = schema
-        self.isasync = '_hass_async_safe' in func.__dict__
-        self.iscoroutinefunction = asyncio.iscoroutinefunction(func)
+        self.is_async = '_hass_async_safe' in func.__dict__
+        self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
 
     def as_dict(self):
         """Return dictionary representation of this service."""
@@ -954,7 +961,7 @@ class ServiceRegistry(object):
             self._loop
         ).result()
 
-    @asyncio.coroutine
+    @async_safe
     def async_call(self, domain, service, service_data=None, blocking=False):
         """
         Call a service.
@@ -986,7 +993,7 @@ class ServiceRegistry(object):
         if blocking:
             fut = asyncio.Future(loop=self._loop)
 
-            @asyncio.coroutine
+            @async_safe
             def service_executed(event):
                 """Callback method that is called when service is executed."""
                 if event.data[ATTR_SERVICE_CALL_ID] == call_id:
@@ -1027,7 +1034,7 @@ class ServiceRegistry(object):
 
             data = {ATTR_SERVICE_CALL_ID: call_id}
 
-            if service_handler.iscoroutinefunction:
+            if service_handler.is_coroutinefunction:
                 self._bus.async_fire(EVENT_SERVICE_EXECUTED, data)
             else:
                 self._bus.fire(EVENT_SERVICE_EXECUTED, data)
@@ -1043,10 +1050,10 @@ class ServiceRegistry(object):
 
         service_call = ServiceCall(domain, service, service_data, call_id)
 
-        if service_handler.isasync:
+        if service_handler.is_async:
             service_handler.func(service_call)
             fire_service_executed()
-        elif service_handler.iscoroutinefunction:
+        elif service_handler.is_coroutinefunction:
             yield from service_handler.func(service_call)
             fire_service_executed()
         else:
@@ -1120,7 +1127,7 @@ def async_create_timer(hass, interval=TIMER_INTERVAL):
     stop_event = asyncio.Event(loop=hass.loop)
 
     # Setting the Event inside the loop by marking it as a coroutine
-    @asyncio.coroutine
+    @async_safe
     def stop_timer(event):
         """Stop the timer."""
         stop_event.set()
@@ -1234,7 +1241,7 @@ def async_monitor_worker_pool(hass):
 
     schedule()
 
-    @asyncio.coroutine
+    @async_safe
     def stop_monitor(event):
         """Stop the monitor."""
         handle.cancel()

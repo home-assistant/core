@@ -387,7 +387,7 @@ class TestStateMachine(unittest.TestCase):
     def test_force_update(self):
         """Test force update option."""
         events = []
-        self.hass.bus.listen(EVENT_STATE_CHANGED, events.append)
+        self.hass.bus.listen(EVENT_STATE_CHANGED, lambda ev: events.append(ev))
 
         self.states.set('light.bowl', 'on')
         self.hass.block_till_done()
@@ -581,8 +581,7 @@ class TestWorkerPoolMonitor(object):
         check_threshold()
         assert mock_warning.called
 
-        event_loop.run_until_complete(
-            hass.bus.async_listen_once.mock_calls[0][1][1](None))
+        hass.bus.async_listen_once.mock_calls[0][1][1](None)
         assert schedule_handle.cancel.called
 
 
@@ -618,5 +617,5 @@ class TestAsyncCreateTimer(object):
         assert {ha.ATTR_NOW: now} == event_data
 
         stop_timer = hass.bus.async_listen_once.mock_calls[0][1][1]
-        event_loop.run_until_complete(stop_timer(None))
+        stop_timer(None)
         assert event.set.called

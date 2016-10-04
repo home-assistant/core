@@ -3,7 +3,7 @@ import asyncio
 import functools as ft
 from datetime import timedelta
 
-from ..core import HomeAssistant
+from ..core import HomeAssistant, async_safe
 from ..const import (
     ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 from ..util import dt as dt_util
@@ -58,7 +58,7 @@ def async_track_state_change(hass, entity_ids, action, from_state=None,
         entity_ids = tuple(entity_id.lower() for entity_id in entity_ids)
 
     @ft.wraps(action)
-    @asyncio.coroutine
+    @async_safe
     def state_change_listener(event):
         """The listener that listens for specific state changes."""
         if entity_ids != MATCH_ALL and \
@@ -91,7 +91,7 @@ def async_track_point_in_time(hass, action, point_in_time):
     utc_point_in_time = dt_util.as_utc(point_in_time)
 
     @ft.wraps(action)
-    @asyncio.coroutine
+    @async_safe
     def utc_converter(utc_now):
         """Convert passed in UTC now to local now."""
         hass.async_run_job(action, dt_util.as_local(utc_now))
@@ -109,7 +109,7 @@ def async_track_point_in_utc_time(hass, action, point_in_time):
     point_in_time = dt_util.as_utc(point_in_time)
 
     @ft.wraps(action)
-    @asyncio.coroutine
+    @async_safe
     def point_in_time_listener(event):
         """Listen for matching time_changed events."""
         now = event.data[ATTR_NOW]
@@ -152,7 +152,7 @@ def async_track_sunrise(hass, action, offset=None):
         return next_time
 
     @ft.wraps(action)
-    @asyncio.coroutine
+    @async_safe
     def sunrise_automation_listener(now):
         """Called when it's time for action."""
         nonlocal remove
@@ -188,7 +188,7 @@ def async_track_sunset(hass, action, offset=None):
         return next_time
 
     @ft.wraps(action)
-    @asyncio.coroutine
+    @async_safe
     def sunset_automation_listener(now):
         """Called when it's time for action."""
         nonlocal remove
@@ -218,6 +218,7 @@ def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
     # if no pattern given
     if all(val is None for val in (year, month, day, hour, minute, second)):
         @ft.wraps(action)
+        @async_safe
         def time_change_listener(event):
             """Fire every time event that comes in."""
             hass.async_run_job(action, event.data[ATTR_NOW])
@@ -229,7 +230,7 @@ def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
     hour, minute, second = pmp(hour), pmp(minute), pmp(second)
 
     @ft.wraps(action)
-    @asyncio.coroutine
+    @async_safe
     def pattern_time_change_listener(event):
         """Listen for matching time_changed events."""
         now = event.data[ATTR_NOW]
