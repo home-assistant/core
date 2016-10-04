@@ -43,7 +43,7 @@ set_temperature:
       example: 20
 
     operation_mode:
-      description: Operation mode to set temperature to
+      description: Operation mode to set temperature to. This defaults to current_operation mode if not set, or set incorrectly.
       example: 'Heat'
 
 set_humidity:
