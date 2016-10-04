@@ -150,13 +150,13 @@ class HomeAssistant(object):
         def stop_homeassistant(*args):
             """Stop Home Assistant."""
             self.exit_code = 0
-            yield from self.async_stop()
+            self.async_add_job(self.async_stop)
 
         @asyncio.coroutine
         def restart_homeassistant(*args):
             """Restart Home Assistant."""
             self.exit_code = RESTART_EXIT_CODE
-            yield from self.async_stop()
+            self.async_add_job(self.async_stop)
 
         # Register the restart/stop event
         self.loop.call_soon(
@@ -169,18 +169,17 @@ class HomeAssistant(object):
         )
 
         # Setup signal handling
-        try:
-            signal.signal(signal.SIGTERM, stop_homeassistant)
-        except ValueError:
-            _LOGGER.warning(
-                'Could not bind to SIGTERM. Are you running in a thread?')
-        try:
-            signal.signal(signal.SIGHUP, restart_homeassistant)
-        except ValueError:
-            _LOGGER.warning(
-                'Could not bind to SIGHUP. Are you running in a thread?')
-        except AttributeError:
-            pass
+        if sys.platform != "win32":
+            self.loop.add_signal_handler(
+                signal.SIGTERM,
+                asyncio.async,
+                stop_homeassistant()
+            )
+            self.loop.add_signal_handler(
+                signal.SIGHUP,
+                asyncio.async,
+                restart_homeassistant()
+            )
 
         # Run forever and catch keyboard interrupt
         try:
