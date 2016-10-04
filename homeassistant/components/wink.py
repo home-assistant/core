@@ -15,7 +15,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL, \
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==0.8.0', 'pubnub==3.8.2']
+REQUIREMENTS = ['python-wink==0.9.0', 'pubnub==3.8.2']
 
 _LOGGER = logging.getLogger(__name__)
 
