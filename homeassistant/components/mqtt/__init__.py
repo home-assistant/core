@@ -12,16 +12,14 @@ import time
 
 import voluptuous as vol
 
-from homeassistant.core import JobPriority
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import template
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import template, config_validation as cv
+from homeassistant.helpers.event import threaded_listener_factory
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     CONF_PLATFORM, CONF_SCAN_INTERVAL, CONF_VALUE_TEMPLATE)
-from homeassistant.util.async import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -165,18 +163,6 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
-def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
-    """Subscribe to an MQTT topic."""
-    async_remove = run_callback_threadsafe(
-        hass.loop, async_subscribe, hass, topic, callback, qos).result()
-
-    def remove_mqtt():
-        """Remove MQTT subscription."""
-        run_callback_threadsafe(hass.loop, async_remove).result()
-
-    return remove_mqtt
-
-
 def async_subscribe(hass, topic, callback, qos=DEFAULT_QOS):
     """Subscribe to an MQTT topic."""
     @asyncio.coroutine
@@ -185,14 +171,8 @@ def async_subscribe(hass, topic, callback, qos=DEFAULT_QOS):
         if not _match_topic(topic, event.data[ATTR_TOPIC]):
             return
 
-        if asyncio.iscoroutinefunction(callback):
-            yield from callback(
-                event.data[ATTR_TOPIC], event.data[ATTR_PAYLOAD],
-                event.data[ATTR_QOS])
-        else:
-            hass.add_job(callback, event.data[ATTR_TOPIC],
-                         event.data[ATTR_PAYLOAD], event.data[ATTR_QOS],
-                         priority=JobPriority.EVENT_CALLBACK)
+        hass.async_add_job(callback, event.data[ATTR_TOPIC],
+                           event.data[ATTR_PAYLOAD], event.data[ATTR_QOS])
 
     async_remove = hass.bus.async_listen(EVENT_MQTT_MESSAGE_RECEIVED,
                                          mqtt_topic_subscriber)
@@ -201,6 +181,10 @@ def async_subscribe(hass, topic, callback, qos=DEFAULT_QOS):
     MQTT_CLIENT.subscribe(topic, qos)
 
     return async_remove
+
+
+# pylint: disable=invalid-name
+subscribe = threaded_listener_factory(async_subscribe)
 
 
 def _setup_server(hass, config):
