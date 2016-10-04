@@ -146,13 +146,11 @@ class HomeAssistant(object):
         # Register the async start
         self.loop.create_task(self.async_start())
 
-        @asyncio.coroutine
         def stop_homeassistant(*args):
             """Stop Home Assistant."""
             self.exit_code = 0
             self.async_add_job(self.async_stop)
 
-        @asyncio.coroutine
         def restart_homeassistant(*args):
             """Restart Home Assistant."""
             self.exit_code = RESTART_EXIT_CODE
@@ -172,13 +170,11 @@ class HomeAssistant(object):
         if sys.platform != "win32":
             self.loop.add_signal_handler(
                 signal.SIGTERM,
-                asyncio.async,
-                stop_homeassistant()
+                stop_homeassistant
             )
             self.loop.add_signal_handler(
                 signal.SIGHUP,
-                asyncio.async,
-                restart_homeassistant()
+                restart_homeassistant
             )
 
         # Run forever and catch keyboard interrupt
@@ -189,7 +185,7 @@ class HomeAssistant(object):
         except KeyboardInterrupt:
             pass
         finally:
-            self.loop.create_task(stop_homeassistant())
+            self.loop.call_soon(stop_homeassistant)
             self.loop.run_forever()
 
     @asyncio.coroutine
