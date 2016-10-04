@@ -109,7 +109,7 @@ class NestBasicSensor(NestSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.device.variable == 'operation_mode':
+        if self.variable == 'operation_mode':
             return getattr(self.device, "mode")
         else:
             return getattr(self.device, self.variable)
