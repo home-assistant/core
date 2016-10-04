@@ -117,6 +117,12 @@ RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
     vol.Required(const.ATTR_NAME): cv.string,
 })
+SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
+    vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int),
+    vol.Optional(const.ATTR_CONFIG_SIZE): vol.Coerce(int)
+})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -399,6 +405,18 @@ def setup(hass, config):
         _LOGGER.info(
             "Renamed ZWave node %d to %s", node_id, name)
 
+    def set_config_parameter(service):
+        """Set a config parameter to a node."""
+        state = hass.states.get(service.data.get(ATTR_ENTITY_ID))
+        node_id = state.attributes.get(const.ATTR_NODE_ID)
+        node = NETWORK.nodes[node_id]
+        param = service.data.get(const.ATTR_CONFIG_PARAMETER)
+        value = service.data.get(const.ATTR_CONFIG_VALUE)
+        size = service.data.get(const.ATTR_CONFIG_SIZE, 2)
+        node.set_config_param(param, value, size)
+        _LOGGER.info("Setting config parameter %s on Node %s "
+                     "with value %s and size=%s", param, node_id, value, size)
+
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
         _LOGGER.info("Starting ZWave network.")
@@ -459,6 +477,11 @@ def setup(hass, config):
         hass.services.register(DOMAIN, const.SERVICE_RENAME_NODE, rename_node,
                                descriptions[const.SERVICE_RENAME_NODE],
                                schema=RENAME_NODE_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_SET_CONFIG_PARAMETER,
+                               set_config_parameter,
+                               descriptions[
+                                   const.SERVICE_SET_CONFIG_PARAMETER],
+                               schema=SET_CONFIG_PARAMETER_SCHEMA)
 
     # Setup autoheal
     if autoheal:
