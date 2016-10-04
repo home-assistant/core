@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import async_safe
+from homeassistant.core import callback
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 
@@ -29,7 +29,7 @@ def async_trigger(hass, config, action):
     event_type = config.get(CONF_EVENT_TYPE)
     event_data = config.get(CONF_EVENT_DATA)
 
-    @async_safe
+    @callback
     def handle_event(event):
         """Listen for events and calls the action when data matches."""
         if not event_data or all(val == event.data.get(key) for key, val

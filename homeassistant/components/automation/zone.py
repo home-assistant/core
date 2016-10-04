@@ -6,7 +6,7 @@ at https://home-assistant.io/components/automation/#zone-trigger
 """
 import voluptuous as vol
 
-from homeassistant.core import async_safe
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_EVENT, CONF_ENTITY_ID, CONF_ZONE, MATCH_ALL, CONF_PLATFORM)
 from homeassistant.helpers.event import async_track_state_change
@@ -32,7 +32,7 @@ def async_trigger(hass, config, action):
     zone_entity_id = config.get(CONF_ZONE)
     event = config.get(CONF_EVENT)
 
-    @async_safe
+    @callback
     def zone_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
         if from_s and not location.has_location(from_s) or \

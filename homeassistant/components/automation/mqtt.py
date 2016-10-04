@@ -6,7 +6,7 @@ at https://home-assistant.io/components/automation/#mqtt-trigger
 """
 import voluptuous as vol
 
-from homeassistant.core import async_safe
+from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (CONF_PLATFORM, CONF_PAYLOAD)
 import homeassistant.helpers.config_validation as cv
@@ -27,7 +27,7 @@ def async_trigger(hass, config, action):
     topic = config.get(CONF_TOPIC)
     payload = config.get(CONF_PAYLOAD)
 
-    @async_safe
+    @callback
     def mqtt_automation_listener(msg_topic, msg_payload, qos):
         """Listen for MQTT messages."""
         if payload is None or payload == msg_payload:

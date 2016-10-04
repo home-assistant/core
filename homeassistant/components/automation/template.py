@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import async_safe
+from homeassistant.core import callback
 from homeassistant.const import CONF_VALUE_TEMPLATE, CONF_PLATFORM
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import async_track_state_change
@@ -31,7 +31,7 @@ def async_trigger(hass, config, action):
     # Local variable to keep track of if the action has already been triggered
     already_triggered = False
 
-    @async_safe
+    @callback
     def state_changed_listener(entity_id, from_s, to_s):
         """Listen for state changes and calls action."""
         nonlocal already_triggered

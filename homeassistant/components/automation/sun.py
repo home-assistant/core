@@ -9,7 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import async_safe
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_EVENT, CONF_OFFSET, CONF_PLATFORM, SUN_EVENT_SUNRISE)
 from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
@@ -31,7 +31,7 @@ def async_trigger(hass, config, action):
     event = config.get(CONF_EVENT)
     offset = config.get(CONF_OFFSET)
 
-    @async_safe
+    @callback
     def call_action():
         """Call action with right context."""
         hass.async_run_job(action, {

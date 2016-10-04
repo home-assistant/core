@@ -78,16 +78,16 @@ def valid_entity_id(entity_id: str) -> bool:
     return ENTITY_ID_PATTERN.match(entity_id) is not None
 
 
-def async_safe(func):
+def callback(func: Callable[..., None]):
     """Annotation to mark method as safe to call from within the event loop."""
     # pylint: disable=protected-access
-    func._hass_async_safe = True
+    func._hass_callback = True
     return func
 
 
-def is_async_safe(func):
+def is_callback(func: Callable[..., None]):
     """Check if function is safe to be called in the event loop."""
-    return '_hass_async_safe' in func.__dict__
+    return '_hass_callback' in func.__dict__
 
 
 class CoreState(enum.Enum):
@@ -236,7 +236,7 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-        if is_async_safe(target):
+        if is_callback(target):
             self.loop.call_soon(target, *args)
         elif asyncio.iscoroutinefunction(target):
             self.loop.create_task(target(*args))
@@ -249,7 +249,7 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-        if is_async_safe(target):
+        if is_callback(target):
             target(*args)
         else:
             self.async_add_job(target, *args)
@@ -433,7 +433,7 @@ class EventBus(object):
         for func in listeners:
             if asyncio.iscoroutinefunction(func):
                 self._loop.create_task(func(event))
-            elif is_async_safe(func):
+            elif is_callback(func):
                 self._loop.call_soon(func, event)
             else:
                 sync_jobs.append((job_priority, (func, event)))
@@ -822,7 +822,7 @@ class Service(object):
     """Represents a callable service."""
 
     __slots__ = ['func', 'description', 'fields', 'schema',
-                 'is_async', 'is_coroutinefunction']
+                 'is_callback', 'is_coroutinefunction']
 
     def __init__(self, func, description, fields, schema):
         """Initialize a service."""
@@ -830,7 +830,7 @@ class Service(object):
         self.description = description or ''
         self.fields = fields or {}
         self.schema = schema
-        self.is_async = '_hass_async_safe' in func.__dict__
+        self.is_callback = is_callback(func)
         self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
 
     def as_dict(self):
@@ -962,7 +962,7 @@ class ServiceRegistry(object):
             self._loop
         ).result()
 
-    @async_safe
+    @callback
     def async_call(self, domain, service, service_data=None, blocking=False):
         """
         Call a service.
@@ -994,7 +994,7 @@ class ServiceRegistry(object):
         if blocking:
             fut = asyncio.Future(loop=self._loop)
 
-            @async_safe
+            @callback
             def service_executed(event):
                 """Callback method that is called when service is executed."""
                 if event.data[ATTR_SERVICE_CALL_ID] == call_id:
@@ -1051,7 +1051,7 @@ class ServiceRegistry(object):
 
         service_call = ServiceCall(domain, service, service_data, call_id)
 
-        if service_handler.is_async:
+        if service_handler.is_callback:
             service_handler.func(service_call)
             fire_service_executed()
         elif service_handler.is_coroutinefunction:
@@ -1128,7 +1128,7 @@ def async_create_timer(hass, interval=TIMER_INTERVAL):
     stop_event = asyncio.Event(loop=hass.loop)
 
     # Setting the Event inside the loop by marking it as a coroutine
-    @async_safe
+    @callback
     def stop_timer(event):
         """Stop the timer."""
         stop_event.set()
@@ -1242,7 +1242,7 @@ def async_monitor_worker_pool(hass):
 
     schedule()
 
-    @async_safe
+    @callback
     def stop_monitor(event):
         """Stop the monitor."""
         handle.cancel()

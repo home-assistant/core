@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import async_safe
+from homeassistant.core import callback
 from homeassistant.const import CONF_AFTER, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
@@ -39,7 +39,7 @@ def async_trigger(hass, config, action):
         minutes = config.get(CONF_MINUTES)
         seconds = config.get(CONF_SECONDS)
 
-    @async_safe
+    @callback
     def time_automation_listener(now):
         """Listen for time changes and calls action."""
         hass.async_run_job(action, {

@@ -9,7 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import async_safe
+from homeassistant.core import callback
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA,
     SENSOR_CLASSES_SCHEMA)
@@ -83,7 +83,7 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         self.update()
 
-        @async_safe
+        @callback
         def template_bsensor_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
             hass.loop.create_task(self.async_update_ha_state(True))

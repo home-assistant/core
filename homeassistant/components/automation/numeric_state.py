@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import async_safe
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_VALUE_TEMPLATE, CONF_PLATFORM, CONF_ENTITY_ID,
     CONF_BELOW, CONF_ABOVE)
@@ -35,7 +35,7 @@ def async_trigger(hass, config, action):
     if value_template is not None:
         value_template.hass = hass
 
-    @async_safe
+    @callback
     def state_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
         if to_s is None:

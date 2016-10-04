@@ -6,7 +6,7 @@ at https://home-assistant.io/components/automation/#state-trigger
 """
 import voluptuous as vol
 
-from homeassistant.core import async_safe
+from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 from homeassistant.const import MATCH_ALL, CONF_PLATFORM
 from homeassistant.helpers.event import (
@@ -43,7 +43,7 @@ def async_trigger(hass, config, action):
     async_remove_state_for_cancel = None
     async_remove_state_for_listener = None
 
-    @async_safe
+    @callback
     def state_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
         nonlocal async_remove_state_for_cancel, async_remove_state_for_listener
@@ -64,13 +64,13 @@ def async_trigger(hass, config, action):
             call_action()
             return
 
-        @async_safe
+        @callback
         def state_for_listener(now):
             """Fire on state changes after a delay and calls action."""
             async_remove_state_for_cancel()
             call_action()
 
-        @async_safe
+        @callback
         def state_for_cancel_listener(entity, inner_from_s, inner_to_s):
             """Fire on changes and cancel for listener if changed."""
             if inner_to_s.state == to_s.state:
