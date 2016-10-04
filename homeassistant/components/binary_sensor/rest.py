@@ -5,15 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.rest/
 """
 import logging
+import json
 
 import voluptuous as vol
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, SENSOR_CLASSES_SCHEMA, PLATFORM_SCHEMA)
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
     CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE,
-    CONF_SENSOR_CLASS, CONF_VERIFY_SSL)
+    CONF_SENSOR_CLASS, CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD,
+    CONF_HEADERS, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,16 +28,21 @@ DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
+    vol.Optional(CONF_AUTHENTICATION):
+        vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
+    vol.Optional(CONF_HEADERS): cv.string,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(['POST', 'GET']),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.string,
     vol.Optional(CONF_SENSOR_CLASS): SENSOR_CLASSES_SCHEMA,
+    vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
 
 
-# pylint: disable=unused-variable
+# pylint: disable=unused-variable, too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the REST binary sensor."""
     name = config.get(CONF_NAME)
@@ -41,11 +50,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     method = config.get(CONF_METHOD)
     payload = config.get(CONF_PAYLOAD)
     verify_ssl = config.get(CONF_VERIFY_SSL)
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+    headers = json.loads(config.get(CONF_HEADERS, '{}'))
     sensor_class = config.get(CONF_SENSOR_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-    rest = RestData(method, resource, payload, verify_ssl)
+
+    if username and password:
+        if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
+            auth = HTTPDigestAuth(username, password)
+        else:
+            auth = HTTPBasicAuth(username, password)
+    else:
+        auth = None
+
+    rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
 
     if rest.data is None:
