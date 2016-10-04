@@ -80,6 +80,7 @@ def valid_entity_id(entity_id: str) -> bool:
 
 def async_safe(func):
     """Annotation to mark method as safe to call from within the event loop."""
+    # pylint: disable=protected-access
     func._hass_async_safe = True
     return func
 
