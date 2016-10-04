@@ -9,11 +9,11 @@ from ..const import (
 from ..util import dt as dt_util
 from ..util.async import run_callback_threadsafe
 
-# PyLint does not like the use of _threaded_factory
+# PyLint does not like the use of threaded_listener_factory
 # pylint: disable=invalid-name
 
 
-def _threaded_factory(async_factory):
+def threaded_listener_factory(async_factory):
     """Convert an async event helper to a threaded one."""
     @ft.wraps(async_factory)
     def factory(*args, **kwargs):
@@ -83,7 +83,7 @@ def async_track_state_change(hass, entity_ids, action, from_state=None,
     return hass.bus.async_listen(EVENT_STATE_CHANGED, state_change_listener)
 
 
-track_state_change = _threaded_factory(async_track_state_change)
+track_state_change = threaded_listener_factory(async_track_state_change)
 
 
 def async_track_point_in_time(hass, action, point_in_time):
@@ -100,7 +100,7 @@ def async_track_point_in_time(hass, action, point_in_time):
                                          utc_point_in_time)
 
 
-track_point_in_time = _threaded_factory(async_track_point_in_time)
+track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 
 
 def async_track_point_in_utc_time(hass, action, point_in_time):
@@ -133,7 +133,8 @@ def async_track_point_in_utc_time(hass, action, point_in_time):
     return async_unsub
 
 
-track_point_in_utc_time = _threaded_factory(async_track_point_in_utc_time)
+track_point_in_utc_time = threaded_listener_factory(
+    async_track_point_in_utc_time)
 
 
 def async_track_sunrise(hass, action, offset=None):
@@ -169,7 +170,7 @@ def async_track_sunrise(hass, action, offset=None):
     return remove_listener
 
 
-track_sunrise = _threaded_factory(async_track_sunrise)
+track_sunrise = threaded_listener_factory(async_track_sunrise)
 
 
 def async_track_sunset(hass, action, offset=None):
@@ -205,7 +206,7 @@ def async_track_sunset(hass, action, offset=None):
     return remove_listener
 
 
-track_sunset = _threaded_factory(async_track_sunset)
+track_sunset = threaded_listener_factory(async_track_sunset)
 
 
 # pylint: disable=too-many-arguments
@@ -251,7 +252,7 @@ def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
                                  pattern_time_change_listener)
 
 
-track_utc_time_change = _threaded_factory(async_track_utc_time_change)
+track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
 
 
 # pylint: disable=too-many-arguments
@@ -262,7 +263,7 @@ def async_track_time_change(hass, action, year=None, month=None, day=None,
                                        minute, second, local=True)
 
 
-track_time_change = _threaded_factory(async_track_time_change)
+track_time_change = threaded_listener_factory(async_track_time_change)
 
 
 def _process_state_match(parameter):
