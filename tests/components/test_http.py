@@ -3,7 +3,7 @@
 import logging
 import time
 from ipaddress import ip_network
-from unittest.mock import patch, PropertyMock
+from unittest.mock import patch
 
 import requests
 
@@ -90,8 +90,9 @@ class TestHttp:
                             '2001:DB8:FA1::1',
                             '127.0.0.1',
                             '::1']:
-            with patch('werkzeug.wrappers.BaseRequest.remote_addr',
-                       new_callable=PropertyMock(return_value='198.51.100.1')):
+            with patch('homeassistant.components.http.'
+                       'HomeAssistantWSGI.get_real_ip',
+                       return_value=remote_addr):
                 req = requests.get(_url(const.URL_API),
                                    params={'api_password': ''})
 
@@ -144,8 +145,9 @@ class TestHttp:
                             '192.0.2.100',
                             'FD01:DB8::1',
                             '2001:DB8:ABCD::1']:
-            with patch('werkzeug.wrappers.BaseRequest.remote_addr',
-                       new_callable=PropertyMock(return_value=remote_addr)):
+            with patch('homeassistant.components.http.'
+                       'HomeAssistantWSGI.get_real_ip',
+                       return_value=remote_addr):
                 req = requests.get(_url(const.URL_API),
                                    params={'api_password': ''})
 

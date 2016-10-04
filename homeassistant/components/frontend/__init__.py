@@ -215,7 +215,8 @@ class IndexView(HomeAssistantView):
         if self.hass.config.api.api_password:
             # require password if set
             no_auth = 'false'
-            if self.hass.wsgi.is_trusted_ip(request.remote_addr):
+            if self.hass.wsgi.is_trusted_ip(
+                    self.hass.wsgi.get_real_ip(request)):
                 # bypass for trusted networks
                 no_auth = 'true'
 

@@ -435,6 +435,14 @@ class HomeAssistantWSGI(object):
             environ['PATH_INFO'] = '{}.{}'.format(*fingerprinted.groups())
         return app(environ, start_response)
 
+    @staticmethod
+    def get_real_ip(request):
+        """Return the clients correct ip address, even in proxied setups."""
+        if request.access_route:
+            return request.access_route[-1]
+        else:
+            return request.remote_addr
+
     def is_trusted_ip(self, remote_addr):
         """Match an ip address against trusted CIDR networks."""
         return any(ip_address(remote_addr) in trusted_network
@@ -480,13 +488,15 @@ class HomeAssistantView(object):
         except AttributeError:
             raise MethodNotAllowed
 
+        remote_addr = HomeAssistantWSGI.get_real_ip(request)
+
         # Auth code verbose on purpose
         authenticated = False
 
         if self.hass.wsgi.api_password is None:
             authenticated = True
 
-        elif self.hass.wsgi.is_trusted_ip(request.remote_addr):
+        elif self.hass.wsgi.is_trusted_ip(remote_addr):
             authenticated = True
 
         elif hmac.compare_digest(request.headers.get(HTTP_HEADER_HA_AUTH, ''),
@@ -500,17 +510,17 @@ class HomeAssistantView(object):
 
         if self.requires_auth and not authenticated:
             _LOGGER.warning('Login attempt or request with an invalid '
-                            'password from %s', request.remote_addr)
+                            'password from %s', remote_addr)
             persistent_notification.create(
                 self.hass,
-                'Invalid password used from {}'.format(request.remote_addr),
+                'Invalid password used from {}'.format(remote_addr),
                 'Login attempt failed', NOTIFICATION_ID_LOGIN)
             raise Unauthorized()
 
         request.authenticated = authenticated
 
         _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, request.remote_addr, authenticated)
+                     request.path, remote_addr, authenticated)
 
         result = handler(request, **values)
 
