@@ -1,0 +1,6 @@
+{
+  "userBlacklist": [
+    "balloob"
+  ],
+  "skipAlreadyMentionedPR": true
+}
