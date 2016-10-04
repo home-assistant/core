@@ -67,6 +67,12 @@ def setup_scanner(hass, config, see):
         user = query("customeraccounts")
         rel = query(user["accountVehicleRelations"][0])
         vehicle_url = rel["vehicle"] + '/'
+        attributes = query("attributes", vehicle_url)
+
+        dev_id = "volvo_" + attributes["registrationNumber"]
+        host_name = "%s %s/%s" % (attributes["registrationNumber"],
+                                  attributes["vehicleType"],
+                                  attributes["modelYear"])
     except requests.exceptions.RequestException:
         _LOGGER.error("Could not log in to service. "
                       "Please check configuration.")
@@ -78,12 +84,6 @@ def setup_scanner(hass, config, see):
 
         status = query("status", vehicle_url)
         position = query("position", vehicle_url)
-        attributes = query("attributes", vehicle_url)
-
-        dev_id = "volvo_" + attributes["vin"]
-        host_name = "%s %s/%s" % (attributes["registrationNumber"],
-                                  attributes["vehicleType"],
-                                  attributes["modelYear"])
 
         see(dev_id=dev_id,
             host_name=host_name,
