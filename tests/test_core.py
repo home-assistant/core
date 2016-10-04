@@ -56,11 +56,11 @@ class TestHomeAssistant(unittest.TestCase):
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                                   lambda event: calls.append(1))
 
-        #os.kill(os.getpid(), signal.SIGTERM)
+        os.kill(os.getpid(), signal.SIGTERM)
 
-        #self.hass.block_till_done()
+        self.hass.block_till_done()
 
-        #self.assertEqual(1, len(calls))
+        self.assertEqual(1, len(calls))
 
 
 class TestEvent(unittest.TestCase):
