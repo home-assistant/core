@@ -230,6 +230,44 @@ class TestEventBus(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(runs))
 
+    def test_thread_event_listener(self):
+        """Test a  event listener listeners."""
+        thread_calls = []
+
+        def thread_listener(event):
+            thread_calls.append(event)
+
+        self.bus.listen('test_thread', thread_listener)
+        self.bus.fire('test_thread')
+        self.hass.block_till_done()
+        assert len(thread_calls) == 1
+
+    def test_callback_event_listener(self):
+        """Test a  event listener listeners."""
+        callback_calls = []
+
+        @ha.callback
+        def callback_listener(event):
+            callback_calls.append(event)
+
+        self.bus.listen('test_callback', callback_listener)
+        self.bus.fire('test_callback')
+        self.hass.block_till_done()
+        assert len(callback_calls) == 1
+
+    def test_coroutine_event_listener(self):
+        """Test a  event listener listeners."""
+        coroutine_calls = []
+
+        @asyncio.coroutine
+        def coroutine_listener(event):
+            coroutine_calls.append(event)
+
+        self.bus.listen('test_coroutine', coroutine_listener)
+        self.bus.fire('test_coroutine')
+        self.hass.block_till_done()
+        assert len(coroutine_calls) == 1
+
 
 class TestState(unittest.TestCase):
     """Test State methods."""
@@ -471,6 +509,22 @@ class TestServiceRegistry(unittest.TestCase):
         calls = []
 
         @asyncio.coroutine
+        def service_handler(call):
+            """Service handler coroutine."""
+            calls.append(call)
+
+        self.services.register('test_domain', 'register_calls',
+                               service_handler)
+        self.assertTrue(
+            self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
+        self.hass.block_till_done()
+        self.assertEqual(1, len(calls))
+
+    def test_callback_service(self):
+        """Test registering and calling an async service."""
+        calls = []
+
+        @ha.callback
         def service_handler(call):
             """Service handler coroutine."""
             calls.append(call)
