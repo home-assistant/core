@@ -23,13 +23,70 @@ from tests.common import get_test_home_assistant
 PST = pytz.timezone('America/Los_Angeles')
 
 
-class TestMethods(unittest.TestCase):
-    """Test the Home Assistant helper methods."""
+def test_split_entity_id():
+    """Test split_entity_id."""
+    assert ha.split_entity_id('domain.object_id') == ['domain', 'object_id']
 
-    def test_split_entity_id(self):
-        """Test split_entity_id."""
-        self.assertEqual(['domain', 'object_id'],
-                         ha.split_entity_id('domain.object_id'))
+
+def test_async_add_job_schedule_async_safe():
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock()
+    job = MagicMock()
+
+    ha.HomeAssistant.async_add_job(hass, ha.async_safe(job))
+    assert len(hass.loop.call_soon.mock_calls) == 1
+    assert len(hass.loop.create_task.mock_calls) == 0
+    assert len(hass.add_job.mock_calls) == 0
+
+
+@patch('asyncio.iscoroutinefunction', return_value=True)
+def test_async_add_job_schedule_coroutinefunction(mock_iscoro):
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock()
+    job = MagicMock()
+
+    ha.HomeAssistant.async_add_job(hass, job)
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
+
+
+@patch('asyncio.iscoroutinefunction', return_value=False)
+def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock()
+    job = MagicMock()
+
+    ha.HomeAssistant.async_add_job(hass, job)
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 0
+    assert len(hass.add_job.mock_calls) == 1
+
+
+def test_async_run_job_calls_async_safe():
+    """Test that the async_safe annotation is respected."""
+    hass = MagicMock()
+    calls = []
+
+    def job():
+        calls.append(1)
+
+    ha.HomeAssistant.async_run_job(hass, ha.async_safe(job))
+    assert len(calls) == 1
+    assert len(hass.async_add_job.mock_calls) == 0
+
+
+def test_async_run_job_delegates_non_async():
+    """Test that the async_safe annotation is respected."""
+    hass = MagicMock()
+    calls = []
+
+    def job():
+        calls.append(1)
+
+    ha.HomeAssistant.async_run_job(hass, job)
+    assert len(calls) == 0
+    assert len(hass.async_add_job.mock_calls) == 1
 
 
 class TestHomeAssistant(unittest.TestCase):

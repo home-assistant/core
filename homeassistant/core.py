@@ -78,6 +78,12 @@ def valid_entity_id(entity_id: str) -> bool:
     return ENTITY_ID_PATTERN.match(entity_id) is not None
 
 
+def async_safe(func):
+    """Annotation to mark method as safe to call from within the event loop."""
+    func._hass_async_safe = True
+    return func
+
+
 class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
@@ -224,10 +230,23 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-        if asyncio.iscoroutinefunction(target):
+        if '_hass_async_safe' in target.__dict__:
+            self.loop.call_soon(target, *args)
+        elif asyncio.iscoroutinefunction(target):
             self.loop.create_task(target(*args))
         else:
             self.add_job(target, *args)
+
+    def async_run_job(self, target: Callable[..., None], *args: Any):
+        """Run a job from within the event loop.
+
+        target: target to call.
+        args: parameters for method to call.
+        """
+        if '_hass_async_safe' in target.__dict__:
+            target(*args)
+        else:
+            self.async_add_job(target, *args)
 
     def _loop_empty(self):
         """Python 3.4.2 empty loop compatibility function."""
@@ -795,7 +814,7 @@ class Service(object):
     """Represents a callable service."""
 
     __slots__ = ['func', 'description', 'fields', 'schema',
-                 'iscoroutinefunction']
+                 'isasync', 'iscoroutinefunction']
 
     def __init__(self, func, description, fields, schema):
         """Initialize a service."""
@@ -803,6 +822,7 @@ class Service(object):
         self.description = description or ''
         self.fields = fields or {}
         self.schema = schema
+        self.isasync = '_hass_async_safe' in func.__dict__
         self.iscoroutinefunction = asyncio.iscoroutinefunction(func)
 
     def as_dict(self):
@@ -1023,17 +1043,19 @@ class ServiceRegistry(object):
 
         service_call = ServiceCall(domain, service, service_data, call_id)
 
-        if not service_handler.iscoroutinefunction:
+        if service_handler.isasync:
+            service_handler.func(service_call)
+            fire_service_executed()
+        elif service_handler.iscoroutinefunction:
+            yield from service_handler.func(service_call)
+            fire_service_executed()
+        else:
             def execute_service():
                 """Execute a service and fires a SERVICE_EXECUTED event."""
                 service_handler.func(service_call)
                 fire_service_executed()
 
             self._add_job(execute_service, priority=JobPriority.EVENT_SERVICE)
-            return
-
-        yield from service_handler.func(service_call)
-        fire_service_executed()
 
     def _generate_unique_id(self):
         """Generate a unique service call id."""
