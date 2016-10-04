@@ -2,6 +2,7 @@
 import json
 import os
 import unittest
+from unittest.mock import patch
 
 from collections import defaultdict
 
@@ -31,6 +32,7 @@ REGION_TRACKER_STATE = "device_tracker.beacon_{}".format(IBEACON_DEVICE)
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_WAYPOINT_IMPORT = owntracks.CONF_WAYPOINT_IMPORT
 CONF_WAYPOINT_WHITELIST = owntracks.CONF_WAYPOINT_WHITELIST
+CONF_SECRET = owntracks.CONF_SECRET
 
 LOCATION_MESSAGE = {
     'batt': 92,
@@ -183,6 +185,26 @@ REGION_LEAVE_ZERO_MESSAGE = {
 
 BAD_JSON_PREFIX = '--$this is bad json#--'
 BAD_JSON_SUFFIX = '** and it ends here ^^'
+
+SECRET_KEY = "s3cretkey"
+ENCRYPTED_LOCATION_MESSAGE = {
+    # Encrypted version of LOCATION_MESSAGE using libsodium and SECRET_KEY
+    '_type': 'encrypted',
+    'data': ('qm1A83I6TVFRmH5343xy+cbex8jBBxDFkHRuJhELVKVRA/DgXcyKtghw'
+             '9pOw75Lo4gHcyy2wV5CmkjrpKEBR7Qhye4AR0y7hOvlx6U/a3GuY1+W8'
+             'I4smrLkwMvGgBOzXSNdVTzbFTHDvG3gRRaNHFkt2+5MsbH2Dd6CXmpzq'
+             'DIfSN7QzwOevuvNIElii5MlFxI6ZnYIDYA/ZdnAXHEVsNIbyT2N0CXt3'
+             'fTPzgGtFzsufx40EEUkC06J7QTJl7lLG6qaLW1cCWp86Vp0eL3vtZ6xq')}
+
+MOCK_ENCRYPTED_LOCATION_MESSAGE = {
+    # Mock-encrypted version of LOCATION_MESSAGE using pickle
+    '_type': 'encrypted',
+    'data': ('gANDCXMzY3JldGtleXEAQ6p7ImxvbiI6IDEuMCwgInQiOiAidSIsICJi'
+             'YXR0IjogOTIsICJhY2MiOiA2MCwgInZlbCI6IDAsICJfdHlwZSI6ICJs'
+             'b2NhdGlvbiIsICJ2YWMiOiA0LCAicCI6IDEwMS4zOTc3NTg0ODM4ODY3'
+             'LCAidHN0IjogMSwgImxhdCI6IDIuMCwgImFsdCI6IDI3LCAiY29nIjog'
+             'MjQ4LCAidGlkIjogInVzZXIifXEBhnECLg==')
+}
 
 
 class TestDeviceTrackerOwnTracks(unittest.TestCase):
@@ -650,3 +672,101 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.send_message(WAYPOINT_TOPIC, waypoints_message)
         new_wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
         self.assertTrue(wayp == new_wayp)
+
+    try:
+        import libnacl
+    except (ImportError, OSError):
+        libnacl = None
+
+    @unittest.skipUnless(libnacl,
+                         "libnacl/libsodium is not installed")
+    def test_encrypted_payload_libsodium(self):
+        """Test sending encrypted message payload."""
+        self.assertTrue(device_tracker.setup(self.hass, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'owntracks',
+                CONF_SECRET: SECRET_KEY,
+            }}))
+
+        self.send_message(LOCATION_TOPIC, ENCRYPTED_LOCATION_MESSAGE)
+        self.assert_location_latitude(2.0)
+
+    def mock_cipher():
+        """Return a dummy pickle-based cipher."""
+        def mock_decrypt(ciphertext, key):
+            """Decrypt/unpickle."""
+            import pickle
+            (mkey, plaintext) = pickle.loads(ciphertext)
+            if key != mkey:
+                raise ValueError()
+            return plaintext
+        return (len(SECRET_KEY), mock_decrypt)
+
+    @patch('homeassistant.components.device_tracker.owntracks.get_cipher',
+           mock_cipher)
+    def test_encrypted_payload(self):
+        self.assertTrue(device_tracker.setup(self.hass, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'owntracks',
+                CONF_SECRET: SECRET_KEY,
+            }}))
+        self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
+        self.assert_location_latitude(2.0)
+
+    @patch('homeassistant.components.device_tracker.owntracks.get_cipher',
+           mock_cipher)
+    def test_encrypted_payload_topic_key(self):
+        self.assertTrue(device_tracker.setup(self.hass, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'owntracks',
+                CONF_SECRET: {
+                    LOCATION_TOPIC: SECRET_KEY,
+                }}}))
+        self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
+        self.assert_location_latitude(2.0)
+
+    @patch('homeassistant.components.device_tracker.owntracks.get_cipher',
+           mock_cipher)
+    def test_encrypted_payload_no_key(self):
+        self.assertTrue(device_tracker.setup(self.hass, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'owntracks',
+                # key missing
+            }}))
+        self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
+        self.assert_location_latitude(None)
+
+    @patch('homeassistant.components.device_tracker.owntracks.get_cipher',
+           mock_cipher)
+    def test_encrypted_payload_wrong_key(self):
+        self.assertTrue(device_tracker.setup(self.hass, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'owntracks',
+                CONF_SECRET: 'wrong key',
+            }}))
+        self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
+        self.assert_location_latitude(None)
+
+    @patch('homeassistant.components.device_tracker.owntracks.get_cipher',
+           mock_cipher)
+    def test_encrypted_payload_wrong_topic_key(self):
+        self.assertTrue(device_tracker.setup(self.hass, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'owntracks',
+                CONF_SECRET: {
+                    LOCATION_TOPIC: "wrong key"
+                }}}))
+        self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
+        self.assert_location_latitude(None)
+
+    @patch('homeassistant.components.device_tracker.owntracks.get_cipher',
+           mock_cipher)
+    def test_encrypted_payload_no_topic_key(self):
+        self.assertTrue(device_tracker.setup(self.hass, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'owntracks',
+                CONF_SECRET: {
+                    "owntracks/{}/{}".format(USER, "otherdevice"): "foobar"
+                }}}))
+        self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
+        self.assert_location_latitude(None)

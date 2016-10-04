@@ -7,6 +7,7 @@ https://home-assistant.io/components/device_tracker.owntracks/
 import json
 import logging
 import threading
+import base64
 from collections import defaultdict
 
 import voluptuous as vol
@@ -19,6 +20,7 @@ from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 
 DEPENDENCIES = ['mqtt']
+REQUIREMENTS = ['libnacl==1.5.0']
 
 REGIONS_ENTERED = defaultdict(list)
 MOBILE_BEACONS_ACTIVE = defaultdict(list)
@@ -36,6 +38,7 @@ LOCK = threading.Lock()
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_WAYPOINT_IMPORT = 'waypoints'
 CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
+CONF_SECRET = 'secret'
 
 VALIDATE_LOCATION = 'location'
 VALIDATE_TRANSITION = 'transition'
@@ -47,8 +50,23 @@ WAYPOINT_LON_KEY = 'lon'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
     vol.Optional(CONF_WAYPOINT_IMPORT, default=True): cv.boolean,
-    vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(CONF_WAYPOINT_WHITELIST): vol.All(
+        cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SECRET): vol.Any(
+        vol.Schema({vol.Optional(cv.string): cv.string}),
+        cv.string)
 })
+
+
+def get_cipher():
+    """Return decryption function and length of key."""
+    from libnacl import crypto_secretbox_KEYBYTES as KEYLEN
+    from libnacl.secret import SecretBox
+
+    def decrypt(ciphertext, key):
+        """Decrypt ciphertext using key."""
+        return SecretBox(key).decrypt(ciphertext)
+    return (KEYLEN, decrypt)
 
 
 def setup_scanner(hass, config, see):
@@ -56,15 +74,64 @@ def setup_scanner(hass, config, see):
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
     waypoint_import = config.get(CONF_WAYPOINT_IMPORT)
     waypoint_whitelist = config.get(CONF_WAYPOINT_WHITELIST)
+    secret = config.get(CONF_SECRET)
 
-    def validate_payload(payload, data_type):
+    def decrypt_payload(topic, ciphertext):
+        """Decrypt encrypted payload."""
+        try:
+            keylen, decrypt = get_cipher()
+        except OSError:
+            _LOGGER.warning('Ignoring encrypted payload '
+                            'because libsodium not installed.')
+            return None
+
+        if isinstance(secret, dict):
+            key = secret.get(topic)
+        else:
+            key = secret
+
+        if key is None:
+            _LOGGER.warning('Ignoring encrypted payload '
+                            'because no decryption key known '
+                            'for topic %s.', topic)
+            return None
+
+        key = key.encode("utf-8")
+        key = key[:keylen]
+        key = key.ljust(keylen, b'\0')
+
+        try:
+            ciphertext = base64.b64decode(ciphertext)
+            message = decrypt(ciphertext, key)
+            message = message.decode("utf-8")
+            _LOGGER.debug("Decrypted payload: %s", message)
+            return message
+        except ValueError:
+            _LOGGER.warning('Ignoring encrypted payload '
+                            'because unable to decrypt using key '
+                            'for topic %s.', topic)
+            return None
+
+    def validate_payload(topic, payload, data_type):
         """Validate OwnTracks payload."""
+        # pylint: disable=too-many-return-statements
+
         try:
             data = json.loads(payload)
         except ValueError:
             # If invalid JSON
             _LOGGER.error('Unable to parse payload as JSON: %s', payload)
             return None
+
+        if isinstance(data, dict) and \
+           data.get('_type') == 'encrypted' and \
+           'data' in data:
+            plaintext_payload = decrypt_payload(topic, data['data'])
+            if plaintext_payload is None:
+                return None
+            else:
+                return validate_payload(topic, plaintext_payload, data_type)
+
         if not isinstance(data, dict) or data.get('_type') != data_type:
             _LOGGER.debug('Skipping %s update for following data '
                           'because of missing or malformatted data: %s',
@@ -90,7 +157,7 @@ def setup_scanner(hass, config, see):
         """MQTT message received."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typelocation
-        data = validate_payload(payload, VALIDATE_LOCATION)
+        data = validate_payload(topic, payload, VALIDATE_LOCATION)
         if not data:
             return
 
@@ -111,7 +178,7 @@ def setup_scanner(hass, config, see):
         """MQTT event (geofences) received."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typetransition
-        data = validate_payload(payload, VALIDATE_TRANSITION)
+        data = validate_payload(topic, payload, VALIDATE_TRANSITION)
         if not data:
             return
 
@@ -206,7 +273,7 @@ def setup_scanner(hass, config, see):
         """List of waypoints published by a user."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typewaypoints
-        data = validate_payload(payload, VALIDATE_WAYPOINTS)
+        data = validate_payload(topic, payload, VALIDATE_WAYPOINTS)
         if not data:
             return
 
