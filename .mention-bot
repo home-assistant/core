@@ -1,6 +1,8 @@
 {
   "userBlacklist": [
-    "balloob"
-  ],
-  "skipAlreadyMentionedPR": true
+    "balloob",
+    "fabaff",
+    "pavoni",
+    "rmkraus"
+  ]
 }
