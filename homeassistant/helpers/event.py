@@ -220,7 +220,7 @@ def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
         @ft.wraps(action)
         def time_change_listener(event):
             """Fire every time event that comes in."""
-            action(event.data[ATTR_NOW])
+            hass.async_run_job(action, event.data[ATTR_NOW])
 
         return hass.bus.async_listen(EVENT_TIME_CHANGED, time_change_listener)
 

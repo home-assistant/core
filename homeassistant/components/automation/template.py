@@ -40,7 +40,7 @@ def async_trigger(hass, config, action):
         # Check to see if template returns true
         if template_result and not already_triggered:
             already_triggered = True
-            hass.async_add_job(action, {
+            hass.async_run_job(action, {
                 'trigger': {
                     'platform': 'template',
                     'entity_id': entity_id,

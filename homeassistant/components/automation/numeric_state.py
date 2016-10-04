@@ -64,6 +64,6 @@ def async_trigger(hass, config, action):
         variables['trigger']['from_state'] = from_s
         variables['trigger']['to_state'] = to_s
 
-        hass.async_add_job(action, variables)
+        hass.async_run_job(action, variables)
 
     return async_track_state_change(hass, entity_id, state_automation_listener)

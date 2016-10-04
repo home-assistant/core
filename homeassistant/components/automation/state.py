@@ -50,7 +50,7 @@ def async_trigger(hass, config, action):
 
         def call_action():
             """Call action with right context."""
-            hass.async_add_job(action, {
+            hass.async_run_job(action, {
                 'trigger': {
                     'platform': 'state',
                     'entity_id': entity,

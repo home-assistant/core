@@ -31,7 +31,7 @@ def async_trigger(hass, config, action):
     def mqtt_automation_listener(msg_topic, msg_payload, qos):
         """Listen for MQTT messages."""
         if payload is None or payload == msg_payload:
-            hass.async_add_job(action, {
+            hass.async_run_job(action, {
                 'trigger': {
                     'platform': 'mqtt',
                     'topic': msg_topic,

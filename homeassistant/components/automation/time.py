@@ -42,7 +42,7 @@ def async_trigger(hass, config, action):
     @asyncio.coroutine
     def time_automation_listener(now):
         """Listen for time changes and calls action."""
-        hass.async_add_job(action, {
+        hass.async_run_job(action, {
             'trigger': {
                 'platform': 'time',
                 'now': now,
