@@ -43,6 +43,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     method = 'GET'
     payload = None
+    auth = None
+    headers = None
     verify_ssl = config.get(CONF_VERIFY_SSL)
     use_ssl = config.get(CONF_SSL)
 
@@ -53,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     resource = "{}{}{}".format(uri_scheme, host, _ENDPOINT)
 
-    rest = RestData(method, resource, payload, verify_ssl)
+    rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
 
     if rest.data is None:
