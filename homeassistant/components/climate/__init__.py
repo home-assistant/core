@@ -79,6 +79,7 @@ SET_TEMPERATURE_SCHEMA = vol.Schema({
     vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
     vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_OPERATION_MODE): cv.string,
 })
 SET_FAN_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -122,8 +123,10 @@ def set_aux_heat(hass, aux_heat, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_AUX_HEAT, data)
 
 
+# pylint: disable=too-many-arguments
 def set_temperature(hass, temperature=None, entity_id=None,
-                    target_temp_high=None, target_temp_low=None):
+                    target_temp_high=None, target_temp_low=None,
+                    operation_mode=None):
     """Set new target temperature."""
     kwargs = {
         key: value for key, value in [
@@ -131,6 +134,7 @@ def set_temperature(hass, temperature=None, entity_id=None,
             (ATTR_TARGET_TEMP_HIGH, target_temp_high),
             (ATTR_TARGET_TEMP_LOW, target_temp_low),
             (ATTR_ENTITY_ID, entity_id),
+            (ATTR_OPERATION_MODE, operation_mode)
         ] if value is not None
     }
     _LOGGER.debug("set_temperature start data=%s", kwargs)
