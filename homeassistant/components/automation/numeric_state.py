@@ -4,11 +4,11 @@ Offer numeric state listening automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#numeric-state-trigger
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_VALUE_TEMPLATE, CONF_PLATFORM, CONF_ENTITY_ID,
     CONF_BELOW, CONF_ABOVE)
@@ -35,7 +35,7 @@ def async_trigger(hass, config, action):
     if value_template is not None:
         value_template.hass = hass
 
-    @asyncio.coroutine
+    @callback
     def state_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
         if to_s is None:
@@ -64,6 +64,6 @@ def async_trigger(hass, config, action):
         variables['trigger']['from_state'] = from_s
         variables['trigger']['to_state'] = to_s
 
-        hass.async_add_job(action, variables)
+        hass.async_run_job(action, variables)
 
     return async_track_state_change(hass, entity_id, state_automation_listener)
