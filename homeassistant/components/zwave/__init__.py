@@ -8,29 +8,36 @@ import logging
 import os.path
 import time
 from pprint import pprint
+
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID,
-    CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP)
+    ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, CONF_CUSTOMIZE,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 from . import const
 
-DOMAIN = "zwave"
 REQUIREMENTS = ['pydispatcher==2.0.5']
 
-CONF_USB_STICK_PATH = "usb_path"
-DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
-CONF_DEBUG = "debug"
-CONF_POLLING_INTERVAL = "polling_interval"
-CONF_POLLING_INTENSITY = "polling_intensity"
-CONF_AUTOHEAL = "autoheal"
+_LOGGER = logging.getLogger(__name__)
+
+CONF_AUTOHEAL = 'autoheal'
+CONF_DEBUG = 'debug'
+CONF_POLLING_INTENSITY = 'polling_intensity'
+CONF_POLLING_INTERVAL = 'polling_interval'
+CONF_USB_STICK_PATH = 'usb_path'
+CONF_CONFIG_PATH = 'config_path'
+
 DEFAULT_CONF_AUTOHEAL = True
+DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
+DEFAULT_POLLING_INTERVAL = 60000
+DEFAULT_DEBUG = True
+DOMAIN = 'zwave'
+
 NETWORK = None
 
 # List of tuple (DOMAIN, discovered service, supported command classes,
@@ -124,7 +131,24 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Optional(const.ATTR_CONFIG_SIZE): vol.Coerce(int)
 })
 
-_LOGGER = logging.getLogger(__name__)
+CUSTOMIZE_SCHEMA = vol.Schema({
+    vol.Optional(CONF_POLLING_INTENSITY):
+        vol.All(cv.positive_int, vol.In([0, 1, 2])),
+})
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
+        vol.Optional(CONF_CONFIG_PATH): cv.string,
+        vol.Optional(CONF_CUSTOMIZE, default={}):
+            vol.Schema({cv.string: CUSTOMIZE_SCHEMA}),
+        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_POLLING_INTERVAL, default=DEFAULT_POLLING_INTERVAL):
+            cv.positive_int,
+        vol.Optional(CONF_USB_STICK_PATH, default=DEFAULT_CONF_USB_STICK_PATH):
+            cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def _obj_to_dict(obj):
@@ -136,20 +160,18 @@ def _obj_to_dict(obj):
 
 def _node_name(node):
     """Return the name of the node."""
-    return node.name or "{} {}".format(
+    return node.name or '{} {}'.format(
         node.manufacturer_name, node.product_name)
 
 
 def _value_name(value):
     """Return the name of the value."""
-    return "{} {}".format(_node_name(value.node), value.label)
+    return '{} {}'.format(_node_name(value.node), value.label)
 
 
 def _node_object_id(node):
     """Return the object_id of the node."""
-    node_object_id = "{}_{}".format(slugify(_node_name(node)),
-                                    node.node_id)
-
+    node_object_id = '{}_{}'.format(slugify(_node_name(node)), node.node_id)
     return node_object_id
 
 
@@ -159,13 +181,11 @@ def _object_id(value):
     The object_id contains node_id and value instance id
     to not collide with other entity_ids.
     """
-    object_id = "{}_{}".format(slugify(_value_name(value)),
-                               value.node.node_id)
+    object_id = "{}_{}".format(slugify(_value_name(value)), value.node.node_id)
 
     # Add the instance id if there is more than one instance for the value
     if value.instance > 1:
-        return "{}_{}".format(object_id, value.instance)
-
+        return '{}_{}'.format(object_id, value.instance)
     return object_id
 
 
@@ -204,7 +224,7 @@ def setup(hass, config):
     global NETWORK
 
     descriptions = conf_util.load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), "services.yaml"))
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     try:
         import libopenzwave
@@ -221,16 +241,16 @@ def setup(hass, config):
         libopenzwave.__file__), 'config')
 
     # Load configuration
-    use_debug = str(config[DOMAIN].get(CONF_DEBUG)) == '1'
-    customize = config[DOMAIN].get(CONF_CUSTOMIZE, {})
-    autoheal = config[DOMAIN].get(CONF_AUTOHEAL, DEFAULT_CONF_AUTOHEAL)
+    use_debug = config[DOMAIN].get(CONF_DEBUG)
+    customize = config[DOMAIN].get(CONF_CUSTOMIZE)
+    autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
 
     # Setup options
     options = ZWaveOption(
-        config[DOMAIN].get(CONF_USB_STICK_PATH, DEFAULT_CONF_USB_STICK_PATH),
+        config[DOMAIN].get(CONF_USB_STICK_PATH),
         user_path=hass.config.config_dir,
-        config_path=config[DOMAIN].get('config_path',
-                                       default_zwave_config_path),)
+        config_path=config[DOMAIN].get(
+            CONF_CONFIG_PATH, default_zwave_config_path))
 
     options.set_console_output(use_debug)
     options.lock()
