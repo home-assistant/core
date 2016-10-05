@@ -86,6 +86,15 @@ class MySensorsSensor(mysensors.MySensorsDeviceEntity, Entity):
     """Representation of a MySensors Sensor child node."""
 
     @property
+    def force_update(self):
+        """Return True if state updates should be forced.
+
+        If True, a state change will be triggered anytime the state property is
+        updated, not just when the value changes.
+        """
+        return True
+
+    @property
     def state(self):
         """Return the state of the device."""
         return self._values.get(self.value_type)
