@@ -269,6 +269,7 @@ omit =
     homeassistant/components/sensor/transmission.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
+    homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/worldclock.py
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yahoo_finance.py

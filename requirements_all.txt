@@ -502,6 +502,9 @@ uvcclient==0.9.0
 # homeassistant.components.verisure
 vsure==0.10.3
 
+# homeassistant.components.sensor.vasttrafik
+vtjp==0.1.11
+
 # homeassistant.components.switch.wake_on_lan
 wakeonlan==0.2.2
 
