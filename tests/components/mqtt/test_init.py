@@ -318,7 +318,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')
 
 
-    def test_receiving_non_utf8_message_gets_logged(self, caplog):
+    def test_receiving_non_utf8_message_gets_logged(self):
         """Test receiving a non utf8 encoded message."""
         calls = []
         
@@ -335,7 +335,4 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.hass.block_till_done()
         
         assert len(calls) == 0
-        record = caplog.records[-1]
-        assert record.levelname == 'ERROR'
-        assert record.msg == 'Illegal utf-8 unicode payload from MQTT topic test_topic.'
         
