@@ -40,6 +40,7 @@ CONF_CONDITION = 'condition'
 CONF_ACTION = 'action'
 CONF_TRIGGER = 'trigger'
 CONF_CONDITION_TYPE = 'condition_type'
+CONF_INITIAL_STATE = 'initial_state'
 
 CONDITION_USE_TRIGGER_VALUES = 'use_trigger_values'
 CONDITION_TYPE_AND = 'and'
@@ -47,6 +48,7 @@ CONDITION_TYPE_OR = 'or'
 
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 DEFAULT_HIDE_ENTITY = False
+DEFAULT_INITIAL_STATE = True
 
 ATTR_LAST_TRIGGERED = 'last_triggered'
 ATTR_VARIABLES = 'variables'
@@ -81,6 +83,8 @@ _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.Schema({
     CONF_ALIAS: cv.string,
+    vol.Optional(CONF_INITIAL_STATE,
+                 default=DEFAULT_INITIAL_STATE): cv.boolean,
     vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
     vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
     vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
@@ -336,7 +340,8 @@ def _async_process_config(hass, config, component):
                 config_block.get(CONF_TRIGGER, []), name)
             entity = AutomationEntity(name, async_attach_triggers, cond_func,
                                       action, hidden)
-            tasks.append(hass.loop.create_task(entity.async_enable()))
+            if config_block[CONF_INITIAL_STATE]:
+                tasks.append(hass.loop.create_task(entity.async_enable()))
             entities.append(entity)
 
     yield from asyncio.gather(*tasks, loop=hass.loop)
