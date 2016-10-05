@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 dev.append(NetAtmoSensor(data, module_name, variable))
     else:
         for module_name in data.get_module_names():
-            for variable in data.stationDatas.monitoredConditions(module_name):
+            for variable in data.stationData.monitoredConditions(module_name):
                 dev.append(NetAtmoSensor(data, module_name, variable))
 
     add_devices(dev)
@@ -96,12 +96,21 @@ class NetAtmoSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        module_id = self.netatmo_data.stationData.moduleByName(module=module_name)['_id']
+        self._unique_id = "Netatmo Sensor {0} - {1} ({2})".format(self._name,
+                                                                    module_id,
+                                                                    self.type)
         self.update()
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique ID for this sensor."""
+        return self._unique_id
 
     @property
     def icon(self):
@@ -224,7 +233,7 @@ class NetAtmoData(object):
         """Initialize the data object."""
         self.auth = auth
         self.data = None
-        self.stationDatas = None
+        self.stationData = None
         self.station = station
 
     def get_module_names(self):
@@ -236,9 +245,9 @@ class NetAtmoData(object):
     def update(self):
         """Call the Netatmo API to update the data."""
         import lnetatmo
-        self.stationDatas = lnetatmo.DeviceList(self.auth)
+        self.stationData = lnetatmo.DeviceList(self.auth)
 
         if self.station is not None:
-            self.data = self.stationDatas.lastData(station=self.station, exclude=3600)
+            self.data = self.stationData.lastData(station=self.station, exclude=3600)
         else:
-            self.data = self.stationDatas.lastData(exclude=3600)
+            self.data = self.stationData.lastData(exclude=3600)
