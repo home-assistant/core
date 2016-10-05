@@ -262,6 +262,7 @@ omit =
     homeassistant/components/sensor/swiss_hydrological_data.py
     homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/systemmonitor.py
+    homeassistant/components/sensor/ted5000.py
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/torque.py
