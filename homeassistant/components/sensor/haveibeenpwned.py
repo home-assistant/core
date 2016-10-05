@@ -16,13 +16,15 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.event import track_point_in_time
 
 _LOGGER = logging.getLogger(__name__)
 
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 USER_AGENT = "Home Assistant HaveIBeenPwned Sensor Component"
 
-SCAN_INTERVAL = 5
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+MIN_TIME_BETWEEN_FORCED_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
@@ -32,28 +34,33 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the RESTful sensor."""
+
     emails = config.get(CONF_EMAIL)
-
     data = HaveIBeenPwnedData(emails)
-    data.update = Throttle(timedelta(seconds=SCAN_INTERVAL-1))(data.update)
 
-    dev = []
+    devices = []
     for email in emails:
-        dev.append(HaveIBeenPwnedSensor(data, email))
+        devices.append(HaveIBeenPwnedSensor(data, hass, email))
 
-    add_devices(dev)
+    add_devices(devices)
+
+    # To make sure we get initial data for the sensors
+    # ignoring the normal throttle of 15 minutes but using
+    # an update throttle of 5 seconds
+    for sensor in devices:
+        sensor.update_nothrottle()
 
 
 class HaveIBeenPwnedSensor(Entity):
     """Implementation of HaveIBeenPwnedSensor."""
 
-    def __init__(self, data, email):
+    def __init__(self, data, hass, email):
         """Initialize the HaveIBeenPwnedSensor sensor."""
-        self._value = None
+        self._state = STATE_UNKNOWN
         self._data = data
+        self._hass = hass
         self._email = email
-        self._unit_of_measurement = "Hits"
-        self.update()
+        self._unit_of_measurement = "Breaches"
 
     @property
     def name(self):
@@ -68,19 +75,16 @@ class HaveIBeenPwnedSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._value is None:
-            return STATE_UNKNOWN
-        else:
-            return len(self._value)
+        return self._state
 
     @property
     def state_attributes(self):
         """Return the atrributes of the sensor."""
         val = {}
-        if self._value is None:
+        if self._email not in self._data.data:
             return val
 
-        for idx, value in enumerate(self._value):
+        for idx, value in enumerate(self._data.data[self._email]):
             tmpname = "breach {}".format(idx+1)
             tmpvalue = "{} {}".format(
                 value["Title"],
@@ -90,63 +94,89 @@ class HaveIBeenPwnedSensor(Entity):
 
         return val
 
+    def update_nothrottle(self, dummy=None):
+        """Update sensor without throttle."""
+        self._data.update_no_throttle()
+
+        # Schedule a forced update 5 seconds in the future if the
+        # update above returned no data for this sensors email.
+        # this is mainly to make sure that we don't
+        # get http error "too many requests" and to have initial
+        # data after hass startup once we have the data it will
+        # update as normal using update
+        if self._email not in self._data.data:
+            track_point_in_time(self._hass,
+                                self.update_nothrottle,
+                                dt_util.now() +
+                                MIN_TIME_BETWEEN_FORCED_UPDATES)
+            return
+
+        if self._email in self._data.data:
+            self._state = len(self._data.data[self._email])
+            self.update_ha_state()
+
     def update(self):
-        """Get data for (next) email and set value if it's our email."""
+        """Update data and see if it contains data for our email."""
         self._data.update()
-        if self._data.email == self._email:
-            self._value = self._data.data
+
+        if self._email in self._data.data:
+            self._state = len(self._data.data[self._email])
 
 
-# pylint: disable=too-few-public-methods
 class HaveIBeenPwnedData(object):
     """Class for handling the data retrieval."""
 
     def __init__(self, emails):
         """Initialize the data object."""
         self._email_count = len(emails)
-        self._current_index = -1
-        self.data = None
-        self.email = None
+        self._current_index = 0
+        self.data = {}
+        self._email = emails[0]
         self._emails = emails
 
-    def update(self):
+    def set_next_email(self):
+        """Set the next email to be looked up."""
+        self._current_index = (self._current_index + 1) % self._email_count
+        self._email = self._emails[self._current_index]
+
+    def update_no_throttle(self):
+        """Get the data for a specific email."""
+        self.update(no_throttle=True)
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES, MIN_TIME_BETWEEN_FORCED_UPDATES)
+    def update(self, **kwargs):
         """Get the latest data for current email from REST service."""
         try:
-            self.data = None
-            self._current_index = (self._current_index + 1) % self._email_count
-            self.email = self._emails[self._current_index]
             url = "https://haveibeenpwned.com/api/v2/breachedaccount/{}". \
-                format(self.email)
+                   format(self._email)
 
-            _LOGGER.info("Checking for breaches for email %s", self.email)
+            _LOGGER.info("Checking for breaches for email %s", self._email)
 
             req = requests.get(url, headers={"User-agent": USER_AGENT},
                                allow_redirects=True, timeout=5)
 
-            # Intial data for all email addresses have been gathered
-            # Throttle the amount of requests made to 1 per 15 minutes to
-            # prevent abuse and because the data will almost never change.
-            # This means the more email addresses that are specified the
-            # longer it will take to update them all, this is part of
-            # abuse protection. I emailed the owner of the api to see
-            # if he was ok with this abuse protection scheme and it
-            # was fine for him like this
-            if self._current_index == self._email_count - 1:
-                global SCAN_INTERVAL
-                SCAN_INTERVAL = 60*15
-                self.update = Throttle(timedelta(
-                    seconds=SCAN_INTERVAL-5))(self.update)
-
-        except requests.exceptions.RequestException as exception:
-            _LOGGER.error(exception)
+        except requests.exceptions.RequestException:
+            _LOGGER.error("failed fetching HaveIBeenPwned Data for '%s'",
+                          self._email)
             return
 
         if req.status_code == 200:
-            self.data = sorted(req.json(), key=lambda k: k["AddedDate"],
-                               reverse=True)
+            self.data[self._email] = sorted(req.json(),
+                                            key=lambda k: k["AddedDate"],
+                                            reverse=True)
+
+            # only goto next email if we had data so that
+            # the forced updates try this current email again
+            self.set_next_email()
+
         elif req.status_code == 404:
-            self.data = []
+            self.data[self._email] = []
+
+            # only goto next email if we had data so that
+            # the forced updates try this current email again
+            self.set_next_email()
+
         else:
             _LOGGER.error("failed fetching HaveIBeenPwned Data for '%s'"
-                          "(HTTP Status_code = %d)", self.email,
+                          "(HTTP Status_code = %d)", self._email,
                           req.status_code)
