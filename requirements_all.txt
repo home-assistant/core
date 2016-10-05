@@ -373,8 +373,8 @@ pysnmp==4.3.2
 # homeassistant.components.digital_ocean
 python-digitalocean==1.9.0
 
-# homeassistant.components.sensor.forecast
-python-forecastio==1.3.4
+# homeassistant.components.sensor.darksky
+python-forecastio==1.3.5
 
 # homeassistant.components.sensor.hp_ilo
 python-hpilo==3.8
