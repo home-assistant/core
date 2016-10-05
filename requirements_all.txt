@@ -120,7 +120,7 @@ googlemaps==2.4.4
 gps3==0.33.3
 
 # homeassistant.components.openalpr
-ha-alpr==0.2
+ha-alpr==0.3
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==0.13
