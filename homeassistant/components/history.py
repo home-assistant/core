@@ -27,12 +27,14 @@ CONF_DOMAINS = 'domains'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         CONF_EXCLUDE: vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.ensure_list,
-            vol.Optional(CONF_DOMAINS, default=[]): cv.ensure_list
+            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
+                                                            [cv.string])
         }),
         CONF_INCLUDE: vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.ensure_list,
-            vol.Optional(CONF_DOMAINS, default=[]): cv.ensure_list
+            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
+                                                            [cv.string])
         })
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -67,9 +69,9 @@ def get_significant_states(start_time, end_time=None, entity_id=None,
     query = recorder.query('States').filter(
         (states.domain.in_(SIGNIFICANT_DOMAINS) |
          (states.last_changed == states.last_updated)) &
-        (states.last_updated > start_time) &
-        (~states.domain.in_(IGNORE_DOMAINS)))
-    query = _set_filters_in_query(query, states, entity_ids, filters)
+        (states.last_updated > start_time))
+    if filters:
+        query = filters.apply(query, entity_ids)
 
     if end_time is not None:
         query = query.filter(states.last_updated < end_time)
@@ -120,8 +122,9 @@ def get_states(utc_point_in_time, entity_ids=None, run=None, filters=None):
         (states.created >= run.start) &
         (states.created < utc_point_in_time) &
         (~states.domain.in_(IGNORE_DOMAINS)))
-    most_recent_state_ids = _set_filters_in_query(
-        most_recent_state_ids, states, entity_ids, filters)
+    if filters:
+        most_recent_state_ids = filters.apply(most_recent_state_ids,
+                                              entity_ids)
 
     most_recent_state_ids = most_recent_state_ids.group_by(
         states.entity_id).subquery()
@@ -169,8 +172,18 @@ def get_state(utc_point_in_time, entity_id, run=None):
 # pylint: disable=unused-argument
 def setup(hass, config):
     """Setup the history hooks."""
-    hass.wsgi.register_view(Last5StatesView(hass, config))
-    hass.wsgi.register_view(HistoryPeriodView(hass, config))
+    filters = Filters()
+    exclude = config[DOMAIN].get(CONF_EXCLUDE)
+    if exclude:
+        filters.excluded_entities = exclude[CONF_ENTITIES]
+        filters.excluded_domains = exclude[CONF_DOMAINS]
+    include = config[DOMAIN].get(CONF_INCLUDE)
+    if include:
+        filters.included_entities = include[CONF_ENTITIES]
+        filters.included_domains = include[CONF_DOMAINS]
+
+    hass.wsgi.register_view(Last5StatesView(hass))
+    hass.wsgi.register_view(HistoryPeriodView(hass, filters))
     register_built_in_panel(hass, 'history', 'History', 'mdi:poll-box')
 
     return True
@@ -182,10 +195,9 @@ class Last5StatesView(HomeAssistantView):
     url = '/api/history/entity/<entity:entity_id>/recent_states'
     name = 'api:history:entity-recent-states'
 
-    def __init__(self, hass, config):
+    def __init__(self, hass):
         """Initilalize the history last 5 states view."""
         super().__init__(hass)
-        self.config = config
 
     def get(self, request, entity_id):
         """Retrieve last 5 states of entity."""
@@ -199,10 +211,10 @@ class HistoryPeriodView(HomeAssistantView):
     name = 'api:history:view-period'
     extra_urls = ['/api/history/period/<datetime:datetime>']
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, filters):
         """Initilalize the history period view."""
         super().__init__(hass)
-        self.config = config
+        self.filters = filters
 
     def get(self, request, datetime=None):
         """Return history over a period of time."""
@@ -217,76 +229,67 @@ class HistoryPeriodView(HomeAssistantView):
         entity_id = request.args.get('filter_entity_id')
 
         return self.json(get_significant_states(
-            start_time, end_time, entity_id, Filters(self.config)).values())
+            start_time, end_time, entity_id, self.filters).values())
 
 
 # pylint: disable=too-few-public-methods
 class Filters(object):
     """Container for the configured include and exclude filters."""
 
-    def __init__(self, config):
+    def __init__(self):
         """Initialise the include and exclude filters."""
         self.excluded_entities = []
         self.excluded_domains = []
         self.included_entities = []
         self.included_domains = []
-        exclude = config[DOMAIN].get(CONF_EXCLUDE)
-        if exclude:
-            self.excluded_entities = exclude[CONF_ENTITIES]
-            self.excluded_domains = exclude[CONF_DOMAINS]
-        include = config[DOMAIN].get(CONF_INCLUDE)
-        if include:
-            self.included_entities = include[CONF_ENTITIES]
-            self.included_domains = include[CONF_DOMAINS]
 
+    def apply(self, query, entity_ids=None):
+        """Apply the Include/exclude filter on domains and entities on query.
 
-def _set_filters_in_query(query, states, entity_ids, filters):
-    """Include/exclude domains and entities in query as configured.
+        Following rules apply:
+        * only the include section is configured - just query the specified
+          entities or domains.
+        * only the exclude section is configured - filter the specified
+          entities and domains from all the entities in the system.
+        * if include and exclude is defined - select the entities specified in
+          the include and filter out the ones from the exclude list.
+        """
+        states = recorder.get_model('States')
+        # specific entities requested - do not in/exclude anything
+        if entity_ids is not None:
+            return query.filter(states.entity_id.in_(entity_ids))
+        query = query.filter(~states.domain.in_(IGNORE_DOMAINS))
 
-    Following rules apply:
-    * only the include section is configured - just query the specified
-      entities or domains.
-    * only the exclude section is configured - filter the specified entities
-      and domains from all the entities in the system.
-    * if include and exclude is defined - select the entities specified in the
-      include and filter out the ones from the exclude list.
-    """
-    # specific entities requested - do not in/exclude anything
-    if entity_ids is not None:
-        return query.filter(states.entity_id.in_(entity_ids))
-    if not filters:
+        filter_query = None
+        # filter if only excluded domain is configured
+        if self.excluded_domains and not self.included_domains:
+            filter_query = ~states.domain.in_(self.excluded_domains)
+            if self.included_entities:
+                filter_query |= states.entity_id.in_(self.included_entities)
+        # filter if only included domain is configured
+        elif not self.excluded_domains and self.included_domains:
+            filter_query = states.domain.in_(self.included_domains)
+            if self.included_entities:
+                filter_query |= states.entity_id.in_(self.included_entities)
+        # filter if included and excluded domain is configured
+        elif self.excluded_domains and self.included_domains:
+            filter_query = ~states.domain.in_(self.excluded_domains)
+            if self.included_entities:
+                filter_query &= (states.domain.in_(self.included_domains) |
+                                 states.entity_id.in_(self.included_entities))
+            else:
+                filter_query &= (states.domain.in_(self.included_domains) &
+                                 ~states.domain.in_(self.excluded_domains))
+        # no domain filter just included entities
+        elif not self.excluded_domains and not self.included_domains and \
+                self.included_entities:
+            filter_query = states.entity_id.in_(self.included_entities)
+        if filter_query is not None:
+            query = query.filter(filter_query)
+        # finally apply excluded entities filter if configured
+        if self.excluded_entities:
+            query = query.filter(~states.entity_id.in_(self.excluded_entities))
         return query
-
-    filter_query = None
-    # filter if only excluded domain is configured
-    if filters.excluded_domains and not filters.included_domains:
-        filter_query = ~states.domain.in_(filters.excluded_domains)
-        if filters.included_entities:
-            filter_query |= states.entity_id.in_(filters.included_entities)
-    # filter if only included domain is configured
-    elif not filters.excluded_domains and filters.included_domains:
-        filter_query = states.domain.in_(filters.included_domains)
-        if filters.included_entities:
-            filter_query |= states.entity_id.in_(filters.included_entities)
-    # filter if included and excluded domain is configured
-    elif filters.excluded_domains and filters.included_domains:
-        filter_query = ~states.domain.in_(filters.excluded_domains)
-        if filters.included_entities:
-            filter_query &= (states.domain.in_(filters.included_domains) |
-                             states.entity_id.in_(filters.included_entities))
-        else:
-            filter_query &= (states.domain.in_(filters.included_domains) &
-                             ~states.domain.in_(filters.excluded_domains))
-    # no domain filter just included entities
-    elif not filters.excluded_domains and not filters.included_domains and \
-            filters.included_entities:
-        filter_query = states.entity_id.in_(filters.included_entities)
-    if filter_query is not None:
-        query = query.filter(filter_query)
-    # finally apply excluded entities filter if configured
-    if filters.excluded_entities:
-        query = query.filter(~states.entity_id.in_(filters.excluded_entities))
-    return query
 
 
 def _is_significant(state):

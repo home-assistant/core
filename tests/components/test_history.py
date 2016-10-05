@@ -43,7 +43,9 @@ class TestComponentHistory(unittest.TestCase):
     def test_setup(self):
         """Test setup method of history."""
         mock_http_component(self.hass)
-        self.assertTrue(setup_component(self.hass, history.DOMAIN, {}))
+        self.assertTrue(setup_component(
+            self.hass, history.DOMAIN, history.CONFIG_SCHEMA({
+                history.DOMAIN: {}})))
 
     def test_last_5_states(self):
         """Test retrieving the last 5 states."""
@@ -150,10 +152,11 @@ class TestComponentHistory(unittest.TestCase):
         media player (attribute changes are not significant and not returned).
         """
         zero, four, states = self.record_states()
-        hist = history.get_significant_states(zero, four)
+        hist = history.get_significant_states(
+            zero, four, filters=history.Filters())
         assert states == hist
 
-    def test_get_significant_states_enitty_id(self):
+    def test_get_significant_states_entity_id(self):
         """Test that only significant states are returned for one entity."""
         zero, four, states = self.record_states()
         del states['media_player.test2']
@@ -161,7 +164,9 @@ class TestComponentHistory(unittest.TestCase):
         del states['thermostat.test2']
         del states['script.can_cancel_this_one']
 
-        hist = history.get_significant_states(zero, four, 'media_player.test')
+        hist = history.get_significant_states(
+            zero, four, 'media_player.test',
+            filters=history.Filters())
         assert states == hist
 
     def test_get_significant_states_exclude_domain(self):
@@ -293,7 +298,16 @@ class TestComponentHistory(unittest.TestCase):
 
     def check_significant_states(self, zero, four, states, config):
         """Check if significant states are retrieved."""
-        filters = history.Filters(config)
+        filters = history.Filters()
+        exclude = config[history.DOMAIN].get(history.CONF_EXCLUDE)
+        if exclude:
+            filters.excluded_entities = exclude[history.CONF_ENTITIES]
+            filters.excluded_domains = exclude[history.CONF_DOMAINS]
+        include = config[history.DOMAIN].get(history.CONF_INCLUDE)
+        if include:
+            filters.included_entities = include[history.CONF_ENTITIES]
+            filters.included_domains = include[history.CONF_DOMAINS]
+
         hist = history.get_significant_states(zero, four, filters=filters)
         assert states == hist
 
