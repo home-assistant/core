@@ -192,8 +192,6 @@ class HomeAssistant(object):
         except KeyboardInterrupt:
             self.loop.call_soon(stop_homeassistant)
             self.loop.run_forever()
-        finally:
-            self.loop.close()
 
     @asyncio.coroutine
     def async_start(self):
