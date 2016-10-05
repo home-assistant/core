@@ -27,7 +27,7 @@ DEPENDENCIES = ['ffmpeg']
 REQUIREMENTS = [
     'https://github.com/pvizeli/cloudapi/releases/download/1.0.2/'
     'python-1.0.2.zip#cloud_api==1.0.2',
-    'ha-alpr==0.2']
+    'ha-alpr==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ DEFAULT_NAME = 'OpenAlpr'
 DEFAULT_ENGINE = ENGINE_LOCAL
 DEFAULT_RENDER = RENDER_FFMPEG
 DEFAULT_BINARY = 'alpr'
-DEFAULT_INTERVAL = 2
+DEFAULT_INTERVAL = 10
 DEFAULT_CONFIDENCE = 80.0
 
 DEVICE_SCHEMA = vol.Schema({
