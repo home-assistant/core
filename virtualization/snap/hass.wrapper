@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ ! -d $SNAP_DATA/config ] ; then
+	mkdir -p $SNAP_DATA/config
+fi
+exec $SNAP/bin/hass --config $SNAP_DATA/config $@
