@@ -78,14 +78,14 @@ def valid_entity_id(entity_id: str) -> bool:
     return ENTITY_ID_PATTERN.match(entity_id) is not None
 
 
-def callback(func: Callable[..., None]):
+def callback(func: Callable[..., Callable]):
     """Annotation to mark method as safe to call from within the event loop."""
     # pylint: disable=protected-access
     func._hass_callback = True
     return func
 
 
-def is_callback(func: Callable[..., None]):
+def is_callback(func: Callable[..., Callable]):
     """Check if function is safe to be called in the event loop."""
     return '_hass_callback' in func.__dict__
 
@@ -405,7 +405,6 @@ class EventBus(object):
 
         self._loop.call_soon_threadsafe(self.async_fire, event_type,
                                         event_data, origin)
-        return
 
     def async_fire(self, event_type: str, event_data=None,
                    origin=EventOrigin.local, wait=False):
