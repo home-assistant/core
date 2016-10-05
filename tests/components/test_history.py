@@ -236,7 +236,8 @@ class TestComponentHistory(unittest.TestCase):
 
         config = history.CONFIG_SCHEMA({
             ha.DOMAIN: {},
-            history.DOMAIN: {history.CONF_INCLUDE: {
+            history.DOMAIN: {
+                history.CONF_INCLUDE: {
                     history.CONF_ENTITIES: ['media_player.test',
                                             'thermostat.test']},
                 history.CONF_EXCLUDE: {
