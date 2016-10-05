@@ -139,7 +139,8 @@ class TestAPI(unittest.TestCase):
         hass.states.set("test.test", "not_to_be_set")
 
         events = []
-        hass.bus.listen(const.EVENT_STATE_CHANGED, events.append)
+        hass.bus.listen(const.EVENT_STATE_CHANGED,
+                        lambda ev: events.append(ev))
 
         requests.post(_url(const.URL_API_STATES_ENTITY.format("test.test")),
                       data=json.dumps({"state": "not_to_be_set"}),

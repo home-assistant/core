@@ -171,7 +171,7 @@ def async_subscribe(hass, topic, callback, qos=DEFAULT_QOS):
         if not _match_topic(topic, event.data[ATTR_TOPIC]):
             return
 
-        hass.async_add_job(callback, event.data[ATTR_TOPIC],
+        hass.async_run_job(callback, event.data[ATTR_TOPIC],
                            event.data[ATTR_PAYLOAD], event.data[ATTR_QOS])
 
     async_remove = hass.bus.async_listen(EVENT_MQTT_MESSAGE_RECEIVED,
