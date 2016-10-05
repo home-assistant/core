@@ -31,6 +31,8 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 DEPENDENCIES = ['group']
 
+GROUP_NAME_ALL_AUTOMATIONS = 'all automations'
+
 CONF_ALIAS = 'alias'
 CONF_HIDE_ENTITY = 'hide_entity'
 
@@ -139,7 +141,8 @@ def reload(hass):
 
 def setup(hass, config):
     """Setup the automation."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass,
+                                group_name=GROUP_NAME_ALL_AUTOMATIONS)
 
     success = run_coroutine_threadsafe(
         _async_process_config(hass, config, component), hass.loop).result()
