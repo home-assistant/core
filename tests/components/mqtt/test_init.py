@@ -118,20 +118,6 @@ class TestMQTT(unittest.TestCase):
         }, blocking=True)
         self.assertFalse(mqtt.MQTT_CLIENT.publish.called)
 
-    def test_service_call_without_payload_or_payload_template(self):
-        """Test the service call without payload or payload template.
-
-        Send empty message if neither 'payload' nor 'payload_template'
-        are provided.
-        """
-        # Call the service directly because the helper functions require you to
-        # provide a payload.
-        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
-            mqtt.ATTR_TOPIC: "test/topic"
-        }, blocking=True)
-        self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
-        self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][1], "")
-
     def test_service_call_with_ascii_qos_retain_flags(self):
         """Test the service call with args that can be misinterpreted.
 
@@ -330,3 +316,26 @@ class TestMQTTCallbacks(unittest.TestCase):
     def test_invalid_mqtt_topics(self):
         self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'bad+topic')
         self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')
+
+
+    def test_receiving_non_utf8_message_gets_logged(self, caplog):
+        """Test receiving a non utf8 encoded message."""
+        calls = []
+        
+        def record(event):
+            """Helper to record calls."""
+            calls.append(event)
+            
+        self.hass.bus.listen_once(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, record)
+        
+        MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
+        message = MQTTMessage('test_topic', 1, 0x9a)
+        
+        mqtt.MQTT_CLIENT._mqtt_on_message(None, {'hass': self.hass}, message)
+        self.hass.block_till_done()
+        
+        assert len(calls) == 0
+        record = caplog.records[-1]
+        assert record.levelname == 'ERROR'
+        assert record.msg == 'Illegal utf-8 unicode payload from MQTT topic test_topic.'
+        
