@@ -78,14 +78,14 @@ def valid_entity_id(entity_id: str) -> bool:
     return ENTITY_ID_PATTERN.match(entity_id) is not None
 
 
-def callback(func: Callable[..., Callable]):
+def callback(func: Callable[..., None]) -> Callable[..., None]:
     """Annotation to mark method as safe to call from within the event loop."""
     # pylint: disable=protected-access
     func._hass_callback = True
     return func
 
 
-def is_callback(func: Callable[..., Callable]):
+def is_callback(func: Callable[..., Any]) -> bool:
     """Check if function is safe to be called in the event loop."""
     return '_hass_callback' in func.__dict__
 
