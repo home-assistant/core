@@ -100,6 +100,46 @@ class TestAutomation(unittest.TestCase):
         self.assertEqual(['hello.world'],
                          self.calls[0].data.get(ATTR_ENTITY_ID))
 
+    def test_service_initial_value_off(self):
+        """Test initial value off."""
+        entity_id = 'automation.hello'
+
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'alias': 'hello',
+                'initial_state': 'off',
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'action': {
+                    'service': 'test.automation',
+                    'entity_id': ['hello.world', 'hello.world2']
+                }
+            }
+        })
+        assert not automation.is_on(self.hass, entity_id)
+
+    def test_service_initial_value_on(self):
+        """Test initial value on."""
+        entity_id = 'automation.hello'
+
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'alias': 'hello',
+                'initial_state': 'on',
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'action': {
+                    'service': 'test.automation',
+                    'entity_id': ['hello.world', 'hello.world2']
+                }
+            }
+        })
+        assert automation.is_on(self.hass, entity_id)
+
     def test_service_specify_entity_id_list(self):
         """Test service data."""
         assert setup_component(self.hass, automation.DOMAIN, {
