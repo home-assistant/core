@@ -13,6 +13,17 @@ heal_network:
 remove_node:
   description: Remove a node from the Z-Wave network. Refer to OZW.log for details.
 
+set_config_parameter:
+  description: Set a config parameter to a node on the Z-Wave network.
+  fields:
+    entity_id:
+      description: Name of entity to set config parameter to.
+    parameter:
+      description: Parameter number to set (integer).
+    value:
+      description: Value to set on parameter. (integer).
+    size:
+      description: (Optional) The size of the value. Defaults to 2.
 start_network:
   description: Start the Z-Wave network. This might take a while, depending on how big your Z-Wave network is.
 
