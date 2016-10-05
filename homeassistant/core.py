@@ -146,17 +146,15 @@ class HomeAssistant(object):
         # Register the async start
         self.loop.create_task(self.async_start())
 
-        @asyncio.coroutine
         def stop_homeassistant(*args):
             """Stop Home Assistant."""
             self.exit_code = 0
-            yield from self.async_stop()
+            self.async_add_job(self.async_stop)
 
-        @asyncio.coroutine
         def restart_homeassistant(*args):
             """Restart Home Assistant."""
             self.exit_code = RESTART_EXIT_CODE
-            yield from self.async_stop()
+            self.async_add_job(self.async_stop)
 
         # Register the restart/stop event
         self.loop.call_soon(
@@ -169,18 +167,22 @@ class HomeAssistant(object):
         )
 
         # Setup signal handling
-        try:
-            signal.signal(signal.SIGTERM, stop_homeassistant)
-        except ValueError:
-            _LOGGER.warning(
-                'Could not bind to SIGTERM. Are you running in a thread?')
-        try:
-            signal.signal(signal.SIGHUP, restart_homeassistant)
-        except ValueError:
-            _LOGGER.warning(
-                'Could not bind to SIGHUP. Are you running in a thread?')
-        except AttributeError:
-            pass
+        if sys.platform != 'win32':
+            try:
+                self.loop.add_signal_handler(
+                    signal.SIGTERM,
+                    stop_homeassistant
+                )
+            except ValueError:
+                _LOGGER.warning('Could not bind to SIGTERM.')
+
+            try:
+                self.loop.add_signal_handler(
+                    signal.SIGHUP,
+                    restart_homeassistant
+                )
+            except ValueError:
+                _LOGGER.warning('Could not bind to SIGHUP.')
 
         # Run forever and catch keyboard interrupt
         try:
@@ -188,10 +190,10 @@ class HomeAssistant(object):
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
         except KeyboardInterrupt:
-            pass
-        finally:
-            self.loop.create_task(stop_homeassistant())
+            self.loop.call_soon(stop_homeassistant)
             self.loop.run_forever()
+        finally:
+            self.loop.close()
 
     @asyncio.coroutine
     def async_start(self):
