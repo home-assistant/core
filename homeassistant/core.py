@@ -1034,7 +1034,8 @@ class ServiceRegistry(object):
 
             data = {ATTR_SERVICE_CALL_ID: call_id}
 
-            if service_handler.is_coroutinefunction:
+            if (service_handler.is_coroutinefunction or
+                    service_handler.is_callback):
                 self._bus.async_fire(EVENT_SERVICE_EXECUTED, data)
             else:
                 self._bus.fire(EVENT_SERVICE_EXECUTED, data)
