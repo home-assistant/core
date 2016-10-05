@@ -173,6 +173,9 @@ STATE_UNLOCKED = 'unlocked'
 STATE_UNAVAILABLE = 'unavailable'
 
 # #### STATE AND EVENT ATTRIBUTES ####
+# Attribution
+ATTR_ATTRIBUTION = 'attribution'
+
 # Contains current time for a TIME_CHANGED event
 ATTR_NOW = 'now'
 

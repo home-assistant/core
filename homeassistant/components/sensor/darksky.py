@@ -13,7 +13,7 @@ from requests.exceptions import ConnectionError as ConnectError, \
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS)
+    CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -22,6 +22,7 @@ REQUIREMENTS = ['python-forecastio==1.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ATTRIBUTION = "Powered by Dark Sky"
 CONF_UNITS = 'units'
 CONF_UPDATE_INTERVAL = 'update_interval'
 
@@ -177,6 +178,13 @@ class DarkSkySensor(Entity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         return SENSOR_TYPES[self.type][6]
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+        }
 
     # pylint: disable=too-many-branches,too-many-statements
     def update(self):

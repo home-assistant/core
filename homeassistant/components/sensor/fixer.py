@@ -10,7 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -19,6 +19,11 @@ REQUIREMENTS = ['fixerio==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_BASE = 'Base currency'
+ATTR_EXCHANGE_RATE = 'Exchange rate'
+ATTR_TARGET = 'Target currency'
+
+CONF_ATTRIBUTION = "Data provided by the European Central Bank (ECB)"
 CONF_BASE = 'base'
 CONF_TARGET = 'target'
 
@@ -28,10 +33,6 @@ DEFAULT_NAME = 'Exchange rate'
 ICON = 'mdi:currency'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(days=1)
-
-STATE_ATTR_BASE = 'Base currency'
-STATE_ATTR_EXCHANGE_RATE = 'Exchange rate'
-STATE_ATTR_TARGET = 'Target currency'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TARGET): cv.string,
@@ -90,9 +91,10 @@ class ExchangeRateSensor(Entity):
         """Return the state attributes."""
         if self.data.rate is not None:
             return {
-                STATE_ATTR_BASE: self.data.rate['base'],
-                STATE_ATTR_TARGET: self._target,
-                STATE_ATTR_EXCHANGE_RATE: self.data.rate['rates'][self._target]
+                ATTR_BASE: self.data.rate['base'],
+                ATTR_TARGET: self._target,
+                ATTR_EXCHANGE_RATE: self.data.rate['rates'][self._target],
+                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             }
 
     @property

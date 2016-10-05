@@ -11,16 +11,17 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    STATE_UNKNOWN)
+    STATE_UNKNOWN, ATTR_ATTRIBUTION)
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 _RESOURCE = 'http://api.wunderground.com/api/{}/conditions/q/'
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ATTRIBUTION = "Data provided by the WUnderground weather service"
 CONF_PWS_ID = 'pws_id'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
@@ -109,6 +110,13 @@ class WUndergroundSensor(Entity):
             return STATE_UNKNOWN
 
     @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+        }
+
+    @property
     def entity_picture(self):
         """Return the entity picture."""
         if self._condition == 'weather':
@@ -123,9 +131,8 @@ class WUndergroundSensor(Entity):
         """Update current conditions."""
         self.rest.update()
 
+
 # pylint: disable=too-few-public-methods
-
-
 class WUndergroundData(object):
     """Get data from WUnderground."""
 

@@ -12,9 +12,10 @@ from urllib.error import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['coinmarketcap==2.0.1']
 
@@ -30,6 +31,7 @@ ATTR_PRICE = 'price_usd'
 ATTR_SYMBOL = 'symbol'
 ATTR_TOTAL_SUPPLY = 'total_supply'
 
+CONF_ATTRIBUTION = "Data provided by CoinMarketCap"
 CONF_CURRENCY = 'currency'
 
 DEFAULT_CURRENCY = 'bitcoin'
@@ -89,7 +91,7 @@ class CoinMarketCapSensor(Entity):
         return ICON
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_24H_VOLUME_USD: self._ticker.get('24h_volume_usd'),
@@ -99,6 +101,7 @@ class CoinMarketCapSensor(Entity):
             ATTR_PERCENT_CHANGE_7D: self._ticker.get('percent_change_7d'),
             ATTR_SYMBOL: self._ticker.get('symbol'),
             ATTR_TOTAL_SUPPLY: self._ticker.get('total_supply'),
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
     # pylint: disable=too-many-branches
