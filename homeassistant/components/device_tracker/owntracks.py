@@ -19,26 +19,27 @@ from homeassistant.util import convert, slugify
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 
-DEPENDENCIES = ['mqtt']
 REQUIREMENTS = ['libnacl==1.5.0']
-
-REGIONS_ENTERED = defaultdict(list)
-MOBILE_BEACONS_ACTIVE = defaultdict(list)
-
-BEACON_DEV_ID = 'beacon'
-
-LOCATION_TOPIC = 'owntracks/+/+'
-EVENT_TOPIC = 'owntracks/+/+/event'
-WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoint'
 
 _LOGGER = logging.getLogger(__name__)
 
-LOCK = threading.Lock()
+BEACON_DEV_ID = 'beacon'
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
+CONF_SECRET = 'secret'
 CONF_WAYPOINT_IMPORT = 'waypoints'
 CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
-CONF_SECRET = 'secret'
+
+DEPENDENCIES = ['mqtt']
+
+EVENT_TOPIC = 'owntracks/+/+/event'
+
+LOCATION_TOPIC = 'owntracks/+/+'
+LOCK = threading.Lock()
+
+MOBILE_BEACONS_ACTIVE = defaultdict(list)
+
+REGIONS_ENTERED = defaultdict(list)
 
 VALIDATE_LOCATION = 'location'
 VALIDATE_TRANSITION = 'transition'
@@ -46,6 +47,7 @@ VALIDATE_WAYPOINTS = 'waypoints'
 
 WAYPOINT_LAT_KEY = 'lat'
 WAYPOINT_LON_KEY = 'lon'
+WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoint'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
@@ -70,7 +72,7 @@ def get_cipher():
 
 
 def setup_scanner(hass, config, see):
-    """Setup an OwnTracks tracker."""
+    """Set up an OwnTracks tracker."""
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
     waypoint_import = config.get(CONF_WAYPOINT_IMPORT)
     waypoint_whitelist = config.get(CONF_WAYPOINT_WHITELIST)
@@ -113,7 +115,7 @@ def setup_scanner(hass, config, see):
             return None
 
     def validate_payload(topic, payload, data_type):
-        """Validate OwnTracks payload."""
+        """Validate the OwnTracks payload."""
         # pylint: disable=too-many-return-statements
 
         try:
