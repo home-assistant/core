@@ -316,3 +316,18 @@ class TestMQTTCallbacks(unittest.TestCase):
     def test_invalid_mqtt_topics(self):
         self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'bad+topic')
         self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')
+
+    def test_receiving_non_utf8_message_gets_logged(self):
+        """Test receiving a non utf8 encoded message."""
+        calls = []
+
+        def record(event):
+            """Helper to record calls."""
+            calls.append(event)
+
+        self.hass.bus.listen_once(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, record)
+        MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
+        message = MQTTMessage('test_topic', 1, 0x9a)
+        mqtt.MQTT_CLIENT._mqtt_on_message(None, {'hass': self.hass}, message)
+        self.hass.block_till_done()
+        assert len(calls) == 0
