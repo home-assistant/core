@@ -8,7 +8,8 @@ https://home-assistant.io/components/climate.zwave/
 # pylint: disable=import-error
 import logging
 from homeassistant.components.climate import DOMAIN
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import (
+    ClimateDevice, ATTR_OPERATION_MODE)
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
 from homeassistant.const import (
@@ -243,10 +244,20 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             temperature = kwargs.get(ATTR_TEMPERATURE)
         else:
             return
+        operation_mode = kwargs.get(ATTR_OPERATION_MODE)
+        _LOGGER.debug("set_temperature operation_mode=%s", operation_mode)
 
         for value in (self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT)
                       .values()):
+            if operation_mode is not None:
+                setpoint_mode = SET_TEMP_TO_INDEX.get(operation_mode)
+                if value.index != setpoint_mode:
+                    continue
+                _LOGGER.debug("setpoint_mode=%s", setpoint_mode)
+                value.data = temperature
+                break
+
             if self.current_operation is not None:
                 if self._hrt4_zw and self.current_operation == 'Off':
                     # HRT4-ZW can change setpoint when off.
