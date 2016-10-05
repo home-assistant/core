@@ -23,6 +23,7 @@ from homeassistant.helpers.script import Script
 
 DOMAIN = "script"
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+GROUP_NAME_ALL_SCRIPTS = 'all scripts'
 DEPENDENCIES = ["group"]
 
 CONF_SEQUENCE = "sequence"
@@ -73,7 +74,8 @@ def toggle(hass, entity_id):
 
 def setup(hass, config):
     """Load the scripts from the configuration."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass,
+                                group_name=GROUP_NAME_ALL_SCRIPTS)
 
     def service_handler(service):
         """Execute a service call to script.<script name>."""
