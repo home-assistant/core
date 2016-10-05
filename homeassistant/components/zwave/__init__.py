@@ -133,7 +133,7 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
 
 CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_POLLING_INTENSITY):
-        vol.All(cv.positive_int, vol.In([0, 1, 2])),
+        vol.All(cv.positive_int, vol.In([0, 1, 2, 3, 4, 5])),
 })
 
 CONFIG_SCHEMA = vol.Schema({
