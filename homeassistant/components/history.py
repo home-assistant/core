@@ -265,7 +265,7 @@ class Filters(object):
         if self.excluded_domains and not self.included_domains:
             filter_query = ~states.domain.in_(self.excluded_domains)
             if self.included_entities:
-                filter_query |= states.entity_id.in_(self.included_entities)
+                filter_query &= states.entity_id.in_(self.included_entities)
         # filter if only included domain is configured
         elif not self.excluded_domains and self.included_domains:
             filter_query = states.domain.in_(self.included_domains)

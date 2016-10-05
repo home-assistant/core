@@ -43,9 +43,15 @@ class TestComponentHistory(unittest.TestCase):
     def test_setup(self):
         """Test setup method of history."""
         mock_http_component(self.hass)
-        self.assertTrue(setup_component(
-            self.hass, history.DOMAIN, history.CONFIG_SCHEMA({
-                history.DOMAIN: {}})))
+        config = history.CONFIG_SCHEMA({
+            ha.DOMAIN: {},
+            history.DOMAIN: {history.CONF_INCLUDE: {
+                    history.CONF_DOMAINS: ['media_player'],
+                    history.CONF_ENTITIES: ['thermostat.test']},
+                history.CONF_EXCLUDE: {
+                    history.CONF_DOMAINS: ['thermostat'],
+                    history.CONF_ENTITIES: ['media_player.test']}}})
+        self.assertTrue(setup_component(self.hass, history.DOMAIN, config))
 
     def test_last_5_states(self):
         """Test retrieving the last 5 states."""
@@ -200,6 +206,43 @@ class TestComponentHistory(unittest.TestCase):
                 history.CONF_ENTITIES: ['media_player.test', ]}}})
         self.check_significant_states(zero, four, states, config)
 
+    def test_get_significant_states_exclude(self):
+        """Test significant states when excluding entities and domains.
+
+        We should not get back every thermostat and media player test changes.
+        """
+        zero, four, states = self.record_states()
+        del states['media_player.test']
+        del states['thermostat.test']
+        del states['thermostat.test2']
+
+        config = history.CONFIG_SCHEMA({
+            ha.DOMAIN: {},
+            history.DOMAIN: {history.CONF_EXCLUDE: {
+                history.CONF_DOMAINS: ['thermostat', ],
+                history.CONF_ENTITIES: ['media_player.test', ]}}})
+        self.check_significant_states(zero, four, states, config)
+
+    def test_get_significant_states_exclude_include_entity(self):
+        """Test significant states when excluding domains and include entities.
+
+        We should not get back every thermostat and media player test changes.
+        """
+        zero, four, states = self.record_states()
+        del states['media_player.test2']
+        del states['thermostat.test']
+        del states['thermostat.test2']
+        del states['script.can_cancel_this_one']
+
+        config = history.CONFIG_SCHEMA({
+            ha.DOMAIN: {},
+            history.DOMAIN: {history.CONF_INCLUDE: {
+                    history.CONF_ENTITIES: ['media_player.test',
+                                            'thermostat.test']},
+                history.CONF_EXCLUDE: {
+                    history.CONF_DOMAINS: ['thermostat']}}})
+        self.check_significant_states(zero, four, states, config)
+
     def test_get_significant_states_include_domain(self):
         """Test if significant states are returned when including domains.
 
@@ -217,7 +260,7 @@ class TestComponentHistory(unittest.TestCase):
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_include_entity(self):
-        """Test if significant states are returned when excluding domains.
+        """Test if significant states are returned when including entities.
 
         We should only get back changes of the media_player.test entity.
         """
@@ -230,6 +273,23 @@ class TestComponentHistory(unittest.TestCase):
         config = history.CONFIG_SCHEMA({
             ha.DOMAIN: {},
             history.DOMAIN: {history.CONF_INCLUDE: {
+                history.CONF_ENTITIES: ['media_player.test']}}})
+        self.check_significant_states(zero, four, states, config)
+
+    def test_get_significant_states_include(self):
+        """Test significant states when including domains and entities.
+
+        We should only get back changes of the media_player.test entity and the
+        thermostat domain.
+        """
+        zero, four, states = self.record_states()
+        del states['media_player.test2']
+        del states['script.can_cancel_this_one']
+
+        config = history.CONFIG_SCHEMA({
+            ha.DOMAIN: {},
+            history.DOMAIN: {history.CONF_INCLUDE: {
+                history.CONF_DOMAINS: ['thermostat'],
                 history.CONF_ENTITIES: ['media_player.test']}}})
         self.check_significant_states(zero, four, states, config)
 
