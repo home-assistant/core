@@ -75,6 +75,10 @@ class TestAutomation(unittest.TestCase):
         assert state is not None
         assert state.attributes.get('last_triggered') == time
 
+        state = self.hass.states.get('group.all_automations')
+        assert state is not None
+        assert state.attributes.get('entity_id') == ('automation.hello',)
+
     def test_service_specify_entity_id(self):
         """Test service data."""
         assert setup_component(self.hass, automation.DOMAIN, {
