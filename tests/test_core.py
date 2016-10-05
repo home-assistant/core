@@ -1,8 +1,6 @@
 """Test to verify that Home Assistant core works."""
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
-import os
-import signal
 import unittest
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
@@ -14,8 +12,7 @@ from homeassistant.exceptions import InvalidEntityFormatError
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
-    __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM)
+    __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM)
 
 from tests.common import get_test_home_assistant
 
