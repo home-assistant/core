@@ -159,7 +159,10 @@ class WUndergroundSensor(Entity):
 
     def update(self):
         """Update current conditions."""
-        self.rest.update()
+        if self._condition == 'alerts':
+            self.rest.update_alerts()
+        else:
+            self.rest.update()
 
 
 # pylint: disable=too-few-public-methods
@@ -200,6 +203,9 @@ class WUndergroundData(object):
             self.data = None
             raise
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update_alerts(self):
+        """Get the latest alerts data from WUnderground."""
         try:
             result = requests.get(self._build_url(_ALERTS), timeout=10).json()
             if "error" in result['response']:
