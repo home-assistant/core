@@ -9,58 +9,74 @@ harmony:
 - name: Bedroom
   username: EMAIL
   password: PASSWORD
-  ip: 10.168.1.13
+  host: 10.168.1.13
   port: 5222
 - name: Family Room
   username: EMAIL
   password: PASSWORD
-  ip: 10.168.1.16
+  host: 10.168.1.16
   port: 5222
 """
+
 from homeassistant.components.discovery import load_platform
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT
-from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    ATTR_ENTITY_ID)
-from homeassistant.components import group
+from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT, ATTR_ENTITY_ID
 import logging
 import pyharmony
 import voluptuous as vol
-import os
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyharmony>=0.2.0']
+REQUIREMENTS = ['pyharmony>=1.0.5']
 _LOGGER = logging.getLogger(__name__)
-CONF_IP = 'ip'
-#SCAN_INTERVAL = 30
-#GROUP_NAME_ALL_HARMONY = 'all remote devices'
-#ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_harmony')
 
-#ENTITY_ID_FORMAT = DOMAIN + '.{}'
+SCAN_INTERVAL = 30
+GROUP_NAME_ALL_HARMONY = 'all harmony devices'
 
 HARMONY_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-ATTR_VALUE1 = 'device'
-ATTR_VALUE2 = 'command'
-ATTR_DEFAULT = ''
+
+
 DOMAIN = 'harmony'
-HUB_CONF_GLOBAL = {}
+HARMONY = {}
 
 def setup(hass, config):
-    """Track states and offer events for switches."""
+    """Track states and offer events for Harmony devices."""
 
-    global HUB_CONF_GLOBAL
-    HUB_CONF_GLOBAL = config[DOMAIN]
+    global HARMONY
+
+    for hub in config[DOMAIN]:
+        #populate global variable
+        HARMONY[hub[CONF_NAME]] = {}
+        HARMONY[hub[CONF_NAME]]['device'] = \
+            HarmonyDevice(hub[CONF_NAME],
+                          hub[CONF_USERNAME],
+                          hub[CONF_PASSWORD],
+                          hub[CONF_HOST],
+                          hub[CONF_PORT])
+        HARMONY[hub[CONF_NAME]]['activities'] = \
+            pyharmony.ha_get_activities(hub[CONF_USERNAME],
+                                        hub[CONF_PASSWORD],
+                                        hub[CONF_HOST],
+                                        hub[CONF_PORT])
+
+        #create configuration file containing activites, devices, and commands
+        HARMONY_CONF_FILE = hass.config.path('harmonyConf-' + hub[CONF_NAME] + '.txt')
+        pyharmony.ha_get_config_file(hub[CONF_USERNAME],
+                                     hub[CONF_PASSWORD],
+                                     hub[CONF_HOST],
+                                     hub[CONF_PORT],
+                                     HARMONY_CONF_FILE)
 
     # create sensor for each Harmony device to display current activity
     load_platform(hass, 'sensor', DOMAIN )
+
     # create switch for each activity from each Harmony device
-    load_platform(hass, 'switch', DOMAIN, {})
+    load_platform(hass, 'switch', DOMAIN)
+
+    #create remote object and start services
+    load_platform(hass, 'remote', DOMAIN, {})
 
     return True
 
@@ -72,7 +88,6 @@ class HarmonyDevice(Entity):
         self._password = password
         self._ip = ip
         self._port = port
-        self._devices = ''
 
 
     @property
@@ -87,18 +102,17 @@ class HarmonyDevice(Entity):
         return self.get_status()
 
 
+    @property
+    def config(self):
+        '''Return the device's configuration information'''
+        return {'email':self._email,
+                'password':self._password,
+                'ip':self._ip,
+                'port':self._port}
+
     def get_status(self):
         return pyharmony.ha_get_current_activity(self._email, self._password, self._ip, self._port)
 
-
-    def send_command(self, device_id, new_command):
-        pyharmony.ha_send_command(self._email, self._password, self._ip, self._port, device_id, new_command)
-
-
-    def is_on(hass, entity_id=None):
-        """Return if the switch is on based on the statemachine."""
-        entity_id = entity_id or ENTITY_ID_ALL_SWITCHES
-        if hass.states.is_state(entity_id, 'PowerOff'):
-            return False
-        else:
-            return True
+    def turn_on(self, activity_id):
+        """Turn the switch on."""
+        pyharmony.ha_start_activity(self._email, self._password, self._ip, self._port, activity_id)
