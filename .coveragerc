@@ -46,6 +46,9 @@ omit =
     homeassistant/components/octoprint.py
     homeassistant/components/*/octoprint.py
 
+    homeassistant/components/paradox.py
+    homeassistant/components/*/paradox.py
+
     homeassistant/components/qwikswitch.py
     homeassistant/components/*/qwikswitch.py
 
