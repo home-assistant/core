@@ -322,10 +322,20 @@ class HomeAssistant(object):
     # pylint: disable=no-self-use
     def _async_exception_handler(self, loop, context):
         """Handle all exception inside the core loop."""
-        _LOGGER.warning(
-            "Exception inside async loop: %s",
-            context.get('message')
-        )
+        message = context.get('message')
+        if message:
+            _LOGGER.warning(
+                "Error inside async loop: %s",
+                message
+            )
+
+        # for debug modus
+        exception = context.get('exception')
+        if exception is not None:
+            _LOGGER.debug(
+                "Exception inside async loop: %s",
+                exception
+            )
 
 
 class EventOrigin(enum.Enum):
