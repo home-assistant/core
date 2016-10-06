@@ -367,6 +367,9 @@ pynx584==0.2
 # homeassistant.components.sensor.openweathermap
 pyowm==2.4.0
 
+# homeassistant.components.paradox
+pyparadox_alarm==1.0.0
+
 # homeassistant.components.switch.acer_projector
 pyserial==3.1.1
 
