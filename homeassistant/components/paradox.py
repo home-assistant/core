@@ -89,8 +89,9 @@ ZONE_SCHEMA = vol.Schema({
 def setup(hass, base_config):
     """
     Set up a Home Assistant component to represent a Paradox Alarm, as a hub.
-    I.e. it will consist of an alarm platform to represent each alarm partition,
-    as well as a binary sensor platform to represent each zone.
+    
+    I.e. it will consist of an alarm platform to represent each alarm area/
+    partition, as well as a binary sensor platform to represent each zone.
     """
     from pyparadox_alarm.alarm_panel import ParadoxAlarmPanel
     # from pydispatch import dispatcher
@@ -123,7 +124,8 @@ def setup(hass, base_config):
     if 'IP' in _comm_module:
         IP_MODULE = True
     '''
-    # These will be auto discovered in later versions if we can get the serial speed sorted.
+    # These will be auto discovered in later versions.
+    # ...if we can get the serial speed sorted.
     _zones = config.get(CONF_ZONES)
     _partitions = config.get(CONF_PARTITIONS)
     # _connect_status = {}
@@ -145,17 +147,19 @@ def setup(hass, base_config):
                          PARADOX_CONTROLLER.paradox_model)
 
     def update_alarm_armed_cb(area_number):
-        """Process the area/partition armed event received from alarm panel."""
+        """Process the area armed event received from alarm panel."""
         _LOGGER.debug('Area %d received armed event.', area_number)
         try:
             # Area in use on alarm panel might not be setup/defined in HA
             _affected_area = PARTITION_SCHEMA(_partitions[area_number])
-            _LOGGER.debug('HA area %s to be armed.', _affected_area[CONF_PARTITIONNAME])
+            _LOGGER.debug('HA area %s to be armed.', 
+                          _affected_area[CONF_PARTITIONNAME])
             # This does not seem to be the correct way to set the state.
 
             _att = {'friendly_name': _affected_area[CONF_PARTITIONNAME]}
 
-            hass.states.set('alarm_control_panel.' + _affected_area[CONF_PARTITIONNAME],
+            hass.states.set('alarm_control_panel.' + 
+                            _affected_area[CONF_PARTITIONNAME],
                             STATE_ALARM_ARMED_AWAY, _att)
         except KeyError:
             _LOGGER.debug('Area %d not defined in HA.', area_number)
@@ -163,7 +167,7 @@ def setup(hass, base_config):
         return True
 
     def update_alarm_stay_armed_cb(area_number):
-        """Process the area/partition stay armed event received from alarm panel."""
+        """Process area stay armed event received from alarm panel."""
         _LOGGER.debug('Area %d received stay armed event.', area_number)
         try:
             # Area in use on alarm panel might not be setup/defined in HA
@@ -183,7 +187,7 @@ def setup(hass, base_config):
         return True
 
     def update_alarm_disarmed_cb(area_number):
-        """Process the area/partition disarmed event received from alarm panel."""
+        """Process area/partition disarmed event received from alarm panel."""
         _LOGGER.debug('Area %d received disarmed event.', area_number)
         try:
             # Area in use on alarm panel might not be setup/defined in HA
