@@ -128,7 +128,7 @@ def ensure_config_exists(config_dir: str, detect_location: bool=True) -> str:
     return config_path
 
 
-def create_default_config(config_dir, detect_location=True):
+def create_default_config(config_dir: str, detect_location=True):
     """Create a default configuration file in given configuration directory.
 
     Return path to new config file if success, None if failed.
@@ -180,14 +180,14 @@ def create_default_config(config_dir, detect_location=True):
         return None
 
 
-def find_config_file(config_dir):
+def find_config_file(config_dir: str):
     """Look in given directory for supported configuration files."""
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
 
     return config_path if os.path.isfile(config_path) else None
 
 
-def load_yaml_config_file(config_path):
+def load_yaml_config_file(config_path: str):
     """Parse a YAML configuration file."""
     conf_dict = load_yaml(config_path)
 
@@ -200,7 +200,7 @@ def load_yaml_config_file(config_path):
     return conf_dict
 
 
-def process_ha_config_upgrade(hass):
+def process_ha_config_upgrade(hass: core.HomeAssistant):
     """Upgrade config if necessary."""
     version_path = hass.config.path(VERSION_FILE)
 
@@ -225,7 +225,7 @@ def process_ha_config_upgrade(hass):
         outp.write(__version__)
 
 
-def process_ha_core_config(hass, config):
+def process_ha_core_config(hass: core.HomeAssistant, config: dict):
     """Process the [homeassistant] section from the config."""
     # pylint: disable=too-many-branches
     config = CORE_CONFIG_SCHEMA(config)
