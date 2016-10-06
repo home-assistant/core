@@ -1,5 +1,6 @@
 """
-Support for Paradox Alarm area/partition states - represented as an alarm control panel.
+Support for Paradox Alarm area/partition states
+ - represented as an alarm control panel.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.paradox/
@@ -26,20 +27,23 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Paradox alarm control panel platform, based on configuration file contents."""
-
-    # Get the area/partition information specified in the configuration/yaml file.
-    _configured_partitions = discovery_info['partitions']
-    for area_number in _configured_partitions:
+    """
+    Set up the Paradox alarm control panel platform.
+    Based on configuration file contents, not auto discovery.
+    """
+    # Get the area information specified in the configuration/yaml file.
+    _yaml_partitions = discovery_info['partitions']
+    for area_number in _yaml_partitions:
         # For each area specified, get the detail for that area.
-        _device_config_data = PARTITION_SCHEMA(_configured_partitions[area_number])
+        _device_config_data = PARTITION_SCHEMA(_yaml_partitions[area_number])
         # Add the partition as a HA device.
         # Each area is represented as an alarm control panel in HA
-        add_devices([ParadoxAlarm(hass,
-                                  area_number,
-                                  _device_config_data[CONF_PARTITIONNAME],
-                                  PARADOX_CONTROLLER.alarm_state['partition'][area_number]
-                                 )])
+        add_devices(
+            [ParadoxAlarm(hass,
+                          area_number,
+                          _device_config_data[CONF_PARTITIONNAME],
+                          PARADOX_CONTROLLER.alarm_state['partition'][area_number]
+                          )])
     return True
 
 
@@ -64,13 +68,16 @@ class ParadoxAlarm(alarm.AlarmControlPanel):
         # At startup the area status should be requested from the alarm panel.
         # Request the area status from the alarm panel
         PARADOX_CONTROLLER.submit_area_status_request(self._area_number)
-        # No need to wait status will be updated when it returns from the panel.
+        # No need to wait, status will be updated when it returns from alarm.
 
         _LOGGER.debug('HA added area: ' + area_name)
 
     @property
     def name(self):
-        """Return the name of the alarm control panel device. (Area/Partition name/label)"""
+        """
+        Return the name of the alarm control panel device.
+        (Area/Partition name/label)
+        """
         _LOGGER.debug('HA reports area name as ' + self._name)
         return self._name
 
