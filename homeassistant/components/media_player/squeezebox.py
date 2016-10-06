@@ -126,7 +126,7 @@ class LogitechMediaServer(object):
         # a (artist): Artist name 'artist'
         # d (duration): Song duration in seconds 'duration'
         # K (artwork_url): URL to remote artwork
-        # l (album): Album name, including the server's added "(N of M)" if the server is set to group multi disc albums together
+        # l (album): Album, including the server's  "(N of M)"
         tags = 'adKl'
         new_status = {}
         telnet = telnetlib.Telnet(self.host, self.port)
@@ -233,10 +233,10 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """Title of current playing media."""
         if 'title' in self._status:
             return self._status['title']
-            
+
         if 'current_title' in self._status:
             return self._status['current_title']
-    
+
     @property
     def media_artist(self):
         """Artist of current playing media."""
