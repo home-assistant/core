@@ -125,7 +125,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
                 if self._timer is not None and self._timer.isAlive():
                     self._timer.cancel()
 
-                self._timer = Timer(2, _refresh_value)
+                self._timer = Timer(5, _refresh_value)
                 self._timer.start()
 
             self.update_ha_state()
