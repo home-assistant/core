@@ -1,5 +1,6 @@
 """
 Support for Paradox Alarms.
+
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/paradox/
 
@@ -9,8 +10,8 @@ Focus for getting the PRT3 to work for now.
 Because the Evisalink looks very close to the IP100/1500, the evisalink code
 was changed to IP100/150 and then commented out for later testing.
 
-I'm hoping that this file can cater for whichever comms (USB/IP) module is being used.
-I'm also assuming that both modules may be used at the same time even if it doesn't make much sense.
+I'm hoping that this file can cater for both comms modules (USB/IP).
+I'm also assuming that both modules may be used at the same time.
 """
 import logging
 import time
@@ -23,8 +24,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 #   STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
 
-# REQUIREMENTS = ['https://github.com/PollieKrismis/pyparadox_alarm/archive/v0.1.4.zip'
-#                '#pyparadox_alarm==0.1.4']
 REQUIREMENTS = ['pyparadox_alarm==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,11 +88,10 @@ ZONE_SCHEMA = vol.Schema({
 # pylint: disable=too-many-return-statements
 def setup(hass, base_config):
     """
-    Sets up a Home Assistant component to represent a Paradox Alarm, as a hub.
+    Set up a Home Assistant component to represent a Paradox Alarm, as a hub.
     I.e. it will consist of an alarm platform to represent each alarm partition,
     as well as a binary sensor platform to represent each zone.
     """
-
     from pyparadox_alarm.alarm_panel import ParadoxAlarmPanel
     # from pydispatch import dispatcher
 
@@ -143,14 +141,15 @@ def setup(hass, base_config):
             _LOGGER.info('Paradox controller not initialised')
             return False
         else:
-            _LOGGER.info('Paradox controller initialised as %s.', PARADOX_CONTROLLER.paradox_model)
+            _LOGGER.info('Paradox controller initialised as %s.',
+                         PARADOX_CONTROLLER.paradox_model)
 
     def update_alarm_armed_cb(area_number):
-        '''Process the area/partition armed event received from alarm panel.'''
+        """Process the area/partition armed event received from alarm panel."""
         _LOGGER.debug('Area %d received armed event.', area_number)
         try:
             # Area in use on alarm panel might not be setup/defined in HA
-            _affected_area = PARTITION_SCHEMA(_partitions[area_number])  # Hass partition dict
+            _affected_area = PARTITION_SCHEMA(_partitions[area_number])
             _LOGGER.debug('HA area %s to be armed.', _affected_area[CONF_PARTITIONNAME])
             # This does not seem to be the correct way to set the state.
 
@@ -164,17 +163,19 @@ def setup(hass, base_config):
         return True
 
     def update_alarm_stay_armed_cb(area_number):
-        '''Process the area/partition stay armed event received from alarm panel.'''
+        """Process the area/partition stay armed event received from alarm panel."""
         _LOGGER.debug('Area %d received stay armed event.', area_number)
         try:
             # Area in use on alarm panel might not be setup/defined in HA
-            _affected_area = PARTITION_SCHEMA(_partitions[area_number])  # Hass partition dict
-            _LOGGER.debug('HA area %s to be stay armed.', _affected_area[CONF_PARTITIONNAME])
+            _affected_area = PARTITION_SCHEMA(_partitions[area_number])
+            _LOGGER.debug('HA area %s to be stay armed.',
+                          _affected_area[CONF_PARTITIONNAME])
             # This does not seem to be the correct way to set the state.
 
             _att = {'friendly_name': _affected_area[CONF_PARTITIONNAME]}
 
-            hass.states.set('alarm_control_panel.' + _affected_area[CONF_PARTITIONNAME],
+            hass.states.set('alarm_control_panel.' +
+                            _affected_area[CONF_PARTITIONNAME],
                             STATE_ALARM_ARMED_HOME, _att)
         except KeyError:
             _LOGGER.debug('Area %d not defined in HA.', area_number)
@@ -182,17 +183,19 @@ def setup(hass, base_config):
         return True
 
     def update_alarm_disarmed_cb(area_number):
-        '''Process the area/partition disarmed event received from alarm panel.'''
+        """Process the area/partition disarmed event received from alarm panel."""
         _LOGGER.debug('Area %d received disarmed event.', area_number)
         try:
             # Area in use on alarm panel might not be setup/defined in HA
-            _affected_area = PARTITION_SCHEMA(_partitions[area_number])  # Hass partition dict
-            _LOGGER.debug('HA area %s to be disarmed.', _affected_area[CONF_PARTITIONNAME])
+            _affected_area = PARTITION_SCHEMA(_partitions[area_number])
+            _LOGGER.debug('HA area %s to be disarmed.',
+                          _affected_area[CONF_PARTITIONNAME])
 
             _att = {'friendly_name': _affected_area[CONF_PARTITIONNAME]}
 
             # This does not seem to be the correct way to set the state.
-            hass.states.set('alarm_control_panel.' + _affected_area[CONF_PARTITIONNAME],
+            hass.states.set('alarm_control_panel.' +
+                            _affected_area[CONF_PARTITIONNAME],
                             STATE_ALARM_DISARMED, _att)
         except KeyError:
             _LOGGER.debug('Area %d not defined in HA.', area_number)
@@ -200,15 +203,17 @@ def setup(hass, base_config):
         return True
 
     def update_zone_status_cb(zone_number):
-        '''Process the zone status change received from alarm panel.'''
+        """Process the zone status change received from alarm panel."""
         # Rather define 'zone' as a constant.
         # This is not needed, the new status is getting passed in!
         _new_status = PARADOX_CONTROLLER.alarm_state['zone'][zone_number]['status']['open']
-        _LOGGER.debug('Zone %d received new status %s.', zone_number, _new_status)
+        _LOGGER.debug('Zone %d received new status %s.',
+                      zone_number, _new_status)
         try:
             # Zone on alarm panel might not be setup/defined in HA
-            _affected_zone = ZONE_SCHEMA(_zones[zone_number])  # Hass zone dictionary
-            _LOGGER.debug('HA zone %s to be updated.', _affected_zone[CONF_ZONENAME])
+            _affected_zone = ZONE_SCHEMA(_zones[zone_number])
+            _LOGGER.debug('HA zone %s to be updated.',
+                          _affected_zone[CONF_ZONENAME])
             # This does not seem to be the correct way to set the state.
             if _new_status:
                 _new_status = 'on'
@@ -218,7 +223,8 @@ def setup(hass, base_config):
             _att = {'friendly_name': _affected_zone[CONF_ZONENAME],
                     'sensor_class': _affected_zone[CONF_ZONETYPE]}
 
-            hass.states.set('binary_sensor.' + _affected_zone[CONF_ZONENAME], _new_status, _att)
+            hass.states.set('binary_sensor.' + _affected_zone[CONF_ZONENAME],
+                            _new_status, _att)
         except KeyError:
             _LOGGER.debug('Zone %d not defined in HA.', zone_number)
 
@@ -239,7 +245,7 @@ def setup(hass, base_config):
 
         return True
 
-    # Overwrite the controllers default callback so it calls the hass functions instead
+    # Overwrite the controllers default callback to call the hass functions
     PARADOX_CONTROLLER.callback_area_armed = update_alarm_armed_cb
     PARADOX_CONTROLLER.callback_area_stay_armed = update_alarm_stay_armed_cb
     PARADOX_CONTROLLER.callback_area_disarmed = update_alarm_disarmed_cb

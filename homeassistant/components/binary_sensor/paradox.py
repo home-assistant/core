@@ -16,19 +16,23 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up Paradox binary sensor platform, based on configuration/yaml file contents."""
+    """
+    Set up Paradox binary sensor platform.
+    Based on configuration/yaml file contents, not auto discovery.
+    """
     # Get the zone information specified in the configuration/yaml file.
     _configured_zones = discovery_info['zones']
     for zone_num in _configured_zones:
         # For each zone specified, get the detail for that zone.
         _device_config_data = ZONE_SCHEMA(_configured_zones[zone_num])
         # Add the zone as a HA device.
-        add_devices([ParadoxBinarySensor(hass,
-                                         zone_num,
-                                         _device_config_data[CONF_ZONENAME],
-                                         _device_config_data[CONF_ZONETYPE],
-                                         PARADOX_CONTROLLER.alarm_state['zone'][zone_num]
-                                        )])
+        add_devices(
+            [ParadoxBinarySensor(hass,
+                                 zone_num,
+                                 _device_config_data[CONF_ZONENAME],
+                                 _device_config_data[CONF_ZONETYPE],
+                                 PARADOX_CONTROLLER.alarm_state['zone'][zone_num]
+                                 )])
     return True
 
 
@@ -53,13 +57,13 @@ class ParadoxBinarySensor(BinarySensorDevice):
         # At startup Alarm State will not contain any zone statuses yet
         # Request the zone status from the alarm panel
         PARADOX_CONTROLLER.submit_zone_status_request(self._zone_number)
-        # No need to wait, the status will be updated when it returns from the panel.
+        # No need to wait, status will be updated when it returns from alarm.
 
         _LOGGER.debug('HA added zone: ' + zone_name)
 
     @property
     def name(self):
-        """Return the name of the binary sensor device. (Zone name/label)"""
+        """Return the name of the binary sensor device (Zone name/label)."""
         _LOGGER.debug('HA reports zone name as ' + self._name)
         return self._name
 
@@ -67,7 +71,7 @@ class ParadoxBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Return true if sensor is on."""
         # Do we need to set/assign the state or is that done by HA later?
-        # self._state = PARADOX_CONTROLLER.alarm_state['zone']['status']['open']
+        # self._state=PARADOX_CONTROLLER.alarm_state['zone']['status']['open']
         # return self._state
         _LOGGER.debug('HA is checking the status of %s', self._name)
         return self._zone_mirror['status']['open']
@@ -83,7 +87,7 @@ class ParadoxBinarySensor(BinarySensorDevice):
         return False
 
     def update(self):
-        """Updates the zone state."""
+        """Update the zone state."""
         # Can this to work...
         # self._state = new_state
         _LOGGER.debug('Updating zone status.')
