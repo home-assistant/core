@@ -13,6 +13,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_DATA, BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import template as template_helper
 
 DOMAIN = "apns"
 APNS_DEVICES = "apns.yaml"
@@ -23,11 +24,11 @@ ATTR_PUSH_ID = "push_id"
 ATTR_NAME = "name"
 
 REGISTER_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_PUSH_ID): cv.template,
+    vol.Required(ATTR_PUSH_ID): cv.string,
     vol.Optional(ATTR_NAME, default=None): cv.string,
 })
 
-REQUIREMENTS = ["apns3==1.0.0"]
+REQUIREMENTS = ["apns2==0.1.1"]
 
 
 def get_service(hass, config):
@@ -45,9 +46,14 @@ def get_service(hass, config):
         logging.error("Certificate must be specified.")
         return None
 
+    topic = config.get('topic')
+    if topic is None:
+        logging.error("Topic must be specified.")
+        return None
+
     sandbox = bool(config.get('sandbox', False))
 
-    service = ApnsNotificationService(hass, name, sandbox, cert_file)
+    service = ApnsNotificationService(hass, name, topic, sandbox, cert_file)
     hass.services.register(DOMAIN,
                            name,
                            service.register,
@@ -64,11 +70,12 @@ class ApnsDevice(object):
     registered for push notifications.
     """
 
-    def __init__(self, push_id, name, tracking_device_id=None):
+    def __init__(self, push_id, name, tracking_device_id=None, disabled=False):
         """Initialize Apns Device."""
         self.device_push_id = push_id
         self.device_name = name
         self.tracking_id = tracking_device_id
+        self.device_disabled = disabled
 
     @property
     def push_id(self):
@@ -100,6 +107,15 @@ class ApnsDevice(object):
         """
         return DEVICE_TRACKER_DOMAIN + '.' + self.tracking_id
 
+    @property
+    def disabled(self):
+        """Should receive notifications."""
+        return self.device_disabled
+
+    def disable(self):
+        """Disable the device from recieving notifications."""
+        self.device_disabled = True
+
     def __eq__(self, other):
         """Return the comparision."""
         if isinstance(other, self.__class__):
@@ -110,11 +126,12 @@ class ApnsDevice(object):
         """Return the comparision."""
         return not self.__eq__(other)
 
-
 class ApnsNotificationService(BaseNotificationService):
-    """Implement the notification service for the AWS SNS service."""
+    """Implement the notification service for the APNS service."""
 
-    def __init__(self, hass, app_name, sandbox, cert_file):
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self, hass, app_name, topic, sandbox, cert_file):
         """Initialize APNS application."""
         self.hass = hass
         self.app_name = app_name
@@ -123,12 +140,14 @@ class ApnsNotificationService(BaseNotificationService):
         self.yaml_path = hass.config.path(app_name + '_' + APNS_DEVICES)
         self.devices = {}
         self.device_states = {}
+        self.topic = topic
         if os.path.isfile(self.yaml_path):
             self.devices = {
                 str(key): ApnsDevice(
                     str(key),
                     value.get('name'),
-                    value.get('tracking_device_id')
+                    value.get('tracking_device_id'),
+                    value.get('disabled', False)
                 )
                 for (key, value) in
                 load_yaml_config_file(self.yaml_path).items()
@@ -161,6 +180,8 @@ class ApnsNotificationService(BaseNotificationService):
         if device.tracking_device_id is not None:
             attributes.append(
                 'tracking_device_id: {}'.format(device.tracking_device_id))
+        if device.disabled:
+            attributes.append('disabled: True')
 
         out.write(device.push_id)
         out.write(": {")
@@ -196,7 +217,7 @@ class ApnsNotificationService(BaseNotificationService):
             self.devices[push_id] = device
             with open(self.yaml_path, 'a') as out:
                 self.write_device(out, device)
-            return
+            return True
 
         if device != current_device:
             self.devices[push_id] = device
@@ -204,14 +225,16 @@ class ApnsNotificationService(BaseNotificationService):
 
         return True
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message=None, **kwargs):
         """Send push message to registered devices."""
-        from apns3 import APNs, Payload
+        from apns2.client import APNsClient
+        from apns2.payload import Payload
+        from apns2.errors import Unregistered
 
-        apns = APNs(
+        apns = APNsClient(
+            self.certificate,
             use_sandbox=self.sandbox,
-            cert_file=self.certificate,
-            key_file=self.certificate)
+            use_alternative_port=False)
 
         device_state = kwargs.get(ATTR_TARGET)
         message_data = kwargs.get(ATTR_DATA)
@@ -219,20 +242,44 @@ class ApnsNotificationService(BaseNotificationService):
         if message_data is None:
             message_data = {}
 
+        if isinstance(message, str):
+            rendered_message = message
+        elif isinstance(message, template_helper.Template):
+            rendered_message = message.render()
+        else:
+            rendered_message = ""
+
         payload = Payload(
-            message,
-            message_data.get("badge"),
-            message_data.get("sound"),
-            message_data.get("category"),
-            message_data.get("custom", {}),
-            message_data.get("content_available", False))
+            alert=rendered_message,
+            badge=message_data.get("badge"),
+            sound=message_data.get("sound"),
+            category=message_data.get("category"),
+            custom=message_data.get("custom", {}),
+            content_available=message_data.get("content_available", False))
+
+        device_update = False
 
         for push_id, device in self.devices.items():
-            if device_state is None:
-                apns.gateway_server.send_notification(push_id, payload)
-            elif device.tracking_device_id is not None:
-                state = self.device_states.get(device.full_tracking_device_id)
-                if state == str(device_state):
-                    apns.gateway_server.send_notification(push_id, payload)
+            if not device.disabled:
+                state = None
+                if device.tracking_device_id is not None:
+                    state = self.device_states.get(
+                        device.full_tracking_device_id)
+
+                if device_state is None or state == str(device_state):
+                    try:
+                        apns.send_notification(
+                            push_id,
+                            payload,
+                            topic=self.topic)
+                    except Unregistered:
+                        logging.error(
+                            "Device %s has unregistered.",
+                            push_id)
+                        device_update = True
+                        device.disable()
+
+        if device_update:
+            self.write_devices()
 
         return True
