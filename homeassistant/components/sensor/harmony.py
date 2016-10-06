@@ -7,32 +7,37 @@ https://home-assistant.io/components/harmony/
 
 import logging
 import homeassistant.components.harmony as harmony
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT
 
 DEPENDENCIES = ['harmony']
 _LOGGER = logging.getLogger(__name__)
-CONF_IP = 'ip'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
 
-    for hub in harmony.HUB_CONF_GLOBAL:
-        add_devices([HarmonySensor(hub[CONF_NAME],
-                                   hub[CONF_USERNAME],
-                                   hub[CONF_PASSWORD],
-                                   hub[CONF_IP],
-                                   hub[CONF_PORT])])
+    for hub in harmony.HARMONY:
+        add_devices([HarmonySensor(harmony.HARMONY[hub]['device'])])
     return True
 
 
 
 class HarmonySensor(harmony.HarmonyDevice):
     """Representation of a Harmony Sensor."""
-    def __init__(self, name, username, password, ip, port):
-        super().__init__(name, username, password, ip, port)
-        self._name = 'harmony_' + self._name
+    def __init__(self, harmony_device):
+        self._harmony_device = harmony_device
+        self._name = 'harmony_' + self._harmony_device.name
+
+    @property
+    def state(self):
+        """Return the state of the Harmony device."""
+        return self.get_status()
+
+
+    def get_status(self):
+        return str(self._harmony_device.state)
+
+
+
    
 
 
