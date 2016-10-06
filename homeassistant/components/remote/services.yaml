@@ -1,0 +1,42 @@
+# Describes the format for available switch services
+
+turn_on:
+  description: Semds the Power On Command
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn on
+      example: 'remote.living_room'
+    activity:
+      description: Activity ID to start
+      example: 'bedroomTV'
+
+turn_off:
+  description: Sends the Power Off Command
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn off
+      example: 'remote.living_room'
+
+send_command:
+  description: Semds a single command to a single device
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to send command from
+      example: 'remote.living_room'
+    device:
+      description: Device ID to send command to
+      example: '32756745'
+    command:
+      description: Command to send
+      example: 'Play'
+
+sync:
+  description: Syncs the remote's configuration
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to sync
+      example: 'remote.living_room'
