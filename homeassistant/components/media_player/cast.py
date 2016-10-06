@@ -68,6 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     casts = []
 
+    # in most cases this call will be executed only. In some cases discover_chromecasts() is also called
     all_chromecasts = pychromecast.get_chromecasts()
 
     for host in hosts:
