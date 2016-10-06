@@ -114,7 +114,6 @@ def run_coroutine_threadsafe(coro, loop):
         except Exception as exc:
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
-            raise
 
     loop.call_soon_threadsafe(callback)
     return future
@@ -161,7 +160,6 @@ def run_callback_threadsafe(loop, callback, *args):
         except Exception as exc:
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
-            raise
 
     loop.call_soon_threadsafe(run_callback)
     return future
