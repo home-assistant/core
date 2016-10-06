@@ -10,7 +10,7 @@ Focus for getting the PRT3 to work for now.
 Because the Evisalink looks very close to the IP100/1500, the evisalink code
 was changed to IP100/150 and then commented out for later testing.
 
-I'm hoping that this file can cater for both comms modules (USB/IP).
+I'm hoping that the hub can cater for both comms modules (USB/IP).
 I'm also assuming that both modules may be used at the same time.
 """
 import logging

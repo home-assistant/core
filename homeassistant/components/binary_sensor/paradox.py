@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ParadoxBinarySensor(BinarySensorDevice):
-    """Representation of an Paradox zone as binary sensor."""
+    """Representation of an Paradox zone as a binary sensor."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, zone_number, zone_name, zone_type, zone_info):

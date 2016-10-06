@@ -106,17 +106,17 @@ class ParadoxAlarm(alarm.AlarmControlPanel):
             return STATE_UNKNOWN
 
     def alarm_disarm(self, code=None):
-        """Send disarm command."""
+        """Send disarm command. Planned for next version."""
         raise NotImplementedError()
 
     def alarm_arm_home(self, code=None):
-        """Send arm home command."""
+        """Send arm home command. Planned for next version."""
         raise NotImplementedError()
 
     def alarm_arm_away(self, code=None):
-        """Send arm away command."""
+        """Send arm away command. Planned for next version."""
         raise NotImplementedError()
 
     def alarm_trigger(self, code=None):
-        """Send alarm trigger command."""
+        """Send alarm trigger command. Planned for next version."""
         raise NotImplementedError()
