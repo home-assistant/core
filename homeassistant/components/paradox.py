@@ -210,8 +210,9 @@ def setup(hass, base_config):
         """Process the zone status change received from alarm panel."""
         # Rather define 'zone' as a constant.
         # This is not needed, the new status is getting passed in!
-        _new_status = PARADOX_CONTROLLER.alarm_state['zone']
-        [zone_number]['status']['open']
+        _new_status = PARADOX_CONTROLLER.alarm_state['zone'][zone_number][
+            'status'
+            ]['open']
         _LOGGER.debug('Zone %d received new status %s.',
                       zone_number, _new_status)
         try:
