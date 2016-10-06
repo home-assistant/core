@@ -1,6 +1,7 @@
 """Asyncio backports for Python 3.4.3 compatibility."""
 import concurrent.futures
 import threading
+import logging
 from asyncio import coroutines
 from asyncio.futures import Future
 
@@ -11,6 +12,9 @@ except ImportError:
     # pylint: disable=unused-import
     from asyncio import async
     ensure_future = async
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _set_result_unless_cancelled(fut, result):
@@ -114,6 +118,8 @@ def run_coroutine_threadsafe(coro, loop):
         except Exception as exc:
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
+            else:
+                _LOGGER.warning("Exception on lost future: %s", exc)
 
     loop.call_soon_threadsafe(callback)
     return future
@@ -160,6 +166,8 @@ def run_callback_threadsafe(loop, callback, *args):
         except Exception as exc:
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
+            else:
+                _LOGGER.warning("Exception on lost future: %s", exc)
 
     loop.call_soon_threadsafe(run_callback)
     return future
