@@ -89,7 +89,7 @@ ZONE_SCHEMA = vol.Schema({
 def setup(hass, base_config):
     """
     Set up a Home Assistant component to represent a Paradox Alarm, as a hub.
-    
+
     I.e. it will consist of an alarm platform to represent each alarm area/
     partition, as well as a binary sensor platform to represent each zone.
     """
@@ -152,13 +152,13 @@ def setup(hass, base_config):
         try:
             # Area in use on alarm panel might not be setup/defined in HA
             _affected_area = PARTITION_SCHEMA(_partitions[area_number])
-            _LOGGER.debug('HA area %s to be armed.', 
+            _LOGGER.debug('HA area %s to be armed.',
                           _affected_area[CONF_PARTITIONNAME])
             # This does not seem to be the correct way to set the state.
 
             _att = {'friendly_name': _affected_area[CONF_PARTITIONNAME]}
 
-            hass.states.set('alarm_control_panel.' + 
+            hass.states.set('alarm_control_panel.' +
                             _affected_area[CONF_PARTITIONNAME],
                             STATE_ALARM_ARMED_AWAY, _att)
         except KeyError:
@@ -210,7 +210,8 @@ def setup(hass, base_config):
         """Process the zone status change received from alarm panel."""
         # Rather define 'zone' as a constant.
         # This is not needed, the new status is getting passed in!
-        _new_status = PARADOX_CONTROLLER.alarm_state['zone'][zone_number]['status']['open']
+        _new_status = PARADOX_CONTROLLER.alarm_state['zone']\
+                        [zone_number]['status']['open']
         _LOGGER.debug('Zone %d received new status %s.',
                       zone_number, _new_status)
         try:

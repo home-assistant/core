@@ -1,5 +1,6 @@
 """
 Support for Paradox Alarm area/partition states.
+
  - represented as an alarm control panel.
 
 For more details about this platform, please refer to the documentation at
@@ -29,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """
     Set up the Paradox alarm control panel platform.
-    
+
     Based on configuration file contents, not auto discovery.
     """
     # Get the area information specified in the configuration/yaml file.
@@ -78,7 +79,7 @@ class ParadoxAlarm(alarm.AlarmControlPanel):
     def name(self):
         """
         Return the name of the alarm control panel device.
-        
+
         (Area/Partition name/label)
         """
         _LOGGER.debug('HA reports area name as ' + self._name)

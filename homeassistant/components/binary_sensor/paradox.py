@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """
     Set up Paradox binary sensor platform.
-    
+
     Based on configuration/yaml file contents, not auto discovery.
     """
     # Get the zone information specified in the configuration/yaml file.
