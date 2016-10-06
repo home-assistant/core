@@ -319,6 +319,7 @@ class HomeAssistant(object):
         self.state = CoreState.not_running
         self.loop.stop()
 
+    # pylint: disable=no-self-use
     def _async_exception_handler(self, loop, context):
         """Handle all exception inside the core loop."""
         _LOGGER.warning(
