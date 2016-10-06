@@ -139,6 +139,7 @@ class TestWundergroundSetup(unittest.TestCase):
         wunderground.setup_platform(self.hass, VALID_CONFIG, self.add_devices,
                                     None)
         for device in self.DEVICES:
+            device.update()
             self.assertTrue(str(device.name).startswith('PWS_'))
             if device.name == 'PWS_weather':
                 self.assertEqual(ICON_URL, device.entity_picture)
