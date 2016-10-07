@@ -73,7 +73,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id,
             'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
-            away_hide=True)
+            hide_if_away=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
                                         TEST_PLATFORM))
@@ -209,7 +209,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id, None,
-            friendly_name, picture, away_hide=True)
+            friendly_name, picture, hide_if_away=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
@@ -226,7 +226,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id, None,
-            away_hide=True)
+            hide_if_away=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
         scanner = get_component('device_tracker.test').SCANNER
@@ -244,7 +244,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id, None,
-            away_hide=True)
+            hide_if_away=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
         scanner = get_component('device_tracker.test').SCANNER

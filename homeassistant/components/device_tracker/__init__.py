@@ -282,7 +282,7 @@ class Device(Entity):
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
                  track: bool, dev_id: str, mac: str, name: str=None,
                  picture: str=None, gravatar: str=None,
-                 away_hide: bool=False) -> None:
+                 hide_if_away: bool=False) -> None:
         """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
@@ -307,7 +307,7 @@ class Device(Entity):
         else:
             self.config_picture = picture
 
-        self.away_hide = away_hide
+        self.away_hide = hide_if_away
 
     @property
     def name(self):
@@ -406,8 +406,8 @@ def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
         vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
         vol.Optional('gravatar', default=None): vol.Any(None, cv.string),
         vol.Optional('picture', default=None): vol.Any(None, cv.string),
-        vol.Optional(CONF_CONSIDER_HOME, default=consider_home
-                     .total_seconds()): cv.positive_int
+        vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
+            cv.time_period, cv.positive_timedelta)
     })
     try:
         result = []
@@ -415,13 +415,10 @@ def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
         for dev_id, device in devices.items():
             try:
                 device = dev_schema(device)
+                device['dev_id'] = cv.slug(dev_id)
             except vol.Invalid as exp:
                 log_exception(exp, dev_id, devices)
             else:
-                device['dev_id'] = dev_id.lower()
-                device['away_hide'] = device.pop(CONF_AWAY_HIDE)
-                device['consider_home'] = timedelta(
-                    seconds=device['consider_home'])
                 result.append(Device(hass, **device))
         return result
     except (HomeAssistantError, FileNotFoundError):
