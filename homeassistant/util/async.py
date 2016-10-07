@@ -120,7 +120,7 @@ def run_coroutine_threadsafe(coro, loop):
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
             else:
-                _LOGGER.warning("Exception on lost future: %s", exc)
+                _LOGGER.warning("Exception on lost future: ", exc_info=True)
 
     loop.call_soon_threadsafe(callback)
     return future
@@ -169,7 +169,7 @@ def run_callback_threadsafe(loop, callback, *args):
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
             else:
-                _LOGGER.warning("Exception on lost future: %s", exc)
+                _LOGGER.warning("Exception on lost future: ", exc_info=True)
 
     loop.call_soon_threadsafe(run_callback)
     return future
