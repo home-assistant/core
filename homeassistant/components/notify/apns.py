@@ -126,6 +126,7 @@ class ApnsDevice(object):
         """Return the comparision."""
         return not self.__eq__(other)
 
+
 class ApnsNotificationService(BaseNotificationService):
     """Implement the notification service for the APNS service."""
 
