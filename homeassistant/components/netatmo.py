@@ -1,5 +1,5 @@
 """
-Support for the Netatmo devices (Weather Station and Welcome camera).
+Support for the Netatmo devices (Weather Station, Welcome camera and Thermostat).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/netatmo/
@@ -45,7 +45,7 @@ def setup(hass, config):
         NETATMO_AUTH = lnetatmo.ClientAuth(
             config[DOMAIN][CONF_API_KEY], config[DOMAIN][CONF_SECRET_KEY],
             config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD],
-            'read_station read_camera access_camera')
+            'read_station read_camera access_camera read_thermostat write_thermostat')
     except HTTPError:
         _LOGGER.error("Unable to connect to Netatmo API")
         return False
