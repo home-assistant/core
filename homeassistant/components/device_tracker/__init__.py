@@ -43,6 +43,8 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 YAML_DEVICES = 'known_devices.yaml'
 
 CONF_TRACK_NEW = 'track_new_devices'
+DEFAULT_TRACK_NEW = True
+
 CONF_CONSIDER_HOME = 'consider_home'
 
 CONF_SCAN_INTERVAL = 'interval_seconds'
@@ -67,7 +69,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 
 _CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.All(cv.ensure_list, [
     vol.Schema({
-        vol.Optional(CONF_TRACK_NEW, default=True): cv.boolean,
+        vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
         vol.Optional(
             CONF_CONSIDER_HOME, default=timedelta(seconds=180)): vol.All(
                 cv.time_period, cv.positive_timedelta)
