@@ -305,22 +305,11 @@ class TestApns(unittest.TestCase):
 
         notify.setup(hass, config)
 
-        states_received = Event()
-
-        def state_changed_listener(entity_id, from_s, to_s):
-            states_received.set()
-
-        track_state_change(
-            hass,
-            ["device_tracker.tracking456"],
-            state_changed_listener)
-
         hass.states.set('device_tracker.tracking456',
                         'home',
                         force_update=True)
 
-        states_received.wait(5)
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
         self.assertTrue(hass.services.call('notify', 'test_app',
                                            {'message': 'Hello',
