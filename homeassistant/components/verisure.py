@@ -16,7 +16,7 @@ from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['vsure==0.10.2']
+REQUIREMENTS = ['vsure==0.10.3']
 
 _LOGGER = logging.getLogger(__name__)
 

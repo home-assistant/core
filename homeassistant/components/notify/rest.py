@@ -75,8 +75,10 @@ class RestNotificationService(BaseNotificationService):
             data[self._title_param_name] = kwargs.get(ATTR_TITLE,
                                                       ATTR_TITLE_DEFAULT)
 
-        if self._target_param_name is not None:
-            data[self._target_param_name] = kwargs.get(ATTR_TARGET)
+        if self._target_param_name is not None and ATTR_TARGET in kwargs:
+            # Target is a list as of 0.29 and we don't want to break existing
+            # integrations, so just return the first target in the list.
+            data[self._target_param_name] = kwargs[ATTR_TARGET][0]
 
         if self._method == 'POST':
             response = requests.post(self._resource, data=data, timeout=10)

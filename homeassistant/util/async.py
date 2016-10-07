@@ -1,5 +1,6 @@
 """Asyncio backports for Python 3.4.3 compatibility."""
 import concurrent.futures
+import threading
 from asyncio import coroutines
 from asyncio.futures import Future
 
@@ -97,6 +98,10 @@ def run_coroutine_threadsafe(coro, loop):
 
     Return a concurrent.futures.Future to access the result.
     """
+    ident = loop.__dict__.get("_thread_ident")
+    if ident is not None and ident == threading.get_ident():
+        raise RuntimeError('Cannot be called from within the event loop')
+
     if not coroutines.iscoroutine(coro):
         raise TypeError('A coroutine object is required')
     future = concurrent.futures.Future()
@@ -122,6 +127,10 @@ def fire_coroutine_threadsafe(coro, loop):
     is intended for fire-and-forget use. This reduces the
     work involved to fire the function on the loop.
     """
+    ident = loop.__dict__.get("_thread_ident")
+    if ident is not None and ident == threading.get_ident():
+        raise RuntimeError('Cannot be called from within the event loop')
+
     if not coroutines.iscoroutine(coro):
         raise TypeError('A coroutine object is required: %s' % coro)
 
@@ -139,6 +148,10 @@ def run_callback_threadsafe(loop, callback, *args):
 
     Return a concurrent.futures.Future to access the result.
     """
+    ident = loop.__dict__.get("_thread_ident")
+    if ident is not None and ident == threading.get_ident():
+        raise RuntimeError('Cannot be called from within the event loop')
+
     future = concurrent.futures.Future()
 
     def run_callback():

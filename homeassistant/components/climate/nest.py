@@ -8,11 +8,11 @@ import logging
 import voluptuous as vol
 import homeassistant.components.nest as nest
 from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice,
-    PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
+    PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    ATTR_TEMPERATURE)
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_SCAN_INTERVAL, STATE_ON, TEMP_FAHRENHEIT)
-from homeassistant.util.temperature import convert as convert_temperature
+    TEMP_CELSIUS, CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
 
 DEPENDENCIES = ['nest']
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                  for structure, device in nest.devices()])
 
 
-# pylint: disable=abstract-method
+# pylint: disable=abstract-method,too-many-public-methods
 class NestThermostat(ClimateDevice):
     """Representation of a Nest thermostat."""
 
@@ -40,6 +40,8 @@ class NestThermostat(ClimateDevice):
         self.structure = structure
         self.device = device
         self._fan_list = [STATE_ON, STATE_AUTO]
+        self._operation_list = [STATE_HEAT, STATE_COOL, STATE_AUTO,
+                                STATE_OFF]
 
     @property
     def name(self):
@@ -57,10 +59,7 @@ class NestThermostat(ClimateDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        if self.device.measurment_scale == 'F':
-            return TEMP_FAHRENHEIT
-        elif self.device.measurement_scale == 'C':
-            return TEMP_CELSIUS
+        return TEMP_CELSIUS
 
     @property
     def device_state_attributes(self):
@@ -69,7 +68,6 @@ class NestThermostat(ClimateDevice):
         return {
             "humidity": self.device.humidity,
             "target_humidity": self.device.target_humidity,
-            "mode": self.device.mode
         }
 
     @property
@@ -78,14 +76,26 @@ class NestThermostat(ClimateDevice):
         return self.device.temperature
 
     @property
-    def operation(self):
+    def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if self.device.hvac_ac_state is True:
+        if self.device.mode == 'cool':
             return STATE_COOL
-        elif self.device.hvac_heater_state is True:
+        elif self.device.mode == 'heat':
             return STATE_HEAT
+        elif self.device.mode == 'range':
+            return STATE_AUTO
+        elif self.device.mode == 'off':
+            return STATE_OFF
         else:
-            return STATE_IDLE
+            return STATE_UNKNOWN
+
+    @property
+    def target_temperature(self):
+        """Return the temperature we try to reach."""
+        if self.device.mode != 'range' and not self.is_away_mode_on:
+            return self.device.target
+        else:
+            return None
 
     @property
     def target_temperature_low(self):
@@ -95,7 +105,8 @@ class NestThermostat(ClimateDevice):
             return self.device.away_temperature[0]
         if self.device.mode == 'range':
             return self.device.target[0]
-        return self.target_temperature
+        else:
+            return None
 
     @property
     def target_temperature_high(self):
@@ -105,7 +116,8 @@ class NestThermostat(ClimateDevice):
             return self.device.away_temperature[1]
         if self.device.mode == 'range':
             return self.device.target[1]
-        return self.target_temperature
+        else:
+            return None
 
     @property
     def is_away_mode_on(self):
@@ -114,20 +126,32 @@ class NestThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None and \
-           kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
-            target_temp_high = convert_temperature(kwargs.get(
-                ATTR_TARGET_TEMP_HIGH), self._unit, TEMP_CELSIUS)
-            target_temp_low = convert_temperature(kwargs.get(
-                ATTR_TARGET_TEMP_LOW), self._unit, TEMP_CELSIUS)
+        target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        if target_temp_low is not None and target_temp_high is not None:
 
-        temp = (target_temp_low, target_temp_high)
+            if self.device.mode == 'range':
+                temp = (target_temp_low, target_temp_high)
+        else:
+            temp = kwargs.get(ATTR_TEMPERATURE)
         _LOGGER.debug("Nest set_temperature-output-value=%s", temp)
         self.device.target = temp
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        self.device.mode = operation_mode
+        if operation_mode == STATE_HEAT:
+            self.device.mode = 'heat'
+        elif operation_mode == STATE_COOL:
+            self.device.mode = 'cool'
+        elif operation_mode == STATE_AUTO:
+            self.device.mode = 'range'
+        elif operation_mode == STATE_OFF:
+            self.device.mode = 'off'
+
+    @property
+    def operation_list(self):
+        """List of available operation modes."""
+        return self._operation_list
 
     def turn_away_mode_on(self):
         """Turn away on."""

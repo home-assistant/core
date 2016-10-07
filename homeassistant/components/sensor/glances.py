@@ -1,5 +1,5 @@
 """
-Support gahtering system information of hosts which are running glances.
+Support gathering system information of hosts which are running glances.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.glances/
@@ -24,6 +24,8 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Glances'
 DEFAULT_PORT = '61208'
 
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%'],
     'disk_use': ['Disk Use', 'GiB'],
@@ -34,11 +36,11 @@ SENSOR_TYPES = {
     'swap_use_percent': ['Swap Use', '%'],
     'swap_use': ['Swap Use', 'GiB'],
     'swap_free': ['Swap Free', 'GiB'],
-    'processor_load': ['CPU Load', None],
-    'process_running': ['Running', None],
-    'process_total': ['Total', None],
-    'process_thread': ['Thread', None],
-    'process_sleeping': ['Sleeping', None]
+    'processor_load': ['CPU Load', '15 min'],
+    'process_running': ['Running', 'Count'],
+    'process_total': ['Total', 'Count'],
+    'process_thread': ['Thread', 'Count'],
+    'process_sleeping': ['Sleeping', 'Count']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -48,10 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_RESOURCES, default=['disk_use']):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
-
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 # pylint: disable=unused-variable
@@ -66,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         response = requests.get(url, timeout=10)
         if not response.ok:
-            _LOGGER.error('Response status is "%s"', response.status_code)
+            _LOGGER.error("Response status is '%s'", response.status_code)
             return False
     except requests.exceptions.ConnectionError:
         _LOGGER.error("No route to resource/endpoint: %s", url)

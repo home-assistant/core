@@ -1,8 +1,85 @@
 """Tests for async util methods from Python source."""
 import asyncio
 from asyncio import test_utils
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from homeassistant.util import async as hasync
+
+
+@patch('asyncio.coroutines.iscoroutine', return_value=True)
+@patch('concurrent.futures.Future')
+@patch('threading.get_ident')
+def test_run_coroutine_threadsafe_from_inside_event_loop(mock_ident, _, __):
+    """Testing calling run_coroutine_threadsafe from inside an event loop."""
+    coro = MagicMock()
+    loop = MagicMock()
+
+    loop._thread_ident = None
+    mock_ident.return_value = 5
+    hasync.run_coroutine_threadsafe(coro, loop)
+    assert len(loop.call_soon_threadsafe.mock_calls) == 1
+
+    loop._thread_ident = 5
+    mock_ident.return_value = 5
+    with pytest.raises(RuntimeError):
+        hasync.run_coroutine_threadsafe(coro, loop)
+    assert len(loop.call_soon_threadsafe.mock_calls) == 1
+
+    loop._thread_ident = 1
+    mock_ident.return_value = 5
+    hasync.run_coroutine_threadsafe(coro, loop)
+    assert len(loop.call_soon_threadsafe.mock_calls) == 2
+
+
+@patch('asyncio.coroutines.iscoroutine', return_value=True)
+@patch('concurrent.futures.Future')
+@patch('threading.get_ident')
+def test_fire_coroutine_threadsafe_from_inside_event_loop(mock_ident, _, __):
+    """Testing calling fire_coroutine_threadsafe from inside an event loop."""
+    coro = MagicMock()
+    loop = MagicMock()
+
+    loop._thread_ident = None
+    mock_ident.return_value = 5
+    hasync.fire_coroutine_threadsafe(coro, loop)
+    assert len(loop.call_soon_threadsafe.mock_calls) == 1
+
+    loop._thread_ident = 5
+    mock_ident.return_value = 5
+    with pytest.raises(RuntimeError):
+        hasync.fire_coroutine_threadsafe(coro, loop)
+    assert len(loop.call_soon_threadsafe.mock_calls) == 1
+
+    loop._thread_ident = 1
+    mock_ident.return_value = 5
+    hasync.fire_coroutine_threadsafe(coro, loop)
+    assert len(loop.call_soon_threadsafe.mock_calls) == 2
+
+
+@patch('concurrent.futures.Future')
+@patch('threading.get_ident')
+def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _):
+    """Testing calling run_callback_threadsafe from inside an event loop."""
+    callback = MagicMock()
+    loop = MagicMock()
+
+    loop._thread_ident = None
+    mock_ident.return_value = 5
+    hasync.run_callback_threadsafe(loop, callback)
+    assert len(loop.call_soon_threadsafe.mock_calls) == 1
+
+    loop._thread_ident = 5
+    mock_ident.return_value = 5
+    with pytest.raises(RuntimeError):
+        hasync.run_callback_threadsafe(loop, callback)
+    assert len(loop.call_soon_threadsafe.mock_calls) == 1
+
+    loop._thread_ident = 1
+    mock_ident.return_value = 5
+    hasync.run_callback_threadsafe(loop, callback)
+    assert len(loop.call_soon_threadsafe.mock_calls) == 2
 
 
 class RunCoroutineThreadsafeTests(test_utils.TestCase):

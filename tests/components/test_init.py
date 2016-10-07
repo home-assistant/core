@@ -77,7 +77,8 @@ class TestComponentsCore(unittest.TestCase):
         service_call = ha.ServiceCall('homeassistant', 'turn_on', {
             'entity_id': ['light.test', 'sensor.bla', 'light.bla']
         })
-        self.hass.services._services['homeassistant']['turn_on'](service_call)
+        service = self.hass.services._services['homeassistant']['turn_on']
+        service.func(service_call)
 
         self.assertEqual(2, mock_call.call_count)
         self.assertEqual(

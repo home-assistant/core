@@ -202,8 +202,7 @@ class EmonCmsData(object):
         """Get the latest data."""
         try:
             req = requests.get(self._url, params={"apikey": self._apikey},
-                               verify=False, allow_redirects=True,
-                               timeout=5)
+                               allow_redirects=True, timeout=5)
         except requests.exceptions.RequestException as exception:
             _LOGGER.error(exception)
             return

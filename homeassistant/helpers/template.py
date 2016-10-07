@@ -149,8 +149,8 @@ class Template(object):
         global_vars = ENV.make_globals({
             'closest': location_methods.closest,
             'distance': location_methods.distance,
-            'is_state': self.hass.states.async_is_state,
-            'is_state_attr': self.hass.states.async_is_state_attr,
+            'is_state': self.hass.states.is_state,
+            'is_state_attr': self.hass.states.is_state_attr,
             'states': AllStates(self.hass),
         })
 
@@ -158,6 +158,12 @@ class Template(object):
             ENV, self._compiled_code, global_vars, None)
 
         return self._compiled
+
+    def __eq__(self, other):
+        """Compare template with another."""
+        return (self.__class__ == other.__class__ and
+                self.template == other.template and
+                self.hass == other.hass)
 
 
 class AllStates(object):
