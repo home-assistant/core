@@ -5,9 +5,10 @@ import os
 import homeassistant.components.notify as notify
 from tests.common import get_test_home_assistant
 from homeassistant.config import load_yaml_config_file
+from homeassistant.helpers.event import track_state_change
 from unittest.mock import patch
 from apns2.errors import Unregistered
-
+from threading import Event
 
 class TestApns(unittest.TestCase):
     """Test the APNS component."""
@@ -303,11 +304,21 @@ class TestApns(unittest.TestCase):
 
         notify.setup(hass, config)
 
+        states_received = Event()
+
+        def state_changed_listener(entity_id, from_s, to_s):
+            states_received.set()
+
+        track_state_change(
+            hass,
+            ["device_tracker.tracking456"],
+            state_changed_listener)
+
         hass.states.set('device_tracker.tracking456',
                         'home',
                         force_update=True)
 
-        hass.pool.block_till_done()
+        states_received.wait(5)
 
         self.assertTrue(hass.services.call('notify', 'test_app',
                                            {'message': 'Hello',
