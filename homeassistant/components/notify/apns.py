@@ -154,22 +154,25 @@ class ApnsNotificationService(BaseNotificationService):
                 load_yaml_config_file(self.yaml_path).items()
             }
 
-        def state_changed_listener(entity_id, from_s, to_s):
-            """
-            Listener for sate change.
-
-            Track device state change if a device
-            has a tracking id specified.
-            """
-            self.device_states[entity_id] = str(to_s.state)
-            return
-
         tracking_ids = [
             device.full_tracking_device_id
             for (key, device) in self.devices.items()
             if device.tracking_device_id is not None
         ]
-        track_state_change(hass, tracking_ids, state_changed_listener)
+        track_state_change(
+            hass,
+            tracking_ids,
+            self.device_state_changed_listener)
+
+    def device_state_changed_listener(self, entity_id, from_s, to_s):
+        """
+        Listener for sate change.
+
+        Track device state change if a device
+        has a tracking id specified.
+        """
+        self.device_states[entity_id] = str(to_s.state)
+        return
 
     @staticmethod
     def write_device(out, device):

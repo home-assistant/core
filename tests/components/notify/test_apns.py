@@ -3,12 +3,12 @@ import unittest
 import os
 
 import homeassistant.components.notify as notify
+from homeassistant.core import State
+from homeassistant.components.notify.apns import ApnsNotificationService
 from tests.common import get_test_home_assistant
 from homeassistant.config import load_yaml_config_file
-from homeassistant.helpers.event import track_state_change
 from unittest.mock import patch
 from apns2.errors import Unregistered
-from threading import Event
 
 
 class TestApns(unittest.TestCase):
@@ -288,14 +288,7 @@ class TestApns(unittest.TestCase):
     def test_send_with_state(self, mock_client):
         """Test updating an existing device."""
         send = mock_client.return_value.send_notification
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
-        }
+
         hass = get_test_home_assistant()
 
         devices_path = hass.config.path('test_app_apns.yaml')
@@ -303,18 +296,22 @@ class TestApns(unittest.TestCase):
             out.write('1234: {name: test device 1, tracking_device_id: tracking123}\n')  # nopep8
             out.write('5678: {name: test device 2, tracking_device_id: tracking456}\n')  # nopep8
 
-        notify.setup(hass, config)
+        notify_service = ApnsNotificationService(
+            hass,
+            'test_app',
+            'testapp.appname',
+            False,
+            'test_app.pem'
+        )
 
-        hass.states.set('device_tracker.tracking456',
-                        'home',
-                        force_update=True)
+        notify_service.device_state_changed_listener(
+            'device_tracker.tracking456',
+            State('device_tracker.tracking456', None),
+            State('device_tracker.tracking456', 'home'))
 
         hass.block_till_done()
 
-        self.assertTrue(hass.services.call('notify', 'test_app',
-                                           {'message': 'Hello',
-                                            'target': 'home'},
-                                           blocking=True))
+        notify_service.send_message(message='Hello', target='home')
 
         self.assertTrue(send.called)
         self.assertEqual(1, len(send.mock_calls))
