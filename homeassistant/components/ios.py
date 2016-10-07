@@ -92,7 +92,7 @@ ACTION_SCHEMA = vol.Schema({
                  default=ATTR_DEFAULT_BEHAVIOR): vol.In(BEHAVIORS),
     vol.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_BUTTON_TITLE): cv.string,
     vol.Optional(CONF_PUSH_ACTIONS_TEXT_INPUT_PLACEHOLDER): cv.string,
-})
+}, extra=vol.ALLOW_EXTRA)
 
 ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [ACTION_SCHEMA])
 
@@ -108,7 +108,7 @@ CONFIG_SCHEMA = vol.Schema({
     }
 }, extra=vol.ALLOW_EXTRA)
 
-IDENTIFY_DEVICE_SCHEMA = {
+IDENTIFY_DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_DEVICE_NAME): cv.string,
     vol.Required(ATTR_DEVICE_LOCALIZED_MODEL): cv.string,
     vol.Required(ATTR_DEVICE_MODEL): cv.string,
@@ -116,18 +116,17 @@ IDENTIFY_DEVICE_SCHEMA = {
     vol.Required(ATTR_DEVICE_SYSTEM_VERSION): cv.string,
     vol.Required(ATTR_DEVICE_TYPE): cv.string,
     vol.Required(ATTR_DEVICE_SYSTEM_NAME): cv.string,
-}
+}, extra=vol.ALLOW_EXTRA)
 
-IDENTIFY_DEVICE_SCHEMA_CONTAINER = vol.All(dict,
-                                           vol.Schema(IDENTIFY_DEVICE_SCHEMA))
+IDENTIFY_DEVICE_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_DEVICE_SCHEMA)
 
-IDENTIFY_APP_SCHEMA = {
+IDENTIFY_APP_SCHEMA = vol.Schema({
     vol.Required(ATTR_APP_BUNDLE_IDENTIFER): cv.string,
     vol.Required(ATTR_APP_BUILD_NUMBER): cv.positive_int,
     vol.Required(ATTR_APP_VERSION_NUMBER): cv.positive_int
-}
+}, extra=vol.ALLOW_EXTRA)
 
-IDENTIFY_APP_SCHEMA_CONTAINER = vol.All(dict, vol.Schema(IDENTIFY_APP_SCHEMA))
+IDENTIFY_APP_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_APP_SCHEMA)
 
 IDENTIFY_SCHEMA = vol.Schema({
     vol.Required(ATTR_DEVICE): IDENTIFY_DEVICE_SCHEMA_CONTAINER,
