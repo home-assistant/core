@@ -398,15 +398,32 @@ class Device(Entity):
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     """Load devices from YAML configuration file."""
+    dev_schema = vol.Schema({
+        vol.Required('name'): cv.string,
+        vol.Optional('track', default=False): cv.boolean,
+        vol.Optional('mac', default=None): vol.Any(None, vol.All(cv.string,
+                                                                 vol.Upper)),
+        vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
+        vol.Optional('gravatar', default=None): vol.Any(None, cv.string),
+        vol.Optional('picture', default=None): vol.Any(None, cv.string),
+        vol.Optional(CONF_CONSIDER_HOME, default=consider_home
+                     .total_seconds()): cv.positive_int
+    })
     try:
-        return [
-            Device(hass, consider_home, device.get('track', False),
-                   str(dev_id).lower(), None if device.get('mac') is None
-                   else str(device.get('mac')).upper(),
-                   device.get('name'), device.get('picture'),
-                   device.get('gravatar'),
-                   device.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
-            for dev_id, device in load_yaml_config_file(path).items()]
+        result = []
+        devices = load_yaml_config_file(path)
+        for dev_id, device in devices.items():
+            try:
+                device = dev_schema(device)
+            except vol.Invalid as exp:
+                log_exception(exp, dev_id, devices)
+            else:
+                device['dev_id'] = dev_id.lower()
+                device['away_hide'] = device.pop(CONF_AWAY_HIDE)
+                device['consider_home'] = timedelta(
+                    seconds=device['consider_home'])
+                result.append(Device(hass, **device))
+        return result
     except (HomeAssistantError, FileNotFoundError):
         # When YAML file could not be loaded/did not contain a dict
         return []

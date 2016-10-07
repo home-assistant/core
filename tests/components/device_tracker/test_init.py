@@ -59,15 +59,13 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     def test_reading_broken_yaml_config(self):  # pylint: disable=no-self-use
         """Test when known devices contains invalid data."""
         files = {'empty.yaml': '',
-                 'bad.yaml': '100',
-                 'ok.yaml': 'my_device:\n  name: Device'}
+                 'nodict.yaml': '100',
+                 'allok.yaml': 'my_device:\n  name: Device'}
+        args = {'hass': self.hass, 'consider_home': timedelta(seconds=60)}
         with patch_yaml_files(files):
-            # File is empty
-            assert device_tracker.load_config('empty.yaml', None, False) == []
-            # File contains a non-dict format
-            assert device_tracker.load_config('bad.yaml', None, False) == []
-            # A file that works fine
-            assert len(device_tracker.load_config('ok.yaml', None, False)) == 1
+            assert device_tracker.load_config('empty.yaml', **args) == []
+            assert device_tracker.load_config('nodict.yaml', **args) == []
+            assert len(device_tracker.load_config('allok.yaml', **args)) == 1
 
     def test_reading_yaml_config(self):
         """Test the rendering of the YAML configuration."""
