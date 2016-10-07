@@ -40,9 +40,16 @@ class NestThermostat(ClimateDevice):
         self.structure = structure
         self.device = device
         self._fan_list = [STATE_ON, STATE_AUTO]
+        
+        """Not all nest devices support both cooling and heating so remove unused options"""
         self._operation_list = [STATE_HEAT, STATE_COOL, STATE_AUTO,
                                 STATE_OFF]
-
+                                
+        if(self.can_cool and not self.can_heat):
+            self._operation_list = [STATE_COOL, STATE_OFF]
+        elif(self.can_heat and not self.can_cool):
+            self._operation_list = [STATE_HEAT, STATE_OFF]
+        
     @property
     def name(self):
         """Return the name of the nest, if any."""
@@ -64,11 +71,15 @@ class NestThermostat(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        # Move these to Thermostat Device and make them global
-        return {
-            "humidity": self.device.humidity,
-            "target_humidity": self.device.target_humidity,
-        }
+        if( self.has_humidifier or self.has_dehumidifier ):
+            # Move these to Thermostat Device and make them global
+            return {
+                "humidity": self.device.humidity,
+                "target_humidity": self.device.target_humidity,
+            }
+        else:
+            """There is no way to control humidity so do not publish humidity and target_humidity"""
+            return {}
 
     @property
     def current_temperature(self):
@@ -163,9 +174,13 @@ class NestThermostat(ClimateDevice):
 
     @property
     def current_fan_mode(self):
-        """Return whether the fan is on."""
-        return STATE_ON if self.device.fan else STATE_AUTO
-
+        if( self.has_fan ):
+            """Return whether the fan is on."""
+            return STATE_ON if self.device.fan else STATE_AUTO
+        else:
+            """No Fan available so disable slider."""
+            return None
+            
     @property
     def fan_list(self):
         """List of available fan modes."""
@@ -196,3 +211,24 @@ class NestThermostat(ClimateDevice):
     def update(self):
         """Python-nest has its own mechanism for staying up to date."""
         pass
+
+    """ Exposing extra properties these properties will probally be added to python-nest 2.11 using getter """
+    @property
+    def can_heat(self):
+        return self.device._shared['can_heat']
+
+    @property
+    def can_cool(self):
+        return self.device._shared['can_cool']
+
+    @property
+    def has_humidifier(self):
+        return self.device._device['has_humidifier']
+
+    @property
+    def has_dehumidifier(self):
+        return self.device._device['has_dehumidifier']
+
+    @property
+    def has_fan(self):
+        return self.device._device['has_fan']
