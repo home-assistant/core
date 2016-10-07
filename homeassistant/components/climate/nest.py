@@ -174,6 +174,7 @@ class NestThermostat(ClimateDevice):
 
     @property
     def current_fan_mode(self):
+        """Return whether the fan is on."""
         if self.has_fan:
             # Return whether the fan is on
             return STATE_ON if self.device.fan else STATE_AUTO
