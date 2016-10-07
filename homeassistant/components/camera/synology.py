@@ -44,7 +44,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_URL): cv.string,
-    vol.Optional(CONF_CAMERA_NAME): cv.string,
     vol.Optional(CONF_WHITELIST, default=[]): cv.ensure_list,
     vol.Optional(CONF_VALID_CERT, default=True): cv.boolean,
 })
