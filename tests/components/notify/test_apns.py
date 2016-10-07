@@ -10,6 +10,7 @@ from unittest.mock import patch
 from apns2.errors import Unregistered
 from threading import Event
 
+
 class TestApns(unittest.TestCase):
     """Test the APNS component."""
 
@@ -319,6 +320,7 @@ class TestApns(unittest.TestCase):
                         force_update=True)
 
         states_received.wait(5)
+        hass.pool.block_till_done()
 
         self.assertTrue(hass.services.call('notify', 'test_app',
                                            {'message': 'Hello',
