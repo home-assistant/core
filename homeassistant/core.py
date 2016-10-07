@@ -332,9 +332,10 @@ class HomeAssistant(object):
         # for debug modus
         exception = context.get('exception')
         if exception is not None:
+            exc_info = (type(exception), exception, exception.__traceback__)
             _LOGGER.debug(
-                "Exception inside async loop: %s",
-                exception
+                "Exception inside async loop: ",
+                exc_info=exc_info
             )
 
 
