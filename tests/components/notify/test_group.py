@@ -28,7 +28,7 @@ class TestNotifyGroup(unittest.TestCase):
         self.service = group.get_service(self.hass, {'services': [
             {'service': 'demo1'},
             {'service': 'demo2',
-             'data': {'target': 'unnamed device',
+             'data': {'target': ['unnamed device'],
                       'data': {'test': 'message'}}}]})
 
         assert self.service is not None
