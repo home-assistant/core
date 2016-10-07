@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
         return None
 
     for module_name in data.get_module_names():
-        print (module_name)
+        
         if config[CONF_MODULES] != []:
             if module_name not in config[CONF_MODULES]:
                 continue
