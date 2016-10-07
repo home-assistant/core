@@ -186,7 +186,7 @@ https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
 https://github.com/laf/russound/archive/0.1.6.zip#russound==0.1.6
 
 # homeassistant.components.switch.anel_pwrctrl
-https://github.com/mweinelt/anel-pwrctrl/archive/master.zip#anel_pwrctrl==0.0.1
+https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
 
 # homeassistant.components.ecobee
 https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6
