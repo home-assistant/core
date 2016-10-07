@@ -6,8 +6,8 @@ https://home-assistant.io/components/notify.group/
 """
 import collections
 import logging
-import voluptuous as vol
 import copy
+import voluptuous as vol
 
 from homeassistant.const import ATTR_SERVICE
 from homeassistant.components.notify import (DOMAIN, ATTR_MESSAGE, ATTR_DATA,
