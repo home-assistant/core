@@ -7,6 +7,8 @@ https://home-assistant.io/components/alexa/
 import copy
 import enum
 import logging
+import uuid
+from datetime import datetime
 
 import voluptuous as vol
 
@@ -16,7 +18,8 @@ from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
 
-API_ENDPOINT = '/api/alexa'
+INTENTS_API_ENDPOINT = '/api/alexa'
+FLASH_BRIEFINGS_API_ENDPOINT = '/api/alexa/flash_briefings/<briefing_id>'
 
 CONF_ACTION = 'action'
 CONF_CARD = 'card'
@@ -27,6 +30,21 @@ CONF_TYPE = 'type'
 CONF_TITLE = 'title'
 CONF_CONTENT = 'content'
 CONF_TEXT = 'text'
+
+CONF_FLASH_BRIEFINGS = 'flash_briefings'
+CONF_UID = 'uid'
+CONF_DATE = 'date'
+CONF_TITLE = 'title'
+CONF_AUDIO = 'audio'
+CONF_TEXT = 'text'
+CONF_DISPLAY_URL = 'display_url'
+
+ATTR_UID = 'uid'
+ATTR_UPDATE_DATE = 'updateDate'
+ATTR_TITLE_TEXT = 'titleText'
+ATTR_STREAM_URL = 'streamUrl'
+ATTR_MAIN_TEXT = 'mainText'
+ATTR_REDIRECTION_URL = 'redirectionURL'
 
 DOMAIN = 'alexa'
 DEPENDENCIES = ['http']
@@ -61,6 +79,16 @@ CONFIG_SCHEMA = vol.Schema({
                     vol.Required(CONF_TEXT): cv.template,
                 }
             }
+        },
+        CONF_FLASH_BRIEFINGS: {
+            cv.string: vol.All(cv.ensure_list, [{
+                vol.Required(CONF_UID, default=str(uuid.uuid4())): cv.string,
+                vol.Optional(CONF_DATE, default=datetime.utcnow()): cv.time,
+                vol.Required(CONF_TITLE): cv.template,
+                vol.Optional(CONF_AUDIO): cv.url,
+                vol.Required(CONF_TEXT): cv.template,
+                vol.Optional(CONF_DISPLAY_URL): cv.template,
+            }]),
         }
     }
 }, extra=vol.ALLOW_EXTRA)
@@ -68,16 +96,19 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Activate Alexa component."""
-    hass.wsgi.register_view(AlexaView(hass,
-                                      config[DOMAIN].get(CONF_INTENTS, {})))
+    intents = config[DOMAIN].get(CONF_INTENTS, {})
+    flash_briefings = config[DOMAIN].get(CONF_FLASH_BRIEFINGS, {})
+
+    hass.wsgi.register_view(AlexaIntentsView(hass, intents))
+    hass.wsgi.register_view(AlexaFlashBriefingView(hass, flash_briefings))
 
     return True
 
 
-class AlexaView(HomeAssistantView):
+class AlexaIntentsView(HomeAssistantView):
     """Handle Alexa requests."""
 
-    url = API_ENDPOINT
+    url = INTENTS_API_ENDPOINT
     name = 'api:alexa'
 
     def __init__(self, hass, intents):
@@ -235,3 +266,60 @@ class AlexaResponse(object):
             'sessionAttributes': self.session_attributes,
             'response': response,
         }
+
+
+class AlexaFlashBriefingView(HomeAssistantView):
+    """Handle Alexa Flash Briefing skill requests."""
+
+    url = FLASH_BRIEFINGS_API_ENDPOINT
+    name = 'api:alexa:flash_briefings'
+
+    def __init__(self, hass, flash_briefings):
+        """Initialize Alexa view."""
+        super().__init__(hass)
+        self.flash_briefings = copy.deepcopy(flash_briefings)
+        template.attach(hass, self.flash_briefings)
+
+    def get(self, request, briefing_id):
+        """Handle Alexa Flash Briefing request."""
+        _LOGGER.debug('Received Alexa flash briefing request for: %s',
+                      briefing_id)
+
+        if self.flash_briefings.get(briefing_id) is None:
+            err = 'No configured Alexa flash briefing was found for: %s'
+            _LOGGER.error(err, briefing_id)
+            return self.Response(status=404)
+
+        briefing = []
+
+        for item in self.flash_briefings.get(briefing_id, []):
+            output = {}
+            if item.get(CONF_TITLE) is not None:
+                if isinstance(item.get(CONF_TITLE), template.Template):
+                    output[ATTR_TITLE_TEXT] = item[CONF_TITLE].render()
+
+            if item.get(CONF_TEXT) is not None:
+                if isinstance(item.get(CONF_TEXT), template.Template):
+                    output[ATTR_MAIN_TEXT] = item[CONF_TEXT].render()
+
+            if item.get(CONF_DISPLAY_URL) is not None:
+                if isinstance(item.get(CONF_DISPLAY_URL),
+                              template.Template):
+                    output[ATTR_REDIRECTION_URL] = \
+                        item[CONF_DISPLAY_URL].render()
+
+            date_format = '%Y-%m-%dT%H:%M:%S.0Z'
+            output[ATTR_UPDATE_DATE] = item[CONF_DATE].strftime(date_format)
+
+            if item.get(CONF_UID) is not None:
+                output[ATTR_UID] = item.get(CONF_UID)
+
+            if item.get(CONF_AUDIO) is not None:
+                output[ATTR_STREAM_URL] = item.get(CONF_AUDIO)
+
+            if item.get(CONF_DISPLAY_URL) is not None:
+                output[ATTR_REDIRECTION_URL] = item.get(CONF_DISPLAY_URL)
+
+            briefing.append(output)
+
+        return self.json(briefing)

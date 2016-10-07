@@ -13,7 +13,8 @@ from tests.common import get_test_instance_port, get_test_home_assistant
 
 API_PASSWORD = "test1234"
 SERVER_PORT = get_test_instance_port()
-API_URL = "http://127.0.0.1:{}{}".format(SERVER_PORT, alexa.API_ENDPOINT)
+API_URL = "http://127.0.0.1:{}{}".format(SERVER_PORT,
+                                         alexa.INTENTS_API_ENDPOINT)
 HA_HEADERS = {
     const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
     const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON,
