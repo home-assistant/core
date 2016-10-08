@@ -136,6 +136,7 @@ class HomeAssistant(object):
         self.loop = loop or asyncio.get_event_loop()
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.loop.set_default_executor(self.executor)
+        self.loop.set_exception_handler(self._async_exception_handler)
         self.pool = pool = create_worker_pool()
         self.bus = EventBus(pool, self.loop)
         self.services = ServiceRegistry(self.bus, self.add_job, self.loop)
@@ -317,6 +318,25 @@ class HomeAssistant(object):
         self.executor.shutdown()
         self.state = CoreState.not_running
         self.loop.stop()
+
+    # pylint: disable=no-self-use
+    def _async_exception_handler(self, loop, context):
+        """Handle all exception inside the core loop."""
+        message = context.get('message')
+        if message:
+            _LOGGER.warning(
+                "Error inside async loop: %s",
+                message
+            )
+
+        # for debug modus
+        exception = context.get('exception')
+        if exception is not None:
+            exc_info = (type(exception), exception, exception.__traceback__)
+            _LOGGER.debug(
+                "Exception inside async loop: ",
+                exc_info=exc_info
+            )
 
 
 class EventOrigin(enum.Enum):
