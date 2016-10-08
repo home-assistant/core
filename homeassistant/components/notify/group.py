@@ -6,7 +6,6 @@ https://home-assistant.io/components/notify.group/
 """
 import collections
 import logging
-import copy
 import voluptuous as vol
 
 from homeassistant.const import ATTR_SERVICE
@@ -54,7 +53,7 @@ class GroupNotifyPlatform(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send message to all entities in the group."""
-        payload = copy.copy(kwargs)
+        payload = kwargs
         payload[ATTR_MESSAGE] = message
 
         for entity in self.entities:
