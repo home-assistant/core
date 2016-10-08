@@ -70,9 +70,10 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 
 _CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.All(cv.ensure_list, [
     vol.Schema({
-        vol.Optional(CONF_TRACK_NEW): cv.boolean,
-        vol.Optional(CONF_CONSIDER_HOME): vol.All(
-            cv.time_period, cv.positive_timedelta)
+        vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
+        vol.Optional(
+            CONF_CONSIDER_HOME, default=timedelta(seconds=180)): vol.All(
+                cv.time_period, cv.positive_timedelta)
     }, extra=vol.ALLOW_EXTRA)])}, extra=vol.ALLOW_EXTRA)
 
 DISCOVERY_PLATFORMS = {
