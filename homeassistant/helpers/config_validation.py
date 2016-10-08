@@ -231,7 +231,7 @@ def slugify(value):
     slg = util_slugify(str(value))
     if len(slg) > 0:
         return slg
-    raise vol.Invalid('invalid slug {}'.format(value))
+    raise vol.Invalid('Unable to slugify {}'.format(value))
 
 
 def string(value: Any) -> str:
