@@ -11,18 +11,20 @@ import mimetypes
 import threading
 import re
 import ssl
+
 import voluptuous as vol
 
 import homeassistant.remote as rem
 from homeassistant import util
 from homeassistant.const import (
     SERVER_PORT, HTTP_HEADER_HA_AUTH, HTTP_HEADER_CACHE_CONTROL,
-    HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, CONTENT_TYPE_JSON,
     HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, ALLOWED_CORS_HEADERS,
     EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
 from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components import persistent_notification
 
 DOMAIN = 'http'
 REQUIREMENTS = ('cherrypy==8.1.0', 'static3==0.7.0', 'Werkzeug==0.11.11')
@@ -37,6 +39,7 @@ CONF_SSL_KEY = 'ssl_key'
 CONF_CORS_ORIGINS = 'cors_allowed_origins'
 
 DATA_API_PASSWORD = 'api_password'
+NOTIFICATION_ID_LOGIN = 'http-login'
 
 # TLS configuation follows the best-practice guidelines specified here:
 # https://wiki.mozilla.org/Security/Server_Side_TLS
@@ -106,7 +109,7 @@ def setup(hass, config):
     api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
     server_host = conf.get(CONF_SERVER_HOST, '0.0.0.0')
     server_port = conf.get(CONF_SERVER_PORT, SERVER_PORT)
-    development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
+    development = str(conf.get(CONF_DEVELOPMENT, '')) == '1'
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf.get(CONF_CORS_ORIGINS, [])
@@ -365,8 +368,8 @@ class HomeAssistantWSGI(object):
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
             self.server.ssl_adapter = ContextSSLAdapter(context)
 
-        threading.Thread(target=self.server.start, daemon=True,
-                         name='WSGI-server').start()
+        threading.Thread(
+            target=self.server.start, daemon=True, name='WSGI-server').start()
 
     def stop(self):
         """Stop the wsgi server."""
@@ -391,10 +394,10 @@ class HomeAssistantWSGI(object):
                 resp = ex.get_response(request.environ)
                 if request.accept_mimetypes.accept_json:
                     resp.data = json.dumps({
-                        "result": "error",
-                        "message": str(ex),
+                        'result': 'error',
+                        'message': str(ex),
                     })
-                    resp.mimetype = "application/json"
+                    resp.mimetype = CONTENT_TYPE_JSON
                 return resp
 
     def base_app(self, environ, start_response):
@@ -403,11 +406,11 @@ class HomeAssistantWSGI(object):
         response = self.dispatch_request(request)
 
         if self.cors_origins:
-            cors_check = (environ.get("HTTP_ORIGIN") in self.cors_origins)
+            cors_check = (environ.get('HTTP_ORIGIN') in self.cors_origins)
             cors_headers = ", ".join(ALLOWED_CORS_HEADERS)
             if cors_check:
                 response.headers[HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN] = \
-                    environ.get("HTTP_ORIGIN")
+                    environ.get('HTTP_ORIGIN')
                 response.headers[HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS] = \
                     cors_headers
 
@@ -425,7 +428,7 @@ class HomeAssistantWSGI(object):
         # Strip out any cachebusting MD5 fingerprints
         fingerprinted = _FINGERPRINT.match(environ.get('PATH_INFO', ''))
         if fingerprinted:
-            environ['PATH_INFO'] = "{}.{}".format(*fingerprinted.groups())
+            environ['PATH_INFO'] = '{}.{}'.format(*fingerprinted.groups())
         return app(environ, start_response)
 
 
@@ -489,6 +492,10 @@ class HomeAssistantView(object):
         if self.requires_auth and not authenticated:
             _LOGGER.warning('Login attempt or request with an invalid '
                             'password from %s', request.remote_addr)
+            persistent_notification.create(
+                self.hass,
+                'Invalid password used from {}'.format(request.remote_addr),
+                'Login attempt failed', NOTIFICATION_ID_LOGIN)
             raise Unauthorized()
 
         request.authenticated = authenticated
@@ -512,12 +519,9 @@ class HomeAssistantView(object):
     def json(self, result, status_code=200):
         """Return a JSON response."""
         msg = json.dumps(
-            result,
-            sort_keys=True,
-            cls=rem.JSONEncoder
-        ).encode('UTF-8')
-        return self.Response(msg, mimetype="application/json",
-                             status=status_code)
+            result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
+        return self.Response(
+            msg, mimetype=CONTENT_TYPE_JSON, status=status_code)
 
     def json_message(self, error, status_code=200):
         """Return a JSON message response."""

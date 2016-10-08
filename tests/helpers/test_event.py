@@ -1,6 +1,7 @@
 """Test event helpers."""
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
+import asyncio
 import unittest
 from datetime import datetime, timedelta
 
@@ -113,17 +114,23 @@ class TestEventHelpers(unittest.TestCase):
         wildcard_runs = []
         wildercard_runs = []
 
-        track_state_change(
-            self.hass, 'light.Bowl', lambda a, b, c: specific_runs.append(1),
-            'on', 'off')
+        def specific_run_callback(entity_id, old_state, new_state):
+            specific_runs.append(1)
 
         track_state_change(
-            self.hass, 'light.Bowl',
-            lambda _, old_s, new_s: wildcard_runs.append((old_s, new_s)))
+            self.hass, 'light.Bowl', specific_run_callback, 'on', 'off')
 
-        track_state_change(
-            self.hass, MATCH_ALL,
-            lambda _, old_s, new_s: wildercard_runs.append((old_s, new_s)))
+        @ha.callback
+        def wildcard_run_callback(entity_id, old_state, new_state):
+            wildcard_runs.append((old_state, new_state))
+
+        track_state_change(self.hass, 'light.Bowl', wildcard_run_callback)
+
+        @asyncio.coroutine
+        def wildercard_run_callback(entity_id, old_state, new_state):
+            wildercard_runs.append((old_state, new_state))
+
+        track_state_change(self.hass, MATCH_ALL, wildercard_run_callback)
 
         # Adding state to state machine
         self.hass.states.set("light.Bowl", "on")

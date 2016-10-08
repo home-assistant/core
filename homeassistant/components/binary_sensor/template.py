@@ -4,10 +4,12 @@ Support for exposing a templated binary sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.template/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA,
     SENSOR_CLASSES_SCHEMA)
@@ -81,9 +83,10 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         self.update()
 
+        @callback
         def template_bsensor_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
-            self.update_ha_state(True)
+            hass.loop.create_task(self.async_update_ha_state(True))
 
         track_state_change(hass, entity_ids, template_bsensor_state_listener)
 
@@ -107,10 +110,11 @@ class BinarySensorTemplate(BinarySensorDevice):
         """No polling needed."""
         return False
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data and update the state."""
         try:
-            self._state = self._template.render().lower() == 'true'
+            self._state = self._template.async_render().lower() == 'true'
         except TemplateError as ex:
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):

@@ -25,7 +25,7 @@ ATTR_QUERIES_TODAY = 'queries_today'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_METHOD = 'GET'
-DEFAULT_NAME = 'Pi-hole'
+DEFAULT_NAME = 'Pi-Hole'
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
@@ -43,6 +43,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     method = 'GET'
     payload = None
+    auth = None
+    headers = None
     verify_ssl = config.get(CONF_VERIFY_SSL)
     use_ssl = config.get(CONF_SSL)
 
@@ -53,11 +55,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     resource = "{}{}{}".format(uri_scheme, host, _ENDPOINT)
 
-    rest = RestData(method, resource, payload, verify_ssl)
+    rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
 
     if rest.data is None:
-        _LOGGER.error('Unable to fetch REST data')
+        _LOGGER.error("Unable to fetch data from Pi-Hole")
         return False
 
     add_devices([PiHoleSensor(hass, rest, name)])
@@ -97,5 +99,8 @@ class PiHoleSensor(Entity):
 
     def update(self):
         """Get the latest data from REST API and updates the state."""
-        self.rest.update()
-        self._state = json.loads(self.rest.data)
+        try:
+            self.rest.update()
+            self._state = json.loads(self.rest.data)
+        except TypeError:
+            _LOGGER.error("Unable to fetch data from Pi-Hole")

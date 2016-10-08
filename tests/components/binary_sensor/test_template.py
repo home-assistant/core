@@ -119,7 +119,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
         vs.update_ha_state()
         self.hass.block_till_done()
 
-        with mock.patch.object(vs, 'update') as mock_update:
+        with mock.patch.object(vs, 'async_update') as mock_update:
             self.hass.bus.fire(EVENT_STATE_CHANGED)
             self.hass.block_till_done()
             assert mock_update.call_count == 1

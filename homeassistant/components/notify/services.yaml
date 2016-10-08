@@ -11,9 +11,9 @@ notify:
       example: 'Your Garage Door Friend'
 
     target:
-      description: Target of the notification. Optional depending on the platform
+      description: An array of targets to send the notification to. Optional depending on the platform.
       example: platform specific
 
     data:
-      description: Extended information for notification. Optional depending on the platform
+      description: Extended information for notification. Optional depending on the platform.
       example: platform specific
