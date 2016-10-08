@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.components import climate
 
-from tests.common import get_test_home_assistant
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 ENTITY = 'climate.test'
@@ -44,8 +44,9 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
             'name': 'test',
             'target_sensor': ENT_SENSOR
         }
-        self.assertFalse(setup_component(self.hass, 'climate', {
-            'climate': config}))
+        with assert_setup_component(0):
+            setup_component(self.hass, 'climate', {
+                'climate': config})
 
     def test_valid_conf(self):
         """Test set up genreic_thermostat with valid config values."""

@@ -9,11 +9,14 @@ from homeassistant.components.binary_sensor import template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_hlpr
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, assert_setup_component
 
 
 class TestBinarySensorTemplate(unittest.TestCase):
     """Test for Binary sensor template platform."""
+
+    hass = None
+    # pylint: disable=invalid-name
 
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
@@ -47,53 +50,53 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_setup_no_sensors(self):
         """"Test setup with no sensors."""
-        result = bootstrap.setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'template'
-            }
-        })
-        self.assertFalse(result)
+        with assert_setup_component(0):
+            assert bootstrap.setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template'
+                }
+            })
 
     def test_setup_invalid_device(self):
         """"Test the setup with invalid devices."""
-        result = bootstrap.setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'foo bar': {},
-                },
-            }
-        })
-        self.assertFalse(result)
+        with assert_setup_component(0):
+            assert bootstrap.setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'foo bar': {},
+                    },
+                }
+            })
 
     def test_setup_invalid_sensor_class(self):
         """"Test setup with invalid sensor class."""
-        result = bootstrap.setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'test': {
-                        'value_template': '{{ foo }}',
-                        'sensor_class': 'foobarnotreal',
+        with assert_setup_component(0):
+            assert bootstrap.setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test': {
+                            'value_template': '{{ foo }}',
+                            'sensor_class': 'foobarnotreal',
+                        },
                     },
-                },
-            }
-        })
-        self.assertFalse(result)
+                }
+            })
 
     def test_setup_invalid_missing_template(self):
         """"Test setup with invalid and missing template."""
-        result = bootstrap.setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'test': {
-                        'sensor_class': 'motion',
-                    },
+        with assert_setup_component(0):
+            assert bootstrap.setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test': {
+                            'sensor_class': 'motion',
+                        },
+                    }
                 }
-            }
-        })
-        self.assertFalse(result)
+            })
 
     def test_attributes(self):
         """"Test the attributes."""
@@ -107,7 +110,9 @@ class TestBinarySensorTemplate(unittest.TestCase):
         vs.update()
         self.assertFalse(vs.is_on)
 
+        # pylint: disable=protected-access
         vs._template = template_hlpr.Template("{{ 2 > 1 }}", self.hass)
+
         vs.update()
         self.assertTrue(vs.is_on)
 
