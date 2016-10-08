@@ -401,15 +401,12 @@ class MQTT(object):
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
-        payload = ""
-
         try:
             payload = msg.payload.decode('utf-8')
         except AttributeError:
             _LOGGER.error("Illegal utf-8 unicode payload from "
                           "MQTT topic %s. Payload: %s", msg.topic, msg.payload)
-
-        if payload:
+        else:
             _LOGGER.debug("received message on %s: %s",
                           msg.topic, payload)
             self.hass.bus.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
