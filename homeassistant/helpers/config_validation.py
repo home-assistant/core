@@ -167,7 +167,16 @@ def time_period_str(value: str) -> timedelta:
     return offset
 
 
-time_period = vol.Any(time_period_str, timedelta, time_period_dict)
+def time_period_seconds(value: Union[int, str]) -> timedelta:
+    """Validate and transform seconds to a time offset."""
+    try:
+        return timedelta(seconds=int(value))
+    except (ValueError, TypeError):
+        raise vol.Invalid('Expected seconds, got {}'.format(value))
+
+
+time_period = vol.Any(time_period_str, time_period_seconds, timedelta,
+                      time_period_dict)
 
 
 def match_all(value):
