@@ -44,6 +44,7 @@ class NestThermostat(ClimateDevice):
         # Not all nest devices support cooling and heating remove unused
         self._operation_list = [STATE_OFF]
 
+        # Add supported nest thermostat features
         if self.can_heat:
             self._operation_list.append(STATE_HEAT)
 
