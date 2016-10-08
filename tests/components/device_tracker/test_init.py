@@ -60,12 +60,27 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         """Test when known devices contains invalid data."""
         files = {'empty.yaml': '',
                  'nodict.yaml': '100',
-                 'allok.yaml': 'my_device:\n  name: Device'}
+                 'badkey.yaml': '@:\n  name: Device',
+                 'noname.yaml': 'my_device:\n',
+                 'allok.yaml':  'My Device:\n  name: Device',
+                 'oneok.yaml':  ('My Device!:\n  name: Device\n'
+                                 'bad_device:\n  nme: Device')}
         args = {'hass': self.hass, 'consider_home': timedelta(seconds=60)}
         with patch_yaml_files(files):
             assert device_tracker.load_config('empty.yaml', **args) == []
             assert device_tracker.load_config('nodict.yaml', **args) == []
-            assert len(device_tracker.load_config('allok.yaml', **args)) == 1
+            assert device_tracker.load_config('noname.yaml', **args) == []
+            assert device_tracker.load_config('badkey.yaml', **args) == []
+
+            res = device_tracker.load_config('allok.yaml', **args)
+            assert len(res) == 1
+            assert res[0].name == 'Device'
+            assert res[0].dev_id == 'my_device'
+
+            res = device_tracker.load_config('oneok.yaml', **args)
+            assert len(res) == 1
+            assert res[0].name == 'Device'
+            assert res[0].dev_id == 'my_device'
 
     def test_reading_yaml_config(self):
         """Test the rendering of the YAML configuration."""
