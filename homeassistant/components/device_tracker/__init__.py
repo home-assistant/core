@@ -46,6 +46,7 @@ CONF_TRACK_NEW = 'track_new_devices'
 DEFAULT_TRACK_NEW = True
 
 CONF_CONSIDER_HOME = 'consider_home'
+DEFAULT_CONSIDER_HOME = 180
 
 CONF_SCAN_INTERVAL = 'interval_seconds'
 DEFAULT_SCAN_INTERVAL = 12
@@ -119,8 +120,9 @@ def setup(hass: HomeAssistantType, config: ConfigType):
         return False
     else:
         conf = conf[0] if len(conf) > 0 else {}
-        consider_home = conf[CONF_CONSIDER_HOME]
-        track_new = conf[CONF_TRACK_NEW]
+        consider_home = conf.get(CONF_CONSIDER_HOME,
+                                 timedelta(seconds=DEFAULT_CONSIDER_HOME))
+        track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = load_config(yaml_path, hass, consider_home)
 
@@ -415,7 +417,7 @@ def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
         for dev_id, device in devices.items():
             try:
                 device = dev_schema(device)
-                device['dev_id'] = cv.slug(dev_id)
+                device['dev_id'] = cv.slugify(dev_id)
             except vol.Invalid as exp:
                 log_exception(exp, dev_id, devices)
             else:
