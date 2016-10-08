@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import valid_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
-from homeassistant.util import slugify
+from homeassistant.util import slugify as util_slugify
 from homeassistant.helpers import template as template_helper
 
 # pylint: disable=invalid-name
@@ -218,10 +218,20 @@ def slug(value):
     if value is None:
         raise vol.Invalid('Slug should not be None')
     value = str(value)
-    slg = slugify(value)
+    slg = util_slugify(value)
     if value == slg:
         return value
     raise vol.Invalid('invalid slug {} (try {})'.format(value, slg))
+
+
+def slugify(value):
+    """Coerce a value to a slug."""
+    if value is None:
+        raise vol.Invalid('Slug should not be None')
+    slg = util_slugify(str(value))
+    if len(slg) > 0:
+        return slg
+    raise vol.Invalid('Unable to slugify {}'.format(value))
 
 
 def string(value: Any) -> str:

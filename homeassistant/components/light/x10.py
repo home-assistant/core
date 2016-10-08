@@ -41,7 +41,7 @@ def get_status():
 
 def get_unit_status(code):
     """Get on/off status for given unit."""
-    unit = int(code[1])
+    unit = int(code[1:])
     return get_status()[16 - int(unit)] == '1'
 
 
