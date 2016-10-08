@@ -175,7 +175,7 @@ def time_period_seconds(value: Union[int, str]) -> timedelta:
         raise vol.Invalid('Expected seconds, got {}'.format(value))
 
 
-time_period = vol.Any(time_period_seconds, time_period_str, timedelta,
+time_period = vol.Any(time_period_str, time_period_seconds, timedelta,
                       time_period_dict)
 
 
