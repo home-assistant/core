@@ -18,7 +18,8 @@ DEPENDENCIES = ['homematic']
 
 HM_STATE_HA_CAST = {
     "RotaryHandleSensor": {0: "closed", 1: "tilted", 2: "open"},
-    "WaterSensor": {0: "dry", 1: "wet", 2: "water"}
+    "WaterSensor": {0: "dry", 1: "wet", 2: "water"},
+    "CO2Sensor": {0: "normal", 1: "added", 2: "strong"},
 }
 
 HM_UNIT_HA_CAST = {
@@ -38,6 +39,7 @@ HM_UNIT_HA_CAST = {
     "WIND_DIRECTION_RANGE": "°",
     "SUNSHINEDURATION": "#",
     "AIR_PRESSURE": "hPa",
+    "FREQUENCY": "Hz",
 }
 
 

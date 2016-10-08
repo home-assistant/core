@@ -13,7 +13,6 @@ from homeassistant.components.climate import (
     ATTR_TEMPERATURE)
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
-from homeassistant.util.temperature import convert as convert_temperature
 
 DEPENDENCIES = ['nest']
 _LOGGER = logging.getLogger(__name__)
@@ -127,12 +126,9 @@ class NestThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None and \
-           kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
-            target_temp_high = convert_temperature(kwargs.get(
-                ATTR_TARGET_TEMP_HIGH), self._unit, TEMP_CELSIUS)
-            target_temp_low = convert_temperature(kwargs.get(
-                ATTR_TARGET_TEMP_LOW), self._unit, TEMP_CELSIUS)
+        target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        if target_temp_low is not None and target_temp_high is not None:
 
             if self.device.mode == 'range':
                 temp = (target_temp_low, target_temp_high)

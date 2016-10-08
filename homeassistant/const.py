@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 29
-PATCH_VERSION = '7'
+MINOR_VERSION = 30
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -63,6 +63,7 @@ CONF_BELOW = 'below'
 CONF_BLACKLIST = 'blacklist'
 CONF_BRIGHTNESS = 'brightness'
 CONF_CODE = 'code'
+CONF_COLOR_TEMP = 'color_temp'
 CONF_COMMAND = 'command'
 CONF_COMMAND_CLOSE = 'command_close'
 CONF_COMMAND_OFF = 'command_off'
@@ -86,6 +87,7 @@ CONF_EVENT = 'event'
 CONF_FILE_PATH = 'file_path'
 CONF_FILENAME = 'filename'
 CONF_FRIENDLY_NAME = 'friendly_name'
+CONF_HEADERS = 'headers'
 CONF_HOST = 'host'
 CONF_HOSTS = 'hosts'
 CONF_ICON = 'icon'

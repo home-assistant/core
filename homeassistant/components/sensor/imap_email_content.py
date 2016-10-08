@@ -104,7 +104,7 @@ class EmailReader:
             self.connection.select()
 
             if len(self._unread_ids) == 0:
-                search = "SINCE {0:%d-%b-%y}".format(datetime.date.today())
+                search = "SINCE {0:%d-%b-%Y}".format(datetime.date.today())
                 if self._last_id is not None:
                     search = "UID {}:*".format(self._last_id)
 

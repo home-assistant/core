@@ -158,7 +158,8 @@ def setup(hass, config):  # pylint: disable=too-many-locals
             'No devices could be setup as gateways, check your configuration')
         return False
 
-    for component in 'sensor', 'switch', 'light', 'binary_sensor', 'climate':
+    for component in ['sensor', 'switch', 'light', 'binary_sensor', 'climate',
+                      'cover']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
@@ -340,5 +341,7 @@ class MySensorsDeviceEntity(object):
                               set_req.V_LOCK_STATUS, set_req.V_TRIPPED):
                 self._values[value_type] = (
                     STATE_ON if int(value) == 1 else STATE_OFF)
+            elif value_type == set_req.V_DIMMER:
+                self._values[value_type] = int(value)
             else:
                 self._values[value_type] = value
