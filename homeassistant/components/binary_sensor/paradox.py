@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """
     Set up Paradox binary sensor platform.
+
     Based on configuration/yaml file contents, not auto discovery.
     """
     # Get the zone information specified in the configuration/yaml file.
@@ -27,17 +28,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _device_config_data = ZONE_SCHEMA(_configured_zones[zone_num])
         # Add the zone as a HA device.
         add_devices(
-            [ParadoxBinarySensor(hass,
-                                 zone_num,
-                                 _device_config_data[CONF_ZONENAME],
-                                 _device_config_data[CONF_ZONETYPE],
-                                 PARADOX_CONTROLLER.alarm_state['zone'][zone_num]
-                                 )])
+            [ParadoxBinarySensor(
+                hass,
+                zone_num,
+                _device_config_data[CONF_ZONENAME],
+                _device_config_data[CONF_ZONETYPE],
+                PARADOX_CONTROLLER.alarm_state['zone'][zone_num]
+                )])
     return True
 
 
 class ParadoxBinarySensor(BinarySensorDevice):
-    """Representation of an Paradox zone as binary sensor."""
+    """Representation of an Paradox zone as a binary sensor."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, zone_number, zone_name, zone_type, zone_info):
