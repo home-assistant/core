@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.sensor.command_line import CommandSensorData
 from homeassistant.const import (
     CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_NAME, CONF_VALUE_TEMPLATE,
-    CONF_SENSOR_CLASS, CONF_COMMAND)
+    CONF_SENSOR_CLASS, CONF_COMMAND, CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ DEFAULT_NAME = 'Binary Command Sensor'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND): cv.string,
@@ -46,7 +46,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-    data = CommandSensorData(command)
+    scan_interval = config.get(CONF_SCAN_INTERVAL)
+    data = CommandSensorData(command, scan_interval)
 
     add_devices([CommandBinarySensor(
         hass, data, name, sensor_class, payload_on, payload_off,
