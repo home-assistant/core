@@ -72,16 +72,16 @@ def get_test_home_assistant(num_threads=None):
     def fake_stop():
         yield None
 
-    def start_hass():
+    @patch.object(ha, 'async_create_timer')
+    @patch.object(ha, 'async_monitor_worker_pool')
+    @patch.object(hass.loop, 'add_signal_handler')
+    @patch.object(hass.loop, 'run_forever')
+    @patch.object(hass.loop, 'close')
+    @patch.object(hass, 'async_stop', return_value=fake_stop())
+    def start_hass(*mocks):
         """Helper to start hass."""
-        with patch.object(hass.loop, 'run_forever', return_value=None):
-            with patch.object(hass, 'async_stop', return_value=fake_stop()):
-                with patch.object(ha, 'async_create_timer', return_value=None):
-                    with patch.object(ha, 'async_monitor_worker_pool',
-                                      return_value=None):
-                        with patch.object(hass.loop, 'add_signal_handler'):
-                            orig_start()
-                            hass.block_till_done()
+        orig_start()
+        hass.block_till_done()
 
     def stop_hass():
         orig_stop()
