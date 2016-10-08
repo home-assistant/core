@@ -37,7 +37,7 @@ DEPENDENCIES = ['http']
 FITBIT_AUTH_CALLBACK_PATH = '/auth/fitbit/callback'
 FITBIT_AUTH_START = '/auth/fitbit'
 FITBIT_CONFIG_FILE = 'fitbit.conf'
-FITBIT_DEFAULT_RESOURCE_LIST = ['activities/steps']
+FITBIT_DEFAULT_RESOURCES = ['activities/steps']
 
 ICON = 'mdi:walk'
 
@@ -118,7 +118,7 @@ FITBIT_MEASUREMENTS = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_RESOURCES, default=[]):
+    vol.Optional(CONF_MONITORED_RESOURCES, default=FITBIT_DEFAULT_RESOURCES):
         vol.All(cv.ensure_list, [vol.In(FITBIT_RESOURCES_LIST)]),
 })
 
@@ -202,7 +202,7 @@ def request_oauth_completion(hass):
     def fitbit_configuration_callback(callback_data):
         """The actions to do when our configuration callback is called."""
 
-    start_url = "{}{}".format(hass.config.api.base_url, FITBIT_AUTH_START)
+    start_url = '{}{}'.format(hass.config.api.base_url, FITBIT_AUTH_START)
 
     description = "Please authorize Fitbit by visiting {}".format(start_url)
 
@@ -254,8 +254,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 authd_client.system = 'en_US'
 
         dev = []
-        for resource in config.get(
-                CONF_MONITORED_RESOURCES, FITBIT_DEFAULT_RESOURCE_LIST):
+        for resource in config.get(CONF_MONITORED_RESOURCES):
             dev.append(FitbitSensor(
                 authd_client, config_path, resource,
                 hass.config.units.is_metric))
