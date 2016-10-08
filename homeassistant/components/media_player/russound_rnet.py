@@ -40,8 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_PORT): cv.port,
     vol.Required(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
-    vol.Required(CONF_SOURCES, default=[]):
-        vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
+    vol.Required(CONF_SOURCES): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
 })
 
 
