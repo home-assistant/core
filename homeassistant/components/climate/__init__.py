@@ -422,13 +422,13 @@ class ClimateDevice(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self.hass.config.units.temperature_unit
+        """The unit of measurement to display."""
+        return hass.config.units.temperature_unit
 
     @property
     def _platform_unit_of_measurement(self):
-        """Return the unit of measurement used by the platform"""
-        return self.hass.config.units.temperature_unit
+        """The unit of measurement used by the platform."""
+        raise NotImplementedError
 
     @property
     def current_humidity(self):
@@ -571,3 +571,11 @@ class ClimateDevice(Entity):
             decimal_count = 0
 
         return round(value, decimal_count)
+
+    def _convert_to_platform(self, temp):
+        """Convert temperature into units used by the platform."""
+        if temp is None or not isinstance(temp, Number):
+            return temp
+
+        return convert_temperature(temp, self.unit_of_measurement,
+                                   self._platform_unit_of_measurement)
