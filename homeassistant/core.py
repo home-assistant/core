@@ -159,11 +159,13 @@ class HomeAssistant(object):
         # Register the async start
         self.loop.create_task(self.async_start())
 
+        @callback
         def stop_homeassistant(*args):
             """Stop Home Assistant."""
             self.exit_code = 0
             self.async_add_job(self.async_stop)
 
+        @callback
         def restart_homeassistant(*args):
             """Restart Home Assistant."""
             self.exit_code = RESTART_EXIT_CODE
@@ -205,6 +207,8 @@ class HomeAssistant(object):
         except KeyboardInterrupt:
             self.loop.call_soon(stop_homeassistant)
             self.loop.run_forever()
+        finally:
+            self.loop.close()
 
     @asyncio.coroutine
     def async_start(self):
