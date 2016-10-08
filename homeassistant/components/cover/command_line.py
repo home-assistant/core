@@ -38,7 +38,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for device_name, device_config in devices.items():
         value_template = device_config.get(CONF_VALUE_TEMPLATE)
-        value_template.hass = hass
+        if value_template is not None:
+            value_template.hass = hass
 
         covers.append(
             CommandCover(
