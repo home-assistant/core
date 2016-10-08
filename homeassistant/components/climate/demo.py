@@ -126,14 +126,11 @@ class DemoClimate(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._target_temperature = self._convert_to_platform(
-                kwargs.get(ATTR_TEMPERATURE))
+            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
         if kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None and \
            kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
-            self._target_temperature_high = self._convert_to_platform(
-                kwargs.get(ATTR_TARGET_TEMP_HIGH))
-            self._target_temperature_low = self._convert_to_platform(
-                kwargs.get(ATTR_TARGET_TEMP_LOW))
+            self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+            self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         self.update_ha_state()
 
     def set_humidity(self, humidity):
