@@ -29,7 +29,7 @@ ICON = 'mdi:currency-usd'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
-ATTR_CHANGE = 'Cchange'
+ATTR_CHANGE = 'Change'
 ATTR_OPEN = 'open'
 ATTR_PREV_CLOSE = 'prev_close'
 
