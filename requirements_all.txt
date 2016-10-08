@@ -174,7 +174,7 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 https://github.com/gadgetreactor/pyHS100/archive/ef85f939fd5b07064a0f34dfa673fa7d6140bd95.zip#pyHS100==0.1.2
 
 # homeassistant.components.netatmo
-https://github.com/jabesq/netatmo-api-python/archive/v0.5.0.zip#lnetatmo==0.5.0
+https://github.com/jabesq/netatmo-api-python/archive/v0.6.0.zip#lnetatmo==0.6.0
 
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
