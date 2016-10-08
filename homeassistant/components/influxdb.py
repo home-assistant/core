@@ -28,6 +28,7 @@ DEFAULT_PORT = 8086
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = False
 DOMAIN = 'influxdb'
+TIMEOUT = 5
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -69,7 +70,8 @@ def setup(hass, config):
     try:
         influx = InfluxDBClient(
             host=host, port=port, username=username, password=password,
-            database=database, ssl=ssl, verify_ssl=verify_ssl)
+            database=database, ssl=ssl, verify_ssl=verify_ssl,
+            timeout=TIMEOUT)
         influx.query("select * from /.*/ LIMIT 1;")
     except exceptions.InfluxDBClientError as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "

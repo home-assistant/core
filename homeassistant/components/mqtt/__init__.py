@@ -4,6 +4,7 @@ Support for MQTT message handling.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/
 """
+import asyncio
 import logging
 import os
 import socket
@@ -14,8 +15,8 @@ import voluptuous as vol
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import template
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import template, config_validation as cv
+from homeassistant.helpers.event import threaded_listener_factory
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     CONF_PLATFORM, CONF_SCAN_INTERVAL, CONF_VALUE_TEMPLATE)
@@ -162,21 +163,28 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
-def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
+def async_subscribe(hass, topic, callback, qos=DEFAULT_QOS):
     """Subscribe to an MQTT topic."""
+    @asyncio.coroutine
     def mqtt_topic_subscriber(event):
         """Match subscribed MQTT topic."""
-        if _match_topic(topic, event.data[ATTR_TOPIC]):
-            callback(event.data[ATTR_TOPIC], event.data[ATTR_PAYLOAD],
-                     event.data[ATTR_QOS])
+        if not _match_topic(topic, event.data[ATTR_TOPIC]):
+            return
 
-    remove = hass.bus.listen(EVENT_MQTT_MESSAGE_RECEIVED,
-                             mqtt_topic_subscriber)
+        hass.async_run_job(callback, event.data[ATTR_TOPIC],
+                           event.data[ATTR_PAYLOAD], event.data[ATTR_QOS])
+
+    async_remove = hass.bus.async_listen(EVENT_MQTT_MESSAGE_RECEIVED,
+                                         mqtt_topic_subscriber)
 
     # Future: track subscriber count and unsubscribe in remove
     MQTT_CLIENT.subscribe(topic, qos)
 
-    return remove
+    return async_remove
+
+
+# pylint: disable=invalid-name
+subscribe = threaded_listener_factory(async_subscribe)
 
 
 def _setup_server(hass, config):
