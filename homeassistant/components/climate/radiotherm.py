@@ -81,7 +81,7 @@ class RadioThermostat(ClimateDevice):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def _platform_unit_of_measurement(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
 

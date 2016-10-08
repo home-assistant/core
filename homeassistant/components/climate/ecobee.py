@@ -105,7 +105,7 @@ class Thermostat(ClimateDevice):
         return self.thermostat['name']
 
     @property
-    def unit_of_measurement(self):
+    def _platform_unit_of_measurement(self):
         """Return the unit of measurement."""
         if self.thermostat['settings']['useCelsius']:
             return TEMP_CELSIUS

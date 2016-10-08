@@ -77,7 +77,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def _platform_unit_of_measurement(self):
         """Return the unit of measurement which this thermostat uses."""
         return TEMP_CELSIUS
 

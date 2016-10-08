@@ -423,7 +423,12 @@ class ClimateDevice(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        raise NotImplementedError
+        return self.hass.config.units.temperature_unit
+
+    @property
+    def _platform_unit_of_measurement(self):
+        """Return the unit of measurement used by the platform"""
+        return self.hass.config.units.temperature_unit
 
     @property
     def current_humidity(self):
@@ -556,10 +561,10 @@ class ClimateDevice(Entity):
         if temp is None or not isinstance(temp, Number):
             return temp
 
-        value = convert_temperature(temp, self.unit_of_measurement,
-                                    self.hass.config.units.temperature_unit)
+        value = convert_temperature(temp, self._platform_unit_of_measurement,
+                                    self.unit_of_measurement)
 
-        if self.hass.config.units.temperature_unit is TEMP_CELSIUS:
+        if self.unit_of_measurement is TEMP_CELSIUS:
             decimal_count = 1
         else:
             # Users of fahrenheit generally expect integer units.
