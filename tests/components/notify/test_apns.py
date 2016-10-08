@@ -67,7 +67,7 @@ class TestApns(unittest.TestCase):
         self.assertFalse(notify.setup(hass, config))
 
     def test_register_new_device(self):
-
+        """Test registering a new device with a name."""
         config = {
             'notify': {
                 'platform': 'apns',
