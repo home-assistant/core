@@ -4,7 +4,7 @@ import unittest
 from unittest import mock
 
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_TURN_OFF,
@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.components import thermostat
 
-from tests.common import get_test_home_assistant
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 ENTITY = 'thermostat.test'
@@ -44,12 +44,13 @@ class TestSetupThermostatHeatControl(unittest.TestCase):
             'name': 'test',
             'target_sensor': ENT_SENSOR
         }
-        self.assertFalse(_setup_component(self.hass, 'thermostat', {
-            'thermostat': config}))
+        with assert_setup_component(0):
+            setup_component(self.hass, 'thermostat', {
+                'thermostat': config})
 
     def test_valid_conf(self):
         """Test set up heat_control with valid config values."""
-        self.assertTrue(_setup_component(self.hass, 'thermostat',
+        self.assertTrue(setup_component(self.hass, 'thermostat',
                         {'thermostat': {
                             'platform': 'heat_control',
                             'name': 'test',
