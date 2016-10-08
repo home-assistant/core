@@ -200,17 +200,18 @@ def test_time_period():
     schema = vol.Schema(cv.time_period)
 
     for value in (
-        None, '', 1234, 'hello:world', '12:', '12:34:56:78',
+        None, '', 'hello:world', '12:', '12:34:56:78',
         {}, {'wrong_key': -10}
     ):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
     for value in (
-        '8:20', '23:59', '-8:20', '-23:59:59', '-48:00', {'minutes': 5}
+        '8:20', '23:59', '-8:20', '-23:59:59', '-48:00', {'minutes': 5}, 1, '5'
     ):
         schema(value)
 
+    assert timedelta(seconds=180) == schema('180')
     assert timedelta(hours=23, minutes=59) == schema('23:59')
     assert -1 * timedelta(hours=1, minutes=15) == schema('-1:15')
 

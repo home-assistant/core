@@ -33,11 +33,11 @@ class TestUpdater(unittest.TestCase):
         updater.CURRENT_VERSION = MOCK_CURRENT_VERSION
 
         self.assertTrue(setup_component(self.hass, updater.DOMAIN, {
-            'updater': None
+            'updater': {}
         }))
 
-        self.assertTrue(self.hass.states.is_state(updater.ENTITY_ID,
-                                                  NEW_VERSION))
+        self.assertTrue(self.hass.states.is_state(
+            updater.ENTITY_ID, NEW_VERSION))
 
     @patch('homeassistant.components.updater.get_newest_version')
     def test_no_entity_on_same_version(self, mock_get_newest_version):
@@ -46,20 +46,20 @@ class TestUpdater(unittest.TestCase):
         updater.CURRENT_VERSION = MOCK_CURRENT_VERSION
 
         self.assertTrue(setup_component(self.hass, updater.DOMAIN, {
-            'updater': None
+            'updater': {}
         }))
 
         self.assertIsNone(self.hass.states.get(updater.ENTITY_ID))
 
         mock_get_newest_version.return_value = NEW_VERSION
 
-        fire_time_changed(self.hass,
-                          dt_util.utcnow().replace(hour=0, minute=0, second=0))
+        fire_time_changed(
+            self.hass, dt_util.utcnow().replace(hour=0, minute=0, second=0))
 
         self.hass.block_till_done()
 
-        self.assertTrue(self.hass.states.is_state(updater.ENTITY_ID,
-                                                  NEW_VERSION))
+        self.assertTrue(self.hass.states.is_state(
+            updater.ENTITY_ID, NEW_VERSION))
 
     @patch('homeassistant.components.updater.requests.get')
     def test_errors_while_fetching_new_version(self, mock_get):
@@ -78,5 +78,5 @@ class TestUpdater(unittest.TestCase):
         updater.CURRENT_VERSION = MOCK_CURRENT_VERSION + 'dev'
 
         self.assertFalse(setup_component(self.hass, updater.DOMAIN, {
-            'updater': None
+            'updater': {}
         }))

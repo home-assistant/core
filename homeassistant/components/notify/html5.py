@@ -359,8 +359,6 @@ class HTML5NotificationService(BaseNotificationService):
 
         if not targets:
             targets = self.registrations.keys()
-        elif not isinstance(targets, list):
-            targets = [targets]
 
         for target in targets:
             info = self.registrations.get(target)

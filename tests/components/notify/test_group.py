@@ -74,7 +74,7 @@ class TestNotifyGroup(unittest.TestCase):
         data = self.events[-1].data
         assert {
             'message': 'Hello',
-            'target': 'unnamed device',
+            'target': ['unnamed device'],
             'title': 'Test notification',
             'data': {'hello': 'world', 'test': 'message'}
         } == data

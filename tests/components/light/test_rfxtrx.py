@@ -9,7 +9,7 @@ from homeassistant.components import rfxtrx as rfxtrx_core
 from tests.common import get_test_home_assistant
 
 
-@pytest.mark.skipif("os.environ.get('RFXTRX') == 'SKIP'")
+@pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
 class TestLightRfxtrx(unittest.TestCase):
     """Test the Rfxtrx light platform."""
 

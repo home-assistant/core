@@ -6,39 +6,41 @@ https://home-assistant.io/components/upnp/
 """
 import logging
 
-from homeassistant.const import (EVENT_HOMEASSISTANT_STOP)
+import voluptuous as vol
 
-DEPENDENCIES = ["api"]
+from homeassistant.const import (EVENT_HOMEASSISTANT_STOP)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "upnp"
+DEPENDENCIES = ['api']
+DOMAIN = 'upnp'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({}),
+}, extra=vol.ALLOW_EXTRA)
 
 
+# pylint: disable=import-error, no-member, broad-except
 def setup(hass, config):
     """Register a port mapping for Home Assistant via UPnP."""
-    # pylint: disable=import-error
     import miniupnpc
 
-    # pylint: disable=no-member
     upnp = miniupnpc.UPnP()
 
     upnp.discoverdelay = 200
     upnp.discover()
     try:
         upnp.selectigd()
-    # pylint: disable=broad-except
     except Exception:
         _LOGGER.exception("Error when attempting to discover a UPnP IGD")
         return False
 
-    upnp.addportmapping(hass.config.api.port, "TCP",
-                        hass.config.api.host, hass.config.api.port,
-                        "Home Assistant", "")
+    upnp.addportmapping(hass.config.api.port, 'TCP', hass.config.api.host,
+                        hass.config.api.port, 'Home Assistant', '')
 
     def deregister_port(event):
         """De-register the UPnP port mapping."""
-        upnp.deleteportmapping(hass.config.api.port, "TCP")
+        upnp.deleteportmapping(hass.config.api.port, 'TCP')
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
 

@@ -12,9 +12,6 @@ from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
 from homeassistant.components.rollershutter import RollershutterDevice
 
-COMMAND_CLASS_SWITCH_MULTILEVEL = 0x26  # 38
-COMMAND_CLASS_SWITCH_BINARY = 0x25  # 37
-
 SOMFY = 0x47
 SOMFY_ZRTSI = 0x5a52
 SOMFY_ZRTSI_CONTROLLER = (SOMFY, SOMFY_ZRTSI)
@@ -32,10 +29,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
 
-    if value.command_class != zwave.COMMAND_CLASS_SWITCH_MULTILEVEL:
+    if value.command_class != zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL:
         return
     if value.index != 0:
         return
@@ -82,9 +79,10 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
         """Callback on data change for the registered node/value pair."""
         # Position value
         for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
-            if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
-               and value.label == 'Level':
+                class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
+            if value.command_class == \
+               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and \
+               value.label == 'Level':
                 self._current_position = value.data
 
     @property
@@ -101,23 +99,26 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
 
     def move_up(self, **kwargs):
         """Move the roller shutter up."""
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
-            if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
-               and value.label == 'Open' or \
-               value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
-               and value.label == 'Down':
+        for value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL)
+                      .values()):
+            if value.command_class == \
+               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
+               'Open' or value.command_class == \
+               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
+               'Down':
                 self._lozwmgr.pressButton(value.value_id)
                 break
 
     def move_down(self, **kwargs):
         """Move the roller shutter down."""
         for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
-            if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
-               and value.label == 'Up' or \
-               value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
-               and value.label == 'Close':
+                class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
+            if value.command_class == \
+               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
+               'Up' or value.command_class == \
+               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
+               'Close':
                 self._lozwmgr.pressButton(value.value_id)
                 break
 
@@ -128,10 +129,11 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
     def stop(self, **kwargs):
         """Stop the roller shutter."""
         for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
-            if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
-               and value.label == 'Open' or \
-               value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
-               and value.label == 'Down':
+                class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
+            if value.command_class == \
+               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
+               'Open' or value.command_class == \
+               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
+               'Down':
                 self._lozwmgr.releaseButton(value.value_id)
                 break
