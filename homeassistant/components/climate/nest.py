@@ -41,14 +41,17 @@ class NestThermostat(ClimateDevice):
         self.device = device
         self._fan_list = [STATE_ON, STATE_AUTO]
 
-        """Not all nest devices support cooling and heating remove unused"""
-        self._operation_list = [STATE_HEAT, STATE_COOL, STATE_AUTO,
-                                STATE_OFF]
+        # Not all nest devices support cooling and heating remove unused
+        self._operation_list = [STATE_OFF]
 
-        if self.can_cool and not self.can_heat:
-            self._operation_list = [STATE_COOL, STATE_OFF]
-        elif self.can_heat and not self.can_cool:
-            self._operation_list = [STATE_HEAT, STATE_OFF]
+        if self.can_heat:
+            self._operation_list.append(STATE_HEAT)
+
+        if self.can_cool:
+            self._operation_list.append(STATE_COOL)
+
+        if self.can_heat and self.can_cool:
+            self._operation_list.append(STATE_AUTO)
 
     @property
     def name(self):
