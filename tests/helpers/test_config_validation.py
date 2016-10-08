@@ -3,10 +3,10 @@ from collections import OrderedDict
 from datetime import timedelta
 import enum
 import os
-import tempfile
 
 import pytest
 import voluptuous as vol
+from unittest.mock import Mock, patch
 
 import homeassistant.helpers.config_validation as cv
 
@@ -68,18 +68,18 @@ def test_isfile():
     """Validate that the value is an existing file."""
     schema = vol.Schema(cv.isfile)
 
-    with tempfile.NamedTemporaryFile() as fp:
-        pass
+    fake_file = 'this-file-does-not.exist'
+    assert not os.path.isfile(fake_file)
 
-    for value in ('invalid', None, -1, 0, 80000, fp.name):
+    for value in ('invalid', None, -1, 0, 80000, fake_file):
         with pytest.raises(vol.Invalid):
             schema(value)
 
-    with tempfile.TemporaryDirectory() as tmp_path:
-        tmp_file = os.path.join(tmp_path, "test.txt")
-        with open(tmp_file, "w") as tmp_handl:
-            tmp_handl.write("test file")
-        schema(tmp_file)
+    # patching methods that allow us to fake a file existing
+    # with write access
+    with patch('os.path.isfile', Mock(return_value=True)), \
+            patch('os.access', Mock(return_value=True)):
+        schema('test.txt')
 
 
 def test_url():

@@ -1,8 +1,7 @@
 """The testd for Core components."""
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
-from unittest.mock import patch
-from tempfile import TemporaryDirectory
+from unittest.mock import patch, Mock
 
 import yaml
 
@@ -13,7 +12,8 @@ from homeassistant.const import (
 import homeassistant.components as comps
 from homeassistant.helpers import entity
 
-from tests.common import get_test_home_assistant, mock_service
+from tests.common import (
+    get_test_home_assistant, mock_service, patch_yaml_files)
 
 
 class TestComponentsCore(unittest.TestCase):
@@ -89,6 +89,7 @@ class TestComponentsCore(unittest.TestCase):
             ('sensor', 'turn_on', {'entity_id': ['sensor.bla']}, False),
             mock_call.call_args_list[1][0])
 
+    @patch('homeassistant.config.os.path.isfile', Mock(return_value=True))
     def test_reload_core_conf(self):
         """Test reload core conf service."""
         ent = entity.Entity()
@@ -101,23 +102,20 @@ class TestComponentsCore(unittest.TestCase):
         assert state.state == 'unknown'
         assert state.attributes == {}
 
-        with TemporaryDirectory() as conf_dir:
-            self.hass.config.config_dir = conf_dir
-            conf_yaml = self.hass.config.path(config.YAML_CONFIG_FILE)
-
-            with open(conf_yaml, 'a') as fp:
-                fp.write(yaml.dump({
-                    ha.DOMAIN: {
-                        'latitude': 10,
-                        'longitude': 20,
-                        'customize': {
-                            'test.Entity': {
-                                'hello': 'world'
-                            }
+        files = {
+            config.YAML_CONFIG_FILE: yaml.dump({
+                ha.DOMAIN: {
+                    'latitude': 10,
+                    'longitude': 20,
+                    'customize': {
+                        'test.Entity': {
+                            'hello': 'world'
                         }
                     }
-                }))
-
+                }
+            })
+        }
+        with patch_yaml_files(files, True):
             comps.reload_core_config(self.hass)
             self.hass.block_till_done()
 
@@ -131,17 +129,15 @@ class TestComponentsCore(unittest.TestCase):
         assert state.state == 'unknown'
         assert state.attributes.get('hello') == 'world'
 
+    @patch('homeassistant.config.os.path.isfile', Mock(return_value=True))
     @patch('homeassistant.components._LOGGER.error')
     @patch('homeassistant.config.process_ha_core_config')
     def test_reload_core_with_wrong_conf(self, mock_process, mock_error):
         """Test reload core conf service."""
-        with TemporaryDirectory() as conf_dir:
-            self.hass.config.config_dir = conf_dir
-            conf_yaml = self.hass.config.path(config.YAML_CONFIG_FILE)
-
-            with open(conf_yaml, 'a') as fp:
-                fp.write(yaml.dump(['invalid', 'config']))
-
+        files = {
+            config.YAML_CONFIG_FILE: yaml.dump(['invalid', 'config'])
+        }
+        with patch_yaml_files(files, True):
             comps.reload_core_config(self.hass)
             self.hass.block_till_done()
 
