@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import generate_entity_id
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = [
     'https://github.com/sander76/powerviewApi/'
-    'archive/master.zip#powerviewApi==0.2']
+    'archive/master.zip#powerviewApi==0.3.15']
 
 HUB_ADDRESS = 'address'
 
@@ -20,7 +20,7 @@ HUB_ADDRESS = 'address'
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the powerview scenes stored in a Powerview hub."""
-    import powerview
+    from powerview_api import powerview
 
     hub_address = config.get(HUB_ADDRESS)
 
