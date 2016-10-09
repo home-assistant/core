@@ -500,7 +500,7 @@ urllib3
 uvcclient==0.9.0
 
 # homeassistant.components.verisure
-vsure==0.10.3
+vsure==0.11.0
 
 # homeassistant.components.sensor.vasttrafik
 vtjp==0.1.11
