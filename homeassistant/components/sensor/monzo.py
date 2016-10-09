@@ -22,13 +22,15 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ACCOUNT_ID = 'account_id'
 
-ICON_EUR = 'mdi:currency-eur'
-ICON_GBP = 'mdi:currency-gbp'
-ICON_INR = 'mdi:currency-inr'
-ICON_NGN = 'mdi:currency-ngn'
-ICON_RUB = 'mdi:currency-rub'
-ICON_TRY = 'mdi:currency-try'
-ICON_USD = 'mdi:currency-usd'
+ICONS = {
+    'eur': 'mdi:currency-eur',
+    'gbp': 'mdi:currency-gbp',
+    'inr': 'mdi:currency-inr',
+    'ngn': 'mdi:currency-ngn',
+    'rub': 'mdi:currency-rub',
+    'try': 'mdi:currency-try',
+    'usd': 'mdi:currency-usd',
+}
 
 DEFAULT_NAME = 'Monzo'
 
@@ -42,7 +44,7 @@ VARIABLE_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    vol.Required(CONF_MONITORED_VARIABLES, default=[]):
+    vol.Optional(CONF_MONITORED_VARIABLES, default=['balance']):
         vol.All(cv.ensure_list, [vol.In(VARIABLE_TYPES)]),
     vol.Optional(CONF_ACCOUNT_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
@@ -53,11 +55,17 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Monzo sensor."""
+    from monzo.errors import (ForbiddenError, UnauthorizedError)
     access_token = config.get(CONF_ACCESS_TOKEN)
     account_id = config.get(CONF_ACCOUNT_ID)
     name = config.get(CONF_NAME)
 
-    data = MonzoData(access_token, account_id)
+    try:
+        data = MonzoData(access_token, account_id)
+    except (ForbiddenError, UnauthorizedError):
+        _LOGGER.error('Monzo failed to initialise', exec=True)
+        return False
+
     dev = []
     for variable in config[CONF_MONITORED_VARIABLES]:
         dev.append(MonzoSensor(data, variable, name))
@@ -97,24 +105,17 @@ class MonzoSensor(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        icon = ICON_USD
+        unit = self._unit_of_measurement
 
-        if not self._unit_of_measurement:
+        if not unit:
+            return ICONS['usd']
+
+        icon = ([k for k, v in ICONS.items() if unit.lower() in v][0])
+
+        if icon:
             return icon
-        elif self._unit_of_measurement.lower() == 'eur':
-            icon = ICON_EUR
-        elif self._unit_of_measurement.lower() == 'gbp':
-            icon = ICON_GBP
-        elif self._unit_of_measurement.lower() == 'inr':
-            icon = ICON_INR
-        elif self._unit_of_measurement.lower() == 'ngn':
-            icon = ICON_NGN
-        elif self._unit_of_measurement.lower() == 'rub':
-            icon = ICON_RUB
-        elif self._unit_of_measurement.lower() == 'try':
-            icon = ICON_TRY
-
-        return icon
+        else:
+            return ICONS['usd']
 
     def update(self):
         """Get the latest data and updates the states."""
