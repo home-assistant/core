@@ -63,21 +63,21 @@ class PushoverNotificationService(BaseNotificationService):
 
         targets = kwargs.get(ATTR_TARGET)
 
-	if targets is not None:
-		for target in targets:
-			if target is not None:
-				data['device'] = target
+        if targets is not None:
+            for target in targets:
+                if target is not None:
+                    data['device'] = target
 
-				try:
-					self.pushover.send_message(message, **data)
-				except ValueError as val_err:
-					_LOGGER.error(str(val_err))
-				except RequestError:
-					_LOGGER.exception('Could not send pushover notification')
-	else:
-		try:
-			self.pushover.send_message(message, **data)
-		except ValueError as val_err:
-			_LOGGER.error(str(val_err))
-		except RequestError:
-			_LOGGER.exception('Could not send pushover notification')
+                    try:
+                        self.pushover.send_message(message, **data)
+                    except ValueError as val_err:
+                        _LOGGER.error(str(val_err))
+                    except RequestError:
+                        _LOGGER.exception('Could not send pushover notification')
+        else:
+            try:
+                self.pushover.send_message(message, **data)
+            except ValueError as val_err:
+                _LOGGER.error(str(val_err))
+            except RequestError:
+                _LOGGER.exception('Could not send pushover notification')
