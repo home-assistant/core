@@ -45,13 +45,13 @@ class NestThermostat(ClimateDevice):
         self._operation_list = [STATE_OFF]
 
         # Add supported nest thermostat features
-        if self.can_heat:
+        if self.device.can_heat:
             self._operation_list.append(STATE_HEAT)
 
-        if self.can_cool:
+        if self.device.can_cool:
             self._operation_list.append(STATE_COOL)
 
-        if self.can_heat and self.can_cool:
+        if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(STATE_AUTO)
 
     @property
@@ -75,7 +75,7 @@ class NestThermostat(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        if self.has_humidifier or self.has_dehumidifier:
+        if self.device.has_humidifier or self.device.has_dehumidifier:
             # Move these to Thermostat Device and make them global
             return {
                 "humidity": self.device.humidity,
@@ -179,7 +179,7 @@ class NestThermostat(ClimateDevice):
     @property
     def current_fan_mode(self):
         """Return whether the fan is on."""
-        if self.has_fan:
+        if self.device.has_fan:
             # Return whether the fan is on
             return STATE_ON if self.device.fan else STATE_AUTO
         else:
@@ -216,30 +216,3 @@ class NestThermostat(ClimateDevice):
     def update(self):
         """Python-nest has its own mechanism for staying up to date."""
         pass
-
-    # Exposing extra properties will probably be added to python-nest 2.11
-    # pylint: disable=protected-access
-    @property
-    def can_heat(self):
-        """Temp function to check if thermostat is able to heat."""
-        return self.device._shared['can_heat']
-
-    @property
-    def can_cool(self):
-        """Temp function to check if thermostat is able to cool."""
-        return self.device._shared['can_cool']
-
-    @property
-    def has_humidifier(self):
-        """Temp function to check if thermostat has humidifier."""
-        return self.device._device['has_humidifier']
-
-    @property
-    def has_dehumidifier(self):
-        """Temp function to check if thermostat has dehumidifier."""
-        return self.device._device['has_dehumidifier']
-
-    @property
-    def has_fan(self):
-        """Temp function to check if thermostat has a fan."""
-        return self.device._device['has_fan']
