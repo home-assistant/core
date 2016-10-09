@@ -14,6 +14,7 @@ import requests
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
+from homeassistant.util import slugify
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -87,7 +88,7 @@ def setup_scanner(hass, config, see):
         vehicle_url = rel["vehicle"] + '/'
         attributes = query("attributes", vehicle_url)
 
-        dev_id = "volvo_" + attributes["registrationNumber"]
+        dev_id = "volvo_" + slugify(attributes["registrationNumber"])
         host_name = "%s %s/%s" % (attributes["registrationNumber"],
                                   attributes["vehicleType"],
                                   attributes["modelYear"])
