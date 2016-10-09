@@ -6,23 +6,42 @@ https://home-assistant.io/components/media_player.russound_rnet/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON)
+    CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
     'https://github.com/laf/russound/archive/0.1.6.zip'
     '#russound==0.1.6']
 
-ZONES = 'zones'
-SOURCES = 'sources'
+_LOGGER = logging.getLogger(__name__)
+
+CONF_ZONES = 'zones'
+CONF_SOURCES = 'sources'
 
 SUPPORT_RUSSOUND = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                      SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
-_LOGGER = logging.getLogger(__name__)
+ZONE_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+})
+
+SOURCE_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_PORT): cv.port,
+    vol.Required(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
+    vol.Required(CONF_SOURCES): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -32,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     keypad = config.get('keypad', '70')
 
     if host is None or port is None:
-        _LOGGER.error('Invalid config. Expected %s and %s',
+        _LOGGER.error("Invalid config. Expected %s and %s",
                       CONF_HOST, CONF_PORT)
         return False
 
@@ -42,13 +61,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     russ.connect(keypad)
 
     sources = []
-    for source in config[SOURCES]:
+    for source in config[CONF_SOURCES]:
         sources.append(source['name'])
 
     if russ.is_connected():
-        for zone_id, extra in config[ZONES].items():
-            add_devices([RussoundRNETDevice(hass, russ, sources, zone_id,
-                                            extra)])
+        for zone_id, extra in config[CONF_ZONES].items():
+            add_devices([RussoundRNETDevice(
+                hass, russ, sources, zone_id, extra)])
     else:
         _LOGGER.error('Not connected to %s:%s', host, port)
 
