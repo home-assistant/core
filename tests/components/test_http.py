@@ -2,6 +2,8 @@
 # pylint: disable=protected-access,too-many-public-methods
 import logging
 import time
+from ipaddress import ip_network
+from unittest.mock import patch
 
 import requests
 
@@ -18,6 +20,11 @@ HA_HEADERS = {
     const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
     const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON,
 }
+# dont' add 127.0.0.1/::1 as trusted, as it may interfere with other test cases
+TRUSTED_NETWORKS = ["192.0.2.0/24",
+                    "2001:DB8:ABCD::/48",
+                    '100.64.0.1',
+                    'FD01:DB8::1']
 
 CORS_ORIGINS = [HTTP_BASE_URL, HTTP_BASE]
 
@@ -46,6 +53,10 @@ def setUpModule():   # pylint: disable=invalid-name
 
     bootstrap.setup_component(hass, 'api')
 
+    hass.wsgi.trusted_networks = [
+        ip_network(trusted_network)
+        for trusted_network in TRUSTED_NETWORKS]
+
     hass.start()
     time.sleep(0.05)
 
@@ -72,14 +83,21 @@ class TestHttp:
 
         assert req.status_code == 401
 
-    def test_access_denied_with_ip_no_in_approved_ips(self, caplog):
-        """Test access deniend with ip not in approved ip."""
-        hass.wsgi.approved_ips = ['134.4.56.1']
+    def test_access_denied_with_untrusted_ip(self, caplog):
+        """Test access with an untrusted ip address."""
 
-        req = requests.get(_url(const.URL_API),
-                           params={'api_password': ''})
+        for remote_addr in ['198.51.100.1',
+                            '2001:DB8:FA1::1',
+                            '127.0.0.1',
+                            '::1']:
+            with patch('homeassistant.components.http.'
+                       'HomeAssistantWSGI.get_real_ip',
+                       return_value=remote_addr):
+                req = requests.get(_url(const.URL_API),
+                                   params={'api_password': ''})
 
-        assert req.status_code == 401
+                assert req.status_code == 401, \
+                    "{} shouldn't be trusted".format(remote_addr)
 
     def test_access_with_password_in_header(self, caplog):
         """Test access with password in URL."""
@@ -121,14 +139,20 @@ class TestHttp:
         # assert const.URL_API in logs
         assert API_PASSWORD not in logs
 
-    def test_access_with_ip_in_approved_ips(self, caplog):
-        """Test access with approved ip."""
-        hass.wsgi.approved_ips = ['127.0.0.1', '134.4.56.1']
+    def test_access_with_trusted_ip(self, caplog):
+        """Test access with trusted addresses."""
+        for remote_addr in ['100.64.0.1',
+                            '192.0.2.100',
+                            'FD01:DB8::1',
+                            '2001:DB8:ABCD::1']:
+            with patch('homeassistant.components.http.'
+                       'HomeAssistantWSGI.get_real_ip',
+                       return_value=remote_addr):
+                req = requests.get(_url(const.URL_API),
+                                   params={'api_password': ''})
 
-        req = requests.get(_url(const.URL_API),
-                           params={'api_password': ''})
-
-        assert req.status_code == 200
+                assert req.status_code == 200, \
+                    "{} should be trusted".format(remote_addr)
 
     def test_cors_allowed_with_password_in_url(self):
         """Test cross origin resource sharing with password in url."""
