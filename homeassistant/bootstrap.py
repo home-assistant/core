@@ -199,7 +199,7 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
     return config
 
 
-def prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
+def prepare_setup_platform(hass: core.HomeAssistant, config: dict, domain: str,
                            platform_name: str) -> Optional[ModuleType]:
     """Load a platform and makes sure dependencies are setup."""
     _ensure_loader_prepared(hass)
@@ -361,7 +361,7 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
         ))
     except ImportError:
         pass
-
+    
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path(ERROR_LOG_FILENAME)
     err_path_exists = os.path.isfile(err_log_path)
