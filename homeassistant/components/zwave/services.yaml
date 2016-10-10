@@ -16,8 +16,8 @@ remove_node:
 set_config_parameter:
   description: Set a config parameter to a node on the Z-Wave network.
   fields:
-    entity_id:
-      description: Name of entity to set config parameter to.
+    node_id:
+      description: Node id of the device to set config parameter to (integer).
     parameter:
       description: Parameter number to set (integer).
     value:
