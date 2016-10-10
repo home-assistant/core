@@ -26,15 +26,15 @@ from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, QueryType
 import homeassistant.util.dt as dt_util
 
-DOMAIN = "recorder"
+DOMAIN = 'recorder'
 
-REQUIREMENTS = ['sqlalchemy==1.0.15']
+REQUIREMENTS = ['sqlalchemy==1.1.1']
 
-DEFAULT_URL = "sqlite:///{hass_config_path}"
-DEFAULT_DB_FILE = "home-assistant_v2.db"
+DEFAULT_URL = 'sqlite:///{hass_config_path}'
+DEFAULT_DB_FILE = 'home-assistant_v2.db'
 
-CONF_DB_URL = "db_url"
-CONF_PURGE_DAYS = "purge_days"
+CONF_DB_URL = 'db_url'
+CONF_PURGE_DAYS = 'purge_days'
 
 RETRIES = 3
 CONNECT_RETRY_WAIT = 10
@@ -56,8 +56,8 @@ _LOGGER = logging.getLogger(__name__)
 Session = None  # pylint: disable=no-member
 
 
-def execute(q: QueryType) \
-        -> List[Any]:  # pylint: disable=invalid-sequence-index
+# pylint: disable=invalid-sequence-index
+def execute(q: QueryType) -> List[Any]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -101,7 +101,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     global _INSTANCE  # pylint: disable=global-statement
 
     if _INSTANCE is not None:
-        _LOGGER.error('Only a single instance allowed.')
+        _LOGGER.error("Only a single instance allowed")
         return False
 
     purge_days = config.get(DOMAIN, {}).get(CONF_PURGE_DAYS)
@@ -155,8 +155,7 @@ class Recorder(threading.Thread):
     """A threaded recorder class."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, hass: HomeAssistant, purge_days: int, uri: str) \
-            -> None:
+    def __init__(self, hass: HomeAssistant, purge_days: int, uri: str) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self)
 
