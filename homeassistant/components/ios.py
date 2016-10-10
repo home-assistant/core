@@ -235,18 +235,18 @@ def setup(hass, config):
     if CONFIG_FILE == {}:
         CONFIG_FILE[ATTR_DEVICES] = {}
 
-    app_config = config[DOMAIN]
-    push_config = app_config[CONF_PUSH]
-
     # device_tracker = loader.get_component("device_tracker")
     zeroconf = loader.get_component("zeroconf")
     zeroconf.setup(hass, config)
 
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
 
-    hass.wsgi.register_view(iOSPushConfigView(hass, push_config))
-
     hass.wsgi.register_view(iOSIdentifyDeviceView(hass))
+
+    if config.get(DOMAIN) is not None:
+        app_config = config[DOMAIN]
+        push_config = app_config[CONF_PUSH]
+        hass.wsgi.register_view(iOSPushConfigView(hass, push_config))
 
     return True
 
