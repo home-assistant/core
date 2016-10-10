@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.helpers import template, script, config_validation as cv
 from homeassistant.components.http import HomeAssistantView
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +46,8 @@ ATTR_TITLE_TEXT = 'titleText'
 ATTR_STREAM_URL = 'streamUrl'
 ATTR_MAIN_TEXT = 'mainText'
 ATTR_REDIRECTION_URL = 'redirectionURL'
+
+DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.0Z'
 
 DOMAIN = 'alexa'
 DEPENDENCIES = ['http']
@@ -83,9 +86,9 @@ CONFIG_SCHEMA = vol.Schema({
         CONF_FLASH_BRIEFINGS: {
             cv.string: vol.All(cv.ensure_list, [{
                 vol.Required(CONF_UID, default=str(uuid.uuid4())): cv.string,
-                vol.Optional(CONF_DATE, default=datetime.utcnow()): cv.time,
+                vol.Optional(CONF_DATE, default=datetime.utcnow()): cv.string,
                 vol.Required(CONF_TITLE): cv.template,
-                vol.Optional(CONF_AUDIO): cv.url,
+                vol.Optional(CONF_AUDIO): cv.template,
                 vol.Required(CONF_TEXT, default=""): cv.template,
                 vol.Optional(CONF_DISPLAY_URL): cv.template,
             }]),
@@ -280,6 +283,7 @@ class AlexaFlashBriefingView(HomeAssistantView):
         self.flash_briefings = copy.deepcopy(flash_briefings)
         template.attach(hass, self.flash_briefings)
 
+    # pylint: disable=too-many-branches
     def get(self, request, briefing_id):
         """Handle Alexa Flash Briefing request."""
         _LOGGER.debug('Received Alexa flash briefing request for: %s',
@@ -297,28 +301,36 @@ class AlexaFlashBriefingView(HomeAssistantView):
             if item.get(CONF_TITLE) is not None:
                 if isinstance(item.get(CONF_TITLE), template.Template):
                     output[ATTR_TITLE_TEXT] = item[CONF_TITLE].render()
+                else:
+                    output[ATTR_TITLE_TEXT] = item.get(CONF_TITLE)
 
             if item.get(CONF_TEXT) is not None:
                 if isinstance(item.get(CONF_TEXT), template.Template):
                     output[ATTR_MAIN_TEXT] = item[CONF_TEXT].render()
+                else:
+                    output[ATTR_MAIN_TEXT] = item.get(CONF_TEXT)
+
+            if item.get(CONF_UID) is not None:
+                output[ATTR_UID] = item.get(CONF_UID)
+
+            if item.get(CONF_AUDIO) is not None:
+                if isinstance(item.get(CONF_AUDIO), template.Template):
+                    output[ATTR_STREAM_URL] = item[CONF_AUDIO].render()
+                else:
+                    output[ATTR_STREAM_URL] = item.get(CONF_AUDIO)
 
             if item.get(CONF_DISPLAY_URL) is not None:
                 if isinstance(item.get(CONF_DISPLAY_URL),
                               template.Template):
                     output[ATTR_REDIRECTION_URL] = \
                         item[CONF_DISPLAY_URL].render()
+                else:
+                    output[ATTR_REDIRECTION_URL] = item.get(CONF_DISPLAY_URL)
 
-            date_format = '%Y-%m-%dT%H:%M:%S.0Z'
-            output[ATTR_UPDATE_DATE] = item[CONF_DATE].strftime(date_format)
+            if isinstance(item[CONF_DATE], str):
+                item[CONF_DATE] = dt_util.parse_datetime(item[CONF_DATE])
 
-            if item.get(CONF_UID) is not None:
-                output[ATTR_UID] = item.get(CONF_UID)
-
-            if item.get(CONF_AUDIO) is not None:
-                output[ATTR_STREAM_URL] = item.get(CONF_AUDIO)
-
-            if item.get(CONF_DISPLAY_URL) is not None:
-                output[ATTR_REDIRECTION_URL] = item.get(CONF_DISPLAY_URL)
+            output[ATTR_UPDATE_DATE] = item[CONF_DATE].strftime(DATE_FORMAT)
 
             briefing.append(output)
 
