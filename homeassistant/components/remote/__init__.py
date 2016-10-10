@@ -1,5 +1,5 @@
 """
-Component to interface with various remotes that can be controlled remotely.
+Component to interface with univeral remote control devices.
 
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/remote/
@@ -9,27 +9,23 @@ import logging
 import os
 
 import voluptuous as vol
-
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
-#will fix once testing is complete
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,ATTR_ENTITY_ID)#, SERVICE_SEND_COMMAND,
-   # SERVICE_SYNC, ATTR_DEVICE, ATTR_COMMAND, ATTR_ACTIVITY)
+    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.components import group
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 
 ATTR_DEVICE = 'device'
 ATTR_COMMAND = 'command'
 ATTR_ACTIVITY = 'activity'
 SERVICE_SEND_COMMAND = 'send_command'
 SERVICE_SYNC = 'sync'
-
+ATTR_DEFAULT = ''
 
 DOMAIN = 'remote'
-
-ATTR_DEFAULT = ''
 SCAN_INTERVAL = 30
 
 GROUP_NAME_ALL_REMOTES = 'all remotes'
@@ -69,6 +65,7 @@ def turn_off(hass, entity_id=None):
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
+
 def send_command(hass, device=None, command=None, entity_id=None):
     """Send a command to a device"""
     data = {}
@@ -103,14 +100,14 @@ def setup(hass, config):
             if service.service == SERVICE_TURN_ON:
                 remote.turn_on(activity=activity_id)
             elif service.service == SERVICE_SEND_COMMAND:
-               remote.send_command(device=device, command=command)
+                remote.send_command(device=device, command=command)
             elif service.service == SERVICE_SYNC:
                 remote.sync()
             else:
                 remote.turn_off()
+
             if remote.should_poll:
                 remote.update_ha_state(True)
-
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
@@ -138,20 +135,23 @@ class RemoteDevice(ToggleEntity):
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {}
-
-        for prop, attr in PROP_TO_ATTR.items():
-            value = getattr(self, prop)
-            if value:
-                data[attr] = value
-
         return data
 
+    def state(self):
+        return self.is_on
 
-def turn_on(self, **kwargs):
-    """Turn a device one with the remote"""
-    raise NotImplementedError()
+    def turn_on(self, **kwargs):
+        """Turn a device one with the remote"""
+        raise NotImplementedError()
 
+    def turn_off(self, **kwargs):
+        """Turn a device off with the remote."""
+        raise NotImplementedError()
 
-def turn_off(self, **kwargs):
-    """Turn a device off with the remote."""
-    raise NotImplementedError()
+    def sync(self, **kwargs):
+        """Turn a device off with the remote."""
+        raise NotImplementedError()
+
+    def send_command(self, **kwargs):
+        """Turn a device off with the remote."""
+        raise NotImplementedError()
