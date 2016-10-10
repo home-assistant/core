@@ -253,7 +253,7 @@ def setup(hass, config):
                     kwargs[value] = convert_temperature(
                         temp,
                         hass.config.units.temperature_unit,
-                        climate._platform_unit_of_measurement
+                        climate.temperature_unit
                     )
                 else:
                     kwargs[value] = temp
@@ -426,7 +426,7 @@ class ClimateDevice(Entity):
         return self.hass.config.units.temperature_unit
 
     @property
-    def _platform_unit_of_measurement(self):
+    def temperature_unit(self):
         """The unit of measurement used by the platform."""
         raise NotImplementedError
 
@@ -561,7 +561,7 @@ class ClimateDevice(Entity):
         if temp is None or not isinstance(temp, Number):
             return temp
 
-        value = convert_temperature(temp, self._platform_unit_of_measurement,
+        value = convert_temperature(temp, self.temperature_unit,
                                     self.unit_of_measurement)
 
         if self.unit_of_measurement is TEMP_CELSIUS:
