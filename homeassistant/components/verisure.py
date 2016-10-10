@@ -27,7 +27,7 @@ CONF_LOCKS = 'locks'
 CONF_MOUSE = 'mouse'
 CONF_SMARTPLUGS = 'smartplugs'
 CONF_THERMOMETERS = 'thermometers'
-
+CONF_SMARTCAM = 'smartcam'
 DOMAIN = 'verisure'
 
 HUB = None
@@ -43,6 +43,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_MOUSE, default=True): cv.boolean,
         vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
         vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
+        vol.Optional(CONF_SMARTCAM, default=True): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -55,7 +56,8 @@ def setup(hass, config):
     if not HUB.login():
         return False
 
-    for component in ('sensor', 'switch', 'alarm_control_panel', 'lock'):
+    for component in ('sensor', 'switch', 'alarm_control_panel', 'lock',
+                      'camera'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
