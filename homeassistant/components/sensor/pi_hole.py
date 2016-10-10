@@ -89,8 +89,8 @@ class PiHoleSensor(Entity):
 
     # pylint: disable=no-member
     @property
-    def state_attributes(self):
-        """Return the state attributes of the GPS."""
+    def device_state_attributes(self):
+        """Return the state attributes of the Pi-Hole."""
         return {
             ATTR_BLOCKED_DOMAINS: self._state.get('domains_being_blocked'),
             ATTR_PERCENTAGE_TODAY: self._state.get('ads_percentage_today'),
@@ -98,7 +98,7 @@ class PiHoleSensor(Entity):
         }
 
     def update(self):
-        """Get the latest data from REST API and updates the state."""
+        """Get the latest data from the Pi-Hole API and updates the state."""
         try:
             self.rest.update()
             self._state = json.loads(self.rest.data)
