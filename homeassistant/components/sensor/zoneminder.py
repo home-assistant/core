@@ -54,7 +54,10 @@ class ZMSensorMonitors(Entity):
         monitor = zoneminder.get_state(
             'api/monitors/%i.json' % self._monitor_id
         )
-        self._state = monitor['monitor']['Monitor']['Function']
+        if monitor['monitor']['Monitor']['Function'] is None:
+            self._state = "None"
+        else:
+            self._state = monitor['monitor']['Monitor']['Function']
 
 
 class ZMSensorEvents(Entity):
