@@ -353,7 +353,8 @@ def _get_devices(device_type, keys):
                     name = _create_ha_name(
                         name=device.NAME,
                         channel=channel,
-                        param=param
+                        param=param,
+                        count=len(channels)
                     )
                     device_dict = {
                         CONF_PLATFORM: "homematic",
@@ -377,22 +378,22 @@ def _get_devices(device_type, keys):
     return device_arr
 
 
-def _create_ha_name(name, channel, param):
+def _create_ha_name(name, channel, param, count):
     """Generate a unique object name."""
     # HMDevice is a simple device
-    if channel == 1 and param is None:
+    if count == 1 and param is None:
         return name
 
     # Has multiple elements/channels
-    if channel > 1 and param is None:
+    if count > 1 and param is None:
         return "{} {}".format(name, channel)
 
     # With multiple param first elements
-    if channel == 1 and param is not None:
+    if count == 1 and param is not None:
         return "{} {}".format(name, param)
 
     # Multiple param on object with multiple elements
-    if channel > 1 and param is not None:
+    if count > 1 and param is not None:
         return "{} {} {}".format(name, channel, param)
 
 
@@ -599,12 +600,6 @@ class HMDevice(Entity):
         # Set param to uppercase
         if self._state:
             self._state = self._state.upper()
-
-        # Generate name
-        if not self._name:
-            self._name = _create_ha_name(name=self._address,
-                                         channel=self._channel,
-                                         param=self._state)
 
     @property
     def should_poll(self):
