@@ -174,7 +174,7 @@ def _load_config(filename):
         return {}
 
     try:
-        with open(filename, 'r') as fdesc:
+        with open(filename, "r") as fdesc:
             inp = fdesc.read()
 
         # In case empty file
@@ -183,17 +183,17 @@ def _load_config(filename):
 
         return json.loads(inp)
     except (IOError, ValueError) as error:
-        _LOGGER.error('Reading config file %s failed: %s', filename, error)
+        _LOGGER.error("Reading config file %s failed: %s", filename, error)
         return None
 
 
 def _save_config(filename, config):
     """Save configuration."""
     try:
-        with open(filename, 'w') as fdesc:
+        with open(filename, "w") as fdesc:
             fdesc.write(json.dumps(config))
     except (IOError, TypeError) as error:
-        _LOGGER.error('Saving config file failed: %s', error)
+        _LOGGER.error("Saving config file failed: %s", error)
         return False
     return True
 
@@ -239,7 +239,7 @@ def setup(hass, config):
     zeroconf = loader.get_component("zeroconf")
     zeroconf.setup(hass, config)
 
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
 
     hass.wsgi.register_view(iOSIdentifyDeviceView(hass))
 
@@ -291,7 +291,7 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         CONFIG_FILE[ATTR_DEVICES][name] = data
 
         if not _save_config(CONFIG_FILE_PATH, CONFIG_FILE):
-            return self.json_message('Error saving device.',
+            return self.json_message("Error saving device.",
                                      HTTP_INTERNAL_SERVER_ERROR)
 
         return self.json({"status": "registered"})
