@@ -234,10 +234,10 @@ class GTFSDepartureSensor(Entity):
             trip = self._departure['trip']
 
             name = '{} {} to {} next departure'
-            self._name = self._custom_name or \
-                             name.format(agency.agency_name,
-                                         origin_station.stop_id,
-                                         destination_station.stop_id)
+            self._name = (self._custom_name or
+                          name.format(agency.agency_name,
+                                      origin_station.stop_id,
+                                      destination_station.stop_id))
 
             # Build attributes
             self._attributes = {}
