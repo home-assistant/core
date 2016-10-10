@@ -5,11 +5,13 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/updater/
 """
 import logging
+import json
 import os
 import platform
 import uuid
-import json
+# pylint: disable=no-name-in-module,import-error
 from distutils.version import StrictVersion
+
 import requests
 import voluptuous as vol
 
