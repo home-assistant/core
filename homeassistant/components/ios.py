@@ -15,6 +15,8 @@ from homeassistant.helpers import config_validation as cv
 
 import homeassistant.loader as loader
 
+from homeassistant.helpers import discovery
+
 from homeassistant.components.http import HomeAssistantView
 
 from homeassistant.const import (HTTP_INTERNAL_SERVER_ERROR,
@@ -59,6 +61,7 @@ ATTR_PERMISSIONS = "permissions"
 ATTR_PUSH_ID = "pushId"
 ATTR_DEVICE_ID = "deviceId"
 ATTR_PUSH_SOUNDS = "pushSounds"
+ATTR_BATTERY = "battery"
 
 ATTR_DEVICE_NAME = "name"
 ATTR_DEVICE_LOCALIZED_MODEL = "localizedModel"
@@ -76,6 +79,17 @@ ATTR_LOCATION_PERMISSION = "location"
 ATTR_NOTIFICATIONS_PERMISSION = "notifications"
 
 PERMISSIONS = [ATTR_LOCATION_PERMISSION, ATTR_NOTIFICATIONS_PERMISSION]
+
+ATTR_BATTERY_STATE = "state"
+ATTR_BATTERY_LEVEL = "level"
+
+ATTR_BATTERY_STATE_UNPLUGGED = "Unplugged"
+ATTR_BATTERY_STATE_CHARGING = "Charging"
+ATTR_BATTERY_STATE_FULL = "Full"
+ATTR_BATTERY_STATE_UNKNOWN = "Unknown"
+
+BATTERY_STATES = [ATTR_BATTERY_STATE_UNPLUGGED, ATTR_BATTERY_STATE_CHARGING,
+                  ATTR_BATTERY_STATE_FULL, ATTR_BATTERY_STATE_UNKNOWN]
 
 ATTR_DEVICES = "devices"
 
@@ -128,8 +142,16 @@ IDENTIFY_APP_SCHEMA = vol.Schema({
 
 IDENTIFY_APP_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_APP_SCHEMA)
 
+IDENTIFY_BATTERY_SCHEMA = vol.Schema({
+    vol.Required(ATTR_BATTERY_LEVEL): cv.positive_int,
+    vol.Required(ATTR_BATTERY_STATE): vol.In(BATTERY_STATES)
+}, extra=vol.ALLOW_EXTRA)
+
+IDENTIFY_BATTERY_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_BATTERY_SCHEMA)
+
 IDENTIFY_SCHEMA = vol.Schema({
     vol.Required(ATTR_DEVICE): IDENTIFY_DEVICE_SCHEMA_CONTAINER,
+    vol.Required(ATTR_BATTERY): IDENTIFY_BATTERY_SCHEMA_CONTAINER,
     vol.Required(ATTR_PUSH_TOKEN): cv.string,
     vol.Required(ATTR_APP): IDENTIFY_APP_SCHEMA_CONTAINER,
     vol.Required(ATTR_PERMISSIONS): vol.All(cv.ensure_list,
@@ -195,6 +217,11 @@ def enabled_push_ids():
     return push_ids
 
 
+def devices():
+    """Return a dictionary of all identified devices."""
+    return CONFIG_FILE[ATTR_DEVICES]
+
+
 def setup(hass, config):
     """Setup the iOS component."""
     # pylint: disable=global-statement, import-error
@@ -214,6 +241,8 @@ def setup(hass, config):
     # device_tracker = loader.get_component("device_tracker")
     zeroconf = loader.get_component("zeroconf")
     zeroconf.setup(hass, config)
+
+    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
 
     hass.wsgi.register_view(iOSPushConfigView(hass, push_config))
 
