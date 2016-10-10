@@ -1,5 +1,5 @@
 """Helpers for components that manage entities."""
-from threading import Lock
+import asyncio
 
 from homeassistant import config as conf_util
 from homeassistant.bootstrap import (prepare_setup_platform,
@@ -7,12 +7,14 @@ from homeassistant.bootstrap import (prepare_setup_platform,
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.util.async import run_coroutine_threadsafe
 
 DEFAULT_SCAN_INTERVAL = 15
 
@@ -189,41 +191,61 @@ class EntityPlatform(object):
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
         self.platform_entities = []
-        self._unsub_polling = None
+        self._async_unsub_polling = None
 
     def add_entities(self, new_entities):
         """Add entities for a single platform."""
-        with self.component.lock:
-            for entity in new_entities:
-                if self.component.add_entity(entity, self):
-                    self.platform_entities.append(entity)
+        run_coroutine_threadsafe(
+            self.async_add_entities(new_entities), self.component.hass.loop
+        ).result()
 
-            self.component.update_group()
+    @async.coroutine
+    def async_add_entities(self, new_entities):
+        """Add entities for a single platform async.
 
-            if self._unsub_polling is not None or \
-               not any(entity.should_poll for entity
-                       in self.platform_entities):
-                return
+        This method must be run in the event loop.
+        """
+        for entity in new_entities:
+            if self.component.add_entity(entity, self):
+                self.platform_entities.append(entity)
 
-            self._unsub_polling = track_utc_time_change(
-                self.component.hass, self._update_entity_states,
-                second=range(0, 60, self.scan_interval))
+        yield from self.component.hass.loop.run_in_executor(
+            None, self.component.update_group
+        )
 
-    def reset(self):
-        """Remove all entities and reset data."""
+        if self._async_unsub_polling is not None or \
+           not any(entity.should_poll for entity
+                   in self.platform_entities):
+            return
+
+        self._async_unsub_polling = track_utc_time_change(
+            self.component.hass, self._update_entity_states,
+            second=range(0, 60, self.scan_interval))
+
+    def async_reset(self):
+        """Remove all entities and reset data.
+
+        This method must be run in the event loop.
+        """
         for entity in self.platform_entities:
-            entity.remove()
-        if self._unsub_polling is not None:
-            self._unsub_polling()
-            self._unsub_polling = None
+            entity.async_remove()
 
+        if self._async_unsub_polling is not None:
+            self._async_unsub_polling()
+            self._async_unsub_polling = None
+
+    @callback
     def _update_entity_states(self, now):
-        """Update the states of all the polling entities."""
-        with self.component.lock:
-            # We copy the entities because new entities might be detected
-            # during state update causing deadlocks.
-            entities = list(entity for entity in self.platform_entities
-                            if entity.should_poll)
+        """Update the states of all the polling entities.
+
+        This method must be run in the event loop.
+        """
+        # We copy the entities because new entities might be detected
+        # during state update causing deadlocks.
+        entities = list(entity for entity in self.platform_entities
+                        if entity.should_poll)
 
         for entity in entities:
-            entity.update_ha_state(True)
+            self.component.hass.async_add_job(
+                entity.async_update_ha_state, True
+            )

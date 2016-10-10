@@ -240,6 +240,13 @@ class Entity(object):
         """Remove entitiy from HASS."""
         self.hass.states.remove(self.entity_id)
 
+    def async_remove(self) -> None:
+        """Remove entitiy from async HASS.
+
+        This method must be run in the event loop.
+        """
+        self.hass.states.async_remove(self.entity_id)
+
     def _attr_setter(self, name, typ, attr, attrs):
         """Helper method to populate attributes based on properties."""
         if attr in attrs:
