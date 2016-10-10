@@ -311,8 +311,7 @@ class TestScriptHelper(unittest.TestCase):
         assert len(script_obj._config_cache) == 1
 
     def test_all_conditions_cached(self):
-        """Test that in a script with multiple conditions, all the conditions
-         get cached."""
+        """Test that multiple conditions get cached."""
         event = 'test_event'
         events = []
 
