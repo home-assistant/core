@@ -1,5 +1,5 @@
 """
-Support for Nest devices.
+Support for Zoneminder
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zoneminder/
