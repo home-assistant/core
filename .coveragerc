@@ -104,6 +104,9 @@ omit =
     homeassistant/components/ffmpeg.py
     homeassistant/components/*/ffmpeg.py
 
+    homeassistant/components/zoneminder.py
+    homeassistant/components/*/zoneminder.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
