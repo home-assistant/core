@@ -86,7 +86,7 @@ CONFIG_SCHEMA = vol.Schema({
                 vol.Optional(CONF_DATE, default=datetime.utcnow()): cv.time,
                 vol.Required(CONF_TITLE): cv.template,
                 vol.Optional(CONF_AUDIO): cv.url,
-                vol.Required(CONF_TEXT): cv.template,
+                vol.Required(CONF_TEXT, default=""): cv.template,
                 vol.Optional(CONF_DISPLAY_URL): cv.template,
             }]),
         }
