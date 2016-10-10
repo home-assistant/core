@@ -185,7 +185,8 @@ class GTFSDepartureSensor(Entity):
         self._pygtfs = pygtfs
         self.origin = origin
         self.destination = destination
-        self._name = name
+        self._custom_name = name
+        self._name = ''
         self._unit_of_measurement = 'min'
         self._state = 0
         self._attributes = {}
@@ -233,7 +234,8 @@ class GTFSDepartureSensor(Entity):
             trip = self._departure['trip']
 
             name = '{} {} to {} next departure'
-            self._name = name.format(agency.agency_name,
+            self._name = self._custom_name or \
+                         name.format(agency.agency_name,
                                      origin_station.stop_id,
                                      destination_station.stop_id)
 
