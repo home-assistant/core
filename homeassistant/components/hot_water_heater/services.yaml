@@ -1,0 +1,67 @@
+set_away_mode:
+  description: Turn away mode on/off for hot water heater controller
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'hot_water_heater.main'
+
+    away_mode:
+      description: New value of away mode
+      example: true
+
+set_guest_mode:
+  description: Turn guest mode on/off for hot water heater controller
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'hot_water_heater.main'
+
+    guest_mode:
+      description: New value of guest mode
+      example: true
+
+set_holiday_mode:
+  description: Turn holiday mode on/off for hot water heater controller
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'hot_water_heater.main'
+
+    holiday_mode:
+      description: New value of holiday mode
+      example: true
+
+set_temperature:
+  description: Set target temperature for the hot water heater controller
+  
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'hot_water_heater.main'
+
+    target_water_temperature:
+      description: New target temperature for geyser
+      example: 55
+
+    panel_diff_temp:
+      description: New differential temperature between geyser and solar collector
+      example: 7
+ 
+    operation_mode:
+      description: Operation mode to set temperature to. This defaults to current_operation mode if not set, or set incorrectly.
+      example: 'On'
+
+set_operation_mode:
+  description: Set operation mode for the hot water heater controller
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'hot_water_heater.main'
+
+    operation_mode:
+      description: New value of operation mode
+      example: On
