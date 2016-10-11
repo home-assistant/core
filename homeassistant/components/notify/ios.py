@@ -17,14 +17,14 @@ _LOGGER = logging.getLogger(__name__)
 
 PUSH_URL = "https://mj28d17jwj.execute-api.us-west-2.amazonaws.com/prod/push"
 
-DEPENDENCIES = ['ios']
+DEPENDENCIES = ["ios"]
 
 
 def get_service(hass, config):
     """Get the iOS notification service."""
-    if 'notify.ios' not in hass.config.components:
+    if "notify.ios" not in hass.config.components:
         # Need this to enable requirements checking in the app.
-        hass.config.components.append('notify.ios')
+        hass.config.components.append("notify.ios")
 
     return iOSNotificationService()
 
@@ -65,5 +65,5 @@ class iOSNotificationService(BaseNotificationService):
 
             if response.status_code not in (200, 201):
                 _LOGGER.exception(
-                    'Error sending push notification. Response %d: %s:',
+                    "Error sending push notification. Response %d: %s:",
                     response.status_code, response.reason)
