@@ -16,12 +16,13 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
     STATE_UNLOCKED, STATE_UNKNOWN, ATTR_ASSUMED_STATE)
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe)
+    run_callback_threadsafe, fire_callback_threadsafe)
 
 DOMAIN = 'group'
 
@@ -142,11 +143,8 @@ def setup(hass, config):
     """Setup all groups found definded in the configuration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    success = run_callback_threadsafe(
+    fire_callback_threadsafe(
         hass.loop, _process_config, hass, config, component).result()
-
-    if not success:
-        return False
 
     descriptions = conf_util.load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
@@ -181,7 +179,6 @@ def _process_config(hass, config, component):
         groups.append(group)
 
     hass.async_add_job(component.async_add_entities, groups)
-    return True
 
 
 class Group(Entity):
@@ -194,12 +191,9 @@ class Group(Entity):
         self.hass = hass
         self._name = name
         self._state = STATE_UNKNOWN
-        self._order = len(hass.states.entity_ids(DOMAIN))
         self._user_defined = user_defined
         self._icon = icon
         self._view = view
-        self.entity_id = generate_entity_id(
-            ENTITY_ID_FORMAT, object_id or name, hass=hass)
         self.tracking = []
         self.group_on = None
         self.group_off = None
@@ -207,11 +201,19 @@ class Group(Entity):
         self._async_unsub_state_changed = None
 
         if async:
+            self._order = len(hass.states.async_entity_ids(DOMAIN))
+            self.entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT, object_id or name, hass=hass)
+
             if entity_ids is not None:
                 self.async_update_tracked_entity_ids(entity_ids)
             else:
                 hass.async_add_job(self.async_update_ha_state, True)
         else:
+            self._order = len(hass.states.entity_ids(DOMAIN))
+            self.entity_id = generate_entity_id(
+                ENTITY_ID_FORMAT, object_id or name, hass=hass)
+
             if entity_ids is not None:
                 self.update_tracked_entity_ids(entity_ids)
             else:
@@ -262,22 +264,45 @@ class Group(Entity):
 
     def update_tracked_entity_ids(self, entity_ids):
         """Update the member entity IDs."""
-        self.stop()
+        run_callback_threadsafe(
+            self.hass.loop, self.async_update_tracked_entity_ids, entity_ids
+        ).result()
+
+    def async_update_tracked_entity_ids(self, entity_ids):
+        """Update the member entity IDs.
+
+        This method must be run in the event loop.
+        """
+        self.async_stop()
         self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
         self.group_on, self.group_off = None, None
 
-        self.update_ha_state(True)
-
-        self.start()
+        self.hass.async_run_job(self.async_update_ha_state, True)
+        self.async_start()
 
     def start(self):
         """Start tracking members."""
-        self._async_unsub_state_changed = track_state_change(
-            self.hass, self.tracking, self._state_changed_listener)
+        run_callback_threadsafe(self.hass.loop, self.async_start).result()
+
+    def async_start(self):
+        """Start tracking members.
+
+        This method must be run in the event loop.
+        """
+        self._async_unsub_state_changed = async_track_state_change(
+            self.hass, self.tracking, self._state_changed_listener
+        )
 
     def stop(self):
         """Unregister the group from Home Assistant."""
         self.remove()
+
+    def async_stop(self):
+        """Unregister the group from Home Assistant.
+
+        This method must be run in the event loop.
+        """
+        self.async_remove()
 
     def async_update(self):
         """Query all members and determine current group state."""
@@ -286,16 +311,27 @@ class Group(Entity):
 
     def remove(self):
         """Remove group from HASS."""
-        super().remove()
+        run_callback_threadsafe(self.hass.loop, self.async_remove).result()
+
+    def async_remove(self):
+        """Remove group from HASS.
+
+        This method must be run in the event loop.
+        """
+        super().async_remove()
 
         if self._async_unsub_state_changed:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None
 
+    @callback
     def _state_changed_listener(self, entity_id, old_state, new_state):
-        """Respond to a member state changing."""
+        """Respond to a member state changing.
+
+        This method must be run in the event loop.
+        """
         self._update_group_state(new_state)
-        self.update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state)
 
     @property
     def _tracking_states(self):
