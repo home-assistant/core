@@ -54,7 +54,7 @@ class EntityComponent(object):
         discovered platforms.
         """
         run_coroutine_threadsafe(
-            self.hass.loop, self.async_setup, config
+            self.async_setup(config), self.hass.loop
         ).result()
 
     @asyncio.coroutine
@@ -196,7 +196,7 @@ class EntityComponent(object):
         This method must be run in the event loop.
         """
         if self.group is None and self.group_name is not None:
-            group = yield from self.component.hass.loop.run_in_executor(
+            group = yield from self.hass.loop.run_in_executor(
                 None, get_component, 'group'
             )
             self.group = group.Group(self.hass, self.group_name,
