@@ -14,7 +14,7 @@ from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_STRUCTURE)
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-nest==2.10.0']
+REQUIREMENTS = ['python-nest==2.11.0']
 
 DOMAIN = 'nest'
 
