@@ -22,6 +22,10 @@ DEPENDENCIES = ['ios']
 
 def get_service(hass, config):
     """Get the iOS notification service."""
+    if 'notify.ios' not in hass.config.components:
+        # Need this to enable requirements checking in the app.
+        hass.config.components.append('notify.ios')
+
     return iOSNotificationService()
 
 

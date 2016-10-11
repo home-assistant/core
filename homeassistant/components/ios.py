@@ -22,6 +22,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (HTTP_INTERNAL_SERVER_ERROR,
                                  HTTP_BAD_REQUEST)
 
+from homeassistant.components.notify import DOMAIN as NotifyDomain
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ios"
@@ -235,9 +237,24 @@ def setup(hass, config):
     if CONFIG_FILE == {}:
         CONFIG_FILE[ATTR_DEVICES] = {}
 
-    # device_tracker = loader.get_component("device_tracker")
+    device_tracker = loader.get_component("device_tracker")
+    if device_tracker.DOMAIN not in hass.config.components:
+        device_tracker.setup(hass, {})
+        # Need this to enable requirements checking in the app.
+        hass.config.components.append(device_tracker.DOMAIN)
+
+    if "notify.ios" not in hass.config.components:
+        notify = loader.get_component("notify.ios")
+        notify.get_service(hass, {})
+        # Need this to enable requirements checking in the app.
+        if NotifyDomain not in hass.config.components:
+            hass.config.components.append(NotifyDomain)
+
     zeroconf = loader.get_component("zeroconf")
-    zeroconf.setup(hass, config)
+    if zeroconf.DOMAIN not in hass.config.components:
+        zeroconf.setup(hass, config)
+        # Need this to enable requirements checking in the app.
+        hass.config.components.append(zeroconf.DOMAIN)
 
     discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
 
@@ -245,8 +262,9 @@ def setup(hass, config):
 
     if config.get(DOMAIN) is not None:
         app_config = config[DOMAIN]
-        push_config = app_config[CONF_PUSH]
-        hass.wsgi.register_view(iOSPushConfigView(hass, push_config))
+        if app_config.get(CONF_PUSH) is not None:
+            push_config = app_config[CONF_PUSH]
+            hass.wsgi.register_view(iOSPushConfigView(hass, push_config))
 
     return True
 
