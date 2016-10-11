@@ -7,9 +7,10 @@ from unittest.mock import patch
 from io import StringIO
 import logging
 import threading
+from contextlib import contextmanager
 
 from homeassistant import core as ha, loader
-from homeassistant.bootstrap import setup_component
+from homeassistant.bootstrap import setup_component, prepare_setup_component
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
@@ -58,6 +59,8 @@ def get_test_home_assistant(num_threads=None):
     stop_event = threading.Event()
 
     def run_loop():
+        """Run event loop."""
+        # pylint: disable=protected-access
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
         loop.close()
@@ -70,20 +73,22 @@ def get_test_home_assistant(num_threads=None):
 
     @asyncio.coroutine
     def fake_stop():
+        """Fake stop."""
         yield None
 
-    def start_hass():
+    @patch.object(ha, 'async_create_timer')
+    @patch.object(ha, 'async_monitor_worker_pool')
+    @patch.object(hass.loop, 'add_signal_handler')
+    @patch.object(hass.loop, 'run_forever')
+    @patch.object(hass.loop, 'close')
+    @patch.object(hass, 'async_stop', return_value=fake_stop())
+    def start_hass(*mocks):
         """Helper to start hass."""
-        with patch.object(hass.loop, 'run_forever', return_value=None):
-            with patch.object(hass, 'async_stop', return_value=fake_stop()):
-                with patch.object(ha, 'async_create_timer', return_value=None):
-                    with patch.object(ha, 'async_monitor_worker_pool',
-                                      return_value=None):
-                        with patch.object(hass.loop, 'add_signal_handler'):
-                            orig_start()
-                            hass.block_till_done()
+        orig_start()
+        hass.block_till_done()
 
     def stop_hass():
+        """Stop hass."""
         orig_stop()
         stop_event.wait()
 
@@ -112,6 +117,7 @@ def mock_service(hass, domain, service):
     """
     calls = []
 
+    # pylint: disable=unnecessary-lambda
     hass.services.register(domain, service, lambda call: calls.append(call))
 
     return calls
@@ -315,3 +321,41 @@ def patch_yaml_files(files_dict, endswith=True):
         raise FileNotFoundError('File not found: {}'.format(fname))
 
     return patch.object(yaml, 'open', mock_open_f, create=True)
+
+
+@contextmanager
+def assert_setup_component(count, domain=None):
+    """Collect valid configuration from setup_component.
+
+    - count: The amount of valid platforms that should be setup
+    - domain: The domain to count is optional. It can be automatically
+              determined most of the time
+
+    Use as a context manager aroung bootstrap.setup_component
+        with assert_setup_component(0) as result_config:
+            setup_component(hass, start_config, domain)
+            # using result_config is optional
+    """
+    config = {}
+
+    def mock_psc(hass, config_input, domain):
+        """Mock the prepare_setup_component to capture config."""
+        res = prepare_setup_component(hass, config_input, domain)
+        config[domain] = None if res is None else res.get(domain)
+        _LOGGER.debug('Configuration for %s, Validated: %s, Original %s',
+                      domain, config[domain], config_input.get(domain))
+        return res
+
+    assert isinstance(config, dict)
+    with patch('homeassistant.bootstrap.prepare_setup_component', mock_psc):
+        yield config
+
+    if domain is None:
+        assert len(config) == 1, ('assert_setup_component requires DOMAIN: {}'
+                                  .format(list(config.keys())))
+        domain = list(config.keys())[0]
+
+    res = config.get(domain)
+    res_len = 0 if res is None else len(res)
+    assert res_len == count, 'setup_component failed, expected {} got {}: {}' \
+        .format(count, res_len, res)

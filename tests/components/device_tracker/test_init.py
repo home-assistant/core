@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import (
     get_test_home_assistant, fire_time_changed, fire_service_discovered,
-    patch_yaml_files)
+    patch_yaml_files, assert_setup_component)
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
 
@@ -59,15 +59,28 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     def test_reading_broken_yaml_config(self):  # pylint: disable=no-self-use
         """Test when known devices contains invalid data."""
         files = {'empty.yaml': '',
-                 'bad.yaml': '100',
-                 'ok.yaml': 'my_device:\n  name: Device'}
+                 'nodict.yaml': '100',
+                 'badkey.yaml': '@:\n  name: Device',
+                 'noname.yaml': 'my_device:\n',
+                 'allok.yaml':  'My Device:\n  name: Device',
+                 'oneok.yaml':  ('My Device!:\n  name: Device\n'
+                                 'bad_device:\n  nme: Device')}
+        args = {'hass': self.hass, 'consider_home': timedelta(seconds=60)}
         with patch_yaml_files(files):
-            # File is empty
-            assert device_tracker.load_config('empty.yaml', None, False) == []
-            # File contains a non-dict format
-            assert device_tracker.load_config('bad.yaml', None, False) == []
-            # A file that works fine
-            assert len(device_tracker.load_config('ok.yaml', None, False)) == 1
+            assert device_tracker.load_config('empty.yaml', **args) == []
+            assert device_tracker.load_config('nodict.yaml', **args) == []
+            assert device_tracker.load_config('noname.yaml', **args) == []
+            assert device_tracker.load_config('badkey.yaml', **args) == []
+
+            res = device_tracker.load_config('allok.yaml', **args)
+            assert len(res) == 1
+            assert res[0].name == 'Device'
+            assert res[0].dev_id == 'my_device'
+
+            res = device_tracker.load_config('oneok.yaml', **args)
+            assert len(res) == 1
+            assert res[0].name == 'Device'
+            assert res[0].dev_id == 'my_device'
 
     def test_reading_yaml_config(self):
         """Test the rendering of the YAML configuration."""
@@ -75,7 +88,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id,
             'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
-            away_hide=True)
+            hide_if_away=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
                                         TEST_PLATFORM))
@@ -211,7 +224,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id, None,
-            friendly_name, picture, away_hide=True)
+            friendly_name, picture, hide_if_away=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
@@ -228,7 +241,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id, None,
-            away_hide=True)
+            hide_if_away=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
         scanner = get_component('device_tracker.test').SCANNER
@@ -246,7 +259,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), True, dev_id, None,
-            away_hide=True)
+            hide_if_away=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
         scanner = get_component('device_tracker.test').SCANNER
@@ -338,6 +351,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     @patch('homeassistant.components.device_tracker.log_exception')
     def test_config_failure(self, mock_ex):
         """Test that the device tracker see failures."""
-        assert not setup_component(self.hass, device_tracker.DOMAIN,
-                                   {device_tracker.DOMAIN: {
-                                    device_tracker.CONF_CONSIDER_HOME: -1}})
+        with assert_setup_component(0, device_tracker.DOMAIN):
+            setup_component(self.hass, device_tracker.DOMAIN,
+                            {device_tracker.DOMAIN: {
+                                device_tracker.CONF_CONSIDER_HOME: -1}})

@@ -25,7 +25,7 @@ ATTR_QUERIES_TODAY = 'queries_today'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_METHOD = 'GET'
-DEFAULT_NAME = 'Pi-hole'
+DEFAULT_NAME = 'Pi-Hole'
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rest.update()
 
     if rest.data is None:
-        _LOGGER.error('Unable to fetch REST data')
+        _LOGGER.error("Unable to fetch data from Pi-Hole")
         return False
 
     add_devices([PiHoleSensor(hass, rest, name)])
@@ -89,8 +89,8 @@ class PiHoleSensor(Entity):
 
     # pylint: disable=no-member
     @property
-    def state_attributes(self):
-        """Return the state attributes of the GPS."""
+    def device_state_attributes(self):
+        """Return the state attributes of the Pi-Hole."""
         return {
             ATTR_BLOCKED_DOMAINS: self._state.get('domains_being_blocked'),
             ATTR_PERCENTAGE_TODAY: self._state.get('ads_percentage_today'),
@@ -98,6 +98,9 @@ class PiHoleSensor(Entity):
         }
 
     def update(self):
-        """Get the latest data from REST API and updates the state."""
-        self.rest.update()
-        self._state = json.loads(self.rest.data)
+        """Get the latest data from the Pi-Hole API and updates the state."""
+        try:
+            self.rest.update()
+            self._state = json.loads(self.rest.data)
+        except TypeError:
+            _LOGGER.error("Unable to fetch data from Pi-Hole")

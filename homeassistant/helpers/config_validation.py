@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import valid_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
-from homeassistant.util import slugify
+from homeassistant.util import slugify as util_slugify
 from homeassistant.helpers import template as template_helper
 
 # pylint: disable=invalid-name
@@ -167,7 +167,16 @@ def time_period_str(value: str) -> timedelta:
     return offset
 
 
-time_period = vol.Any(time_period_str, timedelta, time_period_dict)
+def time_period_seconds(value: Union[int, str]) -> timedelta:
+    """Validate and transform seconds to a time offset."""
+    try:
+        return timedelta(seconds=int(value))
+    except (ValueError, TypeError):
+        raise vol.Invalid('Expected seconds, got {}'.format(value))
+
+
+time_period = vol.Any(time_period_str, time_period_seconds, timedelta,
+                      time_period_dict)
 
 
 def match_all(value):
@@ -209,10 +218,20 @@ def slug(value):
     if value is None:
         raise vol.Invalid('Slug should not be None')
     value = str(value)
-    slg = slugify(value)
+    slg = util_slugify(value)
     if value == slg:
         return value
     raise vol.Invalid('invalid slug {} (try {})'.format(value, slg))
+
+
+def slugify(value):
+    """Coerce a value to a slug."""
+    if value is None:
+        raise vol.Invalid('Slug should not be None')
+    slg = util_slugify(str(value))
+    if len(slg) > 0:
+        return slg
+    raise vol.Invalid('Unable to slugify {}'.format(value))
 
 
 def string(value: Any) -> str:
