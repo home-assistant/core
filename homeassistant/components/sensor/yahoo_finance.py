@@ -10,7 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -19,7 +19,9 @@ REQUIREMENTS = ['yahoo-finance==1.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ATTRIBUTION = "Stock market information provided by Yahoo! Inc."
 CONF_SYMBOL = 'symbol'
+
 DEFAULT_SYMBOL = 'YHOO'
 DEFAULT_NAME = 'Yahoo Stock'
 
@@ -28,8 +30,8 @@ ICON = 'mdi:currency-usd'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 ATTR_CHANGE = 'Change'
-ATTR_OPEN = 'Open'
-ATTR_PREV_CLOSE = 'Prev. Close'
+ATTR_OPEN = 'open'
+ATTR_PREV_CLOSE = 'prev_close'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SYMBOL, default=DEFAULT_SYMBOL): cv.string,
@@ -82,10 +84,7 @@ class YahooFinanceSensor(Entity):
                 ATTR_CHANGE: self.data.price_change,
                 ATTR_OPEN: self.data.price_open,
                 ATTR_PREV_CLOSE: self.data.prev_close,
-                'About': "Stock market information delivered by Yahoo!"
-                         " Inc. are provided free of charge for use"
-                         " by individuals and non-profit organizations"
-                         " for personal, non-commercial uses."
+                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             }
 
     @property
