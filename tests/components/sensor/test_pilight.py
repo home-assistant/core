@@ -11,10 +11,9 @@ from tests.common import get_test_home_assistant
 
 def fire_pilight_message(hass, protocol, data):
     """Fire the fake pilight message."""
-    hass.bus.fire(pilight.EVENT, {
-        pilight.ATTR_PROTOCOL: protocol,
-        **data
-    })
+    message = {pilight.ATTR_PROTOCOL: protocol}
+    message.update(data)
+    hass.bus.fire(pilight.EVENT, message)
 
 
 class TestSensorPilight(unittest.TestCase):
@@ -55,7 +54,6 @@ class TestSensorPilight(unittest.TestCase):
 
     def test_disregard_wrong_payload(self):
         """Test omitting setting of value with wrong payload."""
-
         assert _setup_component(self.hass, sensor.DOMAIN, {
             sensor.DOMAIN: {
                 'platform': 'pilight',
