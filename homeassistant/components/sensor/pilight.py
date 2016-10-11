@@ -82,7 +82,6 @@ class PilightSensor(Entity):
         If the code matches the defined playload
         of this sensor the sensor state is changed accordingly.
         """
-
         # Check if received code matches defined playoad
         # True if payload is contained in received code dict, not
         # all items have to match
