@@ -115,7 +115,7 @@ class EntityComponent(object):
         This method must be run in the event loop.
         """
         platform = yield from self.hass.loop.run_in_executor(
-            prepare_setup_platform, self.hass, self.config, self.domain,
+            None, prepare_setup_platform, self.hass, self.config, self.domain,
             platform_type
         )
 
