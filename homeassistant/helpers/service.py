@@ -115,7 +115,7 @@ def async_extract_entity_ids(hass, service_call):
     if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
         return []
 
-    group = yield from hass.loop.run_in_executor(None, get_component, 'group')
+    group = get_component('group')
 
     # Entity ID attr can be a list or a string
     service_ent_id = service_call.data[ATTR_ENTITY_ID]
