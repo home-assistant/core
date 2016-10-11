@@ -89,7 +89,10 @@ def reload(hass):
 
 
 def expand_entity_ids(hass, entity_ids):
-    """Return entity_ids with group entity ids replaced by their members."""
+    """Return entity_ids with group entity ids replaced by their members.
+
+    Async friendly.
+    """
     found_ids = []
 
     for entity_id in entity_ids:
@@ -120,7 +123,10 @@ def expand_entity_ids(hass, entity_ids):
 
 
 def get_entity_ids(hass, entity_id, domain_filter=None):
-    """Get members of this group."""
+    """Get members of this group.
+
+    Async friendly.
+    """
     group = hass.states.get(entity_id)
 
     if not group or ATTR_ENTITY_ID not in group.attributes:

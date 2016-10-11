@@ -160,7 +160,7 @@ def setup(hass, config):
     @asyncio.coroutine
     def trigger_service_handler(service_call):
         """Handle automation triggers."""
-        for entity in component.extract_from_service(service_call):
+        for entity in component.async_extract_from_service(service_call):
             hass.loop.create_task(entity.async_trigger(
                 service_call.data.get(ATTR_VARIABLES), True))
 
@@ -168,13 +168,13 @@ def setup(hass, config):
     def turn_onoff_service_handler(service_call):
         """Handle automation turn on/off service calls."""
         method = 'async_{}'.format(service_call.service)
-        for entity in component.extract_from_service(service_call):
+        for entity in component.async_extract_from_service(service_call):
             hass.loop.create_task(getattr(entity, method)())
 
     @asyncio.coroutine
     def toggle_service_handler(service_call):
         """Handle automation toggle service calls."""
-        for entity in component.extract_from_service(service_call):
+        for entity in component.async_extract_from_service(service_call):
             if entity.is_on:
                 hass.loop.create_task(entity.async_turn_off())
             else:

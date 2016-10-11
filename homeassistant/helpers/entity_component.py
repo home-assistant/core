@@ -13,7 +13,7 @@ from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_utc_time_change
-from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 
@@ -104,7 +104,7 @@ class EntityComponent(object):
             return list(self.entities.values())
 
         return [self.entities[entity_id] for entity_id
-                in extract_entity_ids(self.hass, service)
+                in async_extract_entity_ids(self.hass, service)
                 if entity_id in self.entities]
 
     @callback

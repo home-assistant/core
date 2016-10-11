@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant  # NOQA
 from homeassistant.exceptions import TemplateError
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async import (
+    run_coroutine_threadsafe, run_callback_threadsafe)
 
 HASS = None  # type: Optional[HomeAssistant]
 
@@ -99,10 +100,22 @@ def extract_entity_ids(hass, service_call):
 
     Will convert group entity ids to the entity ids it represents.
     """
+    return run_callback_threadsafe(
+        hass.loop, async_extract_entity_ids, hass, service_call
+    ).result()
+
+
+def async_extract_entity_ids(hass, service_call):
+    """Helper method to extract a list of entity ids from a service call.
+
+    Will convert group entity ids to the entity ids it represents.
+
+    This method must be run in the event loop.
+    """
     if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
         return []
 
-    group = get_component('group')
+    group = yield from hass.loop.run_in_executor(None, get_component, 'group')
 
     # Entity ID attr can be a list or a string
     service_ent_id = service_call.data[ATTR_ENTITY_ID]
