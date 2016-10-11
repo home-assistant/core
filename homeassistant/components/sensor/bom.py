@@ -11,16 +11,17 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS,
-    STATE_UNKNOWN, CONF_NAME)
+    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, STATE_UNKNOWN, CONF_NAME,
+    ATTR_ATTRIBUTION)
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 _RESOURCE = 'http://www.bom.gov.au/fwo/{}/{}.{}.json'
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ATTRIBUTION = "Data provided by the Australian Bureau of Meteorology"
 CONF_ZONE_ID = 'zone_id'
 CONF_WMO_ID = 'wmo_id'
 
@@ -75,7 +76,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the BOM sensor."""
+    """Set up the BOM sensor."""
     rest = BOMCurrentData(
         hass, config.get(CONF_ZONE_ID), config.get(CONF_WMO_ID))
 
@@ -96,7 +97,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class BOMCurrentSensor(Entity):
-    """Implementing the BOM current sensor."""
+    """Implementation of a BOM current sensor."""
 
     def __init__(self, rest, condition, stationname):
         """Initialize the sensor."""
@@ -131,6 +132,7 @@ class BOMCurrentSensor(Entity):
         attr['Station Name'] = self.rest.data['name']
         attr['Last Update'] = datetime.datetime.strptime(str(
             self.rest.data['local_date_time_full']), '%Y%m%d%H%M%S')
+        attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return attr
 
     @property

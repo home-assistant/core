@@ -5,19 +5,24 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.yr/
 """
 import logging
+
 import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_ELEVATION, CONF_MONITORED_CONDITIONS)
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_ELEVATION, CONF_MONITORED_CONDITIONS,
+    ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
 REQUIREMENTS = ['xmltodict==0.10.2']
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_ATTRIBUTION = "Weather forecast from yr.no, delivered by the Norwegian " \
+                   "Meteorological Institute and the NRK."
 
 # Sensor types are defined like so:
 SENSOR_TYPES = {
@@ -108,8 +113,7 @@ class YrSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            'about': "Weather forecast from yr.no, delivered by the"
-                     " Norwegian Meteorological Institute and the NRK"
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
     @property
