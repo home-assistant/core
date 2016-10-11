@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.4.0']
+REQUIREMENTS = ['pyowm==2.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,12 +174,12 @@ class WeatherData(object):
         """Get the latest data from OpenWeatherMap."""
         obs = self.owm.weather_at_coords(self.latitude, self.longitude)
         if obs is None:
-            _LOGGER.warning('Failed to fetch data from OWM')
+            _LOGGER.warning("Failed to fetch data from OpenWeatherMap")
             return
 
         self.data = obs.get_weather()
 
         if self.forecast == 1:
-            obs = self.owm.three_hours_forecast_at_coords(self.latitude,
-                                                          self.longitude)
+            obs = self.owm.three_hours_forecast_at_coords(
+                self.latitude, self.longitude)
             self.fc_data = obs.get_forecast()
