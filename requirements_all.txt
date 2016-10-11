@@ -58,7 +58,7 @@ boto3==1.3.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
-cherrypy==8.1.0
+cherrypy==8.1.2
 
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==2.0.1
@@ -70,7 +70,7 @@ colorlog>2.1,<3
 directpy==0.1
 
 # homeassistant.components.notify.xmpp
-dnspython3==1.14.0
+dnspython3==1.15.0
 
 # homeassistant.components.dweet
 # homeassistant.components.sensor.dweet
@@ -361,7 +361,7 @@ pynetio==0.1.6
 pynx584==0.2
 
 # homeassistant.components.sensor.openweathermap
-pyowm==2.4.0
+pyowm==2.5.0
 
 # homeassistant.components.switch.acer_projector
 pyserial==3.1.1
@@ -380,7 +380,7 @@ python-forecastio==1.3.5
 python-hpilo==3.8
 
 # homeassistant.components.lirc
-# python-lirc==1.2.1
+# python-lirc==1.2.3
 
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
@@ -389,7 +389,7 @@ python-mpd2==0.5.5
 python-mystrom==0.3.6
 
 # homeassistant.components.nest
-python-nest==2.10.0
+python-nest==2.11.0
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.6.1
@@ -458,7 +458,7 @@ speedtest-cli==0.3.4
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.0.15
+sqlalchemy==1.1.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
