@@ -69,7 +69,7 @@ class ProliphixThermostat(ClimateDevice):
         }
 
     @property
-    def unit_of_measurement(self):
+    def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
 
