@@ -3,6 +3,7 @@
 import os
 import unittest
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.loader as loader
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.components import (
@@ -52,16 +53,16 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
 
         loader.get_component('light.test').init()
 
-        self.assertTrue(device_tracker.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}
         }))
 
-        self.assertTrue(light.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {CONF_PLATFORM: 'test'}
         }))
 
-        self.assertTrue(sun.setup(
-            self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}))
+        self.assertTrue(setup_component(self.hass, sun.DOMAIN, {
+            sun.DOMAIN: {sun.CONF_ELEVATION: 0}}))
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -70,16 +71,17 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
 
     def test_lights_on_when_sun_sets(self):
         """Test lights go on when there is someone home and the sun sets."""
-        self.assertTrue(device_sun_light_trigger.setup(
-            self.hass, {device_sun_light_trigger.DOMAIN: {}}))
+        self.assertTrue(setup_component(
+            self.hass, device_sun_light_trigger.DOMAIN, {
+                device_sun_light_trigger.DOMAIN: {}}))
 
         ensure_sun_risen(self.hass)
         light.turn_off(self.hass)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         ensure_sun_set(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(light.is_on(self.hass))
 
@@ -88,15 +90,16 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
         """Test lights turn off when everyone leaves the house."""
         light.turn_on(self.hass)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
-        self.assertTrue(device_sun_light_trigger.setup(
-            self.hass, {device_sun_light_trigger.DOMAIN: {}}))
+        self.assertTrue(setup_component(
+            self.hass, device_sun_light_trigger.DOMAIN, {
+                device_sun_light_trigger.DOMAIN: {}}))
 
         self.hass.states.set(device_tracker.ENTITY_ID_ALL_DEVICES,
                              STATE_NOT_HOME)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertFalse(light.is_on(self.hass))
 
@@ -106,13 +109,14 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
         light.turn_off(self.hass)
         ensure_sun_set(self.hass)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
-        self.assertTrue(device_sun_light_trigger.setup(
-            self.hass, {device_sun_light_trigger.DOMAIN: {}}))
+        self.assertTrue(setup_component(
+            self.hass, device_sun_light_trigger.DOMAIN, {
+                device_sun_light_trigger.DOMAIN: {}}))
 
         self.hass.states.set(
             device_tracker.ENTITY_ID_FORMAT.format('device_2'), STATE_HOME)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(light.is_on(self.hass))

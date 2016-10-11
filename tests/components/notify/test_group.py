@@ -1,10 +1,11 @@
 """The tests for the notify.group platform."""
 import unittest
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import group
 
-from tests.common import get_test_home_assistant
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestNotifyGroup(unittest.TestCase):
@@ -14,18 +15,16 @@ class TestNotifyGroup(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.events = []
-        self.assertTrue(notify.setup(self.hass, {
-            'notify': {
-                'name': 'demo1',
-                'platform': 'demo'
-            }
-        }))
-        self.assertTrue(notify.setup(self.hass, {
-            'notify': {
-                'name': 'demo2',
-                'platform': 'demo'
-            }
-        }))
+        with assert_setup_component(2):
+            setup_component(self.hass, notify.DOMAIN, {
+                'notify': [{
+                    'name': 'demo1',
+                    'platform': 'demo'
+                }, {
+                    'name': 'demo2',
+                    'platform': 'demo'
+                }]
+            })
 
         self.service = group.get_service(self.hass, {'services': [
             {'service': 'demo1'},
@@ -48,7 +47,7 @@ class TestNotifyGroup(unittest.TestCase):
     def test_send_message_to_group(self):
         """Test sending a message to a notify group."""
         self.service.send_message('Hello', title='Test notification')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(len(self.events) == 2)
         last_event = self.events[-1]
         self.assertEqual(last_event.data[notify.ATTR_TITLE],
@@ -60,7 +59,7 @@ class TestNotifyGroup(unittest.TestCase):
         notify_data = {'hello': 'world'}
         self.service.send_message('Hello', title='Test notification',
                                   data=notify_data)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         last_event = self.events[-1]
         self.assertEqual(last_event.data[notify.ATTR_TITLE],
                          'Test notification')
@@ -72,11 +71,11 @@ class TestNotifyGroup(unittest.TestCase):
         notify_data = {'hello': 'world'}
         self.service.send_message('Hello', title='Test notification',
                                   data=notify_data)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         data = self.events[-1].data
         assert {
             'message': 'Hello',
-            'target': 'unnamed device',
+            'target': ['unnamed device'],
             'title': 'Test notification',
             'data': {'hello': 'world', 'test': 'message'}
         } == data

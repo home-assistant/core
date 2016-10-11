@@ -23,7 +23,8 @@ CONF_FROM_NUMBER = "from_number"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ACCOUNT_SID): cv.string,
     vol.Required(CONF_AUTH_TOKEN): cv.string,
-    vol.Required(CONF_FROM_NUMBER): vol.Match(r"^\+?[1-9]\d{1,14}$"),
+    vol.Required(CONF_FROM_NUMBER):
+        vol.All(cv.string, vol.Match(r"^\+?[1-9]\d{1,14}$")),
 })
 
 
@@ -55,9 +56,6 @@ class TwilioSMSNotificationService(BaseNotificationService):
         if not targets:
             _LOGGER.info("At least 1 target is required")
             return
-
-        if not isinstance(targets, list):
-            targets = [targets]
 
         for target in targets:
             self.client.messages.create(to=target, body=message,

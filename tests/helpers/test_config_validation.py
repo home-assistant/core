@@ -1,6 +1,7 @@
 """Test config validators."""
 from collections import OrderedDict
 from datetime import timedelta
+import enum
 import os
 import tempfile
 
@@ -199,17 +200,18 @@ def test_time_period():
     schema = vol.Schema(cv.time_period)
 
     for value in (
-        None, '', 1234, 'hello:world', '12:', '12:34:56:78',
+        None, '', 'hello:world', '12:', '12:34:56:78',
         {}, {'wrong_key': -10}
     ):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
     for value in (
-        '8:20', '23:59', '-8:20', '-23:59:59', '-48:00', {'minutes': 5}
+        '8:20', '23:59', '-8:20', '-23:59:59', '-48:00', {'minutes': 5}, 1, '5'
     ):
         schema(value)
 
+    assert timedelta(seconds=180) == schema('180')
     assert timedelta(hours=23, minutes=59) == schema('23:59')
     assert -1 * timedelta(hours=1, minutes=15) == schema('-1:15')
 
@@ -302,7 +304,8 @@ def test_template():
     schema = vol.Schema(cv.template)
 
     for value in (None, '{{ partial_print }', '{% if True %}Hello', ['test']):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(vol.Invalid,
+                           message='{} not considered invalid'.format(value)):
             schema(value)
 
     for value in (
@@ -417,3 +420,19 @@ def test_ordered_dict_value_validator():
         schema({'hello': 'world'})
 
     schema({'hello': 5})
+
+
+def test_enum():
+    """Test enum validator."""
+    class TestEnum(enum.Enum):
+        """Test enum."""
+
+        value1 = "Value 1"
+        value2 = "Value 2"
+
+    schema = vol.Schema(cv.enum(TestEnum))
+
+    with pytest.raises(vol.Invalid):
+        schema('value3')
+
+    TestEnum['value1']

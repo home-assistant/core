@@ -8,6 +8,7 @@ import logging
 import json
 import os
 import socket
+import time
 
 import voluptuous as vol
 
@@ -232,6 +233,7 @@ class GPMDP(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the player."""
+        time.sleep(1)
         playstate = self.send_gpmdp_msg('playback', 'getPlaybackState')
         if playstate is None:
             return

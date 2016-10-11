@@ -4,7 +4,7 @@ import unittest
 from unittest import mock
 
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_TURN_OFF,
@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.components import climate
 
-from tests.common import get_test_home_assistant
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 ENTITY = 'climate.test'
@@ -44,12 +44,13 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
             'name': 'test',
             'target_sensor': ENT_SENSOR
         }
-        self.assertFalse(_setup_component(self.hass, 'climate', {
-            'climate': config}))
+        with assert_setup_component(0):
+            setup_component(self.hass, 'climate', {
+                'climate': config})
 
     def test_valid_conf(self):
         """Test set up genreic_thermostat with valid config values."""
-        self.assertTrue(_setup_component(self.hass, 'climate',
+        self.assertTrue(setup_component(self.hass, 'climate',
                         {'climate': {
                             'platform': 'generic_thermostat',
                             'name': 'test',
@@ -61,7 +62,7 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
         self.hass.states.set(ENT_SENSOR, 22.0, {
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS
         })
-        climate.setup(self.hass, {'climate': {
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
@@ -80,7 +81,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
-        climate.setup(self.hass, {'climate': {
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
@@ -93,7 +94,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
 
     def test_setup_defaults_to_unknown(self):
         """Test the setting of defaults to unknown."""
-        self.assertEqual('unknown', self.hass.states.get(ENTITY).state)
+        self.assertEqual('idle', self.hass.states.get(ENTITY).state)
 
     def test_default_setup_params(self):
         """Test the setup with default parameters."""
@@ -104,7 +105,8 @@ class TestClimateGenericThermostat(unittest.TestCase):
 
     def test_custom_setup_params(self):
         """Test the setup with custom parameters."""
-        climate.setup(self.hass, {'climate': {
+        self.hass.config.components.remove(climate.DOMAIN)
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
@@ -121,7 +123,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
     def test_set_target_temp(self):
         """Test the setting of the target temperature."""
         climate.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY)
         self.assertEqual(30.0, state.attributes.get('temperature'))
 
@@ -132,7 +134,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         unit = state.attributes.get('unit_of_measurement')
 
         self._setup_sensor(22.0, unit='bad_unit')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(ENTITY)
         self.assertEqual(unit, state.attributes.get('unit_of_measurement'))
@@ -145,7 +147,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         unit = state.attributes.get('unit_of_measurement')
 
         self._setup_sensor(None)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(ENTITY)
         self.assertEqual(unit, state.attributes.get('unit_of_measurement'))
@@ -155,9 +157,9 @@ class TestClimateGenericThermostat(unittest.TestCase):
         """Test if target temperature turn heater on."""
         self._setup_switch(False)
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         climate.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -168,9 +170,9 @@ class TestClimateGenericThermostat(unittest.TestCase):
         """Test if target temperature turn heater off."""
         self._setup_switch(True)
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         climate.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -181,9 +183,9 @@ class TestClimateGenericThermostat(unittest.TestCase):
         """Test if temperature change turn heater on."""
         self._setup_switch(False)
         climate.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -194,9 +196,9 @@ class TestClimateGenericThermostat(unittest.TestCase):
         """Test if temperature change turn heater off."""
         self._setup_switch(True)
         climate.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -229,7 +231,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
-        climate.setup(self.hass, {'climate': {
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
@@ -245,9 +247,9 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         """Test if target temperature turn ac off."""
         self._setup_switch(True)
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         climate.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -258,9 +260,9 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         """Test if target temperature turn ac on."""
         self._setup_switch(False)
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         climate.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -271,9 +273,9 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         """Test if temperature change turn ac off."""
         self._setup_switch(True)
         climate.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -284,9 +286,9 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         """Test if temperature change turn ac on."""
         self._setup_switch(False)
         climate.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -319,7 +321,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
-        climate.setup(self.hass, {'climate': {
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
@@ -336,9 +338,9 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         """Test if temperature change turn ac on."""
         self._setup_switch(False)
         climate.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_temp_change_ac_trigger_on_long_enough(self):
@@ -349,9 +351,9 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
                         return_value=fake_changed):
             self._setup_switch(False)
         climate.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -362,9 +364,9 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         """Test if temperature change turn ac on."""
         self._setup_switch(True)
         climate.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_temp_change_ac_trigger_off_long_enough(self):
@@ -375,9 +377,9 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
                         return_value=fake_changed):
             self._setup_switch(True)
         climate.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -410,7 +412,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
-        climate.setup(self.hass, {'climate': {
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
             'heater': ENT_SWITCH,
@@ -426,18 +428,18 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         """Test if temp change doesn't turn heater off because of time."""
         self._setup_switch(True)
         climate.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_temp_change_heater_trigger_on_not_long_enough(self):
         """Test if temp change doesn't turn heater on because of time."""
         self._setup_switch(False)
         climate.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_temp_change_heater_trigger_on_long_enough(self):
@@ -448,9 +450,9 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
                         return_value=fake_changed):
             self._setup_switch(False)
         climate.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -465,9 +467,9 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
                         return_value=fake_changed):
             self._setup_switch(True)
         climate.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)

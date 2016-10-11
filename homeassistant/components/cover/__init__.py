@@ -25,9 +25,8 @@ from homeassistant.const import (
 DOMAIN = 'cover'
 SCAN_INTERVAL = 15
 
-GROUP_NAME_ALL_COVERS = 'all_covers'
-ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format(
-    GROUP_NAME_ALL_COVERS)
+GROUP_NAME_ALL_COVERS = 'all covers'
+ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format('all_covers')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 

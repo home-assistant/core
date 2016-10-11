@@ -1,11 +1,13 @@
 """The test for the Trend sensor platform."""
 import homeassistant.bootstrap as bootstrap
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, assert_setup_component
 
 
 class TestTrendBinarySensor:
     """Test the Trend sensor."""
+
+    hass = None
 
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
@@ -30,9 +32,9 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', '1')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', '2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'on'
 
@@ -51,9 +53,9 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', '2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', '1')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 
@@ -73,9 +75,9 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', '1')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', '2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 
@@ -95,9 +97,9 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', '2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', '1')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'on'
 
@@ -116,9 +118,9 @@ class TestTrendBinarySensor:
             }
         })
         self.hass.states.set('sensor.test_state', 'State', {'attr': '1'})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', 'State', {'attr': '2'})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'on'
 
@@ -138,10 +140,10 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', 'State', {'attr': '2'})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', 'State', {'attr': '1'})
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 
@@ -160,9 +162,9 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', 'Non')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', 'Numeric')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 
@@ -182,48 +184,53 @@ class TestTrendBinarySensor:
         })
 
         self.hass.states.set('sensor.test_state', 'State', {'attr': '2'})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.hass.states.set('sensor.test_state', 'State', {'attr': '1'})
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('binary_sensor.test_trend_sensor')
         assert state.state == 'off'
 
-    def test_invalid_name_does_not_create(self):
+    def test_invalid_name_does_not_create(self): \
+            # pylint: disable=invalid-name
         """Test invalid name."""
-        assert not bootstrap.setup_component(self.hass, 'binary_sensor', {
-            'binary_sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'test INVALID sensor': {
-                        'entity_id':
-                            "sensor.test_state"
+        with assert_setup_component(0):
+            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test INVALID sensor': {
+                            'entity_id':
+                                "sensor.test_state"
+                        }
                     }
                 }
-            }
-        })
+            })
         assert self.hass.states.all() == []
 
-    def test_invalid_sensor_does_not_create(self):
+    def test_invalid_sensor_does_not_create(self): \
+            # pylint: disable=invalid-name
         """Test invalid sensor."""
-        assert not bootstrap.setup_component(self.hass, 'binary_sensor', {
-            'binary_sensor': {
-                'platform': 'template',
-                'sensors': {
-                    'test_trend_sensor': {
-                        'not_entity_id':
-                            "sensor.test_state"
+        with assert_setup_component(0):
+            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_trend_sensor': {
+                            'not_entity_id':
+                                "sensor.test_state"
+                        }
                     }
                 }
-            }
-        })
+            })
         assert self.hass.states.all() == []
 
     def test_no_sensors_does_not_create(self):
         """Test no sensors."""
-        assert not bootstrap.setup_component(self.hass, 'binary_sensor', {
-            'binary_sensor': {
-                'platform': 'trend'
-            }
-        })
+        with assert_setup_component(0):
+            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
+                    'platform': 'trend'
+                }
+            })
         assert self.hass.states.all() == []

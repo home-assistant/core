@@ -36,14 +36,14 @@ TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ORIGIN): cv.string,
     vol.Required(CONF_DESTINATION): cv.string,
-    vol.Required(CONF_DATA): cv.isfile,
+    vol.Required(CONF_DATA): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
 # pylint: disable=too-many-locals
 def get_next_departure(sched, start_station_id, end_station_id):
-    """Get the next departure for the given sched."""
+    """Get the next departure for the given schedule."""
     origin_station = sched.stops_by_id(start_station_id)[0]
     destination_station = sched.stops_by_id(end_station_id)[0]
 
@@ -147,7 +147,7 @@ def get_next_departure(sched, start_station_id, end_station_id):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get the GTFS sensor."""
+    """Set up the GTFS sensor."""
     gtfs_dir = hass.config.path(DEFAULT_PATH)
     data = config.get(CONF_DATA)
     origin = config.get(CONF_ORIGIN)
@@ -185,7 +185,8 @@ class GTFSDepartureSensor(Entity):
         self._pygtfs = pygtfs
         self.origin = origin
         self.destination = destination
-        self._name = name
+        self._custom_name = name
+        self._name = ''
         self._unit_of_measurement = 'min'
         self._state = 0
         self._attributes = {}
@@ -233,9 +234,10 @@ class GTFSDepartureSensor(Entity):
             trip = self._departure['trip']
 
             name = '{} {} to {} next departure'
-            self._name = name.format(agency.agency_name,
-                                     origin_station.stop_id,
-                                     destination_station.stop_id)
+            self._name = (self._custom_name or
+                          name.format(agency.agency_name,
+                                      origin_station.stop_id,
+                                      destination_station.stop_id))
 
             # Build attributes
             self._attributes = {}

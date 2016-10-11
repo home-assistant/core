@@ -85,7 +85,7 @@ class TestStateHelpers(unittest.TestCase):
 
         state.reproduce_state(self.hass, ha.State('light.test', 'on'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) == 0)
         self.assertEqual(None, self.hass.states.get('light.test'))
@@ -98,7 +98,7 @@ class TestStateHelpers(unittest.TestCase):
 
         state.reproduce_state(self.hass, ha.State('light.test', 'on'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) > 0)
         last_call = calls[-1]
@@ -114,7 +114,7 @@ class TestStateHelpers(unittest.TestCase):
 
         state.reproduce_state(self.hass, ha.State('light.test', 'off'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) > 0)
         last_call = calls[-1]
@@ -134,7 +134,7 @@ class TestStateHelpers(unittest.TestCase):
             'complex': complex_data
         }))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) > 0)
         last_call = calls[-1]
@@ -154,7 +154,7 @@ class TestStateHelpers(unittest.TestCase):
         state.reproduce_state(self.hass, ha.State('media_player.test', 'None',
                                                   media_attributes))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) > 0)
         last_call = calls[-1]
@@ -172,7 +172,7 @@ class TestStateHelpers(unittest.TestCase):
         state.reproduce_state(
             self.hass, ha.State('media_player.test', 'playing'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) > 0)
         last_call = calls[-1]
@@ -190,7 +190,7 @@ class TestStateHelpers(unittest.TestCase):
         state.reproduce_state(
             self.hass, ha.State('media_player.test', 'paused'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) > 0)
         last_call = calls[-1]
@@ -207,7 +207,7 @@ class TestStateHelpers(unittest.TestCase):
 
         state.reproduce_state(self.hass, ha.State('light.test', 'bad'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(len(calls) == 0)
         self.assertEqual('off', self.hass.states.get('light.test').state)
@@ -221,7 +221,7 @@ class TestStateHelpers(unittest.TestCase):
 
         state.reproduce_state(self.hass, ha.State('group.test', 'on'))
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(light_calls))
         last_call = light_calls[-1]
@@ -241,7 +241,7 @@ class TestStateHelpers(unittest.TestCase):
             ha.State('light.test1', 'on', {'brightness': 95}),
             ha.State('light.test2', 'on', {'brightness': 95})])
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(1, len(light_calls))
         last_call = light_calls[-1]

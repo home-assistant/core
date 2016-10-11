@@ -1,11 +1,13 @@
 """Test event helpers."""
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
+import asyncio
 import unittest
 from datetime import datetime, timedelta
 
 from astral import Astral
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.core as ha
 from homeassistant.const import MATCH_ALL
 from homeassistant.helpers.event import (
@@ -46,23 +48,23 @@ class TestEventHelpers(unittest.TestCase):
             self.hass, lambda x: runs.append(1), birthday_paulus)
 
         self._send_time_changed(before_birthday)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(runs))
 
         self._send_time_changed(birthday_paulus)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(runs))
 
         # A point in time tracker will only fire once, this should do nothing
         self._send_time_changed(birthday_paulus)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(runs))
 
         track_point_in_time(
             self.hass, lambda x: runs.append(1), birthday_paulus)
 
         self._send_time_changed(after_birthday)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(runs))
 
         unsub = track_point_in_time(
@@ -70,7 +72,7 @@ class TestEventHelpers(unittest.TestCase):
         unsub()
 
         self._send_time_changed(after_birthday)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(runs))
 
     def test_track_time_change(self):
@@ -83,17 +85,17 @@ class TestEventHelpers(unittest.TestCase):
             self.hass, lambda x: specific_runs.append(1), second=[0, 30])
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(1, len(wildcard_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 15))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(2, len(wildcard_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
 
@@ -101,7 +103,7 @@ class TestEventHelpers(unittest.TestCase):
         unsub_utc()
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
 
@@ -112,21 +114,27 @@ class TestEventHelpers(unittest.TestCase):
         wildcard_runs = []
         wildercard_runs = []
 
-        track_state_change(
-            self.hass, 'light.Bowl', lambda a, b, c: specific_runs.append(1),
-            'on', 'off')
+        def specific_run_callback(entity_id, old_state, new_state):
+            specific_runs.append(1)
 
         track_state_change(
-            self.hass, 'light.Bowl',
-            lambda _, old_s, new_s: wildcard_runs.append((old_s, new_s)))
+            self.hass, 'light.Bowl', specific_run_callback, 'on', 'off')
 
-        track_state_change(
-            self.hass, MATCH_ALL,
-            lambda _, old_s, new_s: wildercard_runs.append((old_s, new_s)))
+        @ha.callback
+        def wildcard_run_callback(entity_id, old_state, new_state):
+            wildcard_runs.append((old_state, new_state))
+
+        track_state_change(self.hass, 'light.Bowl', wildcard_run_callback)
+
+        @asyncio.coroutine
+        def wildercard_run_callback(entity_id, old_state, new_state):
+            wildercard_runs.append((old_state, new_state))
+
+        track_state_change(self.hass, MATCH_ALL, wildercard_run_callback)
 
         # Adding state to state machine
         self.hass.states.set("light.Bowl", "on")
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(specific_runs))
         self.assertEqual(1, len(wildcard_runs))
         self.assertEqual(1, len(wildercard_runs))
@@ -135,34 +143,34 @@ class TestEventHelpers(unittest.TestCase):
 
         # Set same state should not trigger a state change/listener
         self.hass.states.set('light.Bowl', 'on')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(specific_runs))
         self.assertEqual(1, len(wildcard_runs))
         self.assertEqual(1, len(wildercard_runs))
 
         # State change off -> on
         self.hass.states.set('light.Bowl', 'off')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(2, len(wildcard_runs))
         self.assertEqual(2, len(wildercard_runs))
 
         # State change off -> off
         self.hass.states.set('light.Bowl', 'off', {"some_attr": 1})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
         self.assertEqual(3, len(wildercard_runs))
 
         # State change off -> on
         self.hass.states.set('light.Bowl', 'on')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(4, len(wildcard_runs))
         self.assertEqual(4, len(wildercard_runs))
 
         self.hass.states.remove('light.bowl')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(5, len(wildcard_runs))
         self.assertEqual(5, len(wildercard_runs))
@@ -173,7 +181,7 @@ class TestEventHelpers(unittest.TestCase):
 
         # Set state for different entity id
         self.hass.states.set('switch.kitchen', 'on')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(5, len(wildcard_runs))
         self.assertEqual(6, len(wildercard_runs))
@@ -186,7 +194,8 @@ class TestEventHelpers(unittest.TestCase):
         # Setup sun component
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
-        sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+        setup_component(self.hass, sun.DOMAIN, {
+            sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
         # Get next sunrise/sunset
         astral = Astral()
@@ -211,17 +220,17 @@ class TestEventHelpers(unittest.TestCase):
 
         # run tests
         self._send_time_changed(next_rising - offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(runs))
         self.assertEqual(0, len(offset_runs))
 
         self._send_time_changed(next_rising)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(runs))
         self.assertEqual(0, len(offset_runs))
 
         self._send_time_changed(next_rising + offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(runs))
         self.assertEqual(1, len(offset_runs))
 
@@ -229,7 +238,7 @@ class TestEventHelpers(unittest.TestCase):
         unsub2()
 
         self._send_time_changed(next_rising + offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(runs))
         self.assertEqual(1, len(offset_runs))
 
@@ -241,7 +250,8 @@ class TestEventHelpers(unittest.TestCase):
         # Setup sun component
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
-        sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+        setup_component(self.hass, sun.DOMAIN, {
+            sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
         # Get next sunrise/sunset
         astral = Astral()
@@ -265,17 +275,17 @@ class TestEventHelpers(unittest.TestCase):
 
         # Run tests
         self._send_time_changed(next_setting - offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(runs))
         self.assertEqual(0, len(offset_runs))
 
         self._send_time_changed(next_setting)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(runs))
         self.assertEqual(0, len(offset_runs))
 
         self._send_time_changed(next_setting + offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(runs))
         self.assertEqual(1, len(offset_runs))
 
@@ -283,7 +293,7 @@ class TestEventHelpers(unittest.TestCase):
         unsub2()
 
         self._send_time_changed(next_setting + offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(runs))
         self.assertEqual(1, len(offset_runs))
 
@@ -299,21 +309,21 @@ class TestEventHelpers(unittest.TestCase):
             self.hass, lambda x: specific_runs.append(1), minute='/5')
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 3, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 5, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
 
         unsub()
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 5, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
 
     def test_periodic_task_hour(self):
@@ -324,29 +334,29 @@ class TestEventHelpers(unittest.TestCase):
             self.hass, lambda x: specific_runs.append(1), hour='/2')
 
         self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 23, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 0, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
 
         self._send_time_changed(datetime(2014, 5, 25, 1, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
 
         self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(3, len(specific_runs))
 
         unsub()
 
         self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(3, len(specific_runs))
 
     def test_periodic_task_day(self):
@@ -357,21 +367,21 @@ class TestEventHelpers(unittest.TestCase):
             self.hass, lambda x: specific_runs.append(1), day='/2')
 
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
 
         self._send_time_changed(datetime(2014, 5, 3, 12, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
 
         self._send_time_changed(datetime(2014, 5, 4, 0, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
 
         unsub()
 
         self._send_time_changed(datetime(2014, 5, 4, 0, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
 
     def test_periodic_task_year(self):
@@ -382,21 +392,21 @@ class TestEventHelpers(unittest.TestCase):
             self.hass, lambda x: specific_runs.append(1), year='/2')
 
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
 
         self._send_time_changed(datetime(2015, 5, 2, 0, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
 
         self._send_time_changed(datetime(2016, 5, 2, 0, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
 
         unsub()
 
         self._send_time_changed(datetime(2016, 5, 2, 0, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
 
     def test_periodic_task_wrong_input(self):
@@ -407,5 +417,5 @@ class TestEventHelpers(unittest.TestCase):
             self.hass, lambda x: specific_runs.append(1), year='/two')
 
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(specific_runs))

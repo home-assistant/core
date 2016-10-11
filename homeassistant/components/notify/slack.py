@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
     CONF_API_KEY, CONF_USERNAME, CONF_ICON)
 import homeassistant.helpers.config_validation as cv
@@ -68,16 +68,19 @@ class SlackNotificationService(BaseNotificationService):
         """Send a message to a user."""
         import slacker
 
-        channel = kwargs.get('target') or self._default_channel
+        targets = kwargs.get(ATTR_TARGET, [self._default_channel])
+
         data = kwargs.get('data')
         attachments = data.get('attachments') if data else None
 
-        try:
-            self.slack.chat.post_message(channel, message,
-                                         as_user=self._as_user,
-                                         username=self._username,
-                                         icon_emoji=self._icon,
-                                         attachments=attachments,
-                                         link_names=True)
-        except slacker.Error as err:
-            _LOGGER.error("Could not send slack notification. Error: %s", err)
+        for target in targets:
+            try:
+                self.slack.chat.post_message(target, message,
+                                             as_user=self._as_user,
+                                             username=self._username,
+                                             icon_emoji=self._icon,
+                                             attachments=attachments,
+                                             link_names=True)
+            except slacker.Error as err:
+                _LOGGER.error("Could not send slack notification. Error: %s",
+                              err)

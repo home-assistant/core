@@ -11,21 +11,24 @@ import mimetypes
 import threading
 import re
 import ssl
+from ipaddress import ip_address, ip_network
+
 import voluptuous as vol
 
 import homeassistant.remote as rem
 from homeassistant import util
 from homeassistant.const import (
     SERVER_PORT, HTTP_HEADER_HA_AUTH, HTTP_HEADER_CACHE_CONTROL,
-    HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, CONTENT_TYPE_JSON,
     HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, ALLOWED_CORS_HEADERS,
     EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
 from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components import persistent_notification
 
 DOMAIN = 'http'
-REQUIREMENTS = ('cherrypy==7.1.0', 'static3==0.7.0', 'Werkzeug==0.11.11')
+REQUIREMENTS = ('cherrypy==8.1.0', 'static3==0.7.0', 'Werkzeug==0.11.11')
 
 CONF_API_PASSWORD = 'api_password'
 CONF_SERVER_HOST = 'server_host'
@@ -34,8 +37,10 @@ CONF_DEVELOPMENT = 'development'
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
 CONF_CORS_ORIGINS = 'cors_allowed_origins'
+CONF_TRUSTED_NETWORKS = 'trusted_networks'
 
 DATA_API_PASSWORD = 'api_password'
+NOTIFICATION_ID_LOGIN = 'http-login'
 
 # TLS configuation follows the best-practice guidelines specified here:
 # https://wiki.mozilla.org/Security/Server_Side_TLS
@@ -71,7 +76,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DEVELOPMENT): cv.string,
         vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
         vol.Optional(CONF_SSL_KEY): cv.isfile,
-        vol.Optional(CONF_CORS_ORIGINS): cv.ensure_list
+        vol.Optional(CONF_CORS_ORIGINS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_TRUSTED_NETWORKS):
+            vol.All(cv.ensure_list, [ip_network])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -104,10 +111,13 @@ def setup(hass, config):
     api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
     server_host = conf.get(CONF_SERVER_HOST, '0.0.0.0')
     server_port = conf.get(CONF_SERVER_PORT, SERVER_PORT)
-    development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
+    development = str(conf.get(CONF_DEVELOPMENT, '')) == '1'
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf.get(CONF_CORS_ORIGINS, [])
+    trusted_networks = [
+        ip_network(trusted_network)
+        for trusted_network in conf.get(CONF_TRUSTED_NETWORKS, [])]
 
     server = HomeAssistantWSGI(
         hass,
@@ -117,7 +127,8 @@ def setup(hass, config):
         api_password=api_password,
         ssl_certificate=ssl_certificate,
         ssl_key=ssl_key,
-        cors_origins=cors_origins
+        cors_origins=cors_origins,
+        trusted_networks=trusted_networks
     )
 
     def start_wsgi_server(event):
@@ -249,7 +260,8 @@ class HomeAssistantWSGI(object):
     # pylint: disable=too-many-arguments
 
     def __init__(self, hass, development, api_password, ssl_certificate,
-                 ssl_key, server_host, server_port, cors_origins):
+                 ssl_key, server_host, server_port, cors_origins,
+                 trusted_networks):
         """Initilalize the WSGI Home Assistant server."""
         from werkzeug.wrappers import Response
 
@@ -268,6 +280,7 @@ class HomeAssistantWSGI(object):
         self.server_host = server_host
         self.server_port = server_port
         self.cors_origins = cors_origins
+        self.trusted_networks = trusted_networks
         self.event_forwarder = None
         self.server = None
 
@@ -359,8 +372,8 @@ class HomeAssistantWSGI(object):
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
             self.server.ssl_adapter = ContextSSLAdapter(context)
 
-        threading.Thread(target=self.server.start, daemon=True,
-                         name='WSGI-server').start()
+        threading.Thread(
+            target=self.server.start, daemon=True, name='WSGI-server').start()
 
     def stop(self):
         """Stop the wsgi server."""
@@ -385,10 +398,10 @@ class HomeAssistantWSGI(object):
                 resp = ex.get_response(request.environ)
                 if request.accept_mimetypes.accept_json:
                     resp.data = json.dumps({
-                        "result": "error",
-                        "message": str(ex),
+                        'result': 'error',
+                        'message': str(ex),
                     })
-                    resp.mimetype = "application/json"
+                    resp.mimetype = CONTENT_TYPE_JSON
                 return resp
 
     def base_app(self, environ, start_response):
@@ -397,11 +410,11 @@ class HomeAssistantWSGI(object):
         response = self.dispatch_request(request)
 
         if self.cors_origins:
-            cors_check = (environ.get("HTTP_ORIGIN") in self.cors_origins)
+            cors_check = (environ.get('HTTP_ORIGIN') in self.cors_origins)
             cors_headers = ", ".join(ALLOWED_CORS_HEADERS)
             if cors_check:
                 response.headers[HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN] = \
-                    environ.get("HTTP_ORIGIN")
+                    environ.get('HTTP_ORIGIN')
                 response.headers[HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS] = \
                     cors_headers
 
@@ -419,8 +432,21 @@ class HomeAssistantWSGI(object):
         # Strip out any cachebusting MD5 fingerprints
         fingerprinted = _FINGERPRINT.match(environ.get('PATH_INFO', ''))
         if fingerprinted:
-            environ['PATH_INFO'] = "{}.{}".format(*fingerprinted.groups())
+            environ['PATH_INFO'] = '{}.{}'.format(*fingerprinted.groups())
         return app(environ, start_response)
+
+    @staticmethod
+    def get_real_ip(request):
+        """Return the clients correct ip address, even in proxied setups."""
+        if request.access_route:
+            return request.access_route[-1]
+        else:
+            return request.remote_addr
+
+    def is_trusted_ip(self, remote_addr):
+        """Match an ip address against trusted CIDR networks."""
+        return any(ip_address(remote_addr) in trusted_network
+                   for trusted_network in self.hass.wsgi.trusted_networks)
 
 
 class HomeAssistantView(object):
@@ -462,10 +488,15 @@ class HomeAssistantView(object):
         except AttributeError:
             raise MethodNotAllowed
 
+        remote_addr = HomeAssistantWSGI.get_real_ip(request)
+
         # Auth code verbose on purpose
         authenticated = False
 
         if self.hass.wsgi.api_password is None:
+            authenticated = True
+
+        elif self.hass.wsgi.is_trusted_ip(remote_addr):
             authenticated = True
 
         elif hmac.compare_digest(request.headers.get(HTTP_HEADER_HA_AUTH, ''),
@@ -479,13 +510,17 @@ class HomeAssistantView(object):
 
         if self.requires_auth and not authenticated:
             _LOGGER.warning('Login attempt or request with an invalid '
-                            'password from %s', request.remote_addr)
+                            'password from %s', remote_addr)
+            persistent_notification.create(
+                self.hass,
+                'Invalid password used from {}'.format(remote_addr),
+                'Login attempt failed', NOTIFICATION_ID_LOGIN)
             raise Unauthorized()
 
         request.authenticated = authenticated
 
         _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, request.remote_addr, authenticated)
+                     request.path, remote_addr, authenticated)
 
         result = handler(request, **values)
 
@@ -503,12 +538,9 @@ class HomeAssistantView(object):
     def json(self, result, status_code=200):
         """Return a JSON response."""
         msg = json.dumps(
-            result,
-            sort_keys=True,
-            cls=rem.JSONEncoder
-        ).encode('UTF-8')
-        return self.Response(msg, mimetype="application/json",
-                             status=status_code)
+            result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
+        return self.Response(
+            msg, mimetype=CONTENT_TYPE_JSON, status=status_code)
 
     def json_message(self, error, status_code=200):
         """Return a JSON message response."""

@@ -2,6 +2,7 @@ flake8>=3.0.4
 pylint>=1.5.6
 coveralls>=1.1
 pytest>=2.9.2
+pytest-asyncio>=0.5.0
 pytest-cov>=2.3.1
 pytest-timeout>=1.0.0
 pytest-catchlog>=1.2.2

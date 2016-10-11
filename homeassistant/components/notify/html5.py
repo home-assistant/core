@@ -144,7 +144,7 @@ def _save_config(filename, config):
     """Save configuration."""
     try:
         with open(filename, 'w') as fdesc:
-            fdesc.write(json.dumps(config, indent=4, sort_keys=True))
+            fdesc.write(json.dumps(config))
     except (IOError, TypeError) as error:
         _LOGGER.error('Saving config file failed: %s', error)
         return False
@@ -314,7 +314,10 @@ class HTML5NotificationService(BaseNotificationService):
     @property
     def targets(self):
         """Return a dictionary of registered targets."""
-        return self.registrations.keys()
+        targets = {}
+        for registration in self.registrations:
+            targets[registration] = registration
+        return targets
 
     # pylint: disable=too-many-locals
     def send_message(self, message="", **kwargs):
@@ -341,12 +344,15 @@ class HTML5NotificationService(BaseNotificationService):
             # Pick out fields that should go into the notification directly vs
             # into the notification data dictionary.
 
-            for key, val in data.copy().items():
+            data_tmp = {}
+
+            for key, val in data.items():
                 if key in HTML5_SHOWNOTIFICATION_PARAMETERS:
                     payload[key] = val
-                    del data[key]
+                else:
+                    data_tmp[key] = val
 
-            payload[ATTR_DATA] = data
+            payload[ATTR_DATA] = data_tmp
 
         if (payload[ATTR_DATA].get(ATTR_URL) is None and
                 payload.get(ATTR_ACTIONS) is None):
@@ -356,8 +362,6 @@ class HTML5NotificationService(BaseNotificationService):
 
         if not targets:
             targets = self.registrations.keys()
-        elif not isinstance(targets, list):
-            targets = [targets]
 
         for target in targets:
             info = self.registrations.get(target)

@@ -17,7 +17,7 @@ from homeassistant import util, core
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    STATE_ON
+    STATE_ON, HTTP_BAD_REQUEST
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_SUPPORTED_FEATURES, SUPPORT_BRIGHTNESS
@@ -25,6 +25,8 @@ from homeassistant.components.light import (
 from homeassistant.components.http import (
     HomeAssistantView, HomeAssistantWSGI
 )
+# pylint: disable=unused-import
+from homeassistant.components.http import REQUIREMENTS   # noqa
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'emulated_hue'
@@ -74,7 +76,8 @@ def setup(hass, yaml_config):
         api_password=None,
         ssl_certificate=None,
         ssl_key=None,
-        cors_origins=[]
+        cors_origins=[],
+        trusted_networks=[]
     )
 
     server.register_view(DescriptionXmlView(hass, config))
@@ -190,6 +193,7 @@ class HueUsernameView(HomeAssistantView):
 
     url = '/api'
     name = 'hue:api'
+    extra_urls = ['/api/']
     requires_auth = False
 
     def __init__(self, hass):
@@ -201,11 +205,10 @@ class HueUsernameView(HomeAssistantView):
         data = request.json
 
         if 'devicetype' not in data:
-            return self.Response("devicetype not specified", status=400)
+            return self.json_message('devicetype not specified',
+                                     HTTP_BAD_REQUEST)
 
-        json_response = [{'success': {'username': '12345678901234567890'}}]
-
-        return self.json(json_response)
+        return self.json([{'success': {'username': '12345678901234567890'}}])
 
 
 class HueLightsView(HomeAssistantView):

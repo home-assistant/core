@@ -5,21 +5,20 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mqtt/
 """
 import logging
-from functools import partial
 
 import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR,
-    Light)
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP, SUPPORT_BRIGHTNESS,
+    SUPPORT_RGB_COLOR, SUPPORT_COLOR_TEMP, Light)
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
-    CONF_PAYLOAD_ON, CONF_STATE, CONF_BRIGHTNESS, CONF_RGB)
+    CONF_PAYLOAD_ON, CONF_STATE, CONF_BRIGHTNESS, CONF_RGB,
+    CONF_COLOR_TEMP)
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import render_with_possible_json_value
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +32,9 @@ CONF_RGB_STATE_TOPIC = 'rgb_state_topic'
 CONF_RGB_COMMAND_TOPIC = 'rgb_command_topic'
 CONF_RGB_VALUE_TEMPLATE = 'rgb_value_template'
 CONF_BRIGHTNESS_SCALE = 'brightness_scale'
+CONF_COLOR_TEMP_STATE_TOPIC = 'color_temp_state_topic'
+CONF_COLOR_TEMP_COMMAND_TOPIC = 'color_temp_command_topic'
+CONF_COLOR_TEMP_VALUE_TEMPLATE = 'color_temp_value_template'
 
 DEFAULT_NAME = 'MQTT Light'
 DEFAULT_PAYLOAD_ON = 'ON'
@@ -46,6 +48,9 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_BRIGHTNESS_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_RGB_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_RGB_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_RGB_VALUE_TEMPLATE): cv.template,
@@ -72,12 +77,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 CONF_BRIGHTNESS_COMMAND_TOPIC,
                 CONF_RGB_STATE_TOPIC,
                 CONF_RGB_COMMAND_TOPIC,
+                CONF_COLOR_TEMP_STATE_TOPIC,
+                CONF_COLOR_TEMP_COMMAND_TOPIC
             )
         },
         {
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
             CONF_BRIGHTNESS: config.get(CONF_BRIGHTNESS_VALUE_TEMPLATE),
-            CONF_RGB: config.get(CONF_RGB_VALUE_TEMPLATE)
+            CONF_RGB: config.get(CONF_RGB_VALUE_TEMPLATE),
+            CONF_COLOR_TEMP: config.get(CONF_COLOR_TEMP_VALUE_TEMPLATE)
         },
         config.get(CONF_QOS),
         config.get(CONF_RETAIN),
@@ -94,6 +102,7 @@ class MqttLight(Light):
     """MQTT light."""
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
+    # pylint: disable=too-many-locals,too-many-branches
     def __init__(self, hass, name, topic, templates, qos, retain, payload,
                  optimistic, brightness_scale):
         """Initialize MQTT light."""
@@ -108,18 +117,26 @@ class MqttLight(Light):
             optimistic or topic[CONF_RGB_STATE_TOPIC] is None
         self._optimistic_brightness = (
             optimistic or topic[CONF_BRIGHTNESS_STATE_TOPIC] is None)
+        self._optimistic_color_temp = (
+            optimistic or topic[CONF_COLOR_TEMP_STATE_TOPIC] is None)
         self._brightness_scale = brightness_scale
         self._state = False
         self._supported_features = 0
         self._supported_features |= (
             topic[CONF_RGB_STATE_TOPIC] is not None and SUPPORT_RGB_COLOR)
         self._supported_features |= (
-            topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None
-            and SUPPORT_BRIGHTNESS)
+            topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None and
+            SUPPORT_BRIGHTNESS)
+        self._supported_features |= (
+            topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None and
+            SUPPORT_COLOR_TEMP)
 
-        templates = {key: ((lambda value: value) if tpl is None else
-                           partial(render_with_possible_json_value, hass, tpl))
-                     for key, tpl in templates.items()}
+        for key, tpl in list(templates.items()):
+            if tpl is None:
+                templates[key] = lambda value: value
+            else:
+                tpl.hass = hass
+                templates[key] = tpl.render_with_possible_json_value
 
         def state_received(topic, payload, qos):
             """A new MQTT message has been received."""
@@ -167,6 +184,21 @@ class MqttLight(Light):
         else:
             self._rgb = None
 
+        def color_temp_received(topic, payload, qos):
+            """A new MQTT message for color temp has been received."""
+            self._color_temp = int(templates[CONF_COLOR_TEMP](payload))
+            self.update_ha_state()
+
+        if self._topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None:
+            mqtt.subscribe(
+                self._hass, self._topic[CONF_COLOR_TEMP_STATE_TOPIC],
+                color_temp_received, self._qos)
+            self._color_temp = 150
+        if self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
+            self._color_temp = 150
+        else:
+            self._color_temp = None
+
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
@@ -176,6 +208,11 @@ class MqttLight(Light):
     def rgb_color(self):
         """Return the RGB color value."""
         return self._rgb
+
+    @property
+    def color_temp(self):
+        """Return the color temperature in mired."""
+        return self._color_temp
 
     @property
     def should_poll(self):
@@ -227,6 +264,16 @@ class MqttLight(Light):
 
             if self._optimistic_brightness:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
+                should_update = True
+
+        if ATTR_COLOR_TEMP in kwargs and \
+           self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
+            color_temp = int(kwargs[ATTR_COLOR_TEMP])
+            mqtt.publish(
+                self._hass, self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC],
+                color_temp, self._qos, self._retain)
+            if self._optimistic_color_temp:
+                self._color_temp = kwargs[ATTR_COLOR_TEMP]
                 should_update = True
 
         mqtt.publish(self._hass, self._topic[CONF_COMMAND_TOPIC],

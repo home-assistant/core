@@ -73,6 +73,7 @@ class RadioThermostat(ClimateDevice):
         self._name = None
         self.hold_temp = hold_temp
         self.update()
+        self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
 
     @property
     def name(self):
@@ -101,6 +102,11 @@ class RadioThermostat(ClimateDevice):
     def current_operation(self):
         """Return the current operation. head, cool idle."""
         return self._current_operation
+
+    @property
+    def operation_list(self):
+        """Return the operation modes list."""
+        return self._operation_list
 
     @property
     def target_temperature(self):

@@ -1,6 +1,7 @@
 """The tests for the Scene component."""
 import unittest
 
+from homeassistant.bootstrap import setup_component
 from homeassistant import loader
 from homeassistant.components import light, scene
 
@@ -38,7 +39,7 @@ class TestScene(unittest.TestCase):
         test_light = loader.get_component('light.test')
         test_light.init()
 
-        self.assertTrue(light.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {'platform': 'test'}
         }))
 
@@ -46,13 +47,13 @@ class TestScene(unittest.TestCase):
 
         light.turn_off(self.hass, [light_1.entity_id, light_2.entity_id])
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         entity_state = {
             'state': 'on',
             'brightness': 100,
         }
-        self.assertTrue(scene.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, scene.DOMAIN, {
             'scene': [{
                 'name': 'test',
                 'entities': {
@@ -63,7 +64,7 @@ class TestScene(unittest.TestCase):
         }))
 
         scene.activate(self.hass, 'scene.test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(light_1.is_on)
         self.assertTrue(light_2.is_on)
@@ -77,7 +78,7 @@ class TestScene(unittest.TestCase):
         test_light = loader.get_component('light.test')
         test_light.init()
 
-        self.assertTrue(light.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {'platform': 'test'}
         }))
 
@@ -85,9 +86,9 @@ class TestScene(unittest.TestCase):
 
         light.turn_off(self.hass, [light_1.entity_id, light_2.entity_id])
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
-        self.assertTrue(scene.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, scene.DOMAIN, {
             'scene': [{
                 'name': 'test',
                 'entities': {
@@ -101,7 +102,7 @@ class TestScene(unittest.TestCase):
         }))
 
         scene.activate(self.hass, 'scene.test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(light_1.is_on)
         self.assertTrue(light_2.is_on)

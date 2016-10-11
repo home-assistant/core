@@ -4,7 +4,7 @@ import unittest
 from unittest import mock
 
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_TURN_OFF,
@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.components import thermostat
 
-from tests.common import get_test_home_assistant
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 ENTITY = 'thermostat.test'
@@ -44,12 +44,13 @@ class TestSetupThermostatHeatControl(unittest.TestCase):
             'name': 'test',
             'target_sensor': ENT_SENSOR
         }
-        self.assertFalse(_setup_component(self.hass, 'thermostat', {
-            'thermostat': config}))
+        with assert_setup_component(0):
+            setup_component(self.hass, 'thermostat', {
+                'thermostat': config})
 
     def test_valid_conf(self):
         """Test set up heat_control with valid config values."""
-        self.assertTrue(_setup_component(self.hass, 'thermostat',
+        self.assertTrue(setup_component(self.hass, 'thermostat',
                         {'thermostat': {
                             'platform': 'heat_control',
                             'name': 'test',
@@ -122,7 +123,7 @@ class TestThermostatHeatControl(unittest.TestCase):
     def test_set_target_temp(self):
         """Test the setting of the target temperature."""
         thermostat.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual('30.0', self.hass.states.get(ENTITY).state)
 
     def test_sensor_bad_unit(self):
@@ -132,7 +133,7 @@ class TestThermostatHeatControl(unittest.TestCase):
         unit = state.attributes.get('unit_of_measurement')
 
         self._setup_sensor(22.0, unit='bad_unit')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(ENTITY)
         self.assertEqual(unit, state.attributes.get('unit_of_measurement'))
@@ -145,7 +146,7 @@ class TestThermostatHeatControl(unittest.TestCase):
         unit = state.attributes.get('unit_of_measurement')
 
         self._setup_sensor(None)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(ENTITY)
         self.assertEqual(unit, state.attributes.get('unit_of_measurement'))
@@ -155,9 +156,9 @@ class TestThermostatHeatControl(unittest.TestCase):
         """Test if target temperature turn heater on."""
         self._setup_switch(False)
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         thermostat.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -168,9 +169,9 @@ class TestThermostatHeatControl(unittest.TestCase):
         """Test if target temperature turn heater off."""
         self._setup_switch(True)
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         thermostat.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -181,9 +182,9 @@ class TestThermostatHeatControl(unittest.TestCase):
         """Test if temperature change turn heater on."""
         self._setup_switch(False)
         thermostat.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -194,9 +195,9 @@ class TestThermostatHeatControl(unittest.TestCase):
         """Test if temperature change turn heater off."""
         self._setup_switch(True)
         thermostat.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -245,9 +246,9 @@ class TestThermostatHeatControlACMode(unittest.TestCase):
         """Test if target temperature turn ac off."""
         self._setup_switch(True)
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         thermostat.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -258,9 +259,9 @@ class TestThermostatHeatControlACMode(unittest.TestCase):
         """Test if target temperature turn ac on."""
         self._setup_switch(False)
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         thermostat.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -271,9 +272,9 @@ class TestThermostatHeatControlACMode(unittest.TestCase):
         """Test if temperature change turn ac off."""
         self._setup_switch(True)
         thermostat.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -284,9 +285,9 @@ class TestThermostatHeatControlACMode(unittest.TestCase):
         """Test if temperature change turn ac on."""
         self._setup_switch(False)
         thermostat.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -336,9 +337,9 @@ class TestThermostatHeatControlACModeMinCycle(unittest.TestCase):
         """Test if temperature change turn ac on."""
         self._setup_switch(False)
         thermostat.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_temp_change_ac_trigger_on_long_enough(self):
@@ -349,9 +350,9 @@ class TestThermostatHeatControlACModeMinCycle(unittest.TestCase):
                         return_value=fake_changed):
             self._setup_switch(False)
         thermostat.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -362,9 +363,9 @@ class TestThermostatHeatControlACModeMinCycle(unittest.TestCase):
         """Test if temperature change turn ac on."""
         self._setup_switch(True)
         thermostat.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_temp_change_ac_trigger_off_long_enough(self):
@@ -375,9 +376,9 @@ class TestThermostatHeatControlACModeMinCycle(unittest.TestCase):
                         return_value=fake_changed):
             self._setup_switch(True)
         thermostat.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -426,18 +427,18 @@ class TestThermostatHeatControlMinCycle(unittest.TestCase):
         """Test if temp change doesn't turn heater off because of time."""
         self._setup_switch(True)
         thermostat.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_temp_change_heater_trigger_on_not_long_enough(self):
         """Test if temp change doesn't turn heater on because of time."""
         self._setup_switch(False)
         thermostat.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_temp_change_heater_trigger_on_long_enough(self):
@@ -448,9 +449,9 @@ class TestThermostatHeatControlMinCycle(unittest.TestCase):
                         return_value=fake_changed):
             self._setup_switch(False)
         thermostat.set_temperature(self.hass, 30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
@@ -465,9 +466,9 @@ class TestThermostatHeatControlMinCycle(unittest.TestCase):
                         return_value=fake_changed):
             self._setup_switch(True)
         thermostat.set_temperature(self.hass, 25)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self._setup_sensor(30)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)

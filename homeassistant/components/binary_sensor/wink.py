@@ -1,19 +1,17 @@
 """
-Support for Wink sensors.
+Support for Wink binary sensors.
 
 For more details about this platform, please refer to the documentation at
-at https://home-assistant.io/components/sensor.wink/
+at https://home-assistant.io/components/binary_sensor.wink/
 """
-import logging
 import json
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.sensor.wink import WinkDevice
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
-REQUIREMENTS = ['python-wink==0.7.14', 'pubnub==3.8.2']
+DEPENDENCIES = ['wink']
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
@@ -21,7 +19,11 @@ SENSOR_TYPES = {
     "brightness": "light",
     "vibration": "vibration",
     "loudness": "sound",
-    "liquid_detected": "moisture"
+    "liquid_detected": "moisture",
+    "motion": "motion",
+    "presence": "occupancy",
+    "co_detected": "gas",
+    "smoke_detected": "smoke"
 }
 
 
@@ -29,23 +31,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink binary sensor platform."""
     import pywink
 
-    if discovery_info is None:
-        token = config.get(CONF_ACCESS_TOKEN)
-
-        if token is None:
-            logging.getLogger(__name__).error(
-                "Missing wink access_token. "
-                "Get one at https://winkbearertoken.appspot.com/")
-            return
-
-        pywink.set_bearer_token(token)
-
     for sensor in pywink.get_sensors():
         if sensor.capability() in SENSOR_TYPES:
             add_devices([WinkBinarySensorDevice(sensor)])
 
     for key in pywink.get_keys():
         add_devices([WinkBinarySensorDevice(key)])
+
+    for sensor in pywink.get_smoke_and_co_detectors():
+        add_devices([WinkBinarySensorDevice(sensor)])
 
 
 class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
@@ -70,15 +64,25 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
     def is_on(self):
         """Return true if the binary sensor is on."""
         if self.capability == "loudness":
-            return self.wink.loudness_boolean()
+            state = self.wink.loudness_boolean()
         elif self.capability == "vibration":
-            return self.wink.vibration_boolean()
+            state = self.wink.vibration_boolean()
         elif self.capability == "brightness":
-            return self.wink.brightness_boolean()
+            state = self.wink.brightness_boolean()
         elif self.capability == "liquid_detected":
-            return self.wink.liquid_boolean()
+            state = self.wink.liquid_boolean()
+        elif self.capability == "motion":
+            state = self.wink.motion_boolean()
+        elif self.capability == "presence":
+            state = self.wink.presence_boolean()
+        elif self.capability == "co_detected":
+            state = self.wink.co_detected_boolean()
+        elif self.capability == "smoke_detected":
+            state = self.wink.smoke_detected_boolean()
         else:
-            return self.wink.state()
+            state = self.wink.state()
+
+        return state
 
     @property
     def sensor_class(self):

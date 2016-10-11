@@ -7,7 +7,7 @@ https://home-assistant.io/components/light.isy994/
 import logging
 from typing import Callable
 
-from homeassistant.components.light import Light
+from homeassistant.components.light import Light, SUPPORT_BRIGHTNESS
 import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType
@@ -19,8 +19,8 @@ VALUE_TO_STATE = {
     True: STATE_ON,
 }
 
-UOM = ['2', '78']
-STATES = [STATE_OFF, STATE_ON, 'true', 'false']
+UOM = ['2', '51', '78']
+STATES = [STATE_OFF, STATE_ON, 'true', 'false', '%']
 
 
 # pylint: disable=unused-argument
@@ -35,7 +35,7 @@ def setup_platform(hass, config: ConfigType,
 
     for node in isy.filter_nodes(isy.NODES, units=UOM,
                                  states=STATES):
-        if node.dimmable:
+        if node.dimmable or '51' in node.uom:
             devices.append(ISYLightDevice(node))
 
     add_devices(devices)
@@ -60,10 +60,15 @@ class ISYLightDevice(isy.ISYDevice, Light):
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 light device."""
-        if not self._node.fastOff():
+        if not self._node.fastoff():
             _LOGGER.debug('Unable to turn on light.')
 
     def turn_on(self, brightness=100, **kwargs) -> None:
         """Send the turn on command to the ISY994 light device."""
         if not self._node.on(val=brightness):
             _LOGGER.debug('Unable to turn on light.')
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_BRIGHTNESS

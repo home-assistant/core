@@ -4,17 +4,18 @@ Support for switches which integrates with other components.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.template/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.switch import (
     ENTITY_ID_FORMAT, SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
-    ATTR_ENTITY_ID, MATCH_ALL, CONF_SWITCHES)
+    ATTR_ENTITY_ID, CONF_SWITCHES)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.script import Script
@@ -31,7 +32,7 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Required(ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(OFF_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-    vol.Optional(ATTR_ENTITY_ID, default=MATCH_ALL): cv.entity_ids
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -49,7 +50,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         state_template = device_config[CONF_VALUE_TEMPLATE]
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
-        entity_ids = device_config[ATTR_ENTITY_ID]
+        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
+                      state_template.extract_entities())
 
         switches.append(
             SwitchTemplate(
@@ -80,15 +82,17 @@ class SwitchTemplate(SwitchDevice):
                                             hass=hass)
         self._name = friendly_name
         self._template = state_template
+        state_template.hass = hass
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
         self._state = False
 
         self.update()
 
+        @callback
         def template_switch_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
-            self.update_ha_state(True)
+            hass.loop.create_task(self.async_update_ha_state(True))
 
         track_state_change(hass, entity_ids, template_switch_state_listener)
 
@@ -120,10 +124,11 @@ class SwitchTemplate(SwitchDevice):
         """Fire the off action."""
         self._off_script.run()
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Update the state from the template."""
         try:
-            state = template.render(self.hass, self._template).lower()
+            state = self._template.async_render().lower()
 
             if state in _VALID_STATES:
                 self._state = state in ('true', STATE_ON)

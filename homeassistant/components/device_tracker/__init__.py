@@ -46,7 +46,7 @@ CONF_TRACK_NEW = 'track_new_devices'
 DEFAULT_TRACK_NEW = True
 
 CONF_CONSIDER_HOME = 'consider_home'
-DEFAULT_CONSIDER_HOME = 180  # seconds
+DEFAULT_CONSIDER_HOME = 180
 
 CONF_SCAN_INTERVAL = 'interval_seconds'
 DEFAULT_SCAN_INTERVAL = 12
@@ -70,8 +70,10 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 
 _CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.All(cv.ensure_list, [
     vol.Schema({
-        vol.Optional(CONF_TRACK_NEW): cv.boolean,
-        vol.Optional(CONF_CONSIDER_HOME): cv.positive_int  # seconds
+        vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
+        vol.Optional(
+            CONF_CONSIDER_HOME, default=timedelta(seconds=180)): vol.All(
+                cv.time_period, cv.positive_timedelta)
     }, extra=vol.ALLOW_EXTRA)])}, extra=vol.ALLOW_EXTRA)
 
 DISCOVERY_PLATFORMS = {
@@ -118,8 +120,8 @@ def setup(hass: HomeAssistantType, config: ConfigType):
         return False
     else:
         conf = conf[0] if len(conf) > 0 else {}
-        consider_home = timedelta(
-            seconds=conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME))
+        consider_home = conf.get(CONF_CONSIDER_HOME,
+                                 timedelta(seconds=DEFAULT_CONSIDER_HOME))
         track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = load_config(yaml_path, hass, consider_home)
@@ -282,7 +284,7 @@ class Device(Entity):
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
                  track: bool, dev_id: str, mac: str, name: str=None,
                  picture: str=None, gravatar: str=None,
-                 away_hide: bool=False) -> None:
+                 hide_if_away: bool=False) -> None:
         """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
@@ -307,7 +309,7 @@ class Device(Entity):
         else:
             self.config_picture = picture
 
-        self.away_hide = away_hide
+        self.away_hide = hide_if_away
 
     @property
     def name(self):
@@ -398,15 +400,29 @@ class Device(Entity):
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     """Load devices from YAML configuration file."""
+    dev_schema = vol.Schema({
+        vol.Required('name'): cv.string,
+        vol.Optional('track', default=False): cv.boolean,
+        vol.Optional('mac', default=None): vol.Any(None, vol.All(cv.string,
+                                                                 vol.Upper)),
+        vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
+        vol.Optional('gravatar', default=None): vol.Any(None, cv.string),
+        vol.Optional('picture', default=None): vol.Any(None, cv.string),
+        vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
+            cv.time_period, cv.positive_timedelta)
+    })
     try:
-        return [
-            Device(hass, consider_home, device.get('track', False),
-                   str(dev_id).lower(), None if device.get('mac') is None
-                   else str(device.get('mac')).upper(),
-                   device.get('name'), device.get('picture'),
-                   device.get('gravatar'),
-                   device.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
-            for dev_id, device in load_yaml_config_file(path).items()]
+        result = []
+        devices = load_yaml_config_file(path)
+        for dev_id, device in devices.items():
+            try:
+                device = dev_schema(device)
+                device['dev_id'] = cv.slugify(dev_id)
+            except vol.Invalid as exp:
+                log_exception(exp, dev_id, devices)
+            else:
+                result.append(Device(hass, **device))
+        return result
     except (HomeAssistantError, FileNotFoundError):
         # When YAML file could not be loaded/did not contain a dict
         return []

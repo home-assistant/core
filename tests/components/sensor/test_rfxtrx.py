@@ -1,6 +1,8 @@
 """The tests for the Rfxtrx sensor platform."""
 import unittest
 
+import pytest
+
 from homeassistant.bootstrap import _setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.const import TEMP_CELSIUS
@@ -8,6 +10,7 @@ from homeassistant.const import TEMP_CELSIUS
 from tests.common import get_test_home_assistant
 
 
+@pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
 class TestSensorRfxtrx(unittest.TestCase):
     """Test the Rfxtrx sensor platform."""
 
@@ -20,6 +23,8 @@ class TestSensorRfxtrx(unittest.TestCase):
         """Stop everything that was started."""
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx_core.RFX_DEVICES = {}
+        if rfxtrx_core.RFXOBJECT:
+            rfxtrx_core.RFXOBJECT.close_connection()
         self.hass.stop()
 
     def test_default_config(self):
