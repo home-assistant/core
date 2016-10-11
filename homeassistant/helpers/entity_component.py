@@ -274,7 +274,7 @@ class EntityPlatform(object):
             self.async_add_entities(new_entities), self.component.hass.loop
         ).result()
 
-    @async.coroutine
+    @asyncio.coroutine
     def async_add_entities(self, new_entities):
         """Add entities for a single platform async.
 
@@ -291,7 +291,7 @@ class EntityPlatform(object):
                    in self.platform_entities):
             return
 
-        self._async_unsub_polling = track_utc_time_change(
+        self._async_unsub_polling = async_track_utc_time_change(
             self.component.hass, self._update_entity_states,
             second=range(0, 60, self.scan_interval))
 
