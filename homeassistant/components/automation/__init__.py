@@ -183,8 +183,7 @@ def setup(hass, config):
     @asyncio.coroutine
     def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
-        conf = yield from hass.loop.run_in_executor(
-            None, component.prepare_reload)
+        conf = component.async_prepare_reload()
         if conf is None:
             return
         hass.loop.create_task(_async_process_config(hass, conf, component))
@@ -345,8 +344,7 @@ def _async_process_config(hass, config, component):
             entities.append(entity)
 
     yield from asyncio.gather(*tasks, loop=hass.loop)
-    yield from hass.loop.run_in_executor(
-        None, component.add_entities, entities)
+    hass.loop.async_add_job(component.async_add_entities, entities)
 
     return len(entities) > 0
 

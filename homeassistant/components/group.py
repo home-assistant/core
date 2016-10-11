@@ -4,6 +4,7 @@ Provides functionality to group entities.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
 """
+import asyncio
 import logging
 import os
 
@@ -308,6 +309,7 @@ class Group(Entity):
         """
         self.async_remove()
 
+    @asyncio.coroutine
     def async_update(self):
         """Query all members and determine current group state."""
         self._state = STATE_UNKNOWN
