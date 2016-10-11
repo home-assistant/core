@@ -19,14 +19,14 @@ REQUIREMENTS = ['bluepy_devices==0.2.0']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MODE = 'mode'
-ATTR_MODE_READBLE = 'mode_readable'
+ATTR_MODE_READABLE = 'mode_readable'
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MAC): cv.string,
+    vol.Required(CONF_MAC): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}):
+    vol.Required(CONF_DEVICES):
         vol.Schema({cv.string: DEVICE_SCHEMA}),
 })
 
@@ -85,7 +85,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
         """Return the device specific state attributes."""
         return {
             ATTR_MODE: self._thermostat.mode,
-            ATTR_MODE_READBLE: self._thermostat.mode_readable,
+            ATTR_MODE_READABLE: self._thermostat.mode_readable,
         }
 
     @property
