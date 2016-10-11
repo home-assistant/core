@@ -4,6 +4,7 @@ Provides functionality to group entities.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
 """
+import asyncio
 import logging
 import os
 import threading
@@ -141,7 +142,8 @@ def setup(hass, config):
     """Setup all groups found definded in the configuration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    success = _process_config(hass, config, component)
+    success = run_callback_threadsafe(
+        hass.loop, _process_config, hass, config, component).result()
 
     if not success:
         return False
@@ -149,12 +151,13 @@ def setup(hass, config):
     descriptions = conf_util.load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
+    @callback
     def reload_service_handler(service_call):
         """Remove all groups and load new ones from config."""
-        conf = component.prepare_reload()
+        conf = component.async_prepare_reload()
         if conf is None:
             return
-        _process_config(hass, conf, component)
+        hass.async_run_job(_process_config, hass, conf, component)
 
     hass.services.register(DOMAIN, SERVICE_RELOAD, reload_service_handler,
                            descriptions[DOMAIN][SERVICE_RELOAD],
@@ -163,8 +166,10 @@ def setup(hass, config):
     return True
 
 
+@callback
 def _process_config(hass, config, component):
     """Process group configuration."""
+    groups
     for object_id, conf in config.get(DOMAIN, {}).items():
         name = conf.get(CONF_NAME, object_id)
         entity_ids = conf.get(CONF_ENTITIES) or []
@@ -172,9 +177,10 @@ def _process_config(hass, config, component):
         view = conf.get(CONF_VIEW)
 
         group = Group(hass, name, entity_ids, icon=icon, view=view,
-                      object_id=object_id)
-        component.add_entities((group,))
+                      object_id=object_id, async=True)
+        groups.append(group)
 
+    hass.async_add_job(component.async_add_entities, groups)
     return True
 
 
@@ -183,7 +189,7 @@ class Group(Entity):
 
     # pylint: disable=too-many-instance-attributes, too-many-arguments
     def __init__(self, hass, name, entity_ids=None, user_defined=True,
-                 icon=None, view=False, object_id=None):
+                 icon=None, view=False, object_id=None, async=False):
         """Initialize a group."""
         self.hass = hass
         self._name = name
@@ -198,13 +204,18 @@ class Group(Entity):
         self.group_on = None
         self.group_off = None
         self._assumed_state = False
-        self._lock = threading.Lock()
         self._async_unsub_state_changed = None
 
-        if entity_ids is not None:
-            self.update_tracked_entity_ids(entity_ids)
+        if async:
+            if entity_ids is not None:
+                self.async_update_tracked_entity_ids(entity_ids)
+            else:
+                hass.async_add_job(self.async_update_ha_state, True)
         else:
-            self.update_ha_state(True)
+            if entity_ids is not None:
+                self.update_tracked_entity_ids(entity_ids)
+            else:
+                self.update_ha_state(True)
 
     @property
     def should_poll(self):
@@ -268,7 +279,7 @@ class Group(Entity):
         """Unregister the group from Home Assistant."""
         self.remove()
 
-    def update(self):
+    def async_update(self):
         """Query all members and determine current group state."""
         self._state = STATE_UNKNOWN
         self._update_group_state()
@@ -307,27 +318,26 @@ class Group(Entity):
         """
         # pylint: disable=too-many-branches
         # To store current states of group entities. Might not be needed.
-        with self._lock:
-            states = None
-            gr_state = self._state
-            gr_on = self.group_on
-            gr_off = self.group_off
+        states = None
+        gr_state = self._state
+        gr_on = self.group_on
+        gr_off = self.group_off
 
-            # We have not determined type of group yet
-            if gr_on is None:
-                if tr_state is None:
-                    states = self._tracking_states
+        # We have not determined type of group yet
+        if gr_on is None:
+            if tr_state is None:
+                states = self._tracking_states
 
-                    for state in states:
-                        gr_on, gr_off = \
-                            _get_group_on_off(state.state)
-                        if gr_on is not None:
-                            break
-                else:
-                    gr_on, gr_off = _get_group_on_off(tr_state.state)
+                for state in states:
+                    gr_on, gr_off = \
+                        _get_group_on_off(state.state)
+                    if gr_on is not None:
+                        break
+            else:
+                gr_on, gr_off = _get_group_on_off(tr_state.state)
 
-                if gr_on is not None:
-                    self.group_on, self.group_off = gr_on, gr_off
+            if gr_on is not None:
+                self.group_on, self.group_off = gr_on, gr_off
 
             # We cannot determine state of the group
             if gr_on is None:
