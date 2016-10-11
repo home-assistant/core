@@ -5,8 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.universal/
 """
 import logging
-# pylint: disable=import-error
 from copy import copy
+
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_APP_ID, ATTR_APP_NAME, ATTR_MEDIA_ALBUM_ARTIST, ATTR_MEDIA_ALBUM_NAME,
@@ -19,114 +20,58 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
     ATTR_INPUT_SOURCE, SERVICE_SELECT_SOURCE, SERVICE_CLEAR_PLAYLIST,
-    MediaPlayerDevice)
+    MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, CONF_NAME, SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF,
     SERVICE_TURN_ON, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE, STATE_OFF, STATE_ON,
-    SERVICE_MEDIA_STOP)
+    SERVICE_MEDIA_STOP, CONF_STATE)
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.service import call_from_config
+import homeassistant.helpers.config_validation as cv
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_ACTIVE_CHILD = 'active_child'
 
 CONF_ATTRS = 'attributes'
 CONF_CHILDREN = 'children'
 CONF_COMMANDS = 'commands'
-CONF_PLATFORM = 'platform'
+CONF_DATA = 'data'
+CONF_IS_VOLUME_MUTED = 'is_volume_muted'
 CONF_SERVICE = 'service'
 CONF_SERVICE_DATA = 'service_data'
-CONF_STATE = 'state'
 
 OFF_STATES = [STATE_IDLE, STATE_OFF]
-REQUIREMENTS = []
-_LOGGER = logging.getLogger(__name__)
+ATTRIBUTES_OVERWRITE = [CONF_STATE, CONF_IS_VOLUME_MUTED]
+COMMANDS = [SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
+            SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE]
+
+COMMAND_SCHEMA = vol.Schema({
+    vol.Optional(CONF_SERVICE): cv.string,
+    vol.Optional(CONF_DATA): cv.string,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_CHILDREN, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_COMMANDS, default={}):
+        vol.Schema({vol.All(cv.string, vol.In(COMMANDS)): COMMAND_SCHEMA}),
+    vol.Optional(CONF_ATTRS, default={}):
+        {vol.All(cv.string, vol.In(ATTRIBUTES_OVERWRITE)): cv.string},
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the universal media players."""
-    if not validate_config(config):
-        return
-
-    player = UniversalMediaPlayer(hass,
-                                  config[CONF_NAME],
-                                  config[CONF_CHILDREN],
-                                  config[CONF_COMMANDS],
-                                  config[CONF_ATTRS])
-
-    add_devices([player])
-
-
-def validate_config(config):
-    """Validate universal media player configuration."""
-    del config[CONF_PLATFORM]
-
-    # Validate name
-    if CONF_NAME not in config:
-        _LOGGER.error('Universal Media Player configuration requires name')
-        return False
-
-    validate_children(config)
-    validate_commands(config)
-    validate_attributes(config)
-
-    del_keys = []
-    for key in config:
-        if key not in [CONF_NAME, CONF_CHILDREN, CONF_COMMANDS, CONF_ATTRS]:
-            _LOGGER.warning(
-                'Universal Media Player (%s) unrecognized parameter %s',
-                config[CONF_NAME], key)
-            del_keys.append(key)
-    for key in del_keys:
-        del config[key]
-
-    return True
-
-
-def validate_children(config):
-    """Validate children."""
-    if CONF_CHILDREN not in config:
-        _LOGGER.info(
-            'No children under Universal Media Player (%s)', config[CONF_NAME])
-        config[CONF_CHILDREN] = []
-    elif not isinstance(config[CONF_CHILDREN], list):
-        _LOGGER.warning(
-            'Universal Media Player (%s) children not list in config. '
-            'They will be ignored.',
-            config[CONF_NAME])
-        config[CONF_CHILDREN] = []
-
-
-def validate_commands(config):
-    """Validate commands."""
-    if CONF_COMMANDS not in config:
-        config[CONF_COMMANDS] = {}
-    elif not isinstance(config[CONF_COMMANDS], dict):
-        _LOGGER.warning(
-            'Universal Media Player (%s) specified commands not dict in '
-            'config. They will be ignored.',
-            config[CONF_NAME])
-        config[CONF_COMMANDS] = {}
-
-
-def validate_attributes(config):
-    """Validate attributes."""
-    if CONF_ATTRS not in config:
-        config[CONF_ATTRS] = {}
-    elif not isinstance(config[CONF_ATTRS], dict):
-        _LOGGER.warning(
-            'Universal Media Player (%s) specified attributes '
-            'not dict in config. They will be ignored.',
-            config[CONF_NAME])
-        config[CONF_ATTRS] = {}
-
-    for key, val in config[CONF_ATTRS].items():
-        attr = val.split('|', 1)
-        if len(attr) == 1:
-            attr.append(None)
-        config[CONF_ATTRS][key] = attr
+    """Set up the universal media player."""
+    add_devices([
+        UniversalMediaPlayer(
+            hass, config[CONF_NAME], config[CONF_CHILDREN],
+            config[CONF_COMMANDS], config[CONF_ATTRS])
+    ])
 
 
 class UniversalMediaPlayer(MediaPlayerDevice):
@@ -165,8 +110,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def _override_or_child_attr(self, attr_name):
         """Return either the override or the active child for attr_name."""
         if attr_name in self._attrs:
-            return self._entity_lkp(self._attrs[attr_name][0],
-                                    self._attrs[attr_name][1])
+            return self._entity_lkp(
+                self._attrs[attr_name][0], self._attrs[attr_name][1])
 
         return self._child_attr(attr_name)
 
@@ -189,8 +134,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         active_child = self._child_state
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
 
-        self.hass.services.call(DOMAIN, service_name, service_data,
-                                blocking=True)
+        self.hass.services.call(
+            DOMAIN, service_name, service_data, blocking=True)
 
     @property
     def should_poll(self):
@@ -201,8 +146,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def master_state(self):
         """Return the master state for entity or None."""
         if CONF_STATE in self._attrs:
-            master_state = self._entity_lkp(self._attrs[CONF_STATE][0],
-                                            self._attrs[CONF_STATE][1])
+            master_state = self._entity_lkp(
+                self._attrs[CONF_STATE][0], self._attrs[CONF_STATE][1])
             return master_state if master_state else STATE_OFF
         else:
             return None
