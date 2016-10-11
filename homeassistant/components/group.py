@@ -4,10 +4,8 @@ Provides functionality to group entities.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
 """
-import asyncio
 import logging
 import os
-import threading
 
 import voluptuous as vol
 
@@ -17,7 +15,7 @@ from homeassistant.const import (
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
     STATE_UNLOCKED, STATE_UNKNOWN, ATTR_ASSUMED_STATE)
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
@@ -167,7 +165,7 @@ def setup(hass, config):
 @callback
 def _process_config(hass, config, component):
     """Process group configuration."""
-    groups
+    groups = []
     for object_id, conf in config.get(DOMAIN, {}).items():
         name = conf.get(CONF_NAME, object_id)
         entity_ids = conf.get(CONF_ENTITIES) or []

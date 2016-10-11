@@ -197,7 +197,7 @@ class EntityComponent(object):
         """
         if self.group is None and self.group_name is not None:
             group = yield from self.component.hass.loop.run_in_executor(
-                get_component, 'group'
+                None, get_component, 'group'
             )
             self.group = group.Group(self.hass, self.group_name,
                                      user_defined=False, async=True)
@@ -250,9 +250,10 @@ class EntityComponent(object):
 
         This method must be run in the event loop.
         """
-        return yield from self.hass.loop.run_in_executor(
+        conf = yield from self.hass.loop.run_in_executor(
             None, self.prepare_reload
         )
+        return conf
 
 
 class EntityPlatform(object):

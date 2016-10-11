@@ -1,9 +1,8 @@
 """Helper methods to help with platform discovery."""
 
-from homeassistant import bootstrap
+from homeassistant import bootstrap, core
 from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
-from homeassistant.core import callback
 from homeassistant.util.async import run_callback_threadsafe
 
 EVENT_LOAD_PLATFORM = 'load_platform.{}'
@@ -57,7 +56,7 @@ def async_listen_platform(hass, component, callback):
     """
     service = EVENT_LOAD_PLATFORM.format(component)
 
-    @callback
+    @core.callback
     def discovery_platform_listener(event):
         """Listen for platform discovery events."""
         if event.data.get(ATTR_SERVICE) != service:
