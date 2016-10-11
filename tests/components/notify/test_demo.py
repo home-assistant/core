@@ -152,7 +152,7 @@ data_template:
 
         assert {
             'message': 'my message',
-            'target': 'test target id',
+            'target': ['test target id'],
             'title': 'my title',
             'data': {'hello': 'world'}
         } == data
