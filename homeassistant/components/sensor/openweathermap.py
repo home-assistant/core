@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    CONF_MONITORED_CONDITIONS)
+    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -21,6 +21,7 @@ REQUIREMENTS = ['pyowm==2.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ATTRIBUTION = "Data provied by OpenWeatherMap"
 CONF_FORECAST = 'forecast'
 
 DEFAULT_NAME = 'OWM'
@@ -112,6 +113,13 @@ class OpenWeatherMapSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+        }
 
     # pylint: disable=too-many-branches
     def update(self):
