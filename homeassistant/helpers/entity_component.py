@@ -155,11 +155,10 @@ class EntityComponent(object):
 
     def add_entity(self, entity, platform=None):
         """Add entity to component."""
-        return run_coroutine_threadsafe(
-            self.async_add_entities(entity, platform), self.component.hass.loop
+        return run_callback_threadsafe(
+            self.hass.loop, self.async_add_entities, entity, platform
         ).result()
 
-    @asyncio.coroutine
     def async_add_entity(self, entity, platform=None):
         """Add entity to component.
 
@@ -272,7 +271,7 @@ class EntityPlatform(object):
         This method must be run in the event loop.
         """
         for entity in new_entities:
-            if self.component.add_entity(entity, self):
+            if self.component.async_add_entity(entity, self):
                 self.platform_entities.append(entity)
 
         self.component.async_update_group()
