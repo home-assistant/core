@@ -17,8 +17,10 @@ from homeassistant.const import (
     STATE_UNLOCKED, STATE_UNKNOWN, ATTR_ASSUMED_STATE)
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async import (
+    run_coroutine_threadsafe, run_callback_threadsafe)
 
 DOMAIN = 'group'
 
@@ -197,7 +199,7 @@ class Group(Entity):
         self.group_off = None
         self._assumed_state = False
         self._lock = threading.Lock()
-        self._unsub_state_changed = None
+        self._async_unsub_state_changed = None
 
         if entity_ids is not None:
             self.update_tracked_entity_ids(entity_ids)
@@ -259,7 +261,7 @@ class Group(Entity):
 
     def start(self):
         """Start tracking members."""
-        self._unsub_state_changed = track_state_change(
+        self._async_unsub_state_changed = track_state_change(
             self.hass, self.tracking, self._state_changed_listener)
 
     def stop(self):
@@ -275,9 +277,9 @@ class Group(Entity):
         """Remove group from HASS."""
         super().remove()
 
-        if self._unsub_state_changed:
-            self._unsub_state_changed()
-            self._unsub_state_changed = None
+        if self._async_unsub_state_changed:
+            self._async_unsub_state_changed()
+            self._async_unsub_state_changed = None
 
     def _state_changed_listener(self, entity_id, old_state, new_state):
         """Respond to a member state changing."""

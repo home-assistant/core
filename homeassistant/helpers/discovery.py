@@ -3,6 +3,8 @@
 from homeassistant import bootstrap
 from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.core import callback
+from homeassistant.util.async import run_callback_threadsafe
 
 EVENT_LOAD_PLATFORM = 'load_platform.{}'
 ATTR_PLATFORM = 'platform'
@@ -43,8 +45,19 @@ def discover(hass, service, discovered=None, component=None, hass_config=None):
 
 def listen_platform(hass, component, callback):
     """Register a platform loader listener."""
+    run_callback_threadsafe(
+        hass.loop, async_listen_platform, hass, component, callback
+    ).result()
+
+
+def async_listen_platform(hass, component, callback):
+    """Register a platform loader listener.
+
+    This method must be run in the event loop.
+    """
     service = EVENT_LOAD_PLATFORM.format(component)
 
+    @callback
     def discovery_platform_listener(event):
         """Listen for platform discovery events."""
         if event.data.get(ATTR_SERVICE) != service:
@@ -55,9 +68,12 @@ def listen_platform(hass, component, callback):
         if not platform:
             return
 
-        callback(platform, event.data.get(ATTR_DISCOVERED))
+        hass.async_run_job(
+            callback, platform, event.data.get(ATTR_DISCOVERED)
+        )
 
-    hass.bus.listen(EVENT_PLATFORM_DISCOVERED, discovery_platform_listener)
+    hass.bus.async_listen(
+        EVENT_PLATFORM_DISCOVERED, discovery_platform_listener)
 
 
 def load_platform(hass, component, platform, discovered=None,
