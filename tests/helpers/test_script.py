@@ -1,6 +1,7 @@
 """The tests for the Script component."""
 # pylint: disable=too-many-public-methods,protected-access
 from datetime import timedelta
+from unittest import mock
 import unittest
 
 # Otherwise can't test just this file (import order issue)
@@ -279,3 +280,62 @@ class TestScriptHelper(unittest.TestCase):
         script_obj.run()
         self.hass.block_till_done()
         assert len(events) == 3
+
+    @mock.patch('homeassistant.helpers.script.condition.async_from_config')
+    def test_condition_created_once(self, async_from_config):
+        """Test that the conditions do not get created multiple times."""
+        event = 'test_event'
+        events = []
+
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.hass.states.set('test.entity', 'hello')
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {
+                'condition': 'template',
+                'value_template': '{{ states.test.entity.state == "hello" }}',
+            },
+            {'event': event},
+        ]))
+
+        script_obj.run()
+        script_obj.run()
+        self.hass.block_till_done()
+        assert async_from_config.call_count == 1
+        assert len(script_obj._config_cache) == 1
+
+    def test_all_conditions_cached(self):
+        """Test that multiple conditions get cached."""
+        event = 'test_event'
+        events = []
+
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.hass.states.set('test.entity', 'hello')
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {
+                'condition': 'template',
+                'value_template': '{{ states.test.entity.state == "hello" }}',
+            },
+            {
+                'condition': 'template',
+                'value_template': '{{ states.test.entity.state != "hello" }}',
+            },
+            {'event': event},
+        ]))
+
+        script_obj.run()
+        self.hass.block_till_done()
+        assert len(script_obj._config_cache) == 2

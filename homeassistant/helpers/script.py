@@ -51,6 +51,7 @@ class Script():
                               in self.sequence)
         self._async_unsub_delay_listener = None
         self._template_cache = {}
+        self._config_cache = {}
 
     @property
     def is_running(self) -> bool:
@@ -153,9 +154,14 @@ class Script():
 
     def _async_check_condition(self, action, variables):
         """Test if condition is matching."""
+        config_cache_key = frozenset((k, str(v)) for k, v in action.items())
+        config = self._config_cache.get(config_cache_key)
+        if not config:
+            config = condition.async_from_config(action, False)
+            self._config_cache[config_cache_key] = config
+
         self.last_action = action.get(CONF_ALIAS, action[CONF_CONDITION])
-        check = condition.async_from_config(action, False)(
-            self.hass, variables)
+        check = config(self.hass, variables)
         self._log("Test condition {}: {}".format(self.last_action, check))
         return check
 
