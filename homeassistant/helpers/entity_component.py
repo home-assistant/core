@@ -54,7 +54,7 @@ class EntityComponent(object):
         discovered platforms.
         """
         run_coroutine_threadsafe(
-            self.async_setup(config), self.component.hass.loop
+            self.hass.loop, self.async_setup, config
         ).result()
 
     @asyncio.coroutine
@@ -244,6 +244,15 @@ class EntityComponent(object):
 
         self.reset()
         return conf
+
+    def async_prepare_reload(self):
+        """Prepare reloading this entity component.
+
+        This method must be run in the event loop.
+        """
+        return yield from self.hass.loop.run_in_executor(
+            None, self.prepare_reload
+        )
 
 
 class EntityPlatform(object):
