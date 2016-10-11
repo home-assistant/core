@@ -19,6 +19,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+#  pylint: disable=too-many-locals
 DEFAULT_NAME = 'Synology Camera'
 DEFAULT_STREAM_ID = '0'
 TIMEOUT = 5
@@ -39,6 +40,7 @@ CAMERA_PATH = 'camera.cgi'
 STREAMING_PATH = 'SurveillanceStation/videoStreaming.cgi'
 
 SYNO_API_URL = '{0}{1}{2}'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
@@ -51,11 +53,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a Synology IP Camera."""
-    from json import loads
-    global STREAMING_PATH
-    global CAMERA_PATH
-    global AUTH_PATH
-
     # Determine API to use for authentication
     syno_api_url = SYNO_API_URL.format(config.get(CONF_URL),
                                        WEBAPI_PATH,
@@ -68,30 +65,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                              params=query_payload,
                              verify=config.get(CONF_VALID_CERT),
                              timeout=TIMEOUT)
-    query_resp = loads(query_req.text)
-    AUTH_PATH = query_resp['data'][AUTH_API]['path']
+    query_resp = query_req.json()
+    auth_path = query_resp['data'][AUTH_API]['path']
     camera_api = query_resp['data'][CAMERA_API]['path']
-    CAMERA_PATH = query_resp['data'][CAMERA_API]['path']
-    STREAMING_PATH = query_resp['data'][STREAMING_API]['path']
+    camera_path = query_resp['data'][CAMERA_API]['path']
+    streaming_path = query_resp['data'][STREAMING_API]['path']
 
     # Authticate to NAS to get a session id
     syno_auth_url = SYNO_API_URL.format(config.get(CONF_URL),
                                         WEBAPI_PATH,
-                                        AUTH_PATH)
-
-    auth_payload = {'api': AUTH_API,
-                    'method': 'Login',
-                    'version': '2',
-                    'account': config.get(CONF_USERNAME),
-                    'passwd': config.get(CONF_PASSWORD),
-                    'session': 'SurveillanceStation',
-                    'format': 'sid'}
-    auth_req = requests.get(syno_auth_url,
-                            params=auth_payload,
-                            verify=config.get(CONF_VALID_CERT),
-                            timeout=TIMEOUT)
-    auth_resp = loads(auth_req.text)
-    session_id = auth_resp['data']['sid']
+                                        auth_path)
+    session_id = get_session_id(config.get(CONF_USERNAME),
+                                config.get(CONF_PASSWORD),
+                                syno_auth_url,
+                                config.get(CONF_VALID_CERT))
 
     # Use SessionID to get cameras in system
     syno_camera_url = SYNO_API_URL.format(config.get(CONF_URL),
@@ -105,23 +92,46 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                               verify=config.get(CONF_VALID_CERT),
                               timeout=TIMEOUT,
                               cookies={'id': session_id})
-    camera_resp = loads(camera_req.text)
+    camera_resp = camera_req.json()
     cameras = camera_resp['data']['cameras']
     for camera in cameras:
         if not config.get(CONF_WHITELIST):
             camera_id = camera['id']
             snapshot_path = camera['snapshot_path']
+
             add_devices([SynologyCamera(config,
                                         camera_id,
                                         camera['name'],
-                                        snapshot_path)])
+                                        snapshot_path,
+                                        streaming_path,
+                                        camera_path,
+                                        auth_path)])
+
+
+def get_session_id(username, password, login_url, valid_cert):
+    """Get a session id."""
+    auth_payload = {'api': AUTH_API,
+                    'method': 'Login',
+                    'version': '2',
+                    'account': username,
+                    'passwd': password,
+                    'session': 'SurveillanceStation',
+                    'format': 'sid'}
+    auth_req = requests.get(login_url,
+                            params=auth_payload,
+                            verify=valid_cert,
+                            timeout=TIMEOUT)
+    auth_resp = auth_req.json()
+    return auth_resp['data']['sid']
 
 
 # pylint: disable=too-many-instance-attributes
 class SynologyCamera(Camera):
     """An implementation of a Synology NAS based IP camera."""
 
-    def __init__(self, config, camera_id, camera_name, snapshot_path):
+# pylint: disable=too-many-arguments
+    def __init__(self, config, camera_id, camera_name,
+                 snapshot_path, streaming_path, camera_path, auth_path):
         """Initialize a Synology Surveillance Station camera."""
         super().__init__()
         self._name = camera_name
@@ -135,12 +145,17 @@ class SynologyCamera(Camera):
         self._valid_cert = config.get(CONF_VALID_CERT)
         self._camera_id = camera_id
         self._snapshot_path = snapshot_path
+        self._streaming_path = streaming_path
+        self._camera_path = camera_path
+        self._auth_path = auth_path
 
-        self.get_sid()
+        self._session_id = get_session_id(self._username,
+                                          self._password,
+                                          self._login_url,
+                                          self._valid_cert)
 
     def get_sid(self):
         """Get a session id."""
-        from json import loads
         auth_payload = {'api': AUTH_API,
                         'method': 'Login',
                         'version': '2',
@@ -152,14 +167,14 @@ class SynologyCamera(Camera):
                                 params=auth_payload,
                                 verify=self._valid_cert,
                                 timeout=TIMEOUT)
-        auth_resp = loads(auth_req.text)
+        auth_resp = auth_req.json()
         self._session_id = auth_resp['data']['sid']
 
     def camera_image(self):
         """Return a still image response from the camera."""
         image_url = SYNO_API_URL.format(self._synology_url,
                                         WEBAPI_PATH,
-                                        CAMERA_PATH)
+                                        self._camera_path)
         image_payload = {'api': CAMERA_API,
                          'method': 'GetSnapshot',
                          'version': '1',
@@ -180,7 +195,7 @@ class SynologyCamera(Camera):
         """Return a MJPEG stream image response directly from the camera."""
         streaming_url = SYNO_API_URL.format(self._synology_url,
                                             WEBAPI_PATH,
-                                            STREAMING_PATH)
+                                            self._streaming_path)
         streaming_payload = {'api': STREAMING_API,
                              'method': 'Stream',
                              'version': '1',
