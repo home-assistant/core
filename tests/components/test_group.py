@@ -64,7 +64,7 @@ class TestComponentsGroup(unittest.TestCase):
     def test_setup_empty_group(self):
         """Try to setup an empty group."""
         grp = run_callback_threadsafe(
-            self.hass.loop, group.Group, 'nothing', []).result()
+            self.hass.loop, group.Group, self.hass, 'nothing', []).result()
 
         self.assertEqual(STATE_UNKNOWN, grp.state)
 
