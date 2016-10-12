@@ -16,8 +16,7 @@ from homeassistant.const import (
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
     STATE_UNLOCKED, STATE_UNKNOWN, ATTR_ASSUMED_STATE)
 from homeassistant.core import callback
-from homeassistant.helpers.entity import (
-    Entity, async_generate_entity_id, generate_entity_id)
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
