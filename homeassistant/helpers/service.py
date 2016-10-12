@@ -99,16 +99,6 @@ def extract_entity_ids(hass, service_call):
     """Helper method to extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
-    """
-    return run_callback_threadsafe(
-        hass.loop, async_extract_entity_ids, hass, service_call
-    ).result()
-
-
-def async_extract_entity_ids(hass, service_call):
-    """Helper method to extract a list of entity ids from a service call.
-
-    Will convert group entity ids to the entity ids it represents.
 
     This method must be run in the event loop.
     """

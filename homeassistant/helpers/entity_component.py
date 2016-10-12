@@ -13,7 +13,7 @@ from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_utc_time_change
-from homeassistant.helpers.service import async_extract_entity_ids
+from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 
@@ -69,8 +69,12 @@ class EntityComponent(object):
         self.config = config
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
+        tasks = []
         for p_type, p_config in config_per_platform(config, self.domain):
-            self.hass.async_run_job(self._setup_platform, p_type, p_config)
+            tasks.append(self.hass.loop.create_task(
+                    self._setup_platform(p_type, p_config)
+            ))
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.components.discovery.load_platform()
@@ -104,10 +108,10 @@ class EntityComponent(object):
             return list(self.entities.values())
 
         return [self.entities[entity_id] for entity_id
-                in async_extract_entity_ids(self.hass, service)
+                in extract_entity_ids(self.hass, service)
                 if entity_id in self.entities]
 
-    @callback
+    @asyncio.coroutine
     def _setup_platform(self, platform_type, platform_config,
                         discovery_info=None):
         """Setup a platform for this component.
@@ -137,8 +141,8 @@ class EntityComponent(object):
 
         try:
             if getattr(platform, 'async_setup_platform', None):
-                self.hass.async_run_job(
-                    platform.setup_platform, self.hass, platform_config,
+                yield from platform.async_setup_platform(
+                    self.hass, platform_config,
                     entity_platform.async_add_entities, discovery_info
                 )
             else:
@@ -181,7 +185,7 @@ class EntityComponent(object):
                 self.entities.keys())
 
         self.entities[entity.entity_id] = entity
-        self.hass.async_add_job(entity.async_update_ha_state)
+        self.hass.loop.create_task(entity.async_update_ha_state())
 
         return True
 
@@ -268,11 +272,11 @@ class EntityPlatform(object):
 
     def add_entities(self, new_entities):
         """Add entities for a single platform."""
-        run_coroutine_threadsafe(
-            self.async_add_entities(new_entities), self.component.hass.loop
+        run_callback_threadsafe(
+            self.component.hass.loop, self.async_add_entities, new_entities
         ).result()
 
-    @asyncio.coroutine
+    @callback
     def async_add_entities(self, new_entities):
         """Add entities for a single platform async.
 
@@ -317,6 +321,6 @@ class EntityPlatform(object):
                         if entity.should_poll)
 
         for entity in entities:
-            self.component.hass.async_add_job(
-                entity.async_update_ha_state, True
+            self.component.hass.loop.create_task(
+                entity.async_update_ha_state(True)
             )

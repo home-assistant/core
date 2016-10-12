@@ -160,7 +160,7 @@ def setup(hass, config):
         conf = component.async_prepare_reload()
         if conf is None:
             return
-        hass.async_run_job(_process_config, hass, conf, component)
+        hass.loop.call_soon(_process_config, hass, conf, component)
 
     hass.services.register(DOMAIN, SERVICE_RELOAD, reload_service_handler,
                            descriptions[DOMAIN][SERVICE_RELOAD],
@@ -183,7 +183,7 @@ def _process_config(hass, config, component):
                       object_id=object_id, async=True)
         groups.append(group)
 
-    hass.async_add_job(component.async_add_entities, groups)
+    hass.loop.call_soon(component.async_add_entities, groups)
 
 
 class Group(Entity):
@@ -282,7 +282,7 @@ class Group(Entity):
         self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
         self.group_on, self.group_off = None, None
 
-        self.hass.async_run_job(self.async_update_ha_state, True)
+        self.hass.loop.create_task(self.async_update_ha_state(True))
         self.async_start()
 
     def start(self):
@@ -313,7 +313,7 @@ class Group(Entity):
     def async_update(self):
         """Query all members and determine current group state."""
         self._state = STATE_UNKNOWN
-        self._update_group_state()
+        self._async_update_group_state()
 
     def remove(self):
         """Remove group from HASS."""
@@ -336,7 +336,7 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
-        self._update_group_state(new_state)
+        self._async_update_group_state(new_state)
         self.hass.async_add_job(self.async_update_ha_state)
 
     @property
@@ -352,11 +352,13 @@ class Group(Entity):
 
         return states
 
-    def _update_group_state(self, tr_state=None):
+    def _async_update_group_state(self, tr_state=None):
         """Update group state.
 
         Optionally you can provide the only state changed since last update
         allowing this method to take shortcuts.
+
+        This method must be run in the event loop.
         """
         # pylint: disable=too-many-branches
         # To store current states of group entities. Might not be needed.

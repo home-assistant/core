@@ -248,7 +248,7 @@ class Entity(object):
 
     def remove(self) -> None:
         """Remove entitiy from HASS."""
-        self.hass.states.remove(self.entity_id)
+        run_coroutine_threadsafe(self.hass.loop, self.async_remove)
 
     def async_remove(self) -> None:
         """Remove entitiy from async HASS.
