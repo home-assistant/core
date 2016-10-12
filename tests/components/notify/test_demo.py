@@ -64,7 +64,6 @@ class TestNotifyDemo(unittest.TestCase):
         data = self.events[0].data
         assert {
             'message': 'my message',
-            'target': None,
             'title': 'my title',
             'data': {'hello': 'world'}
         } == data
@@ -92,7 +91,6 @@ data_template:
         self.assertTrue(len(self.events) == 1)
         assert {
             'message': 'Test 123 4',
-            'target': None,
             'data': {
                 'push': {
                     'sound':
@@ -124,7 +122,6 @@ data_template:
         assert {
             'message': 'Test 123 4',
             'title': 'Test',
-            'target': None,
             'data': {
                 'push': {
                     'sound':
@@ -152,7 +149,7 @@ data_template:
 
         assert {
             'message': 'my message',
-            'target': 'test target id',
+            'target': ['test target id'],
             'title': 'my title',
             'data': {'hello': 'world'}
         } == data
