@@ -72,9 +72,9 @@ class EntityComponent(object):
         tasks = []
         for p_type, p_config in config_per_platform(config, self.domain):
             tasks.append(self.hass.loop.create_task(
-                    self._setup_platform(p_type, p_config)
+                self._setup_platform(p_type, p_config)
             ))
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.gather(*tasks, loop=self.hass.loop)
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.components.discovery.load_platform()
