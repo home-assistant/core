@@ -6,6 +6,7 @@ pip>=7.0.0
 jinja2>=2.8
 voluptuous==0.9.2
 typing>=3,<4
+pybbox
 
 # homeassistant.components.nuimo_controller
 --only-binary=all git+https://github.com/getSenic/nuimo-linux-python#nuimo==1.0.0
@@ -318,6 +319,9 @@ pyasn1-modules==0.0.8
 
 # homeassistant.components.notify.xmpp
 pyasn1==0.1.9
+
+# homeassistant.components.device_tracker.bbox
+pybbox==0.0.5-alpha
 
 # homeassistant.components.device_tracker.bluetooth_tracker
 # pybluez==0.22
