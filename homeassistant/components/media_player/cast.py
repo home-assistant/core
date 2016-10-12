@@ -63,7 +63,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hosts = [(config.get(CONF_HOST), DEFAULT_PORT)]
 
     else:
-        hosts = [tuple(dev[:2]) for dev in pychromecast.discover_chromecasts() if tuple(dev[:2]) not in KNOWN_HOSTS]
+        hosts = [tuple(dev[:2]) for dev in pychromecast.discover_chromecasts() 
+                 if tuple(dev[:2]) not in KNOWN_HOSTS]
 
     casts = []
 
@@ -73,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for host in hosts:
         found = [device for device in all_chromecasts
-                if (device.host, device.port) == host]
+                 if (device.host, device.port) == host]
         if found:
             try:
                 casts.append(CastDevice(found[0]))
