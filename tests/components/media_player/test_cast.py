@@ -5,10 +5,12 @@ from unittest.mock import patch
 
 from homeassistant.components.media_player import cast
 
+
 class FakeChromeCast(object):
     def __init__(self, host, port):
         self.host = host
         self.port = port
+
 
 class TestCastMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
@@ -18,7 +20,9 @@ class TestCastMediaPlayer(unittest.TestCase):
     def test_filter_duplicates(self, mock_get_chromecasts, mock_device):
         """Test filtering of duplicates."""
 
-        mock_get_chromecasts.return_value = [FakeChromeCast('some_host', cast.DEFAULT_PORT)]
+        mock_get_chromecasts.return_value = [
+            FakeChromeCast('some_host', cast.DEFAULT_PORT)
+        ]
 
         # Test chromecasts as if they were hardcoded in configuration.yaml
         cast.setup_platform(None, {
