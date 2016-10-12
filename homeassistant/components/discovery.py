@@ -21,10 +21,10 @@ DOMAIN = 'discovery'
 SCAN_INTERVAL = 300  # seconds
 SERVICE_NETGEAR = 'netgear_router'
 SERVICE_WEMO = 'belkin_wemo'
-SERVICE_HA_IOS_APP = 'ha_ios'
+SERVICE_HASS_IOS_APP = 'hass_ios'
 
 SERVICE_HANDLERS = {
-    SERVICE_HA_IOS_APP: ('ios', None),
+    SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
     'philips_hue': ('light', 'hue'),
