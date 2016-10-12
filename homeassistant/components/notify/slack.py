@@ -68,7 +68,10 @@ class SlackNotificationService(BaseNotificationService):
         """Send a message to a user."""
         import slacker
 
-        targets = kwargs.get(ATTR_TARGET, [self._default_channel])
+        if kwargs.get(ATTR_TARGET) is None:
+            targets = [self._default_channel]
+        else:
+            targets = kwargs.get(ATTR_TARGET)
 
         data = kwargs.get('data')
         attachments = data.get('attachments') if data else None
