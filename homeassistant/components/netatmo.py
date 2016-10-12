@@ -1,5 +1,6 @@
 """
-Support for the Netatmo devices (Weather Station, Welcome camera and Thermostat).
+Support for the Netatmo devices
+(Weather Station, Welcome Camera and Thermostat).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/netatmo/
@@ -24,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SECRET_KEY = 'secret_key'
 CONF_DEVICES = 'devices'
-
+DEFAULT_DEVICES = ['camera', 'sensor', 'binary_sensor', 'climate']
 DOMAIN = 'netatmo'
 
 NETATMO_AUTH = None
@@ -38,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_SECRET_KEY): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_DEVICES): cv.ensure_list,
+        vol.Optional(CONF_DEVICES, default=DEFAULT_DEVICES): cv.ensure_list,
         vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -53,7 +54,8 @@ def setup(hass, config):
         NETATMO_AUTH = lnetatmo.ClientAuth(
             config[DOMAIN][CONF_API_KEY], config[DOMAIN][CONF_SECRET_KEY],
             config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD],
-            'read_station read_camera access_camera read_thermostat write_thermostat')
+            'read_station read_camera access_camera '
+            'read_thermostat write_thermostat')
     except HTTPError:
         _LOGGER.error("Unable to connect to Netatmo API")
         return False

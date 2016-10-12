@@ -1,17 +1,17 @@
 """
-Support for Netatmo thermostat.
+Support for Netatmo Smart Thermostat.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/thermostat.netatmo/
+https://home-assistant.io/components/climate.netatmo/
 """
 import logging
 from datetime import timedelta
-import requests
 import voluptuous as vol
 
 from homeassistant.components.netatmo import ThermostatData
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.components.climate import (STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+from homeassistant.components.climate import\
+ (STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_RELAY = 'relay'
 CONF_THERMOSTAT = 'thermostat'
-CONF_AWAY_TEMPERATURE = 'away_temperature'
+# CONF_AWAY_TEMPERATURE = 'away_temperature'
 
 DEFAULT_AWAY_TEMPERATURE = 14
 # # Return cached results if last scan was less then this time ago
@@ -40,20 +40,18 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the NetAtmo Thermostat."""
     netatmo = get_component('netatmo')
     device = config.get(CONF_RELAY)
-    away_temp = config.get(CONF_AWAY_TEMPERATURE)
+    # away_temp = config.get(CONF_AWAY_TEMPERATURE)
     import lnetatmo
     try:
         data = ThermostatData(netatmo.NETATMO_AUTH, device)
+        for module_name in data.get_module_names():
+            if CONF_THERMOSTAT in config:
+                if config[CONF_THERMOSTAT] != [] and \
+                   module_name not in config[CONF_THERMOSTAT]:
+                    continue
+            add_callback_devices([NetatmoThermostat(data, module_name)])
     except lnetatmo.NoDevice:
         return None
-
-    for module_name in data.get_module_names():
-        if CONF_THERMOSTAT in config:
-            if config[CONF_THERMOSTAT] != [] and \
-               module_name not in config[CONF_THERMOSTAT]:
-                continue
-
-        add_callback_devices([NetatmoThermostat(data, module_name)])
 
 
 class NetatmoThermostat(ClimateDevice):
@@ -65,7 +63,7 @@ class NetatmoThermostat(ClimateDevice):
         self._state = None
         self._name = module_name
         self._target_temperature = None
-        self._away_temp = away_temp
+        # self._away_temp = away_temp
         self._away = None
         self.update()
 
@@ -108,7 +106,6 @@ class NetatmoThermostat(ClimateDevice):
         """Return true if away mode is on."""
         return self._away
 
-
     def turn_away_mode_on(self):
         """Turn away on."""
         mode = "away"
@@ -132,7 +129,8 @@ class NetatmoThermostat(ClimateDevice):
             return
         mode = "manual"
         endTimeOffset = 7200
-        self._data.thermostatdata.setthermpoint(mode, temperature, endTimeOffset)
+        self._data.thermostatdata.setthermpoint\
+            (mode, temperature, endTimeOffset)
         self._target_temperature = temperature
         self._away = False
         self.update_ha_state()
