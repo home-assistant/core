@@ -101,7 +101,7 @@ def setup(hass, config):
 
             if targets.get(call.service) is not None:
                 kwargs[ATTR_TARGET] = [targets[call.service]]
-            else:
+            elif call.data.get(ATTR_TARGET) is not None:
                 kwargs[ATTR_TARGET] = call.data.get(ATTR_TARGET)
 
             message.hass = hass
