@@ -326,4 +326,4 @@ class EntityPlatform(object):
             ))
 
         # wait until all updates are done for protect loop for spaming
-        yield from asyncio.gather(*tasks, loop=self.hass.loop)
+        yield from asyncio.gather(*tasks, loop=self.component.hass.loop)
