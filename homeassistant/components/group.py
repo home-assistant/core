@@ -180,7 +180,7 @@ def _process_config(hass, config, component):
         view = conf.get(CONF_VIEW)
 
         group = Group(hass, name, entity_ids, icon=icon, view=view,
-                      object_id=object_id, async=True)
+                      object_id=object_id)
         groups.append(group)
 
     hass.loop.call_soon(component.async_add_entities, groups)
@@ -191,12 +191,16 @@ class Group(Entity):
 
     # pylint: disable=too-many-instance-attributes, too-many-arguments
     def __init__(self, hass, name, entity_ids=None, user_defined=True,
-                 icon=None, view=False, object_id=None, async=False):
-        """Initialize a group."""
+                 icon=None, view=False, object_id=None):
+        """Initialize a group.
+
+        This method must be run in the event loop.
+        """
         self.hass = hass
         self._name = name
         self._state = STATE_UNKNOWN
         self._user_defined = user_defined
+        self._order = len(hass.states.async_entity_ids(DOMAIN))
         self._icon = icon
         self._view = view
         self.tracking = []
@@ -204,25 +208,13 @@ class Group(Entity):
         self.group_off = None
         self._assumed_state = False
         self._async_unsub_state_changed = None
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, object_id or name, hass=hass)
 
-        if async:
-            self._order = len(hass.states.async_entity_ids(DOMAIN))
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id or name, hass=hass)
-
-            if entity_ids is not None:
-                self.async_update_tracked_entity_ids(entity_ids)
-            else:
-                hass.async_add_job(self.async_update_ha_state, True)
+        if entity_ids is not None:
+            self.async_update_tracked_entity_ids(entity_ids)
         else:
-            self._order = len(hass.states.entity_ids(DOMAIN))
-            self.entity_id = generate_entity_id(
-                ENTITY_ID_FORMAT, object_id or name, hass=hass)
-
-            if entity_ids is not None:
-                self.update_tracked_entity_ids(entity_ids)
-            else:
-                self.update_ha_state(True)
+            hass.loop.create_task(self.async_update_ha_state(True))
 
     @property
     def should_poll(self):
@@ -337,7 +329,7 @@ class Group(Entity):
         This method must be run in the event loop.
         """
         self._async_update_group_state(new_state)
-        self.hass.async_add_job(self.async_update_ha_state)
+        self.hass.loop.create_task(self.async_update_ha_state())
 
     @property
     def _tracking_states(self):

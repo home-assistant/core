@@ -25,6 +25,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
+from homeassistant.util.async import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.event import track_utc_time_change
@@ -252,6 +253,14 @@ class DeviceTracker(object):
 
     def setup_group(self):
         """Initialize group for all tracked devices."""
+        run_callback_threadsafe(
+            self.hass.loop, self.async_setup_group).result()
+
+    def async_setup_group(self):
+        """Initialize group for all tracked devices.
+
+        This method must be run in the event loop.
+        """
         entity_ids = (dev.entity_id for dev in self.devices.values()
                       if dev.track)
         self.group = group.Group(
