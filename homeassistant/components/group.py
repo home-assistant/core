@@ -211,7 +211,8 @@ class Group(Entity):
             ENTITY_ID_FORMAT, object_id or name, hass=hass)
 
         if entity_ids is not None:
-            self.async_update_tracked_entity_ids(entity_ids)
+            hass.loop.call_soon(
+                self.async_update_tracked_entity_ids, entity_ids)
         else:
             hass.loop.create_task(self.async_update_ha_state(True))
 
@@ -291,7 +292,7 @@ class Group(Entity):
 
     def stop(self):
         """Unregister the group from Home Assistant."""
-        self.remove()
+        run_callback_threadsafe(self.hass.loop, self.async_stop).result()
 
     def async_stop(self):
         """Unregister the group from Home Assistant.
