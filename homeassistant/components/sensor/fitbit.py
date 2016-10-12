@@ -359,6 +359,8 @@ class FitbitSensor(Entity):
         pretty_resource = pretty_resource.title()
         if pretty_resource == 'Body Bmi':
             pretty_resource = 'BMI'
+        elif pretty_resource == 'Heart':
+            pretty_resource = 'Resting Heart Rate'
         self._name = pretty_resource
         unit_type = FITBIT_RESOURCES_LIST[self.resource_type]
         if unit_type == "":
