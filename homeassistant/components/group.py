@@ -214,7 +214,7 @@ class Group(Entity):
         if entity_ids is not None:
             self.async_update_tracked_entity_ids(entity_ids)
         else:
-            yield from self.async_update_ha_state(True)
+            hass.loop.create_task(self.async_update_ha_state(True))
 
     @property
     def should_poll(self):

@@ -202,9 +202,8 @@ class EntityComponent(object):
         if self.group is None and self.group_name is not None:
             group = get_component('group')
             self.group = group.Group(self.hass, self.group_name,
-                                     user_defined=False)
-
-        if self.group is not None:
+                                     self.entities.keys(), user_defined=False)
+        elif self.group is not None:
             self.group.async_update_tracked_entity_ids(self.entities.keys())
 
     def reset(self):
