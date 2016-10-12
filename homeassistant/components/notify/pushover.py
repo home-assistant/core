@@ -63,7 +63,7 @@ class PushoverNotificationService(BaseNotificationService):
 
         targets = kwargs.get(ATTR_TARGET)
 
-        if isinstance(targets, list) is False:
+        if not isinstance(targets, list):
             targets = [targets]
 
         for target in targets:
