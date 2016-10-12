@@ -147,7 +147,7 @@ class EntityComponent(object):
                 )
             else:
                 yield from self.hass.loop.run_in_executor(
-                    platform.setup_platform, self.hass, platform_config,
+                    None, platform.setup_platform, self.hass, platform_config,
                     entity_platform.add_entities, discovery_info
                 )
 

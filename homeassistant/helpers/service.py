@@ -12,8 +12,7 @@ from homeassistant.core import HomeAssistant  # NOQA
 from homeassistant.exceptions import TemplateError
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe)
+from homeassistant.util.async import run_coroutine_threadsafe
 
 HASS = None  # type: Optional[HomeAssistant]
 
