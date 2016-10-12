@@ -8,7 +8,7 @@ Sample configuation.yaml entry:
 remote:
   - platform: harmony
     name: Bedroom
-    username: !secret username   (email addresse used to login to harmony website)
+    username: !secret username   (email address used to login to harmony website)
     password: !secret password   (password used to login to harmony website)
     host: 10.168.1.13            (Harmony device IP address)
     port: 5222                   (Harmony device port, 5222 is default)
