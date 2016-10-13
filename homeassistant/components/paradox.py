@@ -110,20 +110,20 @@ def setup(hass, base_config):
     # Needed for the PRT3
     _prt_port = config.get(CONF_PRT_PORT)
     _prt_speed = config.get(CONF_PRT_SPEED)
-    '''
+
     # Needed for the IP100/150
-    _ip_host = config.get(CONF_IP_HOST)
-    _ip_port = config.get(CONF_IP_PORT)
-    _zone_dump = config.get(CONF_ZONEDUMP_INTERVAL)
-    _keep_alive = config.get(CONF_IP_KEEPALIVE)
+    # _ip_host = config.get(CONF_IP_HOST)
+    # _ip_port = config.get(CONF_IP_PORT)
+    # _zone_dump = config.get(CONF_ZONEDUMP_INTERVAL)
+    # _keep_alive = config.get(CONF_IP_KEEPALIVE)
     # Assign it here or rather send it all with kwargs?
     # How do we need to communicate with alarm panel
-    if 'PRT3' in _comm_module:
-        PRT_MODULE = True
+    # if 'PRT3' in _comm_module:
+    #    PRT_MODULE = True
 
-    if 'IP' in _comm_module:
-        IP_MODULE = True
-    '''
+    # if 'IP' in _comm_module:
+    #    IP_MODULE = True
+
     # These will be auto discovered in later versions.
     # ...if we can get the serial speed sorted.
     _zones = config.get(CONF_ZONES)
