@@ -160,7 +160,7 @@ class EntityComponent(object):
     def add_entity(self, entity, platform=None):
         """Add entity to component."""
         return run_coroutine_threadsafe(
-            self.async_add_entities(entity, platform), self.hass.loop
+            self.async_add_entity(entity, platform), self.hass.loop
         ).result()
 
     @asyncio.coroutine
