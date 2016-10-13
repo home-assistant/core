@@ -274,11 +274,11 @@ class EntityPlatform(object):
 
     def add_entities(self, new_entities):
         """Add entities for a single platform."""
-        run_callback_threadsafe(
-            self.component.hass.loop, self.async_add_entities, new_entities
+        run_coroutine_threadsafe(
+            self.async_add_entities(new_entities), self.component.hass.loop
         ).result()
 
-    @callback
+    @asyncio.coroutine
     def async_add_entities(self, new_entities):
         """Add entities for a single platform async.
 

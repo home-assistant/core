@@ -183,7 +183,7 @@ def _process_config(hass, config, component):
                       object_id=object_id)
         groups.append(group)
 
-    hass.loop.call_soon(component.async_add_entities, groups)
+    hass.loop.create_task(component.async_add_entities(groups))
 
 
 class Group(Entity):
