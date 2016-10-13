@@ -160,10 +160,11 @@ class EntityComponent(object):
 
     def add_entity(self, entity, platform=None):
         """Add entity to component."""
-        return run_callback_threadsafe(
-            self.hass.loop, self.async_add_entities, entity, platform
+        return run_coroutine_threadsafe(
+            self.async_add_entities(entity, platform), self.hass.loop
         ).result()
 
+    @asyncio.coroutine
     def async_add_entity(self, entity, platform=None):
         """Add entity to component.
 
@@ -186,7 +187,7 @@ class EntityComponent(object):
                 self.entities.keys())
 
         self.entities[entity.entity_id] = entity
-        self.hass.loop.create_task(entity.async_update_ha_state())
+        yield from entity.async_update_ha_state()
 
         return True
 
