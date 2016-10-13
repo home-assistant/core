@@ -208,10 +208,7 @@ class EntityComponent(object):
                 user_defined=False
             )
         elif self.group is not None:
-            self.hass.loop.create_task(
-                self.group.async_update_tracked_entity_ids(
-                    self.entities.keys())
-            )
+            self.group.async_update_tracked_entity_ids(self.entities.keys())
 
     def reset(self):
         """Remove entities and reset the entity component to initial values."""
@@ -322,12 +319,16 @@ class EntityPlatform(object):
 
         This method must be run in the event loop.
         """
+        tasks = []
         # We copy the entities because new entities might be detected
         # during state update causing deadlocks.
         entities = list(entity for entity in self.platform_entities
                         if entity.should_poll)
 
         for entity in entities:
-            self.component.hass.loop.create_task(
+            tasks.append(self.component.hass.loop.create_task(
                 entity.async_update_ha_state(True)
-            )
+            ))
+
+        # wait until all updates are done for protect loop for spaming
+        asyncio.gather(*tasks, loop=self.component.hass.loop)
