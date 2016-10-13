@@ -94,20 +94,20 @@ class TestHelpersEntityComponent(unittest.TestCase):
         component = EntityComponent(_LOGGER, DOMAIN, self.hass, 20)
 
         no_poll_ent = EntityTest(should_poll=False)
-        no_poll_ent.async_update_ha_state = Mock()
+        no_poll_ent.update = Mock()
         poll_ent = EntityTest(should_poll=True)
-        poll_ent.async_update_ha_state = Mock()
+        poll_ent.update = Mock()
 
         component.add_entities([no_poll_ent, poll_ent])
 
-        no_poll_ent.async_update_ha_state.reset_mock()
-        poll_ent.async_update_ha_state.reset_mock()
+        no_poll_ent.update.reset_mock()
+        poll_ent.update.reset_mock()
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
         self.hass.block_till_done()
 
-        assert not no_poll_ent.async_update_ha_state.called
-        assert poll_ent.async_update_ha_state.called
+        assert not no_poll_ent.update.called
+        assert poll_ent.update.called
 
     def test_update_state_adds_entities(self):
         """Test if updating poll entities cause an entity to be added works."""
@@ -118,7 +118,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         component.add_entities([ent2])
         assert 1 == len(self.hass.states.entity_ids())
-        ent2.update_ha_state = lambda *_: component.add_entities([ent1])
+        ent2.update = lambda *_: component.add_entities([ent1])
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
         self.hass.block_till_done()
