@@ -211,10 +211,11 @@ class Group(Entity):
             ENTITY_ID_FORMAT, object_id or name, hass=hass)
 
         if entity_ids is not None:
-            hass.loop.call_soon(
-                self.async_update_tracked_entity_ids, entity_ids)
+            tasks.append(hass.loop.create_task(
+                self.async_update_tracked_entity_ids(entity_ids)))
         else:
-            hass.loop.create_task(self.async_update_ha_state(True))
+            tasks.append(hass.loop.create_task(
+                self.async_update_ha_state(True)))
 
     @property
     def should_poll(self):
@@ -261,10 +262,11 @@ class Group(Entity):
 
     def update_tracked_entity_ids(self, entity_ids):
         """Update the member entity IDs."""
-        run_callback_threadsafe(
-            self.hass.loop, self.async_update_tracked_entity_ids, entity_ids
+        run_coroutine_threadsafe(
+            self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
         ).result()
 
+    @asyncio.coroutine
     def async_update_tracked_entity_ids(self, entity_ids):
         """Update the member entity IDs.
 
@@ -274,7 +276,7 @@ class Group(Entity):
         self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
         self.group_on, self.group_off = None, None
 
-        self.hass.loop.create_task(self.async_update_ha_state(True))
+        yield from self.async_update_ha_state(True)
         self.async_start()
 
     def start(self):
