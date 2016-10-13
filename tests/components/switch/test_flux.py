@@ -1,6 +1,6 @@
 """The tests for the Flux switch platform."""
-import unittest
 from datetime import timedelta
+import unittest
 from unittest.mock import patch
 
 from homeassistant.bootstrap import setup_component
@@ -8,8 +8,10 @@ from homeassistant.components import switch, light
 from homeassistant.const import CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON
 import homeassistant.loader as loader
 import homeassistant.util.dt as dt_util
-from tests.common import get_test_home_assistant
-from tests.common import fire_time_changed, mock_service
+
+from tests.common import (
+    assert_setup_component, get_test_home_assistant, fire_time_changed,
+    mock_service)
 
 
 class TestSwitchFlux(unittest.TestCase):
@@ -50,21 +52,23 @@ class TestSwitchFlux(unittest.TestCase):
 
     def test_valid_config_no_name(self):
         """Test configuration."""
-        assert setup_component(self.hass, 'switch', {
-            'switch': {
-                'platform': 'flux',
-                'lights': ['light.desk', 'light.lamp']
-            }
-        })
+        with assert_setup_component(1, 'switch'):
+            assert setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'flux',
+                    'lights': ['light.desk', 'light.lamp']
+                }
+            })
 
     def test_invalid_config_no_lights(self):
         """Test configuration."""
-        assert not setup_component(self.hass, 'switch', {
-            'switch': {
-                'platform': 'flux',
-                'name': 'flux'
-            }
-        })
+        with assert_setup_component(0, 'switch'):
+            assert setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'flux',
+                    'name': 'flux'
+                }
+            })
 
     def test_flux_when_switch_is_off(self):
         """Test the flux switch when it is off."""

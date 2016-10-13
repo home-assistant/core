@@ -79,18 +79,11 @@ class LogitechMediaServer(object):
 
     def _get_http_port(self):
         """Get http port from media server, it is used to get cover art."""
-        http_port = None
-        try:
-            http_port = self.query('pref', 'httpport', '?')
-            if not http_port:
-                _LOGGER.error("Unable to read data from server %s:%s",
-                              self.host, self.port)
-                return
-            return http_port
-        except ConnectionError as ex:
-            _LOGGER.error("Failed to connect to server %s:%s - %s",
-                          self.host, self.port, ex)
-            return
+        http_port = self.query('pref', 'httpport', '?')
+        if not http_port:
+            _LOGGER.error("Failed to connect to server %s:%s",
+                          self.host, self.port)
+        return http_port
 
     def create_players(self):
         """Create a list of SqueezeBoxDevices connected to the LMS."""
@@ -104,20 +97,27 @@ class LogitechMediaServer(object):
 
     def query(self, *parameters):
         """Send request and await response from server."""
-        telnet = telnetlib.Telnet(self.host, self.port)
-        if self._username and self._password:
-            telnet.write('login {username} {password}\n'.format(
-                username=self._username,
-                password=self._password).encode('UTF-8'))
-            telnet.read_until(b'\n', timeout=3)
-        message = '{}\n'.format(' '.join(parameters))
-        telnet.write(message.encode('UTF-8'))
-        response = telnet.read_until(b'\n', timeout=3)\
-            .decode('UTF-8')\
-            .split(' ')[-1]\
-            .strip()
-        telnet.write(b'exit\n')
-        return urllib.parse.unquote(response)
+        try:
+            telnet = telnetlib.Telnet(self.host, self.port)
+            if self._username and self._password:
+                telnet.write('login {username} {password}\n'.format(
+                    username=self._username,
+                    password=self._password).encode('UTF-8'))
+                telnet.read_until(b'\n', timeout=3)
+            message = '{}\n'.format(' '.join(parameters))
+            telnet.write(message.encode('UTF-8'))
+            response = telnet.read_until(b'\n', timeout=3)\
+                             .decode('UTF-8')\
+                             .split(' ')[-1]\
+                             .strip()
+            telnet.write(b'exit\n')
+            return urllib.parse.unquote(response)
+        except (OSError, ConnectionError) as error:
+            _LOGGER.error("Could not communicate with %s:%d: %s",
+                          self.host,
+                          self.port,
+                          error)
+            return None
 
     def get_player_status(self, player):
         """Get ithe status of a player."""
@@ -126,20 +126,27 @@ class LogitechMediaServer(object):
         # a (artist): Artist name 'artist'
         # d (duration): Song duration in seconds 'duration'
         # K (artwork_url): URL to remote artwork
-        tags = 'adK'
+        # l (album): Album, including the server's  "(N of M)"
+        tags = 'adKl'
         new_status = {}
-        telnet = telnetlib.Telnet(self.host, self.port)
-        telnet.write('{player} status - 1 tags:{tags}\n'.format(
-            player=player,
-            tags=tags
+        try:
+            telnet = telnetlib.Telnet(self.host, self.port)
+            telnet.write('{player} status - 1 tags:{tags}\n'.format(
+                player=player,
+                tags=tags
             ).encode('UTF-8'))
-        response = telnet.read_until(b'\n', timeout=3)\
-            .decode('UTF-8')\
-            .split(' ')
-        telnet.write(b'exit\n')
-        for item in response:
-            parts = urllib.parse.unquote(item).partition(':')
-            new_status[parts[0]] = parts[2]
+            response = telnet.read_until(b'\n', timeout=3)\
+                             .decode('UTF-8')\
+                             .split(' ')
+            telnet.write(b'exit\n')
+            for item in response:
+                parts = urllib.parse.unquote(item).partition(':')
+                new_status[parts[0]] = parts[2]
+        except (OSError, ConnectionError) as error:
+            _LOGGER.error("Could not communicate with %s:%d: %s",
+                          self.host,
+                          self.port,
+                          error)
         return new_status
 
 
@@ -230,13 +237,23 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if 'artist' in self._status and 'title' in self._status:
-            return '{artist} - {title}'.format(
-                artist=self._status['artist'],
-                title=self._status['title']
-                )
+        if 'title' in self._status:
+            return self._status['title']
+
         if 'current_title' in self._status:
             return self._status['current_title']
+
+    @property
+    def media_artist(self):
+        """Artist of current playing media."""
+        if 'artist' in self._status:
+            return self._status['artist']
+
+    @property
+    def media_album_name(self):
+        """Album of current playing media."""
+        if 'album' in self._status:
+            return self._status['album'].rstrip()
 
     @property
     def supported_media_commands(self):

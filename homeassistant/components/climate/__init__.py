@@ -253,7 +253,7 @@ def setup(hass, config):
                     kwargs[value] = convert_temperature(
                         temp,
                         hass.config.units.temperature_unit,
-                        climate.unit_of_measurement
+                        climate.temperature_unit
                     )
                 else:
                     kwargs[value] = temp
@@ -422,7 +422,12 @@ class ClimateDevice(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement."""
+        """The unit of measurement to display."""
+        return self.hass.config.units.temperature_unit
+
+    @property
+    def temperature_unit(self):
+        """The unit of measurement used by the platform."""
         raise NotImplementedError
 
     @property
@@ -556,10 +561,10 @@ class ClimateDevice(Entity):
         if temp is None or not isinstance(temp, Number):
             return temp
 
-        value = convert_temperature(temp, self.unit_of_measurement,
-                                    self.hass.config.units.temperature_unit)
+        value = convert_temperature(temp, self.temperature_unit,
+                                    self.unit_of_measurement)
 
-        if self.hass.config.units.temperature_unit is TEMP_CELSIUS:
+        if self.unit_of_measurement is TEMP_CELSIUS:
             decimal_count = 1
         else:
             # Users of fahrenheit generally expect integer units.
