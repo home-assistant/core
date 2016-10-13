@@ -218,14 +218,14 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
-        self = Group(hass, name, entity_id=None, user_defined=True,
-                     icon=None, view=False, object_id=None)
+        self = Group(hass, name, user_defined=True, icon=None, view=False,
+                     object_id=None)
 
         if entity_ids is not None:
             hass.loop.call_soon(
                 self.async_update_tracked_entity_ids, entity_ids)
         else:
-            yield from self.async_update_ha_state(True)
+            hass.loop.create_task(self.async_update_ha_state(True))
 
         return self
 
@@ -235,7 +235,7 @@ class Group(Entity):
              icon=None, view=False, object_id=None):
         """Init and update Group."""
         return run_callback_threadsafe(
-            hass.loop, Group.async_init, hass, name, entity_id, user_defined,
+            hass.loop, Group.async_init, hass, name, entity_ids, user_defined,
             icon, view, object_id).result()
 
     @property
