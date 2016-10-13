@@ -71,32 +71,32 @@ def setup(hass, config):
 
     def _setup_groups():
         """Init group in loop."""
-        group.Group.async_init(hass, 'living room', [
+        group.Group(hass, 'living room', [
             lights[1], switches[0], 'input_select.living_room_preset',
             'rollershutter.living_room_window', media_players[1],
             'scene.romantic_lights'])
-        group.Group.async_init(hass, 'bedroom', [
+        group.Group(hass, 'bedroom', [
             lights[0], switches[1], media_players[0],
             'input_slider.noise_allowance'])
-        group.Group.async_init(hass, 'kitchen', [
+        group.Group(hass, 'kitchen', [
             lights[2], 'rollershutter.kitchen_window', 'lock.kitchen_door'])
-        group.Group.async_init(hass, 'doors', [
+        group.Group(hass, 'doors', [
             'lock.front_door', 'lock.kitchen_door',
             'garage_door.right_garage_door', 'garage_door.left_garage_door'])
-        group.Group.async_init(hass, 'automations', [
+        group.Group(hass, 'automations', [
             'input_select.who_cooks', 'input_boolean.notify', ])
-        group.Group.async_init(hass, 'people', [
+        group.Group(hass, 'people', [
             'device_tracker.demo_anne_therese', 'device_tracker.demo_home_boy',
             'device_tracker.demo_paulus'])
-        group.Group.async_init(hass, 'thermostats', [
+        group.Group(hass, 'thermostats', [
             'thermostat.nest', 'thermostat.thermostat'])
-        group.Group.async_init(hass, 'downstairs', [
+        group.Group(hass, 'downstairs', [
             'group.living_room', 'group.kitchen',
             'scene.romantic_lights', 'rollershutter.kitchen_window',
             'rollershutter.living_room_window', 'group.doors',
             'thermostat.nest',
         ], view=True)
-        group.Group.async_init(hass, 'Upstairs', [
+        group.Group(hass, 'Upstairs', [
             'thermostat.thermostat', 'group.bedroom',
         ], view=True)
 
