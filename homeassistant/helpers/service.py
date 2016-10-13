@@ -99,7 +99,7 @@ def extract_entity_ids(hass, service_call):
 
     Will convert group entity ids to the entity ids it represents.
 
-    This method must be run in the event loop.
+    Async friendly.
     """
     if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
         return []

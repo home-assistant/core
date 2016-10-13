@@ -81,7 +81,8 @@ class EntityComponent(object):
         @callback
         def component_platform_discovered(platform, info):
             """Callback to load a platform."""
-            self.hass.async_run_job(self._setup_platform, platform, {}, info)
+            self.hass.loop.create_task(
+                self._setup_platform(platform, {}, info))
 
         discovery.async_listen_platform(
             self.hass, self.domain, component_platform_discovered)
@@ -328,4 +329,4 @@ class EntityPlatform(object):
             ))
 
         # wait until all updates are done for protect loop for spaming
-        yield from asyncio.gather(*tasks, loop=self.component.hass.loop)
+        asyncio.gather(*tasks, loop=self.component.hass.loop)
