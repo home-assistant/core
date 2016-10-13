@@ -13,7 +13,9 @@ from homeassistant.const import (
     SERVICE_TOGGLE, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_component import (EntityComponent,
+                                                    generate_entity_id)
+from homeassistant.helpers import extract_domain_configs
 
 DOMAIN = 'input_boolean'
 
@@ -60,16 +62,20 @@ def setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
+    entity_ids = []
 
-    for object_id, cfg in config[DOMAIN].items():
-        if not cfg:
-            cfg = {}
+    for config_key in extract_domain_configs(config, DOMAIN):
+        for object_id, cfg in config[config_key].items():
+            if not cfg:
+                cfg = {}
 
-        name = cfg.get(CONF_NAME)
-        state = cfg.get(CONF_INITIAL, False)
-        icon = cfg.get(CONF_ICON)
-
-        entities.append(InputBoolean(object_id, name, state, icon))
+            name = cfg.get(CONF_NAME)
+            state = cfg.get(CONF_INITIAL, False)
+            icon = cfg.get(CONF_ICON)
+            entity_id = generate_entity_id(ENTITY_ID_FORMAT,
+                                           object_id, entity_ids)
+            entity_ids.append(entity_id)
+            entities.append(InputBoolean(entity_id, name, state, icon))
 
     if not entities:
         return False
@@ -101,9 +107,9 @@ def setup(hass, config):
 class InputBoolean(ToggleEntity):
     """Representation of a boolean input."""
 
-    def __init__(self, object_id, name, state, icon):
+    def __init__(self, entity_id, name, state, icon):
         """Initialize a boolean input."""
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
+        self.entity_id = entity_id
         self._name = name
         self._state = state
         self._icon = icon
