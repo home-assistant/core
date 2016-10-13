@@ -269,11 +269,12 @@ class TestBootstrap:
     def test_home_assistant_core_config_validation(self):
         """Test if we pass in wrong information for HA conf."""
         # Extensive HA conf validation testing is done in test_config.py
+        hass = get_test_home_assistant()
         assert None is bootstrap.from_config_dict({
             'homeassistant': {
                 'latitude': 'some string'
             }
-        })
+        }, hass=hass)
 
     def test_component_setup_with_validation_and_dependency(self):
         """Test all config is passed to dependencies."""
