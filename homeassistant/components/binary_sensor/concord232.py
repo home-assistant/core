@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def get_opening_type(zone):
         """Helper function to try to guess sensor type frm name."""
-        _LOGGER.debug("get_opening_type by name: %s " % zone["name"])
+        _LOGGER.debug("get_opening_type by name: %s ", zone["name"])
         if "MOTION" in zone["name"]:
             return "motion"
         if "KEY" in zone["name"]:
@@ -76,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     for zone in zones:
-        _LOGGER.info('Loading Zone found: %s' % zone['name'])
+        _LOGGER.info('Loading Zone found: %s', zone['name'])
 
     zone_sensors = {
         zone['number']: Concord232ZoneSensor(
@@ -138,13 +138,12 @@ class Concord232Watcher(threading.Thread):
     def _process_events(self, events):
         for event in events:
             zone = event['number']
-            _LOGGER.debug("Found Zone: %s" % zone)
             zone_sensor = self._zone_sensors.get(zone)
-            _LOGGER.debug("Zone_Sensor:  %s" % zone_sensor)
+            _LOGGER.debug("Zone %s detected as %s ", zone, zone_sensor)
             # pylint: disable=protected-access
             if not zone_sensor:
                 return
-            _LOGGER.debug("Zone State:  %s" % event['state'])
+            _LOGGER.debug("Zone State: %s", event['state'])
             zone_sensor._zone['state'] = event['state']
             zone_sensor.update_ha_state()
 
