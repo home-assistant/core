@@ -402,7 +402,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         """Test if callback is safe."""
         return isinstance(obj, AllStates) or super().is_safe_callable(obj)
 
-ENV = TemplateEnvironment()
+ENV = TemplateEnvironment(undefined=jinja2.StrictUndefined)
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
 ENV.filters['timestamp_custom'] = timestamp_custom
