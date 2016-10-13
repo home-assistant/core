@@ -178,8 +178,8 @@ def _process_config(hass, config, component):
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
 
-        group = Group(hass, name, entity_ids, icon=icon, view=view,
-                      object_id=object_id)
+        group = Group.async_init(hass, name, entity_ids, icon=icon, view=view,
+                                 object_id=object_id)
         groups.append(group)
 
     hass.loop.call_soon(component.async_add_entities, groups)
@@ -189,8 +189,8 @@ class Group(Entity):
     """Track a group of entity ids."""
 
     # pylint: disable=too-many-instance-attributes, too-many-arguments
-    def __init__(self, hass, name, entity_ids=None, user_defined=True,
-                 icon=None, view=False, object_id=None):
+    def __init__(self, hass, name, user_defined=True, icon=None, view=False,
+                 object_id=None):
         """Initialize a group.
 
         This method must be run in the event loop.
@@ -210,11 +210,33 @@ class Group(Entity):
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id or name, hass=hass)
 
+    @staticmethod
+    # pylint: disable=too-many-arguments
+    def async_init(hass, name, entity_ids=None, user_defined=True,
+                   icon=None, view=False, object_id=None):
+        """Init and update Group.
+
+        This method must be run in the event loop.
+        """
+        self = Group(hass, name, entity_id=None, user_defined=True,
+                     icon=None, view=False, object_id=None)
+
         if entity_ids is not None:
             hass.loop.call_soon(
                 self.async_update_tracked_entity_ids, entity_ids)
         else:
-            hass.loop.create_task(self.async_update_ha_state(True))
+            yield from self.async_update_ha_state(True)
+
+        return self
+
+    @staticmethod
+    # pylint: disable=too-many-arguments
+    def init(hass, name, entity_ids=None, user_defined=True,
+             icon=None, view=False, object_id=None):
+        """Init and update Group."""
+        return run_callback_threadsafe(
+            hass.loop, Group.async_init, hass, name, entity_id, user_defined,
+            icon, view, object_id).result()
 
     @property
     def should_poll(self):
