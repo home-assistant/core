@@ -8,19 +8,22 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, assert_setup_component
 
 
 class TestAutomation(unittest.TestCase):
     """Test the event automation."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
         self.calls = []
 
         def record_call(service):
+            """Record call."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
@@ -31,18 +34,19 @@ class TestAutomation(unittest.TestCase):
 
     def test_service_data_not_a_dict(self):
         """Test service data not dict."""
-        assert not setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'event',
-                    'event_type': 'test_event',
-                },
-                'action': {
-                    'service': 'test.automation',
-                    'data': 100,
+        with assert_setup_component(0):
+            assert not setup_component(self.hass, automation.DOMAIN, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                    'action': {
+                        'service': 'test.automation',
+                        'data': 100,
+                    }
                 }
-            }
-        })
+            })
 
     def test_service_specify_data(self):
         """Test service data."""
@@ -70,7 +74,7 @@ class TestAutomation(unittest.TestCase):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
         assert len(self.calls) == 1
-        assert 'event - test_event' == self.calls[0].data['some']
+        assert self.calls[0].data['some'] == 'event - test_event'
         state = self.hass.states.get('automation.hello')
         assert state is not None
         assert state.attributes.get('last_triggered') == time
@@ -444,21 +448,22 @@ class TestAutomation(unittest.TestCase):
     })
     def test_reload_config_when_invalid_config(self, mock_load_yaml):
         """Test the reload config service handling invalid config."""
-        assert setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'alias': 'hello',
-                'trigger': {
-                    'platform': 'event',
-                    'event_type': 'test_event',
-                },
-                'action': {
-                    'service': 'test.automation',
-                    'data_template': {
-                        'event': '{{ trigger.event.event_type }}'
+        with assert_setup_component(1):
+            assert setup_component(self.hass, automation.DOMAIN, {
+                automation.DOMAIN: {
+                    'alias': 'hello',
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                    'action': {
+                        'service': 'test.automation',
+                        'data_template': {
+                            'event': '{{ trigger.event.event_type }}'
+                        }
                     }
                 }
-            }
-        })
+            })
         assert self.hass.states.get('automation.hello') is not None
 
         self.hass.bus.fire('test_event')
@@ -470,11 +475,11 @@ class TestAutomation(unittest.TestCase):
         automation.reload(self.hass)
         self.hass.block_till_done()
 
-        assert self.hass.states.get('automation.hello') is not None
+        assert self.hass.states.get('automation.hello') is None
 
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
-        assert len(self.calls) == 2
+        assert len(self.calls) == 1
 
     def test_reload_config_handles_load_fails(self):
         """Test the reload config service."""

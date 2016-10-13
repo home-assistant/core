@@ -17,7 +17,8 @@ from homeassistant.util import Throttle
 
 
 REQUIREMENTS = ['https://github.com/mweinelt/anel-pwrctrl/archive/'
-                'master.zip#anel_pwrctrl==0.0.1']
+                'ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip'
+                '#anel_pwrctrl==0.0.1']
 
 CONF_PORT_RECV = "port_recv"
 CONF_PORT_SEND = "port_send"

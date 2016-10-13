@@ -38,6 +38,7 @@ def setup_component(hass: core.HomeAssistant, domain: str,
                     config: Optional[Dict]=None) -> bool:
     """Setup a component and all its dependencies."""
     if domain in hass.config.components:
+        _LOGGER.debug('Component %s already set up.', domain)
         return True
 
     _ensure_loader_prepared(hass)
@@ -53,6 +54,7 @@ def setup_component(hass: core.HomeAssistant, domain: str,
 
     for component in components:
         if not _setup_component(hass, component, config):
+            _LOGGER.error('Component %s failed to setup', component)
             return False
 
     return True
@@ -158,7 +160,7 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
                 p_validated = component.PLATFORM_SCHEMA(p_config)
             except vol.Invalid as ex:
                 log_exception(ex, domain, config)
-                return None
+                continue
 
             # Not all platform components follow same pattern for platforms
             # So if p_name is None we are not going to validate platform
@@ -171,7 +173,7 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
                                               p_name)
 
             if platform is None:
-                return None
+                continue
 
             # Validate platform specific schema
             if hasattr(platform, 'PLATFORM_SCHEMA'):
@@ -180,7 +182,7 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
                 except vol.Invalid as ex:
                     log_exception(ex, '{}.{}'.format(domain, p_name),
                                   p_validated)
-                    return None
+                    continue
 
             platforms.append(p_validated)
 

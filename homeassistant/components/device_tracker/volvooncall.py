@@ -14,6 +14,7 @@ import requests
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
+from homeassistant.util import slugify
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -39,28 +40,46 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_scanner(hass, config, see):
     """Validate the configuration and return a scanner."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    session = requests.Session()
+    session.headers.update(HEADERS)
+    session.auth = (config.get(CONF_USERNAME),
+                    config.get(CONF_PASSWORD))
 
     interval = max(MIN_TIME_BETWEEN_SCANS.seconds,
                    config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
 
-    session = requests.Session()
-    session.headers.update(HEADERS)
-    session.auth = (username, password)
-
     def query(ref, rel=SERVICE_URL):
         """Perform a query to the online service."""
         url = urljoin(rel, ref)
+        _LOGGER.debug("Request for %s", url)
+        res = session.get(url, timeout=15)
+        res.raise_for_status()
+        _LOGGER.debug("Received %s", res.json())
+        return res.json()
+
+    def update(now):
+        """Update status from the online service."""
         try:
-            _LOGGER.debug("Request for %s", url)
-            res = session.get(url)
-            res.raise_for_status()
-            _LOGGER.debug("Received %s", res.json())
-            return res.json()
-        except requests.exceptions.RequestException:
-            _LOGGER.exception("Could not make query to %s", url)
-            raise
+            _LOGGER.debug("Updating")
+            status = query("status", vehicle_url)
+            position = query("position", vehicle_url)
+            see(dev_id=dev_id,
+                host_name=host_name,
+                gps=(position["position"]["latitude"],
+                     position["position"]["longitude"]),
+                attributes=dict(
+                    tank_volume=attributes["fuelTankVolume"],
+                    washer_fluid=status["washerFluidLevel"],
+                    brake_fluid=status["brakeFluid"],
+                    service_warning=status["serviceWarningStatus"],
+                    fuel=status["fuelAmount"],
+                    odometer=status["odometer"],
+                    range=status["distanceToEmpty"]))
+        except requests.exceptions.RequestException as error:
+            _LOGGER.error("Could not query server: %s", error)
+        finally:
+            track_point_in_utc_time(hass, update,
+                                    now + timedelta(seconds=interval))
 
     try:
         _LOGGER.info('Logging in to service')
@@ -69,37 +88,14 @@ def setup_scanner(hass, config, see):
         vehicle_url = rel["vehicle"] + '/'
         attributes = query("attributes", vehicle_url)
 
-        dev_id = "volvo_" + attributes["registrationNumber"]
+        dev_id = "volvo_" + slugify(attributes["registrationNumber"])
         host_name = "%s %s/%s" % (attributes["registrationNumber"],
                                   attributes["vehicleType"],
                                   attributes["modelYear"])
-    except requests.exceptions.RequestException:
+        update(utcnow())
+        return True
+    except requests.exceptions.RequestException as error:
         _LOGGER.error("Could not log in to service. "
-                      "Please check configuration.")
+                      "Please check configuration: "
+                      "%s", error)
         return False
-
-    def update(now):
-        """Update status from the online service."""
-        _LOGGER.debug("Updating")
-
-        status = query("status", vehicle_url)
-        position = query("position", vehicle_url)
-
-        see(dev_id=dev_id,
-            host_name=host_name,
-            gps=(position["position"]["latitude"],
-                 position["position"]["longitude"]),
-            attributes=dict(
-                tank_volume=attributes["fuelTankVolume"],
-                washer_fluid=status["washerFluidLevel"],
-                brake_fluid=status["brakeFluid"],
-                service_warning=status["serviceWarningStatus"],
-                fuel=status["fuelAmount"],
-                odometer=status["odometer"],
-                range=status["distanceToEmpty"]))
-
-        track_point_in_utc_time(hass, update,
-                                now + timedelta(seconds=interval))
-
-    update(utcnow())
-    return True

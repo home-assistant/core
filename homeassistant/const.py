@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 30
+MINOR_VERSION = 31
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -173,6 +173,9 @@ STATE_UNLOCKED = 'unlocked'
 STATE_UNAVAILABLE = 'unavailable'
 
 # #### STATE AND EVENT ATTRIBUTES ####
+# Attribution
+ATTR_ATTRIBUTION = 'attribution'
+
 # Contains current time for a TIME_CHANGED event
 ATTR_NOW = 'now'
 
