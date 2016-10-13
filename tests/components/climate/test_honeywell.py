@@ -264,13 +264,13 @@ class TestHoneywellRound(unittest.TestCase):
     def test_attributes(self):
         """Test the attributes."""
         self.assertEqual('House', self.round1.name)
-        self.assertEqual(TEMP_CELSIUS, self.round1.unit_of_measurement)
+        self.assertEqual(TEMP_CELSIUS, self.round1.temperature_unit)
         self.assertEqual(20, self.round1.current_temperature)
         self.assertEqual(21, self.round1.target_temperature)
         self.assertFalse(self.round1.is_away_mode_on)
 
         self.assertEqual('Hot Water', self.round2.name)
-        self.assertEqual(TEMP_CELSIUS, self.round2.unit_of_measurement)
+        self.assertEqual(TEMP_CELSIUS, self.round2.temperature_unit)
         self.assertEqual(21, self.round2.current_temperature)
         self.assertEqual(None, self.round2.target_temperature)
         self.assertFalse(self.round2.is_away_mode_on)
@@ -330,9 +330,9 @@ class TestHoneywellUS(unittest.TestCase):
 
     def test_unit_of_measurement(self):
         """Test the unit of measurement."""
-        self.assertEqual(TEMP_FAHRENHEIT, self.honeywell.unit_of_measurement)
+        self.assertEqual(TEMP_FAHRENHEIT, self.honeywell.temperature_unit)
         self.device.temperature_unit = 'C'
-        self.assertEqual(TEMP_CELSIUS, self.honeywell.unit_of_measurement)
+        self.assertEqual(TEMP_CELSIUS, self.honeywell.temperature_unit)
 
     def test_target_temp(self):
         """Test the target temperature."""

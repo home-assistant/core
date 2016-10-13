@@ -344,12 +344,15 @@ class HTML5NotificationService(BaseNotificationService):
             # Pick out fields that should go into the notification directly vs
             # into the notification data dictionary.
 
-            for key, val in data.copy().items():
+            data_tmp = {}
+
+            for key, val in data.items():
                 if key in HTML5_SHOWNOTIFICATION_PARAMETERS:
                     payload[key] = val
-                    del data[key]
+                else:
+                    data_tmp[key] = val
 
-            payload[ATTR_DATA] = data
+            payload[ATTR_DATA] = data_tmp
 
         if (payload[ATTR_DATA].get(ATTR_URL) is None and
                 payload.get(ATTR_ACTIONS) is None):
