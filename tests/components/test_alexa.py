@@ -405,5 +405,4 @@ class TestAlexa(unittest.TestCase):
         req = _flash_briefing_req("news_audio")
         self.assertEqual(200, req.status_code)
         response = req.json()
-        print("response", response)
         self.assertEqual(response, data)
