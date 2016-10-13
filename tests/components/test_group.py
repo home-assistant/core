@@ -4,11 +4,12 @@ from collections import OrderedDict
 import unittest
 from unittest.mock import patch
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON, ATTR_HIDDEN,
     ATTR_ASSUMED_STATE, STATE_NOT_HOME, )
 import homeassistant.components.group as group
+from homeassistant.util.async import run_callback_threadsafe
 
 from tests.common import get_test_home_assistant
 
@@ -28,9 +29,11 @@ class TestComponentsGroup(unittest.TestCase):
         """Try to setup a group with mixed groupable states."""
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('device_tracker.Paulus', STATE_HOME)
-        group.Group.init(
+        run_callback_threadsafe(
+            self.hass.loop, group.Group,
             self.hass, 'person_and_light',
-            ['light.Bowl', 'device_tracker.Paulus'])
+            ['light.Bowl', 'device_tracker.Paulus']
+        ).result()
 
         self.assertEqual(
             STATE_ON,
@@ -41,9 +44,9 @@ class TestComponentsGroup(unittest.TestCase):
         """Try to setup a group with a non existing state."""
         self.hass.states.set('light.Bowl', STATE_ON)
 
-        grp = group.Group.init(
-            self.hass, 'light_and_nothing',
-            ['light.Bowl', 'non.existing'])
+        grp = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'light_and_nothing',
+            ['light.Bowl', 'non.existing']).result()
 
         self.assertEqual(STATE_ON, grp.state)
 
@@ -52,15 +55,16 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.states.set('cast.living_room', "Plex")
         self.hass.states.set('cast.bedroom', "Netflix")
 
-        grp = group.Group.init(
-            self.hass, 'chromecasts',
-            ['cast.living_room', 'cast.bedroom'])
+        grp = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'chromecasts',
+            ['cast.living_room', 'cast.bedroom']).result()
 
         self.assertEqual(STATE_UNKNOWN, grp.state)
 
     def test_setup_empty_group(self):
         """Try to setup an empty group."""
-        grp = group.Group.init(self.hass, 'nothing', [])
+        grp = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'nothing', []).result()
 
         self.assertEqual(STATE_UNKNOWN, grp.state)
 
@@ -68,8 +72,9 @@ class TestComponentsGroup(unittest.TestCase):
         """Test if the group keeps track of states."""
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
-        test_group = group.Group.init(
-            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
+        test_group = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'init_group',
+            ['light.Bowl', 'light.Ceiling'], False).result()
 
         # Test if group setup in our init mode is ok
         self.assertIn(test_group.entity_id, self.hass.states.entity_ids())
@@ -82,8 +87,9 @@ class TestComponentsGroup(unittest.TestCase):
         """Test if turn off if the last device that was on turns off."""
         self.hass.states.set('light.Bowl', STATE_OFF)
         self.hass.states.set('light.Ceiling', STATE_OFF)
-        test_group = group.Group.init(
-            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
+        test_group = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'init_group',
+            ['light.Bowl', 'light.Ceiling'], False).result()
 
         self.hass.block_till_done()
 
@@ -94,8 +100,9 @@ class TestComponentsGroup(unittest.TestCase):
         """Test if turn on if all devices were turned off and one turns on."""
         self.hass.states.set('light.Bowl', STATE_OFF)
         self.hass.states.set('light.Ceiling', STATE_OFF)
-        test_group = group.Group.init(
-            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
+        test_group = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'init_group',
+            ['light.Bowl', 'light.Ceiling'], False).result()
 
         # Turn one on
         self.hass.states.set('light.Ceiling', STATE_ON)
@@ -108,8 +115,9 @@ class TestComponentsGroup(unittest.TestCase):
         """Test is_on method."""
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
-        test_group = group.Group.init(
-            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
+        test_group = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'init_group',
+            ['light.Bowl', 'light.Ceiling'], False).result()
 
         self.assertTrue(group.is_on(self.hass, test_group.entity_id))
         self.hass.states.set('light.Bowl', STATE_OFF)
@@ -123,8 +131,9 @@ class TestComponentsGroup(unittest.TestCase):
         """Test expand_entity_ids method."""
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
-        test_group = group.Group.init(
-            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
+        test_group = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'init_group',
+            ['light.Bowl', 'light.Ceiling'], False).result()
 
         self.assertEqual(sorted(['light.ceiling', 'light.bowl']),
                          sorted(group.expand_entity_ids(
@@ -134,8 +143,9 @@ class TestComponentsGroup(unittest.TestCase):
         """Test that expand_entity_ids does not return duplicates."""
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
-        test_group = group.Group.init(
-            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
+        test_group = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'init_group',
+            ['light.Bowl', 'light.Ceiling'], False).result()
 
         self.assertEqual(
             ['light.bowl', 'light.ceiling'],
@@ -155,8 +165,9 @@ class TestComponentsGroup(unittest.TestCase):
         """Test get_entity_ids method."""
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
-        test_group = group.Group.init(
-            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
+        test_group = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'init_group',
+            ['light.Bowl', 'light.Ceiling'], False).result()
 
         self.assertEqual(
             ['light.bowl', 'light.ceiling'],
@@ -166,8 +177,9 @@ class TestComponentsGroup(unittest.TestCase):
         """Test if get_entity_ids works with a domain_filter."""
         self.hass.states.set('switch.AC', STATE_OFF)
 
-        mixed_group = group.Group.init(
-            self.hass, 'mixed_group', ['light.Bowl', 'switch.AC'], False)
+        mixed_group = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'mixed_group',
+            ['light.Bowl', 'switch.AC'], False).result()
 
         self.assertEqual(
             ['switch.ac'],
@@ -188,8 +200,9 @@ class TestComponentsGroup(unittest.TestCase):
         If no states existed and now a state it is tracking is being added
         as ON.
         """
-        test_group = group.Group.init(
-            self.hass, 'test group', ['light.not_there_1'])
+        test_group = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'test group',
+            ['light.not_there_1']).result()
 
         self.hass.states.set('light.not_there_1', STATE_ON)
 
@@ -204,8 +217,9 @@ class TestComponentsGroup(unittest.TestCase):
         If no states existed and now a state it is tracking is being added
         as OFF.
         """
-        test_group = group.Group.init(
-            self.hass, 'test group', ['light.not_there_1'])
+        test_group = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'test group',
+            ['light.not_there_1']).result()
 
         self.hass.states.set('light.not_there_1', STATE_OFF)
 
@@ -218,8 +232,9 @@ class TestComponentsGroup(unittest.TestCase):
         """Test setup method."""
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
-        test_group = group.Group.init(
-            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
+        test_group = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'init_group',
+            ['light.Bowl', 'light.Ceiling'], False).result()
 
         group_conf = OrderedDict()
         group_conf['second_group'] = {
@@ -230,7 +245,7 @@ class TestComponentsGroup(unittest.TestCase):
         group_conf['test_group'] = 'hello.world,sensor.happy'
         group_conf['empty_group'] = {'name': 'Empty Group', 'entities': None}
 
-        _setup_component(self.hass, 'group', {'group': group_conf})
+        setup_component(self.hass, 'group', {'group': group_conf})
 
         group_state = self.hass.states.get(
             group.ENTITY_ID_FORMAT.format('second_group'))
@@ -257,17 +272,24 @@ class TestComponentsGroup(unittest.TestCase):
 
     def test_groups_get_unique_names(self):
         """Two groups with same name should both have a unique entity id."""
-        grp1 = group.Group.init(self.hass, 'Je suis Charlie')
-        grp2 = group.Group.init(self.hass, 'Je suis Charlie')
+        grp1 = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'Je suis Charlie').result()
+        grp2 = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'Je suis Charlie').result()
 
         self.assertNotEqual(grp1.entity_id, grp2.entity_id)
 
     def test_expand_entity_ids_expands_nested_groups(self):
         """Test if entity ids epands to nested groups."""
-        group.Group.init(self.hass, 'light', ['light.test_1', 'light.test_2'])
-        group.Group.init(self.hass, 'switch', ['switch.test_1', 'switch.test_2'])
-        group.Group.init(self.hass, 'group_of_groups', ['group.light',
-                                                   'group.switch'])
+        run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'light',
+            ['light.test_1', 'light.test_2']).result()
+        run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'switch',
+            ['switch.test_1', 'switch.test_2']).result()
+        run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'group_of_groups',
+            ['group.light', 'group.switch']).result()
 
         self.assertEqual(
             ['light.test_1', 'light.test_2', 'switch.test_1', 'switch.test_2'],
@@ -278,9 +300,9 @@ class TestComponentsGroup(unittest.TestCase):
         """Test assumed state."""
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
-        test_group = group.Group.init(
-            self.hass, 'init_group',
-            ['light.Bowl', 'light.Ceiling', 'sensor.no_exist'])
+        test_group = run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'init_group',
+            ['light.Bowl', 'light.Ceiling', 'sensor.no_exist']).result()
 
         state = self.hass.states.get(test_group.entity_id)
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
@@ -304,9 +326,9 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.states.set('device_tracker.Adam', STATE_HOME)
         self.hass.states.set('device_tracker.Eve', STATE_NOT_HOME)
         self.hass.block_till_done()
-        group.Group.init(
-            self.hass, 'peeps',
-            ['device_tracker.Adam', 'device_tracker.Eve'])
+        run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'peeps',
+            ['device_tracker.Adam', 'device_tracker.Eve']).result()
         self.hass.states.set('device_tracker.Adam', 'cool_state_not_home')
         self.hass.block_till_done()
         self.assertEqual(STATE_NOT_HOME,
@@ -315,7 +337,7 @@ class TestComponentsGroup(unittest.TestCase):
 
     def test_reloading_groups(self):
         """Test reloading the group config."""
-        _setup_component(self.hass, 'group', {'group': {
+        setup_component(self.hass, 'group', {'group': {
                     'second_group': {
                         'entities': 'light.Bowl',
                         'icon': 'mdi:work',

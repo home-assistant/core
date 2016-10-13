@@ -286,7 +286,8 @@ class EntityPlatform(object):
         This method must be run in the event loop.
         """
         for entity in new_entities:
-            if self.component.async_add_entity(entity, self):
+            ret = yield from self.component.async_add_entity(entity, self)
+            if ret:
                 self.platform_entities.append(entity)
 
         self.component.async_update_group()
