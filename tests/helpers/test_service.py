@@ -145,6 +145,8 @@ class TestServiceHelpers(unittest.TestCase):
             self.hass.loop, group.Group,
             self.hass, 'test', ['light.Ceiling', 'light.Kitchen']).result()
 
+        self.hass.block_till_done()
+
         call = ha.ServiceCall('light', 'turn_on',
                               {ATTR_ENTITY_ID: 'light.Bowl'})
 

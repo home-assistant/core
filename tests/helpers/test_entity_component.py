@@ -106,8 +106,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
         self.hass.block_till_done()
 
-        assert not no_poll_ent.update_ha_state.called
-        assert poll_ent.update_ha_state.called
+        assert not no_poll_ent.async_update_ha_state.called
+        assert poll_ent.async_update_ha_state.called
 
     def test_update_state_adds_entities(self):
         """Test if updating poll entities cause an entity to be added works."""
@@ -242,7 +242,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert ('platform_test', {}, {'msg': 'discovery_info'}) == \
             mock_setup.call_args[0]
 
-    @patch('homeassistant.helpers.entity_component.track_utc_time_change')
+    @patch('homeassistant.helpers.entity_component.'
+           'async_track_utc_time_change')
     def test_set_scan_interval_via_config(self, mock_track):
         """Test the setting of the scan interval via configuration."""
         def platform_setup(hass, config, add_devices, discovery_info=None):

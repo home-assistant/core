@@ -407,6 +407,8 @@ class TestHelpersTemplate(unittest.TestCase):
             self.hass.loop, group.Group, self.hass, 'location group',
             ['test_domain.object']).result()
 
+        self.hass.block_till_done()
+
         self.assertEqual(
             'test_domain.object',
             template.Template(
@@ -428,6 +430,8 @@ class TestHelpersTemplate(unittest.TestCase):
         run_callback_threadsafe(
             self.hass.loop, group.Group, self.hass, 'location group',
             ['test_domain.object']).result()
+
+        self.hass.block_till_done()
 
         self.assertEqual(
             'test_domain.object',
