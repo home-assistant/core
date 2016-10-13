@@ -160,7 +160,7 @@ def setup(hass, config):
         conf = component.async_prepare_reload()
         if conf is None:
             return
-        hass.loop.call_soon(_process_config, hass, conf, component)
+        _process_config(hass, conf, component)
 
     hass.services.register(DOMAIN, SERVICE_RELOAD, reload_service_handler,
                            descriptions[DOMAIN][SERVICE_RELOAD],
