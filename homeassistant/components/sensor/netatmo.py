@@ -65,20 +65,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = NetAtmoData(netatmo.NETATMO_AUTH, config.get(CONF_STATION, None))
 
     dev = []
-    if CONF_MODULES in config:
-        # Iterate each module
-        for module_name, monitored_conditions in config[CONF_MODULES].items():
-            # Test if module exist """
-            if module_name not in data.get_module_names():
-                _LOGGER.error('Module name: "%s" not found', module_name)
-                continue
-            # Only create sensor for monitored """
-            for variable in monitored_conditions:
-                dev.append(NetAtmoSensor(data, module_name, variable))
-    else:
-        for module_name in data.get_module_names():
-            for variable in data.station_data.monitoredConditions(module_name):
-                dev.append(NetAtmoSensor(data, module_name, variable))
+    import lnetatmo
+    try:
+        if CONF_MODULES in config:
+            # Iterate each module
+            for module_name, monitored_conditions in\
+                    config[CONF_MODULES].items():
+                # Test if module exist """
+                if module_name not in data.get_module_names():
+                    _LOGGER.error('Module name: "%s" not found', module_name)
+                    continue
+                # Only create sensor for monitored """
+                for variable in monitored_conditions:
+                    dev.append(NetAtmoSensor(data, module_name, variable))
+        else:
+            for module_name in data.get_module_names():
+                for variable in\
+                        data.station_data.monitoredConditions(module_name):
+                    dev.append(NetAtmoSensor(data, module_name, variable))
+    except lnetatmo.NoDevice:
+        return None
 
     add_devices(dev)
 
