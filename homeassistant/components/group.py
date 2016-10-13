@@ -211,11 +211,11 @@ class Group(Entity):
             ENTITY_ID_FORMAT, object_id or name, hass=hass)
 
         if entity_ids is not None:
-            tasks.append(hass.loop.create_task(
-                self.async_update_tracked_entity_ids(entity_ids)))
+            hass.loop.create_task(
+                self.async_update_tracked_entity_ids(entity_ids))
         else:
-            tasks.append(hass.loop.create_task(
-                self.async_update_ha_state(True)))
+            hass.loop.create_task(
+                self.async_update_ha_state(True))
 
     @property
     def should_poll(self):
