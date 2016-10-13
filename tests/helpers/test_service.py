@@ -9,6 +9,7 @@ from homeassistant import core as ha, loader
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
 from homeassistant.helpers import service, template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async import run_callback_threadsafe
 
 from tests.common import get_test_home_assistant, mock_service
 
@@ -139,8 +140,10 @@ class TestServiceHelpers(unittest.TestCase):
         self.hass.states.set('light.Ceiling', STATE_OFF)
         self.hass.states.set('light.Kitchen', STATE_OFF)
 
-        loader.get_component('group').Group.init(
-            self.hass, 'test', ['light.Ceiling', 'light.Kitchen'])
+        group = loader.get_component('group')
+        run_callback_threadsafe(
+            self.hass.loop, group.Group,
+            self.hass, 'test', ['light.Ceiling', 'light.Kitchen']).result()
 
         call = ha.ServiceCall('light', 'turn_on',
                               {ATTR_ENTITY_ID: 'light.Bowl'})

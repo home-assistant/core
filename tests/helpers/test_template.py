@@ -15,6 +15,7 @@ from homeassistant.const import (
     MATCH_ALL,
 )
 import homeassistant.util.dt as dt_util
+from homeassistant.util.async import run_callback_threadsafe
 
 from tests.common import get_test_home_assistant
 
@@ -402,7 +403,9 @@ class TestHelpersTemplate(unittest.TestCase):
             'longitude': self.hass.config.longitude,
         })
 
-        group.Group.init(self.hass, 'location group', ['test_domain.object'])
+        run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'location group',
+            ['test_domain.object']).result()
 
         self.assertEqual(
             'test_domain.object',
@@ -422,7 +425,9 @@ class TestHelpersTemplate(unittest.TestCase):
             'longitude': self.hass.config.longitude,
         })
 
-        group.Group.init(self.hass, 'location group', ['test_domain.object'])
+        run_callback_threadsafe(
+            self.hass.loop, group.Group, self.hass, 'location group',
+            ['test_domain.object']).result()
 
         self.assertEqual(
             'test_domain.object',
