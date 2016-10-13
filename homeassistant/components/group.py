@@ -20,7 +20,8 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async import (
+    run_callback_threadsafe, run_coroutine_threadsafe)
 
 DOMAIN = 'group'
 
@@ -211,6 +212,7 @@ class Group(Entity):
             ENTITY_ID_FORMAT, object_id or name, hass=hass)
 
     @staticmethod
+    @asyncio.coroutine
     # pylint: disable=too-many-arguments
     def async_init(hass, name, entity_ids=None, user_defined=True,
                    icon=None, view=False, object_id=None):
@@ -234,7 +236,7 @@ class Group(Entity):
     def init(hass, name, entity_ids=None, user_defined=True,
              icon=None, view=False, object_id=None):
         """Init and update Group."""
-        return run_callback_threadsafe(
+        return run_coroutine_threadsafe(
             hass.loop, Group.async_init, hass, name, entity_ids, user_defined,
             icon, view, object_id).result()
 
