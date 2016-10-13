@@ -25,11 +25,14 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
                        current_ids: Optional[List[str]]=None,
                        hass: Optional[HomeAssistant]=None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-    if hass and current_ids is None:
-        return run_callback_threadsafe(
-            hass.loop, async_generate_entity_id, entity_id_format, name,
-            current_ids, hass
-        ).result()
+    if current_ids is None:
+        if hass is None:
+            raise ValueError("Missing required parameter currentids or hass")
+        else:
+            return run_callback_threadsafe(
+                hass.loop, async_generate_entity_id, entity_id_format, name,
+                current_ids, hass
+            ).result()
 
     name = (name or DEVICE_DEFAULT_NAME).lower()
 
