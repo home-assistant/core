@@ -190,8 +190,8 @@ class Group(Entity):
     """Track a group of entity ids."""
 
     # pylint: disable=too-many-instance-attributes, too-many-arguments
-    def __init__(self, hass, name, user_defined=True, icon=None, view=False,
-                 object_id=None):
+    def __init__(self, hass, name, entity_ids=None, user_defined=True,
+                 icon=None, view=False, object_id=None):
         """Initialize a group.
 
         This method must be run in the event loop.
