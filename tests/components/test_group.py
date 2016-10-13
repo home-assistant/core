@@ -115,6 +115,7 @@ class TestComponentsGroup(unittest.TestCase):
             ['light.Bowl', 'light.Ceiling'], False).result()
 
         # Turn one on
+        self.hass.block_till_done()
         self.hass.states.set('light.Ceiling', STATE_ON)
         self.hass.block_till_done()
 
@@ -315,6 +316,8 @@ class TestComponentsGroup(unittest.TestCase):
         run_callback_threadsafe(
             self.hass.loop, group.Group, self.hass, 'switch',
             ['switch.test_1', 'switch.test_2']).result()
+
+        self.hass.block_till_done()
         run_callback_threadsafe(
             self.hass.loop, group.Group, self.hass, 'group_of_groups',
             ['group.light', 'group.switch']).result()
