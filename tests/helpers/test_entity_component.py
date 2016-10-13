@@ -94,14 +94,14 @@ class TestHelpersEntityComponent(unittest.TestCase):
         component = EntityComponent(_LOGGER, DOMAIN, self.hass, 20)
 
         no_poll_ent = EntityTest(should_poll=False)
-        no_poll_ent.update_ha_state = Mock()
+        no_poll_ent.async_update_ha_state = Mock()
         poll_ent = EntityTest(should_poll=True)
-        poll_ent.update_ha_state = Mock()
+        poll_ent.async_update_ha_state = Mock()
 
         component.add_entities([no_poll_ent, poll_ent])
 
-        no_poll_ent.update_ha_state.reset_mock()
-        poll_ent.update_ha_state.reset_mock()
+        no_poll_ent.async_update_ha_state.reset_mock()
+        poll_ent.async_update_ha_state.reset_mock()
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
         self.hass.block_till_done()
@@ -265,7 +265,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert mock_track.called
         assert [0, 30] == list(mock_track.call_args[1]['second'])
 
-    @patch('homeassistant.helpers.entity_component.track_utc_time_change')
+    @patch('homeassistant.helpers.entity_component.'
+           'async_track_utc_time_change')
     def test_set_scan_interval_via_platform(self, mock_track):
         """Test the setting of the scan interval via platform."""
         def platform_setup(hass, config, add_devices, discovery_info=None):
