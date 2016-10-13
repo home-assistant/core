@@ -50,6 +50,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Concord232 binary sensor platform."""
     from concord232 import client as concord232_client
 
+    def get_opening_type(zone):
+        """Helper function to try to guess sensor type frm name"""
+        _LOGGER.debug("get_opening_type by name: %s " % zone["name"])
+        if "MOTION" in zone["name"]:
+            return "motion"
+        if "KEY" in zone["name"]:
+            return "safety"
+        if "SMOKE" in zone["name"]:
+            return "smoke"
+        if "WATER" in zone["name"]:
+            return "water"
+        return "opening"
+
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     exclude = config.get(CONF_EXCLUDE_ZONES)
@@ -68,7 +81,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     zone_sensors = {
         zone['number']: Concord232ZoneSensor(
             zone,
-            zone_types.get(zone['number'], get_opening(zone)))
+            zone_types.get(zone['number'], get_opening_type(zone)))
         for zone in zones
         if zone['number'] not in exclude}
     _LOGGER.info(zone_sensors)
@@ -80,19 +93,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         _LOGGER.warning("No zones found on Concord232")
     return True
-
-
-def get_opening(zone):
-    _LOGGER.debug("Find appropriate sensor type by name: %s " % zone["name"])
-    if "MOTION" in zone["name"]:
-        return "motion"
-    if "KEY" in zone["name"]:
-        return "safety"
-    if "SMOKE" in zone["name"]:
-        return "smoke"
-    if "WATER" in zone["name"]:
-        return "water"
-    return "opening"
 
 
 class Concord232ZoneSensor(BinarySensorDevice):
