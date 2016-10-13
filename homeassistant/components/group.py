@@ -148,7 +148,7 @@ def setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     run_callback_threadsafe(
-        hass.loop, _process_config, hass, config, component).result()
+        hass.loop, _async_process_config, hass, config, component).result()
 
     descriptions = conf_util.load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
@@ -159,7 +159,7 @@ def setup(hass, config):
         conf = component.async_prepare_reload()
         if conf is None:
             return
-        _process_config(hass, conf, component)
+        _async_process_config(hass, conf, component)
 
     hass.services.register(DOMAIN, SERVICE_RELOAD, reload_service_handler,
                            descriptions[DOMAIN][SERVICE_RELOAD],
@@ -169,7 +169,7 @@ def setup(hass, config):
 
 
 @callback
-def _process_config(hass, config, component):
+def _async_process_config(hass, config, component):
     """Process group configuration."""
     groups = []
     for object_id, conf in config.get(DOMAIN, {}).items():
