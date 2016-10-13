@@ -402,7 +402,7 @@ class TestHelpersTemplate(unittest.TestCase):
             'longitude': self.hass.config.longitude,
         })
 
-        group.Group(self.hass, 'location group', ['test_domain.object'])
+        group.Group.init(self.hass, 'location group', ['test_domain.object'])
 
         self.assertEqual(
             'test_domain.object',
@@ -422,7 +422,7 @@ class TestHelpersTemplate(unittest.TestCase):
             'longitude': self.hass.config.longitude,
         })
 
-        group.Group(self.hass, 'location group', ['test_domain.object'])
+        group.Group.init(self.hass, 'location group', ['test_domain.object'])
 
         self.assertEqual(
             'test_domain.object',
