@@ -125,6 +125,9 @@ class WUndergroundSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
+
+        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+
         if not self.rest.alerts or self._condition != 'alerts':
             return
 
@@ -138,13 +141,6 @@ class WUndergroundSensor(Entity):
                         dkey = alert.capitalize()
                     attrs[dkey] = data[alert]
         return attrs
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-        }
 
     @property
     def entity_picture(self):
