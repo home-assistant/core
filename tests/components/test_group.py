@@ -35,6 +35,8 @@ class TestComponentsGroup(unittest.TestCase):
             ['light.Bowl', 'device_tracker.Paulus']
         ).result()
 
+        self.hass.block_till_done()
+
         self.assertEqual(
             STATE_ON,
             self.hass.states.get(
@@ -48,6 +50,8 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass.loop, group.Group, self.hass, 'light_and_nothing',
             ['light.Bowl', 'non.existing']).result()
 
+        self.hass.block_till_done()
+
         self.assertEqual(STATE_ON, grp.state)
 
     def test_setup_group_with_non_groupable_states(self):
@@ -59,12 +63,16 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass.loop, group.Group, self.hass, 'chromecasts',
             ['cast.living_room', 'cast.bedroom']).result()
 
+        self.hass.block_till_done()
+
         self.assertEqual(STATE_UNKNOWN, grp.state)
 
     def test_setup_empty_group(self):
         """Try to setup an empty group."""
         grp = run_callback_threadsafe(
             self.hass.loop, group.Group, self.hass, 'nothing', []).result()
+
+        self.hass.block_till_done()
 
         self.assertEqual(STATE_UNKNOWN, grp.state)
 
@@ -75,6 +83,8 @@ class TestComponentsGroup(unittest.TestCase):
         test_group = run_callback_threadsafe(
             self.hass.loop, group.Group, self.hass, 'init_group',
             ['light.Bowl', 'light.Ceiling'], False).result()
+
+        self.hass.block_till_done()
 
         # Test if group setup in our init mode is ok
         self.assertIn(test_group.entity_id, self.hass.states.entity_ids())
@@ -119,6 +129,8 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass.loop, group.Group, self.hass, 'init_group',
             ['light.Bowl', 'light.Ceiling'], False).result()
 
+        self.hass.block_till_done()
+
         self.assertTrue(group.is_on(self.hass, test_group.entity_id))
         self.hass.states.set('light.Bowl', STATE_OFF)
         self.hass.block_till_done()
@@ -135,6 +147,8 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass.loop, group.Group, self.hass, 'init_group',
             ['light.Bowl', 'light.Ceiling'], False).result()
 
+        self.hass.block_till_done()
+
         self.assertEqual(sorted(['light.ceiling', 'light.bowl']),
                          sorted(group.expand_entity_ids(
                              self.hass, [test_group.entity_id])))
@@ -146,6 +160,8 @@ class TestComponentsGroup(unittest.TestCase):
         test_group = run_callback_threadsafe(
             self.hass.loop, group.Group, self.hass, 'init_group',
             ['light.Bowl', 'light.Ceiling'], False).result()
+
+        self.hass.block_till_done()
 
         self.assertEqual(
             ['light.bowl', 'light.ceiling'],
@@ -169,6 +185,8 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass.loop, group.Group, self.hass, 'init_group',
             ['light.Bowl', 'light.Ceiling'], False).result()
 
+        self.hass.block_till_done()
+
         self.assertEqual(
             ['light.bowl', 'light.ceiling'],
             sorted(group.get_entity_ids(self.hass, test_group.entity_id)))
@@ -180,6 +198,8 @@ class TestComponentsGroup(unittest.TestCase):
         mixed_group = run_callback_threadsafe(
             self.hass.loop, group.Group, self.hass, 'mixed_group',
             ['light.Bowl', 'switch.AC'], False).result()
+
+        self.hass.block_till_done()
 
         self.assertEqual(
             ['switch.ac'],
@@ -204,6 +224,8 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass.loop, group.Group, self.hass, 'test group',
             ['light.not_there_1']).result()
 
+        self.hass.block_till_done()
+
         self.hass.states.set('light.not_there_1', STATE_ON)
 
         self.hass.block_till_done()
@@ -221,6 +243,8 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass.loop, group.Group, self.hass, 'test group',
             ['light.not_there_1']).result()
 
+        self.hass.block_till_done()
+
         self.hass.states.set('light.not_there_1', STATE_OFF)
 
         self.hass.block_till_done()
@@ -235,6 +259,8 @@ class TestComponentsGroup(unittest.TestCase):
         test_group = run_callback_threadsafe(
             self.hass.loop, group.Group, self.hass, 'init_group',
             ['light.Bowl', 'light.Ceiling'], False).result()
+
+        self.hass.block_till_done()
 
         group_conf = OrderedDict()
         group_conf['second_group'] = {
@@ -277,6 +303,8 @@ class TestComponentsGroup(unittest.TestCase):
         grp2 = run_callback_threadsafe(
             self.hass.loop, group.Group, self.hass, 'Je suis Charlie').result()
 
+        self.hass.block_till_done()
+
         self.assertNotEqual(grp1.entity_id, grp2.entity_id)
 
     def test_expand_entity_ids_expands_nested_groups(self):
@@ -291,6 +319,8 @@ class TestComponentsGroup(unittest.TestCase):
             self.hass.loop, group.Group, self.hass, 'group_of_groups',
             ['group.light', 'group.switch']).result()
 
+        self.hass.block_till_done()
+
         self.assertEqual(
             ['light.test_1', 'light.test_2', 'switch.test_1', 'switch.test_2'],
             sorted(group.expand_entity_ids(self.hass,
@@ -303,6 +333,8 @@ class TestComponentsGroup(unittest.TestCase):
         test_group = run_callback_threadsafe(
             self.hass.loop, group.Group, self.hass, 'init_group',
             ['light.Bowl', 'light.Ceiling', 'sensor.no_exist']).result()
+
+        self.hass.block_till_done()
 
         state = self.hass.states.get(test_group.entity_id)
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
@@ -326,9 +358,13 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.states.set('device_tracker.Adam', STATE_HOME)
         self.hass.states.set('device_tracker.Eve', STATE_NOT_HOME)
         self.hass.block_till_done()
+
         run_callback_threadsafe(
             self.hass.loop, group.Group, self.hass, 'peeps',
             ['device_tracker.Adam', 'device_tracker.Eve']).result()
+
+        self.hass.block_till_done()
+
         self.hass.states.set('device_tracker.Adam', 'cool_state_not_home')
         self.hass.block_till_done()
         self.assertEqual(STATE_NOT_HOME,
