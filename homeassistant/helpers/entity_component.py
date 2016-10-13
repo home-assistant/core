@@ -14,8 +14,7 @@ from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.service import extract_entity_ids
-from homeassistant.util.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe)
+from homeassistant.util.async import run_callback_threadsafe
 
 DEFAULT_SCAN_INTERVAL = 15
 
