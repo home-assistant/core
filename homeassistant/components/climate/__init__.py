@@ -368,7 +368,10 @@ class ClimateDevice(Entity):
     @property
     def state(self):
         """Return the current state."""
-        return self.current_operation or STATE_UNKNOWN
+        if self.current_operation:
+            return self.current_operation
+        else:
+            return STATE_UNKNOWN
 
     @property
     def state_attributes(self):
@@ -398,17 +401,20 @@ class ClimateDevice(Entity):
         fan_mode = self.current_fan_mode
         if fan_mode is not None:
             data[ATTR_FAN_MODE] = fan_mode
-            data[ATTR_FAN_LIST] = self.fan_list
+            if self.fan_list:
+                data[ATTR_FAN_LIST] = self.fan_list
 
         operation_mode = self.current_operation
         if operation_mode is not None:
             data[ATTR_OPERATION_MODE] = operation_mode
-            data[ATTR_OPERATION_LIST] = self.operation_list
+            if self.operation_list:
+                data[ATTR_OPERATION_LIST] = self.operation_list
 
         swing_mode = self.current_swing_mode
         if swing_mode is not None:
             data[ATTR_SWING_MODE] = swing_mode
-            data[ATTR_SWING_LIST] = self.swing_list
+            if self.swing_list:
+                data[ATTR_SWING_LIST] = self.swing_list
 
         is_away = self.is_away_mode_on
         if is_away is not None:
