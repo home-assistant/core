@@ -213,7 +213,7 @@ class Group(Entity):
                      icon=None, view=False, object_id=None):
         """Initialize a group."""
         return run_callback_threadsafe(
-            hass.loop, Group.async_create_object, hass, name, entity_ids,
+            hass.loop, Group.async_create_group, hass, name, entity_ids,
             user_defined, icon, view, object_id).result()
 
     @staticmethod
