@@ -8,6 +8,7 @@ import logging
 
 from datetime import timedelta
 
+import uuid
 import requests
 import voluptuous as vol
 
@@ -18,14 +19,13 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_API_KEY, CONF_PORT, DEVICE_DEFAULT_NAME, STATE_IDLE,
-    STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+    STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONTENT_TYPE_JSON,
+    MAJOR_VERSION, MINOR_VERSION)
 from homeassistant.helpers.event import (track_utc_time_change)
 from homeassistant.util import Throttle
 
-REQUIREMENTS = []
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-HASS_ID = '055cfe9f2e0413d479e5111d96e7ff6e'
 
 DEFAULT_PORT = 8096
 
@@ -47,14 +47,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     key = config.get(CONF_API_KEY)
     port = config.get(CONF_PORT)
 
-    # Build URL
     url = 'http://{}:{}'.format(host, port)
 
-    _LOGGER.info('Setting up Emby server at: ' + url)
+    _LOGGER.info('Setting up Emby server at: %s', url)
 
     embyserver = EmbyRemote(key, url)
-
-    # _LOGGER.info('Connected to: %s', host)
 
     emby_clients = {}
     emby_sessions = {}
@@ -70,7 +67,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         new_emby_clients = []
         for device in devices:
-            if device['DeviceId'] != HASS_ID:
+            if device['DeviceId'] != embyserver.unique_id:
                 if device['DeviceId'] not in emby_clients:
                     _LOGGER.info('New Emby DeviceID: %s. Adding to Clients.',
                                  device['DeviceId'])
@@ -107,6 +104,19 @@ class EmbyRemote:
         """Initialize Emby API class."""
         self.api_key = api_key
         self.server_url = server_url
+        self.emby_id = uuid.uuid4().hex
+
+        # Build requests session
+        self.emby_request = requests.Session()
+        self.emby_request.timeout = 5
+        self.emby_request.stream = False
+        self.emby_request.headers.update({'Content-Type': CONTENT_TYPE_JSON,
+                                          'Accept': CONTENT_TYPE_JSON})
+
+    @property
+    def unique_id(self):
+        """Return unique ID for connection to Emby."""
+        return self.emby_id
 
     @property
     def get_sessions_url(self):
@@ -127,16 +137,13 @@ class EmbyRemote:
     def get_sessions(self):
         """Return active client sessions."""
         url = self.get_sessions_url.format(self.api_key)
-        headers = {'Content-Type': 'application/json',
-                   'Accept': 'application/json'}
 
         try:
-            response = requests.get(url, headers=headers)
+            response = self.emby_request.get(url)
         except requests.exceptions.RequestException as err:
             _LOGGER.error('Requests error getting sessions: %s', err)
             return
         else:
-            # clients = json.loads(response)
             clients = response.json()
             return clients
 
@@ -144,18 +151,17 @@ class EmbyRemote:
         """Send media commands to client."""
         url = self.playstate_url.format(
             session['Id'], state, self.api_key)
-        headers = {'Content-Type': 'application/json',
-                   'Accept': 'application/json',
-                   'x-emby-authorization':
+        headers = {'x-emby-authorization':
                    'MediaBrowser Client="Emby Mobile",'
                    'Device="Home Assistant",'
                    'DeviceId="{}",'
-                   'Version="1.0"'.format(HASS_ID)}
+                   'Version="{}.{}"'.format(
+                       self.unique_id, MAJOR_VERSION, MINOR_VERSION)}
 
         _LOGGER.debug('Playstate request state: %s, URL: %s', state, url)
 
         try:
-            requests.post(url, headers=headers)
+            self.emby_request.post(url, headers=headers)
         except requests.exceptions.RequestException as err:
             _LOGGER.error('Requests error setting playstate: %s', err)
             return
@@ -303,17 +309,21 @@ class EmbyClient(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self.now_playing_item is None:
-            return None
-        media_type = self.now_playing_item['Type']
+#        if self.now_playing_item is None:
+#            return None
+#        media_type = self.now_playing_item['Type']
 
-        if media_type == 'Episode':
+#        if media_type == 'Episode':
+#            return self.client.get_image(
+#                self.now_playing_item['Id'], 'Primary', self.play_percent())
+#        elif media_type == 'Movie':
+#            return self.client.get_image(
+#                self.now_playing_item['Id'], 'Thumb', self.play_percent())
+#        return None
+        if self.now_playing_item is not None:
             return self.client.get_image(
-                self.now_playing_item['Id'], 'Primary', self.play_percent())
-        elif media_type == 'Movie':
-            return self.client.get_image(
-                self.now_playing_item['Id'], 'Thumb', self.play_percent())
-        return None
+                self.now_playing_item['ThumbItemId'], 'Thumb',
+                self.play_percent())
 
     @property
     def media_title(self):
