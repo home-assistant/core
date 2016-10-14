@@ -31,11 +31,13 @@ CONF_POLLING_INTENSITY = 'polling_intensity'
 CONF_POLLING_INTERVAL = 'polling_interval'
 CONF_USB_STICK_PATH = 'usb_path'
 CONF_CONFIG_PATH = 'config_path'
+CONF_IGNORED = 'ignored'
 
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
 DEFAULT_POLLING_INTERVAL = 60000
 DEFAULT_DEBUG = True
+DEFAULT_CONF_IGNORED = False
 DOMAIN = 'zwave'
 
 NETWORK = None
@@ -134,6 +136,7 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
 CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_POLLING_INTENSITY):
         vol.All(cv.positive_int),
+    vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -324,6 +327,11 @@ def setup(hass, config):
             name = "{}.{}".format(component, _object_id(value))
 
             node_config = customize.get(name, {})
+
+            if node_config.get(CONF_IGNORED):
+                _LOGGER.info("Ignoring device %s", name)
+                return
+
             polling_intensity = convert(
                 node_config.get(CONF_POLLING_INTENSITY), int)
             if polling_intensity:
