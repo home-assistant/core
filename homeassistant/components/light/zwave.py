@@ -115,7 +115,6 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._brightness = None
         self._state = None
-        self.update_properties()
         self._alt_delay = None
         self._zw098 = None
 
@@ -133,6 +132,8 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
                     _LOGGER.debug("Dimmer delay workaround enabled for node:"
                                   " %s", value.parent_id)
                     self._alt_delay = 1
+
+        self.update_properties()
 
         # Used for value change event handling
         self._refreshing = False
