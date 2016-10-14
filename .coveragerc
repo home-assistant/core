@@ -296,6 +296,7 @@ omit =
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
+    homeassistant/components/switch/x10.py
     homeassistant/components/thermostat/eq3btsmart.py
     homeassistant/components/thermostat/heatmiser.py
     homeassistant/components/thermostat/homematic.py
