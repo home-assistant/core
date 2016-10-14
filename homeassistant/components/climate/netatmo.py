@@ -8,10 +8,9 @@ import logging
 from datetime import timedelta
 import voluptuous as vol
 
-from homeassistant.components.netatmo import ThermostatData
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.components.climate import\
- (STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+from homeassistant.components.climate import (
+    STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
@@ -75,7 +74,7 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._data.thermostatdata.temp
+        return self._target_temperature
 
     @property
     def temperature_unit(self):
@@ -122,15 +121,15 @@ class NetatmoThermostat(ClimateDevice):
         self._away = False
         self.update_ha_state()
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, endTimeOffset=None, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
         mode = "manual"
         endTimeOffset = 7200
-        self._data.thermostatdata.setthermpoint\
-            (mode, temperature, endTimeOffset)
+        self._data.thermostatdata.setthermpoint(
+            mode, temperature, endTimeOffset)
         self._target_temperature = temperature
         self._away = False
         self.update_ha_state()
@@ -144,3 +143,39 @@ class NetatmoThermostat(ClimateDevice):
             self._away = True
         else:
             self._away = False
+
+
+class ThermostatData(object):
+    """Get the latest data from Netatmo."""
+
+    def __init__(self, auth, device=None):
+        """Initialize the data object."""
+        self.auth = auth
+        self.thermostatdata = None
+        self.module_names = []
+        self.device = device
+        self.current_temperature = None
+        self.target_temperature = None
+        self.setpoint_mode = None
+        # self.operation =
+
+    def get_module_names(self):
+        """Return all module available on the API as a list."""
+        self.update()
+        if not self.device:
+            for device in self.thermostatdata.modules:
+                for module in self.thermostatdata.modules[device].values():
+                    self.module_names.append(module['module_name'])
+        else:
+            for module in self.thermostatdata.modules[self.device].values():
+                self.module_names.append(module['module_name'])
+        return self.module_names
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Call the NetAtmo API to update the data."""
+        import lnetatmo
+        self.thermostatdata = lnetatmo.ThermostatData(self.auth)
+        self.target_temperature = self.thermostatdata.setpoint_temp
+        self.setpoint_mode = self.thermostatdata.setpoint_mode
+        self.current_temperature = self.thermostatdata.temp
