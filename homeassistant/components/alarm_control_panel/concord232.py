@@ -4,11 +4,9 @@ Support for Concord232 alarm control panels.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.concord232/
 """
-<<<<<<< HEAD
+
 import datetime
 
-=======
->>>>>>> 5ed42d4cef9b60de6924e3fa04112322d332c441
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -37,13 +35,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
 })
 
-<<<<<<< HEAD
 CONCORD232_GLOBAL = None
 
 SCAN_INTERVAL = 1
 
-=======
->>>>>>> 5ed42d4cef9b60de6924e3fa04112322d332c441
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup concord232 platform."""
@@ -66,7 +61,6 @@ class Concord232Alarm(alarm.AlarmControlPanel):
     def __init__(self, hass, url, name):
         """Initalize the concord232 alarm panel."""
         from concord232 import client
-<<<<<<< HEAD
         self._state = STATE_UNKNOWN
         self._hass = hass
         self._name = name
@@ -77,19 +71,12 @@ class Concord232Alarm(alarm.AlarmControlPanel):
             CONCORD232_GLOBAL = client.Client(self._url)
         else:
             _LOGGER.debug('Found GLOBAL Client using it')
+
         self._alarm = CONCORD232_GLOBAL
-        self._alarm.list_partitions()
+        self._alarm.partitions = self._alarm.list_partitions()
         CONCORD232_GLOBAL.last_partition_update = datetime.datetime.now()
-=======
-        self._hass = hass
-        self._name = name
-        self._url = url
-        self._alarm = client.Client(self._url)
-        # Do an initial list operation so that we will try to actually
-        # talk to the API and trigger a requests exception for setup_platform()
-        # to catch
-        self._alarm.list_partitions()
->>>>>>> 5ed42d4cef9b60de6924e3fa04112322d332c441
+        self.update()
+
 
     @property
     def should_poll(self):
@@ -109,19 +96,15 @@ class Concord232Alarm(alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-<<<<<<< HEAD
         return self._state
 
     def update(self):
         """Updates values from API."""
-=======
->>>>>>> 5ed42d4cef9b60de6924e3fa04112322d332c441
         try:
             part = self._alarm.list_partitions()[0]
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error('Unable to connect to %(host)s: %(reason)s',
                           dict(host=self._url, reason=ex))
-<<<<<<< HEAD
             newstate = STATE_UNKNOWN
         except IndexError:
             _LOGGER.error('concord232 reports no partitions')
@@ -137,20 +120,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         if not newstate == self._state:
             _LOGGER.info("State Chnage from %s to %s", self._state, newstate)
             self._state = newstate
-=======
-            return STATE_UNKNOWN
-        except IndexError:
-            _LOGGER.error('concord232 reports no partitions')
-            return STATE_UNKNOWN
-
-        _LOGGER.info("Armed State: %s", part['arming_level'])
-        if part['arming_level'] == "Off":
-            return STATE_ALARM_DISARMED
-        elif "Home" in part['arming_level']:
-            return STATE_ALARM_ARMED_HOME
-        else:
-            return STATE_ALARM_ARMED_AWAY
->>>>>>> 5ed42d4cef9b60de6924e3fa04112322d332c441
+        return self._state
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
