@@ -15,7 +15,6 @@ from homeassistant.const import (
     MATCH_ALL,
 )
 import homeassistant.util.dt as dt_util
-from homeassistant.util.async import run_callback_threadsafe
 
 from tests.common import get_test_home_assistant
 

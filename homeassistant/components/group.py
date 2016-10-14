@@ -210,7 +210,7 @@ class Group(Entity):
     @staticmethod
     # pylint: disable=too-many-arguments
     def create_group(hass, name, entity_ids=None, user_defined=True,
-                      icon=None, view=False, object_id=None):
+                     icon=None, view=False, object_id=None):
         """Initialize a group."""
         return run_callback_threadsafe(
             hass.loop, Group.async_create_object, hass, name, entity_ids,
@@ -219,12 +219,12 @@ class Group(Entity):
     @staticmethod
     # pylint: disable=too-many-arguments
     def async_create_group(hass, name, entity_ids=None, user_defined=True,
-                            icon=None, view=False, object_id=None):
+                           icon=None, view=False, object_id=None):
         """Initialize a group.
 
         This method must be run in the event loop.
         """
-        self = Object(
+        self = Group(
             hass, name, user_defined=user_defined, icon=icon, view=view)
 
         # init data

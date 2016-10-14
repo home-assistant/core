@@ -10,7 +10,6 @@ import homeassistant.bootstrap as bootstrap
 import homeassistant.core as ha
 import homeassistant.loader as loader
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
-from homeassistant.util.async import run_callback_threadsafe
 
 DEPENDENCIES = ['conversation', 'introduction', 'zone']
 DOMAIN = 'demo'
