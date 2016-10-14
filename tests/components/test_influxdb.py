@@ -70,8 +70,6 @@ class TestInfluxDB(unittest.TestCase):
 
         assert not setup_component(self.hass, influxdb.DOMAIN, config)
 
-        
-
     def test_setup_query_fail(self, mock_client):
         """Test the setup for query failures."""
         config = {
