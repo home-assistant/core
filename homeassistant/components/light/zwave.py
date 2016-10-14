@@ -223,17 +223,12 @@ class ZwaveColorLight(ZwaveDimmer):
         self._rgb = None
         self._ct = None
 
-        # Here we attempt to find a zwave color value with the same instance
-        # id as the dimmer value. Currently zwave nodes that change colors
-        # only include one dimmer and one color command, but this will
-        # hopefully provide some forward compatibility for new devices that
-        # have multiple color changing elements.
+        # Currently zwave nodes only exist with one color element per node.
         for value_color in value.node.get_rgbbulbs().values():
-            if value.instance == value_color.instance:
-                self._value_color = value_color
+            self._value_color = value_color
 
         if self._value_color is None:
-            raise ValueError("No matching color command found.")
+            raise ValueError("No color command found.")
 
         for value_color_channels in value.node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_SWITCH_COLOR,
