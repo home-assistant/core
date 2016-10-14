@@ -319,11 +319,14 @@ pyasn1-modules==0.0.8
 # homeassistant.components.notify.xmpp
 pyasn1==0.1.9
 
+# homeassistant.components.device_tracker.bbox
+pybbox==0.0.5-alpha
+
 # homeassistant.components.device_tracker.bluetooth_tracker
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.7.4
+pychromecast==0.7.6
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -500,7 +503,7 @@ urllib3
 uvcclient==0.9.0
 
 # homeassistant.components.verisure
-vsure==0.11.0
+vsure==0.11.1
 
 # homeassistant.components.sensor.vasttrafik
 vtjp==0.1.11

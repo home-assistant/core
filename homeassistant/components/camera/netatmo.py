@@ -36,15 +36,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import lnetatmo
     try:
         data = WelcomeData(netatmo.NETATMO_AUTH, home)
+        for camera_name in data.get_camera_names():
+            if CONF_CAMERAS in config:
+                if config[CONF_CAMERAS] != [] and \
+                   camera_name not in config[CONF_CAMERAS]:
+                    continue
+            add_devices([WelcomeCamera(data, camera_name, home)])
     except lnetatmo.NoDevice:
         return None
-
-    for camera_name in data.get_camera_names():
-        if CONF_CAMERAS in config:
-            if config[CONF_CAMERAS] != [] and \
-               camera_name not in config[CONF_CAMERAS]:
-                continue
-        add_devices([WelcomeCamera(data, camera_name, home)])
 
 
 class WelcomeCamera(Camera):
