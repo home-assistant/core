@@ -139,7 +139,7 @@ hikvision==0.4
 # http://github.com/adafruit/Adafruit_Python_DHT/archive/310c59b0293354d07d94375f1365f7b9b9110c7d.zip#Adafruit_DHT==1.3.0
 
 # homeassistant.components.light.flux_led
-https://github.com/Danielhiversen/flux_led/archive/0.7.zip#flux_led==0.7
+https://github.com/Danielhiversen/flux_led/archive/0.7.zip#flux_led==0.8
 
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.5.zip#pyW215==0.3.5
@@ -293,7 +293,7 @@ pmsensor==0.3
 
 # homeassistant.components.climate.proliphix
 # homeassistant.components.thermostat.proliphix
-proliphix==0.3.1
+proliphix==0.4.0
 
 # homeassistant.components.sensor.systemmonitor
 psutil==4.3.1
@@ -319,11 +319,14 @@ pyasn1-modules==0.0.8
 # homeassistant.components.notify.xmpp
 pyasn1==0.1.9
 
+# homeassistant.components.device_tracker.bbox
+pybbox==0.0.5-alpha
+
 # homeassistant.components.device_tracker.bluetooth_tracker
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.7.4
+pychromecast==0.7.6
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -500,7 +503,7 @@ urllib3
 uvcclient==0.9.0
 
 # homeassistant.components.verisure
-vsure==0.11.0
+vsure==0.11.1
 
 # homeassistant.components.sensor.vasttrafik
 vtjp==0.1.11

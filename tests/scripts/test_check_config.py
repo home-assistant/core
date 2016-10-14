@@ -74,13 +74,15 @@ class TestCheckConfig(unittest.TestCase):
         with patch_yaml_files(files):
             res = check_config.check(get_test_config_dir('component.yaml'))
             change_yaml_files(res)
-            self.assertDictEqual({
-                'components': {},
-                'except': {'http': {'password': 'err123'}},
-                'secret_cache': {},
-                'secrets': {},
-                'yaml_files': ['.../component.yaml']
-            }, res)
+
+            self.assertDictEqual({}, res['components'])
+            self.assertDictEqual(
+                {'http': {'password': 'err123'}},
+                res['except']
+            )
+            self.assertDictEqual({}, res['secret_cache'])
+            self.assertDictEqual({}, res['secrets'])
+            self.assertListEqual(['.../component.yaml'], res['yaml_files'])
 
         files = {
             'platform.yaml': (BASE_CONFIG + 'mqtt:\n\n'

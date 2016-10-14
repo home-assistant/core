@@ -114,6 +114,7 @@ omit =
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
+    homeassistant/components/camera/synology.py
     homeassistant/components/climate/eq3btsmart.py
     homeassistant/components/climate/heatmiser.py
     homeassistant/components/climate/homematic.py
@@ -127,6 +128,7 @@ omit =
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
+    homeassistant/components/device_tracker/bbox.py
     homeassistant/components/device_tracker/bluetooth_tracker.py
     homeassistant/components/device_tracker/bluetooth_le_tracker.py
     homeassistant/components/device_tracker/bt_home_hub_5.py
@@ -216,6 +218,7 @@ omit =
     homeassistant/components/openalpr.py
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/sensor/arest.py
+    homeassistant/components/sensor/arwn.py
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/coinmarketcap.py

@@ -31,11 +31,13 @@ CONF_POLLING_INTENSITY = 'polling_intensity'
 CONF_POLLING_INTERVAL = 'polling_interval'
 CONF_USB_STICK_PATH = 'usb_path'
 CONF_CONFIG_PATH = 'config_path'
+CONF_IGNORED = 'ignored'
 
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
 DEFAULT_POLLING_INTERVAL = 60000
 DEFAULT_DEBUG = True
+DEFAULT_CONF_IGNORED = False
 DOMAIN = 'zwave'
 
 NETWORK = None
@@ -125,7 +127,7 @@ RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NAME): cv.string,
 })
 SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
     vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int),
     vol.Optional(const.ATTR_CONFIG_SIZE): vol.Coerce(int)
@@ -133,7 +135,8 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
 
 CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_POLLING_INTENSITY):
-        vol.All(cv.positive_int, vol.In([0, 1, 2, 3, 4, 5])),
+        vol.All(cv.positive_int),
+    vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -181,7 +184,8 @@ def _object_id(value):
     The object_id contains node_id and value instance id
     to not collide with other entity_ids.
     """
-    object_id = "{}_{}".format(slugify(_value_name(value)), value.node.node_id)
+    object_id = "{}_{}_{}".format(slugify(_value_name(value)),
+                                  value.node.node_id, value.index)
 
     # Add the instance id if there is more than one instance for the value
     if value.instance > 1:
@@ -323,6 +327,11 @@ def setup(hass, config):
             name = "{}.{}".format(component, _object_id(value))
 
             node_config = customize.get(name, {})
+
+            if node_config.get(CONF_IGNORED):
+                _LOGGER.info("Ignoring device %s", name)
+                return
+
             polling_intensity = convert(
                 node_config.get(CONF_POLLING_INTENSITY), int)
             if polling_intensity:
@@ -427,8 +436,7 @@ def setup(hass, config):
 
     def set_config_parameter(service):
         """Set a config parameter to a node."""
-        state = hass.states.get(service.data.get(ATTR_ENTITY_ID))
-        node_id = state.attributes.get(const.ATTR_NODE_ID)
+        node_id = service.data.get(const.ATTR_NODE_ID)
         node = NETWORK.nodes[node_id]
         param = service.data.get(const.ATTR_CONFIG_PARAMETER)
         value = service.data.get(const.ATTR_CONFIG_VALUE)
