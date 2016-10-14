@@ -160,7 +160,7 @@ IDENTIFY_SCHEMA = vol.Schema({
                                             [vol.In(PERMISSIONS)]),
     vol.Required(ATTR_PUSH_ID): cv.string,
     vol.Required(ATTR_DEVICE_ID): cv.string,
-    vol.Optional(ATTR_PUSH_SOUNDS): list,
+    vol.Optional(ATTR_PUSH_SOUNDS): list
 }, extra=vol.ALLOW_EXTRA)
 
 CONFIGURATION_FILE = "ios.conf"
@@ -222,6 +222,14 @@ def enabled_push_ids():
 def devices():
     """Return a dictionary of all identified devices."""
     return CONFIG_FILE[ATTR_DEVICES]
+
+
+def device_name_for_push_id(push_id):
+    """Return the device name for the push ID."""
+    for device_name, device in CONFIG_FILE[ATTR_DEVICES].items():
+        if device.get(ATTR_PUSH_ID) is push_id:
+            return device_name
+    return None
 
 
 def setup(hass, config):

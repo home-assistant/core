@@ -5,9 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.ios/
 """
 import logging
+from datetime import datetime, timezone
 import requests
 
 from homeassistant.components import ios
+
+import homeassistant.util.dt as dt_util
 
 from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_MESSAGE,
@@ -15,7 +18,7 @@ from homeassistant.components.notify import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PUSH_URL = "https://mj28d17jwj.execute-api.us-west-2.amazonaws.com/prod/push"
+PUSH_URL = "https://ios-push.home-assistant.io/push"
 
 DEPENDENCIES = ["ios"]
 
@@ -61,9 +64,24 @@ class iOSNotificationService(BaseNotificationService):
         for target in targets:
             data[ATTR_TARGET] = target
 
-            response = requests.put(PUSH_URL, json=data, timeout=10)
+            req = requests.post(PUSH_URL, json=data, timeout=10)
 
-            if response.status_code not in (200, 201):
-                _LOGGER.exception(
-                    "Error sending push notification. Response %d: %s:",
-                    response.status_code, response.reason)
+            if req.status_code is not 201:
+                message = req.json()["message"]
+                if req.status_code is 429:
+                    _LOGGER.warning(message)
+                elif req.status_code is 400 or 500:
+                    _LOGGER.error(message)
+
+            if req.status_code in (201, 429):
+                rate_limits = req.json()["rateLimits"]
+                resetsAt = dt_util.parse_datetime(rate_limits["resetsAt"])
+                resetsAtTime = resetsAt - datetime.now(timezone.utc)
+                rate_limit_msg = ("iOS push notification rate limits for %s: "
+                                  "%d sent, %d allowed, %d errors, "
+                                  "resets in %s")
+                _LOGGER.info(rate_limit_msg,
+                             ios.device_name_for_push_id(target),
+                             rate_limits["successful"],
+                             rate_limits["maximum"], rate_limits["errors"],
+                             str(resetsAtTime).split(".")[0])
