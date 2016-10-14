@@ -9,14 +9,15 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
-    BaseNotificationService)
+    ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pushbullet.py==0.10.0']
 
+ATTR_URL = 'url'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -40,7 +41,7 @@ def get_service(hass, config):
     return PushBulletNotificationService(pushbullet)
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, too-many-branches
 class PushBulletNotificationService(BaseNotificationService):
     """Implement the notification service for Pushbullet."""
 
@@ -79,11 +80,18 @@ class PushBulletNotificationService(BaseNotificationService):
         """
         targets = kwargs.get(ATTR_TARGET)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        data = kwargs.get(ATTR_DATA)
+        url = None
+        if data:
+            url = data.get(ATTR_URL, None)
         refreshed = False
 
         if not targets:
             # Backward compatebility, notify all devices in own account
-            self.pushbullet.push_note(title, message)
+            if url:
+                self.pushbullet.push_link(title, url, body=message)
+            else:
+                self.pushbullet.push_note(title, message)
             _LOGGER.info('Sent notification to self')
             return
 
@@ -98,7 +106,11 @@ class PushBulletNotificationService(BaseNotificationService):
             # Target is email, send directly, don't use a target object
             # This also seems works to send to all devices in own account
             if ttype == 'email':
-                self.pushbullet.push_note(title, message, email=tname)
+                if url:
+                    self.pushbullet.push_link(title, url,
+                                              body=message, email=tname)
+                else:
+                    self.pushbullet.push_note(title, message, email=tname)
                 _LOGGER.info('Sent notification to email %s', tname)
                 continue
 
@@ -117,7 +129,11 @@ class PushBulletNotificationService(BaseNotificationService):
             # Attempt push_note on a dict value. Keys are types & target
             # name. Dict pbtargets has all *actual* targets.
             try:
-                self.pbtargets[ttype][tname].push_note(title, message)
+                if url:
+                    self.pbtargets[ttype][tname].push_link(title, url,
+                                                           body=message)
+                else:
+                    self.pbtargets[ttype][tname].push_note(title, message)
                 _LOGGER.info('Sent notification to %s/%s', ttype, tname)
             except KeyError:
                 _LOGGER.error('No such target: %s/%s', ttype, tname)
