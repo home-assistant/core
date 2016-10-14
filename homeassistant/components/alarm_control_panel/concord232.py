@@ -77,7 +77,6 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         CONCORD232_GLOBAL.last_partition_update = datetime.datetime.now()
         self.update()
 
-
     @property
     def should_poll(self):
         """Polling needed."""
@@ -99,7 +98,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         return self._state
 
     def update(self):
-        """Updates values from API."""
+        """Update values from API."""
         try:
             part = self._alarm.list_partitions()[0]
         except requests.exceptions.ConnectionError as ex:
