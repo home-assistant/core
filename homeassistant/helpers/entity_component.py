@@ -203,7 +203,7 @@ class EntityComponent(object):
         """
         if self.group is None and self.group_name is not None:
             group = get_component('group')
-            self.group = group.Group(
+            self.group = group.Group.async_create_group(
                 self.hass, self.group_name, self.entities.keys(),
                 user_defined=False
             )

@@ -178,8 +178,8 @@ def _async_process_config(hass, config, component):
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
 
-        group = Group(hass, name, entity_ids, icon=icon, view=view,
-                      object_id=object_id)
+        group = Group.async_create_group(
+            hass, name, entity_ids, icon=icon, view=view, object_id=object_id)
         groups.append(group)
 
     hass.loop.create_task(component.async_add_entities(groups))
@@ -189,17 +189,16 @@ class Group(Entity):
     """Track a group of entity ids."""
 
     # pylint: disable=too-many-instance-attributes, too-many-arguments
-    def __init__(self, hass, name, entity_ids=None, user_defined=True,
-                 icon=None, view=False, object_id=None):
+    def __init__(self, hass, name, user_defined=True, icon=None, view=False):
         """Initialize a group.
 
-        This method must be run in the event loop.
+        This Object have factory function for creation.
         """
         self.hass = hass
         self._name = name
         self._state = STATE_UNKNOWN
         self._user_defined = user_defined
-        self._order = len(hass.states.async_entity_ids(DOMAIN))
+        self._order = None
         self._icon = icon
         self._view = view
         self.tracking = []
@@ -207,13 +206,39 @@ class Group(Entity):
         self.group_off = None
         self._assumed_state = False
         self._async_unsub_state_changed = None
+
+    @staticmethod
+    # pylint: disable=too-many-arguments
+    def create_group(hass, name, entity_ids=None, user_defined=True,
+                      icon=None, view=False, object_id=None):
+        """Initialize a group."""
+        return run_callback_threadsafe(
+            hass.loop, Group.async_create_object, hass, name, entity_ids,
+            user_defined, icon, view, object_id).result()
+
+    @staticmethod
+    # pylint: disable=too-many-arguments
+    def async_create_group(hass, name, entity_ids=None, user_defined=True,
+                            icon=None, view=False, object_id=None):
+        """Initialize a group.
+
+        This method must be run in the event loop.
+        """
+        self = Object(
+            hass, name, user_defined=user_defined, icon=icon, view=view)
+
+        # init data
+        self._order = len(hass.states.async_entity_ids(DOMAIN))
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id or name, hass=hass)
 
+        # run other async stuff
         if entity_ids is not None:
             self.async_update_tracked_entity_ids(entity_ids)
         else:
             hass.loop.create_task(self.async_update_ha_state(True))
+
+        return self
 
     @property
     def should_poll(self):

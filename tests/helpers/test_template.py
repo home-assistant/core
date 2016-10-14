@@ -403,9 +403,8 @@ class TestHelpersTemplate(unittest.TestCase):
             'longitude': self.hass.config.longitude,
         })
 
-        run_callback_threadsafe(
-            self.hass.loop, group.Group, self.hass, 'location group',
-            ['test_domain.object']).result()
+        group.Group.create_group(
+            self.hass, 'location group', ['test_domain.object'])
 
         self.hass.block_till_done()
 
@@ -427,9 +426,8 @@ class TestHelpersTemplate(unittest.TestCase):
             'longitude': self.hass.config.longitude,
         })
 
-        run_callback_threadsafe(
-            self.hass.loop, group.Group, self.hass, 'location group',
-            ['test_domain.object']).result()
+        group.Group.create_group(
+            self.hass, 'location group', ['test_domain.object'])
 
         self.hass.block_till_done()
 
