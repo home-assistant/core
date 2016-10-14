@@ -181,7 +181,8 @@ def _object_id(value):
     The object_id contains node_id and value instance id
     to not collide with other entity_ids.
     """
-    object_id = "{}_{}".format(slugify(_value_name(value)), value.node.node_id)
+    object_id = "{}_{}_{}".format(slugify(_value_name(value)),
+                                  value.node.node_id, value.index)
 
     # Add the instance id if there is more than one instance for the value
     if value.instance > 1:
