@@ -26,7 +26,7 @@ DOMAIN = 'zoneminder'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_URL): cv.string,
+        vol.Optional(CONF_URL, default="/zm/"): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string
     })
@@ -75,7 +75,7 @@ def login():
     )
 
     if req.status_code != requests.codes.ok:
-        _LOGGER.error("Connection error logging into the ZoneMinder")
+        _LOGGER.error("Connection error logging into ZoneMinder")
         return False
 
     return True
