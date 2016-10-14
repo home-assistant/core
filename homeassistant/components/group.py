@@ -228,6 +228,7 @@ class Group(Entity):
             hass, name, user_defined=user_defined, icon=icon, view=view)
 
         # init data
+        # pylint: disable=protected-access
         self._order = len(hass.states.async_entity_ids(DOMAIN))
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id or name, hass=hass)
