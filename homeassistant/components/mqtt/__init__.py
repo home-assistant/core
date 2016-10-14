@@ -405,7 +405,8 @@ class MQTT(object):
             payload = msg.payload.decode('utf-8')
         except AttributeError:
             _LOGGER.error("Illegal utf-8 unicode payload from "
-                          "MQTT topic: %s, Payload: %s", msg.topic, msg.payload)
+                          "MQTT topic: %s, Payload: %s", msg.topic,
+                          msg.payload)
         else:
             _LOGGER.debug("received message on %s: %s",
                           msg.topic, payload)
