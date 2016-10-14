@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_DEVICES)
 from homeassistant.components.switch import (
-    Switch, PLATFORM_SCHEMA)
+    SwitchDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(X10Switch(switch) for switch in config[CONF_DEVICES])
 
 
-class X10Switch(Switch):
+class X10Switch(SwitchDevice):
     """Representation of an X10 Switch."""
 
     def __init__(self, switch):
