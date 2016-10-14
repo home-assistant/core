@@ -7,44 +7,51 @@ https://home-assistant.io/components/media_player.samsungtv/
 import logging
 import socket
 
-from homeassistant.components.media_player import (
-    DOMAIN, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
-from homeassistant.helpers import validate_config
+import voluptuous as vol
 
-CONF_PORT = "port"
-CONF_TIMEOUT = "timeout"
+from homeassistant.components.media_player import (
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['samsungctl==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['samsungctl==0.5.1']
+CONF_TIMEOUT = 'timeout'
+
+DEFAULT_NAME = 'Samsung TV Remote'
+DEFAULT_PORT = 55000
+DEFAULT_TIMEOUT = 0
 
 SUPPORT_SAMSUNGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+})
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Samsung TV platform."""
-    # Validate that all required config options are given
-    if not validate_config({DOMAIN: config}, {DOMAIN: [CONF_HOST]}, _LOGGER):
-        return False
+    name = config.get(CONF_NAME)
 
-    # Default the entity_name to 'Samsung TV Remote'
-    name = config.get(CONF_NAME, 'Samsung TV Remote')
-
-    # Generate a config for the Samsung lib
+    # Generate a configuration for the Samsung library
     remote_config = {
-        "name": "HomeAssistant",
-        "description": config.get(CONF_NAME, ''),
-        "id": "ha.component.samsung",
-        "port": config.get(CONF_PORT, 55000),
-        "host": config.get(CONF_HOST),
-        "timeout": config.get(CONF_TIMEOUT, 0),
+        'name': 'HomeAssistant',
+        'description': config.get(CONF_NAME),
+        'id': 'ha.component.samsung',
+        'port': config.get(CONF_PORT),
+        'host': config.get(CONF_HOST),
+        'timeout': config.get(CONF_TIMEOUT),
     }
 
     add_devices([SamsungTVDevice(name, remote_config)])
@@ -56,7 +63,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     # pylint: disable=too-many-public-methods
     def __init__(self, name, config):
-        """Initialize the samsung device."""
+        """Initialize the Samsung device."""
         from samsungctl import Remote
         # Save a reference to the imported class
         self._remote_class = Remote
@@ -124,19 +131,19 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self.send_key("KEY_POWEROFF")
+        self.send_key('KEY_POWEROFF')
 
     def volume_up(self):
         """Volume up the media player."""
-        self.send_key("KEY_VOLUP")
+        self.send_key('KEY_VOLUP')
 
     def volume_down(self):
         """Volume down media player."""
-        self.send_key("KEY_VOLDOWN")
+        self.send_key('KEY_VOLDOWN')
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self.send_key("KEY_MUTE")
+        self.send_key('KEY_MUTE')
 
     def media_play_pause(self):
         """Simulate play pause media player."""
@@ -148,21 +155,21 @@ class SamsungTVDevice(MediaPlayerDevice):
     def media_play(self):
         """Send play command."""
         self._playing = True
-        self.send_key("KEY_PLAY")
+        self.send_key('KEY_PLAY')
 
     def media_pause(self):
         """Send media pause command to media player."""
         self._playing = False
-        self.send_key("KEY_PAUSE")
+        self.send_key('KEY_PAUSE')
 
     def media_next_track(self):
         """Send next track command."""
-        self.send_key("KEY_FF")
+        self.send_key('KEY_FF')
 
     def media_previous_track(self):
         """Send the previous track command."""
-        self.send_key("KEY_REWIND")
+        self.send_key('KEY_REWIND')
 
     def turn_on(self):
         """Turn the media player on."""
-        self.send_key("KEY_POWERON")
+        self.send_key('KEY_POWERON')

@@ -1,0 +1,9 @@
+# Describes the format for available binary_sensor services
+
+ffmpeg_restart:
+  description: Send a restart command to a ffmpeg based sensor (party mode).
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will restart. Platform dependent.
+      example: 'binary_sensor.ffmpeg_noise'

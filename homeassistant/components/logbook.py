@@ -4,8 +4,8 @@ Event parser and human readable log generator.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
 """
+import asyncio
 import logging
-import re
 from datetime import timedelta
 from itertools import groupby
 
@@ -18,18 +18,35 @@ from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-                                 STATE_NOT_HOME, STATE_OFF, STATE_ON)
-from homeassistant.core import DOMAIN as HA_DOMAIN
-from homeassistant.core import State
-from homeassistant.helpers import template
-from homeassistant.helpers.entity import split_entity_id
+                                 STATE_NOT_HOME, STATE_OFF, STATE_ON,
+                                 ATTR_HIDDEN)
+from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
+from homeassistant.util.async import run_callback_threadsafe
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'frontend']
 
-URL_LOGBOOK = re.compile(r'/api/logbook(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
-
 _LOGGER = logging.getLogger(__name__)
+
+CONF_EXCLUDE = 'exclude'
+CONF_INCLUDE = 'include'
+CONF_ENTITIES = 'entities'
+CONF_DOMAINS = 'domains'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        CONF_EXCLUDE: vol.Schema({
+            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
+                                                            [cv.string])
+        }),
+        CONF_INCLUDE: vol.Schema({
+            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
+                                                            [cv.string])
+        })
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 
@@ -42,13 +59,20 @@ ATTR_ENTITY_ID = 'entity_id'
 
 LOG_MESSAGE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
-    vol.Required(ATTR_MESSAGE): cv.string,
+    vol.Required(ATTR_MESSAGE): cv.template,
     vol.Optional(ATTR_DOMAIN): cv.slug,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
 })
 
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
+    """Add an entry to the logbook."""
+    run_callback_threadsafe(
+        hass.loop, async_log_entry, hass, name, message, domain, entity_id
+        ).result()
+
+
+def async_log_entry(hass, name, message, domain=None, entity_id=None):
     """Add an entry to the logbook."""
     data = {
         ATTR_NAME: name,
@@ -59,11 +83,12 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
         data[ATTR_DOMAIN] = domain
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
-    hass.bus.fire(EVENT_LOGBOOK_ENTRY, data)
+    hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data)
 
 
 def setup(hass, config):
     """Listen for download events to download files."""
+    @asyncio.coroutine
     def log_message(service):
         """Handle sending notification message service calls."""
         message = service.data[ATTR_MESSAGE]
@@ -71,10 +96,11 @@ def setup(hass, config):
         domain = service.data.get(ATTR_DOMAIN)
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
-        message = template.render(hass, message)
-        log_entry(hass, name, message, domain, entity_id)
+        message.hass = hass
+        message = message.async_render()
+        async_log_entry(hass, name, message, domain, entity_id)
 
-    hass.wsgi.register_view(LogbookView)
+    hass.wsgi.register_view(LogbookView(hass, config))
 
     register_built_in_panel(hass, 'logbook', 'Logbook',
                             'mdi:format-list-bulleted-type')
@@ -89,16 +115,16 @@ class LogbookView(HomeAssistantView):
 
     url = '/api/logbook'
     name = 'api:logbook'
-    extra_urls = ['/api/logbook/<date:date>']
+    extra_urls = ['/api/logbook/<datetime:datetime>']
 
-    def get(self, request, date=None):
+    def __init__(self, hass, config):
+        """Initilalize the logbook view."""
+        super().__init__(hass)
+        self.config = config
+
+    def get(self, request, datetime=None):
         """Retrieve logbook entries."""
-        if date:
-            start_day = dt_util.start_of_local_day(date)
-        else:
-            start_day = dt_util.start_of_local_day()
-
-        start_day = dt_util.as_utc(start_day)
+        start_day = dt_util.as_utc(datetime or dt_util.start_of_local_day())
         end_day = start_day + timedelta(days=1)
 
         events = recorder.get_model('Events')
@@ -106,6 +132,7 @@ class LogbookView(HomeAssistantView):
             (events.time_fired > start_day) &
             (events.time_fired < end_day))
         events = recorder.execute(query)
+        events = _exclude_events(events, self.config)
 
         return self.json(humanify(events))
 
@@ -183,10 +210,6 @@ def humanify(events):
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
 
-                # Do not report on new entities
-                if 'old_state' not in event.data:
-                    continue
-
                 to_state = State.from_dict(event.data.get('new_state'))
 
                 # If last_changed != last_updated only attributes have changed
@@ -202,6 +225,11 @@ def humanify(events):
                 # Skip all but the last sensor state
                 if domain == 'sensor' and \
                    event != last_sensor_event[to_state.entity_id]:
+                    continue
+
+                # Don't show continuous sensor value changes in the logbook
+                if domain == 'sensor' and \
+                   to_state.attributes.get('unit_of_measurement'):
                     continue
 
                 yield Entry(
@@ -242,6 +270,67 @@ def humanify(events):
                     event.time_fired, event.data.get(ATTR_NAME),
                     event.data.get(ATTR_MESSAGE), domain,
                     entity_id)
+
+
+def _exclude_events(events, config):
+    """Get lists of excluded entities and platforms."""
+    # pylint: disable=too-many-branches
+    excluded_entities = []
+    excluded_domains = []
+    included_entities = []
+    included_domains = []
+    exclude = config[DOMAIN].get(CONF_EXCLUDE)
+    if exclude:
+        excluded_entities = exclude[CONF_ENTITIES]
+        excluded_domains = exclude[CONF_DOMAINS]
+    include = config[DOMAIN].get(CONF_INCLUDE)
+    if include:
+        included_entities = include[CONF_ENTITIES]
+        included_domains = include[CONF_DOMAINS]
+
+    filtered_events = []
+    for event in events:
+        if event.event_type == EVENT_STATE_CHANGED:
+            to_state = State.from_dict(event.data.get('new_state'))
+            # Do not report on new entities
+            if not to_state:
+                continue
+
+            # exclude entities which are customized hidden
+            hidden = to_state.attributes.get(ATTR_HIDDEN, False)
+            if hidden:
+                continue
+
+            domain = to_state.domain
+            entity_id = to_state.entity_id
+            # filter if only excluded is configured for this domain
+            if excluded_domains and domain in excluded_domains and \
+                    not included_domains:
+                if (included_entities and entity_id not in included_entities) \
+                        or not included_entities:
+                    continue
+            # filter if only included is configured for this domain
+            elif not excluded_domains and included_domains and \
+                    domain not in included_domains:
+                if (included_entities and entity_id not in included_entities) \
+                        or not included_entities:
+                    continue
+            # filter if included and excluded is configured for this domain
+            elif excluded_domains and included_domains and \
+                    (domain not in included_domains or
+                     domain in excluded_domains):
+                if (included_entities and entity_id not in included_entities) \
+                        or not included_entities or domain in excluded_domains:
+                    continue
+            # filter if only included is configured for this entity
+            elif not excluded_domains and not included_domains and \
+                    included_entities and entity_id not in included_entities:
+                continue
+            # check if logbook entry is excluded for this entity
+            if entity_id in excluded_entities:
+                continue
+        filtered_events.append(event)
+    return filtered_events
 
 
 def _entry_message_from_state(domain, state):

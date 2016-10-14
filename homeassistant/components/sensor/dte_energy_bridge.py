@@ -1,33 +1,48 @@
-"""Support for monitoring energy usage using the DTE energy bridge."""
+"""
+Support for monitoring energy usage using the DTE energy bridge.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.dte_energy_bridge/
+"""
 import logging
 
+import voluptuous as vol
+
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_IP_ADDRESS = 'ip'
+
+DEFAULT_NAME = 'Current Energy Usage'
+
 ICON = 'mdi:flash'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_IP_ADDRESS): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the DTE energy bridge sensor."""
-    ip_address = config.get('ip')
-    if not ip_address:
-        _LOGGER.error(
-            "Configuration Error"
-            "'ip' of the DTE energy bridge is required")
-        return None
-    dev = [DteEnergyBridgeSensor(ip_address)]
-    add_devices(dev)
+    name = config.get(CONF_NAME)
+    ip_address = config.get(CONF_IP_ADDRESS)
+
+    add_devices([DteEnergyBridgeSensor(ip_address, name)])
 
 
 # pylint: disable=too-many-instance-attributes
 class DteEnergyBridgeSensor(Entity):
-    """Implementation of an DTE Energy Bridge sensor."""
+    """Implementation of a DTE Energy Bridge sensor."""
 
-    def __init__(self, ip_address):
+    def __init__(self, ip_address, name):
         """Initialize the sensor."""
         self._url = "http://{}/instantaneousdemand".format(ip_address)
-        self._name = "Current Energy Usage"
+        self._name = name
         self._unit_of_measurement = "kW"
         self._state = None
 

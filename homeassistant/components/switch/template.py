@@ -4,62 +4,54 @@ Support for switches which integrates with other components.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.template/
 """
+import asyncio
 import logging
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
+import voluptuous as vol
+
+from homeassistant.core import callback
+from homeassistant.components.switch import (
+    ENTITY_ID_FORMAT, SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
-    ATTR_ENTITY_ID, MATCH_ALL)
+    ATTR_ENTITY_ID, CONF_SWITCHES)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.script import Script
-from homeassistant.helpers import template
 from homeassistant.helpers.event import track_state_change
-from homeassistant.util import slugify
+from homeassistant.helpers.script import Script
+import homeassistant.helpers.config_validation as cv
 
-CONF_SWITCHES = 'switches'
+_LOGGER = logging.getLogger(__name__)
+_VALID_STATES = [STATE_ON, STATE_OFF, 'true', 'false']
 
 ON_ACTION = 'turn_on'
 OFF_ACTION = 'turn_off'
 
-_LOGGER = logging.getLogger(__name__)
-_VALID_STATES = [STATE_ON, STATE_OFF, 'true', 'false']
+SWITCH_SCHEMA = vol.Schema({
+    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Required(ON_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Required(OFF_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+})
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Template switch."""
     switches = []
-    if config.get(CONF_SWITCHES) is None:
-        _LOGGER.error("Missing configuration data for switch platform")
-        return False
 
     for device, device_config in config[CONF_SWITCHES].items():
-
-        if device != slugify(device):
-            _LOGGER.error("Found invalid key for switch.template: %s. "
-                          "Use %s instead", device, slugify(device))
-            continue
-
-        if not isinstance(device_config, dict):
-            _LOGGER.error("Missing configuration data for switch %s", device)
-            continue
-
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        state_template = device_config.get(CONF_VALUE_TEMPLATE)
-        on_action = device_config.get(ON_ACTION)
-        off_action = device_config.get(OFF_ACTION)
-        if state_template is None:
-            _LOGGER.error(
-                "Missing %s for switch %s", CONF_VALUE_TEMPLATE, device)
-            continue
-
-        if on_action is None or off_action is None:
-            _LOGGER.error(
-                "Missing action for switch %s", device)
-            continue
-
-        entity_ids = device_config.get(ATTR_ENTITY_ID, MATCH_ALL)
+        state_template = device_config[CONF_VALUE_TEMPLATE]
+        on_action = device_config[ON_ACTION]
+        off_action = device_config[OFF_ACTION]
+        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
+                      state_template.extract_entities())
 
         switches.append(
             SwitchTemplate(
@@ -90,18 +82,19 @@ class SwitchTemplate(SwitchDevice):
                                             hass=hass)
         self._name = friendly_name
         self._template = state_template
+        state_template.hass = hass
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
         self._state = False
 
         self.update()
 
+        @callback
         def template_switch_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
-            self.update_ha_state(True)
+            hass.loop.create_task(self.async_update_ha_state(True))
 
-        track_state_change(hass, entity_ids,
-                           template_switch_state_listener)
+        track_state_change(hass, entity_ids, template_switch_state_listener)
 
     @property
     def name(self):
@@ -131,10 +124,11 @@ class SwitchTemplate(SwitchDevice):
         """Fire the off action."""
         self._off_script.run()
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Update the state from the template."""
         try:
-            state = template.render(self.hass, self._template).lower()
+            state = self._template.async_render().lower()
 
             if state in _VALID_STATES:
                 self._state = state in ('true', STATE_ON)

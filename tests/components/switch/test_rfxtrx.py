@@ -1,12 +1,15 @@
 """The tests for the Rfxtrx switch platform."""
 import unittest
 
+import pytest
+
 from homeassistant.bootstrap import _setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
 
 from tests.common import get_test_home_assistant
 
 
+@pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
 class TestSwitchRfxtrx(unittest.TestCase):
     """Test the Rfxtrx switch platform."""
 
@@ -40,7 +43,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
-                           {'710000141010170': {
+                           {710000141010170: {
                                'name': 'Test',
                                rfxtrx_core.ATTR_FIREEVENT: True}
                             }}}))

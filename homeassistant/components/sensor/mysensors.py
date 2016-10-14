@@ -11,7 +11,6 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -47,12 +46,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             pres.S_SCENE_CONTROLLER: [set_req.V_SCENE_ON,
                                       set_req.V_SCENE_OFF],
         }
-        if float(gateway.version) < 1.5:
+        if float(gateway.protocol_version) < 1.5:
             map_sv_types.update({
                 pres.S_AIR_QUALITY: [set_req.V_DUST_LEVEL],
                 pres.S_DUST: [set_req.V_DUST_LEVEL],
             })
-        if float(gateway.version) >= 1.5:
+        if float(gateway.protocol_version) >= 1.5:
             map_sv_types.update({
                 pres.S_COLOR_SENSOR: [set_req.V_RGB],
                 pres.S_MULTIMETER: [set_req.V_VOLTAGE,
@@ -66,6 +65,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             })
             map_sv_types[pres.S_LIGHT_LEVEL].append(set_req.V_LEVEL)
 
+        if float(gateway.protocol_version) >= 2.0:
+            map_sv_types.update({
+                pres.S_INFO: [set_req.V_TEXT],
+                pres.S_GAS: [set_req.V_FLOW, set_req.V_VOLUME],
+                pres.S_GPS: [set_req.V_POSITION],
+                pres.S_WATER_QUALITY: [set_req.V_TEMP, set_req.V_PH,
+                                       set_req.V_ORP, set_req.V_EC]
+            })
+            map_sv_types[pres.S_CUSTOM].append(set_req.V_CUSTOM)
+            map_sv_types[pres.S_POWER].extend(
+                [set_req.V_VAR, set_req.V_VA, set_req.V_POWER_FACTOR])
+
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
             map_sv_types, devices, add_devices, MySensorsSensor))
@@ -73,6 +84,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class MySensorsSensor(mysensors.MySensorsDeviceEntity, Entity):
     """Representation of a MySensors Sensor child node."""
+
+    @property
+    def force_update(self):
+        """Return True if state updates should be forced.
+
+        If True, a state change will be triggered anytime the state property is
+        updated, not just when the value changes.
+        """
+        return True
 
     @property
     def state(self):
@@ -99,9 +119,16 @@ class MySensorsSensor(mysensors.MySensorsDeviceEntity, Entity):
             set_req.V_VOLTAGE: 'V',
             set_req.V_CURRENT: 'A',
         }
-        if float(self.gateway.version) >= 1.5:
+        if float(self.gateway.protocol_version) >= 1.5:
             if set_req.V_UNIT_PREFIX in self._values:
                 return self._values[
                     set_req.V_UNIT_PREFIX]
             unit_map.update({set_req.V_PERCENTAGE: '%'})
+        if float(self.gateway.protocol_version) >= 2.0:
+            unit_map.update({
+                set_req.V_ORP: 'mV',
+                set_req.V_EC: 'μS/cm',
+                set_req.V_VAR: 'var',
+                set_req.V_VA: 'VA',
+            })
         return unit_map.get(self.value_type)

@@ -6,18 +6,20 @@ import os
 import sys
 from collections import defaultdict
 from threading import RLock
+
+from types import ModuleType
 from typing import Any, Optional, Dict
 
 import voluptuous as vol
-
+from voluptuous.humanize import humanize_error
 
 import homeassistant.components as core_components
-from homeassistant.components import group, persistent_notification
+from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
 import homeassistant.core as core
-import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
 import homeassistant.util.package as pkg_util
+from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -30,11 +32,15 @@ _CURRENT_SETUP = []
 ATTR_COMPONENT = 'component'
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
+_PERSISTENT_PLATFORMS = set()
+_PERSISTENT_VALIDATION = set()
 
 
-def setup_component(hass, domain, config=None):
+def setup_component(hass: core.HomeAssistant, domain: str,
+                    config: Optional[Dict]=None) -> bool:
     """Setup a component and all its dependencies."""
     if domain in hass.config.components:
+        _LOGGER.debug('Component %s already set up.', domain)
         return True
 
     _ensure_loader_prepared(hass)
@@ -50,12 +56,14 @@ def setup_component(hass, domain, config=None):
 
     for component in components:
         if not _setup_component(hass, component, config):
+            _LOGGER.error('Component %s failed to setup', component)
             return False
 
     return True
 
 
-def _handle_requirements(hass, component, name):
+def _handle_requirements(hass: core.HomeAssistant, component,
+                         name: str) -> bool:
     """Install the requirements for a component."""
     if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
         return True
@@ -69,9 +77,10 @@ def _handle_requirements(hass, component, name):
     return True
 
 
-def _setup_component(hass, domain, config):
+def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
     """Setup a component for Home Assistant."""
     # pylint: disable=too-many-return-statements,too-many-branches
+    # pylint: disable=too-many-statements
     if domain in hass.config.components:
         return True
 
@@ -85,72 +94,23 @@ def _setup_component(hass, domain, config):
                           domain, domain)
             return False
 
+        config = prepare_setup_component(hass, config, domain)
+
+        if config is None:
+            return False
+
         component = loader.get_component(domain)
-        missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
-                        if dep not in hass.config.components]
-
-        if missing_deps:
-            _LOGGER.error(
-                'Not initializing %s because not all dependencies loaded: %s',
-                domain, ", ".join(missing_deps))
-            return False
-
-        if hasattr(component, 'CONFIG_SCHEMA'):
-            try:
-                config = component.CONFIG_SCHEMA(config)
-            except vol.MultipleInvalid as ex:
-                cv.log_exception(_LOGGER, ex, domain, config)
-                return False
-
-        elif hasattr(component, 'PLATFORM_SCHEMA'):
-            platforms = []
-            for p_name, p_config in config_per_platform(config, domain):
-                # Validate component specific platform schema
-                try:
-                    p_validated = component.PLATFORM_SCHEMA(p_config)
-                except vol.MultipleInvalid as ex:
-                    cv.log_exception(_LOGGER, ex, domain, p_config)
-                    return False
-
-                # Not all platform components follow same pattern for platforms
-                # So if p_name is None we are not going to validate platform
-                # (the automation component is one of them)
-                if p_name is None:
-                    platforms.append(p_validated)
-                    continue
-
-                platform = prepare_setup_platform(hass, config, domain,
-                                                  p_name)
-
-                if platform is None:
-                    return False
-
-                # Validate platform specific schema
-                if hasattr(platform, 'PLATFORM_SCHEMA'):
-                    try:
-                        p_validated = platform.PLATFORM_SCHEMA(p_validated)
-                    except vol.MultipleInvalid as ex:
-                        cv.log_exception(_LOGGER, ex, '{}.{}'
-                                         .format(domain, p_name), p_validated)
-                        return False
-
-                platforms.append(p_validated)
-
-            # Create a copy of the configuration with all config for current
-            # component removed and add validated config back in.
-            filter_keys = extract_domain_configs(config, domain)
-            config = {key: value for key, value in config.items()
-                      if key not in filter_keys}
-            config[domain] = platforms
-
-        if not _handle_requirements(hass, component, domain):
-            return False
-
         _CURRENT_SETUP.append(domain)
 
         try:
-            if not component.setup(hass, config):
+            result = component.setup(hass, config)
+            if result is False:
                 _LOGGER.error('component %s failed to initialize', domain)
+                return False
+            elif result is not True:
+                _LOGGER.error('component %s did not return boolean if setup '
+                              'was successful. Disabling component.', domain)
+                loader.set_component(domain, None)
                 return False
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error during setup of component %s', domain)
@@ -162,16 +122,87 @@ def _setup_component(hass, domain, config):
 
         # Assumption: if a component does not depend on groups
         # it communicates with devices
-        if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
+        if 'group' not in getattr(component, 'DEPENDENCIES', []) and \
+           hass.pool.worker_count <= 10:
             hass.pool.add_worker()
 
         hass.bus.fire(
-            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
+            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
+        )
 
         return True
 
 
-def prepare_setup_platform(hass, config, domain, platform_name):
+def prepare_setup_component(hass: core.HomeAssistant, config: dict,
+                            domain: str):
+    """Prepare setup of a component and return processed config."""
+    # pylint: disable=too-many-return-statements
+    component = loader.get_component(domain)
+    missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
+                    if dep not in hass.config.components]
+
+    if missing_deps:
+        _LOGGER.error(
+            'Not initializing %s because not all dependencies loaded: %s',
+            domain, ", ".join(missing_deps))
+        return None
+
+    if hasattr(component, 'CONFIG_SCHEMA'):
+        try:
+            config = component.CONFIG_SCHEMA(config)
+        except vol.Invalid as ex:
+            log_exception(ex, domain, config, hass)
+            return None
+
+    elif hasattr(component, 'PLATFORM_SCHEMA'):
+        platforms = []
+        for p_name, p_config in config_per_platform(config, domain):
+            # Validate component specific platform schema
+            try:
+                p_validated = component.PLATFORM_SCHEMA(p_config)
+            except vol.Invalid as ex:
+                log_exception(ex, domain, config, hass)
+                continue
+
+            # Not all platform components follow same pattern for platforms
+            # So if p_name is None we are not going to validate platform
+            # (the automation component is one of them)
+            if p_name is None:
+                platforms.append(p_validated)
+                continue
+
+            platform = prepare_setup_platform(hass, config, domain,
+                                              p_name)
+
+            if platform is None:
+                continue
+
+            # Validate platform specific schema
+            if hasattr(platform, 'PLATFORM_SCHEMA'):
+                try:
+                    p_validated = platform.PLATFORM_SCHEMA(p_validated)
+                except vol.Invalid as ex:
+                    log_exception(ex, '{}.{}'.format(domain, p_name),
+                                  p_validated, hass)
+                    continue
+
+            platforms.append(p_validated)
+
+        # Create a copy of the configuration with all config for current
+        # component removed and add validated config back in.
+        filter_keys = extract_domain_configs(config, domain)
+        config = {key: value for key, value in config.items()
+                  if key not in filter_keys}
+        config[domain] = platforms
+
+    if not _handle_requirements(hass, component, domain):
+        return None
+
+    return config
+
+
+def prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
+                           platform_name: str) -> Optional[ModuleType]:
     """Load a platform and makes sure dependencies are setup."""
     _ensure_loader_prepared(hass)
 
@@ -182,6 +213,13 @@ def prepare_setup_platform(hass, config, domain, platform_name):
     # Not found
     if platform is None:
         _LOGGER.error('Unable to find platform %s', platform_path)
+
+        _PERSISTENT_PLATFORMS.add(platform_path)
+        message = ('Unable to find the following platforms: ' +
+                   ', '.join(list(_PERSISTENT_PLATFORMS)) +
+                   '(please check your configuration)')
+        persistent_notification.create(
+            hass, message, 'Invalid platforms', 'platform_errors')
         return None
 
     # Already loaded
@@ -221,14 +259,14 @@ def from_config_dict(config: Dict[str, Any],
         if config_dir is not None:
             config_dir = os.path.abspath(config_dir)
             hass.config.config_dir = config_dir
-            _mount_local_lib_path(config_dir)
+            mount_local_lib_path(config_dir)
 
     core_config = config.get(core.DOMAIN, {})
 
     try:
         conf_util.process_ha_core_config(hass, core_config)
     except vol.Invalid as ex:
-        cv.log_exception(_LOGGER, ex, 'homeassistant', core_config)
+        log_exception(ex, 'homeassistant', core_config, hass)
         return None
 
     conf_util.process_ha_config_upgrade(hass)
@@ -253,22 +291,29 @@ def from_config_dict(config: Dict[str, Any],
     components = set(key.split(' ')[0] for key in config.keys()
                      if key != core.DOMAIN)
 
-    if not core_components.setup(hass, config):
-        _LOGGER.error('Home Assistant core failed to initialize. '
-                      'Further initialization aborted.')
-        return hass
+    # Setup in a thread to avoid blocking
+    def component_setup():
+        """Set up a component."""
+        if not core_components.setup(hass, config):
+            _LOGGER.error('Home Assistant core failed to initialize. '
+                          'Further initialization aborted.')
+            return hass
 
-    persistent_notification.setup(hass, config)
+        persistent_notification.setup(hass, config)
 
-    _LOGGER.info('Home Assistant core initialized')
+        _LOGGER.info('Home Assistant core initialized')
 
-    # Give event decorators access to HASS
-    event_decorators.HASS = hass
-    service.HASS = hass
+        # Give event decorators access to HASS
+        event_decorators.HASS = hass
+        service.HASS = hass
 
-    # Setup the components
-    for domain in loader.load_order_components(components):
-        _setup_component(hass, domain, config)
+        # Setup the components
+        for domain in loader.load_order_components(components):
+            _setup_component(hass, domain, config)
+
+    hass.loop.run_until_complete(
+        hass.loop.run_in_executor(None, component_setup)
+    )
 
     return hass
 
@@ -289,7 +334,7 @@ def from_config_file(config_path: str,
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
     hass.config.config_dir = config_dir
-    _mount_local_lib_path(config_dir)
+    mount_local_lib_path(config_dir)
 
     enable_logging(hass, verbose, log_rotate_days)
 
@@ -297,12 +342,15 @@ def from_config_file(config_path: str,
         config_dict = conf_util.load_yaml_config_file(config_path)
     except HomeAssistantError:
         return None
+    finally:
+        clear_secret_cache()
 
     return from_config_dict(config_dict, hass, enable_log=False,
                             skip_pip=skip_pip)
 
 
-def enable_logging(hass, verbose=False, log_rotate_days=None):
+def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
+                   log_rotate_days=None) -> None:
     """Setup the logging."""
     logging.basicConfig(level=logging.INFO)
     fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
@@ -353,12 +401,44 @@ def enable_logging(hass, verbose=False, log_rotate_days=None):
             'Unable to setup error log %s (access denied)', err_log_path)
 
 
-def _ensure_loader_prepared(hass):
+def _ensure_loader_prepared(hass: core.HomeAssistant) -> None:
     """Ensure Home Assistant loader is prepared."""
     if not loader.PREPARED:
         loader.prepare(hass)
 
 
-def _mount_local_lib_path(config_dir):
+def log_exception(ex, domain, config, hass=None):
+    """Generate log exception for config validation."""
+    message = 'Invalid config for [{}]: '.format(domain)
+    if hass is not None:
+        _PERSISTENT_VALIDATION.add(domain)
+        message = ('The following platforms contain invalid configuration:  ' +
+                   ', '.join(list(_PERSISTENT_VALIDATION)) +
+                   '  (please check your configuration)')
+        persistent_notification.create(
+            hass, message, 'Invalid config', 'invalid_config')
+
+    if 'extra keys not allowed' in ex.error_message:
+        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
+                   .format(ex.path[-1], domain, domain,
+                           '->'.join('%s' % m for m in ex.path))
+    else:
+        message += '{}.'.format(humanize_error(config, ex))
+
+    if hasattr(config, '__line__'):
+        message += " (See {}:{})".format(
+            config.__config_file__, config.__line__ or '?')
+
+    if domain != 'homeassistant':
+        message += (' Please check the docs at '
+                    'https://home-assistant.io/components/{}/'.format(domain))
+
+    _LOGGER.error(message)
+
+
+def mount_local_lib_path(config_dir: str) -> str:
     """Add local library to Python Path."""
-    sys.path.insert(0, os.path.join(config_dir, 'deps'))
+    deps_dir = os.path.join(config_dir, 'deps')
+    if deps_dir not in sys.path:
+        sys.path.insert(0, os.path.join(config_dir, 'deps'))
+    return deps_dir

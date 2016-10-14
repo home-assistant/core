@@ -4,10 +4,13 @@
     <meta charset="utf-8">
     <title>Home Assistant</title>
 
-    <link rel='manifest' href='/static/manifest.json'>
+    <link rel='manifest' href='/manifest.json'>
     <link rel='icon' href='/static/icons/favicon.ico'>
     <link rel='apple-touch-icon' sizes='180x180'
           href='/static/icons/favicon-apple-180x180.png'>
+    {% for panel in panels.values() -%}
+      <link rel='prefetch' href='{{ panel.url }}'>
+    {% endfor -%}
     <meta name='apple-mobile-web-app-capable' content='yes'>
     <meta name="msapplication-square70x70logo" content="/static/icons/tile-win-70x70.png"/>
     <meta name="msapplication-square150x150logo" content="/static/icons/tile-win-150x150.png"/>
@@ -73,7 +76,7 @@
           .classList.add('error');
       };
       window.noAuth = {{ no_auth }};
-      window.Polymer = {lazyRegister: true};
+      window.Polymer = {lazyRegister: true, useNativeCSSProperties: true, dom: 'shady'};
     </script>
   </head>
   <body>
@@ -86,9 +89,9 @@
     {# <script src='/static/home-assistant-polymer/build/_demo_data_compiled.js'></script> #}
     <script src='{{ core_url }}'></script>
     <link rel='import' href='{{ ui_url }}' onerror='initError()'>
-    {% if panel_url %}
+    {% if panel_url -%}
       <link rel='import' href='{{ panel_url }}' onerror='initError()' async>
-    {% endif %}
+    {% endif -%}
     <link rel='import' href='{{ icons_url }}' async>
     <script>
       var webComponentsSupported = (
@@ -96,11 +99,11 @@
         'import' in document.createElement('link') &&
         'content' in document.createElement('template'));
       if (!webComponentsSupported) {
-        var e = document.createElement('script')
-        e.async = true
+        var e = document.createElement('script');
+        e.async = true;
         e.onerror = initError;
-        e.src = '/static/webcomponents-lite.min.js'
-        document.head.appendChild(script)
+        e.src = '/static/webcomponents-lite.min.js';
+        document.head.appendChild(e);
       }
     </script>
   </body>

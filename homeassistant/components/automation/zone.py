@@ -6,9 +6,10 @@ at https://home-assistant.io/components/automation/#zone-trigger
 """
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_EVENT, CONF_ENTITY_ID, CONF_ZONE, MATCH_ALL, CONF_PLATFORM)
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers import (
     condition, config_validation as cv, location)
 
@@ -25,12 +26,13 @@ TRIGGER_SCHEMA = vol.Schema({
 })
 
 
-def trigger(hass, config, action):
+def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
     event = config.get(CONF_EVENT)
 
+    @callback
     def zone_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
         if from_s and not location.has_location(from_s) or \
@@ -47,7 +49,7 @@ def trigger(hass, config, action):
         # pylint: disable=too-many-boolean-expressions
         if event == EVENT_ENTER and not from_match and to_match or \
            event == EVENT_LEAVE and from_match and not to_match:
-            action({
+            hass.async_run_job(action, {
                 'trigger': {
                     'platform': 'zone',
                     'entity_id': entity,
@@ -58,7 +60,5 @@ def trigger(hass, config, action):
                 },
             })
 
-    track_state_change(
-        hass, entity_id, zone_automation_listener, MATCH_ALL, MATCH_ALL)
-
-    return True
+    return async_track_state_change(hass, entity_id, zone_automation_listener,
+                                    MATCH_ALL, MATCH_ALL)

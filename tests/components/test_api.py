@@ -61,7 +61,7 @@ class TestAPI(unittest.TestCase):
 
     def tearDown(self):
         """Stop everything that was started."""
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
     def test_api_list_state_entities(self):
         """Test if the debug interface allows us to list state entities."""
@@ -139,7 +139,8 @@ class TestAPI(unittest.TestCase):
         hass.states.set("test.test", "not_to_be_set")
 
         events = []
-        hass.bus.listen(const.EVENT_STATE_CHANGED, events.append)
+        hass.bus.listen(const.EVENT_STATE_CHANGED,
+                        lambda ev: events.append(ev))
 
         requests.post(_url(const.URL_API_STATES_ENTITY.format("test.test")),
                       data=json.dumps({"state": "not_to_be_set"}),
@@ -169,7 +170,7 @@ class TestAPI(unittest.TestCase):
             _url(const.URL_API_EVENTS_EVENT.format("test.event_no_data")),
             headers=HA_HEADERS)
 
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
         self.assertEqual(1, len(test_value))
 
@@ -193,7 +194,7 @@ class TestAPI(unittest.TestCase):
             data=json.dumps({"test": 1}),
             headers=HA_HEADERS)
 
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
         self.assertEqual(1, len(test_value))
 
@@ -213,7 +214,7 @@ class TestAPI(unittest.TestCase):
             data=json.dumps('not an object'),
             headers=HA_HEADERS)
 
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
         self.assertEqual(400, req.status_code)
         self.assertEqual(0, len(test_value))
@@ -224,7 +225,7 @@ class TestAPI(unittest.TestCase):
             data=json.dumps([1, 2, 3]),
             headers=HA_HEADERS)
 
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
         self.assertEqual(400, req.status_code)
         self.assertEqual(0, len(test_value))
@@ -294,7 +295,7 @@ class TestAPI(unittest.TestCase):
                 "test_domain", "test_service")),
             headers=HA_HEADERS)
 
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
         self.assertEqual(1, len(test_value))
 
@@ -318,7 +319,7 @@ class TestAPI(unittest.TestCase):
             data=json.dumps({"test": 1}),
             headers=HA_HEADERS)
 
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
         self.assertEqual(1, len(test_value))
 

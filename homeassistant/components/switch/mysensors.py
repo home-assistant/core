@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             pres.S_LOCK: MySensorsSwitch,
             pres.S_IR: MySensorsIRSwitch,
         }
-        if float(gateway.version) >= 1.5:
+        if float(gateway.protocol_version) >= 1.5:
             map_sv_types.update({
                 pres.S_BINARY: [set_req.V_STATUS, set_req.V_LIGHT],
                 pres.S_SPRINKLER: [set_req.V_STATUS],
@@ -72,6 +72,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 pres.S_SOUND: MySensorsSwitch,
                 pres.S_VIBRATION: MySensorsSwitch,
                 pres.S_MOISTURE: MySensorsSwitch,
+            })
+        if float(gateway.protocol_version) >= 2.0:
+            map_sv_types.update({
+                pres.S_WATER_QUALITY: [set_req.V_STATUS],
+            })
+            device_class_map.update({
+                pres.S_WATER_QUALITY: MySensorsSwitch,
             })
 
         devices = {}

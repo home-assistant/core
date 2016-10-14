@@ -72,15 +72,20 @@ def load_platform(hass, component, platform, discovered=None,
 
     Use `listen_platform` to register a callback for these events.
     """
-    if component is not None:
-        bootstrap.setup_component(hass, component, hass_config)
+    def discover_platform():
+        """Discover platform job."""
+        # No need to fire event if we could not setup component
+        if not bootstrap.setup_component(hass, component, hass_config):
+            return
 
-    data = {
-        ATTR_SERVICE: EVENT_LOAD_PLATFORM.format(component),
-        ATTR_PLATFORM: platform,
-    }
+        data = {
+            ATTR_SERVICE: EVENT_LOAD_PLATFORM.format(component),
+            ATTR_PLATFORM: platform,
+        }
 
-    if discovered is not None:
-        data[ATTR_DISCOVERED] = discovered
+        if discovered is not None:
+            data[ATTR_DISCOVERED] = discovered
 
-    hass.bus.fire(EVENT_PLATFORM_DISCOVERED, data)
+        hass.bus.fire(EVENT_PLATFORM_DISCOVERED, data)
+
+    hass.add_job(discover_platform)

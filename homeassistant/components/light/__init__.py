@@ -30,6 +30,17 @@ ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
+# Bitfield of features supported by the light entity
+ATTR_SUPPORTED_FEATURES = 'supported_features'
+SUPPORT_BRIGHTNESS = 1
+SUPPORT_COLOR_TEMP = 2
+SUPPORT_EFFECT = 4
+SUPPORT_FLASH = 8
+SUPPORT_RGB_COLOR = 16
+SUPPORT_TRANSITION = 32
+SUPPORT_XY_COLOR = 64
+SUPPORT_WHITE_VALUE = 128
+
 # Integer that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
 
@@ -38,6 +49,7 @@ ATTR_RGB_COLOR = "rgb_color"
 ATTR_XY_COLOR = "xy_color"
 ATTR_COLOR_TEMP = "color_temp"
 ATTR_COLOR_NAME = "color_name"
+ATTR_WHITE_VALUE = "white_value"
 
 # int with value 0 .. 255 representing brightness of the light.
 ATTR_BRIGHTNESS = "brightness"
@@ -63,6 +75,8 @@ PROP_TO_ATTR = {
     'color_temp': ATTR_COLOR_TEMP,
     'rgb_color': ATTR_RGB_COLOR,
     'xy_color': ATTR_XY_COLOR,
+    'white_value': ATTR_WHITE_VALUE,
+    'supported_features': ATTR_SUPPORTED_FEATURES,
 }
 
 # Service call validation schemas
@@ -79,7 +93,9 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
                             vol.Coerce(tuple)),
     ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
                            vol.Coerce(tuple)),
-    ATTR_COLOR_TEMP: vol.All(int, vol.Range(min=154, max=500)),
+    ATTR_COLOR_TEMP: vol.All(int, vol.Range(min=color_util.HASS_COLOR_MIN,
+                                            max=color_util.HASS_COLOR_MAX)),
+    ATTR_WHITE_VALUE: vol.All(int, vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: vol.In([EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_WHITE]),
 })
@@ -87,6 +103,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
     ATTR_TRANSITION: VALID_TRANSITION,
+    ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
 })
 
 LIGHT_TOGGLE_SCHEMA = vol.Schema({
@@ -109,8 +126,8 @@ def is_on(hass, entity_id=None):
 
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, color_temp=None, profile=None,
-            flash=None, effect=None, color_name=None):
+            rgb_color=None, xy_color=None, color_temp=None, white_value=None,
+            profile=None, flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -121,6 +138,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_RGB_COLOR, rgb_color),
             (ATTR_XY_COLOR, xy_color),
             (ATTR_COLOR_TEMP, color_temp),
+            (ATTR_WHITE_VALUE, white_value),
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
@@ -272,6 +290,11 @@ class Light(ToggleEntity):
         return None
 
     @property
+    def white_value(self):
+        """Return the white value of this light between 0..255."""
+        return None
+
+    @property
     def state_attributes(self):
         """Return optional state attributes."""
         data = {}
@@ -279,7 +302,7 @@ class Light(ToggleEntity):
         if self.is_on:
             for prop, attr in PROP_TO_ATTR.items():
                 value = getattr(self, prop)
-                if value:
+                if value is not None:
                     data[attr] = value
 
             if ATTR_RGB_COLOR not in data and ATTR_XY_COLOR in data and \
@@ -287,5 +310,12 @@ class Light(ToggleEntity):
                 data[ATTR_RGB_COLOR] = color_util.color_xy_brightness_to_RGB(
                     data[ATTR_XY_COLOR][0], data[ATTR_XY_COLOR][1],
                     data[ATTR_BRIGHTNESS])
+        else:
+            data[ATTR_SUPPORTED_FEATURES] = self.supported_features
 
         return data
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return 0

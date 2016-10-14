@@ -6,27 +6,46 @@ https://home-assistant.io/components/zone/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import (
-    ATTR_HIDDEN, ATTR_ICON, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME)
-from homeassistant.helpers import extract_domain_configs
+    ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_LATITUDE,
+    CONF_LONGITUDE, CONF_ICON)
+from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.util.location import distance
-from homeassistant.util import convert
+import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "zone"
-ENTITY_ID_FORMAT = 'zone.{}'
-ENTITY_ID_HOME = ENTITY_ID_FORMAT.format('home')
-STATE = 'zoning'
-
-DEFAULT_NAME = 'Unnamed zone'
-
-ATTR_RADIUS = 'radius'
-DEFAULT_RADIUS = 100
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_PASSIVE = 'passive'
+ATTR_RADIUS = 'radius'
+
+CONF_PASSIVE = 'passive'
+CONF_RADIUS = 'radius'
+
+DEFAULT_NAME = 'Unnamed zone'
 DEFAULT_PASSIVE = False
+DEFAULT_RADIUS = 100
+DOMAIN = 'zone'
+
+ENTITY_ID_FORMAT = 'zone.{}'
+ENTITY_ID_HOME = ENTITY_ID_FORMAT.format('home')
 
 ICON_HOME = 'mdi:home'
+ICON_IMPORT = 'mdi:import'
+
+STATE = 'zoning'
+
+# The config that zone accepts is the same as if it has platforms.
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_LATITUDE): cv.latitude,
+    vol.Required(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
+    vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
+    vol.Optional(CONF_ICON): cv.icon,
+})
 
 
 def active_zone(hass, latitude, longitude, radius=0):
@@ -71,34 +90,19 @@ def in_zone(zone, latitude, longitude, radius=0):
 def setup(hass, config):
     """Setup zone."""
     entities = set()
-
-    for key in extract_domain_configs(config, DOMAIN):
-        entries = config[key]
-        if not isinstance(entries, list):
-            entries = entries,
-
-        for entry in entries:
-            name = entry.get(CONF_NAME, DEFAULT_NAME)
-            latitude = convert(entry.get(ATTR_LATITUDE), float)
-            longitude = convert(entry.get(ATTR_LONGITUDE), float)
-            radius = convert(entry.get(ATTR_RADIUS, DEFAULT_RADIUS), float)
-            icon = entry.get(ATTR_ICON)
-            passive = entry.get(ATTR_PASSIVE, DEFAULT_PASSIVE)
-
-            if None in (latitude, longitude):
-                logging.getLogger(__name__).error(
-                    'Each zone needs a latitude and longitude.')
-                continue
-
-            zone = Zone(hass, name, latitude, longitude, radius, icon, passive)
-            zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name,
-                                                entities)
-            zone.update_ha_state()
-            entities.add(zone.entity_id)
+    for _, entry in config_per_platform(config, DOMAIN):
+        name = entry.get(CONF_NAME)
+        zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
+                    entry.get(CONF_RADIUS), entry.get(CONF_ICON),
+                    entry.get(CONF_PASSIVE))
+        zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, entities)
+        zone.update_ha_state()
+        entities.add(zone.entity_id)
 
     if ENTITY_ID_HOME not in entities:
-        zone = Zone(hass, hass.config.location_name, hass.config.latitude,
-                    hass.config.longitude, DEFAULT_RADIUS, ICON_HOME, False)
+        zone = Zone(hass, hass.config.location_name,
+                    hass.config.latitude, hass.config.longitude,
+                    DEFAULT_RADIUS, ICON_HOME, False)
         zone.entity_id = ENTITY_ID_HOME
         zone.update_ha_state()
 

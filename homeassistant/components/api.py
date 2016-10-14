@@ -4,6 +4,7 @@ Rest API for Home Assistant.
 For more details about the RESTful API, please refer to the documentation at
 https://home-assistant.io/developers/api/
 """
+import asyncio
 import json
 import logging
 import queue
@@ -79,6 +80,7 @@ class APIEventStream(HomeAssistantView):
         if restrict:
             restrict = restrict.split(',') + [EVENT_HOMEASSISTANT_STOP]
 
+        @asyncio.coroutine
         def forward_events(event):
             """Forward events to the open request."""
             if event.event_type == EVENT_TIME_CHANGED:
@@ -98,31 +100,32 @@ class APIEventStream(HomeAssistantView):
 
         def stream():
             """Stream events to response."""
-            self.hass.bus.listen(MATCH_ALL, forward_events)
+            unsub_stream = self.hass.bus.listen(MATCH_ALL, forward_events)
 
-            _LOGGER.debug('STREAM %s ATTACHED', id(stop_obj))
+            try:
+                _LOGGER.debug('STREAM %s ATTACHED', id(stop_obj))
 
-            # Fire off one message right away to have browsers fire open event
-            to_write.put(STREAM_PING_PAYLOAD)
+                # Fire off one message so browsers fire open event right away
+                to_write.put(STREAM_PING_PAYLOAD)
 
-            while True:
-                try:
-                    payload = to_write.get(timeout=STREAM_PING_INTERVAL)
+                while True:
+                    try:
+                        payload = to_write.get(timeout=STREAM_PING_INTERVAL)
 
-                    if payload is stop_obj:
+                        if payload is stop_obj:
+                            break
+
+                        msg = "data: {}\n\n".format(payload)
+                        _LOGGER.debug('STREAM %s WRITING %s', id(stop_obj),
+                                      msg.strip())
+                        yield msg.encode("UTF-8")
+                    except queue.Empty:
+                        to_write.put(STREAM_PING_PAYLOAD)
+                    except GeneratorExit:
                         break
-
-                    msg = "data: {}\n\n".format(payload)
-                    _LOGGER.debug('STREAM %s WRITING %s', id(stop_obj),
-                                  msg.strip())
-                    yield msg.encode("UTF-8")
-                except queue.Empty:
-                    to_write.put(STREAM_PING_PAYLOAD)
-                except GeneratorExit:
-                    break
-
-            _LOGGER.debug('STREAM %s RESPONSE CLOSED', id(stop_obj))
-            self.hass.bus.remove_listener(MATCH_ALL, forward_events)
+            finally:
+                _LOGGER.debug('STREAM %s RESPONSE CLOSED', id(stop_obj))
+                unsub_stream()
 
         return self.Response(stream(), mimetype='text/event-stream')
 
@@ -375,8 +378,8 @@ class APITemplateView(HomeAssistantView):
     def post(self, request):
         """Render a template."""
         try:
-            return template.render(self.hass, request.json['template'],
-                                   request.json.get('variables'))
+            tpl = template.Template(request.json['template'], self.hass)
+            return tpl.render(request.json.get('variables'))
         except TemplateError as ex:
             return self.json_message('Error rendering template: {}'.format(ex),
                                      HTTP_BAD_REQUEST)

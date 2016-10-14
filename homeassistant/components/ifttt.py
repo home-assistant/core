@@ -9,21 +9,22 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.helpers import validate_config
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['pyfttt==0.3']
+
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "ifttt"
-
-SERVICE_TRIGGER = 'trigger'
 
 ATTR_EVENT = 'event'
 ATTR_VALUE1 = 'value1'
 ATTR_VALUE2 = 'value2'
 ATTR_VALUE3 = 'value3'
 
-REQUIREMENTS = ['pyfttt==0.3']
+CONF_KEY = 'key'
+
+DOMAIN = 'ifttt'
+
+SERVICE_TRIGGER = 'trigger'
 
 SERVICE_TRIGGER_SCHEMA = vol.Schema({
     vol.Required(ATTR_EVENT): cv.string,
@@ -31,6 +32,12 @@ SERVICE_TRIGGER_SCHEMA = vol.Schema({
     vol.Optional(ATTR_VALUE2): cv.string,
     vol.Optional(ATTR_VALUE3): cv.string,
 })
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_KEY): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def trigger(hass, event, value1=None, value2=None, value3=None):
@@ -46,10 +53,7 @@ def trigger(hass, event, value1=None, value2=None, value3=None):
 
 def setup(hass, config):
     """Setup the IFTTT service component."""
-    if not validate_config(config, {DOMAIN: ['key']}, _LOGGER):
-        return False
-
-    key = config[DOMAIN]['key']
+    key = config[DOMAIN][CONF_KEY]
 
     def trigger_service(call):
         """Handle IFTTT trigger service calls."""

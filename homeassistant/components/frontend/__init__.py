@@ -1,4 +1,5 @@
 """Handle the frontend for Home Assistant."""
+import hashlib
 import logging
 import os
 
@@ -13,61 +14,86 @@ URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
 STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static')
 PANELS = {}
+MANIFEST_JSON = {
+    "background_color": "#FFFFFF",
+    "description": "Open-source home automation platform running on Python 3.",
+    "dir": "ltr",
+    "display": "standalone",
+    "icons": [],
+    "lang": "en-US",
+    "name": "Home Assistant",
+    "orientation": "any",
+    "short_name": "Assistant",
+    "start_url": "/",
+    "theme_color": "#03A9F4"
+}
 
 # To keep track we don't register a component twice (gives a warning)
 _REGISTERED_COMPONENTS = set()
 _LOGGER = logging.getLogger(__name__)
 
 
-def register_built_in_panel(hass, component_name, title=None, icon=None,
-                            url_name=None, config=None):
+def register_built_in_panel(hass, component_name, sidebar_title=None,
+                            sidebar_icon=None, url_path=None, config=None):
     """Register a built-in panel."""
     # pylint: disable=too-many-arguments
     path = 'panels/ha-panel-{}.html'.format(component_name)
 
+    if hass.wsgi.development:
+        url = ('/static/home-assistant-polymer/panels/'
+               '{0}/ha-panel-{0}.html'.format(component_name))
+    else:
+        url = None  # use default url generate mechanism
+
     register_panel(hass, component_name, os.path.join(STATIC_PATH, path),
-                   FINGERPRINTS[path], title, icon, url_name, config)
+                   FINGERPRINTS[path], sidebar_title, sidebar_icon, url_path,
+                   url, config)
 
 
-def register_panel(hass, component_name, path, md5, title=None, icon=None,
-                   url_name=None, config=None):
+def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
+                   sidebar_icon=None, url_path=None, url=None, config=None):
     """Register a panel for the frontend.
 
     component_name: name of the web component
     path: path to the HTML of the web component
-    md5: the md5 hash of the web component (for versioning)
-    title: title to show in the sidebar (optional)
-    icon: icon to show next to title in sidebar (optional)
-    url_name: name to use in the url (defaults to component_name)
+    md5: the md5 hash of the web component (for versioning, optional)
+    sidebar_title: title to show in the sidebar (optional)
+    sidebar_icon: icon to show next to title in sidebar (optional)
+    url_path: name to use in the url (defaults to component_name)
+    url: for the web component (for dev environment, optional)
     config: config to be passed into the web component
 
     Warning: this API will probably change. Use at own risk.
     """
     # pylint: disable=too-many-arguments
-    if url_name is None:
-        url_name = component_name
+    if url_path is None:
+        url_path = component_name
 
-    if url_name in PANELS:
-        _LOGGER.warning('Overwriting component %s', url_name)
+    if url_path in PANELS:
+        _LOGGER.warning('Overwriting component %s', url_path)
     if not os.path.isfile(path):
-        _LOGGER.warning('Panel %s component does not exist: %s',
-                        component_name, path)
+        _LOGGER.error('Panel %s component does not exist: %s',
+                      component_name, path)
+        return
+
+    if md5 is None:
+        with open(path) as fil:
+            md5 = hashlib.md5(fil.read().encode('utf-8')).hexdigest()
 
     data = {
-        'url_name': url_name,
+        'url_path': url_path,
         'component_name': component_name,
     }
 
-    if title:
-        data['title'] = title
-    if icon:
-        data['icon'] = icon
+    if sidebar_title:
+        data['title'] = sidebar_title
+    if sidebar_icon:
+        data['icon'] = sidebar_icon
     if config is not None:
         data['config'] = config
 
-    if hass.wsgi.development:
-        data['url'] = ('/static/home-assistant-polymer/panels/'
-                       '{0}/ha-panel-{0}.html'.format(component_name))
+    if url is not None:
+        data['url'] = url
     else:
         url = URL_PANEL_COMPONENT.format(component_name)
 
@@ -78,12 +104,18 @@ def register_panel(hass, component_name, path, md5, title=None, icon=None,
         fprinted_url = URL_PANEL_COMPONENT_FP.format(component_name, md5)
         data['url'] = fprinted_url
 
-    PANELS[url_name] = data
+    PANELS[url_path] = data
+
+
+def add_manifest_json_key(key, val):
+    """Add a keyval to the manifest.json."""
+    MANIFEST_JSON[key] = val
 
 
 def setup(hass, config):
     """Setup serving the frontend."""
     hass.wsgi.register_view(BootstrapView)
+    hass.wsgi.register_view(ManifestJSONView)
 
     if hass.wsgi.development:
         sw_path = "home-assistant-polymer/build/service_worker.js"
@@ -112,6 +144,13 @@ def setup(hass, config):
             hass, ['/{}'.format(name) for name in PANELS]))
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, register_frontend_index)
+
+    for size in (192, 384, 512, 1024):
+        MANIFEST_JSON['icons'].append({
+            "src": "/static/icons/favicon-{}x{}.png".format(size, size),
+            "sizes": "{}x{}".format(size, size),
+            "type": "image/png"
+        })
 
     return True
 
@@ -172,8 +211,14 @@ class IndexView(HomeAssistantView):
 
         panel_url = PANELS[panel]['url'] if panel != 'states' else ''
 
-        # auto login if no password was set
-        no_auth = 'false' if self.hass.config.api.api_password else 'true'
+        no_auth = 'true'
+        if self.hass.config.api.api_password:
+            # require password if set
+            no_auth = 'false'
+            if self.hass.wsgi.is_trusted_ip(
+                    self.hass.wsgi.get_real_ip(request)):
+                # bypass for trusted networks
+                no_auth = 'true'
 
         icons_url = '/static/mdi-{}.html'.format(FINGERPRINTS['mdi.html'])
         template = self.templates.get_template('index.html')
@@ -183,6 +228,20 @@ class IndexView(HomeAssistantView):
         resp = template.render(
             core_url=core_url, ui_url=ui_url, no_auth=no_auth,
             icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
-            panel_url=panel_url)
+            panel_url=panel_url, panels=PANELS)
 
         return self.Response(resp, mimetype='text/html')
+
+
+class ManifestJSONView(HomeAssistantView):
+    """View to return a manifest.json."""
+
+    requires_auth = False
+    url = "/manifest.json"
+    name = "manifestjson"
+
+    def get(self, request):
+        """Return the manifest.json."""
+        import json
+        msg = json.dumps(MANIFEST_JSON, sort_keys=True).encode('UTF-8')
+        return self.Response(msg, mimetype="application/manifest+json")

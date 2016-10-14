@@ -40,13 +40,13 @@ class TestLockMQTT(unittest.TestCase):
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'state-topic', 'LOCK')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_LOCKED, state.state)
 
         fire_mqtt_message(self.hass, 'state-topic', 'UNLOCK')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_UNLOCKED, state.state)
@@ -70,7 +70,7 @@ class TestLockMQTT(unittest.TestCase):
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         lock.lock(self.hass, 'lock.test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'LOCK', 2, False),
                          self.mock_publish.mock_calls[-1][1])
@@ -78,7 +78,7 @@ class TestLockMQTT(unittest.TestCase):
         self.assertEqual(STATE_LOCKED, state.state)
 
         lock.unlock(self.hass, 'lock.test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'UNLOCK', 2, False),
                          self.mock_publish.mock_calls[-1][1])
@@ -104,13 +104,13 @@ class TestLockMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNLOCKED, state.state)
 
         fire_mqtt_message(self.hass, 'state-topic', '{"val":"LOCK"}')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_LOCKED, state.state)
 
         fire_mqtt_message(self.hass, 'state-topic', '{"val":"UNLOCK"}')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_UNLOCKED, state.state)

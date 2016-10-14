@@ -1,15 +1,17 @@
 """The tests for the Flux switch platform."""
-import unittest
 from datetime import timedelta
+import unittest
 from unittest.mock import patch
 
-from homeassistant.bootstrap import _setup_component, setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import switch, light
 from homeassistant.const import CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON
 import homeassistant.loader as loader
 import homeassistant.util.dt as dt_util
-from tests.common import get_test_home_assistant
-from tests.common import fire_time_changed, mock_service
+
+from tests.common import (
+    assert_setup_component, get_test_home_assistant, fire_time_changed,
+    mock_service)
 
 
 class TestSwitchFlux(unittest.TestCase):
@@ -18,7 +20,6 @@ class TestSwitchFlux(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        # self.hass.config.components = ['flux', 'sun', 'light']
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -26,7 +27,7 @@ class TestSwitchFlux(unittest.TestCase):
 
     def test_valid_config(self):
         """Test configuration."""
-        assert _setup_component(self.hass, 'switch', {
+        assert setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'flux',
                 'name': 'flux',
@@ -36,7 +37,7 @@ class TestSwitchFlux(unittest.TestCase):
 
     def test_valid_config_with_info(self):
         """Test configuration."""
-        assert _setup_component(self.hass, 'switch', {
+        assert setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'flux',
                 'name': 'flux',
@@ -51,28 +52,31 @@ class TestSwitchFlux(unittest.TestCase):
 
     def test_valid_config_no_name(self):
         """Test configuration."""
-        assert _setup_component(self.hass, 'switch', {
-            'switch': {
-                'platform': 'flux',
-                'lights': ['light.desk', 'light.lamp']
-            }
-        })
+        with assert_setup_component(1, 'switch'):
+            assert setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'flux',
+                    'lights': ['light.desk', 'light.lamp']
+                }
+            })
 
     def test_invalid_config_no_lights(self):
         """Test configuration."""
-        assert not _setup_component(self.hass, 'switch', {
-            'switch': {
-                'platform': 'flux',
-                'name': 'flux'
-            }
-        })
+        with assert_setup_component(0, 'switch'):
+            assert setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'flux',
+                    'name': 'flux'
+                }
+            })
 
     def test_flux_when_switch_is_off(self):
         """Test the flux switch when it is off."""
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
-            light.setup(self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         dev1 = platform.DEVICES[0]
 
@@ -103,7 +107,7 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         self.assertEqual(0, len(turn_on_calls))
 
     def test_flux_before_sunrise(self):
@@ -111,7 +115,8 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
-            light.setup(self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         dev1 = platform.DEVICES[0]
 
@@ -142,9 +147,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
@@ -155,7 +160,8 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
-            light.setup(self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         dev1 = platform.DEVICES[0]
 
@@ -186,9 +192,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 180)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.431, 0.38])
@@ -199,7 +205,8 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
-            light.setup(self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         dev1 = platform.DEVICES[0]
 
@@ -230,9 +237,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 153)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.496, 0.397])
@@ -243,7 +250,8 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
-            light.setup(self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         dev1 = platform.DEVICES[0]
 
@@ -274,9 +282,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
@@ -287,7 +295,8 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
-            light.setup(self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         dev1 = platform.DEVICES[0]
 
@@ -320,9 +329,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 154)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.494, 0.397])
@@ -333,7 +342,8 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
-            light.setup(self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         dev1 = platform.DEVICES[0]
 
@@ -366,9 +376,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 167)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.461, 0.389])
@@ -379,7 +389,8 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
-            light.setup(self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         dev1 = platform.DEVICES[0]
 
@@ -411,9 +422,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 255)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.496, 0.397])
@@ -423,13 +434,14 @@ class TestSwitchFlux(unittest.TestCase):
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
-            light.setup(self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         dev1, dev2, dev3 = platform.DEVICES
         light.turn_on(self.hass, entity_id=dev2.entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         light.turn_on(self.hass, entity_id=dev3.entity_id)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(dev1.entity_id)
         self.assertEqual(STATE_ON, state.state)
@@ -469,9 +481,9 @@ class TestSwitchFlux(unittest.TestCase):
                     turn_on_calls = mock_service(
                         self.hass, light.DOMAIN, SERVICE_TURN_ON)
                     switch.turn_on(self.hass, 'switch.flux')
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
                     fire_time_changed(self.hass, test_time)
-                    self.hass.pool.block_till_done()
+                    self.hass.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 171)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.452, 0.386])
@@ -481,3 +493,46 @@ class TestSwitchFlux(unittest.TestCase):
         call = turn_on_calls[-3]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 171)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.452, 0.386])
+
+    def test_flux_with_mired(self):
+        """Test the flux switch´s mode mired."""
+        platform = loader.get_component('light.test')
+        platform.init()
+        self.assertTrue(
+            setup_component(self.hass, light.DOMAIN,
+                            {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+
+        dev1 = platform.DEVICES[0]
+
+        # Verify initial state of light
+        state = self.hass.states.get(dev1.entity_id)
+        self.assertEqual(STATE_ON, state.state)
+        self.assertIsNone(state.attributes.get('color_temp'))
+
+        test_time = dt_util.now().replace(hour=8, minute=30, second=0)
+        sunset_time = test_time.replace(hour=17, minute=0, second=0)
+        sunrise_time = test_time.replace(hour=5,
+                                         minute=0,
+                                         second=0) + timedelta(days=1)
+
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            with patch('homeassistant.components.sun.next_rising',
+                       return_value=sunrise_time):
+                with patch('homeassistant.components.sun.next_setting',
+                           return_value=sunset_time):
+                    assert setup_component(self.hass, switch.DOMAIN, {
+                        switch.DOMAIN: {
+                            'platform': 'flux',
+                            'name': 'flux',
+                            'lights': [dev1.entity_id],
+                            'mode': 'mired'
+                        }
+                    })
+                    turn_on_calls = mock_service(
+                        self.hass, light.DOMAIN, SERVICE_TURN_ON)
+                    switch.turn_on(self.hass, 'switch.flux')
+                    self.hass.block_till_done()
+                    fire_time_changed(self.hass, test_time)
+                    self.hass.block_till_done()
+        call = turn_on_calls[-1]
+        self.assertEqual(call.data[light.ATTR_COLOR_TEMP], 269)

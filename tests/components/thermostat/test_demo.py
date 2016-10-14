@@ -1,8 +1,8 @@
 """The tests for the demo thermostat."""
 import unittest
 
-from homeassistant.const import (
-    TEMP_CELSIUS,
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
 )
 from homeassistant.components import thermostat
 
@@ -18,7 +18,7 @@ class TestDemoThermostat(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.temperature_unit = TEMP_CELSIUS
+        self.hass.config.units = METRIC_SYSTEM
         self.assertTrue(thermostat.setup(self.hass, {'thermostat': {
             'platform': 'demo',
         }}))
@@ -43,15 +43,15 @@ class TestDemoThermostat(unittest.TestCase):
 
     def test_set_target_temp_bad_attr(self):
         """Test setting the target temperature without required attribute."""
-        self.assertEqual('21', self.hass.states.get(ENTITY_NEST).state)
+        self.assertEqual('21.0', self.hass.states.get(ENTITY_NEST).state)
         thermostat.set_temperature(self.hass, None, ENTITY_NEST)
-        self.hass.pool.block_till_done()
-        self.assertEqual('21', self.hass.states.get(ENTITY_NEST).state)
+        self.hass.block_till_done()
+        self.assertEqual('21.0', self.hass.states.get(ENTITY_NEST).state)
 
     def test_set_target_temp(self):
         """Test the setting of the target temperature."""
         thermostat.set_temperature(self.hass, 30, ENTITY_NEST)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual('30.0', self.hass.states.get(ENTITY_NEST).state)
 
     def test_set_away_mode_bad_attr(self):
@@ -59,21 +59,21 @@ class TestDemoThermostat(unittest.TestCase):
         state = self.hass.states.get(ENTITY_NEST)
         self.assertEqual('off', state.attributes.get('away_mode'))
         thermostat.set_away_mode(self.hass, None, ENTITY_NEST)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_NEST)
         self.assertEqual('off', state.attributes.get('away_mode'))
 
     def test_set_away_mode_on(self):
         """Test setting the away mode on/true."""
         thermostat.set_away_mode(self.hass, True, ENTITY_NEST)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_NEST)
         self.assertEqual('on', state.attributes.get('away_mode'))
 
     def test_set_away_mode_off(self):
         """Test setting the away mode off/false."""
         thermostat.set_away_mode(self.hass, False, ENTITY_NEST)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_NEST)
         self.assertEqual('off', state.attributes.get('away_mode'))
 
@@ -82,20 +82,20 @@ class TestDemoThermostat(unittest.TestCase):
         state = self.hass.states.get(ENTITY_NEST)
         self.assertEqual('off', state.attributes.get('fan'))
         thermostat.set_fan_mode(self.hass, None, ENTITY_NEST)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_NEST)
         self.assertEqual('off', state.attributes.get('fan'))
 
     def test_set_fan_mode_on(self):
         """Test setting the fan mode on/true."""
         thermostat.set_fan_mode(self.hass, True, ENTITY_NEST)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_NEST)
         self.assertEqual('on', state.attributes.get('fan'))
 
     def test_set_fan_mode_off(self):
         """Test setting the fan mode off/false."""
         thermostat.set_fan_mode(self.hass, False, ENTITY_NEST)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_NEST)
         self.assertEqual('off', state.attributes.get('fan'))

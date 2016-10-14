@@ -5,40 +5,60 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.efergy/
 """
 import logging
+import voluptuous as vol
 
 from requests import RequestException, get
 
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://engage.efergy.com/mobile_proxy/'
+
+CONF_APPTOKEN = 'app_token'
+CONF_UTC_OFFSET = 'utc_offset'
+CONF_MONITORED_VARIABLES = 'monitored_variables'
+CONF_SENSOR_TYPE = 'type'
+
+CONF_CURRENCY = 'currency'
+CONF_PERIOD = 'period'
+
+CONF_INSTANT = 'instant_readings'
+CONF_BUDGET = 'budget'
+CONF_COST = 'cost'
+
 SENSOR_TYPES = {
-    'instant_readings': ['Energy Usage', 'kW'],
-    'budget': ['Energy Budget', None],
-    'cost': ['Energy Cost', None],
+    CONF_INSTANT: ['Energy Usage', 'kW'],
+    CONF_BUDGET: ['Energy Budget', None],
+    CONF_COST: ['Energy Cost', None],
 }
+
+TYPES_SCHEMA = vol.In(
+    [CONF_INSTANT, CONF_BUDGET, CONF_COST])
+
+SENSORS_SCHEMA = vol.Schema({
+    vol.Required(CONF_SENSOR_TYPE): TYPES_SCHEMA,
+    vol.Optional(CONF_CURRENCY, default=''): cv.string,
+    vol.Optional(CONF_PERIOD, default='year'): cv.string,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_APPTOKEN): cv.string,
+    vol.Optional(CONF_UTC_OFFSET): cv.string,
+    vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA]
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Efergy sensor."""
-    app_token = config.get("app_token")
-    if not app_token:
-        _LOGGER.error(
-            "Configuration Error"
-            "Please make sure you have configured your app token")
-        return None
-    utc_offset = str(config.get("utc_offset"))
+    app_token = config.get(CONF_APPTOKEN)
+    utc_offset = str(config.get(CONF_UTC_OFFSET))
     dev = []
-    for variable in config['monitored_variables']:
-        if 'period' not in variable:
-            variable['period'] = ''
-        if 'currency' not in variable:
-            variable['currency'] = ''
-        if variable['type'] not in SENSOR_TYPES:
-            _LOGGER.error('Sensor type: "%s" does not exist', variable)
-        else:
-            dev.append(EfergySensor(variable['type'], app_token, utc_offset,
-                                    variable['period'], variable['currency']))
+    for variable in config[CONF_MONITORED_VARIABLES]:
+        dev.append(EfergySensor(
+            variable[CONF_SENSOR_TYPE], app_token, utc_offset,
+            variable[CONF_PERIOD], variable[CONF_CURRENCY]))
 
     add_devices(dev)
 

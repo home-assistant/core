@@ -13,7 +13,7 @@ from homeassistant.components import zwave
 from homeassistant.components.garage_door import GarageDoorDevice
 
 COMMAND_CLASS_SWITCH_BINARY = 0x25  # 37
-
+COMMAND_CLASS_BARRIER_OPERATOR = 0x66  # 102
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -22,14 +22,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
 
-    if value.command_class != zwave.COMMAND_CLASS_SWITCH_BINARY:
+    if value.command_class != zwave.const.COMMAND_CLASS_SWITCH_BINARY and \
+       value.command_class != zwave.const.COMMAND_CLASS_BARRIER_OPERATOR:
         return
-    if value.type != zwave.TYPE_BOOL:
+    if value.type != zwave.const.TYPE_BOOL:
         return
-    if value.genre != zwave.GENRE_USER:
+    if value.genre != zwave.const.GENRE_USER:
         return
 
     value.set_change_verified(False)
@@ -44,7 +45,6 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, GarageDoorDevice):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
-        self._node = value.node
         self._state = value.data
         dispatcher.connect(
             self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
@@ -53,7 +53,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, GarageDoorDevice):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id:
             self._state = value.data
-            self.update_ha_state(True)
+            self.update_ha_state()
             _LOGGER.debug("Value changed on network %s", value)
 
     @property
@@ -63,8 +63,8 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, GarageDoorDevice):
 
     def close_door(self):
         """Close the garage door."""
-        self._value.node.set_switch(self._value.value_id, False)
+        self._value.data = False
 
     def open_door(self):
         """Open the garage door."""
-        self._value.node.set_switch(self._value.value_id, True)
+        self._value.data = True

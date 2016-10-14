@@ -5,7 +5,10 @@ detect_location_info and elevation are mocked by default during tests.
 """
 import collections
 import math
+from typing import Any, Optional, Tuple, Dict
+
 import requests
+
 
 ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
 FREEGEO_API = 'https://freegeoip.io/json/'
@@ -28,7 +31,7 @@ LocationInfo = collections.namedtuple(
     "LocationInfo",
     ['ip', 'country_code', 'country_name', 'region_code', 'region_name',
      'city', 'zip_code', 'time_zone', 'latitude', 'longitude',
-     'use_fahrenheit'])
+     'use_metric'])
 
 
 def detect_location_info():
@@ -41,11 +44,8 @@ def detect_location_info():
     if data is None:
         return None
 
-    # From Wikipedia: Fahrenheit is used in the Bahamas, Belize,
-    # the Cayman Islands, Palau, and the United States and associated
-    # territories of American Samoa and the U.S. Virgin Islands
-    data['use_fahrenheit'] = data['country_code'] in (
-        'BS', 'BZ', 'KY', 'PW', 'US', 'AS', 'VI')
+    data['use_metric'] = data['country_code'] not in (
+        'US', 'MM', 'LR')
 
     return LocationInfo(**data)
 
@@ -81,7 +81,8 @@ def elevation(latitude, longitude):
 # Source: https://github.com/maurycyp/vincenty
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
 # pylint: disable=too-many-locals, invalid-name, unused-variable
-def vincenty(point1, point2, miles=False):
+def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
+             miles: bool=False) -> Optional[float]:
     """
     Vincenty formula (inverse method) to calculate the distance.
 
@@ -148,7 +149,7 @@ def vincenty(point1, point2, miles=False):
     return round(s, 6)
 
 
-def _get_freegeoip():
+def _get_freegeoip() -> Optional[Dict[str, Any]]:
     """Query freegeoip.io for location data."""
     try:
         raw_info = requests.get(FREEGEO_API, timeout=5).json()
@@ -169,7 +170,7 @@ def _get_freegeoip():
     }
 
 
-def _get_ip_api():
+def _get_ip_api() -> Optional[Dict[str, Any]]:
     """Query ip-api.com for location data."""
     try:
         raw_info = requests.get(IP_API, timeout=5).json()

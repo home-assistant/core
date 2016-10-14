@@ -6,6 +6,8 @@ https://home-assistant.io/components/binary_sensor/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_ON, STATE_OFF)
@@ -25,6 +27,7 @@ SENSOR_CLASSES = [
     'moisture',      # Specifically a wetness sensor
     'motion',        # Motion sensor
     'moving',        # On means moving, Off means stopped
+    'occupancy',     # On means occupied, Off means not occupied
     'opening',       # Door, window, etc.
     'power',         # Power, over-current, etc
     'safety',        # Generic on=unsafe, off=safe
@@ -32,6 +35,8 @@ SENSOR_CLASSES = [
     'sound',         # On means sound detected, Off means no sound
     'vibration',     # On means vibration detected, Off means no vibration
 ]
+
+SENSOR_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(SENSOR_CLASSES))
 
 
 def setup(hass, config):

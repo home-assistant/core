@@ -1,5 +1,5 @@
 """
-Support for RSS/Atom feed.
+Support for RSS/Atom feeds.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/feedreader/
@@ -9,22 +9,39 @@ from logging import getLogger
 from os.path import exists
 from threading import Lock
 import pickle
+
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.helpers.event import track_utc_time_change
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['feedparser==5.2.1']
+
 _LOGGER = getLogger(__name__)
-DOMAIN = "feedreader"
-EVENT_FEEDREADER = "feedreader"
-# pylint: disable=no-value-for-parameter
+
+CONF_URLS = 'urls'
+
+DOMAIN = 'feedreader'
+
+EVENT_FEEDREADER = 'feedreader'
+
+MAX_ENTRIES = 20
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {
-        'urls': [vol.Url()],
+        vol.Required(CONF_URLS): vol.All(cv.ensure_list, [cv.url]),
     }
 }, extra=vol.ALLOW_EXTRA)
-MAX_ENTRIES = 20
+
+
+def setup(hass, config):
+    """Setup the feedreader component."""
+    urls = config.get(DOMAIN)[CONF_URLS]
+    data_file = hass.config.path("{}.pickle".format(DOMAIN))
+    storage = StoredData(data_file)
+    feeds = [FeedManager(url, hass, storage) for url in urls]
+    return len(feeds) > 0
 
 
 # pylint: disable=too-few-public-methods
@@ -83,9 +100,8 @@ class FeedManager(object):
 
     def _update_and_fire_entry(self, entry):
         """Update last_entry_timestamp and fire entry."""
-        # We are lucky, `published_parsed` data available,
-        # let's make use of it to publish only new available
-        # entries since the last run
+        # We are lucky, `published_parsed` data available, let's make use of
+        # it to publish only new available entries since the last run
         if 'published_parsed' in entry.keys():
             self._has_published_parsed = True
             self._last_entry_timestamp = max(entry.published_parsed,
@@ -163,12 +179,3 @@ class StoredData(object):
                 _LOGGER.error('Error saving pickled data to %s',
                               self._data_file)
         self._cache_outdated = True
-
-
-def setup(hass, config):
-    """Setup the feedreader component."""
-    urls = config.get(DOMAIN)['urls']
-    data_file = hass.config.path("{}.pickle".format(DOMAIN))
-    storage = StoredData(data_file)
-    feeds = [FeedManager(url, hass, storage) for url in urls]
-    return len(feeds) > 0

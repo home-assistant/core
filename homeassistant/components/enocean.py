@@ -4,23 +4,36 @@ EnOcean Component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/EnOcean/
 """
+import logging
 
-DOMAIN = "enocean"
+import voluptuous as vol
+
+from homeassistant.const import CONF_DEVICE
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['enocean==0.31']
 
-CONF_DEVICE = "device"
+_LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'enocean'
 
 ENOCEAN_DONGLE = None
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_DEVICE): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Setup the EnOcean component."""
     global ENOCEAN_DONGLE
 
-    serial_dev = config[DOMAIN].get(CONF_DEVICE, "/dev/ttyUSB0")
+    serial_dev = config[DOMAIN].get(CONF_DEVICE)
 
     ENOCEAN_DONGLE = EnOceanDongle(hass, serial_dev)
+
     return True
 
 

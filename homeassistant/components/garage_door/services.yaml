@@ -1,0 +1,15 @@
+open:
+  description: Open all or specified garage door
+
+  fields:
+    entity_id:
+      description: Name(s) of garage door(s) to open
+      example: 'garage.main'
+
+close:
+  description: Close all or a specified garage door
+
+  fields:
+    entity_id:
+      description: Name(s) of garage door(s) to close
+      example: 'garage.main'

@@ -40,25 +40,25 @@ volume_down:
       description: Name(s) of entities to turn volume down on
       example: 'media_player.living_room_sonos'
 
-mute_volume:
+volume_mute:
   description: Mute a media player's volume
 
   fields:
     entity_id:
       description: Name(s) of entities to mute
       example: 'media_player.living_room_sonos'
-    mute:
+    is_volume_muted:
       description: True/false for mute/unmute
       example: true
 
-set_volume_level:
+volume_set:
   description: Set a media player's volume level
 
   fields:
     entity_id:
       description: Name(s) of entities to set volume level on
       example: 'media_player.living_room_sonos'
-    volume:
+    volume_level:
       description: Volume level to set
       example: 60
 
@@ -117,7 +117,7 @@ media_seek:
     entity_id:
       description: Name(s) of entities to seek media on
       example: 'media_player.living_room_chromecast'
-    position:
+    seek_position:
       description: Position to seek to. The format is platform dependent.
       example: 100
 

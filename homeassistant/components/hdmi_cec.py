@@ -1,32 +1,34 @@
 """
 CEC component.
 
-Requires libcec + Python bindings.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/hdmi_cec/
 """
-
 import logging
+
 import voluptuous as vol
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+
+from homeassistant.const import (EVENT_HOMEASSISTANT_START, CONF_DEVICES)
 import homeassistant.helpers.config_validation as cv
 
-
-_LOGGER = logging.getLogger(__name__)
 _CEC = None
-DOMAIN = 'hdmi_cec'
-SERVICE_SELECT_DEVICE = 'select_device'
-SERVICE_POWER_ON = 'power_on'
-SERVICE_STANDBY = 'standby'
-CONF_DEVICES = 'devices'
+_LOGGER = logging.getLogger(__name__)
+
 ATTR_DEVICE = 'device'
+
+DOMAIN = 'hdmi_cec'
+
 MAX_DEPTH = 4
 
+SERVICE_POWER_ON = 'power_on'
+SERVICE_SELECT_DEVICE = 'select_device'
+SERVICE_STANDBY = 'standby'
 
 # pylint: disable=unnecessary-lambda
 DEVICE_SCHEMA = vol.Schema({
     vol.All(cv.positive_int): vol.Any(lambda devices: DEVICE_SCHEMA(devices),
                                       cv.string)
 })
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -56,17 +58,14 @@ def setup(hass, config):
     """Setup CEC capability."""
     global _CEC
 
-    # cec is only available if libcec is properly installed
-    # and the Python bindings are accessible.
     try:
         import cec
     except ImportError:
         _LOGGER.error("libcec must be installed")
         return False
 
-    # Parse configuration into a dict of device name
-    # to physical address represented as a list of
-    # four elements.
+    # Parse configuration into a dict of device name to physical address
+    # represented as a list of four elements.
     flat = {}
     for pair in parse_mapping(config[DOMAIN].get(CONF_DEVICES, {})):
         flat[pair[0]] = pad_physical_address(pair[1])
@@ -78,7 +77,7 @@ def setup(hass, config):
     cfg.bMonitorOnly = 1
     cfg.clientVersion = cec.LIBCEC_VERSION_CURRENT
 
-    # Set up CEC adapter.
+    # Setup CEC adapter.
     _CEC = cec.ICECAdapter.Create(cfg)
 
     def _power_on(call):

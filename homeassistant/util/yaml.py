@@ -1,9 +1,11 @@
 """YAML utility functions."""
 import logging
 import os
+import sys
+import fnmatch
 from collections import OrderedDict
+from typing import Union, List, Dict
 
-import glob
 import yaml
 try:
     import keyring
@@ -15,21 +17,23 @@ from homeassistant.exceptions import HomeAssistantError
 _LOGGER = logging.getLogger(__name__)
 _SECRET_NAMESPACE = 'homeassistant'
 _SECRET_YAML = 'secrets.yaml'
+__SECRET_CACHE = {}  # type: Dict
 
 
 # pylint: disable=too-many-ancestors
 class SafeLineLoader(yaml.SafeLoader):
     """Loader class that keeps track of line numbers."""
 
-    def compose_node(self, parent, index):
+    def compose_node(self, parent: yaml.nodes.Node, index) -> yaml.nodes.Node:
         """Annotate a node with the first line it was seen."""
-        last_line = self.line
-        node = super(SafeLineLoader, self).compose_node(parent, index)
+        last_line = self.line  # type: int
+        node = super(SafeLineLoader,
+                     self).compose_node(parent, index)  # type: yaml.nodes.Node
         node.__line__ = last_line + 1
         return node
 
 
-def load_yaml(fname):
+def load_yaml(fname: str) -> Union[List, Dict]:
     """Load a YAML file."""
     try:
         with open(fname, encoding='utf-8') as conf_file:
@@ -41,7 +45,13 @@ def load_yaml(fname):
         raise HomeAssistantError(exc)
 
 
-def _include_yaml(loader, node):
+def clear_secret_cache() -> None:
+    """Clear the secret cache."""
+    __SECRET_CACHE.clear()
+
+
+def _include_yaml(loader: SafeLineLoader,
+                  node: yaml.nodes.Node) -> Union[List, Dict]:
     """Load another YAML file and embeds it using the !include tag.
 
     Example:
@@ -51,21 +61,32 @@ def _include_yaml(loader, node):
     return load_yaml(fname)
 
 
-def _include_dir_named_yaml(loader, node):
+def _find_files(directory, pattern):
+    """Recursively load files in a directory."""
+    for root, _dirs, files in os.walk(directory):
+        for basename in files:
+            if fnmatch.fnmatch(basename, pattern):
+                filename = os.path.join(root, basename)
+                yield filename
+
+
+def _include_dir_named_yaml(loader: SafeLineLoader,
+                            node: yaml.nodes.Node) -> OrderedDict:
     """Load multiple files from directory as a dictionary."""
-    mapping = OrderedDict()
-    files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
-    for fname in glob.glob(files):
+    mapping = OrderedDict()  # type: OrderedDict
+    loc = os.path.join(os.path.dirname(loader.name), node.value)
+    for fname in _find_files(loc, '*.yaml'):
         filename = os.path.splitext(os.path.basename(fname))[0]
         mapping[filename] = load_yaml(fname)
     return mapping
 
 
-def _include_dir_merge_named_yaml(loader, node):
+def _include_dir_merge_named_yaml(loader: SafeLineLoader,
+                                  node: yaml.nodes.Node) -> OrderedDict:
     """Load multiple files from directory as a merged dictionary."""
-    mapping = OrderedDict()
-    files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
-    for fname in glob.glob(files):
+    mapping = OrderedDict()  # type: OrderedDict
+    loc = os.path.join(os.path.dirname(loader.name), node.value)
+    for fname in _find_files(loc, '*.yaml'):
         if os.path.basename(fname) == _SECRET_YAML:
             continue
         loaded_yaml = load_yaml(fname)
@@ -74,18 +95,21 @@ def _include_dir_merge_named_yaml(loader, node):
     return mapping
 
 
-def _include_dir_list_yaml(loader, node):
+def _include_dir_list_yaml(loader: SafeLineLoader,
+                           node: yaml.nodes.Node):
     """Load multiple files from directory as a list."""
-    files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
-    return [load_yaml(f) for f in glob.glob(files)
+    loc = os.path.join(os.path.dirname(loader.name), node.value)
+    return [load_yaml(f) for f in _find_files(loc, '*.yaml')
             if os.path.basename(f) != _SECRET_YAML]
 
 
-def _include_dir_merge_list_yaml(loader, node):
+def _include_dir_merge_list_yaml(loader: SafeLineLoader,
+                                 node: yaml.nodes.Node):
     """Load multiple files from directory as a merged list."""
-    files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
-    merged_list = []
-    for fname in glob.glob(files):
+    loc = os.path.join(os.path.dirname(loader.name),
+                       node.value)  # type: str
+    merged_list = []  # type: List
+    for fname in _find_files(loc, '*.yaml'):
         if os.path.basename(fname) == _SECRET_YAML:
             continue
         loaded_yaml = load_yaml(fname)
@@ -94,17 +118,28 @@ def _include_dir_merge_list_yaml(loader, node):
     return merged_list
 
 
-def _ordered_dict(loader, node):
+def _ordered_dict(loader: SafeLineLoader,
+                  node: yaml.nodes.MappingNode) -> OrderedDict:
     """Load YAML mappings into an ordered dictionary to preserve key order."""
     loader.flatten_mapping(node)
     nodes = loader.construct_pairs(node)
 
-    seen = {}
+    seen = {}  # type: Dict
     min_line = None
     for (key, _), (node, _) in zip(nodes, node.value):
         line = getattr(node, '__line__', 'unknown')
         if line != 'unknown' and (min_line is None or line < min_line):
             min_line = line
+
+        try:
+            hash(key)
+        except TypeError:
+            fname = getattr(loader.stream, 'name', '')
+            raise yaml.MarkedYAMLError(
+                context="invalid key: \"{}\"".format(key),
+                context_mark=yaml.Mark(fname, 0, min_line, -1, None, None)
+            )
+
         if key in seen:
             fname = getattr(loader.stream, 'name', '')
             first_mark = yaml.Mark(fname, 0, seen[key], -1, None, None)
@@ -116,12 +151,13 @@ def _ordered_dict(loader, node):
         seen[key] = line
 
     processed = OrderedDict(nodes)
-    processed.__config_file__ = loader.name
-    processed.__line__ = min_line
+    setattr(processed, '__config_file__', loader.name)
+    setattr(processed, '__line__', min_line)
     return processed
 
 
-def _env_var_yaml(loader, node):
+def _env_var_yaml(loader: SafeLineLoader,
+                  node: yaml.nodes.Node):
     """Load environment variables and embed it into the configuration YAML."""
     if node.value in os.environ:
         return os.environ[node.value]
@@ -130,42 +166,51 @@ def _env_var_yaml(loader, node):
         raise HomeAssistantError(node.value)
 
 
+def _load_secret_yaml(secret_path: str) -> Dict:
+    """Load the secrets yaml from path."""
+    secret_path = os.path.join(secret_path, _SECRET_YAML)
+    if secret_path in __SECRET_CACHE:
+        return __SECRET_CACHE[secret_path]
+
+    _LOGGER.debug('Loading %s', secret_path)
+    try:
+        secrets = load_yaml(secret_path)
+        if 'logger' in secrets:
+            logger = str(secrets['logger']).lower()
+            if logger == 'debug':
+                _LOGGER.setLevel(logging.DEBUG)
+            else:
+                _LOGGER.error("secrets.yaml: 'logger: debug' expected,"
+                              " but 'logger: %s' found", logger)
+            del secrets['logger']
+    except FileNotFoundError:
+        secrets = {}
+    __SECRET_CACHE[secret_path] = secrets
+    return secrets
+
+
 # pylint: disable=protected-access
-def _secret_yaml(loader, node):
+def _secret_yaml(loader: SafeLineLoader,
+                 node: yaml.nodes.Node):
     """Load secrets and embed it into the configuration YAML."""
-    # Create secret cache on loader and load secrets.yaml
-    if not hasattr(loader, '_SECRET_CACHE'):
-        loader._SECRET_CACHE = {}
+    secret_path = os.path.dirname(loader.name)
+    while True:
+        secrets = _load_secret_yaml(secret_path)
 
-    secret_path = os.path.join(os.path.dirname(loader.name), _SECRET_YAML)
-    if secret_path not in loader._SECRET_CACHE:
-        if os.path.isfile(secret_path):
-            loader._SECRET_CACHE[secret_path] = load_yaml(secret_path)
-            secrets = loader._SECRET_CACHE[secret_path]
-            if 'logger' in secrets:
-                logger = str(secrets['logger']).lower()
-                if logger == 'debug':
-                    _LOGGER.setLevel(logging.DEBUG)
-                else:
-                    _LOGGER.error("secrets.yaml: 'logger: debug' expected,"
-                                  " but 'logger: %s' found", logger)
-                del secrets['logger']
-        else:
-            loader._SECRET_CACHE[secret_path] = None
-    secrets = loader._SECRET_CACHE[secret_path]
+        if node.value in secrets:
+            _LOGGER.debug('Secret %s retrieved from secrets.yaml in '
+                          'folder %s', node.value, secret_path)
+            return secrets[node.value]
 
-    # Retrieve secret, first from secrets.yaml, then from keyring
-    if secrets is not None and node.value in secrets:
-        _LOGGER.debug('Secret %s retrieved from secrets.yaml.', node.value)
-        return secrets[node.value]
-    for sname, sdict in loader._SECRET_CACHE.items():
-        if node.value in sdict:
-            _LOGGER.debug('Secret %s retrieved from secrets.yaml in other '
-                          'folder %s', node.value, sname)
-            return sdict[node.value]
+        if secret_path == os.path.dirname(sys.path[0]):
+            break  # sys.path[0] set to config/deps folder by bootstrap
+
+        secret_path = os.path.dirname(secret_path)
+        if not os.path.exists(secret_path) or len(secret_path) < 5:
+            break  # Somehow we got past the .homeassistant config folder
 
     if keyring:
-        # do ome keyring stuff
+        # do some keyring stuff
         pwd = keyring.get_password(_SECRET_NAMESPACE, node.value)
         if pwd:
             _LOGGER.debug('Secret %s retrieved from keyring.', node.value)

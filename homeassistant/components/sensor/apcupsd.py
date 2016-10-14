@@ -6,9 +6,15 @@ https://home-assistant.io/components/sensor.apcupsd/
 """
 import logging
 
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components import apcupsd
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (TEMP_CELSIUS, CONF_RESOURCES)
 from homeassistant.helpers.entity import Entity
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = [apcupsd.DOMAIN]
 
@@ -92,14 +98,17 @@ INFERRED_UNITS = {
     ' C': TEMP_CELSIUS,
 }
 
-_LOGGER = logging.getLogger(__name__)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_RESOURCES, default=[]):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Setup the APCUPSd sensors."""
     entities = []
 
-    for resource in config['resources']:
+    for resource in config[CONF_RESOURCES]:
         sensor_type = resource.lower()
 
         if sensor_type not in SENSOR_TYPES:
@@ -109,7 +118,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if sensor_type.upper() not in apcupsd.DATA.status:
             _LOGGER.warning(
                 'Sensor type: "%s" does not appear in the APCUPSd status '
-                'output.', sensor_type)
+                'output', sensor_type)
 
         entities.append(APCUPSdSensor(apcupsd.DATA, sensor_type))
 

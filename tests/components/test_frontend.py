@@ -56,7 +56,7 @@ class TestFrontend(unittest.TestCase):
 
     def tearDown(self):
         """Stop everything that was started."""
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
     def test_frontend_and_static(self):
         """Test if we can get the frontend."""

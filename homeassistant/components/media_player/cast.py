@@ -7,38 +7,49 @@ https://home-assistant.io/components/media_player.cast/
 # pylint: disable=import-error
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_STOP, MediaPlayerDevice)
+    SUPPORT_STOP, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_UNKNOWN)
+import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pychromecast==0.7.2']
+REQUIREMENTS = ['pychromecast==0.7.6']
+
+_LOGGER = logging.getLogger(__name__)
+
 CONF_IGNORE_CEC = 'ignore_cec'
 CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
+
+DEFAULT_PORT = 8009
+
 SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA | SUPPORT_STOP
+
 KNOWN_HOSTS = []
 
-DEFAULT_PORT = 8009
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST): cv.string,
+})
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the cast platform."""
     import pychromecast
-    logger = logging.getLogger(__name__)
 
     # import CEC IGNORE attributes
     ignore_cec = config.get(CONF_IGNORE_CEC, [])
     if isinstance(ignore_cec, list):
         pychromecast.IGNORE_CEC += ignore_cec
     else:
-        logger.error('CEC config "%s" must be a list.', CONF_IGNORE_CEC)
+        _LOGGER.error('CEC config "%s" must be a list.', CONF_IGNORE_CEC)
 
     hosts = []
 
@@ -49,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hosts = [discovery_info]
 
     elif CONF_HOST in config:
-        hosts = [(config[CONF_HOST], DEFAULT_PORT)]
+        hosts = [(config.get(CONF_HOST), DEFAULT_PORT)]
 
     else:
         hosts = [tuple(dev[:2]) for dev in pychromecast.discover_chromecasts()
@@ -57,12 +68,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     casts = []
 
+    # get_chromecasts() returns Chromecast objects
+    # with the correct friendly name for grouped devices
+    all_chromecasts = pychromecast.get_chromecasts()
+
     for host in hosts:
-        try:
-            casts.append(CastDevice(*host))
-            KNOWN_HOSTS.append(host)
-        except pychromecast.ChromecastConnectionError:
-            pass
+        found = [device for device in all_chromecasts
+                 if (device.host, device.port) == host]
+        if found:
+            try:
+                casts.append(CastDevice(found[0]))
+                KNOWN_HOSTS.append(host)
+            except pychromecast.ChromecastConnectionError:
+                pass
 
     add_devices(casts)
 
@@ -72,10 +90,9 @@ class CastDevice(MediaPlayerDevice):
 
     # pylint: disable=abstract-method
     # pylint: disable=too-many-public-methods
-    def __init__(self, host, port):
+    def __init__(self, chromecast):
         """Initialize the Cast device."""
-        import pychromecast
-        self.cast = pychromecast.Chromecast(host, port)
+        self.cast = chromecast
 
         self.cast.socket_client.receiver_controller.register_status_listener(
             self)

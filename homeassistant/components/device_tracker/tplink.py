@@ -12,10 +12,11 @@ import threading
 from datetime import timedelta
 
 import requests
+import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago
@@ -23,26 +24,22 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
+})
+
 
 def get_scanner(hass, config):
     """Validate the configuration and return a TP-Link scanner."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-        return None
+    for cls in [Tplink4DeviceScanner, Tplink3DeviceScanner,
+                Tplink2DeviceScanner, TplinkDeviceScanner]:
+        scanner = cls(config[DOMAIN])
+        if scanner.success_init:
+            return scanner
 
-    scanner = Tplink4DeviceScanner(config[DOMAIN])
-
-    if not scanner.success_init:
-        scanner = Tplink3DeviceScanner(config[DOMAIN])
-
-    if not scanner.success_init:
-        scanner = Tplink2DeviceScanner(config[DOMAIN])
-
-    if not scanner.success_init:
-        scanner = TplinkDeviceScanner(config[DOMAIN])
-
-    return scanner if scanner.success_init else None
+    return None
 
 
 class TplinkDeviceScanner(object):
@@ -277,8 +274,10 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
         _LOGGER.info("Retrieving auth tokens...")
         url = 'http://{}/userRpm/LoginRpm.htm?Save=Save'.format(self.host)
 
-        # Generate md5 hash of password
-        password = hashlib.md5(self.password.encode('utf')).hexdigest()
+        # Generate md5 hash of password. The C7 appears to use the first 15
+        # characters of the password only, so we truncate to remove additional
+        # characters from being hashed.
+        password = hashlib.md5(self.password.encode('utf')[:15]).hexdigest()
         credentials = '{}:{}'.format(self.username, password).encode('utf')
 
         # Encode the credentials to be sent as a cookie.
@@ -313,19 +312,23 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
 
             _LOGGER.info("Loading wireless clients...")
 
-            url = 'http://{}/{}/userRpm/WlanStationRpm.htm' \
-                .format(self.host, self.token)
-            referer = 'http://{}'.format(self.host)
-            cookie = 'Authorization=Basic {}'.format(self.credentials)
+            mac_results = []
 
-            page = requests.get(url, headers={
-                'cookie': cookie,
-                'referer': referer
-            })
-            result = self.parse_macs.findall(page.text)
+            # Check both the 2.4GHz and 5GHz client list URLs
+            for clients_url in ('WlanStationRpm.htm', 'WlanStationRpm_5g.htm'):
+                url = 'http://{}/{}/userRpm/{}' \
+                    .format(self.host, self.token, clients_url)
+                referer = 'http://{}'.format(self.host)
+                cookie = 'Authorization=Basic {}'.format(self.credentials)
 
-            if not result:
+                page = requests.get(url, headers={
+                    'cookie': cookie,
+                    'referer': referer
+                })
+                mac_results.extend(self.parse_macs.findall(page.text))
+
+            if not mac_results:
                 return False
 
-            self.last_results = [mac.replace("-", ":") for mac in result]
+            self.last_results = [mac.replace("-", ":") for mac in mac_results]
             return True

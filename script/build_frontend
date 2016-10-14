@@ -10,7 +10,7 @@ npm run frontend_prod
 
 cp bower_components/webcomponentsjs/webcomponents-lite.min.js ..
 cp -r build/* ..
-node script/sw-precache.js
+BUILD_DEV=0 node script/gen-service-worker.js
 cp build/service_worker.js ..
 
 cd ..

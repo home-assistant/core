@@ -1,4 +1,5 @@
 """The tests for the persistent notification component."""
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.persistent_notification as pn
 
 from tests.common import get_test_home_assistant
@@ -10,7 +11,7 @@ class TestPersistentNotification:
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        pn.setup(self.hass, {})
+        setup_component(self.hass, pn.DOMAIN, {})
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -22,7 +23,7 @@ class TestPersistentNotification:
 
         pn.create(self.hass, 'Hello World {{ 1 + 1 }}',
                   title='{{ 1 + 1 }} beers')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         entity_ids = self.hass.states.entity_ids(pn.DOMAIN)
         assert len(entity_ids) == 1
@@ -36,14 +37,14 @@ class TestPersistentNotification:
         assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 0
 
         pn.create(self.hass, 'test', notification_id='Beer 2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(self.hass.states.entity_ids()) == 1
         state = self.hass.states.get('persistent_notification.beer_2')
         assert state.state == 'test'
 
         pn.create(self.hass, 'test 2', notification_id='Beer 2')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         # We should have overwritten old one
         assert len(self.hass.states.entity_ids()) == 1
@@ -55,7 +56,7 @@ class TestPersistentNotification:
         assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 0
 
         pn.create(self.hass, '{{ message + 1 }}', '{{ title + 1 }}')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         entity_ids = self.hass.states.entity_ids(pn.DOMAIN)
         assert len(entity_ids) == 1

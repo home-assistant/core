@@ -40,6 +40,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(rollershutter_update)
 
 
+# pylint: disable=abstract-method
 class RfxtrxRollershutter(rfxtrx.RfxtrxDevice, RollershutterDevice):
     """Representation of an rfxtrx roller shutter."""
 

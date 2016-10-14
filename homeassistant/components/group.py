@@ -4,18 +4,19 @@ Provides functionality to group entities.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
 """
+import logging
+import os
 import threading
-from collections import OrderedDict
 
 import voluptuous as vol
 
-import homeassistant.core as ha
+from homeassistant import config as conf_util, core as ha
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
-    STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_UNKNOWN,
-    ATTR_ASSUMED_STATE, )
-from homeassistant.helpers.entity import (
-    Entity, generate_entity_id, split_entity_id)
+    STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
+    STATE_UNLOCKED, STATE_UNKNOWN, ATTR_ASSUMED_STATE)
+from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_state_change
 import homeassistant.helpers.config_validation as cv
 
@@ -30,41 +31,32 @@ ATTR_AUTO = 'auto'
 ATTR_ORDER = 'order'
 ATTR_VIEW = 'view'
 
+SERVICE_RELOAD = 'reload'
+RELOAD_SERVICE_SCHEMA = vol.Schema({})
+
+_LOGGER = logging.getLogger(__name__)
+
 
 def _conf_preprocess(value):
     """Preprocess alternative configuration formats."""
-    if isinstance(value, (str, list)):
+    if not isinstance(value, dict):
         value = {CONF_ENTITIES: value}
 
     return value
 
-_SINGLE_GROUP_CONFIG = vol.Schema(vol.All(_conf_preprocess, {
-    vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
-    CONF_VIEW: bool,
-    CONF_NAME: str,
-    CONF_ICON: cv.icon,
-}))
-
-
-def _group_dict(value):
-    """Validate a dictionary of group definitions."""
-    config = OrderedDict()
-    for key, group in value.items():
-        try:
-            config[key] = _SINGLE_GROUP_CONFIG(group)
-        except vol.MultipleInvalid as ex:
-            raise vol.Invalid('Group {} is invalid: {}'.format(key, ex))
-
-    return config
-
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(dict, _group_dict)
+    DOMAIN: cv.ordered_dict(vol.All(_conf_preprocess, {
+        vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
+        CONF_VIEW: cv.boolean,
+        CONF_NAME: cv.string,
+        CONF_ICON: cv.icon,
+    }, cv.match_all))
 }, extra=vol.ALLOW_EXTRA)
 
 # List of ON/OFF state tuples for groupable states
 _GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME),
-                (STATE_OPEN, STATE_CLOSED)]
+                (STATE_OPEN, STATE_CLOSED), (STATE_LOCKED, STATE_UNLOCKED)]
 
 
 def _get_group_on_off(state):
@@ -89,6 +81,11 @@ def is_on(hass, entity_id):
     return False
 
 
+def reload(hass):
+    """Reload the automation from config."""
+    hass.services.call(DOMAIN, SERVICE_RELOAD)
+
+
 def expand_entity_ids(hass, entity_ids):
     """Return entity_ids with group entity ids replaced by their members."""
     found_ids = []
@@ -101,7 +98,7 @@ def expand_entity_ids(hass, entity_ids):
 
         try:
             # If entity_id points at a group, expand it
-            domain, _ = split_entity_id(entity_id)
+            domain, _ = ha.split_entity_id(entity_id)
 
             if domain == DOMAIN:
                 found_ids.extend(
@@ -122,35 +119,59 @@ def expand_entity_ids(hass, entity_ids):
 
 def get_entity_ids(hass, entity_id, domain_filter=None):
     """Get members of this group."""
-    entity_id = entity_id.lower()
+    group = hass.states.get(entity_id)
 
-    try:
-        entity_ids = hass.states.get(entity_id).attributes[ATTR_ENTITY_ID]
-
-        if domain_filter:
-            domain_filter = domain_filter.lower()
-
-            return [ent_id for ent_id in entity_ids
-                    if ent_id.startswith(domain_filter)]
-        else:
-            return entity_ids
-
-    except (AttributeError, KeyError):
-        # AttributeError if state did not exist
-        # KeyError if key did not exist in attributes
+    if not group or ATTR_ENTITY_ID not in group.attributes:
         return []
+
+    entity_ids = group.attributes[ATTR_ENTITY_ID]
+
+    if not domain_filter:
+        return entity_ids
+
+    domain_filter = domain_filter.lower() + '.'
+
+    return [ent_id for ent_id in entity_ids
+            if ent_id.startswith(domain_filter)]
 
 
 def setup(hass, config):
     """Setup all groups found definded in the configuration."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    success = _process_config(hass, config, component)
+
+    if not success:
+        return False
+
+    descriptions = conf_util.load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    def reload_service_handler(service_call):
+        """Remove all groups and load new ones from config."""
+        conf = component.prepare_reload()
+        if conf is None:
+            return
+        _process_config(hass, conf, component)
+
+    hass.services.register(DOMAIN, SERVICE_RELOAD, reload_service_handler,
+                           descriptions[DOMAIN][SERVICE_RELOAD],
+                           schema=RELOAD_SERVICE_SCHEMA)
+
+    return True
+
+
+def _process_config(hass, config, component):
+    """Process group configuration."""
     for object_id, conf in config.get(DOMAIN, {}).items():
         name = conf.get(CONF_NAME, object_id)
         entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
 
-        Group(hass, name, entity_ids, icon=icon, view=view,
-              object_id=object_id)
+        group = Group(hass, name, entity_ids, icon=icon, view=view,
+                      object_id=object_id)
+        component.add_entities((group,))
 
     return True
 
@@ -176,6 +197,7 @@ class Group(Entity):
         self.group_off = None
         self._assumed_state = False
         self._lock = threading.Lock()
+        self._unsub_state_changed = None
 
         if entity_ids is not None:
             self.update_tracked_entity_ids(entity_ids)
@@ -237,20 +259,25 @@ class Group(Entity):
 
     def start(self):
         """Start tracking members."""
-        track_state_change(
+        self._unsub_state_changed = track_state_change(
             self.hass, self.tracking, self._state_changed_listener)
 
     def stop(self):
         """Unregister the group from Home Assistant."""
-        self.hass.states.remove(self.entity_id)
-
-        self.hass.bus.remove_listener(
-            ha.EVENT_STATE_CHANGED, self._state_changed_listener)
+        self.remove()
 
     def update(self):
         """Query all members and determine current group state."""
         self._state = STATE_UNKNOWN
         self._update_group_state()
+
+    def remove(self):
+        """Remove group from HASS."""
+        super().remove()
+
+        if self._unsub_state_changed:
+            self._unsub_state_changed()
+            self._unsub_state_changed = None
 
     def _state_changed_listener(self, entity_id, old_state, new_state):
         """Respond to a member state changing."""
@@ -304,8 +331,9 @@ class Group(Entity):
             if gr_on is None:
                 return
 
-            if tr_state is None or (gr_state == gr_on and
-                                    tr_state.state == gr_off):
+            if tr_state is None or ((gr_state == gr_on and
+                                     tr_state.state == gr_off) or
+                                    tr_state.state not in (gr_on, gr_off)):
                 if states is None:
                     states = self._tracking_states
 

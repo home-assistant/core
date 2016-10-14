@@ -7,33 +7,42 @@ https://home-assistant.io/components/media_player.panasonic_viera/
 import logging
 import socket
 
-from homeassistant.components.media_player import (
-    DOMAIN, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
-from homeassistant.helpers import validate_config
+import voluptuous as vol
 
-CONF_PORT = "port"
+from homeassistant.components.media_player import (
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['panasonic_viera==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['panasonic_viera==0.2']
+DEFAULT_NAME = 'Panasonic Viera TV'
+DEFAULT_PORT = 55000
 
 SUPPORT_VIERATV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_TURN_OFF
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+})
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Panasonic Viera TV platform."""
-    from panasonic_viera import DEFAULT_PORT, RemoteControl
+    from panasonic_viera import RemoteControl
 
-    name = config.get(CONF_NAME, 'Panasonic Viera TV')
-    port = config.get(CONF_PORT, DEFAULT_PORT)
+    name = config.get(CONF_NAME)
+    port = config.get(CONF_PORT)
 
     if discovery_info:
         _LOGGER.debug('%s', discovery_info)
@@ -46,13 +55,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([PanasonicVieraTVDevice(name, remote)])
         return True
 
-    # Validate that all required config options are given
-    if not validate_config({DOMAIN: config}, {DOMAIN: [CONF_HOST]}, _LOGGER):
-        return False
-
-    host = config.get(CONF_HOST, None)
-
+    host = config.get(CONF_HOST)
     remote = RemoteControl(host, port)
+
     try:
         remote.get_mute()
     except (socket.timeout, TimeoutError, OSError):

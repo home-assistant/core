@@ -10,7 +10,8 @@ import logging
 # pylint: disable=import-error
 from threading import Timer
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
-    ATTR_RGB_COLOR, DOMAIN, Light
+    ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
+    SUPPORT_RGB_COLOR, DOMAIN, Light
 from homeassistant.components import zwave
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import HASS_COLOR_MAX, HASS_COLOR_MIN, \
@@ -23,6 +24,22 @@ AEOTEC = 0x86
 AEOTEC_ZW098_LED_BULB = 0x62
 AEOTEC_ZW098_LED_BULB_LIGHT = (AEOTEC, AEOTEC_ZW098_LED_BULB)
 
+LINEAR = 0x14f
+LINEAR_WD500Z_DIMMER = 0x3034
+LINEAR_WD500Z_DIMMER_LIGHT = (LINEAR, LINEAR_WD500Z_DIMMER)
+
+GE = 0x63
+GE_12724_DIMMER = 0x3031
+GE_12724_DIMMER_LIGHT = (GE, GE_12724_DIMMER)
+
+DRAGONTECH = 0x184
+DRAGONTECH_PD100_DIMMER = 0x3032
+DRAGONTECH_PD100_DIMMER_LIGHT = (DRAGONTECH, DRAGONTECH_PD100_DIMMER)
+
+ACT = 0x01
+ACT_ZDP100_DIMMER = 0x3030
+ACT_ZDP100_DIMMER_LIGHT = (ACT, ACT_ZDP100_DIMMER)
+
 COLOR_CHANNEL_WARM_WHITE = 0x01
 COLOR_CHANNEL_COLD_WHITE = 0x02
 COLOR_CHANNEL_RED = 0x04
@@ -30,9 +47,14 @@ COLOR_CHANNEL_GREEN = 0x08
 COLOR_CHANNEL_BLUE = 0x10
 
 WORKAROUND_ZW098 = 'zw098'
+WORKAROUND_DELAY = 'alt_delay'
 
 DEVICE_MAPPINGS = {
-    AEOTEC_ZW098_LED_BULB_LIGHT: WORKAROUND_ZW098
+    AEOTEC_ZW098_LED_BULB_LIGHT: WORKAROUND_ZW098,
+    LINEAR_WD500Z_DIMMER_LIGHT: WORKAROUND_DELAY,
+    GE_12724_DIMMER_LIGHT: WORKAROUND_DELAY,
+    DRAGONTECH_PD100_DIMMER_LIGHT: WORKAROUND_DELAY,
+    ACT_ZDP100_DIMMER_LIGHT: WORKAROUND_DELAY
 }
 
 # Generate midpoint color temperatures for bulbs that have limited
@@ -41,25 +63,27 @@ TEMP_MID_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 2 + HASS_COLOR_MIN
 TEMP_WARM_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 * 2 + HASS_COLOR_MIN
 TEMP_COLD_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 + HASS_COLOR_MIN
 
+SUPPORT_ZWAVE = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and add Z-Wave lights."""
     if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
 
-    if value.command_class != zwave.COMMAND_CLASS_SWITCH_MULTILEVEL:
+    if value.command_class != zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL:
         return
-    if value.type != zwave.TYPE_BYTE:
+    if value.type != zwave.const.TYPE_BYTE:
         return
-    if value.genre != zwave.GENRE_USER:
+    if value.genre != zwave.const.GENRE_USER:
         return
 
     value.set_change_verified(False)
 
-    if node.has_command_class(zwave.COMMAND_CLASS_COLOR):
+    if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
         try:
             add_devices([ZwaveColorLight(value)])
         except ValueError as exception:
@@ -92,6 +116,23 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         self._brightness = None
         self._state = None
         self.update_properties()
+        self._alt_delay = None
+        self._zw098 = None
+
+        # Enable appropriate workaround flags for our device
+        # Make sure that we have values for the key before converting to int
+        if (value.node.manufacturer_id.strip() and
+                value.node.product_id.strip()):
+            specific_sensor_key = (int(value.node.manufacturer_id, 16),
+                                   int(value.node.product_id, 16))
+            if specific_sensor_key in DEVICE_MAPPINGS:
+                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZW098:
+                    _LOGGER.debug("AEOTEC ZW098 workaround enabled")
+                    self._zw098 = 1
+                elif DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_DELAY:
+                    _LOGGER.debug("Dimmer delay workaround enabled for node:"
+                                  " %s", value.parent_id)
+                    self._alt_delay = 1
 
         # Used for value change event handling
         self._refreshing = False
@@ -107,25 +148,28 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 
     def _value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.value_id != value.value_id:
-            return
+        if self._value.value_id == value.value_id or \
+           self._value.node == value.node:
 
-        if self._refreshing:
-            self._refreshing = False
-            self.update_properties()
-        else:
-            def _refresh_value():
-                """Used timer callback for delayed value refresh."""
-                self._refreshing = True
-                self._value.refresh()
+            if self._refreshing:
+                self._refreshing = False
+                self.update_properties()
+            else:
+                def _refresh_value():
+                    """Used timer callback for delayed value refresh."""
+                    self._refreshing = True
+                    self._value.refresh()
 
-            if self._timer is not None and self._timer.isAlive():
-                self._timer.cancel()
+                if self._timer is not None and self._timer.isAlive():
+                    self._timer.cancel()
 
-            self._timer = Timer(2, _refresh_value)
-            self._timer.start()
+                if self._alt_delay:
+                    self._timer = Timer(5, _refresh_value)
+                else:
+                    self._timer = Timer(2, _refresh_value)
+                self._timer.start()
 
-        self.update_ha_state()
+            self.update_ha_state()
 
     @property
     def brightness(self):
@@ -136,6 +180,11 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
     def is_on(self):
         """Return true if device is on."""
         return self._state == STATE_ON
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_ZWAVE
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -172,7 +221,6 @@ class ZwaveColorLight(ZwaveDimmer):
         self._color_channels = None
         self._rgb = None
         self._ct = None
-        self._zw098 = None
 
         # Here we attempt to find a zwave color value with the same instance
         # id as the dimmer value. Currently zwave nodes that change colors
@@ -187,23 +235,12 @@ class ZwaveColorLight(ZwaveDimmer):
             raise ValueError("No matching color command found.")
 
         for value_color_channels in value.node.get_values(
-                class_id=zwave.COMMAND_CLASS_COLOR, genre='System',
-                type="Int").values():
+                class_id=zwave.const.COMMAND_CLASS_SWITCH_COLOR,
+                genre='System', type="Int").values():
             self._value_color_channels = value_color_channels
 
         if self._value_color_channels is None:
             raise ValueError("Color Channels not found.")
-
-        # Make sure that we have values for the key before converting to int
-        if (value.node.manufacturer_id.strip() and
-                value.node.product_id.strip()):
-            specific_sensor_key = (int(value.node.manufacturer_id, 16),
-                                   int(value.node.product_id, 16))
-
-            if specific_sensor_key in DEVICE_MAPPINGS:
-                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZW098:
-                    _LOGGER.debug("AEOTEC ZW098 workaround enabled")
-                    self._zw098 = 1
 
         super().__init__(value)
 

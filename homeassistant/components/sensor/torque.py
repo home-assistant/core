@@ -4,19 +4,28 @@ Support for the Torque OBD application.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.torque/
 """
-
+import logging
 import re
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.http import HomeAssistantView
+import voluptuous as vol
 
-DOMAIN = 'torque'
-DEPENDENCIES = ['http']
-SENSOR_EMAIL_FIELD = 'eml'
-DEFAULT_NAME = 'vehicle'
-ENTITY_NAME_FORMAT = '{0} {1}'
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_EMAIL, CONF_NAME)
+from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
+
+_LOGGER = logging.getLogger(__name__)
 
 API_PATH = '/api/torque'
+
+DEFAULT_NAME = 'vehicle'
+DEPENDENCIES = ['http']
+DOMAIN = 'torque'
+
+ENTITY_NAME_FORMAT = '{0} {1}'
+
+SENSOR_EMAIL_FIELD = 'eml'
 SENSOR_NAME_KEY = r'userFullName(\w+)'
 SENSOR_UNIT_KEY = r'userUnit(\w+)'
 SENSOR_VALUE_KEY = r'k(\w+)'
@@ -24,6 +33,11 @@ SENSOR_VALUE_KEY = r'k(\w+)'
 NAME_KEY = re.compile(SENSOR_NAME_KEY)
 UNIT_KEY = re.compile(SENSOR_UNIT_KEY)
 VALUE_KEY = re.compile(SENSOR_VALUE_KEY)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_EMAIL): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 def decode(value):
@@ -39,12 +53,12 @@ def convert_pid(value):
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Torque platform."""
-    vehicle = config.get('name', DEFAULT_NAME)
-    email = config.get('email', None)
+    vehicle = config.get(CONF_NAME)
+    email = config.get(CONF_EMAIL)
     sensors = {}
 
-    hass.wsgi.register_view(TorqueReceiveDataView(hass, email, vehicle,
-                                                  sensors, add_devices))
+    hass.wsgi.register_view(TorqueReceiveDataView(
+        hass, email, vehicle, sensors, add_devices))
     return True
 
 

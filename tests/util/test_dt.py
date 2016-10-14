@@ -137,7 +137,10 @@ class TestDateUtil(unittest.TestCase):
     def test_get_age(self):
         """Test get_age."""
         diff = dt_util.now() - timedelta(seconds=0)
-        self.assertEqual(dt_util.get_age(diff), "0 second")
+        self.assertEqual(dt_util.get_age(diff), "0 seconds")
+
+        diff = dt_util.now() - timedelta(seconds=1)
+        self.assertEqual(dt_util.get_age(diff), "1 second")
 
         diff = dt_util.now() - timedelta(seconds=30)
         self.assertEqual(dt_util.get_age(diff), "30 seconds")

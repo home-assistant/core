@@ -7,28 +7,46 @@ https://home-assistant.io/components/media_player.mpd/
 import logging
 import socket
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_PLAYLIST,
     MediaPlayerDevice)
-from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import (
+    STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_PORT, CONF_PASSWORD,
+    CONF_HOST)
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['python-mpd2==0.5.5']
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['python-mpd2==0.5.5']
+
+CONF_LOCATION = 'location'
+
+DEFAULT_LOCATION = 'MPD'
+DEFAULT_PORT = 6600
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
     SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_PLAY_MEDIA
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+})
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MPD platform."""
-    daemon = config.get('server', None)
-    port = config.get('port', 6600)
-    location = config.get('location', 'MPD')
-    password = config.get('password', None)
+    daemon = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
+    location = config.get(CONF_LOCATION)
+    password = config.get(CONF_PASSWORD)
 
     import mpd
 
@@ -43,18 +61,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         mpd_client.close()
         mpd_client.disconnect()
     except socket.error:
-        _LOGGER.error(
-            "Unable to connect to MPD. "
-            "Please check your settings")
-
+        _LOGGER.error("Unable to connect to MPD")
         return False
     except mpd.CommandError as error:
 
         if "incorrect password" in str(error):
-            _LOGGER.error(
-                "MPD reported incorrect password. "
-                "Please check your password.")
-
+            _LOGGER.error("MPD reported incorrect password")
             return False
         else:
             raise
@@ -65,7 +77,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MpdDevice(MediaPlayerDevice):
     """Representation of a MPD server."""
 
-    # MPD confuses pylint
     # pylint: disable=no-member, too-many-public-methods, abstract-method
     def __init__(self, server, port, location, password):
         """Initialize the MPD device."""

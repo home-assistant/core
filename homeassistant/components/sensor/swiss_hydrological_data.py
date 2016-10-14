@@ -10,8 +10,9 @@ from datetime import timedelta
 import voluptuous as vol
 import requests
 
-from homeassistant.const import (TEMP_CELSIUS, CONF_PLATFORM, CONF_NAME,
-                                 STATE_UNKNOWN)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    TEMP_CELSIUS, CONF_NAME, STATE_UNKNOWN, ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -21,25 +22,28 @@ REQUIREMENTS = ['xmltodict==0.10.2']
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://www.hydrodata.ch/xml/SMS.xml'
 
-DEFAULT_NAME = 'Water temperature'
 CONF_STATION = 'station'
+CONF_ATTRIBUTION = "Data provided by the Swiss Federal Office for the " \
+                   "Environment FOEN"
+
+DEFAULT_NAME = 'Water temperature'
+
 ICON = 'mdi:cup-water'
 
-ATTR_LOCATION = 'Location'
-ATTR_UPDATE = 'Update'
-ATTR_DISCHARGE = 'Discharge'
-ATTR_WATERLEVEL = 'Level'
-ATTR_DISCHARGE_MEAN = 'Discharge mean'
-ATTR_WATERLEVEL_MEAN = 'Level mean'
-ATTR_TEMPERATURE_MEAN = 'Temperature mean'
-ATTR_DISCHARGE_MAX = 'Discharge max'
-ATTR_WATERLEVEL_MAX = 'Level max'
-ATTR_TEMPERATURE_MAX = 'Temperature max'
+ATTR_LOCATION = 'location'
+ATTR_UPDATE = 'update'
+ATTR_DISCHARGE = 'discharge'
+ATTR_WATERLEVEL = 'level'
+ATTR_DISCHARGE_MEAN = 'discharge_mean'
+ATTR_WATERLEVEL_MEAN = 'level_mean'
+ATTR_TEMPERATURE_MEAN = 'temperature_mean'
+ATTR_DISCHARGE_MAX = 'discharge_max'
+ATTR_WATERLEVEL_MAX = 'level_max'
+ATTR_TEMPERATURE_MAX = 'temperature_max'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'swiss_hydrological_data',
-    vol.Optional(CONF_NAME): cv.string,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION): vol.Coerce(int),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 # Return cached results if last scan was less then this time ago.
@@ -50,8 +54,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Swiss hydrological sensor."""
     import xmltodict
 
+    name = config.get(CONF_NAME)
     station = config.get(CONF_STATION)
-    name = config.get(CONF_NAME, DEFAULT_NAME)
 
     try:
         response = requests.get(_RESOURCE, timeout=5)
@@ -126,6 +130,7 @@ class SwissHydrologicalDataSensor(Entity):
 
             attributes[ATTR_LOCATION] = self.data.measurings['location']
             attributes[ATTR_UPDATE] = self.data.measurings['update_time']
+            attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
             return attributes
 
     @property

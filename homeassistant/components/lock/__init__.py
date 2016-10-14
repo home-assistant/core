@@ -22,6 +22,7 @@ from homeassistant.components import group
 
 DOMAIN = 'lock'
 SCAN_INTERVAL = 30
+ATTR_CHANGED_BY = 'changed_by'
 
 GROUP_NAME_ALL_LOCKS = 'all locks'
 ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
@@ -101,6 +102,11 @@ def setup(hass, config):
 class LockDevice(Entity):
     """Representation of a lock."""
 
+    @property
+    def changed_by(self):
+        """Last change triggered by."""
+        return None
+
     # pylint: disable=no-self-use
     @property
     def code_format(self):
@@ -127,6 +133,7 @@ class LockDevice(Entity):
             return None
         state_attr = {
             ATTR_CODE_FORMAT: self.code_format,
+            ATTR_CHANGED_BY: self.changed_by
         }
         return state_attr
 

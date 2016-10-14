@@ -67,7 +67,7 @@ Build home automation on top of your devices:
 -  Turn on the lights when people get home after sunset
 -  Turn on lights slowly during sunset to compensate for less light
 -  Turn off all lights and devices when everybody leaves the house
--  Offers a `REST API <https://home-assistant.io/developers/api/>`__
+-  Offers a `REST API <https://home-assistant.io/developers/rest_api/>`__
    and can interface with MQTT for easy integration with other projects
    like `OwnTracks <http://owntracks.org/>`__
 -  Allow sending notifications using

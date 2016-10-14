@@ -11,25 +11,29 @@ import logging
 import queue
 import threading
 import time
-from datetime import timedelta
+from datetime import timedelta, datetime
+from typing import Any, Union, Optional, List
 
 import voluptuous as vol
 
-import homeassistant.util.dt as dt_util
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
                                  EVENT_TIME_CHANGED, MATCH_ALL)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType, QueryType
+import homeassistant.util.dt as dt_util
 
-DOMAIN = "recorder"
+DOMAIN = 'recorder'
 
-REQUIREMENTS = ['sqlalchemy==1.0.14']
+REQUIREMENTS = ['sqlalchemy==1.1.1']
 
-DEFAULT_URL = "sqlite:///{hass_config_path}"
-DEFAULT_DB_FILE = "home-assistant_v2.db"
+DEFAULT_URL = 'sqlite:///{hass_config_path}'
+DEFAULT_DB_FILE = 'home-assistant_v2.db'
 
-CONF_DB_URL = "db_url"
-CONF_PURGE_DAYS = "purge_days"
+CONF_DB_URL = 'db_url'
+CONF_PURGE_DAYS = 'purge_days'
 
 RETRIES = 3
 CONNECT_RETRY_WAIT = 10
@@ -37,39 +41,42 @@ QUERY_RETRY_WAIT = 0.1
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_PURGE_DAYS): vol.All(vol.Coerce(int),
-                                               vol.Range(min=1)),
-        # pylint: disable=no-value-for-parameter
-        vol.Optional(CONF_DB_URL): vol.Url(),
+        vol.Optional(CONF_PURGE_DAYS):
+            vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional(CONF_DB_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
-_INSTANCE = None
+_INSTANCE = None  # type: Any
 _LOGGER = logging.getLogger(__name__)
 
 # These classes will be populated during setup()
-# pylint: disable=invalid-name
-Session = None
+# pylint: disable=invalid-name,no-member
+Session = None  # pylint: disable=no-member
 
 
-def execute(q):
+# pylint: disable=invalid-sequence-index
+def execute(q: QueryType) -> List[Any]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
     """
     import sqlalchemy.exc
-    for _ in range(0, RETRIES):
-        try:
-            return [
-                row for row in
-                (row.to_native() for row in q)
-                if row is not None]
-        except sqlalchemy.exc.SQLAlchemyError as e:
-            log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
+    try:
+        for _ in range(0, RETRIES):
+            try:
+                return [
+                    row for row in
+                    (row.to_native() for row in q)
+                    if row is not None]
+            except sqlalchemy.exc.SQLAlchemyError as e:
+                log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
+    finally:
+        Session.close()
     return []
 
 
-def run_information(point_in_time=None):
+def run_information(point_in_time: Optional[datetime]=None):
     """Return information about current run.
 
     There is also the run that covers point_in_time.
@@ -88,11 +95,14 @@ def run_information(point_in_time=None):
         (recorder_runs.end > point_in_time)).first()
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Setup the recorder."""
-    # pylint: disable=global-statement
-    # pylint: disable=too-many-locals
-    global _INSTANCE
+    global _INSTANCE  # pylint: disable=global-statement
+
+    if _INSTANCE is not None:
+        _LOGGER.error("Only a single instance allowed")
+        return False
+
     purge_days = config.get(DOMAIN, {}).get(CONF_PURGE_DAYS)
 
     db_url = config.get(DOMAIN, {}).get(CONF_DB_URL, None)
@@ -105,32 +115,38 @@ def setup(hass, config):
     return True
 
 
-def query(model_name, *args):
+def query(model_name: Union[str, Any], *args) -> QueryType:
     """Helper to return a query handle."""
+    _verify_instance()
+
     if isinstance(model_name, str):
-        return Session().query(get_model(model_name), *args)
-    return Session().query(model_name, *args)
+        return Session.query(get_model(model_name), *args)
+    return Session.query(model_name, *args)
 
 
-def get_model(model_name):
+def get_model(model_name: str) -> Any:
     """Get a model class."""
     from homeassistant.components.recorder import models
+    try:
+        return getattr(models, model_name)
+    except AttributeError:
+        _LOGGER.error("Invalid model name %s", model_name)
+        return None
 
-    return getattr(models, model_name)
 
-
-def log_error(e, retry_wait=0, rollback=True,
-              message="Error during query: %s"):
+def log_error(e: Exception, retry_wait: Optional[float]=0,
+              rollback: Optional[bool]=True,
+              message: Optional[str]="Error during query: %s") -> None:
     """Log about SQLAlchemy errors in a sane manner."""
     import sqlalchemy.exc
     if not isinstance(e, sqlalchemy.exc.OperationalError):
-        _LOGGER.exception(e)
+        _LOGGER.exception(str(e))
     else:
         _LOGGER.error(message, str(e))
     if rollback:
-        Session().rollback()
+        Session.rollback()
     if retry_wait:
-        _LOGGER.info("Retrying failed query in %s seconds", QUERY_RETRY_WAIT)
+        _LOGGER.info("Retrying in %s seconds", retry_wait)
         time.sleep(retry_wait)
 
 
@@ -138,19 +154,18 @@ class Recorder(threading.Thread):
     """A threaded recorder class."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, hass, purge_days, uri):
+    def __init__(self, hass: HomeAssistant, purge_days: int, uri: str) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self)
 
         self.hass = hass
         self.purge_days = purge_days
-        self.queue = queue.Queue()
-        self.quit_object = object()
+        self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
         self.db_ready = threading.Event()
-        self.engine = None
-        self._run = None
+        self.engine = None  # type: Any
+        self._run = None  # type: Any
 
         def start_recording(event):
             """Start recording."""
@@ -165,8 +180,6 @@ class Recorder(threading.Thread):
         from homeassistant.components.recorder.models import Events, States
         import sqlalchemy.exc
 
-        global _INSTANCE
-
         while True:
             try:
                 self._setup_connection()
@@ -177,63 +190,52 @@ class Recorder(threading.Thread):
                           message="Error during connection setup: %s")
 
         if self.purge_days is not None:
-            track_point_in_utc_time(self.hass,
-                                    lambda now: self._purge_old_data(),
+            def purge_ticker(event):
+                """Rerun purge every second day."""
+                self._purge_old_data()
+                track_point_in_utc_time(self.hass, purge_ticker,
+                                        dt_util.utcnow() + timedelta(days=2))
+            track_point_in_utc_time(self.hass, purge_ticker,
                                     dt_util.utcnow() + timedelta(minutes=5))
 
         while True:
             event = self.queue.get()
 
-            if event == self.quit_object:
+            if event is None:
                 self._close_run()
                 self._close_connection()
-                _INSTANCE = None
                 self.queue.task_done()
                 return
 
-            elif event.event_type == EVENT_TIME_CHANGED:
+            if event.event_type == EVENT_TIME_CHANGED:
                 self.queue.task_done()
                 continue
 
-            session = Session()
             dbevent = Events.from_event(event)
-            session.add(dbevent)
-
-            for _ in range(0, RETRIES):
-                try:
-                    session.commit()
-                    break
-                except sqlalchemy.exc.OperationalError as e:
-                    log_error(e, retry_wait=QUERY_RETRY_WAIT,
-                              rollback=True)
+            self._commit(dbevent)
 
             if event.event_type != EVENT_STATE_CHANGED:
                 self.queue.task_done()
                 continue
 
-            session = Session()
             dbstate = States.from_event(event)
-
-            for _ in range(0, RETRIES):
-                try:
-                    dbstate.event_id = dbevent.event_id
-                    session.add(dbstate)
-                    session.commit()
-                    break
-                except sqlalchemy.exc.OperationalError as e:
-                    log_error(e, retry_wait=QUERY_RETRY_WAIT,
-                              rollback=True)
+            dbstate.event_id = dbevent.event_id
+            self._commit(dbstate)
 
             self.queue.task_done()
 
+    @callback
     def event_listener(self, event):
         """Listen for new events and put them in the process queue."""
         self.queue.put(event)
 
     def shutdown(self, event):
         """Tell the recorder to shut down."""
-        self.queue.put(self.quit_object)
-        self.queue.join()
+        global _INSTANCE  # pylint: disable=global-statement
+        _INSTANCE = None
+
+        self.queue.put(None)
+        self.join()
 
     def block_till_done(self):
         """Block till all events processed."""
@@ -245,8 +247,7 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        # pylint: disable=global-statement
-        global Session
+        global Session  # pylint: disable=global-statement
 
         import homeassistant.components.recorder.models as models
         from sqlalchemy import create_engine
@@ -269,7 +270,7 @@ class Recorder(threading.Thread):
 
     def _close_connection(self):
         """Close the connection."""
-        global Session
+        global Session  # pylint: disable=global-statement
         self.engine.dispose()
         self.engine = None
         Session = None
@@ -282,7 +283,7 @@ class Recorder(threading.Thread):
             run.end = self.recording_start
             _LOGGER.warning("Ended unfinished session (id=%s from %s)",
                             run.run_id, run.start)
-            Session().add(run)
+            Session.add(run)
 
             _LOGGER.warning("Found unfinished sessions")
 
@@ -290,16 +291,12 @@ class Recorder(threading.Thread):
             start=self.recording_start,
             created=dt_util.utcnow()
         )
-        session = Session()
-        session.add(self._run)
-        session.commit()
+        self._commit(self._run)
 
     def _close_run(self):
         """Save end time for current run."""
         self._run.end = dt_util.utcnow()
-        session = Session()
-        session.add(self._run)
-        session.commit()
+        self._commit(self._run)
         self._run = None
 
     def _purge_old_data(self):
@@ -313,26 +310,51 @@ class Recorder(threading.Thread):
 
         purge_before = dt_util.utcnow() - timedelta(days=self.purge_days)
 
-        _LOGGER.info("Purging events created before %s", purge_before)
-        deleted_rows = Session().query(Events).filter(
-            (Events.created < purge_before)).delete(synchronize_session=False)
-        _LOGGER.debug("Deleted %s events", deleted_rows)
+        def _purge_states(session):
+            deleted_rows = session.query(States) \
+                                  .filter((States.created < purge_before)) \
+                                  .delete(synchronize_session=False)
+            _LOGGER.debug("Deleted %s states", deleted_rows)
 
-        _LOGGER.info("Purging states created before %s", purge_before)
-        deleted_rows = Session().query(States).filter(
-            (States.created < purge_before)).delete(synchronize_session=False)
-        _LOGGER.debug("Deleted %s states", deleted_rows)
+        if self._commit(_purge_states):
+            _LOGGER.info("Purged states created before %s", purge_before)
 
-        Session().commit()
-        Session().expire_all()
+        def _purge_events(session):
+            deleted_rows = session.query(Events) \
+                                  .filter((Events.created < purge_before)) \
+                                  .delete(synchronize_session=False)
+            _LOGGER.debug("Deleted %s events", deleted_rows)
+
+        if self._commit(_purge_events):
+            _LOGGER.info("Purged events created before %s", purge_before)
+
+        Session.expire_all()
 
         # Execute sqlite vacuum command to free up space on disk
         if self.engine.driver == 'sqlite':
             _LOGGER.info("Vacuuming SQLite to free space")
             self.engine.execute("VACUUM")
 
+    @staticmethod
+    def _commit(work):
+        """Commit & retry work: Either a model or in a function."""
+        import sqlalchemy.exc
+        session = Session()
+        for _ in range(0, RETRIES):
+            try:
+                if callable(work):
+                    work(session)
+                else:
+                    session.add(work)
+                session.commit()
+                return True
+            except sqlalchemy.exc.OperationalError as e:
+                log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
+        return False
 
-def _verify_instance():
+
+def _verify_instance() -> None:
     """Throw error if recorder not initialized."""
     if _INSTANCE is None:
         raise RuntimeError("Recorder not initialized.")
+    _INSTANCE.block_till_db_ready()

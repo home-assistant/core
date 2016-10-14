@@ -10,8 +10,8 @@ homeassistant:
   # Impacts weather/sunrise data
   elevation: 665
 
-  # C for Celsius, F for Fahrenheit
-  temperature_unit: C
+  # 'metric' for Metric System, 'imperial' for imperial system
+  unit_system: metric
 
   # Pick yours from here:
   # http://en.wikipedia.org/wiki/List_of_tz_database_time_zones

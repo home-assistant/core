@@ -11,7 +11,6 @@ import itertools as it
 import logging
 
 import homeassistant.core as ha
-from homeassistant.helpers.entity import split_entity_id
 from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.loader import get_component
 from homeassistant.const import (
@@ -35,7 +34,7 @@ def is_on(hass, entity_id=None):
         entity_ids = hass.states.entity_ids()
 
     for entity_id in entity_ids:
-        domain = split_entity_id(entity_id)[0]
+        domain = ha.split_entity_id(entity_id)[0]
 
         module = get_component(domain)
 
@@ -95,7 +94,7 @@ def setup(hass, config):
 
         # Group entity_ids by domain. groupby requires sorted data.
         by_domain = it.groupby(sorted(entity_ids),
-                               lambda item: split_entity_id(item)[0])
+                               lambda item: ha.split_entity_id(item)[0])
 
         for domain, ent_ids in by_domain:
             # We want to block for all calls and only return when all calls

@@ -1,0 +1,53 @@
+# Describes the format for available fan services
+
+set_speed:
+  description: Sets fan speed
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'fan.living_room'
+
+    speed:
+      description: Speed setting
+      example: 'low'
+
+turn_on:
+  description: Turns fan on
+
+  fields:
+    entity_id:
+      description: Names(s) of the entities to turn on
+      example: 'fan.living_room'
+
+    speed:
+      description: Speed setting
+      example: 'high'
+
+turn_off:
+  description: Turns fan off
+
+  fields:
+    entity_id:
+      description: Names(s) of the entities to turn off
+      example: 'fan.living_room'
+
+oscillate:
+  description: Oscillates the fan
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to oscillate
+      example: 'fan.desk_fan'
+
+    oscillating:
+      description: Flag to turn on/off oscillation
+      example: True
+
+toggle:
+  description: Toggle the fan on/off
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to toggle
+      exampl: 'fan.living_room'

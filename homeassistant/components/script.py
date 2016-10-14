@@ -14,7 +14,8 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_TOGGLE, STATE_ON, CONF_ALIAS)
-from homeassistant.helpers.entity import ToggleEntity, split_entity_id
+from homeassistant.core import split_entity_id
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
 
@@ -22,6 +23,7 @@ from homeassistant.helpers.script import Script
 
 DOMAIN = "script"
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+GROUP_NAME_ALL_SCRIPTS = 'all scripts'
 DEPENDENCIES = ["group"]
 
 CONF_SEQUENCE = "sequence"
@@ -72,7 +74,8 @@ def toggle(hass, entity_id):
 
 def setup(hass, config):
     """Load the scripts from the configuration."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass,
+                                group_name=GROUP_NAME_ALL_SCRIPTS)
 
     def service_handler(service):
         """Execute a service call to script.<script name>."""
@@ -123,7 +126,7 @@ class ScriptEntity(ToggleEntity):
     def __init__(self, hass, object_id, name, sequence):
         """Initialize the script."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self.script = Script(hass, sequence, name, self.update_ha_state)
+        self.script = Script(hass, sequence, name, self.async_update_ha_state)
 
     @property
     def should_poll(self):

@@ -6,27 +6,34 @@ https://home-assistant.io/components/arduino/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.helpers import validate_config
+from homeassistant.const import CONF_PORT
+import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "arduino"
-REQUIREMENTS = ['PyMata==2.12']
-BOARD = None
+REQUIREMENTS = ['PyMata==2.13']
+
 _LOGGER = logging.getLogger(__name__)
+
+BOARD = None
+
+DOMAIN = 'arduino'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_PORT): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Setup the Arduino component."""
-    if not validate_config(config,
-                           {DOMAIN: ['port']},
-                           _LOGGER):
-        return False
-
     import serial
     global BOARD
     try:
-        BOARD = ArduinoBoard(config[DOMAIN]['port'])
+        BOARD = ArduinoBoard(config[DOMAIN][CONF_PORT])
     except (serial.serialutil.SerialException, FileNotFoundError):
         _LOGGER.exception("Your port is not accessible.")
         return False
