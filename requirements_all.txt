@@ -293,7 +293,7 @@ pmsensor==0.3
 
 # homeassistant.components.climate.proliphix
 # homeassistant.components.thermostat.proliphix
-proliphix==0.3.1
+proliphix==0.4.0
 
 # homeassistant.components.sensor.systemmonitor
 psutil==4.3.1
