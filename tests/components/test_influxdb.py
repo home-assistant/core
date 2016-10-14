@@ -53,19 +53,6 @@ class TestInfluxDB(unittest.TestCase):
         self.assertEqual(EVENT_STATE_CHANGED,
                          self.hass.bus.listen.call_args_list[0][0][0])
 
-    def test_setup_missing_keys(self, mock_client):
-        """Test the setup with missing keys."""
-        config = {
-            'influxdb': {
-                'username': 'user',
-                'password': 'pass',
-            }
-        }
-        for missing in config['influxdb'].keys():
-            config_copy = copy.deepcopy(config)
-            del config_copy['influxdb'][missing]
-            assert not setup_component(self.hass, influxdb.DOMAIN, config_copy)
-
     def test_setup_query_fail(self, mock_client):
         """Test the setup for query failures."""
         config = {

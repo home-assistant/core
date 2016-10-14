@@ -25,6 +25,8 @@ CONF_TAGS = 'tags'
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086
+DEFAULT_USERNAME = ''
+DEFAULT_PASSWORD = ''
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = False
 DOMAIN = 'influxdb'
@@ -33,8 +35,8 @@ TIMEOUT = 5
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
         vol.Optional(CONF_BLACKLIST, default=[]):
             vol.All(cv.ensure_list, [cv.entity_id]),
         vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
