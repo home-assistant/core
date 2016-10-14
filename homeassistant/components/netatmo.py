@@ -1,5 +1,6 @@
 """
-Support for the Netatmo devices (Weather Station and Welcome camera).
+Support for the Netatmo devices
+(Weather Station, Welcome Camera and Thermostat).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/netatmo/
@@ -23,7 +24,8 @@ REQUIREMENTS = [
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SECRET_KEY = 'secret_key'
-
+CONF_DEVICES = 'devices'
+DEFAULT_DEVICES = ['camera', 'sensor', 'binary_sensor', 'climate']
 DOMAIN = 'netatmo'
 
 NETATMO_AUTH = None
@@ -37,6 +39,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_SECRET_KEY): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_DEVICES, default=DEFAULT_DEVICES): cv.ensure_list,
         vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -51,13 +54,14 @@ def setup(hass, config):
         NETATMO_AUTH = lnetatmo.ClientAuth(
             config[DOMAIN][CONF_API_KEY], config[DOMAIN][CONF_SECRET_KEY],
             config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD],
-            'read_station read_camera access_camera')
+            'read_station read_camera access_camera '
+            'read_thermostat write_thermostat')
     except HTTPError:
         _LOGGER.error("Unable to connect to Netatmo API")
         return False
 
     if config[DOMAIN][CONF_DISCOVERY]:
-        for component in 'camera', 'sensor', 'binary_sensor':
+        for component in config[DOMAIN][CONF_DEVICES]:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
@@ -91,3 +95,39 @@ class WelcomeData(object):
         """Call the Netatmo API to update the data."""
         import lnetatmo
         self.welcomedata = lnetatmo.WelcomeData(self.auth)
+
+
+class ThermostatData(object):
+    """Get the latest data from Netatmo."""
+
+    def __init__(self, auth, device=None):
+        """Initialize the data object."""
+        self.auth = auth
+        self.thermostatdata = None
+        self.module_names = []
+        self.device = device
+        self.current_temperature = None
+        self.target_temperature = None
+        self.setpoint_mode = None
+        # self.operation =
+
+    def get_module_names(self):
+        """Return all module available on the API as a list."""
+        self.update()
+        if not self.device:
+            for device in self.thermostatdata.modules:
+                for module in self.thermostatdata.modules[device].values():
+                    self.module_names.append(module['module_name'])
+        else:
+            for module in self.thermostatdata.modules[self.device].values():
+                self.module_names.append(module['module_name'])
+        return self.module_names
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Call the NetAtmo API to update the data."""
+        import lnetatmo
+        self.thermostatdata = lnetatmo.ThermostatData(self.auth)
+        self.target_temperature = self.thermostatdata.setpoint_temp
+        self.setpoint_mode = self.thermostatdata.setpoint_mode
+        self.current_temperature = self.thermostatdata.temp
