@@ -1,5 +1,4 @@
 """The tests for the InfluxDB component."""
-import copy
 import unittest
 from unittest import mock
 
