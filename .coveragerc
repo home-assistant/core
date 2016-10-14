@@ -218,6 +218,7 @@ omit =
     homeassistant/components/openalpr.py
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/sensor/arest.py
+    homeassistant/components/sensor/arwn.py
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/coinmarketcap.py
