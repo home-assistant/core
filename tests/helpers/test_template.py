@@ -405,8 +405,6 @@ class TestHelpersTemplate(unittest.TestCase):
         group.Group.create_group(
             self.hass, 'location group', ['test_domain.object'])
 
-        self.hass.block_till_done()
-
         self.assertEqual(
             'test_domain.object',
             template.Template(
@@ -427,8 +425,6 @@ class TestHelpersTemplate(unittest.TestCase):
 
         group.Group.create_group(
             self.hass, 'location group', ['test_domain.object'])
-
-        self.hass.block_till_done()
 
         self.assertEqual(
             'test_domain.object',

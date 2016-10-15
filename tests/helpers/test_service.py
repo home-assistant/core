@@ -142,8 +142,6 @@ class TestServiceHelpers(unittest.TestCase):
         loader.get_component('group').Group.create_group(
             self.hass, 'test', ['light.Ceiling', 'light.Kitchen'])
 
-        self.hass.block_till_done()
-
         call = ha.ServiceCall('light', 'turn_on',
                               {ATTR_ENTITY_ID: 'light.Bowl'})
 
