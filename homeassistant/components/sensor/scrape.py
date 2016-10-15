@@ -8,11 +8,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
-    CONF_NAME, CONF_RESOURCE, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
+    CONF_NAME, CONF_RESOURCE, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
+    CONF_VALUE_TEMPLATE,CONF_VERIFY_SSL)
+from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['beautifulsoup4==4.5.1']
@@ -20,20 +21,17 @@ REQUIREMENTS = ['beautifulsoup4==4.5.1']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SELECT = 'select'
-CONF_ELEMENT = 'element'
-CONF_BEFORE = 'before'
-CONF_AFTER = 'after'
 
 DEFAULT_NAME = 'Web scrape'
+DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_SELECT): cv.string,
-    vol.Optional(CONF_ELEMENT, default=0): cv.positive_int,
-    vol.Optional(CONF_BEFORE, default=0): cv.positive_int,
-    vol.Optional(CONF_AFTER, default=99999): cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
 
 
@@ -44,12 +42,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     resource = config.get(CONF_RESOURCE)
     method = 'GET'
     payload = auth = headers = None
-    verify_ssl = True
+    verify_ssl = config.get(CONF_VERIFY_SSL)
     select = config.get(CONF_SELECT)
-    element = config.get(CONF_ELEMENT)
-    before = config.get(CONF_BEFORE)
-    after = config.get(CONF_AFTER)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+    if value_template is not None:
+        value_template.hass = hass
 
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
@@ -59,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     add_devices([
-        ScrapeSensor(rest, name, select, element, before, after, unit)
+        ScrapeSensor(hass, rest, name, select, value_template, unit)
     ])
 
 
@@ -68,15 +66,13 @@ class ScrapeSensor(Entity):
     """Representation of a web scrape sensor."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, rest, name, select, element, before, after, unit):
+    def __init__(self, hass, rest, name, select, value_template, unit):
         """Initialize a web scrape sensor."""
         self.rest = rest
         self._name = name
         self._state = STATE_UNKNOWN
         self._select = select
-        self._element = element
-        self._before = before
-        self._after = after
+        self._value_template = value_template
         self._unit_of_measurement = unit
         self.update()
 
@@ -103,11 +99,11 @@ class ScrapeSensor(Entity):
 
         raw_data = BeautifulSoup(self.rest.data, 'html.parser')
         _LOGGER.debug(raw_data)
-        data = raw_data.select(self._select)
-        _LOGGER.error(data)
+        value = raw_data.select(self._select)[0].text
+        _LOGGER.debug(value)
 
-        try:
-            self._state = data[self._element].text[self._before:self._after]
-        except TypeError:
-            _LOGGER.warning("Unable to extract a value")
-            self._state = STATE_UNKNOWN
+        if self._value_template is not None:
+            self._state = self._value_template.render_with_possible_json_value(
+                value, STATE_UNKNOWN)
+        else:
+            self._state = value
