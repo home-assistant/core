@@ -25,18 +25,40 @@ class TestInputBoolean(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_config(self):
+    def test_config_invalid_config(self):
         """Test config."""
         invalid_configs = [
             None,
             1,
             {},
-            {'name with space': None},
         ]
 
         for cfg in invalid_configs:
             self.assertFalse(
                 setup_component(self.hass, DOMAIN, {DOMAIN: cfg}))
+
+    def test_config_valid_config(self):
+        """Test config."""
+        self.assertTrue(setup_component(self.hass, DOMAIN, {DOMAIN: {
+            'test_1': None}, DOMAIN + " 2": {'test_2': {'initial': True}}}))
+
+        entity_id = 'input_boolean.test_1'
+        entity_id2 = 'input_boolean.test_2'
+
+        self.assertFalse(
+            is_on(self.hass, entity_id))
+        self.assertTrue(
+            is_on(self.hass, entity_id2))
+
+        turn_on(self.hass, entity_id)
+        turn_off(self.hass, entity_id2)
+
+        self.hass.block_till_done()
+
+        self.assertTrue(
+            is_on(self.hass, entity_id))
+        self.assertFalse(
+            is_on(self.hass, entity_id2))
 
     def test_methods(self):
         """Test is_on, turn_on, turn_off methods."""
