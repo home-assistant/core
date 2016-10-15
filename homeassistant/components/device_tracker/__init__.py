@@ -263,7 +263,7 @@ class DeviceTracker(object):
         """
         entity_ids = (dev.entity_id for dev in self.devices.values()
                       if dev.track)
-        self.group = group.Group.async_create_group(
+        self.group = yield from group.Group.async_create_group(
             self.hass, GROUP_NAME_ALL_DEVICES, entity_ids, False)
 
     def update_stale(self, now: dt_util.dt.datetime):

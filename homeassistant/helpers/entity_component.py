@@ -326,16 +326,8 @@ class EntityPlatform(object):
 
         This method must be run in the event loop.
         """
-        tasks = []
-        # We copy the entities because new entities might be detected
-        # during state update causing deadlocks.
-        entities = list(entity for entity in self.platform_entities
-                        if entity.should_poll)
-
-        for entity in entities:
-            tasks.append(self.component.hass.loop.create_task(
-                entity.async_update_ha_state(True)
-            ))
-
-        # wait until all updates are done for protect loop for spaming
-        asyncio.gather(*tasks, loop=self.component.hass.loop)
+        for entity in self.platform_entities:
+            if entity.should_poll:
+                self.component.hass.loop.create_task(
+                    entity.async_update_ha_state(True)
+                )

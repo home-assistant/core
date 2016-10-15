@@ -183,7 +183,7 @@ def setup(hass, config):
     @asyncio.coroutine
     def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
-        conf = component.async_prepare_reload()
+        conf = yield from component.async_prepare_reload()
         if conf is None:
             return
         hass.loop.create_task(_async_process_config(hass, conf, component))
@@ -270,7 +270,9 @@ class AutomationEntity(ToggleEntity):
         self._async_detach_triggers()
         self._async_detach_triggers = None
         self._enabled = False
-        self.hass.loop.create_task(self.async_update_ha_state())
+        # It's important that the update is finished before this method
+        # ends because async_remove depends on it.
+        yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_trigger(self, variables, skip_condition=False):
@@ -283,11 +285,11 @@ class AutomationEntity(ToggleEntity):
             self._last_triggered = utcnow()
             self.hass.loop.create_task(self.async_update_ha_state())
 
-    def remove(self):
+    @asyncio.coroutine
+    def async_remove(self):
         """Remove automation from HASS."""
-        run_coroutine_threadsafe(self.async_turn_off(),
-                                 self.hass.loop).result()
-        super().remove()
+        yield from self.async_turn_off()
+        yield from super().async_remove()
 
     @asyncio.coroutine
     def async_enable(self):
