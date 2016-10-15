@@ -146,7 +146,7 @@ def alarm_keypress(hass, keypress, entity_id=None):
 
 
 def alarm_output_control(hass, output, entity_id=None):
-    """Toggle an output on the alarm"""
+    """Toggle an output on the alarm."""
     data = {}
     if output:
         data[ATTR_OUTPUT] = output
@@ -191,7 +191,7 @@ class AlarmControlPanel(Entity):
         raise NotImplementedError()
 
     def alarm_output_control(self, output=None):
-        """Control an output on the alarm"""
+        """Control an output on the alarm."""
         raise NotImplementedError()
 
     @property
