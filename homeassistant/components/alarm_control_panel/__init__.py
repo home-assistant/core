@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_KEYPRESS, SERVICE_ALARM_OUTPUT_CONTROL )
+    SERVICE_ALARM_KEYPRESS, SERVICE_ALARM_OUTPUT_CONTROL)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
@@ -61,11 +61,11 @@ def setup(hass, config):
         target_alarms = component.extract_from_service(service)
         code = service.data.get(ATTR_CODE)
 
-        for alarm in target_alarms:            
+        for alarm in target_alarms:
             if service.service == 'alarm_disarm':
-            	alarm.alarm_disarm(code)
+                alarm.alarm_disarm(code)
             elif service.service == 'alarm_arm_home':
-            	alarm.alarm_arm_home(code)
+                alarm.alarm_arm_home(code)
             elif service.service == 'alarm_arm_away':
                 alarm.alarm_arm_away(code)
             elif service.service == 'alarm_trigger':
@@ -76,7 +76,7 @@ def setup(hass, config):
             elif service.service == 'alarm_output_control':
                 output = service.data.get(ATTR_OUTPUT)
                 alarm.alarm_output_control(output)
-            
+
             if alarm.should_poll:
                 alarm.update_ha_state(True)
 
@@ -133,6 +133,7 @@ def alarm_trigger(hass, code=None, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_ALARM_TRIGGER, data)
 
+
 def alarm_keypress(hass, keypress, entity_id=None):
     """Send a custom key sequence to the alarm."""
     data = {}
@@ -142,16 +143,18 @@ def alarm_keypress(hass, keypress, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_ALARM_KEYPRESS, data)
-    
+
+
 def alarm_output_control(hass, output, entity_id=None):
     """Toggle an output on the alarm"""
     data = {}
     if output:
-    	data[ATTR_OUTPUT] = output
+        data[ATTR_OUTPUT] = output
     if entity_id:
-    	data[ATTR_ENTITY_ID] = entity_id
-    	
+        data[ATTR_ENTITY_ID] = entity_id
+
     hass.services.call(DOMAIN, SERVICE_ALARM_OUTPUT_CONTROL, data)
+
 
 # pylint: disable=no-self-use
 class AlarmControlPanel(Entity):

@@ -110,12 +110,13 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
         if self._code:
             EVL_CONTROLLER.panic_alarm(self._panic_type)
 
-    def alarm_keypress(self, keypress):
+    def alarm_keypress(self, keypress=None):
         """Send custom keypress."""
         if keypress:
-            EVL_CONTROLLER.keypresses_to_partition(self._partition_number, keypress)
-            
-    def alarm_output_control(self, output):
+            EVL_CONTROLLER.keypresses_to_partition(self._partition_number,
+                                                   keypress)
+
+    def alarm_output_control(self, output=None):
         """Control an output on the alarm (1-4)"""
         if output:
-        	EVL_CONTROLLER.command_output(self._partition_number, output)
+            EVL_CONTROLLER.command_output(self._partition_number, output)
