@@ -342,7 +342,7 @@ def _async_process_config(hass, config, component):
             entity = AutomationEntity(name, async_attach_triggers, cond_func,
                                       action, hidden)
             if config_block[CONF_INITIAL_STATE]:
-                tasks.append(hass.loop.create_task(entity.async_enable()))
+                tasks.append(entity.async_enable())
             entities.append(entity)
 
     yield from asyncio.gather(*tasks, loop=hass.loop)

@@ -71,9 +71,8 @@ class EntityComponent(object):
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
         tasks = []
         for p_type, p_config in config_per_platform(config, self.domain):
-            tasks.append(self.hass.loop.create_task(
-                self._async_setup_platform(p_type, p_config)
-            ))
+            tasks.append(self._async_setup_platform(p_type, p_config))
+
         yield from asyncio.gather(*tasks, loop=self.hass.loop)
 
         # Generic discovery listener for loading platform dynamically

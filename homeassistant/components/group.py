@@ -196,7 +196,7 @@ class Group(Entity):
                  view=False):
         """Initialize a group.
 
-        This Object have factory function for creation.
+        This Object has factory function for creation.
         """
         self.hass = hass
         self._name = name
@@ -331,17 +331,13 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
-        self.async_remove()
+        yield from self.async_remove()
 
     @asyncio.coroutine
     def async_update(self):
         """Query all members and determine current group state."""
         self._state = STATE_UNKNOWN
         self._async_update_group_state()
-
-    def remove(self):
-        """Remove group from HASS."""
-        run_callback_threadsafe(self.hass.loop, self.async_remove).result()
 
     @asyncio.coroutine
     def async_remove(self):
