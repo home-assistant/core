@@ -336,7 +336,6 @@ class TestMQTTCallbacks(unittest.TestCase):
                 {'hass': self.hass},
                 message)
             self.hass.block_till_done()
-            print(test_handle.output)
             self.assertIn(
                 "ERROR:homeassistant.components.mqtt:Illegal utf-8 unicode "
                 "payload from MQTT topic: %s, Payload: " % topic,
