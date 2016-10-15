@@ -72,7 +72,7 @@ class EntityComponent(object):
         tasks = []
         for p_type, p_config in config_per_platform(config, self.domain):
             tasks.append(self.hass.loop.create_task(
-                self._setup_platform(p_type, p_config)
+                self._async_setup_platform(p_type, p_config)
             ))
         yield from asyncio.gather(*tasks, loop=self.hass.loop)
 
@@ -82,7 +82,7 @@ class EntityComponent(object):
         def component_platform_discovered(platform, info):
             """Callback to load a platform."""
             self.hass.loop.create_task(
-                self._setup_platform(platform, {}, info))
+                self._async_setup_platform(platform, {}, info))
 
         discovery.async_listen_platform(
             self.hass, self.domain, component_platform_discovered)
@@ -113,8 +113,8 @@ class EntityComponent(object):
                 if entity_id in self.entities]
 
     @asyncio.coroutine
-    def _setup_platform(self, platform_type, platform_config,
-                        discovery_info=None):
+    def _async_setup_platform(self, platform_type, platform_config,
+                              discovery_info=None):
         """Setup a platform for this component.
 
         This method must be run in the event loop.

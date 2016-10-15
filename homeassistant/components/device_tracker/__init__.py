@@ -6,6 +6,7 @@ https://home-assistant.io/components/device_tracker/
 """
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 # pylint: disable=too-many-locals
+import asyncio
 from datetime import timedelta
 import logging
 import os
@@ -25,7 +26,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.event import track_utc_time_change
@@ -253,9 +254,10 @@ class DeviceTracker(object):
 
     def setup_group(self):
         """Initialize group for all tracked devices."""
-        run_callback_threadsafe(
-            self.hass.loop, self.async_setup_group).result()
+        run_coroutine_threadsafe(
+            self.async_setup_group(), self.hass.loop).result()
 
+    @asyncio.coroutine
     def async_setup_group(self):
         """Initialize group for all tracked devices.
 
