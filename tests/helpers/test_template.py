@@ -206,6 +206,34 @@ class TestHelpersTemplate(unittest.TestCase):
             '-',
             tpl.render_with_possible_json_value('hello', '-'))
 
+    def test_render_with_possible_json_value_with_missing_json_value(self):
+        """Render with possible JSON value with unknown JSON object."""
+        tpl = template.Template('{{ value_json.goodbye }}', self.hass)
+        self.assertEqual(
+            '',
+            tpl.render_with_possible_json_value('{"hello": "world"}'))
+
+    def test_render_with_possible_json_value_valid_with_is_defined(self):
+        """Render with possible JSON value with known JSON object."""
+        tpl = template.Template('{{ value_json.hello|is_defined }}', self.hass)
+        self.assertEqual(
+            'world',
+            tpl.render_with_possible_json_value('{"hello": "world"}'))
+
+    def test_render_with_possible_json_value_undefined_json(self):
+        """Render with possible JSON value with unknown JSON object."""
+        tpl = template.Template('{{ value_json.bye|is_defined }}', self.hass)
+        self.assertEqual(
+            '{"hello": "world"}',
+            tpl.render_with_possible_json_value('{"hello": "world"}'))
+
+    def test_render_with_possible_json_value_undefined_json_error_value(self):
+        """Render with possible JSON value with unknown JSON object."""
+        tpl = template.Template('{{ value_json.bye|is_defined }}', self.hass)
+        self.assertEqual(
+            '',
+            tpl.render_with_possible_json_value('{"hello": "world"}', ''))
+
     def test_raise_exception_on_error(self):
         """Test raising an exception on error."""
         with self.assertRaises(TemplateError):
