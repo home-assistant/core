@@ -401,13 +401,20 @@ class MQTT(object):
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
-        _LOGGER.debug("received message on %s: %s",
-                      msg.topic, msg.payload.decode('utf-8'))
-        self.hass.bus.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
-            ATTR_TOPIC: msg.topic,
-            ATTR_QOS: msg.qos,
-            ATTR_PAYLOAD: msg.payload.decode('utf-8'),
-        })
+        try:
+            payload = msg.payload.decode('utf-8')
+        except AttributeError:
+            _LOGGER.error("Illegal utf-8 unicode payload from "
+                          "MQTT topic: %s, Payload: %s", msg.topic,
+                          msg.payload)
+        else:
+            _LOGGER.debug("received message on %s: %s",
+                          msg.topic, payload)
+            self.hass.bus.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
+                ATTR_TOPIC: msg.topic,
+                ATTR_QOS: msg.qos,
+                ATTR_PAYLOAD: payload,
+            })
 
     def _mqtt_on_unsubscribe(self, _mqttc, _userdata, mid, granted_qos):
         """Unsubscribe successful callback."""
