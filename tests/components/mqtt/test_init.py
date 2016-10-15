@@ -316,3 +316,27 @@ class TestMQTTCallbacks(unittest.TestCase):
     def test_invalid_mqtt_topics(self):
         self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'bad+topic')
         self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')
+
+    def test_receiving_non_utf8_message_gets_logged(self):
+        """Test receiving a non utf8 encoded message."""
+        calls = []
+
+        def record(event):
+            """Helper to record calls."""
+            calls.append(event)
+
+        payload = 0x9a
+        topic = 'test_topic'
+        self.hass.bus.listen_once(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, record)
+        MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
+        message = MQTTMessage(topic, 1, payload)
+        with self.assertLogs(level='ERROR') as test_handle:
+            mqtt.MQTT_CLIENT._mqtt_on_message(
+                None,
+                {'hass': self.hass},
+                message)
+            self.hass.block_till_done()
+            self.assertIn(
+                "ERROR:homeassistant.components.mqtt:Illegal utf-8 unicode "
+                "payload from MQTT topic: %s, Payload: " % topic,
+                test_handle.output[0])
