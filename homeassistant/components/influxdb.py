@@ -33,8 +33,8 @@ TIMEOUT = 5
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
+        vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
         vol.Optional(CONF_BLACKLIST, default=[]):
             vol.All(cv.ensure_list, [cv.entity_id]),
         vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
