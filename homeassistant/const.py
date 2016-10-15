@@ -297,6 +297,8 @@ SERVICE_ALARM_DISARM = 'alarm_disarm'
 SERVICE_ALARM_ARM_HOME = 'alarm_arm_home'
 SERVICE_ALARM_ARM_AWAY = 'alarm_arm_away'
 SERVICE_ALARM_TRIGGER = 'alarm_trigger'
+SERVICE_ALARM_KEYPRESS = 'alarm_keypress'
+SERVICE_ALARM_OUTPUT_CONTROL = 'alarm_output_control'
 
 SERVICE_LOCK = 'lock'
 SERVICE_UNLOCK = 'unlock'
