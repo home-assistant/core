@@ -129,7 +129,7 @@ class WUndergroundSensor(Entity):
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
 
         if not self.rest.alerts or self._condition != 'alerts':
-            return
+            return attrs
 
         multiple_alerts = len(self.rest.alerts) > 1
         for data in self.rest.alerts:
