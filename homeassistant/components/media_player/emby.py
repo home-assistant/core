@@ -309,21 +309,18 @@ class EmbyClient(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-#        if self.now_playing_item is None:
-#            return None
-#        media_type = self.now_playing_item['Type']
-
-#        if media_type == 'Episode':
-#            return self.client.get_image(
-#                self.now_playing_item['Id'], 'Primary', self.play_percent())
-#        elif media_type == 'Movie':
-#            return self.client.get_image(
-#                self.now_playing_item['Id'], 'Thumb', self.play_percent())
-#        return None
         if self.now_playing_item is not None:
-            return self.client.get_image(
-                self.now_playing_item['ThumbItemId'], 'Thumb',
-                self.play_percent())
+            try:
+                return self.client.get_image(
+                    self.now_playing_item['ThumbItemId'], 'Thumb',
+                    self.play_percent())
+            except KeyError:
+                try:
+                    return self.client.get_image(
+                        self.now_playing_item['PrimaryImageItemId'], 'Primary',
+                        self.play_percent())
+                except KeyError:
+                    return None
 
     @property
     def media_title(self):
