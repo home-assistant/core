@@ -251,8 +251,11 @@ class Entity(object):
 
     def remove(self) -> None:
         """Remove entitiy from HASS."""
-        run_callback_threadsafe(self.hass.loop, self.async_remove)
+        run_coroutine_threadsafe(
+            self.async_remove(), self.hass.loop
+        ).result()
 
+    @asyncio.coroutine
     def async_remove(self) -> None:
         """Remove entitiy from async HASS.
 

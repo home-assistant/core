@@ -196,6 +196,7 @@ class EntityComponent(object):
         run_callback_threadsafe(
             self.hass.loop, self.async_update_group).result()
 
+    @asyncio.coroutine
     def async_update_group(self):
         """Set up and/or update component group.
 
@@ -203,25 +204,28 @@ class EntityComponent(object):
         """
         if self.group is None and self.group_name is not None:
             group = get_component('group')
-            self.group = group.Group.async_create_group(
+            self.group = yield from group.Group.async_create_group(
                 self.hass, self.group_name, self.entities.keys(),
                 user_defined=False
             )
         elif self.group is not None:
-            self.group.async_update_tracked_entity_ids(self.entities.keys())
+            yield from self.group.async_update_tracked_entity_ids(
+                self.entities.keys())
 
     def reset(self):
         """Remove entities and reset the entity component to initial values."""
-        run_callback_threadsafe(
-            self.hass.loop, self.async_reset).result()
+        run_coroutine_threadsafe(self.async_reset(), self.hass.loop).result()
 
+    @asyncio.coroutine
     def async_reset(self):
         """Remove entities and reset the entity component to initial values.
 
         This method must be run in the event loop.
         """
-        for platform in self._platforms.values():
-            platform.async_reset()
+        tasks = [platform.async_reset() for platform
+                 in self._platforms.values()]
+
+        yield from asyncio.gather(*tasks, loop=self.hass.loop)
 
         self._platforms = {
             'core': self._platforms['core']
@@ -230,7 +234,7 @@ class EntityComponent(object):
         self.config = None
 
         if self.group is not None:
-            self.group.async_stop()
+            yield from self.group.async_stop()
             self.group = None
 
     def prepare_reload(self):
@@ -250,6 +254,7 @@ class EntityComponent(object):
         self.reset()
         return conf
 
+    @asyncio.coroutine
     def async_prepare_reload(self):
         """Prepare reloading this entity component.
 
@@ -290,7 +295,7 @@ class EntityPlatform(object):
             if ret:
                 self.platform_entities.append(entity)
 
-        self.component.async_update_group()
+        yield from self.component.async_update_group()
 
         if self._async_unsub_polling is not None or \
            not any(entity.should_poll for entity
@@ -301,13 +306,15 @@ class EntityPlatform(object):
             self.component.hass, self._update_entity_states,
             second=range(0, 60, self.scan_interval))
 
+    @asyncio.coroutine
     def async_reset(self):
         """Remove all entities and reset data.
 
         This method must be run in the event loop.
         """
-        for entity in self.platform_entities:
-            entity.async_remove()
+        tasks = [entity.async_remove() for entity in self.platform_entities]
+
+        yield from asyncio.gather(*tasks, loop=self.component.hass.loop)
 
         if self._async_unsub_polling is not None:
             self._async_unsub_polling()

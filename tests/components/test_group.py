@@ -317,7 +317,7 @@ class TestComponentsGroup(unittest.TestCase):
 
     def test_reloading_groups(self):
         """Test reloading the group config."""
-        setup_component(self.hass, 'group', {'group': {
+        assert setup_component(self.hass, 'group', {'group': {
                     'second_group': {
                         'entities': 'light.Bowl',
                         'icon': 'mdi:work',

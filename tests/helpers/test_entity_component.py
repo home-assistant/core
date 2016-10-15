@@ -68,46 +68,46 @@ class TestHelpersEntityComponent(unittest.TestCase):
                                     group_name='everyone')
 
         # No group after setup
-        assert 0 == len(self.hass.states.entity_ids())
+        assert len(self.hass.states.entity_ids()) == 0
 
         component.add_entities([EntityTest(name='hello')])
 
         # group exists
-        assert 2 == len(self.hass.states.entity_ids())
-        assert ['group.everyone'] == self.hass.states.entity_ids('group')
+        assert len(self.hass.states.entity_ids()) == 2
+        assert self.hass.states.entity_ids('group') == ['group.everyone']
 
         group = self.hass.states.get('group.everyone')
 
-        assert ('test_domain.hello',) == group.attributes.get('entity_id')
+        assert group.attributes.get('entity_id') == ('test_domain.hello',)
 
         # group extended
         component.add_entities([EntityTest(name='hello2')])
 
-        assert 3 == len(self.hass.states.entity_ids())
+        assert len(self.hass.states.entity_ids()) == 3
         group = self.hass.states.get('group.everyone')
 
-        assert ['test_domain.hello', 'test_domain.hello2'] == \
-            sorted(group.attributes.get('entity_id'))
+        assert sorted(group.attributes.get('entity_id')) == \
+            ['test_domain.hello', 'test_domain.hello2']
 
     def test_polling_only_updates_entities_it_should_poll(self):
         """Test the polling of only updated entities."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass, 20)
 
         no_poll_ent = EntityTest(should_poll=False)
-        no_poll_ent.update = Mock()
+        no_poll_ent.async_update = Mock()
         poll_ent = EntityTest(should_poll=True)
-        poll_ent.update = Mock()
+        poll_ent.async_update = Mock()
 
         component.add_entities([no_poll_ent, poll_ent])
 
-        no_poll_ent.update.reset_mock()
-        poll_ent.update.reset_mock()
+        no_poll_ent.async_update.reset_mock()
+        poll_ent.async_update.reset_mock()
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
         self.hass.block_till_done()
 
-        assert not no_poll_ent.update.called
-        assert poll_ent.update.called
+        assert not no_poll_ent.async_update.called
+        assert poll_ent.async_update.called
 
     def test_update_state_adds_entities(self):
         """Test if updating poll entities cause an entity to be added works."""
