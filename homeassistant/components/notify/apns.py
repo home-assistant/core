@@ -34,7 +34,7 @@ REQUIREMENTS = ["apns2==0.1.1"]
 def get_service(hass, config):
     """Return push service."""
     descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'apns_services.yaml'))
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     name = config.get("name")
     if name is None:
