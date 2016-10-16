@@ -261,6 +261,7 @@ omit =
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/sabnzbd.py
+    homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/speedtest.py
