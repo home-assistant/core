@@ -31,19 +31,20 @@ class TestBinarySensorTemplate(unittest.TestCase):
     @mock.patch.object(template, 'BinarySensorTemplate')
     def test_setup(self, mock_template):
         """"Test the setup."""
-        tpl = template_hlpr.Template('{{ foo }}', self.hass)
-        config = PLATFORM_SCHEMA({
-            'platform': 'template',
-            'sensors': {
-                'test': {
-                    'friendly_name': 'virtual thingy',
-                    'value_template': tpl,
-                    'sensor_class': 'motion',
-                    'entity_id': 'test'
-                },
+        config = {
+            'binary_sensor': {
+                'platform': 'template',
+                'sensors': {
+                    'test': {
+                        'friendly_name': 'virtual thingy',
+                        'value_template': '{{ foo }}',
+                        'sensor_class': 'motion',
+                        'entity_id': 'test'
+                    },
+                }
             }
-        })
-        with assert_setup_component(0):
+        }
+        with assert_setup_component(1):
             assert bootstrap.setup_component(
                 self.hass, 'binary_sensor', config)
 
