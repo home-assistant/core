@@ -438,7 +438,7 @@ schiene==0.17
 scsgate==0.1.0
 
 # homeassistant.components.notify.sendgrid
-sendgrid==3.4.0
+sendgrid==3.6.0
 
 # homeassistant.components.notify.slack
 slacker==0.9.28
