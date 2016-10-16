@@ -65,7 +65,8 @@ class TestMfiSwitch(unittest.TestCase):
     def test_update(self):
         """Test update."""
         self.switch.update()
-        self.port.refresh.assert_called_once_with()
+        self.assertEqual(self.port.refresh.call_count, 1)
+        self.assertEqual(self.port.refresh.call_args, mock.call())
 
     def test_update_with_target_state(self):
         """Test update with target state."""
@@ -82,13 +83,15 @@ class TestMfiSwitch(unittest.TestCase):
     def test_turn_on(self):
         """Test turn_on."""
         self.switch.turn_on()
-        self.port.control.assert_called_once_with(True)
+        self.assertEqual(self.port.control.call_count, 1)
+        self.assertEqual(self.port.control.call_args, mock.call(True))
         self.assertTrue(self.switch._target_state)
 
     def test_turn_off(self):
         """Test turn_off."""
         self.switch.turn_off()
-        self.port.control.assert_called_once_with(False)
+        self.assertEqual(self.port.control.call_count, 1)
+        self.assertEqual(self.port.control.call_args, mock.call(False))
         self.assertFalse(self.switch._target_state)
 
     def test_current_power_mwh(self):
