@@ -53,7 +53,10 @@ class TestNX584SensorSetup(unittest.TestCase):
         mock_nx.assert_has_calls(
              [mock.call(zone, 'opening') for zone in self.fake_zones])
         self.assertTrue(add_devices.called)
-        nx584_client.Client.assert_called_once_with('http://localhost:5007')
+        self.assertEqual(nx584_client.Client.call_count, 1)
+        self.assertEqual(
+            nx584_client.Client.call_args, mock.call('http://localhost:5007')
+        )
 
     @mock.patch('homeassistant.components.binary_sensor.nx584.NX584Watcher')
     @mock.patch('homeassistant.components.binary_sensor.nx584.NX584ZoneSensor')
@@ -73,7 +76,10 @@ class TestNX584SensorSetup(unittest.TestCase):
             mock.call(self.fake_zones[2], 'motion'),
             ])
         self.assertTrue(add_devices.called)
-        nx584_client.Client.assert_called_once_with('http://foo:123')
+        self.assertEqual(nx584_client.Client.call_count, 1)
+        self.assertEqual(
+            nx584_client.Client.call_args, mock.call('http://foo:123')
+        )
         self.assertTrue(mock_watcher.called)
 
     def _test_assert_graceful_fail(self, config):
@@ -174,7 +180,8 @@ class TestNX584Watcher(unittest.TestCase):
         def run(fake_process):
             fake_process.side_effect = StopMe
             self.assertRaises(StopMe, watcher._run)
-            fake_process.assert_called_once_with(fake_events[0])
+            self.assertEqual(fake_process.call_count, 1)
+            self.assertEqual(fake_process.call_args, mock.call(fake_events[0]))
 
         run()
         self.assertEqual(3, client.get_events.call_count)

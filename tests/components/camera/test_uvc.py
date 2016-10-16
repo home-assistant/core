@@ -54,7 +54,10 @@ class TestUVCSetup(unittest.TestCase):
 
         assert setup_component(self.hass, 'camera', {'camera': config})
 
-        mock_remote.assert_called_once_with('foo', 123, 'secret')
+        self.assertEqual(mock_remote.call_count, 1)
+        self.assertEqual(
+            mock_remote.call_args, mock.call('foo', 123, 'secret')
+        )
         mock_uvc.assert_has_calls([
             mock.call(mock_remote.return_value, 'id1', 'Front'),
             mock.call(mock_remote.return_value, 'id2', 'Back'),
@@ -79,7 +82,10 @@ class TestUVCSetup(unittest.TestCase):
 
         assert setup_component(self.hass, 'camera', {'camera': config})
 
-        mock_remote.assert_called_once_with('foo', 7080, 'secret')
+        self.assertEqual(mock_remote.call_count, 1)
+        self.assertEqual(
+            mock_remote.call_args, mock.call('foo', 7080, 'secret')
+        )
         mock_uvc.assert_has_calls([
             mock.call(mock_remote.return_value, 'id1', 'Front'),
             mock.call(mock_remote.return_value, 'id2', 'Back'),
@@ -104,7 +110,10 @@ class TestUVCSetup(unittest.TestCase):
 
         assert setup_component(self.hass, 'camera', {'camera': config})
 
-        mock_remote.assert_called_once_with('foo', 7080, 'secret')
+        self.assertEqual(mock_remote.call_count, 1)
+        self.assertEqual(
+            mock_remote.call_args, mock.call('foo', 7080, 'secret')
+        )
         mock_uvc.assert_has_calls([
             mock.call(mock_remote.return_value, 'one', 'Front'),
             mock.call(mock_remote.return_value, 'two', 'Back'),
@@ -173,8 +182,12 @@ class TestUVC(unittest.TestCase):
         """"Test the login."""
         mock_store.return_value.get_camera_password.return_value = 'seekret'
         self.uvc._login()
-        mock_camera.assert_called_once_with('host-a', 'admin', 'seekret')
-        mock_camera.return_value.login.assert_called_once_with()
+        self.assertEqual(mock_camera.call_count, 1)
+        self.assertEqual(
+            mock_camera.call_args, mock.call('host-a', 'admin', 'seekret')
+        )
+        self.assertEqual(mock_camera.return_value.login.call_count, 1)
+        self.assertEqual(mock_camera.return_value.login.call_args, mock.call())
 
     @mock.patch('uvcclient.store.get_info_store')
     @mock.patch('uvcclient.camera.UVCCameraClient')
@@ -183,8 +196,12 @@ class TestUVC(unittest.TestCase):
         mock_store.return_value.get_camera_password.return_value = 'seekret'
         self.nvr.server_version = (3, 1, 3)
         self.uvc._login()
-        mock_camera.assert_called_once_with('host-a', 'admin', 'seekret')
-        mock_camera.return_value.login.assert_called_once_with()
+        self.assertEqual(mock_camera.call_count, 1)
+        self.assertEqual(
+            mock_camera.call_args, mock.call('host-a', 'admin', 'seekret')
+        )
+        self.assertEqual(mock_camera.return_value.login.call_count, 1)
+        self.assertEqual(mock_camera.return_value.login.call_args, mock.call())
 
     @mock.patch('uvcclient.store.get_info_store')
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
@@ -192,8 +209,12 @@ class TestUVC(unittest.TestCase):
         """"Test the login with no password."""
         mock_store.return_value.get_camera_password.return_value = None
         self.uvc._login()
-        mock_camera.assert_called_once_with('host-a', 'admin', 'ubnt')
-        mock_camera.return_value.login.assert_called_once_with()
+        self.assertEqual(mock_camera.call_count, 1)
+        self.assertEqual(
+            mock_camera.call_args, mock.call('host-a', 'admin', 'ubnt')
+        )
+        self.assertEqual(mock_camera.return_value.login.call_count, 1)
+        self.assertEqual(mock_camera.return_value.login.call_args, mock.call())
 
     @mock.patch('uvcclient.store.get_info_store')
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
@@ -216,8 +237,12 @@ class TestUVC(unittest.TestCase):
 
         mock_camera.reset_mock()
         self.uvc._login()
-        mock_camera.assert_called_once_with('host-b', 'admin', 'ubnt')
-        mock_camera.return_value.login.assert_called_once_with()
+        self.assertEqual(mock_camera.call_count, 1)
+        self.assertEqual(
+            mock_camera.call_args, mock.call('host-b', 'admin', 'ubnt')
+        )
+        self.assertEqual(mock_camera.return_value.login.call_count, 1)
+        self.assertEqual(mock_camera.return_value.login.call_args, mock.call())
 
     @mock.patch('uvcclient.store.get_info_store')
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
@@ -232,7 +257,8 @@ class TestUVC(unittest.TestCase):
         with mock.patch.object(self.uvc, '_login') as mock_login:
             mock_login.return_value = False
             self.assertEqual(None, self.uvc.camera_image())
-            mock_login.assert_called_once_with()
+            self.assertEqual(mock_login.call_count, 1)
+            self.assertEqual(mock_login.call_args, mock.call())
 
     def test_camera_image_logged_in(self):
         """"Test the login state."""
@@ -262,7 +288,8 @@ class TestUVC(unittest.TestCase):
         self.uvc._camera.get_snapshot.side_effect = fake_snapshot
         with mock.patch.object(self.uvc, '_login') as mock_login:
             self.assertEqual('image', self.uvc.camera_image())
-            mock_login.assert_called_once_with()
+            self.assertEqual(mock_login.call_count, 1)
+            self.assertEqual(mock_login.call_args, mock.call())
             self.assertEqual([], responses)
 
     def test_camera_image_reauths_only_once(self):
@@ -271,4 +298,5 @@ class TestUVC(unittest.TestCase):
         self.uvc._camera.get_snapshot.side_effect = camera.CameraAuthError
         with mock.patch.object(self.uvc, '_login') as mock_login:
             self.assertRaises(camera.CameraAuthError, self.uvc.camera_image)
-            mock_login.assert_called_once_with()
+            self.assertEqual(mock_login.call_count, 1)
+            self.assertEqual(mock_login.call_args, mock.call())
