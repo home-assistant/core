@@ -132,12 +132,12 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int),
     vol.Optional(const.ATTR_CONFIG_SIZE): vol.Coerce(int)
 })
-ASSOCIATION_SCHEMA = vol.Schema({
+CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_ASSOCIATION): cv.string,
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_TARGET_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_GROUP): vol.Coerce(int),
-    vol.Optional(const.ATTR_INSTANCE): vol.Coerce(int)
+    vol.Optional(const.ATTR_INSTANCE, default=0x00): vol.Coerce(int)
 })
 
 CUSTOMIZE_SCHEMA = vol.Schema({
@@ -453,13 +453,13 @@ def setup(hass, config):
         _LOGGER.info("Setting config parameter %s on Node %s "
                      "with value %s and size=%s", param, node_id, value, size)
 
-    def association(service):
-        """Add a association in the zwave network."""
+    def change_association(service):
+        """Changes an association in the zwave network."""
         association_type = service.data.get(const.ATTR_ASSOCIATION)
         node_id = service.data.get(const.ATTR_NODE_ID)
         target_node_id = service.data.get(const.ATTR_TARGET_NODE_ID)
         group = service.data.get(const.ATTR_GROUP)
-        instance = service.data.get(const.ATTR_INSTANCE, 0x00)
+        instance = service.data.get(const.ATTR_INSTANCE)
 
         node = ZWaveGroup(group, NETWORK, node_id)
         if association_type == 'add':
@@ -538,11 +538,11 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_SET_CONFIG_PARAMETER],
                                schema=SET_CONFIG_PARAMETER_SCHEMA)
-        hass.services.register(DOMAIN, const.SERVICE_ASSOCIATION,
-                               association,
+        hass.services.register(DOMAIN, const.SERVICE_CHANGE_ASSOCIATION,
+                               change_association,
                                descriptions[
-                                   const.SERVICE_ASSOCIATION],
-                               schema=ASSOCIATION_SCHEMA)
+                                   const.SERVICE_CHANGE_ASSOCIATION],
+                               schema=CHANGE_ASSOCIATION_SCHEMA)
 
     # Setup autoheal
     if autoheal:

@@ -15,7 +15,7 @@ ATTR_CONFIG_SIZE = "size"
 ATTR_CONFIG_VALUE = "value"
 NETWORK_READY_WAIT_SECS = 30
 
-SERVICE_ASSOCIATION = "add_association"
+SERVICE_CHANGE_ASSOCIATION = "change_association"
 SERVICE_ADD_NODE = "add_node"
 SERVICE_ADD_NODE_SECURE = "add_node_secure"
 SERVICE_REMOVE_NODE = "remove_node"
