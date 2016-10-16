@@ -69,7 +69,7 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("No switches added")
         return False
 
-    yield from add_devices(switches)
+    hass.loop.create_task(add_devices(switches))
     return True
 
 
