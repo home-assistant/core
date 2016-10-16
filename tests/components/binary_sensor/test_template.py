@@ -133,7 +133,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
     def test_event(self):
         """"Test the event."""
         vs = run_callback_threadsafe(
-            self.hass.loop, template.BinarySensorTemplate
+            self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
             template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL
         ).result()
