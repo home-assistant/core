@@ -94,7 +94,12 @@ class TestSplunk(unittest.TestCase):
             payload = {'host': 'http://host:8088/services/collector/event',
                        'event': body}
             self.handler_method(event)
-            self.mock_post.assert_called_once_with(
-                payload['host'], data=payload,
-                headers={'Authorization': 'Splunk secret'})
+            self.assertEqual(self.mock_post.call_count, 1)
+            self.assertEqual(
+                self.mock_post.call_args,
+                mock.call(
+                    payload['host'], data=payload,
+                    headers={'Authorization': 'Splunk secret'}
+                )
+            )
             self.mock_post.reset_mock()
