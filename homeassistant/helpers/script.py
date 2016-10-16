@@ -94,7 +94,7 @@ class Script():
                     delay = vol.All(
                         cv.time_period,
                         cv.positive_timedelta)(
-                            delay.async_render())
+                            delay.async_render(variables))
 
                 self._async_unsub_delay_listener = \
                     async_track_point_in_utc_time(
