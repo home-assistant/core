@@ -68,46 +68,46 @@ class TestHelpersEntityComponent(unittest.TestCase):
                                     group_name='everyone')
 
         # No group after setup
-        assert 0 == len(self.hass.states.entity_ids())
+        assert len(self.hass.states.entity_ids()) == 0
 
         component.add_entities([EntityTest(name='hello')])
 
         # group exists
-        assert 2 == len(self.hass.states.entity_ids())
-        assert ['group.everyone'] == self.hass.states.entity_ids('group')
+        assert len(self.hass.states.entity_ids()) == 2
+        assert self.hass.states.entity_ids('group') == ['group.everyone']
 
         group = self.hass.states.get('group.everyone')
 
-        assert ('test_domain.hello',) == group.attributes.get('entity_id')
+        assert group.attributes.get('entity_id') == ('test_domain.hello',)
 
         # group extended
         component.add_entities([EntityTest(name='hello2')])
 
-        assert 3 == len(self.hass.states.entity_ids())
+        assert len(self.hass.states.entity_ids()) == 3
         group = self.hass.states.get('group.everyone')
 
-        assert ['test_domain.hello', 'test_domain.hello2'] == \
-            sorted(group.attributes.get('entity_id'))
+        assert sorted(group.attributes.get('entity_id')) == \
+            ['test_domain.hello', 'test_domain.hello2']
 
     def test_polling_only_updates_entities_it_should_poll(self):
         """Test the polling of only updated entities."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass, 20)
 
         no_poll_ent = EntityTest(should_poll=False)
-        no_poll_ent.update_ha_state = Mock()
+        no_poll_ent.async_update = Mock()
         poll_ent = EntityTest(should_poll=True)
-        poll_ent.update_ha_state = Mock()
+        poll_ent.async_update = Mock()
 
         component.add_entities([no_poll_ent, poll_ent])
 
-        no_poll_ent.update_ha_state.reset_mock()
-        poll_ent.update_ha_state.reset_mock()
+        no_poll_ent.async_update.reset_mock()
+        poll_ent.async_update.reset_mock()
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
         self.hass.block_till_done()
 
-        assert not no_poll_ent.update_ha_state.called
-        assert poll_ent.update_ha_state.called
+        assert not no_poll_ent.async_update.called
+        assert poll_ent.async_update.called
 
     def test_update_state_adds_entities(self):
         """Test if updating poll entities cause an entity to be added works."""
@@ -118,7 +118,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         component.add_entities([ent2])
         assert 1 == len(self.hass.states.entity_ids())
-        ent2.update_ha_state = lambda *_: component.add_entities([ent1])
+        ent2.update = lambda *_: component.add_entities([ent1])
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
         self.hass.block_till_done()
@@ -225,7 +225,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert platform2_setup.called
 
     @patch('homeassistant.helpers.entity_component.EntityComponent'
-           '._setup_platform')
+           '._async_setup_platform')
     @patch('homeassistant.bootstrap.setup_component', return_value=True)
     def test_setup_does_discovery(self, mock_setup_component, mock_setup):
         """Test setup for discovery."""
@@ -242,7 +242,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert ('platform_test', {}, {'msg': 'discovery_info'}) == \
             mock_setup.call_args[0]
 
-    @patch('homeassistant.helpers.entity_component.track_utc_time_change')
+    @patch('homeassistant.helpers.entity_component.'
+           'async_track_utc_time_change')
     def test_set_scan_interval_via_config(self, mock_track):
         """Test the setting of the scan interval via configuration."""
         def platform_setup(hass, config, add_devices, discovery_info=None):
@@ -264,7 +265,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert mock_track.called
         assert [0, 30] == list(mock_track.call_args[1]['second'])
 
-    @patch('homeassistant.helpers.entity_component.track_utc_time_change')
+    @patch('homeassistant.helpers.entity_component.'
+           'async_track_utc_time_change')
     def test_set_scan_interval_via_platform(self, mock_track):
         """Test the setting of the scan interval via platform."""
         def platform_setup(hass, config, add_devices, discovery_info=None):

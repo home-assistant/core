@@ -11,6 +11,7 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant import config as conf_util
 from homeassistant.const import (
@@ -157,24 +158,24 @@ def setup(hass, config):
     descriptions = conf_util.load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    @asyncio.coroutine
+    @callback
     def trigger_service_handler(service_call):
         """Handle automation triggers."""
-        for entity in component.extract_from_service(service_call):
+        for entity in component.async_extract_from_service(service_call):
             hass.loop.create_task(entity.async_trigger(
                 service_call.data.get(ATTR_VARIABLES), True))
 
-    @asyncio.coroutine
+    @callback
     def turn_onoff_service_handler(service_call):
         """Handle automation turn on/off service calls."""
         method = 'async_{}'.format(service_call.service)
-        for entity in component.extract_from_service(service_call):
+        for entity in component.async_extract_from_service(service_call):
             hass.loop.create_task(getattr(entity, method)())
 
-    @asyncio.coroutine
+    @callback
     def toggle_service_handler(service_call):
         """Handle automation toggle service calls."""
-        for entity in component.extract_from_service(service_call):
+        for entity in component.async_extract_from_service(service_call):
             if entity.is_on:
                 hass.loop.create_task(entity.async_turn_off())
             else:
@@ -183,8 +184,7 @@ def setup(hass, config):
     @asyncio.coroutine
     def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
-        conf = yield from hass.loop.run_in_executor(
-            None, component.prepare_reload)
+        conf = yield from component.async_prepare_reload()
         if conf is None:
             return
         hass.loop.create_task(_async_process_config(hass, conf, component))
@@ -271,7 +271,9 @@ class AutomationEntity(ToggleEntity):
         self._async_detach_triggers()
         self._async_detach_triggers = None
         self._enabled = False
-        self.hass.loop.create_task(self.async_update_ha_state())
+        # It's important that the update is finished before this method
+        # ends because async_remove depends on it.
+        yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_trigger(self, variables, skip_condition=False):
@@ -284,11 +286,11 @@ class AutomationEntity(ToggleEntity):
             self._last_triggered = utcnow()
             self.hass.loop.create_task(self.async_update_ha_state())
 
-    def remove(self):
+    @asyncio.coroutine
+    def async_remove(self):
         """Remove automation from HASS."""
-        run_coroutine_threadsafe(self.async_turn_off(),
-                                 self.hass.loop).result()
-        super().remove()
+        yield from self.async_turn_off()
+        yield from super().async_remove()
 
     @asyncio.coroutine
     def async_enable(self):
@@ -341,12 +343,11 @@ def _async_process_config(hass, config, component):
             entity = AutomationEntity(name, async_attach_triggers, cond_func,
                                       action, hidden)
             if config_block[CONF_INITIAL_STATE]:
-                tasks.append(hass.loop.create_task(entity.async_enable()))
+                tasks.append(entity.async_enable())
             entities.append(entity)
 
     yield from asyncio.gather(*tasks, loop=hass.loop)
-    yield from hass.loop.run_in_executor(
-        None, component.add_entities, entities)
+    hass.loop.create_task(component.async_add_entities(entities))
 
     return len(entities) > 0
 

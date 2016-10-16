@@ -4,9 +4,9 @@ Provides functionality to group entities.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
 """
+import asyncio
 import logging
 import os
-import threading
 
 import voluptuous as vol
 
@@ -15,10 +15,13 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
     STATE_UNLOCKED, STATE_UNKNOWN, ATTR_ASSUMED_STATE)
-from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.core import callback
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async import (
+    run_callback_threadsafe, run_coroutine_threadsafe)
 
 DOMAIN = 'group'
 
@@ -87,7 +90,10 @@ def reload(hass):
 
 
 def expand_entity_ids(hass, entity_ids):
-    """Return entity_ids with group entity ids replaced by their members."""
+    """Return entity_ids with group entity ids replaced by their members.
+
+    Async friendly.
+    """
     found_ids = []
 
     for entity_id in entity_ids:
@@ -118,7 +124,10 @@ def expand_entity_ids(hass, entity_ids):
 
 
 def get_entity_ids(hass, entity_id, domain_filter=None):
-    """Get members of this group."""
+    """Get members of this group.
+
+    Async friendly.
+    """
     group = hass.states.get(entity_id)
 
     if not group or ATTR_ENTITY_ID not in group.attributes:
@@ -139,20 +148,19 @@ def setup(hass, config):
     """Setup all groups found definded in the configuration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    success = _process_config(hass, config, component)
-
-    if not success:
-        return False
+    run_coroutine_threadsafe(
+        _async_process_config(hass, config, component), hass.loop).result()
 
     descriptions = conf_util.load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
+    @asyncio.coroutine
     def reload_service_handler(service_call):
         """Remove all groups and load new ones from config."""
-        conf = component.prepare_reload()
+        conf = yield from component.async_prepare_reload()
         if conf is None:
             return
-        _process_config(hass, conf, component)
+        hass.loop.create_task(_async_process_config(hass, conf, component))
 
     hass.services.register(DOMAIN, SERVICE_RELOAD, reload_service_handler,
                            descriptions[DOMAIN][SERVICE_RELOAD],
@@ -161,48 +169,82 @@ def setup(hass, config):
     return True
 
 
-def _process_config(hass, config, component):
+@asyncio.coroutine
+def _async_process_config(hass, config, component):
     """Process group configuration."""
+    groups = []
     for object_id, conf in config.get(DOMAIN, {}).items():
         name = conf.get(CONF_NAME, object_id)
         entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
 
-        group = Group(hass, name, entity_ids, icon=icon, view=view,
-                      object_id=object_id)
-        component.add_entities((group,))
+        # This order is important as groups get a number based on creation
+        # order.
+        group = yield from Group.async_create_group(
+            hass, name, entity_ids, icon=icon, view=view, object_id=object_id)
+        groups.append(group)
 
-    return True
+    yield from component.async_add_entities(groups)
 
 
 class Group(Entity):
     """Track a group of entity ids."""
 
     # pylint: disable=too-many-instance-attributes, too-many-arguments
-    def __init__(self, hass, name, entity_ids=None, user_defined=True,
-                 icon=None, view=False, object_id=None):
-        """Initialize a group."""
+    def __init__(self, hass, name, order=None, user_defined=True, icon=None,
+                 view=False):
+        """Initialize a group.
+
+        This Object has factory function for creation.
+        """
         self.hass = hass
         self._name = name
         self._state = STATE_UNKNOWN
-        self._order = len(hass.states.entity_ids(DOMAIN))
         self._user_defined = user_defined
+        self._order = order
         self._icon = icon
         self._view = view
-        self.entity_id = generate_entity_id(
-            ENTITY_ID_FORMAT, object_id or name, hass=hass)
         self.tracking = []
         self.group_on = None
         self.group_off = None
         self._assumed_state = False
-        self._lock = threading.Lock()
-        self._unsub_state_changed = None
+        self._async_unsub_state_changed = None
 
+    @staticmethod
+    # pylint: disable=too-many-arguments
+    def create_group(hass, name, entity_ids=None, user_defined=True,
+                     icon=None, view=False, object_id=None):
+        """Initialize a group."""
+        return run_coroutine_threadsafe(
+            Group.async_create_group(hass, name, entity_ids, user_defined,
+                                     icon, view, object_id),
+            hass.loop).result()
+
+    @staticmethod
+    @asyncio.coroutine
+    # pylint: disable=too-many-arguments
+    def async_create_group(hass, name, entity_ids=None, user_defined=True,
+                           icon=None, view=False, object_id=None):
+        """Initialize a group.
+
+        This method must be run in the event loop.
+        """
+        group = Group(
+            hass, name,
+            order=len(hass.states.async_entity_ids(DOMAIN)),
+            user_defined=user_defined, icon=icon, view=view)
+
+        group.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, object_id or name, hass=hass)
+
+        # run other async stuff
         if entity_ids is not None:
-            self.update_tracked_entity_ids(entity_ids)
+            yield from group.async_update_tracked_entity_ids(entity_ids)
         else:
-            self.update_ha_state(True)
+            yield from group.async_update_ha_state(True)
+
+        return group
 
     @property
     def should_poll(self):
@@ -249,40 +291,74 @@ class Group(Entity):
 
     def update_tracked_entity_ids(self, entity_ids):
         """Update the member entity IDs."""
-        self.stop()
+        run_coroutine_threadsafe(
+            self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
+        ).result()
+
+    @asyncio.coroutine
+    def async_update_tracked_entity_ids(self, entity_ids):
+        """Update the member entity IDs.
+
+        This method must be run in the event loop.
+        """
+        yield from self.async_stop()
         self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
         self.group_on, self.group_off = None, None
 
-        self.update_ha_state(True)
-
-        self.start()
+        yield from self.async_update_ha_state(True)
+        self.async_start()
 
     def start(self):
         """Start tracking members."""
-        self._unsub_state_changed = track_state_change(
-            self.hass, self.tracking, self._state_changed_listener)
+        run_callback_threadsafe(self.hass.loop, self.async_start).result()
+
+    def async_start(self):
+        """Start tracking members.
+
+        This method must be run in the event loop.
+        """
+        self._async_unsub_state_changed = async_track_state_change(
+            self.hass, self.tracking, self._state_changed_listener
+        )
 
     def stop(self):
         """Unregister the group from Home Assistant."""
-        self.remove()
+        run_coroutine_threadsafe(self.async_stop(), self.hass.loop).result()
 
-    def update(self):
+    @asyncio.coroutine
+    def async_stop(self):
+        """Unregister the group from Home Assistant.
+
+        This method must be run in the event loop.
+        """
+        yield from self.async_remove()
+
+    @asyncio.coroutine
+    def async_update(self):
         """Query all members and determine current group state."""
         self._state = STATE_UNKNOWN
-        self._update_group_state()
+        self._async_update_group_state()
 
-    def remove(self):
-        """Remove group from HASS."""
-        super().remove()
+    @asyncio.coroutine
+    def async_remove(self):
+        """Remove group from HASS.
 
-        if self._unsub_state_changed:
-            self._unsub_state_changed()
-            self._unsub_state_changed = None
+        This method must be run in the event loop.
+        """
+        yield from super().async_remove()
 
+        if self._async_unsub_state_changed:
+            self._async_unsub_state_changed()
+            self._async_unsub_state_changed = None
+
+    @callback
     def _state_changed_listener(self, entity_id, old_state, new_state):
-        """Respond to a member state changing."""
-        self._update_group_state(new_state)
-        self.update_ha_state()
+        """Respond to a member state changing.
+
+        This method must be run in the event loop.
+        """
+        self._async_update_group_state(new_state)
+        self.hass.loop.create_task(self.async_update_ha_state())
 
     @property
     def _tracking_states(self):
@@ -297,62 +373,64 @@ class Group(Entity):
 
         return states
 
-    def _update_group_state(self, tr_state=None):
+    @callback
+    def _async_update_group_state(self, tr_state=None):
         """Update group state.
 
         Optionally you can provide the only state changed since last update
         allowing this method to take shortcuts.
+
+        This method must be run in the event loop.
         """
         # pylint: disable=too-many-branches
         # To store current states of group entities. Might not be needed.
-        with self._lock:
-            states = None
-            gr_state = self._state
-            gr_on = self.group_on
-            gr_off = self.group_off
+        states = None
+        gr_state = self._state
+        gr_on = self.group_on
+        gr_off = self.group_off
 
-            # We have not determined type of group yet
-            if gr_on is None:
-                if tr_state is None:
-                    states = self._tracking_states
+        # We have not determined type of group yet
+        if gr_on is None:
+            if tr_state is None:
+                states = self._tracking_states
 
-                    for state in states:
-                        gr_on, gr_off = \
-                            _get_group_on_off(state.state)
-                        if gr_on is not None:
-                            break
-                else:
-                    gr_on, gr_off = _get_group_on_off(tr_state.state)
+                for state in states:
+                    gr_on, gr_off = \
+                        _get_group_on_off(state.state)
+                    if gr_on is not None:
+                        break
+            else:
+                gr_on, gr_off = _get_group_on_off(tr_state.state)
 
-                if gr_on is not None:
-                    self.group_on, self.group_off = gr_on, gr_off
+            if gr_on is not None:
+                self.group_on, self.group_off = gr_on, gr_off
 
-            # We cannot determine state of the group
-            if gr_on is None:
-                return
+        # We cannot determine state of the group
+        if gr_on is None:
+            return
 
-            if tr_state is None or ((gr_state == gr_on and
-                                     tr_state.state == gr_off) or
-                                    tr_state.state not in (gr_on, gr_off)):
-                if states is None:
-                    states = self._tracking_states
+        if tr_state is None or ((gr_state == gr_on and
+                                 tr_state.state == gr_off) or
+                                tr_state.state not in (gr_on, gr_off)):
+            if states is None:
+                states = self._tracking_states
 
-                if any(state.state == gr_on for state in states):
-                    self._state = gr_on
-                else:
-                    self._state = gr_off
+            if any(state.state == gr_on for state in states):
+                self._state = gr_on
+            else:
+                self._state = gr_off
 
-            elif tr_state.state in (gr_on, gr_off):
-                self._state = tr_state.state
+        elif tr_state.state in (gr_on, gr_off):
+            self._state = tr_state.state
 
-            if tr_state is None or self._assumed_state and \
-               not tr_state.attributes.get(ATTR_ASSUMED_STATE):
-                if states is None:
-                    states = self._tracking_states
+        if tr_state is None or self._assumed_state and \
+           not tr_state.attributes.get(ATTR_ASSUMED_STATE):
+            if states is None:
+                states = self._tracking_states
 
-                self._assumed_state = any(
-                    state.attributes.get(ATTR_ASSUMED_STATE) for state
-                    in states)
+            self._assumed_state = any(
+                state.attributes.get(ATTR_ASSUMED_STATE) for state
+                in states)
 
-            elif tr_state.attributes.get(ATTR_ASSUMED_STATE):
-                self._assumed_state = True
+        elif tr_state.attributes.get(ATTR_ASSUMED_STATE):
+            self._assumed_state = True

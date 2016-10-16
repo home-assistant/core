@@ -98,6 +98,8 @@ def extract_entity_ids(hass, service_call):
     """Helper method to extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
+
+    Async friendly.
     """
     if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
         return []
