@@ -454,7 +454,7 @@ def setup(hass, config):
                      "with value %s and size=%s", param, node_id, value, size)
 
     def change_association(service):
-        """Changes an association in the zwave network."""
+        """Change an association in the zwave network."""
         association_type = service.data.get(const.ATTR_ASSOCIATION)
         node_id = service.data.get(const.ATTR_NODE_ID)
         target_node_id = service.data.get(const.ATTR_TARGET_NODE_ID)
