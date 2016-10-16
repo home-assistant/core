@@ -11,6 +11,7 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant import config as conf_util
 from homeassistant.const import (
@@ -157,21 +158,21 @@ def setup(hass, config):
     descriptions = conf_util.load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    @asyncio.coroutine
+    @callback
     def trigger_service_handler(service_call):
         """Handle automation triggers."""
         for entity in component.async_extract_from_service(service_call):
             hass.loop.create_task(entity.async_trigger(
                 service_call.data.get(ATTR_VARIABLES), True))
 
-    @asyncio.coroutine
+    @callback
     def turn_onoff_service_handler(service_call):
         """Handle automation turn on/off service calls."""
         method = 'async_{}'.format(service_call.service)
         for entity in component.async_extract_from_service(service_call):
             hass.loop.create_task(getattr(entity, method)())
 
-    @asyncio.coroutine
+    @callback
     def toggle_service_handler(service_call):
         """Handle automation toggle service calls."""
         for entity in component.async_extract_from_service(service_call):
