@@ -33,12 +33,12 @@ ALARM_SERVICE_SCHEMA = vol.Schema({
 })
 
 ALARM_KEYPRESS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_KEYPRESS): cv.string
 })
 
 ALARM_OUTPUT_CONTROL_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_OUTPUT):
         vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
 })
@@ -65,7 +65,7 @@ def setup(hass, config):
     component.setup(config)
 
     def alarm_service_handler(service):
-        """Handle calls to the cover services."""
+        """Handle calls to the alarm control panel services."""
         method = SERVICE_TO_METHOD.get(service.service)
         params = service.data.copy()
         params.pop(ATTR_ENTITY_ID, None)
@@ -135,8 +135,7 @@ def alarm_trigger(hass, code=None, entity_id=None):
 def alarm_keypress(hass, keypress, entity_id=None):
     """Send a custom key sequence to the alarm."""
     data = {}
-    if keypress:
-        data[ATTR_KEYPRESS] = keypress
+    data[ATTR_KEYPRESS] = keypress
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
@@ -146,8 +145,7 @@ def alarm_keypress(hass, keypress, entity_id=None):
 def alarm_output_control(hass, output, entity_id=None):
     """Toggle an output on the alarm."""
     data = {}
-    if output:
-        data[ATTR_OUTPUT] = output
+    data[ATTR_OUTPUT] = output
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
@@ -186,11 +184,11 @@ class AlarmControlPanel(Entity):
 
     def alarm_keypress(self, keypress=None):
         """Send custom key sequence to alarm."""
-        raise NotImplementedError()
+        pass
 
     def alarm_output_control(self, output=None):
         """Control an output on the alarm."""
-        raise NotImplementedError()
+        pass
 
     @property
     def state_attributes(self):
