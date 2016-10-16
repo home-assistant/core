@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
     DOMAIN, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT, TEMP_CELSIUS)
+    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
@@ -221,6 +221,8 @@ class Thermostat(ClimateDevice):
            kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
             high_temp = int(kwargs.get(ATTR_TARGET_TEMP_LOW))
             low_temp = int(kwargs.get(ATTR_TARGET_TEMP_HIGH))
+
+        print("Set: %s - %s" % (high_temp, low_temp))
 
         if self.hold_temp:
             self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
