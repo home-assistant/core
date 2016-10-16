@@ -44,9 +44,17 @@ class TestBinarySensorTemplate(unittest.TestCase):
         add_devices = mock.MagicMock()
         result = template.setup_platform(self.hass, config, add_devices)
         self.assertTrue(result)
-        mock_template.assert_called_once_with(
-            self.hass, 'test', 'virtual thingy', 'motion', tpl, 'test')
-        add_devices.assert_called_once_with([mock_template.return_value])
+        self.assertEqual(mock_template.call_count, 1)
+        self.assertEqual(
+            mock_template.call_args,
+            mock.call(
+                self.hass, 'test', 'virtual thingy', 'motion', tpl, 'test'
+            )
+        )
+        self.assertEqual(add_devices.call_count, 1)
+        self.assertEqual(
+            add_devices.call_args, mock.call([mock_template.return_value])
+        )
 
     def test_setup_no_sensors(self):
         """"Test setup with no sensors."""
