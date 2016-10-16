@@ -39,10 +39,9 @@ class TestBinarySensorTemplate(unittest.TestCase):
                         'friendly_name': 'virtual thingy',
                         'value_template': '{{ foo }}',
                         'sensor_class': 'motion',
-                        'entity_id': 'test'
                     },
-                }
-            }
+                },
+            },
         }
         with assert_setup_component(1):
             assert bootstrap.setup_component(
