@@ -14,7 +14,7 @@ from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wink']
 
-SENSOR_TYPES = ['temperature', 'humidity', 'balance']
+SENSOR_TYPES = ['temperature', 'humidity', 'balance', 'proximity']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -58,6 +58,8 @@ class WinkSensorDevice(WinkDevice, Entity):
             return round(self.wink.temperature_float(), 1)
         elif self.capability == "balance":
             return round(self.wink.balance() / 100, 2)
+        elif self.capability == "proximity":
+            return self.wink.proximity_float()
         else:
             return STATE_OPEN if self.is_open else STATE_CLOSED
 

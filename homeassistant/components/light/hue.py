@@ -50,7 +50,7 @@ SUPPORT_HUE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_ALLOW_UNREACHABLE): cv.boolean,
-    vol.Optional(CONF_FILENAME): cv.isfile,
+    vol.Optional(CONF_FILENAME): cv.string,
 })
 
 

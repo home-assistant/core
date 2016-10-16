@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.components.mqtt import CONF_STATE_TOPIC, CONF_QOS
 from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT)
-from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
@@ -30,13 +29,16 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup MQTT Sensor."""
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+    if value_template is not None:
+        value_template.hass = hass
     add_devices([MqttSensor(
         hass,
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_QOS),
         config.get(CONF_UNIT_OF_MEASUREMENT),
-        config.get(CONF_VALUE_TEMPLATE),
+        value_template,
     )])
 
 
@@ -57,8 +59,8 @@ class MqttSensor(Entity):
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
             if value_template is not None:
-                payload = template.render_with_possible_json_value(
-                    hass, value_template, payload)
+                payload = value_template.render_with_possible_json_value(
+                    payload)
             self._state = payload
             self.update_ha_state()
 

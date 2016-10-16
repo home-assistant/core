@@ -21,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_MODULE = 'modules'
 
 CONF_MODULES = 'modules'
-CONF_MODULE_NAME = 'module_name'
 CONF_STATION = 'station'
 
 DEPENDENCIES = ['netatmo']
@@ -50,7 +49,7 @@ SENSOR_TYPES = {
 }
 
 MODULE_SCHEMA = vol.Schema({
-    vol.Required(CONF_MODULE_NAME, default=[]):
+    vol.Required(cv.string, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
@@ -84,11 +83,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class NetAtmoSensor(Entity):
-    """Implementation of a NetAtmo sensor."""
+    """Implementation of a Netatmo sensor."""
 
     def __init__(self, netatmo_data, module_name, sensor_type):
         """Initialize the sensor."""
-        self._name = 'NetAtmo {} {}'.format(module_name,
+        self._name = 'Netatmo {} {}'.format(module_name,
                                             SENSOR_TYPES[sensor_type][0])
         self.netatmo_data = netatmo_data
         self.module_name = module_name
@@ -232,7 +231,7 @@ class NetAtmoData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Call the NetAtmo API to update the data."""
+        """Call the Netatmo API to update the data."""
         import lnetatmo
         dev_list = lnetatmo.DeviceList(self.auth)
 

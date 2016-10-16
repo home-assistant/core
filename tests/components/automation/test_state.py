@@ -213,7 +213,7 @@ class TestAutomationState(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'condition': [{
-                    'platform': 'state',
+                    'condition': 'state',
                     'entity_id': entity_id,
                     'state': test_state
                 }],
@@ -360,7 +360,7 @@ class TestAutomationState(unittest.TestCase):
                         'event_type': 'test_event',
                     },
                     'condition': {
-                        'platform': 'state',
+                        'condition': 'state',
                         'entity_id': 'test.entity',
                         'state': 'on',
                         'for': {

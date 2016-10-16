@@ -50,19 +50,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
 
-    if value.command_class != zwave.COMMAND_CLASS_SWITCH_MULTILEVEL:
+    if value.command_class != zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL:
         return
-    if value.type != zwave.TYPE_BYTE:
+    if value.type != zwave.const.TYPE_BYTE:
         return
-    if value.genre != zwave.GENRE_USER:
+    if value.genre != zwave.const.GENRE_USER:
         return
 
     value.set_change_verified(False)
 
-    if node.has_command_class(zwave.COMMAND_CLASS_COLOR):
+    if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
         try:
             add_devices([ZwaveColorLight(value)])
         except ValueError as exception:
@@ -195,8 +195,8 @@ class ZwaveColorLight(ZwaveDimmer):
             raise ValueError("No matching color command found.")
 
         for value_color_channels in value.node.get_values(
-                class_id=zwave.COMMAND_CLASS_COLOR, genre='System',
-                type="Int").values():
+                class_id=zwave.const.COMMAND_CLASS_SWITCH_COLOR,
+                genre='System', type="Int").values():
             self._value_color_channels = value_color_channels
 
         if self._value_color_channels is None:

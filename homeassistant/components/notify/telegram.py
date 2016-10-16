@@ -14,16 +14,16 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import (CONF_API_KEY, ATTR_LOCATION, ATTR_LATITUDE,
-                                 ATTR_LONGITUDE)
+from homeassistant.const import (
+    CONF_API_KEY, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE)
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==5.0.0']
+REQUIREMENTS = ['python-telegram-bot==5.1.0']
 
-ATTR_PHOTO = "photo"
-ATTR_DOCUMENT = "document"
-ATTR_CAPTION = "caption"
+ATTR_PHOTO = 'photo'
+ATTR_DOCUMENT = 'document'
+ATTR_CAPTION = 'caption'
 ATTR_URL = 'url'
 ATTR_FILE = 'file'
 ATTR_USERNAME = 'username'
@@ -46,9 +46,9 @@ def get_service(hass, config):
         api_key = config.get(CONF_API_KEY)
         bot = telegram.Bot(token=api_key)
         username = bot.getMe()['username']
-        _LOGGER.info("Telegram bot is '%s'.", username)
+        _LOGGER.info("Telegram bot is '%s'", username)
     except urllib.error.HTTPError:
-        _LOGGER.error("Please check your access token.")
+        _LOGGER.error("Please check your access token")
         return None
 
     return TelegramNotificationService(api_key, chat_id)
@@ -122,7 +122,7 @@ class TelegramNotificationService(BaseNotificationService):
                                  text=text,
                                  parse_mode=parse_mode)
         except telegram.error.TelegramError:
-            _LOGGER.exception("Error sending message.")
+            _LOGGER.exception("Error sending message")
             return
 
     def send_photo(self, data):
@@ -141,7 +141,7 @@ class TelegramNotificationService(BaseNotificationService):
             self.bot.sendPhoto(chat_id=self._chat_id,
                                photo=photo, caption=caption)
         except telegram.error.TelegramError:
-            _LOGGER.exception("Error sending photo.")
+            _LOGGER.exception("Error sending photo")
             return
 
     def send_document(self, data):
@@ -160,7 +160,7 @@ class TelegramNotificationService(BaseNotificationService):
             self.bot.sendDocument(chat_id=self._chat_id,
                                   document=document, caption=caption)
         except telegram.error.TelegramError:
-            _LOGGER.exception("Error sending document.")
+            _LOGGER.exception("Error sending document")
             return
 
     def send_location(self, gps):
@@ -174,5 +174,5 @@ class TelegramNotificationService(BaseNotificationService):
             self.bot.sendLocation(chat_id=self._chat_id,
                                   latitude=latitude, longitude=longitude)
         except telegram.error.TelegramError:
-            _LOGGER.exception("Error sending location.")
+            _LOGGER.exception("Error sending location")
             return

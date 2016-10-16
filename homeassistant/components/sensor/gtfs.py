@@ -36,14 +36,14 @@ TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ORIGIN): cv.string,
     vol.Required(CONF_DESTINATION): cv.string,
-    vol.Required(CONF_DATA): cv.isfile,
+    vol.Required(CONF_DATA): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
 # pylint: disable=too-many-locals
 def get_next_departure(sched, start_station_id, end_station_id):
-    """Get the next departure for the given sched."""
+    """Get the next departure for the given schedule."""
     origin_station = sched.stops_by_id(start_station_id)[0]
     destination_station = sched.stops_by_id(end_station_id)[0]
 
@@ -147,7 +147,7 @@ def get_next_departure(sched, start_station_id, end_station_id):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get the GTFS sensor."""
+    """Set up the GTFS sensor."""
     gtfs_dir = hass.config.path(DEFAULT_PATH)
     data = config.get(CONF_DATA)
     origin = config.get(CONF_ORIGIN)

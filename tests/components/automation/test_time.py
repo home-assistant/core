@@ -250,7 +250,7 @@ class TestAutomationTime(unittest.TestCase):
                     'event_type': 'test_event'
                 },
                 'condition': {
-                    'platform': 'time',
+                    'condition': 'time',
                     'before': '10:00',
                 },
                 'action': {
@@ -285,7 +285,7 @@ class TestAutomationTime(unittest.TestCase):
                     'event_type': 'test_event'
                 },
                 'condition': {
-                    'platform': 'time',
+                    'condition': 'time',
                     'after': '10:00',
                 },
                 'action': {
@@ -320,7 +320,7 @@ class TestAutomationTime(unittest.TestCase):
                     'event_type': 'test_event'
                 },
                 'condition': {
-                    'platform': 'time',
+                    'condition': 'time',
                     'weekday': 'mon',
                 },
                 'action': {
@@ -356,7 +356,7 @@ class TestAutomationTime(unittest.TestCase):
                     'event_type': 'test_event'
                 },
                 'condition': {
-                    'platform': 'time',
+                    'condition': 'time',
                     'weekday': ['mon', 'tue'],
                 },
                 'action': {

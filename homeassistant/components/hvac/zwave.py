@@ -9,8 +9,7 @@ https://home-assistant.io/components/hvac.zwave/
 import logging
 from homeassistant.components.hvac import DOMAIN
 from homeassistant.components.hvac import HvacDevice
-from homeassistant.components.zwave import (
-    ATTR_NODE_ID, ATTR_VALUE_ID, ZWaveDeviceEntity)
+from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
 from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELSIUS)
 
@@ -22,12 +21,6 @@ DEFAULT_NAME = 'ZWave Hvac'
 REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377
 REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120, 0)
-
-COMMAND_CLASS_SENSOR_MULTILEVEL = 0x31
-COMMAND_CLASS_THERMOSTAT_MODE = 0x40
-COMMAND_CLASS_THERMOSTAT_SETPOINT = 0x43
-COMMAND_CLASS_THERMOSTAT_FAN_MODE = 0x44
-COMMAND_CLASS_CONFIGURATION = 0x70
 
 WORKAROUND_ZXT_120 = 'zxt_120'
 
@@ -50,8 +43,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       discovery_info, zwave.NETWORK)
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
-    value = node.values[discovery_info[ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
     value.set_change_verified(False)
     add_devices([ZWaveHvac(value)])
     _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
@@ -107,25 +100,29 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
     def update_properties(self):
         """Callback on data change for the registered node/value pair."""
         # Set point
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
+        for value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT)
+                      .values()):
             if int(value.data) != 0:
                 self._target_temperature = int(value.data)
         # Operation Mode
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_THERMOSTAT_MODE).values():
+        for value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_MODE)
+                      .values()):
             self._current_operation = value.data
             self._operation_list = list(value.data_items)
             _LOGGER.debug("self._operation_list=%s", self._operation_list)
         # Current Temp
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SENSOR_MULTILEVEL).values():
+        for value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL)
+                      .values()):
             if value.label == 'Temperature':
                 self._current_temperature = int(value.data)
                 self._unit = value.units
         # Fan Mode
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_THERMOSTAT_FAN_MODE).values():
+        for value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_FAN_MODE)
+                      .values()):
             self._current_operation_state = value.data
             self._fan_list = list(value.data_items)
             _LOGGER.debug("self._fan_list=%s", self._fan_list)
@@ -133,8 +130,9 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
                           self._current_operation_state)
         # Swing mode
         if self._zxt_120 == 1:
-            for value in self._node.get_values(
-                    class_id=COMMAND_CLASS_CONFIGURATION).values():
+            for value in (self._node.get_values(
+                    class_id=zwave.const.COMMAND_CLASS_CONFIGURATION)
+                          .values()):
                 if value.command_class == 112 and value.index == 33:
                     self._current_swing_mode = value.data
                     self._swing_list = list(value.data_items)
@@ -199,8 +197,9 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
 
     def set_temperature(self, temperature):
         """Set new target temperature."""
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
+        for value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT)
+                      .values()):
             if value.command_class != 67:
                 continue
             if self._zxt_120:
@@ -217,8 +216,9 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_THERMOSTAT_FAN_MODE).values():
+        for value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_FAN_MODE)
+                      .values()):
             if value.command_class == 68 and value.index == 0:
                 value.data = bytes(fan, 'utf-8')
                 break
@@ -226,7 +226,7 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         for value in self._node.get_values(
-                class_id=COMMAND_CLASS_THERMOSTAT_MODE).values():
+                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_MODE).values():
             if value.command_class == 64 and value.index == 0:
                 value.data = bytes(operation_mode, 'utf-8')
                 break
@@ -235,7 +235,7 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
         """Set new target swing mode."""
         if self._zxt_120 == 1:
             for value in self._node.get_values(
-                    class_id=COMMAND_CLASS_CONFIGURATION).values():
+                    class_id=zwave.const.COMMAND_CLASS_CONFIGURATION).values():
                 if value.command_class == 112 and value.index == 33:
                     value.data = bytes(swing_mode, 'utf-8')
                     break

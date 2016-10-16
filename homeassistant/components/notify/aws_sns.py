@@ -70,9 +70,6 @@ class AWSSNS(BaseNotificationService):
             _LOGGER.info("At least 1 target is required")
             return
 
-        if not isinstance(targets, list):
-            targets = [targets]
-
         message_attributes = {k: {"StringValue": json.dumps(v),
                                   "DataType": "String"}
                               for k, v in kwargs.items() if v}

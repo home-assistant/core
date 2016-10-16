@@ -7,19 +7,35 @@ https://home-assistant.io/components/light.limitlessled/
 # pylint: disable=abstract-method
 import logging
 
+import voluptuous as vol
+
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, EFFECT_WHITE, FLASH_LONG,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light)
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['limitlessled==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['limitlessled==1.0.0']
-RGB_BOUNDARY = 40
-DEFAULT_TRANSITION = 0
-DEFAULT_PORT = 8899
-DEFAULT_VERSION = 5
+
+CONF_BRIDGES = 'bridges'
+CONF_GROUPS = 'groups'
+CONF_NUMBER = 'number'
+CONF_TYPE = 'type'
+CONF_VERSION = 'version'
+
 DEFAULT_LED_TYPE = 'rgbw'
+DEFAULT_PORT = 8899
+DEFAULT_TRANSITION = 0
+DEFAULT_VERSION = 5
+
+LED_TYPE = ['rgbw', 'white']
+
+RGB_BOUNDARY = 40
+
 WHITE = [255, 255, 255]
 
 SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
@@ -27,6 +43,25 @@ SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
 SUPPORT_LIMITLESSLED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
                             SUPPORT_FLASH | SUPPORT_RGB_COLOR |
                             SUPPORT_TRANSITION)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_BRIDGES): vol.All(cv.ensure_list, [
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_VERSION,
+                         default=DEFAULT_VERSION): cv.positive_int,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Required(CONF_GROUPS):  vol.All(cv.ensure_list, [
+                {
+                    vol.Required(CONF_NAME): cv.string,
+                    vol.Optional(CONF_TYPE, default=DEFAULT_LED_TYPE):
+                        vol.In(LED_TYPE),
+                    vol.Required(CONF_NUMBER): cv.positive_int,
+                }
+            ]),
+        },
+    ]),
+})
 
 
 def rewrite_legacy(config):

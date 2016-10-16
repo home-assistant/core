@@ -6,7 +6,6 @@ https://home-assistant.io/components/switch.rfxtrx/
 """
 import logging
 
-
 import homeassistant.components.rfxtrx as rfxtrx
 from homeassistant.components.switch import SwitchDevice
 

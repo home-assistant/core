@@ -1,8 +1,8 @@
 """
-Support for Forecast.io weather service.
+Support for Dark Sky weather service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.forecast/
+https://home-assistant.io/components/sensor.darksky/
 """
 import logging
 from datetime import timedelta
@@ -18,15 +18,14 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-forecastio==1.3.4']
+REQUIREMENTS = ['python-forecastio==1.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_UNITS = 'units'
+CONF_UPDATE_INTERVAL = 'update_interval'
 
-DEFAULT_NAME = 'Forecast.io'
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+DEFAULT_NAME = 'Dark Sky'
 
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
@@ -84,12 +83,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2'])
+    vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2']),
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=120)): (
+        vol.All(cv.time_period, cv.positive_timedelta)),
 })
 
 
+# pylint: disable=too-many-arguments
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Forecast.io sensor."""
+    """Setup the Dark Sky sensor."""
     # Validate the configuration
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -105,9 +107,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data and confirm we can connect.
     try:
-        forecast_data = ForeCastData(
-            config.get(CONF_API_KEY, None), hass.config.latitude,
-            hass.config.longitude, units)
+        forecast_data = DarkSkyData(
+            api_key=config.get(CONF_API_KEY, None),
+            latitude=hass.config.latitude,
+            longitude=hass.config.longitude,
+            units=units,
+            interval=config.get(CONF_UPDATE_INTERVAL))
         forecast_data.update_currently()
     except ValueError as error:
         _LOGGER.error(error)
@@ -117,14 +122,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(ForeCastSensor(forecast_data, variable, name))
+        sensors.append(DarkSkySensor(forecast_data, variable, name))
 
     add_devices(sensors)
 
 
 # pylint: disable=too-few-public-methods
-class ForeCastSensor(Entity):
-    """Implementation of a Forecast.io sensor."""
+class DarkSkySensor(Entity):
+    """Implementation of a Dark Sky sensor."""
 
     def __init__(self, forecast_data, sensor_type, name):
         """Initialize the sensor."""
@@ -175,10 +180,10 @@ class ForeCastSensor(Entity):
 
     # pylint: disable=too-many-branches,too-many-statements
     def update(self):
-        """Get the latest data from Forecast.io and updates the states."""
+        """Get the latest data from Dark Sky and updates the states."""
         # Call the API for new forecast data. Each sensor will re-trigger this
-        # same exact call, but thats fine. We cache results for a short period
-        # of time to prevent hitting API limits. Note that forecast.io will
+        # same exact call, but that's fine. We cache results for a short period
+        # of time to prevent hitting API limits. Note that Dark Sky will
         # charge users for too many calls in 1 day, so take care when updating.
         self.forecast_data.update()
         self.update_unit_of_measurement()
@@ -192,7 +197,8 @@ class ForeCastSensor(Entity):
             hourly = self.forecast_data.data_hourly
             self._state = getattr(hourly, 'summary', '')
         elif self.type in ['daily_summary',
-                           'temperature_min', 'temperature_max',
+                           'temperature_min',
+                           'temperature_max',
                            'apparent_temperature_min',
                            'apparent_temperature_max',
                            'precip_intensity_max']:
@@ -242,12 +248,11 @@ def convert_to_camel(data):
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-class ForeCastData(object):
-    """Gets the latest data from Forecast.io."""
+class DarkSkyData(object):
+    """Get the latest data from Darksky."""
 
     # pylint: disable=too-many-instance-attributes
-
-    def __init__(self, api_key, latitude, longitude, units):
+    def __init__(self, api_key, latitude, longitude, units, interval):
         """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude
@@ -261,36 +266,38 @@ class ForeCastData(object):
         self.data_hourly = None
         self.data_daily = None
 
+        # Apply throttling to methods using configured interval
+        self.update = Throttle(interval)(self._update)
+        self.update_currently = Throttle(interval)(self._update_currently)
+        self.update_minutely = Throttle(interval)(self._update_minutely)
+        self.update_hourly = Throttle(interval)(self._update_hourly)
+        self.update_daily = Throttle(interval)(self._update_daily)
+
         self.update()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from Forecast.io."""
+    def _update(self):
+        """Get the latest data from Dark Sky."""
         import forecastio
 
         try:
             self.data = forecastio.load_forecast(
                 self._api_key, self.latitude, self.longitude, units=self.units)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            raise ValueError("Unable to init Forecast.io. - %s", error)
+            raise ValueError("Unable to init Dark Sky. %s", error)
         self.unit_system = self.data.json['flags']['units']
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update_currently(self):
+    def _update_currently(self):
         """Update currently data."""
         self.data_currently = self.data.currently()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update_minutely(self):
+    def _update_minutely(self):
         """Update minutely data."""
         self.data_minutely = self.data.minutely()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update_hourly(self):
+    def _update_hourly(self):
         """Update hourly data."""
         self.data_hourly = self.data.hourly()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update_daily(self):
+    def _update_daily(self):
         """Update daily data."""
         self.data_daily = self.data.daily()

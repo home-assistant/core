@@ -57,9 +57,6 @@ class TwilioSMSNotificationService(BaseNotificationService):
             _LOGGER.info("At least 1 target is required")
             return
 
-        if not isinstance(targets, list):
-            targets = [targets]
-
         for target in targets:
             self.client.messages.create(to=target, body=message,
                                         from_=self.from_number)

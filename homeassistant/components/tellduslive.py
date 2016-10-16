@@ -62,23 +62,25 @@ def setup(hass, config):
 def request_switches():
     """Make request to online service."""
     _LOGGER.debug("Updating switches from Telldus Live")
-    switches = NETWORK.request('devices/list')['device']
+    switches = NETWORK.request('devices/list')
     # Filter out any group of switches.
-    switches = {switch["id"]: switch for switch in switches
+    if switches and 'device' in switches:
+        return {switch["id"]: switch for switch in switches['device']
                 if switch["type"] == "device"}
-    return switches
+    return None
 
 
 @Throttle(MIN_TIME_BETWEEN_SENSOR_UPDATES)
 def request_sensors():
     """Make request to online service."""
     _LOGGER.debug("Updating sensors from Telldus Live")
-    units = NETWORK.request('sensors/list')['sensor']
+    units = NETWORK.request('sensors/list')
     # One unit can contain many sensors.
-    sensors = {unit['id']+sensor['name']: dict(unit, data=sensor)
-               for unit in units
-               for sensor in unit['data']}
-    return sensors
+    if units and 'sensor' in units:
+        return {unit['id']+sensor['name']: dict(unit, data=sensor)
+                for unit in units['sensor']
+                for sensor in unit['data']}
+    return None
 
 
 class TelldusLiveData(object):
@@ -155,8 +157,9 @@ class TelldusLiveData(object):
             response = self._client.request(what, params)
             _LOGGER.debug("got response %s", response)
             return response
-        except (ConnectionError, TimeoutError):
-            _LOGGER.error("failed to make request to Tellduslive servers")
+        except (ConnectionError, TimeoutError, OSError) as error:
+            _LOGGER.error("failed to make request to Tellduslive servers: %s",
+                          error)
             return None
 
     def update_devices(self, local_devices, remote_devices, component_name):

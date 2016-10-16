@@ -25,12 +25,6 @@ DEVICE_MAPPINGS = {
     REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_IGNORE
 }
 
-COMMAND_CLASS_THERMOSTAT_FAN_STATE = 69  # 0x45
-COMMAND_CLASS_THERMOSTAT_SETPOINT = 67  # 0x43
-COMMAND_CLASS_SENSOR_MULTILEVEL = 49  # 0x31
-COMMAND_CLASS_THERMOSTAT_OPERATING_STATE = 66  # 0x42
-COMMAND_CLASS_THERMOSTAT_MODE = 64  # 0x40
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ZWave thermostats."""
@@ -39,8 +33,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       discovery_info, zwave.NETWORK)
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
     value.set_change_verified(False)
     # Make sure that we have values for the key before converting to int
     if (value.node.manufacturer_id.strip() and
@@ -52,13 +46,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat, ignoring")
                 return
     if not (value.node.get_values_for_command_class(
-            COMMAND_CLASS_SENSOR_MULTILEVEL) and
+            zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL) and
             value.node.get_values_for_command_class(
-                COMMAND_CLASS_THERMOSTAT_SETPOINT)):
+                zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT)):
         return
 
-    if value.command_class != COMMAND_CLASS_SENSOR_MULTILEVEL and \
-       value.command_class != COMMAND_CLASS_THERMOSTAT_SETPOINT:
+    if value.command_class != zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL and \
+       value.command_class != zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT:
         return
 
     add_devices([ZWaveThermostat(value)])
@@ -99,20 +93,22 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
         """Callback on data change for the registered node/value pair."""
         # current Temp
         for _, value in self._node.get_values_for_command_class(
-                COMMAND_CLASS_SENSOR_MULTILEVEL).items():
+                zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL).items():
             if value.label == 'Temperature':
                 self._current_temperature = int(value.data)
                 self._unit = value.units
 
         # operation state
-        for _, value in self._node.get_values(
-                class_id=COMMAND_CLASS_THERMOSTAT_OPERATING_STATE).items():
+        for _, value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_OPERATING_STATE)
+                         .items()):
             self._current_operation_state = value.data_as_string
 
         # target temperature
         temps = []
-        for _, value in self._node.get_values(
-                class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).items():
+        for _, value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT)
+                         .items()):
             temps.append(int(value.data))
             if value.index == self._index:
                 self._target_temperature = value.data
@@ -120,8 +116,9 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
         self._target_temperature_low = min(temps)
 
         # fan state
-        for _, value in self._node.get_values(
-                class_id=COMMAND_CLASS_THERMOSTAT_FAN_STATE).items():
+        for _, value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_FAN_STATE)
+                         .items()):
             self._current_fan_state = value.data_as_string
 
     @property
@@ -165,7 +162,7 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
         """Set new target temperature."""
         # set point
         for _, value in self._node.get_values_for_command_class(
-                COMMAND_CLASS_THERMOSTAT_SETPOINT).items():
+                zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT).items():
             if int(value.data) != 0 and value.index == self._index:
                 value.data = temperature
                 break

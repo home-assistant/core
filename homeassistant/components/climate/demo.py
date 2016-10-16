@@ -16,7 +16,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     None, None, "Auto", "heat", None, None, None),
         DemoClimate("Hvac", 21, TEMP_CELSIUS, True, 22, "On High",
                     67, 54, "Off", "cool", False, None, None),
-        DemoClimate("Ecobee", 23, TEMP_CELSIUS, None, 23, "Auto Low",
+        DemoClimate("Ecobee", None, TEMP_CELSIUS, None, 23, "Auto Low",
                     None, None, "Auto", "auto", None, 24, 21)
     ])
 

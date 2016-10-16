@@ -197,7 +197,7 @@ class TestAutomationZone(unittest.TestCase):
                     'event_type': 'test_event'
                 },
                 'condition': {
-                    'platform': 'zone',
+                    'condition': 'zone',
                     'entity_id': 'test.entity',
                     'zone': 'zone.test',
                 },

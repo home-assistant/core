@@ -184,13 +184,13 @@ def setup(hass, base_config):
         load_platform(hass, 'alarm_control_panel', 'envisalink',
                       {CONF_PARTITIONS: _partitions,
                        CONF_CODE: _code,
-                       CONF_PANIC: _panic_type}, config)
+                       CONF_PANIC: _panic_type}, base_config)
         load_platform(hass, 'sensor', 'envisalink',
                       {CONF_PARTITIONS: _partitions,
-                       CONF_CODE: _code}, config)
+                       CONF_CODE: _code}, base_config)
     if _zones:
         load_platform(hass, 'binary_sensor', 'envisalink',
-                      {CONF_ZONES: _zones}, config)
+                      {CONF_ZONES: _zones}, base_config)
 
     return True
 

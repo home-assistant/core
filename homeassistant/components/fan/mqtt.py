@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/fan.mqtt/
 """
 import logging
-from functools import partial
 
 import voluptuous as vol
 
@@ -16,7 +15,6 @@ from homeassistant.const import (
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import render_with_possible_json_value
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MED, SPEED_MEDIUM,
                                           SPEED_HIGH, FanEntity,
                                           SUPPORT_SET_SPEED, SUPPORT_OSCILLATE,
@@ -139,9 +137,12 @@ class MqttFan(FanEntity):
         self._supported_features |= (topic[CONF_SPEED_STATE_TOPIC]
                                      is not None and SUPPORT_SET_SPEED)
 
-        templates = {key: ((lambda value: value) if tpl is None else
-                           partial(render_with_possible_json_value, hass, tpl))
-                     for key, tpl in templates.items()}
+        for key, tpl in list(templates.items()):
+            if tpl is None:
+                templates[key] = lambda value: value
+            else:
+                tpl.hass = hass
+                templates[key] = tpl.render_with_possible_json_value
 
         def state_received(topic, payload, qos):
             """A new MQTT message has been received."""

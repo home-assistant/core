@@ -37,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the Netatmo devices."""
+    """Set up the Netatmo devices."""
     import lnetatmo
 
     global NETATMO_AUTH
@@ -47,7 +47,7 @@ def setup(hass, config):
             config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD],
             'read_station read_camera access_camera')
     except HTTPError:
-        _LOGGER.error("Unable to connect to NatAtmo API")
+        _LOGGER.error("Unable to connect to Netatmo API")
         return False
 
     for component in 'camera', 'sensor':

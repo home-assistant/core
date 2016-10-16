@@ -37,8 +37,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
 
     value.set_change_verified(False)
 
@@ -59,15 +59,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 return
 
     # Generic Device mappings
-    if value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
+    if node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL):
         add_devices([ZWaveMultilevelSensor(value)])
 
-    elif (value.command_class == zwave.COMMAND_CLASS_METER and
-          value.type == zwave.TYPE_DECIMAL):
+    elif node.has_command_class(zwave.const.COMMAND_CLASS_METER) and \
+            value.type == zwave.const.TYPE_DECIMAL:
         add_devices([ZWaveMultilevelSensor(value)])
 
-    elif (value.command_class == zwave.COMMAND_CLASS_ALARM or
-          value.command_class == zwave.COMMAND_CLASS_SENSOR_ALARM):
+    elif node.has_command_class(zwave.const.COMMAND_CLASS_ALARM) or \
+            node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_ALARM):
         add_devices([ZWaveAlarmSensor(value)])
 
 

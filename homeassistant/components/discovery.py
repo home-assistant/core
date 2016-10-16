@@ -9,6 +9,8 @@ loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 import logging
 import threading
 
+import voluptuous as vol
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.helpers.discovery import load_platform, discover
 
@@ -32,6 +34,10 @@ SERVICE_HANDLERS = {
     'logitech_mediaserver': ('media_player', 'squeezebox'),
     'directv': ('media_player', 'directv'),
 }
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({}),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):

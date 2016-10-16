@@ -16,6 +16,7 @@ COMMENT_REQUIREMENTS = (
     'python-lirc',
     'gattlib',
     'pyuserinput',
+    'evdev',
 )
 
 IGNORE_PACKAGES = (

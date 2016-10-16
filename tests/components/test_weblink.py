@@ -1,6 +1,7 @@
 """The tests for the weblink component."""
 import unittest
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import weblink
 from homeassistant import bootstrap
 
@@ -28,7 +29,7 @@ class TestComponentWeblink(unittest.TestCase):
 
     def test_entities_get_created(self):
         """Test if new entity is created."""
-        self.assertTrue(weblink.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, weblink.DOMAIN, {
             weblink.DOMAIN: {
                 'entities': [
                     {

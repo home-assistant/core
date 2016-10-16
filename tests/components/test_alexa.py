@@ -41,6 +41,8 @@ def setUpModule():   # pylint: disable=invalid-name
     hass.services.register('test', 'alexa', lambda call: calls.append(call))
 
     bootstrap.setup_component(hass, alexa.DOMAIN, {
+        # Key is here to verify we allow other keys in config too
+        'homeassistant': {},
         'alexa': {
             'intents': {
                 'WhereAreWeIntent': {

@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import generate_entity_id
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = [
     'https://github.com/sander76/powerviewApi/'
-    'archive/master.zip#powerviewApi==0.2']
+    'archive/cc6f75dd39160d4aaf46cb2ed9220136b924bcb4.zip#powerviewApi==0.2']
 
 HUB_ADDRESS = 'address'
 

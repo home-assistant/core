@@ -19,6 +19,49 @@ from homeassistant.const import (
 from homeassistant.util.async import run_callback_threadsafe
 
 
+def monkey_patch_asyncio():
+    """Replace weakref.WeakSet to address Python 3 bug.
+
+    Under heavy threading operations that schedule calls into
+    the asyncio event loop, Task objects are created. Due to
+    a bug in Python, GC may have an issue when switching between
+    the threads and objects with __del__ (which various components
+    in HASS have).
+
+    This monkey-patch removes the weakref.Weakset, and replaces it
+    with an object that ignores the only call utilizing it (the
+    Task.__init__ which calls _all_tasks.add(self)). It also removes
+    the __del__ which could trigger the future objects __del__ at
+    unpredictable times.
+
+    The side-effect of this manipulation of the Task is that
+    Task.all_tasks() is no longer accurate, and there will be no
+    warning emitted if a Task is GC'd while in use.
+
+    On Python 3.6, after the bug is fixed, this monkey-patch can be
+    disabled.
+
+    See https://bugs.python.org/issue26617 for details of the Python
+    bug.
+    """
+    # pylint: disable=no-self-use, too-few-public-methods, protected-access
+    # pylint: disable=bare-except
+    import asyncio.tasks
+
+    class IgnoreCalls:
+        """Ignore add calls."""
+
+        def add(self, other):
+            """No-op add."""
+            return
+
+    asyncio.tasks.Task._all_tasks = IgnoreCalls()
+    try:
+        del asyncio.tasks.Task.__del__
+    except:
+        pass
+
+
 def validate_python() -> None:
     """Validate we're running the right Python version."""
     if sys.version_info[:3] < REQUIRED_PYTHON_VER:
@@ -308,6 +351,8 @@ def try_to_restart() -> None:
 
 def main() -> int:
     """Start Home Assistant."""
+    monkey_patch_asyncio()
+
     validate_python()
 
     args = get_arguments()

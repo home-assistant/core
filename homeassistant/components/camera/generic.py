@@ -15,7 +15,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.exceptions import TemplateError
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ CONF_STILL_IMAGE_URL = 'still_image_url'
 DEFAULT_NAME = 'Generic Camera'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STILL_IMAGE_URL): vol.Any(cv.url, cv.template),
+    vol.Required(CONF_STILL_IMAGE_URL): cv.template,
     vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE, default=False): cv.boolean,
@@ -50,8 +50,8 @@ class GenericCamera(Camera):
         super().__init__()
         self.hass = hass
         self._name = device_info.get(CONF_NAME)
-        self._still_image_url = template.compile_template(
-            hass, device_info[CONF_STILL_IMAGE_URL])
+        self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
+        self._still_image_url.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
 
         username = device_info.get(CONF_USERNAME)
@@ -71,7 +71,7 @@ class GenericCamera(Camera):
     def camera_image(self):
         """Return a still image response from the camera."""
         try:
-            url = template.render(self.hass, self._still_image_url)
+            url = self._still_image_url.render()
         except TemplateError as err:
             _LOGGER.error('Error parsing template %s: %s',
                           self._still_image_url, err)

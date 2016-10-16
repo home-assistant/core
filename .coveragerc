@@ -16,6 +16,9 @@ omit =
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
 
+    homeassistant/components/digital_ocean.py
+    homeassistant/components/*/digital_ocean.py
+
     homeassistant/components/dweet.py
     homeassistant/components/*/dweet.py
 
@@ -45,6 +48,9 @@ omit =
 
     homeassistant/components/qwikswitch.py
     homeassistant/components/*/qwikswitch.py
+
+    homeassistant/components/rfxtrx.py
+    homeassistant/components/*/rfxtrx.py
 
     homeassistant/components/rpi_gpio.py
     homeassistant/components/*/rpi_gpio.py
@@ -77,7 +83,7 @@ omit =
     homeassistant/components/zigbee.py
     homeassistant/components/*/zigbee.py
 
-    homeassistant/components/zwave.py
+    homeassistant/components/zwave/*
     homeassistant/components/*/zwave.py
 
     homeassistant/components/enocean.py
@@ -135,6 +141,7 @@ omit =
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/device_tracker/ubus.py
+    homeassistant/components/device_tracker/volvooncall.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
     homeassistant/components/fan/mqtt.py
@@ -213,6 +220,7 @@ omit =
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/cpuspeed.py
+    homeassistant/components/sensor/darksky.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
     homeassistant/components/sensor/dte_energy_bridge.py
@@ -222,7 +230,6 @@ omit =
     homeassistant/components/sensor/fastdotcom.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
-    homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
@@ -255,17 +262,20 @@ omit =
     homeassistant/components/sensor/swiss_hydrological_data.py
     homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/systemmonitor.py
+    homeassistant/components/sensor/ted5000.py
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/transmission.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
+    homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/worldclock.py
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yahoo_finance.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/switch/acer_projector.py
+    homeassistant/components/switch/anel_pwrctrl.py
     homeassistant/components/switch/arest.py
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py

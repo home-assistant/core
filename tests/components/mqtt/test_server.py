@@ -18,11 +18,14 @@ class TestMQTT:
         """Stop everything that was started."""
         self.hass.stop()
 
+    @patch('passlib.apps.custom_app_context', return_value='')
+    @patch('tempfile.NamedTemporaryFile', return_value=MagicMock())
     @patch('homeassistant.components.mqtt.MQTT')
     @patch('asyncio.gather')
     @patch('asyncio.new_event_loop')
     def test_creating_config_with_http_pass(self, mock_new_loop, mock_gather,
-                                            mock_mqtt):
+                                            mock_mqtt, mock_temp,
+                                            mock_context):
         """Test if the MQTT server gets started and subscribe/publish msg."""
         self.hass.config.components.append('http')
         password = 'super_secret'
@@ -42,9 +45,10 @@ class TestMQTT:
         assert mock_mqtt.mock_calls[0][1][5] is None
         assert mock_mqtt.mock_calls[0][1][6] is None
 
+    @patch('tempfile.NamedTemporaryFile', return_value=MagicMock())
     @patch('asyncio.gather')
     @patch('asyncio.new_event_loop')
-    def test_broker_config_fails(self, mock_new_loop, mock_gather):
+    def test_broker_config_fails(self, mock_new_loop, mock_gather, mock_temp):
         """Test if the MQTT component fails if server fails."""
         self.hass.config.components.append('http')
         from hbmqtt.broker import BrokerException

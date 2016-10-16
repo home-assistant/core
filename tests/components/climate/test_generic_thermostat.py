@@ -93,7 +93,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
 
     def test_setup_defaults_to_unknown(self):
         """Test the setting of defaults to unknown."""
-        self.assertEqual('unknown', self.hass.states.get(ENTITY).state)
+        self.assertEqual('idle', self.hass.states.get(ENTITY).state)
 
     def test_default_setup_params(self):
         """Test the setup with default parameters."""

@@ -1,4 +1,5 @@
 """Test service helpers."""
+from copy import deepcopy
 import unittest
 from unittest.mock import patch
 
@@ -6,7 +7,8 @@ from unittest.mock import patch
 import homeassistant.components  # noqa
 from homeassistant import core as ha, loader
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
-from homeassistant.helpers import service
+from homeassistant.helpers import service, template
+import homeassistant.helpers.config_validation as cv
 
 from tests.common import get_test_home_assistant, mock_service
 
@@ -97,22 +99,25 @@ class TestServiceHelpers(unittest.TestCase):
 
     def test_not_mutate_input(self):
         """Test for immutable input."""
-        orig = {
+        config = cv.SERVICE_SCHEMA({
             'service': 'test_domain.test_service',
             'entity_id': 'hello.world, sensor.beer',
             'data': {
                 'hello': 1,
             },
-        }
-        service.call_from_config(self.hass, orig)
-        self.hass.block_till_done()
-        self.assertEqual({
-            'service': 'test_domain.test_service',
-            'entity_id': 'hello.world, sensor.beer',
-            'data': {
-                'hello': 1,
-            },
-        }, orig)
+            'data_template': {
+                'nested': {
+                    'value': '{{ 1 + 1 }}'
+                }
+            }
+        })
+        orig = deepcopy(config)
+
+        # Only change after call is each template getting hass attached
+        template.attach(self.hass, orig)
+
+        service.call_from_config(self.hass, config, validate_config=False)
+        assert orig == config
 
     @patch('homeassistant.helpers.service._LOGGER.error')
     def test_fail_silently_if_no_service(self, mock_log):

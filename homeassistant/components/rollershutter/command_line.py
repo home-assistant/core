@@ -9,7 +9,7 @@ import subprocess
 
 from homeassistant.components.rollershutter import RollershutterDevice
 from homeassistant.const import CONF_VALUE_TEMPLATE
-from homeassistant.helpers import template
+from homeassistant.helpers.template import Template
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +20,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     devices = []
 
     for dev_name, properties in rollershutters.items():
+        value_template = properties.get(CONF_VALUE_TEMPLATE)
+
+        if value_template is not None:
+            value_template = Template(value_template, hass)
+
         devices.append(
             CommandRollershutter(
                 hass,
@@ -28,7 +33,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 properties.get('downcmd', 'true'),
                 properties.get('stopcmd', 'true'),
                 properties.get('statecmd', False),
-                properties.get(CONF_VALUE_TEMPLATE, '{{ value }}')))
+                value_template))
     add_devices_callback(devices)
 
 
@@ -103,8 +108,8 @@ class CommandRollershutter(RollershutterDevice):
         if self._command_state:
             payload = str(self._query_state())
             if self._value_template:
-                payload = template.render_with_possible_json_value(
-                    self._hass, self._value_template, payload)
+                payload = self._value_template.render_with_possible_json_value(
+                    payload)
             self._state = int(payload)
 
     def move_up(self, **kwargs):

@@ -2,7 +2,7 @@
 import unittest
 
 from homeassistant.util.unit_system import (
-    METRIC_SYSTEM,
+    METRIC_SYSTEM
 )
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import climate
@@ -12,6 +12,7 @@ from tests.common import get_test_home_assistant
 
 ENTITY_CLIMATE = 'climate.hvac'
 ENTITY_ECOBEE = 'climate.ecobee'
+ENTITY_HEATPUMP = 'climate.heatpump'
 
 
 class TestDemoClimate(unittest.TestCase):
@@ -68,16 +69,26 @@ class TestDemoClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(30.0, state.attributes.get('temperature'))
 
+    def test_set_only_target_temp_with_convert(self):
+        """Test the setting of the target temperature."""
+        state = self.hass.states.get(ENTITY_HEATPUMP)
+        self.assertEqual(20, state.attributes.get('temperature'))
+        climate.set_temperature(self.hass, 21, ENTITY_HEATPUMP)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_HEATPUMP)
+        self.assertEqual(21.0, state.attributes.get('temperature'))
+
     def test_set_target_temp_range(self):
         """Test the setting of the target temperature with range."""
         state = self.hass.states.get(ENTITY_ECOBEE)
-        self.assertEqual(23.0, state.attributes.get('temperature'))
+        self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(21.0, state.attributes.get('target_temp_low'))
         self.assertEqual(24.0, state.attributes.get('target_temp_high'))
-        climate.set_temperature(self.hass, 30, ENTITY_ECOBEE, 25, 20)
+        climate.set_temperature(self.hass, target_temp_high=25,
+                                target_temp_low=20, entity_id=ENTITY_ECOBEE)
         self.hass.pool.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
-        self.assertEqual(30.0, state.attributes.get('temperature'))
+        self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(20.0, state.attributes.get('target_temp_low'))
         self.assertEqual(25.0, state.attributes.get('target_temp_high'))
 
@@ -85,13 +96,15 @@ class TestDemoClimate(unittest.TestCase):
         """Test setting the target temperature range without required
            attribute."""
         state = self.hass.states.get(ENTITY_ECOBEE)
-        self.assertEqual(23, state.attributes.get('temperature'))
+        self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(21.0, state.attributes.get('target_temp_low'))
         self.assertEqual(24.0, state.attributes.get('target_temp_high'))
-        climate.set_temperature(self.hass, None, ENTITY_ECOBEE, None, None)
+        climate.set_temperature(self.hass, temperature=None,
+                                entity_id=ENTITY_ECOBEE, target_temp_low=None,
+                                target_temp_high=None)
         self.hass.pool.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
-        self.assertEqual(23, state.attributes.get('temperature'))
+        self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(21.0, state.attributes.get('target_temp_low'))
         self.assertEqual(24.0, state.attributes.get('target_temp_high'))
 

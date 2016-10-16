@@ -7,26 +7,38 @@ https://home-assistant.io/components/sun/
 import logging
 from datetime import timedelta
 
-import homeassistant.util as util
+import voluptuous as vol
+
+from homeassistant.const import CONF_ELEVATION
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     track_point_in_utc_time, track_utc_time_change)
 from homeassistant.util import dt as dt_util
-from homeassistant.const import CONF_ELEVATION
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util as util
+
 
 REQUIREMENTS = ['astral==1.2']
-DOMAIN = "sun"
-ENTITY_ID = "sun.sun"
-
-STATE_ABOVE_HORIZON = "above_horizon"
-STATE_BELOW_HORIZON = "below_horizon"
-
-STATE_ATTR_NEXT_RISING = "next_rising"
-STATE_ATTR_NEXT_SETTING = "next_setting"
-STATE_ATTR_ELEVATION = "elevation"
-STATE_ATTR_AZIMUTH = "azimuth"
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'sun'
+
+ENTITY_ID = 'sun.sun'
+
+STATE_ABOVE_HORIZON = 'above_horizon'
+STATE_BELOW_HORIZON = 'below_horizon'
+
+STATE_ATTR_AZIMUTH = 'azimuth'
+STATE_ATTR_ELEVATION = 'elevation'
+STATE_ATTR_NEXT_RISING = 'next_rising'
+STATE_ATTR_NEXT_SETTING = 'next_setting'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_ELEVATION): cv.positive_int,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def is_on(hass, entity_id=None):

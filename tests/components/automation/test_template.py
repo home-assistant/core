@@ -339,7 +339,7 @@ class TestAutomationTemplate(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'condition': [{
-                    'platform': 'template',
+                    'condition': 'template',
                     'value_template': '{{ is_state("test.entity", "world") }}'
                 }],
                 'action': {

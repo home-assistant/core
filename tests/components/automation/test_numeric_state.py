@@ -499,7 +499,7 @@ class TestAutomationNumericState(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'condition': {
-                    'platform': 'numeric_state',
+                    'condition': 'numeric_state',
                     'entity_id': entity_id,
                     'above': test_state,
                     'below': test_state + 2

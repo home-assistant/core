@@ -38,6 +38,7 @@ class TestUVCSetup(unittest.TestCase):
                 return {'model': 'UVC'}
 
         hass = mock.MagicMock()
+        hass.pool.worker_count = 2
         hass.config.components = ['http']
         mock_remote.return_value.index.return_value = fake_cameras
         mock_remote.return_value.get_camera.side_effect = fake_get_camera
@@ -65,6 +66,7 @@ class TestUVCSetup(unittest.TestCase):
             {'uuid': 'two', 'name': 'Back', 'id': 'id2'},
         ]
         hass = mock.MagicMock()
+        hass.pool.worker_count = 2
         hass.config.components = ['http']
         mock_remote.return_value.index.return_value = fake_cameras
         mock_remote.return_value.get_camera.return_value = {'model': 'UVC'}
@@ -92,6 +94,7 @@ class TestUVCSetup(unittest.TestCase):
             {'uuid': 'two', 'name': 'Back', 'id': 'id2'},
         ]
         hass = mock.MagicMock()
+        hass.pool.worker_count = 2
         hass.config.components = ['http']
         mock_remote.return_value.index.return_value = fake_cameras
         mock_remote.return_value.get_camera.return_value = {'model': 'UVC'}
@@ -109,6 +112,7 @@ class TestUVCSetup(unittest.TestCase):
     def test_setup_incomplete_config(self, mock_uvc):
         """"Test the setup with incomplete configuration."""
         hass = mock.MagicMock()
+        hass.pool.worker_count = 2
         hass.config.components = ['http']
 
         assert setup_component(
@@ -133,6 +137,7 @@ class TestUVCSetup(unittest.TestCase):
             'key': 'secret',
         }
         hass = mock.MagicMock()
+        hass.pool.worker_count = 2
         hass.config.components = ['http']
 
         for error in errors:

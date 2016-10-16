@@ -172,7 +172,7 @@ class TestAutomationSun(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'condition': {
-                    'platform': 'sun',
+                    'condition': 'sun',
                     'before': 'sunrise',
                 },
                 'action': {
@@ -208,7 +208,7 @@ class TestAutomationSun(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'condition': {
-                    'platform': 'sun',
+                    'condition': 'sun',
                     'after': 'sunrise',
                 },
                 'action': {
@@ -244,7 +244,7 @@ class TestAutomationSun(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'condition': {
-                    'platform': 'sun',
+                    'condition': 'sun',
                     'before': 'sunrise',
                     'before_offset': '+1:00:00'
                 },
@@ -281,7 +281,7 @@ class TestAutomationSun(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'condition': {
-                    'platform': 'sun',
+                    'condition': 'sun',
                     'after': 'sunrise',
                     'after_offset': '+1:00:00'
                 },
@@ -319,7 +319,7 @@ class TestAutomationSun(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'condition': {
-                    'platform': 'sun',
+                    'condition': 'sun',
                     'after': 'sunrise',
                     'before': 'sunset'
                 },
@@ -365,7 +365,7 @@ class TestAutomationSun(unittest.TestCase):
                     'event_type': 'test_event',
                 },
                 'condition': {
-                    'platform': 'sun',
+                    'condition': 'sun',
                     'after': 'sunset',
                 },
                 'action': {

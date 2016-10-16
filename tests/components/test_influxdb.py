@@ -17,6 +17,7 @@ class TestInfluxDB(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = mock.MagicMock()
+        self.hass.pool.worker_count = 2
         self.handler_method = None
 
     def test_setup_config_full(self, mock_client):

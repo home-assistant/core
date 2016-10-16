@@ -4,6 +4,7 @@ import unittest
 from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.components.binary_sensor import command_line
 from homeassistant import bootstrap
+from homeassistant.helpers import template
 
 from tests.common import get_test_home_assistant
 
@@ -56,7 +57,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
 
         entity = command_line.CommandBinarySensor(
             self.hass, data, 'test', None, '1.0', '0',
-            '{{ value | multiply(0.1) }}')
+            template.Template('{{ value | multiply(0.1) }}', self.hass))
 
         self.assertEqual(STATE_ON, entity.state)
 

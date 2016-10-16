@@ -58,6 +58,12 @@ ATTR_OPERATION_LIST = "operation_list"
 ATTR_SWING_MODE = "swing_mode"
 ATTR_SWING_LIST = "swing_list"
 
+CONVERTIBLE_ATTRIBUTE = [
+    ATTR_TEMPERATURE,
+    ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_HIGH,
+]
+
 _LOGGER = logging.getLogger(__name__)
 
 SET_AWAY_MODE_SCHEMA = vol.Schema({
@@ -73,6 +79,7 @@ SET_TEMPERATURE_SCHEMA = vol.Schema({
     vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
     vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_OPERATION_MODE): cv.string,
 })
 SET_FAN_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -116,8 +123,10 @@ def set_aux_heat(hass, aux_heat, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_AUX_HEAT, data)
 
 
+# pylint: disable=too-many-arguments
 def set_temperature(hass, temperature=None, entity_id=None,
-                    target_temp_high=None, target_temp_low=None):
+                    target_temp_high=None, target_temp_low=None,
+                    operation_mode=None):
     """Set new target temperature."""
     kwargs = {
         key: value for key, value in [
@@ -125,6 +134,7 @@ def set_temperature(hass, temperature=None, entity_id=None,
             (ATTR_TARGET_TEMP_HIGH, target_temp_high),
             (ATTR_TARGET_TEMP_LOW, target_temp_low),
             (ATTR_ENTITY_ID, entity_id),
+            (ATTR_OPERATION_MODE, operation_mode)
         ] if value is not None
     }
     _LOGGER.debug("set_temperature start data=%s", kwargs)
@@ -235,10 +245,20 @@ def setup(hass, config):
     def temperature_set_service(service):
         """Set temperature on the target climate devices."""
         target_climate = component.extract_from_service(service)
-        kwargs = service.data
-        for climate in target_climate:
-            climate.set_temperature(**kwargs)
 
+        for climate in target_climate:
+            kwargs = {}
+            for value, temp in service.data.items():
+                if value in CONVERTIBLE_ATTRIBUTE:
+                    kwargs[value] = convert_temperature(
+                        temp,
+                        hass.config.units.temperature_unit,
+                        climate.unit_of_measurement
+                    )
+                else:
+                    kwargs[value] = temp
+
+            climate.set_temperature(**kwargs)
             if climate.should_poll:
                 climate.update_ha_state(True)
 

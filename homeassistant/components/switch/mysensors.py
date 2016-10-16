@@ -73,6 +73,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 pres.S_VIBRATION: MySensorsSwitch,
                 pres.S_MOISTURE: MySensorsSwitch,
             })
+        if float(gateway.protocol_version) >= 2.0:
+            map_sv_types.update({
+                pres.S_WATER_QUALITY: [set_req.V_STATUS],
+            })
+            device_class_map.update({
+                pres.S_WATER_QUALITY: MySensorsSwitch,
+            })
 
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(

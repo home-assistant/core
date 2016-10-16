@@ -38,6 +38,7 @@ class TestStatsd(unittest.TestCase):
             }
         }
         hass = mock.MagicMock()
+        hass.pool.worker_count = 2
         self.assertTrue(setup_component(hass, statsd.DOMAIN, config))
         mock_connection.assert_called_once_with(
             host='host',
@@ -61,6 +62,7 @@ class TestStatsd(unittest.TestCase):
         config['statsd'][statsd.CONF_PREFIX] = statsd.DEFAULT_PREFIX
 
         hass = mock.MagicMock()
+        hass.pool.worker_count = 2
         self.assertTrue(setup_component(hass, statsd.DOMAIN, config))
         mock_connection.assert_called_once_with(
             host='host',
@@ -80,6 +82,7 @@ class TestStatsd(unittest.TestCase):
         config['statsd'][statsd.CONF_RATE] = statsd.DEFAULT_RATE
 
         hass = mock.MagicMock()
+        hass.pool.worker_count = 2
         setup_component(hass, statsd.DOMAIN, config)
         self.assertTrue(hass.bus.listen.called)
         handler_method = hass.bus.listen.call_args_list[0][0][1]
@@ -121,6 +124,7 @@ class TestStatsd(unittest.TestCase):
         config['statsd'][statsd.CONF_RATE] = statsd.DEFAULT_RATE
 
         hass = mock.MagicMock()
+        hass.pool.worker_count = 2
         setup_component(hass, statsd.DOMAIN, config)
         self.assertTrue(hass.bus.listen.called)
         handler_method = hass.bus.listen.call_args_list[0][0][1]
