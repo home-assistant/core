@@ -289,11 +289,9 @@ class EntityPlatform(object):
 
         This method must be run in the event loop.
         """
-        for entity in new_entities:
-            ret = yield from self.component.async_add_entity(entity, self)
-            if ret:
-                self.platform_entities.append(entity)
+        tasks = [self._async_process_entity(entity) for entity in new_entities]
 
+        yield from asyncio.gather(*tasks, loop=self.component.hass.loop)
         yield from self.component.async_update_group()
 
         if self._async_unsub_polling is not None or \
@@ -304,6 +302,13 @@ class EntityPlatform(object):
         self._async_unsub_polling = async_track_utc_time_change(
             self.component.hass, self._update_entity_states,
             second=range(0, 60, self.scan_interval))
+
+    @asyncio.coroutine
+    def _async_process_entity(self, new_entity):
+        """Add entities to StateMachine."""
+        ret = yield from self.component.async_add_entity(new_entity, self)
+        if ret:
+            self.platform_entities.append(new_entity)
 
     @asyncio.coroutine
     def async_reset(self):
