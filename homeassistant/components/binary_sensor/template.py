@@ -113,11 +113,11 @@ class BinarySensorTemplate(BinarySensorDevice):
 
     @asyncio.coroutine
     def async_update(self):
-        """Get the latest data and update the state."""
+        """Update the state from the template."""
         self._async_render()
 
     def _async_render(self):
-        """Get the latest data and update the state."""
+        """Render the state from the template."""
         try:
             self._state = self._template.async_render().lower() == 'true'
         except TemplateError as ex:
