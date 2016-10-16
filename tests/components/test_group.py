@@ -344,3 +344,11 @@ class TestComponentsGroup(unittest.TestCase):
 
         assert self.hass.states.entity_ids() == ['group.hello']
         assert self.hass.bus.listeners['state_changed'] == 1
+
+    def test_stopping_a_group(self):
+        """Test that a group correctly removes itself."""
+        grp = group.Group.create_group(
+            self.hass, 'light', ['light.test_1', 'light.test_2'])
+        assert self.hass.states.entity_ids() == ['group.light']
+        grp.stop()
+        assert self.hass.states.entity_ids() == []
