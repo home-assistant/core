@@ -61,3 +61,8 @@ class TellstickSwitchDevice(tellstick.TellstickDevice, ToggleEntity):
         """Turn the switch off."""
         from tellcore.constants import TELLSTICK_TURNOFF
         self.call_tellstick(TELLSTICK_TURNOFF)
+
+    @property
+    def force_update(self) -> bool:
+        """Will trigger anytime the state property is updated."""
+        return True
