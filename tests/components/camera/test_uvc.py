@@ -9,10 +9,21 @@ from uvcclient import nvr
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.components.camera import uvc
+from tests.common import get_test_home_assistant
 
 
 class TestUVCSetup(unittest.TestCase):
     """Test the UVC camera platform."""
+
+    def setUp(self):
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        self.hass.wsgi = mock.MagicMock()
+        self.hass.config.components = ['http']
+
+    def tearDown(self):
+        """Stop everything that was started."""
+        self.hass.stop()
 
     @mock.patch('uvcclient.nvr.UVCRemote')
     @mock.patch.object(uvc, 'UnifiVideoCamera')
@@ -37,14 +48,11 @@ class TestUVCSetup(unittest.TestCase):
             else:
                 return {'model': 'UVC'}
 
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        hass.config.components = ['http']
         mock_remote.return_value.index.return_value = fake_cameras
         mock_remote.return_value.get_camera.side_effect = fake_get_camera
         mock_remote.return_value.server_version = (3, 2, 0)
 
-        assert setup_component(hass, 'camera', {'camera': config})
+        assert setup_component(self.hass, 'camera', {'camera': config})
 
         mock_remote.assert_called_once_with('foo', 123, 'secret')
         mock_uvc.assert_has_calls([
@@ -65,14 +73,11 @@ class TestUVCSetup(unittest.TestCase):
             {'uuid': 'one', 'name': 'Front', 'id': 'id1'},
             {'uuid': 'two', 'name': 'Back', 'id': 'id2'},
         ]
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        hass.config.components = ['http']
         mock_remote.return_value.index.return_value = fake_cameras
         mock_remote.return_value.get_camera.return_value = {'model': 'UVC'}
         mock_remote.return_value.server_version = (3, 2, 0)
 
-        assert setup_component(hass, 'camera', {'camera': config})
+        assert setup_component(self.hass, 'camera', {'camera': config})
 
         mock_remote.assert_called_once_with('foo', 7080, 'secret')
         mock_uvc.assert_has_calls([
@@ -93,14 +98,11 @@ class TestUVCSetup(unittest.TestCase):
             {'uuid': 'one', 'name': 'Front', 'id': 'id1'},
             {'uuid': 'two', 'name': 'Back', 'id': 'id2'},
         ]
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        hass.config.components = ['http']
         mock_remote.return_value.index.return_value = fake_cameras
         mock_remote.return_value.get_camera.return_value = {'model': 'UVC'}
         mock_remote.return_value.server_version = (3, 1, 3)
 
-        assert setup_component(hass, 'camera', {'camera': config})
+        assert setup_component(self.hass, 'camera', {'camera': config})
 
         mock_remote.assert_called_once_with('foo', 7080, 'secret')
         mock_uvc.assert_has_calls([
@@ -111,18 +113,14 @@ class TestUVCSetup(unittest.TestCase):
     @mock.patch.object(uvc, 'UnifiVideoCamera')
     def test_setup_incomplete_config(self, mock_uvc):
         """"Test the setup with incomplete configuration."""
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        hass.config.components = ['http']
-
         assert setup_component(
-            hass, 'camera', {'platform': 'uvc', 'nvr': 'foo'})
+            self.hass, 'camera', {'platform': 'uvc', 'nvr': 'foo'})
         assert not mock_uvc.called
         assert setup_component(
-            hass, 'camera', {'platform': 'uvc', 'key': 'secret'})
+            self.hass, 'camera', {'platform': 'uvc', 'key': 'secret'})
         assert not mock_uvc.called
         assert setup_component(
-            hass, 'camera', {'platform': 'uvc', 'port': 'invalid'})
+            self.hass, 'camera', {'platform': 'uvc', 'port': 'invalid'})
         assert not mock_uvc.called
 
     @mock.patch.object(uvc, 'UnifiVideoCamera')
@@ -136,13 +134,9 @@ class TestUVCSetup(unittest.TestCase):
             'nvr': 'foo',
             'key': 'secret',
         }
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        hass.config.components = ['http']
-
         for error in errors:
             mock_remote.return_value.index.side_effect = error
-            assert setup_component(hass, 'camera', config)
+            assert setup_component(self.hass, 'camera', config)
             assert not mock_uvc.called
 
 
