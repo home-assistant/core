@@ -37,12 +37,6 @@ class TestNX584SensorSetup(unittest.TestCase):
         """Stop everything that was started."""
         self._mock_client.stop()
 
-    def test_setup_no_config(self):
-        """Test the setup with no configuration."""
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        assert setup_component(hass, 'binary_sensor', {'nx584': {}})
-
     @mock.patch('homeassistant.components.binary_sensor.nx584.NX584Watcher')
     @mock.patch('homeassistant.components.binary_sensor.nx584.NX584ZoneSensor')
     def test_setup_defaults(self, mock_nx, mock_watcher):
