@@ -8,8 +8,7 @@ from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
 from homeassistant.components.binary_sensor import template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_hlpr
-from homeassistant.util.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe)
+from homeassistant.util.async import run_callback_threadsafe
 
 from tests.common import get_test_home_assistant, assert_setup_component
 
