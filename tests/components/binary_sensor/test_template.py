@@ -4,7 +4,6 @@ from unittest import mock
 
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 import homeassistant.bootstrap as bootstrap
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
 from homeassistant.components.binary_sensor import template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_hlpr
