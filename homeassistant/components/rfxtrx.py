@@ -30,10 +30,9 @@ ATTR_DATA_TYPE = 'data_type'
 ATTR_DUMMY = 'dummy'
 ATTR_OFF_DELAY = 'off_delay'
 ATTR_SENSOR_CLASS = 'sensor_class'
-ATTR_PT2262_DATABITS = 'data_bits'
+ATTR_DATABITS = 'data_bits'
 ATTR_CMD_OFF = 'cmd_off'
 ATTR_CMD_ON = 'cmd_on'
-
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_DEVICES = 'devices'
 CONF_SENSOR_CLASS = 'sensor_class'
@@ -121,9 +120,9 @@ DEVICE_SCHEMA_SENSOR = vol.Schema({
 DEVICE_SCHEMA_BINARYSENSOR = vol.Schema({
     vol.Optional(ATTR_NAME, default=None): cv.string,
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
-	vol.Optional(CONF_SENSOR_CLASS, default=None): cv.string,
+    vol.Optional(CONF_SENSOR_CLASS, default=None): cv.string,
     vol.Optional(ATTR_OFF_DELAY, default=None): cv.positive_int,
-	vol.Optional(ATTR_PT2262_DATABITS, default=None): cv.positive_int,
+    vol.Optional(ATTR_DATABITS, default=None): cv.positive_int,
     vol.Optional(ATTR_CMD_ON, default=None): cv.byte,
     vol.Optional(ATTR_CMD_OFF, default=None): cv.byte
 })
@@ -209,9 +208,9 @@ def get_rfx_object(packetid):
         obj = rfxtrxmod.ControlEvent(pkt)
     return obj
 
-def get_masked_deviceid(device_id, nb_data_bits):
+def get_pt2262_deviceid(device_id, nb_data_bits):
     import binascii
-    """Extract and return the PT2262 address from a Lighting4 packet (address+data)"""
+    """Extract and return the address bits from a Lighting4/PT2262 packet"""
     try:
         data = bytearray.fromhex(device_id)
     except ValueError:
@@ -220,11 +219,12 @@ def get_masked_deviceid(device_id, nb_data_bits):
     mask = 0xFF & ~((1 << nb_data_bits) - 1)
 
     data[len(data)-1] &= mask
+
     return binascii.hexlify(data)
 
-def get_masked_cmd(device_id, data_bits):
+def get_pt2262_cmd(device_id, data_bits):
     import binascii
-    """Extract and return the PT2262 data bits from a Lighting4 packet (address+data)"""
+    """Extract and return the data bits from a Lighting4/PT2262 packet"""
     try:
         data = bytearray.fromhex(device_id)
     except ValueError:
@@ -236,10 +236,14 @@ def get_masked_cmd(device_id, data_bits):
     
     
 def get_pt2262_device(device_id):
+    """Look for the device which id matches the given device_id parameter """
     for id, device in RFX_DEVICES.items():
-        if device.is_pt2262 == True and device.masked_id == get_masked_deviceid(device_id, device.data_bits):
-            _LOGGER.info("rfxtrx: found matching device %s for %s", device_id, get_masked_deviceid(device_id, device.data_bits))
-            return device
+        try:
+            if device.is_pt2262 == True and device.masked_id == get_pt2262_deviceid(device_id, device.data_bits):
+                _LOGGER.info("rfxtrx: found matching device %s for %s", device_id, get_pt2262_deviceid(device_id, device.data_bits))
+                return device
+        except AttributeError:
+            continue
     return None
 
     
