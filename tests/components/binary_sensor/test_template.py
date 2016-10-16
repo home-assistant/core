@@ -8,6 +8,8 @@ from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
 from homeassistant.components.binary_sensor import template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_hlpr
+from homeassistant.util.async import (
+    run_coroutine_threadsafe, run_callback_threadsafe)
 
 from tests.common import get_test_home_assistant, assert_setup_component
 
@@ -42,7 +44,9 @@ class TestBinarySensorTemplate(unittest.TestCase):
             }
         })
         add_devices = mock.MagicMock()
-        result = template.setup_platform(self.hass, config, add_devices)
+        result = run_coroutine_threadsafe(
+            template.async_setup_platform(self.hass, config, add_devices),
+            self.hass.loop).result()
         self.assertTrue(result)
         self.assertEqual(mock_template.call_count, 1)
         self.assertEqual(
@@ -108,9 +112,11 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_attributes(self):
         """"Test the attributes."""
-        vs = template.BinarySensorTemplate(
+        vs = run_callback_threadsafe(
+            self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL)
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL
+        ).result()
         self.assertFalse(vs.should_poll)
         self.assertEqual('motion', vs.sensor_class)
         self.assertEqual('Parent', vs.name)
@@ -126,9 +132,11 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_event(self):
         """"Test the event."""
-        vs = template.BinarySensorTemplate(
+        vs = run_callback_threadsafe(
+            self.hass.loop, template.BinarySensorTemplate
             self.hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL)
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL
+        ).result()
         vs.update_ha_state()
         self.hass.block_till_done()
 
@@ -140,9 +148,11 @@ class TestBinarySensorTemplate(unittest.TestCase):
     @mock.patch('homeassistant.helpers.template.Template.render')
     def test_update_template_error(self, mock_render):
         """"Test the template update error."""
-        vs = template.BinarySensorTemplate(
+        vs = run_callback_threadsafe(
+            self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL)
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL
+        ).result()
         mock_render.side_effect = TemplateError('foo')
         vs.update()
         mock_render.side_effect = TemplateError(
