@@ -12,7 +12,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async import (
+    run_coroutine_threadsafe, run_callback_threadsafe)
 
 # Entity attributes that we will overwrite
 _OVERWRITE = {}  # type: Dict[str, Any]
@@ -27,15 +28,27 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
     if current_ids is None:
         if hass is None:
             raise ValueError("Missing required parameter currentids or hass")
+        else:
+            return run_callback_threadsafe(
+                hass.loop, async_generate_entity_id, entity_id_format, name,
+                current_ids, hass
+            ).result()
 
-        current_ids = hass.states.entity_ids()
+    name = (name or DEVICE_DEFAULT_NAME).lower()
 
-    return async_generate_entity_id(entity_id_format, name, current_ids)
+    return ensure_unique_string(
+        entity_id_format.format(slugify(name)), current_ids)
 
 
 def async_generate_entity_id(entity_id_format: str, name: Optional[str],
-                             current_ids: Optional[List[str]]=None) -> str:
+                             current_ids: Optional[List[str]]=None,
+                             hass: Optional[HomeAssistant]=None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
+    if current_ids is None:
+        if hass is None:
+            raise ValueError("Missing required parameter currentids or hass")
+
+        current_ids = hass.states.async_entity_ids()
     name = (name or DEVICE_DEFAULT_NAME).lower()
 
     return ensure_unique_string(
@@ -238,7 +251,17 @@ class Entity(object):
 
     def remove(self) -> None:
         """Remove entitiy from HASS."""
-        self.hass.states.remove(self.entity_id)
+        run_coroutine_threadsafe(
+            self.async_remove(), self.hass.loop
+        ).result()
+
+    @asyncio.coroutine
+    def async_remove(self) -> None:
+        """Remove entitiy from async HASS.
+
+        This method must be run in the event loop.
+        """
+        self.hass.states.async_remove(self.entity_id)
 
     def _attr_setter(self, name, typ, attr, attrs):
         """Helper method to populate attributes based on properties."""
