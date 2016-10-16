@@ -10,16 +10,18 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['rxv==0.1.11']
+REQUIREMENTS = ['rxv==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-                 SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+                 SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | \
+                 SUPPORT_PLAY_MEDIA
 
 CONF_SOURCE_NAMES = 'source_names'
 CONF_SOURCE_IGNORE = 'source_ignore'
@@ -45,11 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     source_names = config.get(CONF_SOURCE_NAMES)
 
     if host is None:
-        receivers = rxv.find()
+        receivers = []
+        for recv in rxv.find():
+            receivers.extend(recv.zone_controllers())
     else:
-        receivers = \
-            [rxv.RXV("http://{}:80/YamahaRemoteControl/ctrl".format(host),
-                     name)]
+        ctrl_url = "http://{}:80/YamahaRemoteControl/ctrl".format(host)
+        receivers = rxv.RXV(ctrl_url, name).zone_controllers()
 
     add_devices(
         YamahaDevice(name, receiver, source_ignore, source_names)
@@ -74,6 +77,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._reverse_mapping = None
         self.update()
         self._name = name
+        self._zone = receiver.zone
 
     def update(self):
         """Get the latest details from the device."""
@@ -104,7 +108,11 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        name = self._name
+        if self._zone != "Main_Zone":
+            # Zone will be one of Main_Zone, Zone_2, Zone_3
+            name += " " + self._zone.replace('_', ' ')
+        return name
 
     @property
     def state(self):
@@ -158,3 +166,14 @@ class YamahaDevice(MediaPlayerDevice):
     def select_source(self, source):
         """Select input source."""
         self._receiver.input = self._reverse_mapping.get(source, source)
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play media from an ID.
+
+        This exposes a pass through for various input sources in the
+        Yamaha to direct play certain kinds of media. media_type is
+        treated as the input type that we are setting, and media id is
+        specific to it.
+        """
+        if media_type == "NET_RADIO":
+            self._receiver.net_radio(media_id)
