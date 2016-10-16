@@ -79,7 +79,8 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
 
         conf_dict[DOMAIN][CONF_MODE] = 'router'
         conf_dict[DOMAIN][CONF_PROTOCOL] = 'ssh'
-        asuswrt_mock.assert_called_once_with(conf_dict[DOMAIN])
+        self.assertEqual(asuswrt_mock.call_count, 1)
+        self.assertEqual(asuswrt_mock.call_args, mock.call(conf_dict[DOMAIN]))
 
     @mock.patch(
         'homeassistant.components.device_tracker.asuswrt.AsusWrtDeviceScanner',
@@ -101,7 +102,8 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
 
         conf_dict[DOMAIN][CONF_MODE] = 'router'
         conf_dict[DOMAIN][CONF_PROTOCOL] = 'ssh'
-        asuswrt_mock.assert_called_once_with(conf_dict[DOMAIN])
+        self.assertEqual(asuswrt_mock.call_count, 1)
+        self.assertEqual(asuswrt_mock.call_args, mock.call(conf_dict[DOMAIN]))
 
     def test_ssh_login_with_pub_key(self):
         """Test that login is done with pub_key when configured to."""
@@ -122,8 +124,11 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.addCleanup(update_mock.stop)
         asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
         asuswrt.ssh_connection()
-        ssh.login.assert_called_once_with('fake_host', 'fake_user',
-                                          ssh_key=FAKEFILE)
+        self.assertEqual(ssh.login.call_count, 1)
+        self.assertEqual(
+            ssh.login.call_args,
+            mock.call('fake_host', 'fake_user', ssh_key=FAKEFILE)
+        )
 
     def test_ssh_login_with_password(self):
         """Test that login is done with password when configured to."""
@@ -144,8 +149,11 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.addCleanup(update_mock.stop)
         asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
         asuswrt.ssh_connection()
-        ssh.login.assert_called_once_with('fake_host', 'fake_user',
-                                          password='fake_pass')
+        self.assertEqual(ssh.login.call_count, 1)
+        self.assertEqual(
+            ssh.login.call_args,
+            mock.call('fake_host', 'fake_user', password='fake_pass')
+        )
 
     def test_ssh_login_without_password_or_pubkey(self):  \
             # pylint: disable=invalid-name
