@@ -107,10 +107,7 @@ class Thermostat(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self.thermostat['settings']['useCelsius']:
-            return TEMP_CELSIUS
-        else:
-            return TEMP_FAHRENHEIT
+        return TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
