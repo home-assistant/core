@@ -1,3 +1,17 @@
+change_association:
+  description: Change an association in the Z-Wave network.
+  fields:
+    association:
+      description: Specify add or remove assosication
+    node_id:
+      description: Node id of the node to set association for.
+    target_node_id:
+      description: Node id of the node to associate to.
+    group:
+      description: Group number to set association for.
+    instance:
+      description: (Optional) Instance of association. Defaults to 0.
+
 add_node:
   description: Add a new node to the Z-Wave network. Refer to OZW.log for details.
 
