@@ -222,7 +222,7 @@ class TestScriptHelper(unittest.TestCase):
                     'hello': '{{ greeting }}',
                 },
             },
-            {'delay': {'seconds': 5}},
+            {'delay': '{{ delay_period }}'},
             {
                 'service': 'test.script',
                 'data_template': {
@@ -233,6 +233,7 @@ class TestScriptHelper(unittest.TestCase):
         script_obj.run({
             'greeting': 'world',
             'greeting2': 'universe',
+            'delay_period': '00:00:05'
         })
 
         self.hass.block_till_done()
