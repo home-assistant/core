@@ -1,0 +1,229 @@
+.mmd_rss,
+.mmd_feed,
+.mmd_link,
+.mmd_shopping,
+.mmd_quote,
+.mmd_glossary,
+.mmd_podcast,
+.mmd_video,
+.mmd_wiki,
+.mmd_arduinocc,
+.mmd_amazon,
+.mmd_applecom,
+.mmd_appnet,
+.mmd_facebookcom,
+.mmd_flattr,
+.mmd_flattrcom,
+.mmd_twitter,
+.mmd_tweet,
+.mmd_twittercom,
+.mmd_wikipediaorg,
+.mmd_youtube,
+.mmd_youtubecom,
+.mmd_googlede,
+.mmd_googlecom,
+.mmd_google,
+.mmd_heisede,
+.mmd_amazonde,
+.mmd_amazoncom,
+.mmd_paypalcom,
+.mmd_esaint,
+.mmd_dlrde,
+.mmd_wiktionaryorg,
+.mmd_deviantartcom,
+.mmd_podloveorg,
+.mmd_dropboxcom,
+.mmd_nytimescom,
+.mmd_shownotes,
+.mmd_githubcom,
+.mmd_imdbcom,
+.mmd_flickrcom,
+.mmd_tumblrcom,
+.mmd_threemach,
+.mmd_soundcloudcom,
+.mmd_slashdotorg,
+.mmd_stackoverflow,
+.mmd_yahoocom,
+.mmd_xingcom,
+.mmd_xenimde,
+.mmd_crefm,
+.mmd_einschlafenpodcastde,
+.mmd_podunioncom,
+.mmd_1337kulturde,
+.mmd_binaergewitterde,
+.mmd_nasagov,
+.mmd_diesondersendungde,
+.mmd_wikigeeksde,
+.mmd_helmholtzde,
+.mmd_famousprojectorg,
+.mmd_nsagov,
+.mmd_thenextwebcom,
+.mmd_achtungabschriftde,
+.mmd_auphoniccom,
+.mmd_creativecommonsorg,
+.mmd_cccde,
+.mmd_raspberrypiorg,
+.mmd_golemde,
+.mmd_selfcssorg,
+.mmd_firtzorg,
+.mmd_hoersuppede,
+.mmd_raumzeitpodcastde,
+.mmd_absradiode,
+.mmd_staatsbuergerkundepodcastde,
+.mmd_openstreetmapde,
+.mmd_openstreetmaporg,
+.mmd_tagesschaude,
+.mmd_uberspacede,
+.mmd_wrintde {
+  background-repeat: no-repeat;
+  background-position: 0 center;
+  padding-left: 18px;
+  margin-left: 4px;
+  background-size: 16px 16px;
+}
+
+.mmd_podcast { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/podcast.png'); }
+
+.mmd_absradiode { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/absradio.png' ); }
+
+.mmd_staatsbuergerkundepodcastde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/staatsbuergerkunde.png' ); }
+
+.mmd_openstreetmapde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/osm.png' ); }
+.mmd_openstreetmaporg { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/osm.png' ); }
+
+.mmd_threemach { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/threema.png'); }
+
+.mmd_deviantartcom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/deviantart.png'); }
+
+.mmd_podloveorg { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/podlove.png'); }
+
+.mmd_tagesschaude { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/tagesschau.png' ); }
+
+.mmd_uberspacede { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/uberspace.png' ); }
+
+.mmd_dropboxcom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/dropbox.png'); }
+
+.mmd_nytimescom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/nyt.png'); }
+
+.mmd_shownotes,
+.mmd_shownotesorg { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/shownotes.png'); }
+
+.mmd_heisede { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/heise.png'); }
+
+.mmd_link { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/link.png'); }
+
+.mmd_shopping { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/shopping.png'); }
+
+.mmd_amazon,
+.mmd_amazonde,
+.mmd_amazoncom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/amazon.png'); }
+
+.mmd_arduinocc { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/arduino.png'); }
+
+.mmd_raspberrypiorg { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/raspberry.png'); }
+
+.mmd_slashdotorg { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/slashdot.png'); }
+
+.mmd_rss,
+.mmd_feed { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/rss.png'); }
+
+.mmd_googlede,
+.mmd_googlecom,
+.mmd_google { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/google.png'); }
+
+.mmd_facebookcom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/facebook.png'); }
+
+.mmd_flattrcom,
+.mmd_flattr { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/flattr.png'); }
+
+.mmd_tweet,
+.mmd_twittercom,
+.mmd_twitter { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/twitter.png'); }
+
+.mmd_wiki,
+.mmd_wikipediaorg,
+.mmd_wiktionaryorg,
+.mmd_glossary { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/wikipedia2.png'); }
+
+.mmd_paypal.com { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/paypal.png'); }
+
+.mmd_stackoverflow { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/stackoverflow.png'); }
+
+.mmd_youtube,
+.mmd_youtubecom,
+.mmd_youtu.be,
+.mmd_video { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/youtube.png'); }
+
+.mmd_applecom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/apple.png'); }
+
+.mmd_appnet { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/appdotnet.png'); }
+
+.mmd_esaint { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/esa.png'); }
+
+.mmd_dlrde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/dlr.png'); }
+
+.mmd_githubcom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/github3.png'); }
+
+.mmd_imdbcom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/imdb.png'); }
+
+.mmd_quote { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/quote.png'); }
+
+.mmd_flickrcom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/flickr.png'); }
+
+.mmd_tumblrcom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/tumblr.png'); }
+
+.mmd_soundcloudcom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/soundcloud.png'); }
+
+.mmd_yahoocom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/yahoo.png'); }
+
+.mmd_xingcom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/xing.png'); }
+
+.mmd_xenimde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/xenim.png'); }
+
+.mmd_crefm { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/cre.png'); }
+
+.mmd_einschlafenpodcastde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/einschlafen.png'); }
+
+.mmd_firtzorg { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/firtz.png'); }
+
+.mmd_hoersuppede { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/hoersuppe.png'); }
+
+.mmd_raumzeitpodcastde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/raumzeit.png'); }
+
+.mmd_wrintde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/wrint.png'); }
+
+.mmd_podunioncom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/podunion.png'); }
+
+.mmd_1337kulturde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/1337kultur.png'); }
+
+.mmd_binaergewitterde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/binaergewitter.png'); }
+
+.mmd_nasagov { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/nasa.png'); }
+
+.mmd_diesondersendungde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/sondersendung.png'); }
+
+.mmd_wikigeeksde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/wikigeeks.png'); }
+
+.mmd_helmholtzde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/helmholtz.png'); }
+
+.mmd_famousprojectorg { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/famous02.png'); }
+
+.mmd_nsagov { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/nsa.png'); }
+
+.mmd_thenextwebcom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/thenextweb.png'); }
+
+.mmd_achtungabschriftde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/achtungabschrift.png'); }
+
+.mmd_auphoniccom { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/auphonic.png'); }
+
+.mmd_cclicense,
+.mmd_creativecommonsorg { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/cc.png'); }
+
+.mmd_cccde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/ccc.png'); }
+
+.mmd_golemde { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/golem.png'); }
+
+.mmd_selfcssorg { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/selfcss.png'); }
+
+.mmd_troll,
+.mmd_trollface { background-image: url('https://raw2.github.com/SimonWaldherr/BitmapWebIcons/gh-pages/trollface.png');}
