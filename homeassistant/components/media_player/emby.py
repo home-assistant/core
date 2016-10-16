@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     key = config.get(CONF_API_KEY)
     port = config.get(CONF_PORT)
 
-    url = 'http://{}:{}'.format(host, port)
+    url = '{}:{}'.format(host, port)
 
     _LOGGER.info('Setting up Emby server at: %s', url)
 
