@@ -2,6 +2,7 @@
 
 ATTR_NODE_ID = "node_id"
 ATTR_TARGET_NODE_ID = "target_node_id"
+ATTR_ASSOCIATION = "association"
 ATTR_INSTANCE = "instance"
 ATTR_GROUP = "group"
 ATTR_VALUE_ID = "value_id"
@@ -14,8 +15,7 @@ ATTR_CONFIG_SIZE = "size"
 ATTR_CONFIG_VALUE = "value"
 NETWORK_READY_WAIT_SECS = 30
 
-SERVICE_ADD_ASSOCIATION = "add_association"
-SERVICE_REMOVE_ASSOCIATION = "remove_association"
+SERVICE_ASSOCIATION = "add_association"
 SERVICE_ADD_NODE = "add_node"
 SERVICE_ADD_NODE_SECURE = "add_node_secure"
 SERVICE_REMOVE_NODE = "remove_node"

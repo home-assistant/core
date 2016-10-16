@@ -1,6 +1,8 @@
-add_association:
+association:
   description: Add a association in the Z-Wave network.
   fields:
+    association:
+      description: Specify add or remove assosication
     node_id:
       description: Node id of the node to set association for.
     target_node_id:
