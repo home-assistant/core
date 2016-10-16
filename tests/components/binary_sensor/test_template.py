@@ -43,28 +43,15 @@ class TestBinarySensorTemplate(unittest.TestCase):
                 },
             }
         })
-        add_devices = mock.MagicMock()
-        result = run_coroutine_threadsafe(
-            template.async_setup_platform(self.hass, config, add_devices),
-            self.hass.loop).result()
-        self.assertTrue(result)
-        self.assertEqual(mock_template.call_count, 1)
-        self.assertEqual(
-            mock_template.call_args,
-            mock.call(
-                self.hass, 'test', 'virtual thingy', 'motion', tpl, 'test'
-            )
-        )
-        self.assertEqual(add_devices.call_count, 1)
-        self.assertEqual(
-            add_devices.call_args, mock.call([mock_template.return_value])
-        )
+        with assert_setup_component(0):
+            assert bootstrap.setup_component(
+                self.hass, 'binary_sensor', config)
 
     def test_setup_no_sensors(self):
         """"Test setup with no sensors."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'sensor', {
-                'sensor': {
+            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
                     'platform': 'template'
                 }
             })
@@ -72,8 +59,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
     def test_setup_invalid_device(self):
         """"Test the setup with invalid devices."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'sensor', {
-                'sensor': {
+            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
                     'platform': 'template',
                     'sensors': {
                         'foo bar': {},
@@ -84,8 +71,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
     def test_setup_invalid_sensor_class(self):
         """"Test setup with invalid sensor class."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'sensor', {
-                'sensor': {
+            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
                     'platform': 'template',
                     'sensors': {
                         'test': {
@@ -99,8 +86,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
     def test_setup_invalid_missing_template(self):
         """"Test setup with invalid and missing template."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'sensor', {
-                'sensor': {
+            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
                     'platform': 'template',
                     'sensors': {
                         'test': {
