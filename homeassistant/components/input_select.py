@@ -31,6 +31,18 @@ SERVICE_SELECT_OPTION_SCHEMA = vol.Schema({
     vol.Required(ATTR_OPTION): cv.string,
 })
 
+SERVICE_SELECT_NEXT = 'select_next'
+
+SERVICE_SELECT_NEXT_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+SERVICE_SELECT_PREVIOUS = 'select_previous'
+
+SERVICE_SELECT_PREVIOUS_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
 
 def _cv_input_select(cfg):
     """Config validation helper for input select (Voluptuous)."""
@@ -53,10 +65,24 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {
 
 
 def select_option(hass, entity_id, option):
-    """Set input_select to False."""
+    """Set value of input_select."""
     hass.services.call(DOMAIN, SERVICE_SELECT_OPTION, {
         ATTR_ENTITY_ID: entity_id,
         ATTR_OPTION: option,
+    })
+
+
+def select_next(hass, entity_id):
+    """Set next value of input_select."""
+    hass.services.call(DOMAIN, SERVICE_SELECT_NEXT, {
+        ATTR_ENTITY_ID: entity_id,
+    })
+
+
+def select_previous(hass, entity_id):
+    """Set previous value of input_select."""
+    hass.services.call(DOMAIN, SERVICE_SELECT_PREVIOUS, {
+        ATTR_ENTITY_ID: entity_id,
     })
 
 
@@ -77,7 +103,7 @@ def setup(hass, config):
         return False
 
     def select_option_service(call):
-        """Handle a calls to the input select services."""
+        """Handle a calls to the input select option service."""
         target_inputs = component.extract_from_service(call)
 
         for input_select in target_inputs:
@@ -86,6 +112,28 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_SELECT_OPTION,
                            select_option_service,
                            schema=SERVICE_SELECT_OPTION_SCHEMA)
+
+    def select_next_service(call):
+        """Handle a calls to the input select next service."""
+        target_inputs = component.extract_from_service(call)
+
+        for input_select in target_inputs:
+            input_select.offset_index(1)
+
+    hass.services.register(DOMAIN, SERVICE_SELECT_NEXT,
+                           select_next_service,
+                           schema=SERVICE_SELECT_NEXT_SCHEMA)
+
+    def select_previous_service(call):
+        """Handle a calls to the input select previous service."""
+        target_inputs = component.extract_from_service(call)
+
+        for input_select in target_inputs:
+            input_select.offset_index(-1)
+
+    hass.services.register(DOMAIN, SERVICE_SELECT_PREVIOUS,
+                           select_previous_service,
+                           schema=SERVICE_SELECT_PREVIOUS_SCHEMA)
 
     component.add_entities(entities)
 
@@ -138,4 +186,11 @@ class InputSelect(Entity):
                             option, ', '.join(self._options))
             return
         self._current_option = option
+        self.update_ha_state()
+
+    def offset_index(self, offset):
+        """Offset current index."""
+        current_index = self._options.index(self._current_option)
+        new_index = (current_index + offset) % len(self._options)
+        self._current_option = self._options[new_index]
         self.update_ha_state()

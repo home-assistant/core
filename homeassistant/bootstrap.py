@@ -32,12 +32,15 @@ _CURRENT_SETUP = []
 ATTR_COMPONENT = 'component'
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
+_PERSISTENT_PLATFORMS = set()
+_PERSISTENT_VALIDATION = set()
 
 
 def setup_component(hass: core.HomeAssistant, domain: str,
                     config: Optional[Dict]=None) -> bool:
     """Setup a component and all its dependencies."""
     if domain in hass.config.components:
+        _LOGGER.debug('Component %s already set up.', domain)
         return True
 
     _ensure_loader_prepared(hass)
@@ -53,6 +56,7 @@ def setup_component(hass: core.HomeAssistant, domain: str,
 
     for component in components:
         if not _setup_component(hass, component, config):
+            _LOGGER.error('Component %s failed to setup', component)
             return False
 
     return True
@@ -147,7 +151,7 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
         try:
             config = component.CONFIG_SCHEMA(config)
         except vol.Invalid as ex:
-            log_exception(ex, domain, config)
+            log_exception(ex, domain, config, hass)
             return None
 
     elif hasattr(component, 'PLATFORM_SCHEMA'):
@@ -157,8 +161,8 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
             try:
                 p_validated = component.PLATFORM_SCHEMA(p_config)
             except vol.Invalid as ex:
-                log_exception(ex, domain, config)
-                return None
+                log_exception(ex, domain, config, hass)
+                continue
 
             # Not all platform components follow same pattern for platforms
             # So if p_name is None we are not going to validate platform
@@ -171,7 +175,7 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
                                               p_name)
 
             if platform is None:
-                return None
+                continue
 
             # Validate platform specific schema
             if hasattr(platform, 'PLATFORM_SCHEMA'):
@@ -179,8 +183,8 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
                     p_validated = platform.PLATFORM_SCHEMA(p_validated)
                 except vol.Invalid as ex:
                     log_exception(ex, '{}.{}'.format(domain, p_name),
-                                  p_validated)
-                    return None
+                                  p_validated, hass)
+                    continue
 
             platforms.append(p_validated)
 
@@ -209,6 +213,13 @@ def prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
     # Not found
     if platform is None:
         _LOGGER.error('Unable to find platform %s', platform_path)
+
+        _PERSISTENT_PLATFORMS.add(platform_path)
+        message = ('Unable to find the following platforms: ' +
+                   ', '.join(list(_PERSISTENT_PLATFORMS)) +
+                   '(please check your configuration)')
+        persistent_notification.create(
+            hass, message, 'Invalid platforms', 'platform_errors')
         return None
 
     # Already loaded
@@ -255,7 +266,7 @@ def from_config_dict(config: Dict[str, Any],
     try:
         conf_util.process_ha_core_config(hass, core_config)
     except vol.Invalid as ex:
-        log_exception(ex, 'homeassistant', core_config)
+        log_exception(ex, 'homeassistant', core_config, hass)
         return None
 
     conf_util.process_ha_config_upgrade(hass)
@@ -303,6 +314,7 @@ def from_config_dict(config: Dict[str, Any],
     hass.loop.run_until_complete(
         hass.loop.run_in_executor(None, component_setup)
     )
+
     return hass
 
 
@@ -395,9 +407,16 @@ def _ensure_loader_prepared(hass: core.HomeAssistant) -> None:
         loader.prepare(hass)
 
 
-def log_exception(ex, domain, config):
+def log_exception(ex, domain, config, hass=None):
     """Generate log exception for config validation."""
     message = 'Invalid config for [{}]: '.format(domain)
+    if hass is not None:
+        _PERSISTENT_VALIDATION.add(domain)
+        message = ('The following platforms contain invalid configuration:  ' +
+                   ', '.join(list(_PERSISTENT_VALIDATION)) +
+                   '  (please check your configuration)')
+        persistent_notification.create(
+            hass, message, 'Invalid config', 'invalid_config')
 
     if 'extra keys not allowed' in ex.error_message:
         message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\

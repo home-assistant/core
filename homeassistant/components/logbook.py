@@ -29,15 +29,22 @@ DEPENDENCIES = ['recorder', 'frontend']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EXCLUDE = 'exclude'
+CONF_INCLUDE = 'include'
 CONF_ENTITIES = 'entities'
 CONF_DOMAINS = 'domains'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         CONF_EXCLUDE: vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.ensure_list,
-            vol.Optional(CONF_DOMAINS, default=[]): cv.ensure_list
+            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
+                                                            [cv.string])
         }),
+        CONF_INCLUDE: vol.Schema({
+            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
+                                                            [cv.string])
+        })
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -267,12 +274,19 @@ def humanify(events):
 
 def _exclude_events(events, config):
     """Get lists of excluded entities and platforms."""
+    # pylint: disable=too-many-branches
     excluded_entities = []
     excluded_domains = []
+    included_entities = []
+    included_domains = []
     exclude = config[DOMAIN].get(CONF_EXCLUDE)
     if exclude:
         excluded_entities = exclude[CONF_ENTITIES]
         excluded_domains = exclude[CONF_DOMAINS]
+    include = config[DOMAIN].get(CONF_INCLUDE)
+    if include:
+        included_entities = include[CONF_ENTITIES]
+        included_domains = include[CONF_DOMAINS]
 
     filtered_events = []
     for event in events:
@@ -288,11 +302,32 @@ def _exclude_events(events, config):
                 continue
 
             domain = to_state.domain
-            # check if logbook entry is excluded for this domain
-            if domain in excluded_domains:
+            entity_id = to_state.entity_id
+            # filter if only excluded is configured for this domain
+            if excluded_domains and domain in excluded_domains and \
+                    not included_domains:
+                if (included_entities and entity_id not in included_entities) \
+                        or not included_entities:
+                    continue
+            # filter if only included is configured for this domain
+            elif not excluded_domains and included_domains and \
+                    domain not in included_domains:
+                if (included_entities and entity_id not in included_entities) \
+                        or not included_entities:
+                    continue
+            # filter if included and excluded is configured for this domain
+            elif excluded_domains and included_domains and \
+                    (domain not in included_domains or
+                     domain in excluded_domains):
+                if (included_entities and entity_id not in included_entities) \
+                        or not included_entities or domain in excluded_domains:
+                    continue
+            # filter if only included is configured for this entity
+            elif not excluded_domains and not included_domains and \
+                    included_entities and entity_id not in included_entities:
                 continue
             # check if logbook entry is excluded for this entity
-            if to_state.entity_id in excluded_entities:
+            if entity_id in excluded_entities:
                 continue
         filtered_events.append(event)
     return filtered_events

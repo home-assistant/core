@@ -3,6 +3,7 @@
 import tempfile
 from unittest import mock
 import threading
+import logging
 
 import voluptuous as vol
 
@@ -10,13 +11,21 @@ from homeassistant import bootstrap, loader
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 
-from tests.common import get_test_home_assistant, MockModule, MockPlatform
+from tests.common import \
+    get_test_home_assistant, MockModule, MockPlatform, assert_setup_component
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TestBootstrap:
     """Test the bootstrap utils."""
+
+    hass = None
+    backup_cache = None
+
+    # pylint: disable=invalid-name, no-self-use
 
     def setup_method(self, method):
         """Setup the test."""
@@ -110,59 +119,72 @@ class TestBootstrap:
         loader.set_component(
             'platform_conf.whatever', MockPlatform('whatever'))
 
-        assert not bootstrap._setup_component(self.hass, 'platform_conf', {
-            'platform_conf': {
-                'hello': 'world',
-                'invalid': 'extra',
-            }
-        })
-
-        assert not bootstrap._setup_component(self.hass, 'platform_conf', {
-            'platform_conf': {
-                'platform': 'whatever',
-                'hello': 'world',
-            },
-
-            'platform_conf 2': {
-                'invalid': True
-            }
-        })
-
-        assert not bootstrap._setup_component(self.hass, 'platform_conf', {
-            'platform_conf': {
-                'platform': 'not_existing',
-                'hello': 'world',
-            }
-        })
-
-        assert bootstrap._setup_component(self.hass, 'platform_conf', {
-            'platform_conf': {
-                'platform': 'whatever',
-                'hello': 'world',
-            }
-        })
+        with assert_setup_component(0):
+            assert bootstrap._setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {
+                    'hello': 'world',
+                    'invalid': 'extra',
+                }
+            })
 
         self.hass.config.components.remove('platform_conf')
 
-        assert bootstrap._setup_component(self.hass, 'platform_conf', {
-            'platform_conf': [{
-                'platform': 'whatever',
-                'hello': 'world',
-            }]
-        })
+        with assert_setup_component(1):
+            assert bootstrap._setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {
+                    'platform': 'whatever',
+                    'hello': 'world',
+                },
+                'platform_conf 2': {
+                    'invalid': True
+                }
+            })
 
         self.hass.config.components.remove('platform_conf')
 
-        # Any falsey paltform config will be ignored (None, {}, etc)
-        assert bootstrap._setup_component(self.hass, 'platform_conf', {
-            'platform_conf': None
-        })
+        with assert_setup_component(0):
+            assert bootstrap._setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {
+                    'platform': 'not_existing',
+                    'hello': 'world',
+                }
+            })
 
         self.hass.config.components.remove('platform_conf')
 
-        assert bootstrap._setup_component(self.hass, 'platform_conf', {
-            'platform_conf': {}
-        })
+        with assert_setup_component(1):
+            assert bootstrap._setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {
+                    'platform': 'whatever',
+                    'hello': 'world',
+                }
+            })
+
+        self.hass.config.components.remove('platform_conf')
+
+        with assert_setup_component(1):
+            assert bootstrap._setup_component(self.hass, 'platform_conf', {
+                'platform_conf': [{
+                    'platform': 'whatever',
+                    'hello': 'world',
+                }]
+            })
+
+        self.hass.config.components.remove('platform_conf')
+
+        # Any falsey platform config will be ignored (None, {}, etc)
+        with assert_setup_component(0) as config:
+            assert bootstrap._setup_component(self.hass, 'platform_conf', {
+                'platform_conf': None
+            })
+            assert 'platform_conf' in self.hass.config.components
+            assert not config['platform_conf']  # empty
+
+            assert bootstrap._setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {}
+            })
+            assert 'platform_conf' in self.hass.config.components
+            assert not config['platform_conf']  # empty
 
     def test_component_not_found(self):
         """setup_component should not crash if component doesn't exist."""
@@ -170,7 +192,6 @@ class TestBootstrap:
 
     def test_component_not_double_initialized(self):
         """Test we do not setup a component twice."""
-
         mock_setup = mock.MagicMock(return_value=True)
 
         loader.set_component('comp', MockModule('comp', setup=mock_setup))
@@ -195,15 +216,13 @@ class TestBootstrap:
         assert 'comp' not in self.hass.config.components
 
     def test_component_not_setup_twice_if_loaded_during_other_setup(self):
-        """
-        Test component that gets setup while waiting for lock is not setup
-        twice.
-        """
+        """Test component setup while waiting for lock is not setup twice."""
         loader.set_component('comp', MockModule('comp'))
 
         result = []
 
         def setup_component():
+            """Setup the component."""
             result.append(bootstrap.setup_component(self.hass, 'comp'))
 
         with bootstrap._SETUP_LOCK:
@@ -250,15 +269,15 @@ class TestBootstrap:
     def test_home_assistant_core_config_validation(self):
         """Test if we pass in wrong information for HA conf."""
         # Extensive HA conf validation testing is done in test_config.py
+        hass = get_test_home_assistant()
         assert None is bootstrap.from_config_dict({
             'homeassistant': {
                 'latitude': 'some string'
             }
-        })
+        }, hass=hass)
 
     def test_component_setup_with_validation_and_dependency(self):
         """Test all config is passed to dependencies."""
-
         def config_check_setup(hass, config):
             """Setup method that tests config is passed in."""
             if config.get('comp_a', {}).get('valid', False):
@@ -283,36 +302,48 @@ class TestBootstrap:
 
     def test_platform_specific_config_validation(self):
         """Test platform that specifies config."""
-
         platform_schema = PLATFORM_SCHEMA.extend({
             'valid': True,
         }, extra=vol.PREVENT_EXTRA)
 
+        mock_setup = mock.MagicMock()
+
         loader.set_component(
             'switch.platform_a',
-            MockPlatform(platform_schema=platform_schema))
+            MockPlatform(platform_schema=platform_schema,
+                         setup_platform=mock_setup))
 
-        assert not bootstrap.setup_component(self.hass, 'switch', {
-            'switch': {
-                'platform': 'platform_a',
-                'invalid': True
-            }
-        })
+        with assert_setup_component(0):
+            assert bootstrap.setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'platform_a',
+                    'invalid': True
+                }
+            })
+            assert mock_setup.call_count == 0
 
-        assert not bootstrap.setup_component(self.hass, 'switch', {
-            'switch': {
-                'platform': 'platform_a',
-                'valid': True,
-                'invalid_extra': True,
-            }
-        })
+        self.hass.config.components.remove('switch')
 
-        assert bootstrap.setup_component(self.hass, 'switch', {
-            'switch': {
-                'platform': 'platform_a',
-                'valid': True
-            }
-        })
+        with assert_setup_component(0):
+            assert bootstrap.setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'platform_a',
+                    'valid': True,
+                    'invalid_extra': True,
+                }
+            })
+            assert mock_setup.call_count == 0
+
+        self.hass.config.components.remove('switch')
+
+        with assert_setup_component(1):
+            assert bootstrap.setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'platform_a',
+                    'valid': True
+                }
+            })
+            assert mock_setup.call_count == 1
 
     def test_disable_component_if_invalid_return(self):
         """Test disabling component if invalid return."""

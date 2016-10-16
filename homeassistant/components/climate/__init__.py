@@ -253,7 +253,7 @@ def setup(hass, config):
                     kwargs[value] = convert_temperature(
                         temp,
                         hass.config.units.temperature_unit,
-                        climate.unit_of_measurement
+                        climate.temperature_unit
                     )
                 else:
                     kwargs[value] = temp
@@ -368,7 +368,10 @@ class ClimateDevice(Entity):
     @property
     def state(self):
         """Return the current state."""
-        return self.current_operation or STATE_UNKNOWN
+        if self.current_operation:
+            return self.current_operation
+        else:
+            return STATE_UNKNOWN
 
     @property
     def state_attributes(self):
@@ -398,17 +401,20 @@ class ClimateDevice(Entity):
         fan_mode = self.current_fan_mode
         if fan_mode is not None:
             data[ATTR_FAN_MODE] = fan_mode
-            data[ATTR_FAN_LIST] = self.fan_list
+            if self.fan_list:
+                data[ATTR_FAN_LIST] = self.fan_list
 
         operation_mode = self.current_operation
         if operation_mode is not None:
             data[ATTR_OPERATION_MODE] = operation_mode
-            data[ATTR_OPERATION_LIST] = self.operation_list
+            if self.operation_list:
+                data[ATTR_OPERATION_LIST] = self.operation_list
 
         swing_mode = self.current_swing_mode
         if swing_mode is not None:
             data[ATTR_SWING_MODE] = swing_mode
-            data[ATTR_SWING_LIST] = self.swing_list
+            if self.swing_list:
+                data[ATTR_SWING_LIST] = self.swing_list
 
         is_away = self.is_away_mode_on
         if is_away is not None:
@@ -422,7 +428,12 @@ class ClimateDevice(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement."""
+        """The unit of measurement to display."""
+        return self.hass.config.units.temperature_unit
+
+    @property
+    def temperature_unit(self):
+        """The unit of measurement used by the platform."""
         raise NotImplementedError
 
     @property
@@ -556,10 +567,10 @@ class ClimateDevice(Entity):
         if temp is None or not isinstance(temp, Number):
             return temp
 
-        value = convert_temperature(temp, self.unit_of_measurement,
-                                    self.hass.config.units.temperature_unit)
+        value = convert_temperature(temp, self.temperature_unit,
+                                    self.unit_of_measurement)
 
-        if self.hass.config.units.temperature_unit is TEMP_CELSIUS:
+        if self.unit_of_measurement is TEMP_CELSIUS:
             decimal_count = 1
         else:
             # Users of fahrenheit generally expect integer units.

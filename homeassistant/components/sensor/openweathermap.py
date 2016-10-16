@@ -12,15 +12,16 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    CONF_MONITORED_CONDITIONS)
+    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.4.0']
+REQUIREMENTS = ['pyowm==2.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ATTRIBUTION = "Data provied by OpenWeatherMap"
 CONF_FORECAST = 'forecast'
 
 DEFAULT_NAME = 'OWM'
@@ -113,6 +114,13 @@ class OpenWeatherMapSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+        }
+
     # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data from OWM and updates the states."""
@@ -174,12 +182,12 @@ class WeatherData(object):
         """Get the latest data from OpenWeatherMap."""
         obs = self.owm.weather_at_coords(self.latitude, self.longitude)
         if obs is None:
-            _LOGGER.warning('Failed to fetch data from OWM')
+            _LOGGER.warning("Failed to fetch data from OpenWeatherMap")
             return
 
         self.data = obs.get_weather()
 
         if self.forecast == 1:
-            obs = self.owm.three_hours_forecast_at_coords(self.latitude,
-                                                          self.longitude)
+            obs = self.owm.three_hours_forecast_at_coords(
+                self.latitude, self.longitude)
             self.fc_data = obs.get_forecast()

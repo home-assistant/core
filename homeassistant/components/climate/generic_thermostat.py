@@ -100,7 +100,7 @@ class GenericThermostat(ClimateDevice):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def temperature_unit(self):
         """Return the unit of measurement."""
         return self._unit
 

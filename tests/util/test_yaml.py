@@ -92,6 +92,27 @@ class TestYaml(unittest.TestCase):
                 doc = yaml.yaml.safe_load(file)
                 assert sorted(doc["key"]) == sorted(["one", "two"])
 
+    def test_include_dir_list_recursive(self):
+        """Test include dir recursive list yaml."""
+        with tempfile.TemporaryDirectory() as include_dir:
+            file_0 = tempfile.NamedTemporaryFile(dir=include_dir,
+                                                 suffix=".yaml", delete=False)
+            file_0.write(b"zero")
+            file_0.close()
+            temp_dir = tempfile.TemporaryDirectory(dir=include_dir)
+            file_1 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
+                                                 suffix=".yaml", delete=False)
+            file_1.write(b"one")
+            file_1.close()
+            file_2 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
+                                                 suffix=".yaml", delete=False)
+            file_2.write(b"two")
+            file_2.close()
+            conf = "key: !include_dir_list {}".format(include_dir)
+            with io.StringIO(conf) as file:
+                doc = yaml.yaml.safe_load(file)
+                assert sorted(doc["key"]) == sorted(["zero", "one", "two"])
+
     def test_include_dir_named(self):
         """Test include dir named yaml."""
         with tempfile.TemporaryDirectory() as include_dir:
@@ -105,6 +126,32 @@ class TestYaml(unittest.TestCase):
             file_2.close()
             conf = "key: !include_dir_named {}".format(include_dir)
             correct = {}
+            correct[os.path.splitext(os.path.basename(file_1.name))[0]] = "one"
+            correct[os.path.splitext(os.path.basename(file_2.name))[0]] = "two"
+            with io.StringIO(conf) as file:
+                doc = yaml.yaml.safe_load(file)
+                assert doc["key"] == correct
+
+    def test_include_dir_named_recursive(self):
+        """Test include dir named yaml."""
+        with tempfile.TemporaryDirectory() as include_dir:
+            file_0 = tempfile.NamedTemporaryFile(dir=include_dir,
+                                                 suffix=".yaml", delete=False)
+            file_0.write(b"zero")
+            file_0.close()
+            temp_dir = tempfile.TemporaryDirectory(dir=include_dir)
+            file_1 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
+                                                 suffix=".yaml", delete=False)
+            file_1.write(b"one")
+            file_1.close()
+            file_2 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
+                                                 suffix=".yaml", delete=False)
+            file_2.write(b"two")
+            file_2.close()
+            conf = "key: !include_dir_named {}".format(include_dir)
+            correct = {}
+            correct[os.path.splitext(
+                            os.path.basename(file_0.name))[0]] = "zero"
             correct[os.path.splitext(os.path.basename(file_1.name))[0]] = "one"
             correct[os.path.splitext(os.path.basename(file_2.name))[0]] = "two"
             with io.StringIO(conf) as file:
@@ -127,6 +174,28 @@ class TestYaml(unittest.TestCase):
                 doc = yaml.yaml.safe_load(file)
                 assert sorted(doc["key"]) == sorted(["one", "two", "three"])
 
+    def test_include_dir_merge_list_recursive(self):
+        """Test include dir merge list yaml."""
+        with tempfile.TemporaryDirectory() as include_dir:
+            file_0 = tempfile.NamedTemporaryFile(dir=include_dir,
+                                                 suffix=".yaml", delete=False)
+            file_0.write(b"- zero")
+            file_0.close()
+            temp_dir = tempfile.TemporaryDirectory(dir=include_dir)
+            file_1 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
+                                                 suffix=".yaml", delete=False)
+            file_1.write(b"- one")
+            file_1.close()
+            file_2 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
+                                                 suffix=".yaml", delete=False)
+            file_2.write(b"- two\n- three")
+            file_2.close()
+            conf = "key: !include_dir_merge_list {}".format(include_dir)
+            with io.StringIO(conf) as file:
+                doc = yaml.yaml.safe_load(file)
+                assert sorted(doc["key"]) == sorted(["zero", "one", "two",
+                                                     "three"])
+
     def test_include_dir_merge_named(self):
         """Test include dir merge named yaml."""
         with tempfile.TemporaryDirectory() as include_dir:
@@ -142,6 +211,32 @@ class TestYaml(unittest.TestCase):
             with io.StringIO(conf) as file:
                 doc = yaml.yaml.safe_load(file)
                 assert doc["key"] == {
+                    "key1": "one",
+                    "key2": "two",
+                    "key3": "three"
+                }
+
+    def test_include_dir_merge_named_recursive(self):
+        """Test include dir merge named yaml."""
+        with tempfile.TemporaryDirectory() as include_dir:
+            file_0 = tempfile.NamedTemporaryFile(dir=include_dir,
+                                                 suffix=".yaml", delete=False)
+            file_0.write(b"key0: zero")
+            file_0.close()
+            temp_dir = tempfile.TemporaryDirectory(dir=include_dir)
+            file_1 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
+                                                 suffix=".yaml", delete=False)
+            file_1.write(b"key1: one")
+            file_1.close()
+            file_2 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
+                                                 suffix=".yaml", delete=False)
+            file_2.write(b"key2: two\nkey3: three")
+            file_2.close()
+            conf = "key: !include_dir_merge_named {}".format(include_dir)
+            with io.StringIO(conf) as file:
+                doc = yaml.yaml.safe_load(file)
+                assert doc["key"] == {
+                    "key0": "zero",
                     "key1": "one",
                     "key2": "two",
                     "key3": "three"

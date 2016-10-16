@@ -41,7 +41,7 @@ class HMThermostat(homematic.HMDevice, ClimateDevice):
     """Representation of a Homematic thermostat."""
 
     @property
-    def unit_of_measurement(self):
+    def temperature_unit(self):
         """Return the unit of measurement that is used."""
         return TEMP_CELSIUS
 
