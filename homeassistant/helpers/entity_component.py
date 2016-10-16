@@ -306,9 +306,9 @@ class EntityPlatform(object):
     @asyncio.coroutine
     def _async_process_entity(self, new_entity):
         """Add entities to StateMachine."""
-        ret = yield from self.component.async_add_entity(entity, self)
+        ret = yield from self.component.async_add_entity(new_entity, self)
         if ret:
-            self.platform_entities.append(entity)
+            self.platform_entities.append(new_entity)
 
     @asyncio.coroutine
     def async_reset(self):
