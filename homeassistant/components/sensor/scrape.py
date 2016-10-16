@@ -12,7 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
     CONF_NAME, CONF_RESOURCE, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
-    CONF_VALUE_TEMPLATE,CONF_VERIFY_SSL)
+    CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
