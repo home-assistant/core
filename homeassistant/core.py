@@ -239,7 +239,7 @@ class HomeAssistant(object):
     def async_add_job(self, target: Callable[..., None], *args: Any):
         """Add a job from within the eventloop.
 
-        Async friendly.
+        This method must be run in the event loop.
 
         target: target to call.
         args: parameters for method to call.
@@ -255,7 +255,7 @@ class HomeAssistant(object):
     def async_run_job(self, target: Callable[..., None], *args: Any):
         """Run a job from within the event loop.
 
-        Async friendly.
+        This method must be run in the event loop.
 
         target: target to call.
         args: parameters for method to call.
@@ -543,7 +543,6 @@ class EventBus(object):
         @callback
         def onetime_listener(event):
             """Remove listener from eventbus and then fire listener."""
-            _LOGGER.debug("BLA")
             if hasattr(onetime_listener, 'run'):
                 return
             # Set variable so that we will never run twice.
@@ -703,7 +702,10 @@ class StateMachine(object):
 
     @callback
     def async_entity_ids(self, domain_filter=None):
-        """List of entity ids that are being tracked."""
+        """List of entity ids that are being tracked.
+
+        This method must be run in the event loop.
+        """
         if domain_filter is None:
             return list(self._states.keys())
 
@@ -906,7 +908,10 @@ class ServiceRegistry(object):
 
     @callback
     def async_services(self):
-        """Dict with per domain a list of available services."""
+        """Dict with per domain a list of available services.
+
+        This method must be run in the event loop.
+        """
         return {domain: {key: value.as_dict() for key, value
                          in self._services[domain].items()}
                 for domain in self._services}
