@@ -84,6 +84,9 @@ class TestLogentries(unittest.TestCase):
                        'logs/token',
                        'event': body}
             self.handler_method(event)
-            self.mock_post.assert_called_once_with(
-                payload['host'], data=payload, timeout=10)
+            self.assertEqual(self.mock_post.call_count, 1)
+            self.assertEqual(
+                self.mock_post.call_args,
+                mock.call(payload['host'], data=payload, timeout=10)
+            )
             self.mock_post.reset_mock()

@@ -62,7 +62,8 @@ class TestHoneywell(unittest.TestCase):
 
         result = honeywell.setup_platform(hass, config, add_devices)
         self.assertTrue(result)
-        mock_sc.assert_called_once_with('user', 'pass')
+        self.assertEqual(mock_sc.call_count, 1)
+        self.assertEqual(mock_sc.call_args, mock.call('user', 'pass'))
         mock_ht.assert_has_calls([
             mock.call(mock_sc.return_value, devices_1[0]),
             mock.call(mock_sc.return_value, devices_2[0]),
@@ -174,9 +175,13 @@ class TestHoneywell(unittest.TestCase):
         hass = mock.MagicMock()
         add_devices = mock.MagicMock()
         self.assertTrue(honeywell.setup_platform(hass, config, add_devices))
-        mock_evo.assert_called_once_with('user', 'pass')
-        mock_evo.return_value.temperatures.assert_called_once_with(
-            force_refresh=True)
+        self.assertEqual(mock_evo.call_count, 1)
+        self.assertEqual(mock_evo.call_args, mock.call('user', 'pass'))
+        self.assertEqual(mock_evo.return_value.temperatures.call_count, 1)
+        self.assertEqual(
+            mock_evo.return_value.temperatures.call_args,
+            mock.call(force_refresh=True)
+        )
         mock_round.assert_has_calls([
             mock.call(mock_evo.return_value, 'foo', True, 20.0),
             mock.call(mock_evo.return_value, 'bar', False, 20.0),
@@ -280,17 +285,26 @@ class TestHoneywellRound(unittest.TestCase):
         self.assertFalse(self.round1.is_away_mode_on)
         self.round1.turn_away_mode_on()
         self.assertTrue(self.round1.is_away_mode_on)
-        self.device.set_temperature.assert_called_once_with('House', 16)
+        self.assertEqual(self.device.set_temperature.call_count, 1)
+        self.assertEqual(
+            self.device.set_temperature.call_args, mock.call('House', 16)
+        )
 
         self.device.set_temperature.reset_mock()
         self.round1.turn_away_mode_off()
         self.assertFalse(self.round1.is_away_mode_on)
-        self.device.cancel_temp_override.assert_called_once_with('House')
+        self.assertEqual(self.device.cancel_temp_override.call_count, 1)
+        self.assertEqual(
+            self.device.cancel_temp_override.call_args, mock.call('House')
+        )
 
     def test_set_temperature(self):
         """Test setting the temperature."""
         self.round1.set_temperature(temperature=25)
-        self.device.set_temperature.assert_called_once_with('House', 25)
+        self.assertEqual(self.device.set_temperature.call_count, 1)
+        self.assertEqual(
+            self.device.set_temperature.call_args, mock.call('House', 25)
+        )
 
     def test_set_operation_mode(self: unittest.TestCase) -> None:
         """Test setting the system operation."""

@@ -125,7 +125,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         device = sonos.DEVICES[-1]
         partymodeMock.return_value = True
         device.group_players()
-        partymodeMock.assert_called_once_with()
+        self.assertEqual(partymodeMock.call_count, 1)
+        self.assertEqual(partymodeMock.call_args, mock.call())
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch.object(SoCoMock, 'unjoin')
@@ -135,7 +136,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         device = sonos.DEVICES[-1]
         unjoinMock.return_value = True
         device.unjoin()
-        unjoinMock.assert_called_once_with()
+        self.assertEqual(unjoinMock.call_count, 1)
+        self.assertEqual(unjoinMock.call_args, mock.call())
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch.object(soco.snapshot.Snapshot, 'snapshot')
@@ -145,7 +147,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         device = sonos.DEVICES[-1]
         snapshotMock.return_value = True
         device.snapshot()
-        snapshotMock.assert_called_once_with()
+        self.assertEqual(snapshotMock.call_count, 1)
+        self.assertEqual(snapshotMock.call_args, mock.call())
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch.object(soco.snapshot.Snapshot, 'restore')
@@ -155,4 +158,5 @@ class TestSonosMediaPlayer(unittest.TestCase):
         device = sonos.DEVICES[-1]
         restoreMock.return_value = True
         device.restore()
-        restoreMock.assert_called_once_with(True)
+        self.assertEqual(restoreMock.call_count, 1)
+        self.assertEqual(restoreMock.call_args, mock.call(True))
