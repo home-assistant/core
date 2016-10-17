@@ -18,7 +18,7 @@ notify:
       description: Extended information for notification. Optional depending on the platform
       example: platform specific
 
-register:
+apns_register:
   description: Registers a device to receive push notifications.
 
   fields:

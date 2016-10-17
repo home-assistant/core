@@ -18,7 +18,7 @@ from homeassistant.helpers import template as template_helper
 DOMAIN = "apns"
 APNS_DEVICES = "apns.yaml"
 DEVICE_TRACKER_DOMAIN = "device_tracker"
-SERVICE_REGISTER = "register"
+SERVICE_REGISTER = "apns_register"
 
 ATTR_PUSH_ID = "push_id"
 ATTR_NAME = "name"
