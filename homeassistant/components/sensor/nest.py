@@ -135,7 +135,7 @@ class NestTempSensor(NestSensor):
         if temp is None:
             return None
 
-        if not isinstance(temp, (int, float)):
+        if isinstance(temp, tuple):
             low, high = temp
             return "%s-%s" % (int(low), int(high))
         else:
