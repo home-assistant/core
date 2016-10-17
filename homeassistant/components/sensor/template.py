@@ -15,8 +15,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
     ATTR_ENTITY_ID, CONF_SENSORS)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import Entity, generate_entity_id
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def async_setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the template sensors."""
     sensors = []
 
@@ -59,7 +59,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not sensors:
         _LOGGER.error("No sensors added")
         return False
-    add_devices(sensors)
+
+    hass.loop.create_task(add_devices(sensors))
     return True
 
 
@@ -71,21 +72,23 @@ class SensorTemplate(Entity):
                  state_template, entity_ids):
         """Initialize the sensor."""
         self.hass = hass
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id,
-                                            hass=hass)
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id,
+                                                  hass=hass)
         self._name = friendly_name
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
         self._state = None
 
-        self.update()
+        # update state
+        self._async_render()
 
         @callback
         def template_sensor_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
             hass.loop.create_task(self.async_update_ha_state(True))
 
-        track_state_change(hass, entity_ids, template_sensor_state_listener)
+        async_track_state_change(
+            hass, entity_ids, template_sensor_state_listener)
 
     @property
     def name(self):
@@ -109,7 +112,11 @@ class SensorTemplate(Entity):
 
     @asyncio.coroutine
     def async_update(self):
-        """Get the latest data and update the states."""
+        """Update the state from the template."""
+        self._async_render()
+
+    def _async_render(self):
+        """Render the state from the template."""
         try:
             self._state = self._template.async_render()
         except TemplateError as ex:

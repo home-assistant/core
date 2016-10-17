@@ -4,10 +4,10 @@ from unittest import mock
 
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 import homeassistant.bootstrap as bootstrap
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
 from homeassistant.components.binary_sensor import template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_hlpr
+from homeassistant.util.async import run_callback_threadsafe
 
 from tests.common import get_test_home_assistant, assert_setup_component
 
@@ -29,38 +29,27 @@ class TestBinarySensorTemplate(unittest.TestCase):
     @mock.patch.object(template, 'BinarySensorTemplate')
     def test_setup(self, mock_template):
         """"Test the setup."""
-        tpl = template_hlpr.Template('{{ foo }}', self.hass)
-        config = PLATFORM_SCHEMA({
-            'platform': 'template',
-            'sensors': {
-                'test': {
-                    'friendly_name': 'virtual thingy',
-                    'value_template': tpl,
-                    'sensor_class': 'motion',
-                    'entity_id': 'test'
+        config = {
+            'binary_sensor': {
+                'platform': 'template',
+                'sensors': {
+                    'test': {
+                        'friendly_name': 'virtual thingy',
+                        'value_template': '{{ foo }}',
+                        'sensor_class': 'motion',
+                    },
                 },
-            }
-        })
-        add_devices = mock.MagicMock()
-        result = template.setup_platform(self.hass, config, add_devices)
-        self.assertTrue(result)
-        self.assertEqual(mock_template.call_count, 1)
-        self.assertEqual(
-            mock_template.call_args,
-            mock.call(
-                self.hass, 'test', 'virtual thingy', 'motion', tpl, 'test'
-            )
-        )
-        self.assertEqual(add_devices.call_count, 1)
-        self.assertEqual(
-            add_devices.call_args, mock.call([mock_template.return_value])
-        )
+            },
+        }
+        with assert_setup_component(1):
+            assert bootstrap.setup_component(
+                self.hass, 'binary_sensor', config)
 
     def test_setup_no_sensors(self):
         """"Test setup with no sensors."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'sensor', {
-                'sensor': {
+            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
                     'platform': 'template'
                 }
             })
@@ -68,8 +57,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
     def test_setup_invalid_device(self):
         """"Test the setup with invalid devices."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'sensor', {
-                'sensor': {
+            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
                     'platform': 'template',
                     'sensors': {
                         'foo bar': {},
@@ -80,8 +69,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
     def test_setup_invalid_sensor_class(self):
         """"Test setup with invalid sensor class."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'sensor', {
-                'sensor': {
+            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
                     'platform': 'template',
                     'sensors': {
                         'test': {
@@ -95,8 +84,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
     def test_setup_invalid_missing_template(self):
         """"Test setup with invalid and missing template."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'sensor', {
-                'sensor': {
+            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
                     'platform': 'template',
                     'sensors': {
                         'test': {
@@ -108,9 +97,11 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_attributes(self):
         """"Test the attributes."""
-        vs = template.BinarySensorTemplate(
+        vs = run_callback_threadsafe(
+            self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL)
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL
+        ).result()
         self.assertFalse(vs.should_poll)
         self.assertEqual('motion', vs.sensor_class)
         self.assertEqual('Parent', vs.name)
@@ -126,9 +117,11 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_event(self):
         """"Test the event."""
-        vs = template.BinarySensorTemplate(
+        vs = run_callback_threadsafe(
+            self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL)
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL
+        ).result()
         vs.update_ha_state()
         self.hass.block_till_done()
 
@@ -140,9 +133,11 @@ class TestBinarySensorTemplate(unittest.TestCase):
     @mock.patch('homeassistant.helpers.template.Template.render')
     def test_update_template_error(self, mock_render):
         """"Test the template update error."""
-        vs = template.BinarySensorTemplate(
+        vs = run_callback_threadsafe(
+            self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
-            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL)
+            template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL
+        ).result()
         mock_render.side_effect = TemplateError('foo')
         vs.update()
         mock_render.side_effect = TemplateError(
