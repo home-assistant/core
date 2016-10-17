@@ -54,7 +54,6 @@ DEFAULT_NAME = "Alarm"
 # pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Concord232 binary sensor platform."""
-
     def get_opening_type(zone):
         """Helper function to try to guess sensor type frm name."""
         if "MOTION" in zone["name"]:
