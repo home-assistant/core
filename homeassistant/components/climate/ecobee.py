@@ -202,18 +202,6 @@ class Thermostat(ClimateDevice):
                 break
         return 'away' in mode
 
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return convert_temperature(
-            super().min_temp, self.unit_of_measurement, TEMP_FAHRENHEIT)
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return convert_temperature(
-            super().max_temp, self.unit_of_measurement, TEMP_FAHRENHEIT)
-
     def turn_away_mode_on(self):
         """Turn away on."""
         if self.hold_temp:
