@@ -9,10 +9,12 @@ import subprocess
 
 import voluptuous as vol
 
-from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA)
+from homeassistant.components.cover import (
+    CoverDevice, ATTR_POSITION, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_COMMAND_CLOSE, CONF_COMMAND_OPEN, CONF_COMMAND_STATE,
-    CONF_COMMAND_STOP, CONF_COVERS, CONF_VALUE_TEMPLATE, CONF_FRIENDLY_NAME)
+    CONF_COMMAND_CLOSE, CONF_COMMAND_OPEN, CONF_COMMAND_SET,
+    CONF_COMMAND_STATE, CONF_COMMAND_STOP, CONF_COVERS, CONF_VALUE_TEMPLATE,
+    CONF_FRIENDLY_NAME)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 COVER_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_CLOSE, default='true'): cv.string,
     vol.Optional(CONF_COMMAND_OPEN, default='true'): cv.string,
+    vol.Optional(CONF_COMMAND_SET): cv.string,
     vol.Optional(CONF_COMMAND_STATE): cv.string,
     vol.Optional(CONF_COMMAND_STOP, default='true'): cv.string,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
@@ -47,6 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device_config.get(CONF_FRIENDLY_NAME, device_name),
                 device_config.get(CONF_COMMAND_OPEN),
                 device_config.get(CONF_COMMAND_CLOSE),
+                device_config.get(CONF_COMMAND_SET),
                 device_config.get(CONF_COMMAND_STOP),
                 device_config.get(CONF_COMMAND_STATE),
                 value_template,
@@ -65,14 +69,15 @@ class CommandCover(CoverDevice):
     """Representation a command line cover."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, hass, name, command_open, command_close, command_stop,
-                 command_state, value_template):
+    def __init__(self, hass, name, command_open, command_close, command_set,
+                 command_stop, command_state, value_template):
         """Initialize the cover."""
         self._hass = hass
         self._name = name
         self._state = None
         self._command_open = command_open
         self._command_close = command_close
+        self._command_set = command_set
         self._command_stop = command_stop
         self._command_state = command_state
         self._value_template = value_template
@@ -154,3 +159,11 @@ class CommandCover(CoverDevice):
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         self._move_cover(self._command_stop)
+
+    def set_cover_position(self, **kwargs):
+        """Set the cover position."""
+        if self.available:
+            if ATTR_POSITION in kwargs:
+                position = float(kwargs[ATTR_POSITION])
+                position = str(min(100, max(0, position)))
+                self._move_cover(self._command_set.format(position=position))

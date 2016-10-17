@@ -21,8 +21,8 @@ class TestCommandCover(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.rs = cmd_rs.CommandCover(self.hass, 'foo',
                                       'command_open', 'command_close',
-                                      'command_stop', 'command_state',
-                                      None)
+                                      'command_set', 'command_stop',
+                                      'command_state', None)
 
     def teardown_method(self, method):
         """Stop down everything that was started."""
