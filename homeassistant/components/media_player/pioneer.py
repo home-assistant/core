@@ -72,7 +72,11 @@ class PioneerDevice(MediaPlayerDevice):
     @classmethod
     def telnet_request(cls, telnet, command, expected_prefix):
         """Execute `command` and return the response."""
-        telnet.write(command.encode("ASCII") + b"\r")
+        try:
+            telnet.write(command.encode("ASCII") + b"\r")
+        except telnetlib.socket.timeout:
+            _LOGGER.debug("Pioneer command %s timed out", command)
+            return None
 
         # The receiver will randomly send state change updates, make sure
         # we get the response we are looking for
@@ -86,19 +90,32 @@ class PioneerDevice(MediaPlayerDevice):
 
     def telnet_command(self, command):
         """Establish a telnet connection and sends `command`."""
-        telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
-        telnet.write(command.encode("ASCII") + b"\r")
-        telnet.read_very_eager()  # skip response
-        telnet.close()
+        try:
+            try:
+                telnet = telnetlib.Telnet(self._host,
+                                          self._port,
+                                          self._timeout)
+            except ConnectionRefusedError:
+                _LOGGER.debug("Pioneer %s refused connection", self._name)
+                return
+            telnet.write(command.encode("ASCII") + b"\r")
+            telnet.read_very_eager()  # skip response
+            telnet.close()
+        except telnetlib.socket.timeout:
+            _LOGGER.debug(
+                "Pioneer %s command %s timed out", self._name, command)
 
     def update(self):
         """Get the latest details from the device."""
         try:
             telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
         except ConnectionRefusedError:
+            _LOGGER.debug("Pioneer %s refused connection", self._name)
             return False
 
-        self._pwstate = self.telnet_request(telnet, "?P", "PWR")
+        pwstate = self.telnet_request(telnet, "?P", "PWR")
+        if pwstate:
+            self._pwstate = pwstate
 
         volume_str = self.telnet_request(telnet, "?V", "VOL")
         self._volume = int(volume_str[3:]) / MAX_VOLUME if volume_str else None
