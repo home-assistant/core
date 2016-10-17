@@ -283,6 +283,11 @@ class StateMachine(ha.StateMachine):
         if event.data['new_state'] is None:
             self._states.pop(event.data['entity_id'], None)
         else:
+            # set remote state
+            self.set(event.data['entity_id'],
+                     event.data['new_state'].state,
+                     attributes=dict(event.data['new_state'].attributes))
+            # set state in our state machine
             self._states[event.data['entity_id']] = event.data['new_state']
 
 
