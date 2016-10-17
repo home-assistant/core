@@ -8,7 +8,6 @@ of entities and react to changes.
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import enum
-import functools as ft
 import logging
 import os
 import re
@@ -137,8 +136,8 @@ class HomeAssistant(object):
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(self._async_exception_handler)
-        self.pool = pool = create_worker_pool()
-        self.bus = EventBus(pool, self.loop)
+        self.pool = create_worker_pool()
+        self.bus = EventBus(self)
         self.services = ServiceRegistry(self.bus, self.add_job, self.loop)
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config()  # type: Config
@@ -409,12 +408,10 @@ class Event(object):
 class EventBus(object):
     """Allows firing of and listening for events."""
 
-    def __init__(self, pool: util.ThreadPool,
-                 loop: asyncio.AbstractEventLoop) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
         self._listeners = {}
-        self._pool = pool
-        self._loop = loop
+        self._hass = hass
 
     @callback
     def async_listeners(self):
@@ -429,16 +426,13 @@ class EventBus(object):
     def listeners(self):
         """Dict with events and the number of listeners."""
         return run_callback_threadsafe(
-            self._loop, self.async_listeners
+            self._hass.loop, self.async_listeners
         ).result()
 
     def fire(self, event_type: str, event_data=None, origin=EventOrigin.local):
         """Fire an event."""
-        if not self._pool.running:
-            raise HomeAssistantError('Home Assistant has shut down.')
-
-        self._loop.call_soon_threadsafe(self.async_fire, event_type,
-                                        event_data, origin)
+        self._hass.loop.call_soon_threadsafe(self.async_fire, event_type,
+                                             event_data, origin)
 
     @callback
     def async_fire(self, event_type: str, event_data=None,
@@ -447,6 +441,10 @@ class EventBus(object):
 
         This method must be run in the event loop.
         """
+        if event_type != EVENT_HOMEASSISTANT_STOP and \
+                self._hass.state == CoreState.stopping:
+            raise HomeAssistantError('Home Assistant is shutting down.')
+
         # Copy the list of the current listeners because some listeners
         # remove themselves as a listener while being executed which
         # causes the iterator to be confused.
@@ -461,20 +459,8 @@ class EventBus(object):
         if not listeners:
             return
 
-        job_priority = JobPriority.from_event_type(event_type)
-
-        sync_jobs = []
         for func in listeners:
-            if asyncio.iscoroutinefunction(func):
-                self._loop.create_task(func(event))
-            elif is_callback(func):
-                self._loop.call_soon(func, event)
-            else:
-                sync_jobs.append((job_priority, (func, event)))
-
-        # Send all the sync jobs at once
-        if sync_jobs:
-            self._pool.add_many_jobs(sync_jobs)
+            self._hass.async_add_job(func, event)
 
     def listen(self, event_type, listener):
         """Listen for all events or events of a specific type.
@@ -483,11 +469,12 @@ class EventBus(object):
         as event_type.
         """
         async_remove_listener = run_callback_threadsafe(
-            self._loop, self.async_listen, event_type, listener).result()
+            self._hass.loop, self.async_listen, event_type, listener).result()
 
         def remove_listener():
             """Remove the listener."""
-            run_callback_threadsafe(self._loop, async_remove_listener).result()
+            run_callback_threadsafe(
+                self._hass.loop, async_remove_listener).result()
 
         return remove_listener
 
@@ -520,11 +507,13 @@ class EventBus(object):
         Returns function to unsubscribe the listener.
         """
         async_remove_listener = run_callback_threadsafe(
-            self._loop, self.async_listen_once, event_type, listener).result()
+            self._hass.loop, self.async_listen_once, event_type, listener,
+        ).result()
 
         def remove_listener():
             """Remove the listener."""
-            run_callback_threadsafe(self._loop, async_remove_listener).result()
+            run_callback_threadsafe(
+                self._hass.loop, async_remove_listener).result()
 
         return remove_listener
 
@@ -539,7 +528,6 @@ class EventBus(object):
 
         This method must be run in the event loop.
         """
-        @ft.wraps(listener)
         @callback
         def onetime_listener(event):
             """Remove listener from eventbus and then fire listener."""
@@ -553,13 +541,7 @@ class EventBus(object):
             setattr(onetime_listener, 'run', True)
             self._async_remove_listener(event_type, onetime_listener)
 
-            if asyncio.iscoroutinefunction(listener):
-                self._loop.create_task(listener(event))
-            elif is_callback(listener):
-                listener(event)
-            else:
-                job_priority = JobPriority.from_event_type(event.event_type)
-                self._pool.add_job(job_priority, (listener, event))
+            self._hass.async_run_job(listener, event)
 
         return self.async_listen(event_type, onetime_listener)
 

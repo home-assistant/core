@@ -124,9 +124,9 @@ class HomeAssistant(ha.HomeAssistant):
         self.remote_api = remote_api
 
         self.loop = loop or asyncio.get_event_loop()
-        self.pool = pool = ha.create_worker_pool()
+        self.pool = ha.create_worker_pool()
 
-        self.bus = EventBus(remote_api, pool, self.loop)
+        self.bus = EventBus(remote_api, self)
         self.services = ha.ServiceRegistry(self.bus, self.add_job, self.loop)
         self.states = StateMachine(self.bus, self.loop, self.remote_api)
         self.config = ha.Config()
@@ -180,9 +180,9 @@ class EventBus(ha.EventBus):
     """EventBus implementation that forwards fire_event to remote API."""
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, api, pool, loop):
+    def __init__(self, api, hass):
         """Initalize the eventbus."""
-        super().__init__(pool, loop)
+        super().__init__(hass)
         self._api = api
 
     def fire(self, event_type, event_data=None, origin=ha.EventOrigin.local):
