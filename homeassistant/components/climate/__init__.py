@@ -379,8 +379,8 @@ class ClimateDevice(Entity):
         data = {
             ATTR_CURRENT_TEMPERATURE:
             self._convert_for_display(self.current_temperature),
-            ATTR_MIN_TEMP: self.min_temp,
-            ATTR_MAX_TEMP: self.max_temp,
+            ATTR_MIN_TEMP: self._convert_for_display(self.min_temp),
+            ATTR_MAX_TEMP: self._convert_for_display(self.max_temp),
             ATTR_TEMPERATURE:
             self._convert_for_display(self.target_temperature),
         }
@@ -571,7 +571,9 @@ class ClimateDevice(Entity):
                                     self.unit_of_measurement)
 
         if self.unit_of_measurement is TEMP_CELSIUS:
-            return round(value * 2) / 2
+            decimal_count = 1
         else:
             # Users of fahrenheit generally expect integer units.
-            return round(value)
+            decimal_count = 0
+
+        return round(value, decimal_count)

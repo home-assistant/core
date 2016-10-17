@@ -14,8 +14,9 @@ from homeassistant.components.climate import (
     DOMAIN, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT, TEMP_CELSIUS)
 from homeassistant.config import load_yaml_config_file
+from homeassistant.util.temperature import convert as convert_temperature
 import homeassistant.helpers.config_validation as cv
 
 _CONFIGURING = {}
@@ -200,6 +201,16 @@ class Thermostat(ClimateDevice):
                 mode = event['holdClimateRef']
                 break
         return 'away' in mode
+
+    @property
+    def min_temp(self):
+        """Return the minimum temperature."""
+        return convert_temperature(7, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+
+    @property
+    def max_temp(self):
+        """Return the maximum temperature."""
+        return convert_temperature(35, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
     def turn_away_mode_on(self):
         """Turn away on."""
