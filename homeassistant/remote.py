@@ -122,7 +122,6 @@ class HomeAssistant(ha.HomeAssistant):
                     remote_api.host, remote_api.port, remote_api.status))
 
         self.remote_api = remote_api
-
         self.loop = loop or asyncio.get_event_loop()
         self.pool = pool = ha.create_worker_pool()
 
@@ -131,8 +130,22 @@ class HomeAssistant(ha.HomeAssistant):
         self.states = StateMachine(self.bus, self.loop, self.remote_api)
         self.config = ha.Config()
         self.state = ha.CoreState.not_running
-
         self.config.api = local_api
+
+    @asyncio.coroutine
+    def async_start(self):
+        """Finalize startup from inside the event loop.
+
+        This method is a coroutine.
+        """
+        # pylint: disable=protected-access
+        self.loop._thread_ident = threading.get_ident()
+        ha.async_create_timer(self)
+        ha.async_monitor_worker_pool(self)
+        self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
+                      origin=ha.EventOrigin.remote)
+        yield from self.loop.run_in_executor(None, self.pool.block_till_done)
+        self.state = ha.CoreState.running
 
     def start(self):
         """Start the instance."""
@@ -142,24 +155,7 @@ class HomeAssistant(ha.HomeAssistant):
                 raise HomeAssistantError(
                     'Unable to setup local API to receive events')
 
-        self.state = ha.CoreState.starting
-        ha.async_create_timer(self)
-
-        self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
-                      origin=ha.EventOrigin.remote)
-
-        # Ensure local HTTP is started
-        self.block_till_done()
-        self.state = ha.CoreState.running
-        time.sleep(0.05)
-
-        # Setup that events from remote_api get forwarded to local_api
-        # Do this after we are running, otherwise HTTP is not started
-        # or requests are blocked
-        if not connect_remote_events(self.remote_api, self.config.api):
-            raise HomeAssistantError((
-                'Could not setup event forwarding from api {} to '
-                'local api {}').format(self.remote_api, self.config.api))
+        super().start()
 
     def stop(self):
         """Stop Home Assistant and shuts down all threads."""
@@ -264,7 +260,7 @@ class StateMachine(ha.StateMachine):
         self._api = api
         self.mirror()
 
-        bus.listen(ha.EVENT_STATE_CHANGED, self._state_changed_listener)
+        bus.async_listen(ha.EVENT_STATE_CHANGED, self._state_changed_listener)
 
     def remove(self, entity_id):
         """Remove the state of an entity.
@@ -287,6 +283,11 @@ class StateMachine(ha.StateMachine):
         if event.data['new_state'] is None:
             self._states.pop(event.data['entity_id'], None)
         else:
+            # set remote state
+            self.set(event.data['entity_id'],
+                     event.data['new_state'].state,
+                     attributes=dict(event.data['new_state'].attributes))
+            # set state in our state machine
             self._states[event.data['entity_id']] = event.data['new_state']
 
 
