@@ -1,36 +1,39 @@
 """The tests for the Pilight sensor platform."""
-import unittest
-from unittest.mock import patch
+import logging
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.components import pilight
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, assert_setup_component
+
+HASS = None
 
 
-def fire_pilight_message(hass, protocol, data):
+def fire_pilight_message(protocol, data):
     """Fire the fake pilight message."""
     message = {pilight.ATTR_PROTOCOL: protocol}
     message.update(data)
-    hass.bus.fire(pilight.EVENT, message)
+    HASS.bus.fire(pilight.EVENT, message)
 
 
-class TestSensorPilight(unittest.TestCase):
-    """Test the Pilight sensor."""
+def setUpModule():   # pylint: disable=invalid-name
+    """Initialize a Home Assistant server."""
+    global HASS
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.hass.config.components = ['pilight']
+    HASS = get_test_home_assistant()
+    HASS.config.components = ['pilight']
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop down everything that was started."""
-        self.hass.stop()
 
-    def test_sensor_value_from_code(self):
-        """Test the setting of value via pilight."""
-        assert _setup_component(self.hass, sensor.DOMAIN, {
+def tearDownModule():   # pylint: disable=invalid-name
+    """Stop the Home Assistant server."""
+    HASS.stop()
+
+
+def test_sensor_value_from_code():
+    """Test the setting of value via pilight."""
+    with assert_setup_component(1):
+        setup_component(HASS, sensor.DOMAIN, {
             sensor.DOMAIN: {
                 'platform': 'pilight',
                 'name': 'test',
@@ -40,78 +43,78 @@ class TestSensorPilight(unittest.TestCase):
             }
         })
 
+        state = HASS.states.get('sensor.test')
+        assert state.state == 'unknown'
+
+        unit_of_measurement = state.attributes.get('unit_of_measurement')
+        assert unit_of_measurement == 'fav unit'
+
         # Set value from data with correct payload
-        fire_pilight_message(hass=self.hass,
-                             protocol='test-protocol',
+        fire_pilight_message(protocol='test-protocol',
                              data={'test': 42})
-        self.hass.block_till_done()
-        state = self.hass.states.get('sensor.test')
-        self.assertEqual('42', state.state)
+        HASS.block_till_done()
+        state = HASS.states.get('sensor.test')
+        assert state.state == '42'
 
-        # Check if unit is set properly
-        self.assertEqual('fav unit',
-                         state.attributes.get('unit_of_measurement'))
 
-    def test_disregard_wrong_payload(self):
-        """Test omitting setting of value with wrong payload."""
-        assert _setup_component(self.hass, sensor.DOMAIN, {
+def test_disregard_wrong_payload():
+    """Test omitting setting of value with wrong payload."""
+    with assert_setup_component(1):
+        setup_component(HASS, sensor.DOMAIN, {
             sensor.DOMAIN: {
                 'platform': 'pilight',
-                'name': 'test',
+                'name': 'test_2',
                 'variable': 'test',
                 'payload': {'uuid': '1-2-3-4',
-                            'protocol': 'test-protocol'}
+                            'protocol': 'test-protocol_2'}
             }
         })
 
         # Try set value from data with incorrect payload
-        fire_pilight_message(hass=self.hass,
-                             protocol='test-protocol',
+        fire_pilight_message(protocol='test-protocol_2',
                              data={'test': 'data',
                                    'uuid': '0-0-0-0'})
-        self.hass.block_till_done()
-        state = self.hass.states.get('sensor.test')
-        self.assertEqual('unknown', state.state)
+        HASS.block_till_done()
+        state = HASS.states.get('sensor.test_2')
+        assert state.state == 'unknown'
 
         # Try set value from data with partially matched payload
-        fire_pilight_message(hass=self.hass,
-                             protocol='wrong-protocol',
+        fire_pilight_message(protocol='wrong-protocol',
                              data={'test': 'data',
                                    'uuid': '1-2-3-4'})
-        self.hass.block_till_done()
-        state = self.hass.states.get('sensor.test')
-        self.assertEqual('unknown', state.state)
+        HASS.block_till_done()
+        state = HASS.states.get('sensor.test_2')
+        assert state.state == 'unknown'
 
         # Try set value from data with fully matched payload
-        fire_pilight_message(hass=self.hass,
-                             protocol='test-protocol',
+        fire_pilight_message(protocol='test-protocol_2',
                              data={'test': 'data',
                                    'uuid': '1-2-3-4',
                                    'other_payload': 3.141})
-        self.hass.block_till_done()
-        state = self.hass.states.get('sensor.test')
-        self.assertEqual('data', state.state)
+        HASS.block_till_done()
+        state = HASS.states.get('sensor.test_2')
+        assert state.state == 'data'
 
-    @unittest.SkipTest
-    @patch('homeassistant.components.sensor.pilight._LOGGER')
-    def test_variable_missing(self, log_mock):
-        """Check if error message when variable missing."""
-        self.hass.config.components = ['pilight']
-        assert _setup_component(self.hass, sensor.DOMAIN, {
+
+def test_variable_missing(caplog):
+    """Check if error message when variable missing."""
+    caplog.set_level(logging.ERROR)
+    with assert_setup_component(1):
+        setup_component(HASS, sensor.DOMAIN, {
             sensor.DOMAIN: {
                 'platform': 'pilight',
-                'name': 'test',
+                'name': 'test_3',
                 'variable': 'test',
                 'payload': {'protocol': 'test-protocol'}
             }
         })
 
         # Create code without sensor variable
-        fire_pilight_message(hass=self.hass,
-                             protocol='test-protocol',
+        fire_pilight_message(protocol='test-protocol',
                              data={'uuid': '1-2-3-4',
                                    'other_variable': 3.141})
+        HASS.block_till_done()
 
-        # FIXME: The following gives a wrong 0, I do not see why
-        # Maybe because of catchlog?
-        self.assertEqual(log_mock.error.call_count, 1)
+        logs = caplog.text
+
+        assert 'No variable test in received code' in logs
