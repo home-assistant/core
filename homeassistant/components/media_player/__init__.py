@@ -4,11 +4,13 @@ Component to interface with various media players.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/media_player/
 """
+import asyncio
 import hashlib
 import logging
 import os
 import requests
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
@@ -677,7 +679,7 @@ class MediaPlayerImageView(HomeAssistantView):
     """Media player view to serve an image."""
 
     requires_auth = False
-    url = "/api/media_player_proxy/<entity(domain=media_player):entity_id>"
+    url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
 
     def __init__(self, hass, entities):
@@ -685,26 +687,34 @@ class MediaPlayerImageView(HomeAssistantView):
         super().__init__(hass)
         self.entities = entities
 
+    @asyncio.coroutine
     def get(self, request, entity_id):
         """Start a get request."""
         player = self.entities.get(entity_id)
-
         if player is None:
-            return self.Response(status=404)
+            return web.Response(status=404)
 
         authenticated = (request.authenticated or
-                         request.args.get('token') == player.access_token)
+                         request.GET.get('token') == player.access_token)
 
         if not authenticated:
-            return self.Response(status=401)
+            return web.Response(status=401)
 
         image_url = player.media_image_url
-        if image_url:
-            response = requests.get(image_url)
-        else:
-            response = None
+
+        if image_url is None:
+            return web.Response(status=404)
+
+        def fetch_image():
+            """Helper method to fetch image."""
+            try:
+                return requests.get(image_url).content
+            except requests.RequestException:
+                return None
+
+        response = yield from self.hass.loop.run_in_executor(None, fetch_image)
 
         if response is None:
-            return self.Response(status=500)
+            return web.Response(status=500)
 
-        return self.Response(response)
+        return web.Response(body=response)

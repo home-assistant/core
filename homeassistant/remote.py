@@ -215,33 +215,31 @@ class EventForwarder(object):
         self._lock = threading.Lock()
         self._unsub_listener = None
 
-    def connect(self, api):
+    def async_connect(self, api):
         """Attach to a Home Assistant instance and forward events.
 
         Will overwrite old target if one exists with same host/port.
         """
-        with self._lock:
-            if self._unsub_listener is None:
-                self._unsub_listener = self.hass.bus.listen(
-                    ha.MATCH_ALL, self._event_listener)
+        if self._unsub_listener is None:
+            self._unsub_listener = self.hass.bus.async_listen(
+                ha.MATCH_ALL, self._event_listener)
 
-            key = (api.host, api.port)
+        key = (api.host, api.port)
 
-            self._targets[key] = api
+        self._targets[key] = api
 
-    def disconnect(self, api):
+    def async_disconnect(self, api):
         """Remove target from being forwarded to."""
-        with self._lock:
-            key = (api.host, api.port)
+        key = (api.host, api.port)
 
-            did_remove = self._targets.pop(key, None) is None
+        did_remove = self._targets.pop(key, None) is None
 
-            if len(self._targets) == 0:
-                # Remove event listener if no forwarding targets present
-                self._unsub_listener()
-                self._unsub_listener = None
+        if len(self._targets) == 0:
+            # Remove event listener if no forwarding targets present
+            self._unsub_listener()
+            self._unsub_listener = None
 
-            return did_remove
+        return did_remove
 
     def _event_listener(self, event):
         """Listen and forward all events."""

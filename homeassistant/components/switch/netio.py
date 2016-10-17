@@ -10,6 +10,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant import util
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
@@ -40,7 +41,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 REQ_CONF = [CONF_HOST, CONF_OUTLETS]
 
-URL_API_NETIO_EP = '/api/netio/<host>'
+URL_API_NETIO_EP = '/api/netio/{host}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -93,9 +94,10 @@ class NetioApiView(HomeAssistantView):
     url = URL_API_NETIO_EP
     name = 'api:netio'
 
+    @callback
     def get(self, request, host):
         """Request handler."""
-        data = request.args
+        data = request.GET
         states, consumptions, cumulated_consumptions, start_dates = \
             [], [], [], []
 
@@ -117,7 +119,7 @@ class NetioApiView(HomeAssistantView):
         ndev.start_dates = start_dates
 
         for dev in DEVICES[host].entities:
-            dev.update_ha_state()
+            self.hass.loop.create_task(dev.async_update_ha_state())
 
         return self.json(True)
 

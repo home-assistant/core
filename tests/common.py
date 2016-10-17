@@ -38,22 +38,10 @@ def get_test_home_assistant(num_threads=None):
         orig_num_threads = ha.MIN_WORKER_THREAD
         ha.MIN_WORKER_THREAD = num_threads
 
-    hass = ha.HomeAssistant(loop)
+    hass = loop.run_until_complete(async_test_home_assistant(loop))
 
     if num_threads:
         ha.MIN_WORKER_THREAD = orig_num_threads
-
-    hass.config.location_name = 'test home'
-    hass.config.config_dir = get_test_config_dir()
-    hass.config.latitude = 32.87336
-    hass.config.longitude = -117.22743
-    hass.config.elevation = 0
-    hass.config.time_zone = date_util.get_time_zone('US/Pacific')
-    hass.config.units = METRIC_SYSTEM
-    hass.config.skip_pip = True
-
-    if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
-        loader.prepare(hass)
 
     # FIXME should not be a daemon. Means hass.stop() not called in teardown
     stop_event = threading.Event()
@@ -94,6 +82,35 @@ def get_test_home_assistant(num_threads=None):
 
     hass.start = start_hass
     hass.stop = stop_hass
+
+    return hass
+
+
+@asyncio.coroutine
+def async_test_home_assistant(loop):
+    """Return a Home Assistant object pointing at test config dir."""
+    loop._thread_ident = threading.get_ident()
+
+    def get_hass():
+        """Temp while we migrate core HASS over to be async constructors."""
+        hass = ha.HomeAssistant(loop)
+
+        hass.config.location_name = 'test home'
+        hass.config.config_dir = get_test_config_dir()
+        hass.config.latitude = 32.87336
+        hass.config.longitude = -117.22743
+        hass.config.elevation = 0
+        hass.config.time_zone = date_util.get_time_zone('US/Pacific')
+        hass.config.units = METRIC_SYSTEM
+        hass.config.skip_pip = True
+
+        if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
+            loader.prepare(hass)
+
+        hass.state = ha.CoreState.running
+        return hass
+
+    hass = yield from loop.run_in_executor(None, get_hass)
 
     return hass
 
@@ -183,6 +200,17 @@ def mock_http_component(hass):
     """Mock the HTTP component."""
     hass.wsgi = mock.MagicMock()
     hass.config.components.append('http')
+    hass.wsgi.views = {}
+
+    def mock_register_view(view):
+        """Store registered view."""
+        if isinstance(view, type):
+            # Instantiate the view, if needed
+            view = view(hass)
+
+        hass.wsgi.views[view.name] = view
+
+    hass.wsgi.register_view = mock_register_view
 
 
 def mock_mqtt_component(hass):

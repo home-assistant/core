@@ -6,6 +6,7 @@ import time
 import unittest
 from unittest.mock import Mock, patch
 
+from aiohttp import web
 import requests
 
 from homeassistant import bootstrap, const
@@ -243,20 +244,13 @@ class TestAPI(unittest.TestCase):
 
     def test_api_get_error_log(self):
         """Test the return of the error log."""
-        test_string = 'Test String°'.encode('UTF-8')
+        test_string = 'Test String°'
 
-        # Can't use read_data with wsgiserver in Python 3.4.2. Due to a
-        # bug in read_data, it can't handle byte types ('Type str doesn't
-        # support the buffer API'), but wsgiserver requires byte types
-        # ('WSGI Applications must yield bytes'). So just mock our own
-        # read method.
-        m_open = Mock(return_value=Mock(
-            read=Mock(side_effect=[test_string]))
-        )
-        with patch('homeassistant.components.http.open', m_open, create=True):
+        with patch('homeassistant.components.http.HomeAssistantView.file',
+                   Mock(return_value=web.Response(text=test_string))):
             req = requests.get(_url(const.URL_API_ERROR_LOG),
                                headers=HA_HEADERS)
-            self.assertEqual(test_string, req.text.encode('UTF-8'))
+            self.assertEqual(test_string, req.text)
             self.assertIsNone(req.headers.get('expires'))
 
     def test_api_get_event_listeners(self):

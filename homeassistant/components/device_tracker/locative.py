@@ -4,6 +4,8 @@ Support for the Locative platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.locative/
 """
+import asyncio
+from functools import partial
 import logging
 
 from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME
@@ -35,15 +37,23 @@ class LocativeView(HomeAssistantView):
         super().__init__(hass)
         self.see = see
 
+    @asyncio.coroutine
     def get(self, request):
         """Locative message received as GET."""
-        return self.post(request)
+        res = yield from self._handle(request.GET)
+        return res
 
+    @asyncio.coroutine
     def post(self, request):
         """Locative message received."""
-        # pylint: disable=too-many-return-statements
-        data = request.values
+        data = yield from request.post()
+        res = yield from self._handle(data)
+        return res
 
+    @asyncio.coroutine
+    def _handle(self, data):
+        """Handle locative request."""
+        # pylint: disable=too-many-return-statements
         if 'latitude' not in data or 'longitude' not in data:
             return ('Latitude and longitude not specified.',
                     HTTP_UNPROCESSABLE_ENTITY)
@@ -68,7 +78,9 @@ class LocativeView(HomeAssistantView):
         direction = data['trigger']
 
         if direction == 'enter':
-            self.see(dev_id=device, location_name=location_name)
+            yield from self.hass.loop.run_in_executor(
+                None, partial(self.see, dev_id=device,
+                              location_name=location_name))
             return 'Setting location to {}'.format(location_name)
 
         elif direction == 'exit':
@@ -76,7 +88,9 @@ class LocativeView(HomeAssistantView):
                 '{}.{}'.format(DOMAIN, device))
 
             if current_state is None or current_state.state == location_name:
-                self.see(dev_id=device, location_name=STATE_NOT_HOME)
+                yield from self.hass.loop.run_in_executor(
+                    None, partial(self.see, dev_id=device,
+                                  location_name=STATE_NOT_HOME))
                 return 'Setting location to not home'
             else:
                 # Ignore the message if it is telling us to exit a zone that we

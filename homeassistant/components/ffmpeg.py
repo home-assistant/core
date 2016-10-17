@@ -4,14 +4,16 @@ Component that will help set the ffmpeg component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ffmpeg/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async import run_coroutine_threadsafe
 
 DOMAIN = 'ffmpeg'
-REQUIREMENTS = ["ha-ffmpeg==0.13"]
+REQUIREMENTS = ["ha-ffmpeg==0.14"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,13 +49,26 @@ def setup(hass, config):
 
 
 def get_binary():
-    """Return ffmpeg binary from config."""
+    """Return ffmpeg binary from config.
+
+    Async friendly.
+    """
     return FFMPEG_CONFIG.get(CONF_FFMPEG_BIN)
 
 
-def run_test(input_source):
+def run_test(hass, input_source):
     """Run test on this input. TRUE is deactivate or run correct."""
-    from haffmpeg import Test
+    return run_coroutine_threadsafe(
+        async_run_test(hass, input_source), hass.loop).result()
+
+
+@asyncio.coroutine
+def async_run_test(hass, input_source):
+    """Run test on this input. TRUE is deactivate or run correct.
+
+    This method must be run in the event loop.
+    """
+    from haffmpeg import TestAsync
 
     if FFMPEG_CONFIG.get(CONF_RUN_TEST):
         # if in cache
@@ -61,8 +76,9 @@ def run_test(input_source):
             return FFMPEG_TEST_CACHE[input_source]
 
         # run test
-        test = Test(get_binary())
-        if not test.run_test(input_source):
+        ffmpeg_test = TestAsync(get_binary(), loop=hass.loop)
+        success = yield from ffmpeg_test.run_test(input_source)
+        if not success:
             _LOGGER.error("FFmpeg '%s' test fails!", input_source)
             FFMPEG_TEST_CACHE[input_source] = False
             return False

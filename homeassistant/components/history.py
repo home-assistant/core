@@ -4,11 +4,13 @@ Provide pre-made queries on top of the recorder component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/history/
 """
+import asyncio
 from collections import defaultdict
 from datetime import timedelta
 from itertools import groupby
 import voluptuous as vol
 
+from homeassistant.const import HTTP_BAD_REQUEST
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, script
@@ -192,16 +194,19 @@ def setup(hass, config):
 class Last5StatesView(HomeAssistantView):
     """Handle last 5 state view requests."""
 
-    url = '/api/history/entity/<entity:entity_id>/recent_states'
+    url = '/api/history/entity/{entity_id}/recent_states'
     name = 'api:history:entity-recent-states'
 
     def __init__(self, hass):
         """Initilalize the history last 5 states view."""
         super().__init__(hass)
 
+    @asyncio.coroutine
     def get(self, request, entity_id):
         """Retrieve last 5 states of entity."""
-        return self.json(last_5_states(entity_id))
+        result = yield from self.hass.loop.run_in_executor(
+            None, last_5_states, entity_id)
+        return self.json(result)
 
 
 class HistoryPeriodView(HomeAssistantView):
@@ -209,15 +214,22 @@ class HistoryPeriodView(HomeAssistantView):
 
     url = '/api/history/period'
     name = 'api:history:view-period'
-    extra_urls = ['/api/history/period/<datetime:datetime>']
+    extra_urls = ['/api/history/period/{datetime}']
 
     def __init__(self, hass, filters):
         """Initilalize the history period view."""
         super().__init__(hass)
         self.filters = filters
 
+    @asyncio.coroutine
     def get(self, request, datetime=None):
         """Return history over a period of time."""
+        if datetime:
+            datetime = dt_util.parse_datetime(datetime)
+
+            if datetime is None:
+                return self.json_message('Invalid datetime', HTTP_BAD_REQUEST)
+
         one_day = timedelta(days=1)
 
         if datetime:
@@ -226,10 +238,13 @@ class HistoryPeriodView(HomeAssistantView):
             start_time = dt_util.utcnow() - one_day
 
         end_time = start_time + one_day
-        entity_id = request.args.get('filter_entity_id')
+        entity_id = request.GET.get('filter_entity_id')
 
-        return self.json(get_significant_states(
-            start_time, end_time, entity_id, self.filters).values())
+        result = yield from self.hass.loop.run_in_executor(
+            None, get_significant_states, start_time, end_time, entity_id,
+            self.filters)
+
+        return self.json(result.values())
 
 
 # pylint: disable=too-few-public-methods

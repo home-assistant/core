@@ -4,31 +4,36 @@ This module provides WSGI application to serve the Home Assistant API.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/http/
 """
+import asyncio
 import hmac
 import json
 import logging
 import mimetypes
-import threading
+import os
+from pathlib import Path
 import re
 import ssl
 from ipaddress import ip_address, ip_network
 
 import voluptuous as vol
+from aiohttp import web, hdrs
+from aiohttp.file_sender import FileSender
+from aiohttp.web_exceptions import (
+    HTTPUnauthorized, HTTPMovedPermanently, HTTPNotModified)
+from aiohttp.web_urldispatcher import StaticRoute
 
+from homeassistant.core import callback, is_callback
 import homeassistant.remote as rem
 from homeassistant import util
 from homeassistant.const import (
-    SERVER_PORT, HTTP_HEADER_HA_AUTH, HTTP_HEADER_CACHE_CONTROL,
-    HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, CONTENT_TYPE_JSON,
-    HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, ALLOWED_CORS_HEADERS,
-    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
-from homeassistant.core import split_entity_id
-import homeassistant.util.dt as dt_util
+    SERVER_PORT, HTTP_HEADER_HA_AUTH,  # HTTP_HEADER_CACHE_CONTROL,
+    CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS, EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_START)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import persistent_notification
 
 DOMAIN = 'http'
-REQUIREMENTS = ('cherrypy==8.1.2', 'static3==0.7.0', 'Werkzeug==0.11.11')
+REQUIREMENTS = ('aiohttp_cors==0.4.0',)
 
 CONF_API_PASSWORD = 'api_password'
 CONF_SERVER_HOST = 'server_host'
@@ -83,6 +88,12 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+# TEMP TO GET TESTS TO RUN
+def request_class():
+    """."""
+    raise Exception('not implemented')
+
+
 class HideSensitiveFilter(logging.Filter):
     """Filter API password calls."""
 
@@ -104,7 +115,7 @@ class HideSensitiveFilter(logging.Filter):
 
 def setup(hass, config):
     """Set up the HTTP API and debug interface."""
-    _LOGGER.addFilter(HideSensitiveFilter(hass))
+    logging.getLogger('aiohttp.access').addFilter(HideSensitiveFilter(hass))
 
     conf = config.get(DOMAIN, {})
 
@@ -131,17 +142,18 @@ def setup(hass, config):
         trusted_networks=trusted_networks
     )
 
-    def start_wsgi_server(event):
-        """Start the WSGI server."""
-        server.start()
+    @callback
+    def stop_server(event):
+        """Callback to stop the server."""
+        hass.loop.create_task(server.stop())
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_wsgi_server)
+    @callback
+    def start_server(event):
+        """Callback to start the server."""
+        hass.loop.create_task(server.start())
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
 
-    def stop_wsgi_server(event):
-        """Stop the WSGI server."""
-        server.stop()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wsgi_server)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_server)
 
     hass.wsgi = server
     hass.config.api = rem.API(server_host if server_host != '0.0.0.0'
@@ -152,105 +164,84 @@ def setup(hass, config):
     return True
 
 
-def request_class():
-    """Generate request class.
+class GzipFileSender(FileSender):
+    """FileSender class capable of sending gzip version if available."""
 
-    Done in method because of imports.
-    """
-    from werkzeug.exceptions import BadRequest
-    from werkzeug.wrappers import BaseRequest, AcceptMixin
-    from werkzeug.utils import cached_property
+    # pylint: disable=invalid-name, too-few-public-methods
 
-    class Request(BaseRequest, AcceptMixin):
-        """Base class for incoming requests."""
+    development = False
 
-        @cached_property
-        def json(self):
-            """Get the result of json.loads if possible."""
-            if not self.data:
-                return None
-            # elif 'json' not in self.environ.get('CONTENT_TYPE', ''):
-            #     raise BadRequest('Not a JSON request')
-            try:
-                return json.loads(self.data.decode(
-                    self.charset, self.encoding_errors))
-            except (TypeError, ValueError):
-                raise BadRequest('Unable to read JSON request')
+    @asyncio.coroutine
+    def send(self, request, filepath):
+        """Send filepath to client using request."""
+        gzip = False
+        if 'gzip' in request.headers[hdrs.ACCEPT_ENCODING]:
+            gzip_path = filepath.with_name(filepath.name + '.gz')
 
-    return Request
+            if gzip_path.is_file():
+                filepath = gzip_path
+                gzip = True
+
+        st = filepath.stat()
+
+        modsince = request.if_modified_since
+        if modsince is not None and st.st_mtime <= modsince.timestamp():
+            raise HTTPNotModified()
+
+        ct, encoding = mimetypes.guess_type(str(filepath))
+        if not ct:
+            ct = 'application/octet-stream'
+
+        resp = self._response_factory()
+        resp.content_type = ct
+        if encoding:
+            resp.headers[hdrs.CONTENT_ENCODING] = encoding
+        if gzip:
+            resp.headers[hdrs.VARY] = hdrs.ACCEPT_ENCODING
+        resp.last_modified = st.st_mtime
+
+        # CACHE HACK
+        if not self.development:
+            cache_time = 31 * 86400  # = 1 month
+            resp.headers[hdrs.CACHE_CONTROL] = "public, max-age={}".format(
+                cache_time)
+
+        file_size = st.st_size
+
+        resp.content_length = file_size
+        resp.set_tcp_cork(True)
+        try:
+            with filepath.open('rb') as f:
+                yield from self._sendfile(request, resp, f, file_size)
+
+        finally:
+            resp.set_tcp_nodelay(True)
+
+        return resp
+
+_GZIP_FILE_SENDER = GzipFileSender()
 
 
-def routing_map(hass):
-    """Generate empty routing map with HA validators."""
-    from werkzeug.routing import Map, BaseConverter, ValidationError
+class HAStaticRoute(StaticRoute):
+    """StaticRoute with support for fingerprinting."""
 
-    class EntityValidator(BaseConverter):
-        """Validate entity_id in urls."""
+    def __init__(self, prefix, path):
+        """Initialize a static route with gzip and cache busting support."""
+        super().__init__(None, prefix, path)
+        self._file_sender = _GZIP_FILE_SENDER
 
-        regex = r"(\w+)\.(\w+)"
+    def match(self, path):
+        """Match path to filename."""
+        if not path.startswith(self._prefix):
+            return None
 
-        def __init__(self, url_map, exist=True, domain=None):
-            """Initilalize entity validator."""
-            super().__init__(url_map)
-            self._exist = exist
-            self._domain = domain
+        # Extra sauce to remove fingerprinted resource names
+        filename = path[self._prefix_len:]
+        fingerprinted = _FINGERPRINT.match(filename)
+        if fingerprinted:
+            filename = '{}.{}'.format(*fingerprinted.groups())
 
-        def to_python(self, value):
-            """Validate entity id."""
-            if self._exist and hass.states.get(value) is None:
-                raise ValidationError()
-            if self._domain is not None and \
-               split_entity_id(value)[0] != self._domain:
-                raise ValidationError()
-
-            return value
-
-        def to_url(self, value):
-            """Convert entity_id for a url."""
-            return value
-
-    class DateValidator(BaseConverter):
-        """Validate dates in urls."""
-
-        regex = r'\d{4}-\d{1,2}-\d{1,2}'
-
-        def to_python(self, value):
-            """Validate and convert date."""
-            parsed = dt_util.parse_date(value)
-
-            if parsed is None:
-                raise ValidationError()
-
-            return parsed
-
-        def to_url(self, value):
-            """Convert date to url value."""
-            return value.isoformat()
-
-    class DateTimeValidator(BaseConverter):
-        """Validate datetimes in urls formatted per ISO 8601."""
-
-        regex = r'\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d' \
-            r'\.\d+([+-][0-2]\d:[0-5]\d|Z)'
-
-        def to_python(self, value):
-            """Validate and convert date."""
-            parsed = dt_util.parse_datetime(value)
-
-            if parsed is None:
-                raise ValidationError()
-
-            return parsed
-
-        def to_url(self, value):
-            """Convert date to url value."""
-            return value.isoformat()
-
-    return Map(converters={
-        'entity': EntityValidator,
-        'date': DateValidator,
-        'datetime': DateTimeValidator,
-    })
+        return {'filename': filename}
 
 
 class HomeAssistantWSGI(object):
@@ -262,27 +253,34 @@ class HomeAssistantWSGI(object):
     def __init__(self, hass, development, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
                  trusted_networks):
-        """Initilalize the WSGI Home Assistant server."""
-        from werkzeug.wrappers import Response
+        """Initialize the WSGI Home Assistant server."""
+        import aiohttp_cors
 
-        Response.mimetype = 'text/html'
-
-        # pylint: disable=invalid-name
-        self.Request = request_class()
-        self.url_map = routing_map(hass)
-        self.views = {}
+        self.app = web.Application(loop=hass.loop)
         self.hass = hass
-        self.extra_apps = {}
         self.development = development
         self.api_password = api_password
         self.ssl_certificate = ssl_certificate
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
-        self.cors_origins = cors_origins
         self.trusted_networks = trusted_networks
         self.event_forwarder = None
+        self._handler = None
         self.server = None
+
+        if cors_origins:
+            self.cors = aiohttp_cors.setup(self.app, defaults={
+                host: aiohttp_cors.ResourceOptions(
+                    allow_headers=ALLOWED_CORS_HEADERS,
+                    allow_methods='*',
+                ) for host in cors_origins
+            })
+        else:
+            self.cors = None
+
+        # CACHE HACK
+        _GZIP_FILE_SENDER.development = development
 
     def register_view(self, view):
         """Register a view with the WSGI server.
@@ -291,21 +289,11 @@ class HomeAssistantWSGI(object):
         It is optional to instantiate it before registering; this method will
         handle it either way.
         """
-        from werkzeug.routing import Rule
-
-        if view.name in self.views:
-            _LOGGER.warning("View '%s' is being overwritten", view.name)
         if isinstance(view, type):
             # Instantiate the view, if needed
             view = view(self.hass)
 
-        self.views[view.name] = view
-
-        rule = Rule(view.url, endpoint=view.name)
-        self.url_map.add(rule)
-        for url in view.extra_urls:
-            rule = Rule(url, endpoint=view.name)
-            self.url_map.add(rule)
+        view.register(self.app.router)
 
     def register_redirect(self, url, redirect_to):
         """Register a redirect with the server.
@@ -316,132 +304,76 @@ class HomeAssistantWSGI(object):
         for the redirect, otherwise it has to be a string with placeholders in
         rule syntax.
         """
-        from werkzeug.routing import Rule
+        def redirect(request):
+            """Redirect to location."""
+            raise HTTPMovedPermanently(redirect_to)
 
-        self.url_map.add(Rule(url, redirect_to=redirect_to))
+        self.app.router.add_route('GET', url, redirect)
 
     def register_static_path(self, url_root, path, cache_length=31):
         """Register a folder to serve as a static path.
 
         Specify optional cache length of asset in days.
         """
-        from static import Cling
+        if os.path.isdir(path):
+            assert url_root.startswith('/')
+            if not url_root.endswith('/'):
+                url_root += '/'
+            route = HAStaticRoute(url_root, path)
+            self.app.router.register_route(route)
+            return
 
-        headers = []
+        filepath = Path(path)
 
-        if cache_length and not self.development:
-            # 1 year in seconds
-            cache_time = cache_length * 86400
+        @asyncio.coroutine
+        def serve_file(request):
+            """Redirect to location."""
+            return _GZIP_FILE_SENDER.send(request, filepath)
 
-            headers.append({
-                'prefix': '',
-                HTTP_HEADER_CACHE_CONTROL:
-                "public, max-age={}".format(cache_time)
-            })
+        # aiohttp supports regex matching for variables. Using that as temp
+        # to work around cache busting MD5.
+        # Turns something like /static/dev-panel.html into
+        # /static/{filename:dev-panel(-[a-z0-9]{32}|)\.html}
+        base, ext = url_root.rsplit('.', 1)
+        base, file = base.rsplit('/', 1)
+        regex = r"{}(-[a-z0-9]{{32}}|)\.{}".format(file, ext)
+        url_pattern = "{}/{{filename:{}}}".format(base, regex)
 
-        self.register_wsgi_app(url_root, Cling(path, headers=headers))
+        self.app.router.add_route('GET', url_pattern, serve_file)
 
-    def register_wsgi_app(self, url_root, app):
-        """Register a path to serve a WSGI app."""
-        if url_root in self.extra_apps:
-            _LOGGER.warning("Url root '%s' is being overwritten", url_root)
-
-        self.extra_apps[url_root] = app
-
+    @asyncio.coroutine
     def start(self):
         """Start the wsgi server."""
-        from cherrypy import wsgiserver
-        from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
-
-        # pylint: disable=too-few-public-methods,super-init-not-called
-        class ContextSSLAdapter(BuiltinSSLAdapter):
-            """SSL Adapter that takes in an SSL context."""
-
-            def __init__(self, context):
-                self.context = context
-
-        # pylint: disable=no-member
-        self.server = wsgiserver.CherryPyWSGIServer(
-            (self.server_host, self.server_port), self,
-            server_name='Home Assistant')
+        if self.cors is not None:
+            for route in list(self.app.router.routes()):
+                self.cors.add(route)
 
         if self.ssl_certificate:
             context = ssl.SSLContext(SSL_VERSION)
             context.options |= SSL_OPTS
             context.set_ciphers(CIPHERS)
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
-            self.server.ssl_adapter = ContextSSLAdapter(context)
+        else:
+            context = None
 
-        threading.Thread(
-            target=self.server.start, daemon=True, name='WSGI-server').start()
+        self._handler = self.app.make_handler()
+        self.server = yield from self.hass.loop.create_server(
+            self._handler, self.server_host, self.server_port, ssl=context)
 
+    @asyncio.coroutine
     def stop(self):
         """Stop the wsgi server."""
-        self.server.stop()
-
-    def dispatch_request(self, request):
-        """Handle incoming request."""
-        from werkzeug.exceptions import (
-            MethodNotAllowed, NotFound, BadRequest, Unauthorized,
-        )
-        from werkzeug.routing import RequestRedirect
-
-        with request:
-            adapter = self.url_map.bind_to_environ(request.environ)
-            try:
-                endpoint, values = adapter.match()
-                return self.views[endpoint].handle_request(request, **values)
-            except RequestRedirect as ex:
-                return ex
-            except (BadRequest, NotFound, MethodNotAllowed,
-                    Unauthorized) as ex:
-                resp = ex.get_response(request.environ)
-                if request.accept_mimetypes.accept_json:
-                    resp.data = json.dumps({
-                        'result': 'error',
-                        'message': str(ex),
-                    })
-                    resp.mimetype = CONTENT_TYPE_JSON
-                return resp
-
-    def base_app(self, environ, start_response):
-        """WSGI Handler of requests to base app."""
-        request = self.Request(environ)
-        response = self.dispatch_request(request)
-
-        if self.cors_origins:
-            cors_check = (environ.get('HTTP_ORIGIN') in self.cors_origins)
-            cors_headers = ", ".join(ALLOWED_CORS_HEADERS)
-            if cors_check:
-                response.headers[HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN] = \
-                    environ.get('HTTP_ORIGIN')
-                response.headers[HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS] = \
-                    cors_headers
-
-        return response(environ, start_response)
-
-    def __call__(self, environ, start_response):
-        """Handle a request for base app + extra apps."""
-        from werkzeug.wsgi import DispatcherMiddleware
-
-        if not self.hass.is_running:
-            from werkzeug.exceptions import BadRequest
-            return BadRequest()(environ, start_response)
-
-        app = DispatcherMiddleware(self.base_app, self.extra_apps)
-        # Strip out any cachebusting MD5 fingerprints
-        fingerprinted = _FINGERPRINT.match(environ.get('PATH_INFO', ''))
-        if fingerprinted:
-            environ['PATH_INFO'] = '{}.{}'.format(*fingerprinted.groups())
-        return app(environ, start_response)
+        self.server.close()
+        yield from self.server.wait_closed()
+        yield from self.app.shutdown()
+        yield from self._handler.finish_connections(60.0)
+        yield from self.app.cleanup()
 
     @staticmethod
     def get_real_ip(request):
         """Return the clients correct ip address, even in proxied setups."""
-        if request.access_route:
-            return request.access_route[-1]
-        else:
-            return request.remote_addr
+        peername = request.transport.get_extra_info('peername')
+        return peername[0] if peername is not None else None
 
     def is_trusted_ip(self, remote_addr):
         """Match an ip address against trusted CIDR networks."""
@@ -457,8 +389,6 @@ class HomeAssistantView(object):
 
     def __init__(self, hass):
         """Initilalize the base view."""
-        from werkzeug.wrappers import Response
-
         if not hasattr(self, 'url'):
             class_name = self.__class__.__name__
             raise AttributeError(
@@ -472,59 +402,96 @@ class HomeAssistantView(object):
             )
 
         self.hass = hass
-        # pylint: disable=invalid-name
-        self.Response = Response
 
-    def handle_request(self, request, **values):
-        """Handle request to url."""
-        from werkzeug.exceptions import MethodNotAllowed, Unauthorized
+    def json(self, result, status_code=200):  # pylint: disable=no-self-use
+        """Return a JSON response."""
+        msg = json.dumps(
+            result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
+        return web.Response(
+            body=msg, content_type=CONTENT_TYPE_JSON, status=status_code)
 
-        if request.method == "OPTIONS":
-            # For CORS preflight requests.
-            return self.options(request)
+    def json_message(self, error, status_code=200):
+        """Return a JSON message response."""
+        return self.json({'message': error}, status_code)
 
-        try:
-            handler = getattr(self, request.method.lower())
-        except AttributeError:
-            raise MethodNotAllowed
+    def file(self, request, fil):  # pylint: disable=no-self-use
+        """Return a file."""
+        assert isinstance(fil, str), 'only string paths allowed'
+        return _GZIP_FILE_SENDER.send(request, Path(fil))
 
+    def register(self, router):
+        """Register the view with a router."""
+        urls = [self.url] + self.extra_urls
+
+        for method in ('get', 'post', 'delete', 'put'):
+            handler = getattr(self, method, None)
+
+            if not handler:
+                continue
+
+            handler = request_handler_factory(self, handler)
+
+            for url in urls:
+                router.add_route(method, url, handler)
+
+        # aiohttp_cors does not work with class based views
+        # self.app.router.add_route('*', self.url, self, name=self.name)
+
+        # for url in self.extra_urls:
+        #     self.app.router.add_route('*', url, self)
+
+
+def request_handler_factory(view, handler):
+    """Factory to wrap our handler classes.
+
+    Eventually authentication should be managed by middleware.
+    """
+    @asyncio.coroutine
+    def handle(request):
+        """Handle incoming request."""
         remote_addr = HomeAssistantWSGI.get_real_ip(request)
 
         # Auth code verbose on purpose
         authenticated = False
 
-        if self.hass.wsgi.api_password is None:
+        if view.hass.wsgi.api_password is None:
             authenticated = True
 
-        elif self.hass.wsgi.is_trusted_ip(remote_addr):
+        elif view.hass.wsgi.is_trusted_ip(remote_addr):
             authenticated = True
 
         elif hmac.compare_digest(request.headers.get(HTTP_HEADER_HA_AUTH, ''),
-                                 self.hass.wsgi.api_password):
+                                 view.hass.wsgi.api_password):
             # A valid auth header has been set
             authenticated = True
 
-        elif hmac.compare_digest(request.args.get(DATA_API_PASSWORD, ''),
-                                 self.hass.wsgi.api_password):
+        elif hmac.compare_digest(request.GET.get(DATA_API_PASSWORD, ''),
+                                 view.hass.wsgi.api_password):
             authenticated = True
 
-        if self.requires_auth and not authenticated:
+        if view.requires_auth and not authenticated:
             _LOGGER.warning('Login attempt or request with an invalid '
                             'password from %s', remote_addr)
-            persistent_notification.create(
-                self.hass,
+            persistent_notification.async_create(
+                view.hass,
                 'Invalid password used from {}'.format(remote_addr),
                 'Login attempt failed', NOTIFICATION_ID_LOGIN)
-            raise Unauthorized()
+            raise HTTPUnauthorized()
 
         request.authenticated = authenticated
 
         _LOGGER.info('Serving %s to %s (auth: %s)',
                      request.path, remote_addr, authenticated)
 
-        result = handler(request, **values)
+        assert asyncio.iscoroutinefunction(handler) or is_callback(handler), \
+            "Handler should be a coroutine or a callback."
 
-        if isinstance(result, self.Response):
+        result = handler(request, **request.match_info)
+
+        if asyncio.iscoroutine(result):
+            result = yield from result
+
+        if isinstance(result, web.StreamResponse):
             # The method handler returned a ready-made Response, how nice of it
             return result
 
@@ -533,36 +500,14 @@ class HomeAssistantView(object):
         if isinstance(result, tuple):
             result, status_code = result
 
-        return self.Response(result, status=status_code)
+        if isinstance(result, str):
+            result = result.encode('utf-8')
+        elif result is None:
+            result = b''
+        elif not isinstance(result, bytes):
+            assert False, ('Result should be None, string, bytes or Response. '
+                           'Got: {}').format(result)
 
-    def json(self, result, status_code=200):
-        """Return a JSON response."""
-        msg = json.dumps(
-            result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
-        return self.Response(
-            msg, mimetype=CONTENT_TYPE_JSON, status=status_code)
+        return web.Response(body=result, status=status_code)
 
-    def json_message(self, error, status_code=200):
-        """Return a JSON message response."""
-        return self.json({'message': error}, status_code)
-
-    def file(self, request, fil, mimetype=None):
-        """Return a file."""
-        from werkzeug.wsgi import wrap_file
-        from werkzeug.exceptions import NotFound
-
-        if isinstance(fil, str):
-            if mimetype is None:
-                mimetype = mimetypes.guess_type(fil)[0]
-
-            try:
-                fil = open(fil, mode='br')
-            except IOError:
-                raise NotFound()
-
-        return self.Response(wrap_file(request.environ, fil),
-                             mimetype=mimetype, direct_passthrough=True)
-
-    def options(self, request):
-        """Default handler for OPTIONS (necessary for CORS preflight)."""
-        return self.Response('', status=200)
+    return handle

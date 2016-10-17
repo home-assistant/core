@@ -83,12 +83,14 @@ SERVICE_TO_STATE = {
 
 
 # pylint: disable=too-few-public-methods, attribute-defined-outside-init
-class TrackStates(object):
+class AsyncTrackStates(object):
     """
     Record the time when the with-block is entered.
 
     Add all states that have changed since the start time to the return list
     when with-block is exited.
+
+    Must be run within the event loop.
     """
 
     def __init__(self, hass):
@@ -103,7 +105,8 @@ class TrackStates(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Add changes states to changes list."""
-        self.states.extend(get_changed_since(self.hass.states.all(), self.now))
+        self.states.extend(get_changed_since(self.hass.states.async_all(),
+                                             self.now))
 
 
 def get_changed_since(states, utc_point_in_time):

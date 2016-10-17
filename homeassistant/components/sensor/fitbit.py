@@ -12,6 +12,7 @@ import time
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
@@ -294,12 +295,13 @@ class FitbitAuthCallbackView(HomeAssistantView):
         self.add_devices = add_devices
         self.oauth = oauth
 
+    @callback
     def get(self, request):
         """Finish OAuth callback request."""
         from oauthlib.oauth2.rfc6749.errors import MismatchingStateError
         from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 
-        data = request.args
+        data = request.GET
 
         response_message = """Fitbit has been successfully authorized!
         You can close this window now!"""
@@ -340,7 +342,8 @@ class FitbitAuthCallbackView(HomeAssistantView):
                                 config_contents):
             _LOGGER.error("Failed to save config file")
 
-        setup_platform(self.hass, self.config, self.add_devices)
+        self.hass.async_add_job(setup_platform, self.hass, self.config,
+                                self.add_devices)
 
         return html_response
 

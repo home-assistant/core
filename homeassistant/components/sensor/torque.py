@@ -9,6 +9,7 @@ import re
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_EMAIL, CONF_NAME)
@@ -77,9 +78,10 @@ class TorqueReceiveDataView(HomeAssistantView):
         self.sensors = sensors
         self.add_devices = add_devices
 
+    @callback
     def get(self, request):
         """Handle Torque data request."""
-        data = request.args
+        data = request.GET
 
         if self.email is not None and self.email != data[SENSOR_EMAIL_FIELD]:
             return
@@ -100,14 +102,14 @@ class TorqueReceiveDataView(HomeAssistantView):
             elif is_value:
                 pid = convert_pid(is_value.group(1))
                 if pid in self.sensors:
-                    self.sensors[pid].on_update(data[key])
+                    self.sensors[pid].async_on_update(data[key])
 
         for pid in names:
             if pid not in self.sensors:
                 self.sensors[pid] = TorqueSensor(
                     ENTITY_NAME_FORMAT.format(self.vehicle, names[pid]),
                     units.get(pid, None))
-                self.add_devices([self.sensors[pid]])
+                self.hass.async_add_job(self.add_devices, [self.sensors[pid]])
 
         return None
 
@@ -141,7 +143,7 @@ class TorqueSensor(Entity):
         """Return the default icon of the sensor."""
         return 'mdi:car'
 
-    def on_update(self, value):
+    def async_on_update(self, value):
         """Receive an update."""
         self._state = value
-        self.update_ha_state()
+        self.hass.loop.create_task(self.async_update_ha_state())
