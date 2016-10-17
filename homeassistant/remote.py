@@ -143,7 +143,7 @@ class HomeAssistant(ha.HomeAssistant):
                     'Unable to setup local API to receive events')
 
         self.state = ha.CoreState.starting
-        ha.async_create_timer(self)
+        ha._async_create_timer(self)  # pylint: disable=protected-access
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
                       origin=ha.EventOrigin.remote)
