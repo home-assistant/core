@@ -6,7 +6,6 @@ https://home-assistant.io/components/updater/
 """
 import logging
 import json
-import os
 import platform
 import uuid
 # pylint: disable=no-name-in-module,import-error
@@ -22,35 +21,38 @@ from homeassistant.helpers import event
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-UPDATER_URL = 'https://1cnlq5djza.execute-api.us-west-2.amazonaws.com/prod'
+UPDATER_URL = 'https://updater.home-assistant.io/'
 DOMAIN = 'updater'
 ENTITY_ID = 'updater.updater'
 ATTR_RELEASE_NOTES = 'release_notes'
 UPDATER_UUID_FILE = '.uuid'
 CONF_OPT_OUT = 'opt_out'
 
-REQUIREMENTS = ['distro>=1,<2']
+REQUIREMENTS = ['distro==1.0.0']
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {
     vol.Optional(CONF_OPT_OUT, default=False): cv.boolean
 }}, extra=vol.ALLOW_EXTRA)
 
 
+def _create_uuid(hass, filename=UPDATER_UUID_FILE):
+    """Create UUID and save it in a file."""
+    with open(hass.config.path(filename), 'w') as fptr:
+        _uuid = uuid.uuid4().hex
+        fptr.write(json.dumps({"uuid": _uuid}))
+        return _uuid
+
+
 def _load_uuid(hass, filename=UPDATER_UUID_FILE):
-    """Load UUID from a file, if it exist if not create it."""
-    path = hass.config.path(filename)
-
-    if not os.path.isfile(path):
-        # file not found create it
-        with open(path, 'w') as uuidfile:
-            uuidfile.write(json.dumps({"uuid": uuid.uuid4().hex}))
-            uuidfile.close()
-
+    """Load UUID from a file, or return None."""
     try:
-        with open(path) as uuidfile:
-            return uuid.UUID(json.loads(uuidfile.read())['uuid'], version=4)
+        with open(hass.config.path(filename)) as fptr:
+            jsonf = json.loads(fptr.read())
+            return uuid.UUID(jsonf['uuid'], version=4).hex
     except (ValueError, AttributeError):
         return None
+    except FileNotFoundError:
+        return _create_uuid(hass, filename)
 
 
 def setup(hass, config):
@@ -60,7 +62,7 @@ def setup(hass, config):
         _LOGGER.warning('Updater not supported in development version')
         return False
 
-    huuid = _load_uuid(hass).hex
+    huuid = _load_uuid(hass)
 
     def check_newest_version(_=None):
         """Check if a new version is available and report if one is."""
@@ -103,7 +105,8 @@ def get_newest_version(huuid, opt_out=False):
 
     try:
         req = requests.post(UPDATER_URL, json=info_object)
-        return (req.json()['version'], req.json()['release-notes'])
+        res = req.json()
+        return (res['version'], res['release-notes'])
     except requests.RequestException:
         _LOGGER.exception('Could not contact HASS Update to check for updates')
         return None
