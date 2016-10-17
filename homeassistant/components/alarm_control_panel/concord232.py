@@ -17,6 +17,8 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
+from concord232 import client
+
 import requests
 
 import voluptuous as vol
@@ -60,7 +62,6 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     def __init__(self, hass, url, name):
         """Initalize the concord232 alarm panel."""
-        from concord232 import client
         self._state = STATE_UNKNOWN
         self._hass = hass
         self._name = name
@@ -74,7 +75,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
         self._alarm = CONCORD232_GLOBAL
         self._alarm.partitions = self._alarm.list_partitions()
-        CONCORD232_GLOBAL.last_partition_update = datetime.datetime.now()
+        self._alarm.last_partition_update = datetime.datetime.now()
         self.update()
 
     @property

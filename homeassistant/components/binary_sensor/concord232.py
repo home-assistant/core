@@ -14,6 +14,8 @@ from homeassistant.const import (CONF_HOST, CONF_PORT)
 
 import homeassistant.helpers.config_validation as cv
 
+from concord232 import client as concord232_client
+
 import requests
 
 import voluptuous as vol
@@ -52,7 +54,6 @@ DEFAULT_NAME = "Alarm"
 # pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Concord232 binary sensor platform."""
-    from concord232 import client as concord232_client
 
     def get_opening_type(zone):
         """Helper function to try to guess sensor type frm name."""
