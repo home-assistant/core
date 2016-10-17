@@ -12,12 +12,17 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/gadgetreactor/pyHS100/archive/'
-                'ef85f939fd5b07064a0f34dfa673fa7d6140bd95.zip#pyHS100==0.1.2']
+REQUIREMENTS = ['https://github.com/kirichkov/pyHS100/archive/'
+                '6e1fedb08ee475a1b8a882a51aa09241e78ac7e8.zip#pyHS100==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'TPLink Switch HS100'
+
+ATTR_CURRENT_CONSUMPTION = 'Current consumption'
+ATTR_TOTAL_CONSUMPTION = 'Total consumption'
+ATTR_VOLTAGE = 'Voltage'
+ATTR_CURRENT = 'Current'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -60,3 +65,27 @@ class SmartPlugSwitch(SwitchDevice):
     def turn_off(self):
         """Turn the switch off."""
         self.smartplug.state = 'OFF'
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        _LOGGER.debug("Updating TP-Link energy meter data")
+
+        emeter_readings = self.smartplug.get_emeter_realtime()
+
+        if emeter_readings is False:
+            return {}
+
+        current_consumption = "%.1f W" % emeter_readings["power"]
+        current = "%.1f A" % emeter_readings["current"]
+        voltage = "%.2f V" % emeter_readings["voltage"]
+        total_consumption = "%.2f kW" % emeter_readings["total"]
+
+        attrs = {
+            ATTR_CURRENT_CONSUMPTION: current_consumption,
+            ATTR_TOTAL_CONSUMPTION: total_consumption,
+            ATTR_VOLTAGE: voltage,
+            ATTR_CURRENT: current
+        }
+
+        return attrs
