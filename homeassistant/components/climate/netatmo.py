@@ -21,9 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_RELAY = 'relay'
 CONF_THERMOSTAT = 'thermostat'
-# CONF_AWAY_TEMPERATURE = 'away_temperature'
 
 DEFAULT_AWAY_TEMPERATURE = 14
+# # The default offeset is 2 hours (when you use the thermostat itself)
 DEFAULT_TIME_OFFSET = 7200
 # # Return cached results if last scan was less then this time ago
 # # NetAtmo Data is uploaded to server every hour
@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the NetAtmo Thermostat."""
     netatmo = get_component('netatmo')
     device = config.get(CONF_RELAY)
-    # away_temp = config.get(CONF_AWAY_TEMPERATURE)
+
     import lnetatmo
     try:
         data = ThermostatData(netatmo.NETATMO_AUTH, device)
@@ -64,7 +64,6 @@ class NetatmoThermostat(ClimateDevice):
         self._state = None
         self._name = module_name
         self._target_temperature = None
-        # self._away_temp = away_temp
         self._away = None
         self.update()
 
@@ -140,7 +139,7 @@ class NetatmoThermostat(ClimateDevice):
         """Get the latest data from NetAtmo API and updates the states."""
         self._data.update()
         self._target_temperature = self._data.thermostatdata.setpoint_temp
-        self._away = (True if self._data.setpoint_mode == 'away' else False)
+        self._away = self._data.setpoint_mode == 'away'
 
 
 class ThermostatData(object):

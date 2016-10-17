@@ -23,8 +23,7 @@ REQUIREMENTS = [
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SECRET_KEY = 'secret_key'
-CONF_DEVICES = 'devices'
-DEFAULT_DEVICES = ['camera', 'sensor', 'binary_sensor', 'climate']
+
 DOMAIN = 'netatmo'
 
 NETATMO_AUTH = None
@@ -38,7 +37,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_SECRET_KEY): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_DEVICES, default=DEFAULT_DEVICES): cv.ensure_list,
         vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -60,7 +58,7 @@ def setup(hass, config):
         return False
 
     if config[DOMAIN][CONF_DISCOVERY]:
-        for component in config[DOMAIN][CONF_DEVICES]:
+        for component in 'camera', 'sensor', 'binary_sensor', 'climate':
             discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
