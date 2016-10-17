@@ -233,8 +233,6 @@ class Thermostat(ClimateDevice):
             high_temp = int(kwargs.get(ATTR_TARGET_TEMP_LOW))
             low_temp = int(kwargs.get(ATTR_TARGET_TEMP_HIGH))
 
-        print("Set: %s - %s" % (high_temp, low_temp))
-
         if self.hold_temp:
             self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
                                            high_temp, "indefinite")
