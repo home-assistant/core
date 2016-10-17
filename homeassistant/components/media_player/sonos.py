@@ -61,6 +61,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     global DEVICES
 
     if discovery_info:
+        # if device allready maped by config
+        if not DEVICES:
+            return True
+
         player = soco.SoCo(discovery_info)
         if player.is_visible:
             device = SonosDevice(hass, player)
