@@ -14,8 +14,6 @@ from homeassistant.const import (CONF_HOST, CONF_PORT)
 
 import homeassistant.helpers.config_validation as cv
 
-from concord232 import client as concord232_client
-
 import requests
 
 import voluptuous as vol
@@ -44,8 +42,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
 })
 
-CONCORD232_GLOBAL = None
-
 SCAN_INTERVAL = 1
 
 DEFAULT_NAME = "Alarm"
@@ -54,17 +50,7 @@ DEFAULT_NAME = "Alarm"
 # pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Concord232 binary sensor platform."""
-    def get_opening_type(zone):
-        """Helper function to try to guess sensor type frm name."""
-        if "MOTION" in zone["name"]:
-            return "motion"
-        if "KEY" in zone["name"]:
-            return "safety"
-        if "SMOKE" in zone["name"]:
-            return "smoke"
-        if "WATER" in zone["name"]:
-            return "water"
-        return "opening"
+    from concord232 import client as concord232_client
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -73,32 +59,41 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
 
     try:
-        global CONCORD232_GLOBAL
-        if CONCORD232_GLOBAL is None:
-            _LOGGER.debug('Initializing GLOBAL Client.')
-            CONCORD232_GLOBAL = concord232_client.Client('http://{}:{}'
-                                                         .format(host, port))
-            CONCORD232_GLOBAL.zones = CONCORD232_GLOBAL.list_zones()
-            CONCORD232_GLOBAL.last_zone_update = datetime.datetime.now()
-        else:
-            _LOGGER.debug('Found GLOBAL Client using it')
+        _LOGGER.debug('Initializing Client.')
+        client = concord232_client.Client('http://{}:{}'
+                                          .format(host, port))
+        client.zones = client.list_zones()
+        client.last_zone_update = datetime.datetime.now()
 
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error('Unable to connect to Concord232: %s', str(ex))
         return False
 
-    for zone in CONCORD232_GLOBAL.zones:
+    for zone in client.zones:
         _LOGGER.info('Loading Zone found: %s', zone['name'])
         if zone['number'] not in exclude:
             sensors.append(Concord232ZoneSensor(
                 hass,
-                CONCORD232_GLOBAL,
+                client,
                 zone,
                 zone_types.get(zone['number'], get_opening_type(zone))))
 
         add_devices(sensors)
 
     return True
+
+
+def get_opening_type(zone):
+    """Helper function to try to guess sensor type frm name."""
+    if "MOTION" in zone["name"]:
+        return "motion"
+    if "KEY" in zone["name"]:
+        return "safety"
+    if "SMOKE" in zone["name"]:
+        return "smoke"
+    if "WATER" in zone["name"]:
+        return "water"
+    return "opening"
 
 
 class Concord232ZoneSensor(BinarySensorDevice):

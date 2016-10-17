@@ -17,8 +17,6 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-from concord232 import client
-
 import requests
 
 import voluptuous as vol
@@ -36,8 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
 })
-
-CONCORD232_GLOBAL = None
 
 SCAN_INTERVAL = 1
 
@@ -62,18 +58,19 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     def __init__(self, hass, url, name):
         """Initalize the concord232 alarm panel."""
+        from concord232 import client as concord232_client
+
         self._state = STATE_UNKNOWN
         self._hass = hass
         self._name = name
         self._url = url
 
-        global CONCORD232_GLOBAL
-        if CONCORD232_GLOBAL is None:
-            CONCORD232_GLOBAL = client.Client(self._url)
-        else:
-            _LOGGER.debug('Found GLOBAL Client using it')
+        try:
+            client = concord232_client.Client(self._url)
+        except requests.exceptions.ConnectionError as ex:
+            _LOGGER.error('Unable to connect to Concord232: %s', str(ex))
 
-        self._alarm = CONCORD232_GLOBAL
+        self._alarm = client
         self._alarm.partitions = self._alarm.list_partitions()
         self._alarm.last_partition_update = datetime.datetime.now()
         self.update()
