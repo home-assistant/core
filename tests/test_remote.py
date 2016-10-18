@@ -69,7 +69,7 @@ def setUpModule():   # pylint: disable=invalid-name
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
                        http.CONF_SERVER_PORT: SLAVE_PORT}})
 
-    with patch.object(ha, 'async_create_timer', return_value=None):
+    with patch.object(ha, '_async_create_timer', return_value=None):
         slave.start()
 
 
