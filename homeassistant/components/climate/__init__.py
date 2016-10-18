@@ -545,12 +545,12 @@ class ClimateDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(7, TEMP_CELSIUS, self.unit_of_measurement)
+        return convert_temperature(7, TEMP_CELSIUS, self.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(35, TEMP_CELSIUS, self.unit_of_measurement)
+        return convert_temperature(35, TEMP_CELSIUS, self.temperature_unit)
 
     @property
     def min_humidity(self):
