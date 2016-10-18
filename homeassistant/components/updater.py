@@ -4,6 +4,7 @@ Support to check for available updates.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/updater/
 """
+from datetime import datetime, timedelta
 import logging
 import json
 import platform
@@ -75,8 +76,11 @@ def setup(hass, config):
                                         ATTR_RELEASE_NOTES: releasenotes}
                 )
 
+    # Update daily, start 1 hour after startup
+    _dt = datetime.now() + timedelta(hours=1)
     event.track_time_change(
-        hass, check_newest_version, hour=[0, 12], minute=0, second=0)
+        hass, check_newest_version,
+        hour=_dt.hour, minute=_dt.minute, second=_dt.second)
 
     check_newest_version()
 
