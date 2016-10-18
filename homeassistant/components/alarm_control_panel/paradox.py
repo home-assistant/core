@@ -23,16 +23,58 @@ SPEED = 'speed'
 DEPENDENCIES = ['paradox']
 _LOGGER = logging.getLogger(__name__)
 
-# DOMAIN = 'alarm_control_panel'
-
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """
     Set up the Paradox alarm control panel platform.
 
-    Based on configuration file contents, not auto discovery.
+    Based on configuration file contents, not auto discovered.
     """
+    def update_alarm_armed_cb(area_number):
+        """Process the area armed event received from alarm panel."""
+        # Area in use on alarm panel might not be setup/defined in HA
+        try:
+            _affected_area = PARTITION_SCHEMA(_partitions[area_number])
+            _LOGGER.debug('HA area %s to be armed.',
+                          _affected_area[CONF_PARTITIONNAME])
+            _area = ('alarm_control_panel.' +
+                     _affected_area[CONF_PARTITIONNAME])
+            _area.update_ha_state(True)
+        except KeyError:
+            _LOGGER.debug('Area %d not defined in HA.', area_number)
+
+    def update_alarm_stay_armed_cb(area_number):
+        """Process area stay armed event received from alarm panel."""
+        # Area in use on alarm panel might not be setup/defined in HA
+        try:
+            _affected_area = PARTITION_SCHEMA(_partitions[area_number])
+            _LOGGER.debug('HA area %s to be stay armed.',
+                          _affected_area[CONF_PARTITIONNAME])
+            _area = ('alarm_control_panel.' +
+                     _affected_area[CONF_PARTITIONNAME])
+            _area.update_ha_state(True)
+        except KeyError:
+            _LOGGER.debug('Area %d not defined in HA.', area_number)
+
+    def update_alarm_disarmed_cb(area_number):
+        """Process area/partition disarmed event received from alarm panel."""
+        # Area in use on alarm panel might not be setup/defined in HA
+        try:
+            _affected_area = PARTITION_SCHEMA(_partitions[area_number])
+            _LOGGER.debug('HA area %s to be disarmed.',
+                          _affected_area[CONF_PARTITIONNAME])
+            _area = ('alarm_control_panel.' +
+                     _affected_area[CONF_PARTITIONNAME])
+            _area.update_ha_state(True)
+        except KeyError:
+            _LOGGER.debug('Area %d not defined in HA.', area_number)
+
+    # Overwrite the controllers default callback to call the hass functions
+    PARADOX_CONTROLLER.callback_area_armed = update_alarm_armed_cb
+    PARADOX_CONTROLLER.callback_area_stay_armed = update_alarm_stay_armed_cb
+    PARADOX_CONTROLLER.callback_area_disarmed = update_alarm_disarmed_cb
+
     # Get the area information specified in the configuration/yaml file.
     _yaml_partitions = discovery_info['partitions']
     for area_number in _yaml_partitions:
@@ -71,7 +113,8 @@ class ParadoxAlarm(alarm.AlarmControlPanel):
         # At startup the area status should be requested from the alarm panel.
         # Request the area status from the alarm panel
         PARADOX_CONTROLLER.submit_area_status_request(self._area_number)
-        # No need to wait, status will be updated when it returns from alarm.
+        # No need to wait or call self.update() as status will be 
+        # updated when it returns from controller.
 
         _LOGGER.debug('HA added area: ' + area_name)
 

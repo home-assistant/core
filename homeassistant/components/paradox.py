@@ -130,111 +130,20 @@ def setup(hass, base_config):
     _partitions = config.get(CONF_PARTITIONS)
     # _connect_status = {}
 
+    _LOGGER.info('Setting up %s on port %s.', _paradox_model, _prt_port)
+    # Rather pass all the parameters using kwargs?
+    PARADOX_CONTROLLER = ParadoxAlarmPanel(_paradox_model,
+                                           _comm_module,
+                                           # _user,
+                                           # _pass,
+                                           _prt_port,
+                                           _prt_speed)
     if PARADOX_CONTROLLER is None:
-        _LOGGER.info('Setting up %s on port %s.', _paradox_model, _prt_port)
-        # Rather pass all the parameters using kwargs?
-        PARADOX_CONTROLLER = ParadoxAlarmPanel(_paradox_model,
-                                               _comm_module,
-                                               # _user,
-                                               # _pass,
-                                               _prt_port,
-                                               _prt_speed)
-        if PARADOX_CONTROLLER is None:
-            _LOGGER.info('Paradox controller not initialised')
-            return False
-        else:
-            _LOGGER.info('Paradox controller initialised as %s.',
-                         PARADOX_CONTROLLER.paradox_model)
-
-    def update_alarm_armed_cb(area_number):
-        """Process the area armed event received from alarm panel."""
-        _LOGGER.debug('Area %d received armed event.', area_number)
-        try:
-            # Area in use on alarm panel might not be setup/defined in HA
-            _affected_area = PARTITION_SCHEMA(_partitions[area_number])
-            _LOGGER.debug('HA area %s to be armed.',
-                          _affected_area[CONF_PARTITIONNAME])
-            # This does not seem to be the correct way to set the state.
-
-            _att = {'friendly_name': _affected_area[CONF_PARTITIONNAME]}
-
-            hass.states.set('alarm_control_panel.' +
-                            _affected_area[CONF_PARTITIONNAME],
-                            STATE_ALARM_ARMED_AWAY, _att)
-        except KeyError:
-            _LOGGER.debug('Area %d not defined in HA.', area_number)
-
-        return True
-
-    def update_alarm_stay_armed_cb(area_number):
-        """Process area stay armed event received from alarm panel."""
-        _LOGGER.debug('Area %d received stay armed event.', area_number)
-        try:
-            # Area in use on alarm panel might not be setup/defined in HA
-            _affected_area = PARTITION_SCHEMA(_partitions[area_number])
-            _LOGGER.debug('HA area %s to be stay armed.',
-                          _affected_area[CONF_PARTITIONNAME])
-            # This does not seem to be the correct way to set the state.
-
-            _att = {'friendly_name': _affected_area[CONF_PARTITIONNAME]}
-
-            hass.states.set('alarm_control_panel.' +
-                            _affected_area[CONF_PARTITIONNAME],
-                            STATE_ALARM_ARMED_HOME, _att)
-        except KeyError:
-            _LOGGER.debug('Area %d not defined in HA.', area_number)
-
-        return True
-
-    def update_alarm_disarmed_cb(area_number):
-        """Process area/partition disarmed event received from alarm panel."""
-        _LOGGER.debug('Area %d received disarmed event.', area_number)
-        try:
-            # Area in use on alarm panel might not be setup/defined in HA
-            _affected_area = PARTITION_SCHEMA(_partitions[area_number])
-            _LOGGER.debug('HA area %s to be disarmed.',
-                          _affected_area[CONF_PARTITIONNAME])
-
-            _att = {'friendly_name': _affected_area[CONF_PARTITIONNAME]}
-
-            # This does not seem to be the correct way to set the state.
-            hass.states.set('alarm_control_panel.' +
-                            _affected_area[CONF_PARTITIONNAME],
-                            STATE_ALARM_DISARMED, _att)
-        except KeyError:
-            _LOGGER.debug('Area %d not defined in HA.', area_number)
-
-        return True
-
-    def update_zone_status_cb(zone_number):
-        """Process the zone status change received from alarm panel."""
-        # Rather define 'zone' as a constant.
-        # This is not needed, the new status is getting passed in!
-        _new_status = PARADOX_CONTROLLER.alarm_state['zone'][zone_number][
-            'status'
-            ]['open']
-        _LOGGER.debug('Zone %d received new status %s.',
-                      zone_number, _new_status)
-        try:
-            # Zone on alarm panel might not be setup/defined in HA
-            _affected_zone = ZONE_SCHEMA(_zones[zone_number])
-            _LOGGER.debug('HA zone %s to be updated.',
-                          _affected_zone[CONF_ZONENAME])
-            # This does not seem to be the correct way to set the state.
-            if _new_status:
-                _new_status = 'on'
-            else:
-                _new_status = 'off'
-
-            _att = {'friendly_name': _affected_zone[CONF_ZONENAME],
-                    'sensor_class': _affected_zone[CONF_ZONETYPE]}
-
-            hass.states.set('binary_sensor.' + _affected_zone[CONF_ZONENAME],
-                            _new_status, _att)
-        except KeyError:
-            _LOGGER.debug('Zone %d not defined in HA.', zone_number)
-
-        return True
+        _LOGGER.info('Paradox controller not initialised')
+        return False
+    else:
+        _LOGGER.info('Paradox controller initialised as %s.',
+                     PARADOX_CONTROLLER.paradox_model)
 
     def stop_paradox(event):
         """Shutdown Paradox connection and threads on exit."""
@@ -250,12 +159,6 @@ def setup(hass, base_config):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_paradox)
 
         return True
-
-    # Overwrite the controllers default callback to call the hass functions
-    PARADOX_CONTROLLER.callback_area_armed = update_alarm_armed_cb
-    PARADOX_CONTROLLER.callback_area_stay_armed = update_alarm_stay_armed_cb
-    PARADOX_CONTROLLER.callback_area_disarmed = update_alarm_disarmed_cb
-    PARADOX_CONTROLLER.callback_zone_state_change = update_zone_status_cb
 
     # Connect to the Paradox Alarm.
     _connected = start_paradox(None)

@@ -6,6 +6,7 @@ https://home-assistant.io/components/binary_sensor.paradox/
 """
 import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import (STATE_OPEN, STATE_CLOSED)
 from homeassistant.components.paradox import (PARADOX_CONTROLLER,
                                               ZONE_SCHEMA,
                                               CONF_ZONENAME,
@@ -21,6 +22,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     Based on configuration/yaml file contents, not auto discovery.
     """
+
+    def update_zone_status_cb(zone_number):
+        """Process the zone status change received from alarm panel."""
+        # The zone on alarm panel might not be setup/defined in HA
+        try:
+            _affected_zone = ZONE_SCHEMA(_zones[zone_number])
+            _LOGGER.debug('HA zone %s to be updated.',
+                          _affected_zone[CONF_ZONENAME])
+
+            _zone = 'binary_sensor.' + _affected_zone[CONF_ZONENAME]
+            _zone.update_ha_state(True)
+        except KeyError:
+            _LOGGER.debug('Zone %d not defined in HA.', zone_number)
+
+        return True
+
+    # Overwrite the controllers default callback to call the hass function
+    PARADOX_CONTROLLER.callback_zone_state_change = update_zone_status_cb
+
     # Get the zone information specified in the configuration/yaml file.
     _configured_zones = discovery_info['zones']
     for zone_num in _configured_zones:
@@ -47,7 +67,7 @@ class ParadoxBinarySensor(BinarySensorDevice):
         self._zone_mirror = zone_info  # As defined in Alarm State dictionary
         self._zone_type = zone_type
         self._zone_number = zone_number
-        if zone_name in '':
+        if zone_name in '':  # Only allow this if we may update the yaml file
             # When no label provided, get zone label from alarm panel
             # PARADOX_CONTROLLER.submit_zone_label_request(self._zone_number)
             # but it is asynchronous so set default name in the mean time
@@ -56,10 +76,11 @@ class ParadoxBinarySensor(BinarySensorDevice):
             self._name = zone_name  # Name in configuration/yaml file
 
         self._state = None
-        # At startup Alarm State will not contain any zone statuses yet
+        # At startup Alarm State will not contain mirrored zone statuses yet
         # Request the zone status from the alarm panel
         PARADOX_CONTROLLER.submit_zone_status_request(self._zone_number)
-        # No need to wait, status will be updated when it returns from alarm.
+        # No need to wait or call self.update() as status will be 
+        # updated when it returns from controller.
 
         _LOGGER.debug('HA added zone: ' + zone_name)
 
@@ -71,12 +92,14 @@ class ParadoxBinarySensor(BinarySensorDevice):
 
     @property
     def is_on(self):
-        """Return true if sensor is on."""
-        # Do we need to set/assign the state or is that done by HA later?
-        # self._state=PARADOX_CONTROLLER.alarm_state['zone']['status']['open']
-        # return self._state
+        """Return true if sensor is open."""
         _LOGGER.debug('HA is checking the status of %s', self._name)
         return self._zone_mirror['status']['open']
+
+    @property
+    def state(self):
+        """Return the state of the binary sensor."""
+        return STATE_OPEN if self.is_on else STATE_CLOSED
 
     @property
     def sensor_class(self):
@@ -90,8 +113,6 @@ class ParadoxBinarySensor(BinarySensorDevice):
 
     def update(self):
         """Update the zone state."""
-        # Can this to work...
-        # self._state = new_state
+        # Controller updated Alarm State dictionary
         _LOGGER.debug('Updating zone status.')
-        self.update_ha_state()  # Force an is_on first?
-        return True
+        return self.state
