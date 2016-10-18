@@ -236,6 +236,7 @@ class BraviaTVDevice(MediaPlayerDevice):
             if power_status == 'active':
                 self._state = STATE_ON
                 playing_info = self._braviarc.get_playing_info()
+                self._reset_playing_info()
                 if playing_info is None or len(playing_info) == 0:
                     self._channel_name = 'App'
                 else:
@@ -254,6 +255,16 @@ class BraviaTVDevice(MediaPlayerDevice):
         except Exception as exception_instance:  # pylint: disable=broad-except
             _LOGGER.error(exception_instance)
             self._state = STATE_OFF
+
+    def _reset_playing_info(self):
+        self._program_name = None
+        self._channel_name = None
+        self._program_media_type = None
+        self._channel_number = None
+        self._source = None
+        self._content_uri = None
+        self._duration = None
+        self._start_date_time = None
 
     def _refresh_volume(self):
         """Refresh volume information."""
