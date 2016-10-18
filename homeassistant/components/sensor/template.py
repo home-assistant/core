@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 # pylint: disable=unused-argument
-def async_setup_platform(hass, config, add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the template sensors."""
     sensors = []
 
@@ -61,7 +61,7 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("No sensors added")
         return False
 
-    hass.loop.create_task(add_devices(sensors))
+    hass.loop.create_task(async_add_devices(sensors))
     return True
 
 
