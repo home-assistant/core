@@ -33,6 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+@asyncio.coroutine
 # pylint: disable=unused-argument
 def async_setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the template sensors."""
