@@ -108,9 +108,11 @@ omit =
     homeassistant/components/*/zoneminder.py
 
     homeassistant/components/alarm_control_panel/alarmdotcom.py
+    homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
     homeassistant/components/binary_sensor/arest.py
+    homeassistant/components/binary_sensor/concord232.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/bloomsky.py
