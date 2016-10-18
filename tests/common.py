@@ -76,8 +76,8 @@ def get_test_home_assistant(num_threads=None):
         """Fake stop."""
         yield None
 
-    @patch.object(ha, 'async_create_timer')
-    @patch.object(ha, 'async_monitor_worker_pool')
+    @patch.object(ha, '_async_create_timer')
+    @patch.object(ha, '_async_monitor_worker_pool')
     @patch.object(hass.loop, 'add_signal_handler')
     @patch.object(hass.loop, 'run_forever')
     @patch.object(hass.loop, 'close')

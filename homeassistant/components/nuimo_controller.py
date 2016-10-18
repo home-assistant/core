@@ -79,8 +79,7 @@ class NuimoThread(threading.Thread):
         self._name = name
         self._hass_is_running = True
         self._nuimo = None
-        self._listener = hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                                              self.stop)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
 
     def run(self):
         """Setup connection or be idle."""
@@ -99,8 +98,6 @@ class NuimoThread(threading.Thread):
         """Terminate Thread by unsetting flag."""
         _LOGGER.debug('Stopping thread for Nuimo %s', self._mac)
         self._hass_is_running = False
-        self._hass.bus.remove_listener(EVENT_HOMEASSISTANT_STOP,
-                                       self._listener)
 
     def _attach(self):
         """Create a nuimo object from mac address or discovery."""
