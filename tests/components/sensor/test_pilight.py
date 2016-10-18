@@ -17,7 +17,7 @@ def fire_pilight_message(protocol, data):
     HASS.bus.fire(pilight.EVENT, message)
 
 
-def setUpModule():   # pylint: disable=invalid-name
+def setup_function():   # pylint: disable=invalid-name
     """Initialize a Home Assistant server."""
     global HASS
 
@@ -25,7 +25,7 @@ def setUpModule():   # pylint: disable=invalid-name
     HASS.config.components = ['pilight']
 
 
-def tearDownModule():   # pylint: disable=invalid-name
+def teardown_function():   # pylint: disable=invalid-name
     """Stop the Home Assistant server."""
     HASS.stop()
 
