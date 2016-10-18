@@ -117,8 +117,8 @@ class NeatoConnectedSwitch(ToggleEntity):
 
     @property
     def is_on(self):
-        State = self.robot.state
         """Return true if device is on."""
+        State = self.robot.state
         if self.is_update_locked():
             return self.graceful_state
         if State['action'] == 1 and State['state'] == 2:
