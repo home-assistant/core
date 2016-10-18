@@ -135,7 +135,11 @@ class NestTempSensor(NestSensor):
         if temp is None:
             return None
 
-        return round(temp, 1)
+        if isinstance(temp, tuple):
+            low, high = temp
+            return "%s-%s" % (int(low), int(high))
+        else:
+            return round(temp, 1)
 
 
 class NestWeatherSensor(NestSensor):
