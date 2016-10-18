@@ -41,6 +41,9 @@ astral==1.2
 # homeassistant.components.sensor.linux_battery
 batinfo==0.3
 
+# homeassistant.components.sensor.scrape
+beautifulsoup4==4.5.1
+
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
 
