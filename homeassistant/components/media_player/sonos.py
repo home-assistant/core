@@ -61,11 +61,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     global DEVICES
 
     if discovery_info:
-        # if device allready maped by config
-        if DEVICES:
-            return True
-
         player = soco.SoCo(discovery_info)
+
+        # if device allready exists by config
+        if player.uid in [device.player_uid for device in DEVICES]:
+            return True
+            
         if player.is_visible:
             device = SonosDevice(hass, player)
             add_devices([device])
@@ -215,6 +216,11 @@ class SonosDevice(MediaPlayerDevice):
     def update_sonos(self, now):
         """Update state, called by track_utc_time_change."""
         self.update_ha_state(True)
+
+    @property
+    def player_uid(self):
+        """A unique identifier."""
+        return self._player.uid
 
     @property
     def name(self):
