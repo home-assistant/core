@@ -41,9 +41,6 @@ astral==1.2
 # homeassistant.components.sensor.linux_battery
 batinfo==0.3
 
-# homeassistant.components.sensor.scrape
-beautifulsoup4==4.5.1
-
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
 
@@ -339,7 +336,7 @@ pycmus==0.1.0
 pydispatcher==2.0.5
 
 # homeassistant.components.envisalink
-pyenvisalink==1.7
+pyenvisalink==1.9
 
 # homeassistant.components.ifttt
 pyfttt==0.3
