@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # if device allready exists by config
         if player.uid in [device.player_uid for device in DEVICES]:
             return True
-            
+
         if player.is_visible:
             device = SonosDevice(hass, player)
             add_devices([device])
