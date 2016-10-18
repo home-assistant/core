@@ -1,4 +1,5 @@
 """The tests for the Updater component."""
+from datetime import datetime, timedelta
 import unittest
 from unittest.mock import patch
 import os
@@ -7,7 +8,6 @@ import requests
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import updater
-import homeassistant.util.dt as dt_util
 
 from tests.common import (
     assert_setup_component, fire_time_changed, get_test_home_assistant)
@@ -39,9 +39,13 @@ class TestUpdater(unittest.TestCase):
         updater.CURRENT_VERSION = MOCK_CURRENT_VERSION
 
         with assert_setup_component(1) as config:
-            assert setup_component(
-                self.hass, updater.DOMAIN, {updater.DOMAIN: {}})
+            setup_component(self.hass, updater.DOMAIN, {updater.DOMAIN: {}})
+            _dt = datetime.now() + timedelta(hours=1)
             assert config['updater'] == {'opt_out': False}
+
+        for secs in [-1, 0, 1]:
+            fire_time_changed(self.hass, _dt + timedelta(seconds=secs))
+            self.hass.block_till_done()
 
         self.assertTrue(self.hass.states.is_state(
             updater.ENTITY_ID, NEW_VERSION))
@@ -56,16 +60,16 @@ class TestUpdater(unittest.TestCase):
         with assert_setup_component(1) as config:
             assert setup_component(
                 self.hass, updater.DOMAIN, {updater.DOMAIN: {}})
+            _dt = datetime.now() + timedelta(hours=1)
             assert config['updater'] == {'opt_out': False}
 
         self.assertIsNone(self.hass.states.get(updater.ENTITY_ID))
 
         mock_get_newest_version.return_value = (NEW_VERSION, '')
 
-        fire_time_changed(
-            self.hass, dt_util.utcnow().replace(hour=0, minute=0, second=0))
-
-        self.hass.block_till_done()
+        for secs in [-1, 0, 1]:
+            fire_time_changed(self.hass, _dt + timedelta(seconds=secs))
+            self.hass.block_till_done()
 
         self.assertTrue(self.hass.states.is_state(
             updater.ENTITY_ID, NEW_VERSION))

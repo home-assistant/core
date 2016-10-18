@@ -63,31 +63,30 @@ def setup(hass, config):
         _LOGGER.warning('Updater not supported in development version')
         return False
 
-    huuid = _load_uuid(hass)
-
-    def check_newest_version(_=None):
-        """Check if a new version is available and report if one is."""
-        newest, releasenotes = get_newest_version(huuid)
-
-        if newest is not None:
-            if StrictVersion(newest) > StrictVersion(CURRENT_VERSION):
-                hass.states.set(
-                    ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available',
-                                        ATTR_RELEASE_NOTES: releasenotes}
-                )
+    huuid = None if config.get(CONF_OPT_OUT) else _load_uuid(hass)
 
     # Update daily, start 1 hour after startup
     _dt = datetime.now() + timedelta(hours=1)
     event.track_time_change(
-        hass, check_newest_version,
+        hass, lambda _: check_newest_version(hass, huuid),
         hour=_dt.hour, minute=_dt.minute, second=_dt.second)
-
-    check_newest_version()
 
     return True
 
 
-def get_newest_version(huuid, opt_out=False):
+def check_newest_version(hass, huuid):
+    """Check if a new version is available and report if one is."""
+    newest, releasenotes = get_newest_version(huuid)
+
+    if newest is not None:
+        if StrictVersion(newest) > StrictVersion(CURRENT_VERSION):
+            hass.states.set(
+                ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available',
+                                    ATTR_RELEASE_NOTES: releasenotes}
+            )
+
+
+def get_newest_version(huuid):
     """Get the newest Home Assistant version."""
     info_object = {'uuid': huuid, 'version': CURRENT_VERSION,
                    'timezone': dt_util.DEFAULT_TIME_ZONE.zone,
@@ -104,8 +103,8 @@ def get_newest_version(huuid, opt_out=False):
         info_object['distribution'] = linux_dist[0]
         info_object['os_version'] = linux_dist[1]
 
-    if opt_out:
-        info_object = []
+    if not huuid:
+        info_object = {}
 
     try:
         req = requests.post(UPDATER_URL, json=info_object)
