@@ -268,8 +268,11 @@ class EmbyClient(MediaPlayerDevice):
         """Return current media percent complete."""
         if self.now_playing_item['RunTimeTicks'] and \
                 self.session['PlayState']['PositionTicks']:
-            return int(self.session['PlayState']['PositionTicks']) / \
-                int(self.now_playing_item['RunTimeTicks']) * 100
+            try:
+                return int(self.session['PlayState']['PositionTicks']) / \
+                    int(self.now_playing_item['RunTimeTicks']) * 100
+            except KeyError:
+                return 0
         else:
             return 0
 
@@ -286,25 +289,34 @@ class EmbyClient(MediaPlayerDevice):
     def media_content_id(self):
         """Content ID of current playing media."""
         if self.now_playing_item is not None:
-            return self.now_playing_item['Id']
+            try:
+                return self.now_playing_item['Id']
+            except KeyError:
+                return None
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
         if self.now_playing_item is None:
             return None
-        media_type = self.now_playing_item['Type']
-        if media_type == 'Episode':
-            return MEDIA_TYPE_TVSHOW
-        elif media_type == 'Movie':
-            return MEDIA_TYPE_VIDEO
-        return None
+        try:
+            media_type = self.now_playing_item['Type']
+            if media_type == 'Episode':
+                return MEDIA_TYPE_TVSHOW
+            elif media_type == 'Movie':
+                return MEDIA_TYPE_VIDEO
+            return None
+        except KeyError:
+            return None
 
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
         if self.now_playing_item and self.media_content_type:
-            return int(self.now_playing_item['RunTimeTicks']) / 10000000
+            try:
+                return int(self.now_playing_item['RunTimeTicks']) / 10000000
+            except KeyError:
+                return None
 
     @property
     def media_image_url(self):
