@@ -16,7 +16,6 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT)
 from homeassistant.config import load_yaml_config_file
-from homeassistant.util.temperature import convert as convert_temperature
 import homeassistant.helpers.config_validation as cv
 
 _CONFIGURING = {}
