@@ -21,7 +21,7 @@ def get_cpu_temp():
 def get_average(x):
     """ use moving average to get better readings """
     if not hasattr(get_average, "t"):
-       get_average.t = [x, x, x]
+        get_average.t = [x, x, x]
     get_average.t[2] = get_average.t[1]
     get_average.t[1] = get_average.t[0]
     get_average.t[0] = x
@@ -81,6 +81,7 @@ class SensehatSensor_humidity(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return '%'
+
 
 class SensehatSensor_pressure(Entity):
     """Representation of a Pressure Sensor."""
