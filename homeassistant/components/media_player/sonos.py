@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['SoCo==0.11.1']
+REQUIREMENTS = ['SoCo==0.12']
 
 _LOGGER = logging.getLogger(__name__)
 
