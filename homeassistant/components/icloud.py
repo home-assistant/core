@@ -8,24 +8,23 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/icloud/
 """
 import logging
-import time as time
 from datetime import datetime, timedelta
-from pytz import timezone
-import pytz
 from math import floor
 import random
+import re
+
+from pytz import timezone
+import pytz
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import PyiCloudFailedLoginException
 
-import re
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.components.device_tracker import see
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.event import track_time_change
-from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
@@ -87,7 +86,7 @@ DEVICESTATUSSET = ['features', 'maxMsgChar', 'darkWake', 'fmlyShare',
                    'isMac', 'locFoundEnabled']
 
 
-def setup(hass, config):
+def setup(hass, config): # pylint: disable=too-many-locals,too-many-branches
     """Set up the iCloud Scanner."""
     if config.get(DOMAIN) is None:
         return False
@@ -140,6 +139,7 @@ def setup(hass, config):
 
         if 'manual_update' in account_config:
             def update_now(now):
+                """Update the account, the devices and the events."""
                 ICLOUDTRACKERS[account].update_icloud(see)
 
             manual_update = account_config.get('manual_update')
@@ -188,7 +188,7 @@ def setup(hass, config):
                 ICLOUDTRACKERS[accountname].keep_alive()
             except ValueError:
                 _LOGGER.error("something went wrong for account %s, " +
-                             "retrying in a minute", accountname)
+                              "retrying in a minute", accountname)
 
     track_utc_time_change(
         hass, keep_alive,
@@ -228,8 +228,8 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
         self._overridestate = None
         self._devicestatuscode = None
         self._devicestatus = None
-        self._lowPowerMode = None
-        self._batteryStatus = None
+        self._lowpowermode = None
+        self._batterystatus = None
         self._googletraveltime = googletraveltime
         self._gttduration = None
         self._gttorigin = None
@@ -257,8 +257,8 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
                 ATTR_BATTERY: self._battery,
                 ATTR_DISTANCE: self._distance,
                 ATTR_DEVICESTATUS: self._devicestatus,
-                ATTR_LOWPOWERMODE: self._lowPowerMode,
-                ATTR_BATTERYSTATUS: self._batteryStatus,
+                ATTR_LOWPOWERMODE: self._lowpowermode,
+                ATTR_BATTERYSTATUS: self._batterystatus,
                 ATTR_GOOGLE_MAPS_TRAVEL_TIME: self._googletraveltime
             }
         else:
@@ -267,8 +267,8 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
                 ATTR_BATTERY: self._battery,
                 ATTR_DISTANCE: self._distance,
                 ATTR_DEVICESTATUS: self._devicestatus,
-                ATTR_LOWPOWERMODE: self._lowPowerMode,
-                ATTR_BATTERYSTATUS: self._batteryStatus,
+                ATTR_LOWPOWERMODE: self._lowpowermode,
+                ATTR_BATTERYSTATUS: self._batterystatus,
                 ATTR_GOOGLE_MAPS_TRAVEL_TIME: self._googletraveltime,
                 ATTR_GOOGLE_MAPS_TRAVEL_TIME_DURATION:
                     self._gttduration,
@@ -336,8 +336,8 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
                     self._devicestatus = 'unregistered'
                 else:
                     self._devicestatus = 'error'
-                self._lowPowerMode = status['lowPowerMode']
-                self._batteryStatus = status['batteryStatus']
+                self._lowpowermode = status['lowPowerMode']
+                self._batterystatus = status['batteryStatus']
                 self.update_ha_state()
                 status = self.identifier.status(DEVICESTATUSSET)
                 battery = status['batteryLevel']*100
@@ -474,16 +474,16 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
         elif self._type == TYPE_NEXT:
             return 'mdi:calendar-clock'
 
-    def keep_alive(self, starttime, endtime, duration, title, tz, location):
+    def keep_alive(self, starttime, endtime, duration, title, tzone, location):
         """Keep the api alive."""
         current = self._type == TYPE_CURRENT
         nextev = self._type == TYPE_NEXT
         self._remaining = 0
-        tempnow = dt_util.now(tz)
-        if tz is None:
+        tempnow = dt_util.now(tzone)
+        if tzone is None:
             self._tz = pytz.utc
         else:
-            self._tz = tz
+            self._tz = tzone
 
         if starttime is None:
             self._starttime = None
@@ -503,9 +503,9 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                     tempnow.minute * 60 -
                                     tempnow.second)
                 if ((self._starttime.year > tempnow.year or
-                     self._starttime.month > tempnow.month or
-                     self._starttime.day > tempnow.day) and
-                     remainingseconds < 0):
+                        self._starttime.month > tempnow.month or
+                        self._starttime.day > tempnow.day) and
+                        remainingseconds < 0):
                     remainingseconds = 86400 + remainingseconds
                 self._remaining = (remainingdays * 1440 +
                                    round(remainingseconds / 60, 0))
@@ -527,9 +527,9 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                     tempnow.minute * 60 -
                                     tempnow.second)
                 if ((self._endtime.year > tempnow.year or
-                     self._endtime.month > tempnow.month or
-                     self._endtime.day > tempnow.day) and
-                     remainingseconds < 0):
+                        self._endtime.month > tempnow.month or
+                        self._endtime.day > tempnow.day) and
+                        remainingseconds < 0):
                     remainingseconds = 86400 + remainingseconds
                 self._remaining = (remainingdays * 1440 +
                                    round(remainingseconds / 60, 0))
@@ -568,9 +568,9 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                     tempnow.minute * 60 -
                                     tempnow.second)
                 if ((self._starttime.year > tempnow.year or
-                     self._starttime.month > tempnow.month or
-                     self._starttime.day > tempnow.day) and
-                     remainingseconds < 0):
+                        self._starttime.month > tempnow.month or
+                        self._starttime.day > tempnow.day) and
+                        remainingseconds < 0):
                     remainingseconds = 86400 + remainingseconds
                 self._remaining = (remainingdays * 1440 +
                                    round(remainingseconds / 60, 0))
@@ -585,9 +585,9 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                     tempnow.minute * 60 -
                                     tempnow.second)
                 if ((self._endtime.year > tempnow.year or
-                    self._endtime.month > tempnow.month or
-                    self._endtime.day > tempnow.day) and
-                    remainingseconds < 0):
+                        self._endtime.month > tempnow.month or
+                        self._endtime.day > tempnow.day) and
+                        remainingseconds < 0):
                     remainingseconds = 86400 + remainingseconds
                 self._remaining = (remainingdays * 1440 +
                                    round(remainingseconds / 60, 0))
@@ -642,14 +642,14 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                 self.api = PyiCloudService(self.username,
                                            self.password,
                                            cookie_directory=
-                                              self.cookiedirectory,
+                                           self.cookiedirectory,
                                            verify=True)
                 for device in self.api.devices:
                     status = device.status(DEVICESTATUSSET)
                     devicename = re.sub(r"(\s|\W|')", '',
                                         status['name']).lower()
                     if (devicename not in self.devices and
-                        devicename not in self._ignored_devices):
+                            devicename not in self._ignored_devices):
                         gtt = None
                         if devicename in self.googletraveltime:
                             gtt = self.googletraveltime[devicename]
@@ -669,24 +669,24 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                     endtime = None
                     duration = None
                     title = None
-                    tz = pytz.utc
+                    tzone = pytz.utc
                     location = None
                     guid = None
                     for event in new_events:
-                        tz = event['tz']
-                        if tz is None:
-                            tz = pytz.utc
+                        tzone = event['tz']
+                        if tzone is None:
+                            tzone = pytz.utc
                         else:
-                            tz = timezone(tz)
-                        tempnow = dt_util.now(tz)
+                            tzone = timezone(tzone)
+                        tempnow = dt_util.now(tzone)
                         guid = event['guid']
                         starttime = event['startDate']
                         startdate = datetime(starttime[1], starttime[2],
                                              starttime[3], starttime[4],
-                                             starttime[5], 0, 0, tz)
+                                             starttime[5], 0, 0, tzone)
                         endtime = event['endDate']
                         enddate = datetime(endtime[1], endtime[2], endtime[3],
-                                           endtime[4], endtime[5], 0, 0, tz)
+                                           endtime[4], endtime[5], 0, 0, tzone)
                         duration = event['duration']
                         title = event['title']
                         location = event['location']
@@ -704,14 +704,14 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                                                                 endtime,
                                                                 duration,
                                                                 title,
-                                                                tz,
+                                                                tzone,
                                                                 location)
 
                         starttime = None
                         endtime = None
                         duration = None
                         title = None
-                        tz = pytz.utc
+                        tzone = pytz.utc
                         location = None
                         guid = None
 
@@ -719,27 +719,27 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                     endtime = None
                     duration = None
                     title = None
-                    tz = pytz.utc
+                    tzone = pytz.utc
                     location = None
                     guid = None
                     for event in new_events:
-                        tz = event['tz']
-                        if tz is None:
-                            tz = pytz.utc
+                        tzone = event['tz']
+                        if tzone is None:
+                            tzone = pytz.utc
                         else:
-                            tz = timezone(tz)
-                        tempnow = dt_util.now(tz)
+                            tzone = timezone(tzone)
+                        tempnow = dt_util.now(tzone)
                         guid = event['guid']
                         starttime = event['startDate']
                         startdate = datetime(starttime[1],
                                              starttime[2],
                                              starttime[3],
                                              starttime[4],
-                                             starttime[5], 0, 0, tz)
+                                             starttime[5], 0, 0, tzone)
                         endtime = event['endDate']
                         enddate = datetime(endtime[1], endtime[2],
                                            endtime[3], endtime[4],
-                                           endtime[5], 0, 0, tz)
+                                           endtime[5], 0, 0, tzone)
                         duration = event['duration']
                         title = event['title']
                         location = event['location']
@@ -757,7 +757,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                                                              endtime,
                                                              duration,
                                                              title,
-                                                             tz,
+                                                             tzone,
                                                              location)
 
             except Exception as error:
@@ -787,11 +787,11 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
     def icon(self):
         """Return the icon to use for device if any."""
         return 'mdi:account'
-        
+
     def get_key(self, item):
         """Sort key of events."""
         return item.get('startDate')
-        
+
     def keep_alive(self):
         """ Keeps the api alive """
         if self.api is None:
@@ -800,7 +800,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                 self.api = PyiCloudService(self.username,
                                            self.password,
                                            cookie_directory=
-                                              self.cookiedirectory,
+                                           self.cookiedirectory,
                                            verify=True)
 
             except PyiCloudFailedLoginException as error:
@@ -820,24 +820,24 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                 endtime = None
                 duration = None
                 title = None
-                tz = pytz.utc
+                tzone = pytz.utc
                 location = None
                 guid = None
                 for event in new_events:
-                    tz = event['tz']
-                    if tz is None:
-                        tz = pytz.utc
+                    tzone = event['tz']
+                    if tzone is None:
+                        tzone = pytz.utc
                     else:
-                        tz = timezone(tz)
-                    tempnow = dt_util.now(tz)
+                        tzone = timezone(tzone)
+                    tempnow = dt_util.now(tzone)
                     guid = event['guid']
                     starttime = event['startDate']
                     startdate = datetime(starttime[1], starttime[2],
                                          starttime[3], starttime[4],
-                                         starttime[5], 0, 0, tz)
+                                         starttime[5], 0, 0, tzone)
                     endtime = event['endDate']
                     enddate = datetime(endtime[1], endtime[2], endtime[3],
-                                       endtime[4], endtime[5], 0, 0, tz)
+                                       endtime[4], endtime[5], 0, 0, tzone)
                     duration = event['duration']
                     title = event['title']
                     location = event['location']
@@ -856,13 +856,13 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                                                             endtime,
                                                             duration,
                                                             title,
-                                                            tz,
+                                                            tzone,
                                                             location)
                     starttime = None
                     endtime = None
                     duration = None
                     title = None
-                    tz = pytz.utc
+                    tzone = pytz.utc
                     location = None
                     guid = None
 
@@ -885,27 +885,27 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                 endtime = None
                 duration = None
                 title = None
-                tz = pytz.utc
+                tzone = pytz.utc
                 location = None
                 guid = None
                 for event in new_events:
-                    tz = event['tz']
-                    if tz is None:
-                        tz = pytz.utc
+                    tzone = event['tz']
+                    if tzone is None:
+                        tzone = pytz.utc
                     else:
-                        tz = timezone(tz)
-                    tempnow = dt_util.now(tz)
+                        tzone = timezone(tzone)
+                    tempnow = dt_util.now(tzone)
                     guid = event['guid']
                     starttime = event['startDate']
                     startdate = datetime(starttime[1],
                                          starttime[2],
                                          starttime[3],
                                          starttime[4],
-                                         starttime[5], 0, 0, tz)
+                                         starttime[5], 0, 0, tzone)
                     endtime = event['endDate']
                     enddate = datetime(endtime[1], endtime[2],
                                        endtime[3], endtime[4],
-                                       endtime[5], 0, 0, tz)
+                                       endtime[5], 0, 0, tzone)
                     duration = event['duration']
                     title = event['title']
                     location = event['location']
@@ -924,7 +924,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                                                          endtime,
                                                          duration,
                                                          title,
-                                                         tz,
+                                                         tzone,
                                                          location)
                 for addedevent in self.nextevents:
                     found = False
