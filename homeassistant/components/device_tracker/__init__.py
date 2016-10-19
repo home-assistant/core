@@ -25,6 +25,7 @@ from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.yaml import escape_yaml_value
 import homeassistant.util as util
 from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
@@ -420,7 +421,12 @@ def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     })
     try:
         result = []
-        devices = load_yaml_config_file(path)
+        try:
+            devices = load_yaml_config_file(path)
+        except HomeAssistantError as err:
+            _LOGGER.error('Unable to load %s: %s', path, str(err))
+            return []
+
         for dev_id, device in devices.items():
             try:
                 device = dev_schema(device)
@@ -467,10 +473,9 @@ def update_config(path: str, dev_id: str, device: Device):
 
         for key, value in (('name', device.name), ('mac', device.mac),
                            ('picture', device.config_picture),
-                           ('track', 'yes' if device.track else 'no'),
-                           (CONF_AWAY_HIDE,
-                            'yes' if device.away_hide else 'no')):
-            out.write('  {}: {}\n'.format(key, '' if value is None else value))
+                           ('track', device.track),
+                           (CONF_AWAY_HIDE, device.away_hide)):
+            out.write('  {}: {}\n'.format(key, escape_yaml_value(value)))
 
 
 def get_gravatar_for_email(email: str):

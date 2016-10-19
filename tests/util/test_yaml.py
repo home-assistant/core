@@ -12,6 +12,7 @@ from tests.common import get_test_config_dir, patch_yaml_files
 
 class TestYaml(unittest.TestCase):
     """Test util.yaml loader."""
+
     # pylint: disable=no-self-use,invalid-name
 
     def test_simple_list(self):
@@ -41,6 +42,14 @@ class TestYaml(unittest.TestCase):
         with self.assertRaises(HomeAssistantError), \
                 patch_yaml_files(files):
             load_yaml_config_file(YAML_CONFIG_FILE)
+
+    def test_escape_yaml_value(self):
+        """Test escape_yaml_value."""
+        assert yaml.escape_yaml_value(True) == 'yes'
+        assert yaml.escape_yaml_value(False) == 'no'
+        assert yaml.escape_yaml_value(None) == ''
+        assert yaml.escape_yaml_value('[bad] start') == '"[bad] start"'
+        assert yaml.escape_yaml_value('[bad] "') == r'"[bad] \""'
 
     def test_no_key(self):
         """Test item without an key."""
