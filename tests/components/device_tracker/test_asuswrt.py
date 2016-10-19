@@ -1,5 +1,6 @@
 """The tests for the ASUSWRT device tracker platform."""
 import os
+from datetime import timedelta
 import unittest
 from unittest import mock
 
@@ -7,8 +8,11 @@ import voluptuous as vol
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import device_tracker
+from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME, CONF_TRACK_NEW)
 from homeassistant.components.device_tracker.asuswrt import (
-    CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, PLATFORM_SCHEMA, DOMAIN)
+    CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, DOMAIN,
+    PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
 
@@ -70,7 +74,9 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
                 CONF_PLATFORM: 'asuswrt',
                 CONF_HOST: 'fake_host',
                 CONF_USERNAME: 'fake_user',
-                CONF_PASSWORD: 'fake_pass'
+                CONF_PASSWORD: 'fake_pass',
+                CONF_TRACK_NEW: True,
+                CONF_CONSIDER_HOME: timedelta(seconds=180)
             }
         }
 
@@ -93,7 +99,9 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
                 CONF_PLATFORM: 'asuswrt',
                 CONF_HOST: 'fake_host',
                 CONF_USERNAME: 'fake_user',
-                CONF_PUB_KEY: FAKEFILE
+                CONF_PUB_KEY: FAKEFILE,
+                CONF_TRACK_NEW: True,
+                CONF_CONSIDER_HOME: timedelta(seconds=180)
             }
         }
 
