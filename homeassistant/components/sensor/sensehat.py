@@ -1,21 +1,22 @@
 """
-A component which show the value of temperature, humidity and pressure 
+A component which show the value of temperature, humidity and pressure
 from Sense HAT board in the form of platform with graphs in history.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/
 """
 
+import os
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from sense_hat import SenseHat
-import os
+
 
 def get_cpu_temp():
     """ get CPU temperature """
     res = os.popen("vcgencmd measure_temp").readline()
     t = float(res.replace("temp=", "").replace("'C\n", ""))
-    return(t)
+    return t
 
 
 def get_average(x):
@@ -26,7 +27,7 @@ def get_average(x):
     get_average.t[1] = get_average.t[0]
     get_average.t[0] = x
     xs = (get_average.t[0]+get_average.t[1]+get_average.t[2])/3
-    return(xs)
+    return xs
 
 sense = SenseHat()
 
