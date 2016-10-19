@@ -13,9 +13,6 @@ import re
 from pytz import timezone
 import pytz
 
-from pyicloud import PyiCloudService
-from pyicloud.exceptions import PyiCloudFailedLoginException
-
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity import generate_entity_id
@@ -315,6 +312,8 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
     def update_icloud(self, ):
         """Authenticate against iCloud and scan for devices."""
         if self.api is not None:
+            from pyicloud import PyiCloudService
+            from pyicloud.exceptions import PyiCloudFailedLoginException
             from pyicloud.exceptions import PyiCloudNoDevicesException
 
             try:
@@ -640,6 +639,8 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         if self.username is None or self.password is None:
             _LOGGER.error('Must specify a username and password')
         else:
+            from pyicloud import PyiCloudService
+            from pyicloud.exceptions import PyiCloudFailedLoginException
             try:
                 # Attempt the login to iCloud
                 self.api = PyiCloudService(self.username,
@@ -798,6 +799,8 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
     def keep_alive(self):
         """Keep the api alive."""
         if self.api is None:
+            from pyicloud import PyiCloudService
+            from pyicloud.exceptions import PyiCloudFailedLoginException
             try:
                 # Attempt the login to iCloud
                 self.api = PyiCloudService(self.username,
@@ -971,7 +974,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         """Authenticate against iCloud and scan for devices."""
         if self.api is not None:
             from pyicloud.exceptions import PyiCloudNoDevicesException
-
             try:
                 # The session timeouts if we are not using it so we
                 # have to re-authenticate. This will send an email.
