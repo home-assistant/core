@@ -14,7 +14,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT,
     CONF_WHITELIST)
 
-REQUIREMENTS = ['pilight==0.0.2']
+REQUIREMENTS = ['pilight==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ def setup(hass, config):
         if not whitelist:
             hass.bus.fire(EVENT, data)
         # Check if data matches the defined whitelist
-        elif all(data[key] in whitelist[key] for key in whitelist):
+        elif all(str(data[key]) in whitelist[key] for key in whitelist):
             hass.bus.fire(EVENT, data)
 
     pilight_client.set_callback(handle_received_code)
