@@ -55,14 +55,15 @@ class TelstraNotificationService(BaseNotificationService):
 
         """Retrieve authorization first"""
         token_data = {
-            'consumer_key': self._consumer_key,
-            'consumer_secret': self._consumer_secret,
+            'client_id': self._consumer_key,
+            'client_secret': self._consumer_secret,
             'grant_type': 'client_credentials',
             'scope': 'SMS'
         }
         token_resource = 'https://api.telstra.com/v1/oauth/token'
-        token_response = requests.post(token_resource, data=token_data).json()
-        if token_response['error']:
+        token_response = requests.get(token_resource, params=token_data).json()
+
+        if 'error' in token_response:
             _LOGGER.exception('Error obtaining authorization from Telstra API.')
             return
 
