@@ -257,7 +257,7 @@ def humanify(events):
                     event.time_fired, "Home Assistant", action,
                     domain=HA_DOMAIN)
 
-            elif event.event_type.lower() == EVENT_LOGBOOK_ENTRY:
+            elif event.event_type == EVENT_LOGBOOK_ENTRY:
                 domain = event.data.get(ATTR_DOMAIN)
                 entity_id = event.data.get(ATTR_ENTITY_ID)
                 if domain is None and entity_id is not None:
@@ -290,6 +290,8 @@ def _exclude_events(events, config):
 
     filtered_events = []
     for event in events:
+        domain, entity_id = None, None
+
         if event.event_type == EVENT_STATE_CHANGED:
             to_state = State.from_dict(event.data.get('new_state'))
             # Do not report on new entities
@@ -303,6 +305,12 @@ def _exclude_events(events, config):
 
             domain = to_state.domain
             entity_id = to_state.entity_id
+
+        elif event.event_type == EVENT_LOGBOOK_ENTRY:
+            domain = event.data.get(ATTR_DOMAIN)
+            entity_id = event.data.get(ATTR_ENTITY_ID)
+
+        if domain or entity_id:
             # filter if only excluded is configured for this domain
             if excluded_domains and domain in excluded_domains and \
                     not included_domains:
