@@ -120,7 +120,8 @@ class NmapDeviceScanner(object):
             options += ' --exclude {}'.format(','.join(exclude_hosts))
 
         try:
-            result = scanner.scan(hosts=' '.join(self.hosts), arguments=options)
+            result = scanner.scan(hosts=' '.join(self.hosts),
+                                  arguments=options)
         except PortScannerError:
             return False
 
