@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         player = soco.SoCo(discovery_info)
 
         # if device allready exists by config
-        if player.uid in [device.player_uid for device in DEVICES]:
+        if player.uid in DEVICES:
             return True
 
         if player.is_visible:
@@ -218,8 +218,8 @@ class SonosDevice(MediaPlayerDevice):
         self.update_ha_state(True)
 
     @property
-    def player_uid(self):
-        """A unique identifier."""
+    def unique_id(self):
+        """Return an unique ID."""
         return self._player.uid
 
     @property
