@@ -228,6 +228,10 @@ VOLUME_MILLILITERS = 'mL'  # type: str
 VOLUME_GALLONS = 'gal'  # type: str
 VOLUME_FLUID_OUNCE = 'fl. oz.'  # type: str
 
+# Bandwidth units
+BANDWIDTH_MEGABITS_SECONDS = 'Mbps'  # type: str
+BANDWIDTH_GIGABITS_SECONDS = 'Gbps'  # type: str
+
 # Mass units
 MASS_GRAMS = 'g'  # type: str
 MASS_KILOGRAMS = 'kg'  # type: str
@@ -385,3 +389,4 @@ VOLUME = 'volume'  # type: str
 TEMPERATURE = 'temperature'  # type: str
 SPEED_MS = 'speed_ms'  # type: str
 ILLUMINANCE = 'illuminance'  # type: str
+BANDWIDTH = 'bandwidth'  # type: str
