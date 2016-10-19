@@ -83,21 +83,18 @@ DEVICESTATUSSET = ['features', 'maxMsgChar', 'darkWake', 'fmlyShare',
                    'isMac', 'locFoundEnabled']
 
 
-def setup(hass, config): # pylint: disable=too-many-locals,too-many-branches
+def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
     """Set up the iCloud Scanner."""
     if config.get(DOMAIN) is None:
         return False
 
     for account, account_config in config[DOMAIN].items():
-
         if not isinstance(account_config, dict):
             _LOGGER.error("Missing configuration data for account %s", account)
             continue
-
         if CONF_USERNAME not in account_config:
             _LOGGER.error("Missing username for account %s", account)
             continue
-
         if CONF_PASSWORD not in account_config:
             _LOGGER.error("Missing password for account %s", account)
             continue
@@ -106,14 +103,13 @@ def setup(hass, config): # pylint: disable=too-many-locals,too-many-branches
         username = account_config.get(CONF_USERNAME)
         password = account_config.get(CONF_PASSWORD)
         cookiedirectory = account_config.get(CONF_COOKIEDIRECTORY, None)
+        getevents = account_config.get(CONF_EVENTS, DEFAULT_EVENTS)
 
         ignored_devices = []
         if 'ignored_devices' in account_config:
             ignored_dev = account_config.get('ignored_devices')
             for each_dev in ignored_dev:
                 ignored_devices.append(each_dev)
-
-        getevents = account_config.get(CONF_EVENTS, DEFAULT_EVENTS)
 
         googletraveltime = {}
         if 'googletraveltime' in account_config:
@@ -208,6 +204,7 @@ def setup(hass, config): # pylint: disable=too-many-locals,too-many-branches
 
     # Tells the bootstrapper that the component was successfully initialized
     return True
+
 
 class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
     """Represent an iDevice in Home Assistant."""
@@ -306,6 +303,7 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
             self.api.authenticate()
             self.identifier.play_sound()
 
+    @staticmethod
     def data_is_accurate(data):
         """Check if location data is accurate."""
         if not data:
@@ -423,6 +421,7 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
                 if self._battery <= 33 and self._distance > 3:
                     self._interval = self._interval * 2
             self.update_ha_state()
+
 
 class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
     """Represent an icloud calendar event in Home Assistant."""
@@ -605,6 +604,7 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
         else:
             self.update_ha_state()
 
+
 class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
     """Represent an icloud account in Home Assistant."""
 
@@ -615,7 +615,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         self.hass = hass
         self.username = username
         self.password = password
-        self.cookiedirectory = cookiedirectory
+        self.cookiedir = cookiedirectory
         self.accountname = name
         self._max_wait_seconds = 120
         self._request_interval_seconds = 10
@@ -644,8 +644,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                 # Attempt the login to iCloud
                 self.api = PyiCloudService(self.username,
                                            self.password,
-                                           cookie_directory=
-                                           self.cookiedirectory,
+                                           cookie_directory=self.cookiedir,
                                            verify=True)
                 for device in self.api.devices:
                     status = device.status(DEVICESTATUSSET)
@@ -791,6 +790,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         """Return the icon to use for device if any."""
         return 'mdi:account'
 
+    @staticmethod
     def get_key(item):
         """Sort key of events."""
         return item.get('startDate')
@@ -802,10 +802,8 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                 # Attempt the login to iCloud
                 self.api = PyiCloudService(self.username,
                                            self.password,
-                                           cookie_directory=
-                                           self.cookiedirectory,
+                                           cookie_directory=self.cookiedir,
                                            verify=True)
-
             except PyiCloudFailedLoginException as error:
                 _LOGGER.error('Error logging into iCloud Service: %s',
                               error)
@@ -987,7 +985,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                 else:
                     for device in self.devices:
                         self.devices[device].update_icloud()
-
             except PyiCloudNoDevicesException:
                 _LOGGER.error('No iCloud Devices found!')
 
