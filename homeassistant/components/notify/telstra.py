@@ -9,7 +9,10 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import BaseNotificationService
+from homeassistant.components.notify import (
+    BaseNotificationService,
+    PLATFORM_SCHEMA
+)
 from homeassistant.const import (CONF_RESOURCE, CONF_METHOD, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
