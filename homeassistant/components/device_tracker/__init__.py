@@ -68,15 +68,11 @@ ATTR_ATTRIBUTES = 'attributes'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,  # seconds
-}, extra=vol.ALLOW_EXTRA)
-
-_CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.All(cv.ensure_list, [
-    vol.Schema({
-        vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
-        vol.Optional(
-            CONF_CONSIDER_HOME, default=timedelta(seconds=180)): vol.All(
-                cv.time_period, cv.positive_timedelta)
-    }, extra=vol.ALLOW_EXTRA)])}, extra=vol.ALLOW_EXTRA)
+    vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
+    vol.Optional(CONF_CONSIDER_HOME,
+                 default=timedelta(seconds=DEFAULT_CONSIDER_HOME)): vol.All(
+                     cv.time_period, cv.positive_timedelta)
+})
 
 DISCOVERY_PLATFORMS = {
     SERVICE_NETGEAR: 'netgear',
@@ -116,7 +112,7 @@ def setup(hass: HomeAssistantType, config: ConfigType):
     yaml_path = hass.config.path(YAML_DEVICES)
 
     try:
-        conf = _CONFIG_SCHEMA(config).get(DOMAIN, [])
+        conf = config.get(DOMAIN, [])
     except vol.Invalid as ex:
         log_exception(ex, DOMAIN, config)
         return False
