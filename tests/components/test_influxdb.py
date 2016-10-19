@@ -1,5 +1,4 @@
 """The tests for the InfluxDB component."""
-import copy
 import unittest
 from unittest import mock
 
@@ -53,18 +52,23 @@ class TestInfluxDB(unittest.TestCase):
         self.assertEqual(EVENT_STATE_CHANGED,
                          self.hass.bus.listen.call_args_list[0][0][0])
 
-    def test_setup_missing_keys(self, mock_client):
-        """Test the setup with missing keys."""
+    def test_setup_minimal_config(self, mock_client):
+        """Tests the setup with minimal configuration."""
+        config = {
+            'influxdb': {}
+        }
+
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+
+    def test_setup_missing_password(self, mock_client):
+        """Test the setup with existing username and missing password."""
         config = {
             'influxdb': {
-                'username': 'user',
-                'password': 'pass',
+                'username': 'user'
             }
         }
-        for missing in config['influxdb'].keys():
-            config_copy = copy.deepcopy(config)
-            del config_copy['influxdb'][missing]
-            assert not setup_component(self.hass, influxdb.DOMAIN, config_copy)
+
+        assert not setup_component(self.hass, influxdb.DOMAIN, config)
 
     def test_setup_query_fail(self, mock_client):
         """Test the setup for query failures."""
@@ -127,7 +131,13 @@ class TestInfluxDB(unittest.TestCase):
                 },
             }]
             self.handler_method(event)
-            mock_client.return_value.write_points.assert_called_once_with(body)
+            self.assertEqual(
+                mock_client.return_value.write_points.call_count, 1
+            )
+            self.assertEqual(
+                mock_client.return_value.write_points.call_args,
+                mock.call(body)
+            )
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_no_units(self, mock_client):
@@ -158,7 +168,13 @@ class TestInfluxDB(unittest.TestCase):
                 },
             }]
             self.handler_method(event)
-            mock_client.return_value.write_points.assert_called_once_with(body)
+            self.assertEqual(
+                mock_client.return_value.write_points.call_count, 1
+            )
+            self.assertEqual(
+                mock_client.return_value.write_points.call_args,
+                mock.call(body)
+            )
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_fail_write(self, mock_client):
@@ -201,8 +217,13 @@ class TestInfluxDB(unittest.TestCase):
             }]
             self.handler_method(event)
             if state_state == 1:
-                mock_client.return_value.write_points.assert_called_once_with(
-                    body)
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_count, 1
+                )
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_args,
+                    mock.call(body)
+                )
             else:
                 self.assertFalse(mock_client.return_value.write_points.called)
             mock_client.return_value.write_points.reset_mock()
@@ -232,8 +253,13 @@ class TestInfluxDB(unittest.TestCase):
             }]
             self.handler_method(event)
             if entity_id == 'ok':
-                mock_client.return_value.write_points.assert_called_once_with(
-                    body)
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_count, 1
+                )
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_args,
+                    mock.call(body)
+                )
             else:
                 self.assertFalse(mock_client.return_value.write_points.called)
             mock_client.return_value.write_points.reset_mock()

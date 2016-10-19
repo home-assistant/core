@@ -104,10 +104,15 @@ omit =
     homeassistant/components/ffmpeg.py
     homeassistant/components/*/ffmpeg.py
 
+    homeassistant/components/zoneminder.py
+    homeassistant/components/*/zoneminder.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
+    homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
     homeassistant/components/binary_sensor/arest.py
+    homeassistant/components/binary_sensor/concord232.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/bloomsky.py
@@ -146,6 +151,7 @@ omit =
     homeassistant/components/device_tracker/volvooncall.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
+    homeassistant/components/emoncms_history.py
     homeassistant/components/fan/mqtt.py
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
@@ -199,6 +205,7 @@ omit =
     homeassistant/components/notify/joaoapps_join.py
     homeassistant/components/notify/kodi.py
     homeassistant/components/notify/llamalab_automate.py
+    homeassistant/components/notify/matrix.py
     homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/nma.py
     homeassistant/components/notify/pushbullet.py
@@ -218,6 +225,7 @@ omit =
     homeassistant/components/openalpr.py
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/sensor/arest.py
+    homeassistant/components/sensor/arwn.py
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/coinmarketcap.py
@@ -257,6 +265,7 @@ omit =
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/sabnzbd.py
+    homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/speedtest.py

@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['uber_rides==0.2.5']
+REQUIREMENTS = ['uber_rides==0.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,10 +49,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     wanted_product_ids = config.get(CONF_PRODUCT_IDS)
 
     dev = []
-    timeandpriceest = UberEstimate(session, config[CONF_START_LATITUDE],
-                                   config[CONF_START_LONGITUDE],
-                                   config.get(CONF_END_LATITUDE),
-                                   config.get(CONF_END_LONGITUDE))
+    timeandpriceest = UberEstimate(
+        session, config[CONF_START_LATITUDE], config[CONF_START_LONGITUDE],
+        config.get(CONF_END_LATITUDE), config.get(CONF_END_LONGITUDE))
     for product_id, product in timeandpriceest.products.items():
         if (wanted_product_ids is not None) and \
            (product_id not in wanted_product_ids):
@@ -114,7 +113,7 @@ class UberSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        time_estimate = self._product.get("time_estimate_seconds")
+        time_estimate = self._product.get('time_estimate_seconds')
         params = {
             'Product ID': self._product['product_id'],
             'Product short description': self._product['short_description'],
