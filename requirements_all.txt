@@ -144,6 +144,9 @@ hikvision==0.4
 # homeassistant.components.light.flux_led
 https://github.com/Danielhiversen/flux_led/archive/0.7.zip#flux_led==0.8
 
+# homeassistant.components.switch.tplink
+https://github.com/GadgetReactor/pyHS100/archive/1f771b7d8090a91c6a58931532e42730b021cbde.zip#pyHS100==0.2.0
+
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.5.zip#pyW215==0.3.5
 
@@ -181,9 +184,6 @@ https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad591540925
 
 # homeassistant.components.qwikswitch
 https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
-
-# homeassistant.components.switch.tplink
-https://github.com/kirichkov/pyHS100/archive/6e1fedb08ee475a1b8a882a51aa09241e78ac7e8.zip#pyHS100==0.2.0
 
 # homeassistant.components.media_player.russound_rnet
 https://github.com/laf/russound/archive/0.1.6.zip#russound==0.1.6
