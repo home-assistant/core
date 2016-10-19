@@ -16,7 +16,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     litejet_ = litejet.CONNECTION
 
     add_devices(LiteJetLight(hass, litejet_, i) for i in litejet_.loads())
-    # add_devices(LiteJetScene(litejet_, i) for i in litejet_.scenes())
 
 
 class LiteJetLight(Light):
@@ -69,9 +68,10 @@ class LiteJetLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn on the light."""
-        # device_brightness = kwargs.get(ATTR_BRIGHTNESS, 255) / 255 * 99
-        # device_rate = 5
-        self._lj.activate_load(self._index)
+        if ATTR_BRIGHTNESS in kwargs:
+            self._lj.activate_load_at(self._index, int(kwargs[ATTR_BRIGHTNESS] / 255 * 99), 0)
+        else:
+            self._lj.activate_load(self._index)
 
     def turn_off(self, **kwargs):
         """Turn off the light."""
@@ -80,38 +80,3 @@ class LiteJetLight(Light):
     def update(self):
         """Retrieve the light's brightness from the LiteJet system."""
         self._brightness = self._lj.get_load_level(self._index) / 99 * 255
-
-
-class LiteJetScene(Light):
-    """Represents a single LiteJet scene."""
-
-    def __init__(self, lj, i):
-        self._lj = lj
-        self._index = i
-        self._on = False
-
-        self._name = "LiteJet "+str(i)+" "+lj.get_scene_name(i)
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def is_on(self):
-        return self._on
-
-    @property
-    def should_poll(self):
-        return False
-
-    def turn_on(self, **kwargs):
-        self._lj.activate_scene(self._index)
-        self._on = True
-
-    def turn_off(self, **kwargs):
-        self._lj.deactivate_scene(self._index)
-        self._on = False
-
-    def update(self):
-        # do nothing
-        return
