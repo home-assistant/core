@@ -9,10 +9,8 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    BaseNotificationService,
-    PLATFORM_SCHEMA
-)
+from homeassistant.components.notify import (BaseNotificationService,
+    ATTR_TITLE, ATTR_DATA, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_RESOURCE, CONF_METHOD, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
@@ -53,6 +51,8 @@ class TelstraNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
 
+        title = kwargs.get(ATTR_TITLE)
+
         """Retrieve authorization first"""
         token_data = {
             'client_id': self._consumer_key,
@@ -70,9 +70,14 @@ class TelstraNotificationService(BaseNotificationService):
         token = token_response['access_token']
 
         """Send the SMS"""
+        if title:
+            text = '{} {}'.format(title, message)
+        else:
+            text = message
+
         message_data = {
             'to': self._phone_number,
-            'body': message
+            'body': text
         }
         message_resource = 'https://api.telstra.com/v1/sms/messages'
         message_headers = {
