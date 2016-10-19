@@ -95,7 +95,6 @@ omit =
     homeassistant/components/homematic.py
     homeassistant/components/*/homematic.py
 
-    homeassistant/components/pilight.py
     homeassistant/components/switch/pilight.py
 
     homeassistant/components/knx.py
