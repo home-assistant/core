@@ -312,8 +312,6 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
     def update_icloud(self, ):
         """Authenticate against iCloud and scan for devices."""
         if self.api is not None:
-            from pyicloud import PyiCloudService
-            from pyicloud.exceptions import PyiCloudFailedLoginException
             from pyicloud.exceptions import PyiCloudNoDevicesException
 
             try:
@@ -373,6 +371,7 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
 
     def devicechanged(self, entity, old_state, new_state):
         """Calculate new interval."""
+        # pylint: disable=too-many-branches
         if entity is None:
             return
 
@@ -475,6 +474,7 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
 
     def keep_alive(self, starttime, endtime, duration, title, tzone, location):
         """Keep the api alive."""
+        # pylint: disable=too-many-arguments,too-many-branches
         current = self._type == TYPE_CURRENT
         nextev = self._type == TYPE_NEXT
         self._remaining = 0
@@ -610,7 +610,8 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
     def __init__(self, hass, username, password, cookiedirectory, name,
                  ignored_devices, getevents, googletraveltime):
         """Initialize an iCloud account."""
-        # pylint: disable=too-many-arguments
+        # pylint: disable=too-many-arguments,too-many-branches
+        # pylint: disable=too-many-statements
         self.hass = hass
         self.username = username
         self.password = password
@@ -640,7 +641,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
             _LOGGER.error('Must specify a username and password')
         else:
             from pyicloud import PyiCloudService
-            from pyicloud.exceptions import PyiCloudFailedLoginException
             try:
                 # Attempt the login to iCloud
                 self.api = PyiCloudService(self.username,
@@ -798,6 +798,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
 
     def keep_alive(self):
         """Keep the api alive."""
+        # pylint: disable=too-many-locals,too-many-branches,too-many-statements
         if self.api is None:
             from pyicloud import PyiCloudService
             from pyicloud.exceptions import PyiCloudFailedLoginException
