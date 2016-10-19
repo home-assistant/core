@@ -127,19 +127,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
                                    'device_tracker.' + devicename,
                                    iclouddevice.devicechanged)
 
-        if 'manual_update' in account_config:
-            def update_now(now):
-                """Update the account, the devices and the events."""
-                ICLOUDTRACKERS[account].update_icloud()
-
-            manual_update = account_config.get('manual_update')
-            for each_time in manual_update:
-                each_time = dt_util.parse_time(each_time)
-                track_time_change(hass, update_now,
-                                  hour=each_time.hour,
-                                  minute=each_time.minute,
-                                  second=each_time.second)
-
     if not ICLOUDTRACKERS:
         _LOGGER.error("No ICLOUDTRACKERS added")
         return False
@@ -472,6 +459,24 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
         elif self._type == TYPE_NEXT:
             return 'mdi:calendar-clock'
 
+    def determine_remaining(self, whattime):
+        """Determine the time remaining."""
+        self._remaining = whattime - tempnow
+        remainingdays = self._remaining.days
+        remainingseconds = (whattime.hour * 3600 +
+                            whattime.minute * 60 +
+                            whattime.second -
+                            tempnow.hour * 3600 -
+                            tempnow.minute * 60 -
+                            tempnow.second)
+        if ((whattime.year > tempnow.year or
+             whattime.month > tempnow.month or
+             whattime.day > tempnow.day) and
+                remainingseconds < 0):
+            remainingseconds = 86400 + remainingseconds
+        self._remaining = (remainingdays * 1440 +
+                           round(remainingseconds / 60, 0))
+
     def keep_alive(self, starttime, endtime, duration, title, tzone, location):
         """Keep the api alive."""
         # pylint: disable=too-many-arguments,too-many-branches
@@ -493,21 +498,7 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                        starttime[5], 0, 0, self._tz)
             self._starttext = self._starttime.strftime("%A %d %B %Y %H.%M.%S")
             if nextev:
-                self._remaining = self._starttime - tempnow
-                remainingdays = self._remaining.days
-                remainingseconds = (self._starttime.hour * 3600 +
-                                    self._starttime.minute * 60 +
-                                    self._starttime.second -
-                                    tempnow.hour * 3600 -
-                                    tempnow.minute * 60 -
-                                    tempnow.second)
-                if ((self._starttime.year > tempnow.year or
-                     self._starttime.month > tempnow.month or
-                     self._starttime.day > tempnow.day) and
-                        remainingseconds < 0):
-                    remainingseconds = 86400 + remainingseconds
-                self._remaining = (remainingdays * 1440 +
-                                   round(remainingseconds / 60, 0))
+                self.determine_remaining(self._starttime)
         if endtime is None:
             self._endtime = None
             self._endtext = None
@@ -517,21 +508,7 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                      self._tz)
             self._endtext = self._endtime.strftime("%A %d %B %Y %H.%M.%S")
             if current:
-                self._remaining = self._endtime - tempnow
-                remainingdays = self._remaining.days
-                remainingseconds = (self._endtime.hour * 3600 +
-                                    self._endtime.minute * 60 +
-                                    self._endtime.second -
-                                    tempnow.hour * 3600 -
-                                    tempnow.minute * 60 -
-                                    tempnow.second)
-                if ((self._endtime.year > tempnow.year or
-                     self._endtime.month > tempnow.month or
-                     self._endtime.day > tempnow.day) and
-                        remainingseconds < 0):
-                    remainingseconds = 86400 + remainingseconds
-                self._remaining = (remainingdays * 1440 +
-                                   round(remainingseconds / 60, 0))
+                self.determine_remaining(self._endtime)
         self._duration = duration
         self._title = title
         if (current or nextev) and title is None:
@@ -558,38 +535,10 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
         tempnow = dt_util.now(self._tz)
         if self._starttime is not None:
             if nextev:
-                self._remaining = self._starttime - tempnow
-                remainingdays = self._remaining.days
-                remainingseconds = (self._starttime.hour * 3600 +
-                                    self._starttime.minute * 60 +
-                                    self._starttime.second -
-                                    tempnow.hour * 3600 -
-                                    tempnow.minute * 60 -
-                                    tempnow.second)
-                if ((self._starttime.year > tempnow.year or
-                     self._starttime.month > tempnow.month or
-                     self._starttime.day > tempnow.day) and
-                        remainingseconds < 0):
-                    remainingseconds = 86400 + remainingseconds
-                self._remaining = (remainingdays * 1440 +
-                                   round(remainingseconds / 60, 0))
+                self.determine_remaining(self._starttime)
         if self._endtime is not None:
             if current:
-                self._remaining = self._endtime - tempnow
-                remainingdays = self._remaining.days
-                remainingseconds = (self._endtime.hour * 3600 +
-                                    self._endtime.minute * 60 +
-                                    self._endtime.second -
-                                    tempnow.hour * 3600 -
-                                    tempnow.minute * 60 -
-                                    tempnow.second)
-                if ((self._endtime.year > tempnow.year or
-                     self._endtime.month > tempnow.month or
-                     self._endtime.day > tempnow.day) and
-                        remainingseconds < 0):
-                    remainingseconds = 86400 + remainingseconds
-                self._remaining = (remainingdays * 1440 +
-                                   round(remainingseconds / 60, 0))
+                self.determine_remaining(self._endtime)
 
         tempdays = floor(self._remaining / 1440)
         temphours = floor((self._remaining % 1440) / 60)
@@ -611,7 +560,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                  ignored_devices, getevents, googletraveltime):
         """Initialize an iCloud account."""
         # pylint: disable=too-many-arguments,too-many-branches
-        # pylint: disable=too-many-statements
+        # pylint: disable=too-many-statements,too-many-locals
         self.hass = hass
         self.username = username
         self.password = password
@@ -641,6 +590,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
             _LOGGER.error('Must specify a username and password')
         else:
             from pyicloud import PyiCloudService
+            from pyicloud.exceptions import PyiCloudFailedLoginException
             try:
                 # Attempt the login to iCloud
                 self.api = PyiCloudService(self.username,
@@ -763,7 +713,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                                                              tzone,
                                                              location)
 
-            except Exception as error:
+            except PyiCloudFailedLoginException as error:
                 _LOGGER.error('Error logging into iCloud Service: %s',
                               error)
 
