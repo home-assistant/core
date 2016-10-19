@@ -13,13 +13,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class PilightDaemonSim:
-    ''' Class to fake the interface of the pilight python package.
+    """Class to fake the interface of the pilight python package.
 
     Is used in an asyncio loop, thus the mock cannot be accessed to
     determine if methods where called?!
     This is solved here in a hackish way by printing errors
     that can be checked using logging.error mocks.
-    '''
+    """
+
     callback = None
     called = None
 
@@ -31,17 +32,18 @@ class PilightDaemonSim:
                         "off": 1}}
 
     def __init__(self, host, port):
-        '''Init pilight client, ignore parameters'''
+        """Init pilight client, ignore parameters."""
         pass
 
     def send_code(self, call):  # pylint: disable=no-self-use
-        '''Called pilight.send service is called'''
+        """Called pilight.send service is called."""
         _LOGGER.error('PilightDaemonSim payload: ' + str(call))
 
     def start(self):
-        '''Called homeassistant.start is called.
+        """Called homeassistant.start is called.
 
-        Also sends one test message after start up'''
+        Also sends one test message after start up
+        """
         _LOGGER.error('PilightDaemonSim start')
         # Fake one code receive after daemon started
         if not self.called:
@@ -49,11 +51,11 @@ class PilightDaemonSim:
             self.called = True
 
     def stop(self):  # pylint: disable=no-self-use
-        '''Called homeassistant.stop is called'''
+        """Called homeassistant.stop is called."""
         _LOGGER.error('PilightDaemonSim stop')
 
     def set_callback(self, function):
-        '''Callback called  on event pilight.pilight_received'''
+        """Callback called  on event pilight.pilight_received."""
         self.callback = function
         _LOGGER.error('PilightDaemonSim callback: ' + str(function))
 
@@ -62,12 +64,12 @@ class TestPilight(unittest.TestCase):
     """Test the Pilight component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started"""
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     @patch('homeassistant.components.pilight._LOGGER.error')
     def test_connection_failed_error(self, mock_error):
-        ''' Try to connect at 127.0.0.1:5000 with socket error'''
+        """Try to connect at 127.0.0.1:5000 with socket error."""
         with assert_setup_component(3):
             with patch('pilight.pilight.Client',
                        side_effect=socket.error) as mock_client:
@@ -79,7 +81,7 @@ class TestPilight(unittest.TestCase):
 
     @patch('homeassistant.components.pilight._LOGGER.error')
     def test_connection_timeout_error(self, mock_error):
-        '''Try to connect at 127.0.0.1:5000 with socket timeout'''
+        """Try to connect at 127.0.0.1:5000 with socket timeout."""
         with assert_setup_component(3):
             with patch('pilight.pilight.Client',
                        side_effect=socket.timeout) as mock_client:
@@ -93,7 +95,7 @@ class TestPilight(unittest.TestCase):
     @patch('homeassistant.core._LOGGER.error')
     @patch('tests.components.test_pilight._LOGGER.error')
     def test_send_code_no_protocol(self, mock_pilight_error, mock_error):
-        '''Try to send data without protocol information, should give error'''
+        """Try to send data without protocol information, should give error."""
         with assert_setup_component(3):
             self.assertTrue(setup_component(
                 self.hass, pilight.DOMAIN, {pilight.DOMAIN: {}}))
@@ -112,7 +114,7 @@ class TestPilight(unittest.TestCase):
     @patch('pilight.pilight.Client', PilightDaemonSim)
     @patch('tests.components.test_pilight._LOGGER.error')
     def test_send_code(self, mock_pilight_error):
-        '''Try to send proper data'''
+        """Try to send proper data."""
         with assert_setup_component(3):
             self.assertTrue(setup_component(
                 self.hass, pilight.DOMAIN, {pilight.DOMAIN: {}}))
@@ -131,7 +133,7 @@ class TestPilight(unittest.TestCase):
     @patch('pilight.pilight.Client', PilightDaemonSim)
     @patch('homeassistant.components.pilight._LOGGER.error')
     def test_send_code_fail(self, mock_pilight_error):
-        '''Check IOError exception error message'''
+        """Check IOError exception error message."""
         with assert_setup_component(3):
             with patch('pilight.pilight.Client.send_code',
                        side_effect=IOError):
@@ -151,7 +153,7 @@ class TestPilight(unittest.TestCase):
     @patch('pilight.pilight.Client', PilightDaemonSim)
     @patch('tests.components.test_pilight._LOGGER.error')
     def test_start_stop(self, mock_pilight_error):
-        '''Check correct startup and stop of pilight daemon'''
+        """Check correct startup and stop of pilight daemon."""
         with assert_setup_component(3):
             self.assertTrue(setup_component(
                 self.hass, pilight.DOMAIN, {pilight.DOMAIN: {}}))
@@ -175,7 +177,7 @@ class TestPilight(unittest.TestCase):
     @patch('pilight.pilight.Client', PilightDaemonSim)
     @patch('homeassistant.core._LOGGER.info')
     def test_receive_code(self, mock_info):
-        '''Check if code receiving via pilight daemon works'''
+        """Check if code receiving via pilight daemon works."""
         with assert_setup_component(3):
             self.assertTrue(setup_component(
                 self.hass, pilight.DOMAIN, {pilight.DOMAIN: {}}))
@@ -198,7 +200,7 @@ class TestPilight(unittest.TestCase):
     @patch('pilight.pilight.Client', PilightDaemonSim)
     @patch('homeassistant.core._LOGGER.info')
     def test_whitelist_exact_match(self, mock_info):
-        '''Check whitelist filter with matched data'''
+        """Check whitelist filter with matched data."""
         with assert_setup_component(3):
             whitelist = {
                 'protocol': [PilightDaemonSim.test_message['protocol']],
@@ -226,7 +228,7 @@ class TestPilight(unittest.TestCase):
     @patch('pilight.pilight.Client', PilightDaemonSim)
     @patch('homeassistant.core._LOGGER.info')
     def test_whitelist_partial_match(self, mock_info):
-        '''Check whitelist filter with partially matched data, should work'''
+        """Check whitelist filter with partially matched data, should work."""
         with assert_setup_component(3):
             whitelist = {
                 'protocol': [PilightDaemonSim.test_message['protocol']],
@@ -252,7 +254,7 @@ class TestPilight(unittest.TestCase):
     @patch('pilight.pilight.Client', PilightDaemonSim)
     @patch('homeassistant.core._LOGGER.info')
     def test_whitelist_or_match(self, mock_info):
-        '''Check whitelist filter with several subsection, should work'''
+        """Check whitelist filter with several subsection, should work."""
         with assert_setup_component(3):
             whitelist = {
                 'protocol': [PilightDaemonSim.test_message['protocol'],
@@ -279,7 +281,7 @@ class TestPilight(unittest.TestCase):
     @patch('pilight.pilight.Client', PilightDaemonSim)
     @patch('homeassistant.core._LOGGER.info')
     def test_whitelist_no_match(self, mock_info):
-        '''Check whitelist filter with unmatched data, should not work'''
+        """Check whitelist filter with unmatched data, should not work."""
         with assert_setup_component(3):
             whitelist = {
                 'protocol': ['wrong_protocoll'],
