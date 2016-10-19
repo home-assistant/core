@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class NeatoConnectedSwitch(ToggleEntity):
-    """ThinkingCleaner Switch (dock, clean, find me)."""
+    """Neato Connected Switch (clean)."""
 
     def __init__(self, robot, switch_type):
         """Initialize the Neato Connected switch."""
@@ -68,9 +68,10 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.lock = False
         self.last_lock_time = None
         self.graceful_state = False
+        self._state = None
 
     def lock_update(self):
-        """Lock the update since TC clean takes some time to update."""
+        """Lock the update since Neato clean takes some time to start."""
         if self.is_update_locked():
             return
         self.lock = True
@@ -101,12 +102,11 @@ class NeatoConnectedSwitch(ToggleEntity):
     @property
     def state(self):
         """Return the state."""
-        State = self.robot.state
-        if not State['availableCommands']['start'] and \
-           not State['availableCommands']['stop'] and \
-           not State['availableCommands']['pause'] and \
-           not State['availableCommands']['resume'] and \
-           not State['availableCommands']['goToBase']:
+        if not self._state['availableCommands']['start'] and \
+           not self._state['availableCommands']['stop'] and \
+           not self._state['availableCommands']['pause'] and \
+           not self._state['availableCommands']['resume'] and \
+           not self._state['availableCommands']['goToBase']:
             return STATE_UNAVAILABLE
         return STATE_ON if self.is_on else STATE_OFF
 
@@ -118,10 +118,9 @@ class NeatoConnectedSwitch(ToggleEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        State = self.robot.state
         if self.is_update_locked():
             return self.graceful_state
-        if State['action'] == 1 and State['state'] == 2:
+        if self._state['action'] == 1 and self._state['state'] == 2:
             return True
         return False
 
@@ -131,7 +130,10 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.robot.start_cleaning()
 
     def turn_off(self, **kwargs):
-        """Turn the device off. (Return Robot to base)"""
+        """Turn the device off (Return Robot to base)."""
         self.robot.pause_cleaning()
         time.sleep(1)
         self.robot.send_to_base()
+
+    def update(self):
+        self._state = self.robot.state
