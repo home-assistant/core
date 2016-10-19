@@ -458,24 +458,6 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
         elif self._type == TYPE_NEXT:
             return 'mdi:calendar-clock'
 
-    def determine_remaining(self, whattime, tempnow):
-        """Determine the time remaining."""
-        self._remaining = whattime - tempnow
-        remainingdays = self._remaining.days
-        remainingseconds = (whattime.hour * 3600 +
-                            whattime.minute * 60 +
-                            whattime.second -
-                            tempnow.hour * 3600 -
-                            tempnow.minute * 60 -
-                            tempnow.second)
-        if ((whattime.year > tempnow.year or
-             whattime.month > tempnow.month or
-             whattime.day > tempnow.day) and
-                remainingseconds < 0):
-            remainingseconds = 86400 + remainingseconds
-        self._remaining = (remainingdays * 1440 +
-                           round(remainingseconds / 60, 0))
-
     def keep_alive(self, starttime, endtime, duration, title, tzone, location):
         """Keep the api alive."""
         # pylint: disable=too-many-arguments,too-many-branches
@@ -497,7 +479,21 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                        starttime[5], 0, 0, self._tz)
             self._starttext = self._starttime.strftime("%A %d %B %Y %H.%M.%S")
             if nextev:
-                self.determine_remaining(self._starttime, tempnow)
+                self._remaining = self._starttime - tempnow
+                remainingdays = self._remaining.days
+                remainingseconds = (self._starttime.hour * 3600 +
+                                    self._starttime.minute * 60 +
+                                    self._starttime.second -
+                                    tempnow.hour * 3600 -
+                                    tempnow.minute * 60 -
+                                    tempnow.second)
+                if ((self._starttime.year > tempnow.year or
+                     self._starttime.month > tempnow.month or
+                     self._starttime.day > tempnow.day) and
+                        remainingseconds < 0):
+                    remainingseconds = 86400 + remainingseconds
+                self._remaining = (remainingdays * 1440 +
+                                   round(remainingseconds / 60, 0))
         if endtime is None:
             self._endtime = None
             self._endtext = None
@@ -507,7 +503,21 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                      self._tz)
             self._endtext = self._endtime.strftime("%A %d %B %Y %H.%M.%S")
             if current:
-                self.determine_remaining(self._endtime, tempnow)
+                self._remaining = self._endtime - tempnow
+                remainingdays = self._remaining.days
+                remainingseconds = (self._endtime.hour * 3600 +
+                                    self._endtime.minute * 60 +
+                                    self._endtime.second -
+                                    tempnow.hour * 3600 -
+                                    tempnow.minute * 60 -
+                                    tempnow.second)
+                if ((self._endtime.year > tempnow.year or
+                     self._endtime.month > tempnow.month or
+                     self._endtime.day > tempnow.day) and
+                        remainingseconds < 0):
+                    remainingseconds = 86400 + remainingseconds
+                self._remaining = (remainingdays * 1440 +
+                                   round(remainingseconds / 60, 0))
         self._duration = duration
         self._title = title
         if (current or nextev) and title is None:
@@ -534,10 +544,38 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
         tempnow = dt_util.now(self._tz)
         if self._starttime is not None:
             if nextev:
-                self.determine_remaining(self._starttime, tempnow)
+                self._remaining = self._starttime - tempnow
+                remainingdays = self._remaining.days
+                remainingseconds = (self._starttime.hour * 3600 +
+                                    self._starttime.minute * 60 +
+                                    self._starttime.second -
+                                    tempnow.hour * 3600 -
+                                    tempnow.minute * 60 -
+                                    tempnow.second)
+                if ((self._starttime.year > tempnow.year or
+                     self._starttime.month > tempnow.month or
+                     self._starttime.day > tempnow.day) and
+                        remainingseconds < 0):
+                    remainingseconds = 86400 + remainingseconds
+                self._remaining = (remainingdays * 1440 +
+                                   round(remainingseconds / 60, 0))
         if self._endtime is not None:
             if current:
-                self.determine_remaining(self._endtime, tempnow)
+                self._remaining = self._endtime - tempnow
+                remainingdays = self._remaining.days
+                remainingseconds = (self._endtime.hour * 3600 +
+                                    self._endtime.minute * 60 +
+                                    self._endtime.second -
+                                    tempnow.hour * 3600 -
+                                    tempnow.minute * 60 -
+                                    tempnow.second)
+                if ((self._endtime.year > tempnow.year or
+                     self._endtime.month > tempnow.month or
+                     self._endtime.day > tempnow.day) and
+                        remainingseconds < 0):
+                    remainingseconds = 86400 + remainingseconds
+                self._remaining = (remainingdays * 1440 +
+                                   round(remainingseconds / 60, 0))
 
         tempdays = floor(self._remaining / 1440)
         temphours = floor((self._remaining % 1440) / 60)
