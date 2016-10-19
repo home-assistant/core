@@ -1,7 +1,4 @@
 """
-homeassistant.components.icloud
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Platform that supports scanning iCloud.
 
 For more details about this platform, please refer to the documentation at
@@ -140,7 +137,7 @@ def setup(hass, config): # pylint: disable=too-many-locals,too-many-branches
         if 'manual_update' in account_config:
             def update_now(now):
                 """Update the account, the devices and the events."""
-                ICLOUDTRACKERS[account].update_icloud(see)
+                ICLOUDTRACKERS[account].update_icloud()
 
             manual_update = account_config.get('manual_update')
             for each_time in manual_update:
@@ -175,9 +172,9 @@ def setup(hass, config): # pylint: disable=too-many-locals,too-many-branches
         devicename = call.data.get('devicename')
         if accountname is None:
             for account in ICLOUDTRACKERS:
-                ICLOUDTRACKERS[account].update_icloud(see, devicename)
+                ICLOUDTRACKERS[account].update_icloud(devicename)
         elif accountname in ICLOUDTRACKERS:
-            ICLOUDTRACKERS[accountname].update_icloud(see, devicename)
+            ICLOUDTRACKERS[accountname].update_icloud(devicename)
     hass.services.register(DOMAIN,
                            'update_icloud', update_icloud)
 
@@ -214,7 +211,9 @@ def setup(hass, config): # pylint: disable=too-many-locals,too-many-branches
 
 class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
     """Represent an iDevice in Home Assistant."""
+
     def __init__(self, hass, icloudobject, name, identifier, googletraveltime):
+        """Initialize the iDevice."""
         # pylint: disable=too-many-arguments
         self.hass = hass
         self.icloudobject = icloudobject
@@ -285,11 +284,11 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
         """Keep the api alive."""
         currentminutes = dt_util.now().hour * 60 + dt_util.now().minute
         if currentminutes % self._interval == 0:
-            self.update_icloud(see)
+            self.update_icloud()
         elif self._interval > 10 and currentminutes % self._interval == 2:
-            self.update_icloud(see)
+            self.update_icloud()
         elif self._interval > 10 and currentminutes % self._interval == 4:
-            self.update_icloud(see)
+            self.update_icloud()
 
         self._gttduration = None
         self._gttorigin = None
@@ -307,15 +306,15 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
             self.api.authenticate()
             self.identifier.play_sound()
 
-    def data_is_accurate(self, data):
-        """Check if location data is accurate"""
+    def data_is_accurate(data):
+        """Check if location data is accurate."""
         if not data:
             return False
         elif not data['locationFinished']:
             return False
         return True
 
-    def update_icloud(self, see):
+    def update_icloud(self, ):
         """Authenticate against iCloud and scan for devices."""
         if self.api is not None:
             from pyicloud.exceptions import PyiCloudNoDevicesException
@@ -373,7 +372,7 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
         else:
             self.get_default_interval()
         self.update_ha_state()
-        self.update_icloud(see)
+        self.update_icloud()
 
     def devicechanged(self, entity, old_state, new_state):
         """Calculate new interval."""
@@ -427,7 +426,9 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
 
 class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
     """Represent an icloud calendar event in Home Assistant."""
-    def __init__(self, hass, icloudobject, name, type=None):
+
+    def __init__(self, hass, icloudobject, name, typeevent=None):
+        """Initialize an iEvent."""
         # pylint: disable=too-many-arguments
         self.hass = hass
         self.icloudobject = icloudobject
@@ -442,7 +443,7 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
         self._remaining = 0
         self._remainingtext = None
         self._location = None
-        self._type = type
+        self._type = typeevent
         self._tz = None
 
         self.entity_id = generate_entity_id(
@@ -503,8 +504,8 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                     tempnow.minute * 60 -
                                     tempnow.second)
                 if ((self._starttime.year > tempnow.year or
-                        self._starttime.month > tempnow.month or
-                        self._starttime.day > tempnow.day) and
+                     self._starttime.month > tempnow.month or
+                     self._starttime.day > tempnow.day) and
                         remainingseconds < 0):
                     remainingseconds = 86400 + remainingseconds
                 self._remaining = (remainingdays * 1440 +
@@ -527,8 +528,8 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                     tempnow.minute * 60 -
                                     tempnow.second)
                 if ((self._endtime.year > tempnow.year or
-                        self._endtime.month > tempnow.month or
-                        self._endtime.day > tempnow.day) and
+                     self._endtime.month > tempnow.month or
+                     self._endtime.day > tempnow.day) and
                         remainingseconds < 0):
                     remainingseconds = 86400 + remainingseconds
                 self._remaining = (remainingdays * 1440 +
@@ -568,8 +569,8 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                     tempnow.minute * 60 -
                                     tempnow.second)
                 if ((self._starttime.year > tempnow.year or
-                        self._starttime.month > tempnow.month or
-                        self._starttime.day > tempnow.day) and
+                     self._starttime.month > tempnow.month or
+                     self._starttime.day > tempnow.day) and
                         remainingseconds < 0):
                     remainingseconds = 86400 + remainingseconds
                 self._remaining = (remainingdays * 1440 +
@@ -585,8 +586,8 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                     tempnow.minute * 60 -
                                     tempnow.second)
                 if ((self._endtime.year > tempnow.year or
-                        self._endtime.month > tempnow.month or
-                        self._endtime.day > tempnow.day) and
+                     self._endtime.month > tempnow.month or
+                     self._endtime.day > tempnow.day) and
                         remainingseconds < 0):
                     remainingseconds = 86400 + remainingseconds
                 self._remaining = (remainingdays * 1440 +
@@ -606,8 +607,10 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
 
 class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
     """Represent an icloud account in Home Assistant."""
+
     def __init__(self, hass, username, password, cookiedirectory, name,
                  ignored_devices, getevents, googletraveltime):
+        """Initialize an iCloud account."""
         # pylint: disable=too-many-arguments
         self.hass = hass
         self.username = username
@@ -788,12 +791,12 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         """Return the icon to use for device if any."""
         return 'mdi:account'
 
-    def get_key(self, item):
+    def get_key(item):
         """Sort key of events."""
         return item.get('startDate')
 
     def keep_alive(self):
-        """ Keeps the api alive """
+        """Keep the api alive."""
         if self.api is None:
             try:
                 # Attempt the login to iCloud
@@ -966,7 +969,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                 for device in self.devices:
                     self.devices[device].lost_iphone()
 
-    def update_icloud(self, see, devicename=None):
+    def update_icloud(self, devicename=None):
         """Authenticate against iCloud and scan for devices."""
         if self.api is not None:
             from pyicloud.exceptions import PyiCloudNoDevicesException
@@ -977,13 +980,13 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                 self.api.authenticate()
                 if devicename is not None:
                     if devicename in self.devices:
-                        self.devices[devicename].update_icloud(see)
+                        self.devices[devicename].update_icloud()
                     else:
                         _LOGGER.error("devicename %s unknown for account %s",
                                       devicename, self.accountname)
                 else:
                     for device in self.devices:
-                        self.devices[device].update_icloud(see)
+                        self.devices[device].update_icloud()
 
             except PyiCloudNoDevicesException:
                 _LOGGER.error('No iCloud Devices found!')
@@ -993,7 +996,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         if devicename is None:
             for device in self.devices:
                 self.devices[device].setinterval(interval)
-                self.devices[device].update_icloud(see)
+                self.devices[device].update_icloud()
         elif devicename in self.devices:
             self.devices[devicename].setinterval(interval)
-            self.devices[devicename].update_icloud(see)
+            self.devices[devicename].update_icloud()
