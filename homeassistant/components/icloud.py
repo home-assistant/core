@@ -18,7 +18,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.components.device_tracker import see
 from homeassistant.helpers.event import track_state_change
-from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
@@ -459,7 +458,7 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
         elif self._type == TYPE_NEXT:
             return 'mdi:calendar-clock'
 
-    def determine_remaining(self, whattime):
+    def determine_remaining(self, whattime, tempnow):
         """Determine the time remaining."""
         self._remaining = whattime - tempnow
         remainingdays = self._remaining.days
@@ -498,7 +497,7 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                        starttime[5], 0, 0, self._tz)
             self._starttext = self._starttime.strftime("%A %d %B %Y %H.%M.%S")
             if nextev:
-                self.determine_remaining(self._starttime)
+                self.determine_remaining(self._starttime, tempnow)
         if endtime is None:
             self._endtime = None
             self._endtext = None
@@ -508,7 +507,7 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
                                      self._tz)
             self._endtext = self._endtime.strftime("%A %d %B %Y %H.%M.%S")
             if current:
-                self.determine_remaining(self._endtime)
+                self.determine_remaining(self._endtime, tempnow)
         self._duration = duration
         self._title = title
         if (current or nextev) and title is None:
@@ -535,10 +534,10 @@ class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
         tempnow = dt_util.now(self._tz)
         if self._starttime is not None:
             if nextev:
-                self.determine_remaining(self._starttime)
+                self.determine_remaining(self._starttime, tempnow)
         if self._endtime is not None:
             if current:
-                self.determine_remaining(self._endtime)
+                self.determine_remaining(self._endtime, tempnow)
 
         tempdays = floor(self._remaining / 1440)
         temphours = floor((self._remaining % 1440) / 60)
