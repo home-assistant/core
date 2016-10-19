@@ -12,8 +12,8 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/kirichkov/pyHS100/archive/'
-                '6e1fedb08ee475a1b8a882a51aa09241e78ac7e8.zip#pyHS100==0.2.0']
+REQUIREMENTS = ['https://github.com/GadgetReactor/pyHS100/archive/'
+                '1f771b7d8090a91c6a58931532e42730b021cbde.zip#pyHS100==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
