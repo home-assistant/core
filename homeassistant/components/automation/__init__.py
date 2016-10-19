@@ -282,7 +282,7 @@ class AutomationEntity(ToggleEntity):
         This method is a coroutine.
         """
         if skip_condition or self._cond_func(variables):
-            yield from self._async_action(variables)
+            yield from self._async_action(self.entity_id, variables)
             self._last_triggered = utcnow()
             self.hass.loop.create_task(self.async_update_ha_state())
 
@@ -357,10 +357,11 @@ def _async_get_action(hass, config, name):
     script_obj = script.Script(hass, config, name)
 
     @asyncio.coroutine
-    def action(variables=None):
+    def action(entity_id, variables):
         """Action to be executed."""
         _LOGGER.info('Executing %s', name)
-        logbook.async_log_entry(hass, name, 'has been triggered', DOMAIN)
+        logbook.async_log_entry(
+            hass, name, 'has been triggered', DOMAIN, entity_id)
         hass.loop.create_task(script_obj.async_run(variables))
 
     return action
