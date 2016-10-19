@@ -8,8 +8,6 @@ import logging
 
 from datetime import timedelta
 
-import uuid
-import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -19,10 +17,11 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_API_KEY, CONF_PORT, DEVICE_DEFAULT_NAME, STATE_IDLE,
-    STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONTENT_TYPE_JSON,
-    MAJOR_VERSION, MINOR_VERSION)
+    STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 from homeassistant.helpers.event import (track_utc_time_change)
 from homeassistant.util import Throttle
+
+REQUIREMENTS = ['pyemby==0.1']
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
@@ -43,15 +42,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Emby platform."""
-    host = config.get(CONF_HOST)
-    key = config.get(CONF_API_KEY)
-    port = config.get(CONF_PORT)
+    from pyemby.emby import EmbyRemote
 
-    url = '{}:{}'.format(host, port)
+    _host = config.get(CONF_HOST)
+    _key = config.get(CONF_API_KEY)
+    _port = config.get(CONF_PORT)
 
-    _LOGGER.info('Setting up Emby server at: %s', url)
+    _url = '{}:{}'.format(_host, _port)
 
-    embyserver = EmbyRemote(key, url)
+    _LOGGER.info('Setting up Emby server at: %s', _url)
+
+    embyserver = EmbyRemote(_key, _url)
 
     emby_clients = {}
     emby_sessions = {}
@@ -95,100 +96,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     update_devices()
     update_sessions()
-
-
-class EmbyRemote:
-    """Emby API Connection Handler."""
-
-    def __init__(self, api_key, server_url):
-        """Initialize Emby API class."""
-        self.api_key = api_key
-        self.server_url = server_url
-        self.emby_id = uuid.uuid4().hex
-
-        # Build requests session
-        self.emby_request = requests.Session()
-        self.emby_request.timeout = 5
-        self.emby_request.stream = False
-        self.emby_request.headers.update({'Content-Type': CONTENT_TYPE_JSON,
-                                          'Accept': CONTENT_TYPE_JSON})
-
-    @property
-    def unique_id(self):
-        """Return unique ID for connection to Emby."""
-        return self.emby_id
-
-    @property
-    def get_sessions_url(self):
-        """Return the session url."""
-        return self.server_url + '/Sessions?api_key={0}'
-
-    @property
-    def playstate_url(self):
-        """Return the playstate url."""
-        return self.server_url + '/Sessions/{0}/Playing/{1}?api_key={2}'
-
-    @property
-    def get_image_url(self):
-        """Return the image url."""
-        return self.server_url + \
-            '/Items/{0}/Images/{1}?api_key={2}&PercentPlayed={3}'
-
-    def get_sessions(self):
-        """Return active client sessions."""
-        url = self.get_sessions_url.format(self.api_key)
-
-        try:
-            response = self.emby_request.get(url)
-        except requests.exceptions.RequestException as err:
-            _LOGGER.error('Requests error getting sessions: %s', err)
-            return
-        else:
-            clients = response.json()
-            return clients
-
-    def set_playstate(self, session, state):
-        """Send media commands to client."""
-        url = self.playstate_url.format(
-            session['Id'], state, self.api_key)
-        headers = {'x-emby-authorization':
-                   'MediaBrowser Client="Emby Mobile",'
-                   'Device="Home Assistant",'
-                   'DeviceId="{}",'
-                   'Version="{}.{}"'.format(
-                       self.unique_id, MAJOR_VERSION, MINOR_VERSION)}
-
-        _LOGGER.debug('Playstate request state: %s, URL: %s', state, url)
-
-        try:
-            self.emby_request.post(url, headers=headers)
-        except requests.exceptions.RequestException as err:
-            _LOGGER.error('Requests error setting playstate: %s', err)
-            return
-
-    def play(self, session):
-        """Call play command."""
-        self.set_playstate(session, 'unpause')
-
-    def pause(self, session):
-        """Call pause command."""
-        self.set_playstate(session, 'pause')
-
-    def stop(self, session):
-        """Call stop command."""
-        self.set_playstate(session, 'stop')
-
-    def next_track(self, session):
-        """Call next track command."""
-        self.set_playstate(session, 'nexttrack')
-
-    def previous_track(self, session):
-        """Call previous track command."""
-        self.set_playstate(session, 'previoustrack')
-
-    def get_image(self, item_id, style, played=0):
-        """Return media image."""
-        return self.get_image_url.format(item_id, style, self.api_key, played)
 
 
 class EmbyClient(MediaPlayerDevice):
