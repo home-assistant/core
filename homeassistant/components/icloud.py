@@ -655,7 +655,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                     to_dt = from_dt + timedelta(days=7)
                     events = self.api.calendar.events(from_dt, to_dt)
                     new_events = sorted(events, key=self.get_key)
-                    tzone = pytz.utc
                     for event in new_events:
                         tzone = event['tz']
                         if tzone is None:
@@ -690,14 +689,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                                                                 title,
                                                                 tzone,
                                                                 location)
-
-                        starttime = None
-                        endtime = None
-                        duration = None
-                        title = None
-                        tzone = pytz.utc
-                        location = None
-                        guid = None
 
                     for event in new_events:
                         tzone = event['tz']
@@ -795,7 +786,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                 to_dt = from_dt + timedelta(days=7)
                 events = self.api.calendar.events(from_dt, to_dt)
                 new_events = sorted(events, key=self.get_key)
-                tzone = pytz.utc
                 for event in new_events:
                     tzone = event['tz']
                     if tzone is None:
@@ -831,13 +821,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                                                             title,
                                                             tzone,
                                                             location)
-                    starttime = None
-                    endtime = None
-                    duration = None
-                    title = None
-                    tzone = pytz.utc
-                    location = None
-                    guid = None
 
                 for addedevent in self.currentevents:
                     found = False
@@ -854,7 +837,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                     else:
                         self.currentevents[addedevent].check_alive()
 
-                tzone = pytz.utc
                 for event in new_events:
                     tzone = event['tz']
                     if tzone is None:
