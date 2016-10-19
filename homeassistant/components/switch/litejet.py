@@ -56,6 +56,12 @@ class LiteJetSwitch(SwitchDevice):
     def should_poll(self):
         return False
 
+    @property
+    def device_state_attributes(self):
+        return {
+            ATTR_NUMBER: self._index
+        }
+
     def turn_on(self, **kwargs):
         self._lj.press_switch(self._index)
 

@@ -35,5 +35,6 @@ def setup(hass, config):
 
     discovery.load_platform(hass, 'light', DOMAIN, {}, config)
     discovery.load_platform(hass, 'switch', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'scene', DOMAIN, {}, config)
 
     return True

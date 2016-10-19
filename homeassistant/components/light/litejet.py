@@ -6,6 +6,8 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, Light
 
 DEPENDENCIES = ['litejet']
 
+ATTR_NUMBER = 'number'
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -58,6 +60,12 @@ class LiteJetLight(Light):
     def should_poll(self):
         """LiteJet lights do not require polling."""
         return False
+
+    @property
+    def device_state_attributes(self):
+        return {
+            ATTR_NUMBER: self._index
+        }
 
     def turn_on(self, **kwargs):
         """Turn on the light."""
