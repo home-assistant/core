@@ -28,13 +28,13 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         CONF_EXCLUDE: vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
-                                                            [cv.string])
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
         }),
         CONF_INCLUDE: vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
-                                                            [cv.string])
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
         })
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -244,7 +244,7 @@ class Filters(object):
         self.included_domains = []
 
     def apply(self, query, entity_ids=None):
-        """Apply the Include/exclude filter on domains and entities on query.
+        """Apply the include/exclude filter on domains and entities on query.
 
         Following rules apply:
         * only the include section is configured - just query the specified
@@ -278,8 +278,8 @@ class Filters(object):
                 filter_query &= (states.domain.in_(self.included_domains) |
                                  states.entity_id.in_(self.included_entities))
             else:
-                filter_query &= (states.domain.in_(self.included_domains) &
-                                 ~states.domain.in_(self.excluded_domains))
+                filter_query &= (states.domain.in_(self.included_domains) & ~
+                                 states.domain.in_(self.excluded_domains))
         # no domain filter just included entities
         elif not self.excluded_domains and not self.included_domains and \
                 self.included_entities:

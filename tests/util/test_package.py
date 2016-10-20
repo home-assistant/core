@@ -12,8 +12,8 @@ import homeassistant.util.package as package
 RESOURCE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..', 'resources'))
 
-TEST_EXIST_REQ = "pip>=7.0.0"
-TEST_NEW_REQ = "pyhelloworld3==1.0.0"
+TEST_EXIST_REQ = 'pip>=7.0.0'
+TEST_NEW_REQ = 'pyhelloworld3==1.0.0'
 TEST_ZIP_REQ = 'file://{}#{}' \
     .format(os.path.join(RESOURCE_DIR, 'pyhelloworld3.zip'), TEST_NEW_REQ)
 
@@ -48,8 +48,8 @@ class TestPackageUtilInstallPackage(unittest.TestCase):
         self.assertEqual(
             mock_subprocess.call_args,
             call([
-                mock_sys.executable, '-m', 'pip',
-                'install', '--quiet', TEST_NEW_REQ
+                mock_sys.executable, '-m', 'pip', 'install', '--quiet',
+                TEST_NEW_REQ
             ])
         )
 
@@ -67,8 +67,8 @@ class TestPackageUtilInstallPackage(unittest.TestCase):
         self.assertEqual(
             mock_subprocess.call_args,
             call([
-                mock_sys.executable, '-m', 'pip', 'install',
-                '--quiet', TEST_NEW_REQ, '--upgrade'
+                mock_sys.executable, '-m', 'pip', 'install', '--quiet',
+                TEST_NEW_REQ, '--upgrade'
             ])
         )
 
@@ -96,9 +96,8 @@ class TestPackageUtilInstallPackage(unittest.TestCase):
 
     @patch('homeassistant.util.package._LOGGER')
     @patch('homeassistant.util.package.sys')
-    def test_install_error(
-            self, mock_sys, mock_logger, mock_exists, mock_subprocess
-    ):
+    def test_install_error(self, mock_sys, mock_logger, mock_exists,
+                           mock_subprocess):
         """Test an install with a target."""
         mock_exists.return_value = False
         mock_subprocess.side_effect = [subprocess.SubprocessError]
@@ -112,13 +111,13 @@ class TestPackageUtilCheckPackageExists(unittest.TestCase):
     """Test for homeassistant.util.package module."""
 
     def test_check_package_global(self):
-        """Test for a globally-installed package"""
+        """Test for a globally-installed package."""
         installed_package = list(pkg_resources.working_set)[0].project_name
 
         self.assertTrue(package.check_package_exists(installed_package, None))
 
     def test_check_package_local(self):
-        """Test for a locally-installed package"""
+        """Test for a locally-installed package."""
         lib_dir = get_python_lib()
         installed_package = list(pkg_resources.working_set)[0].project_name
 
@@ -127,5 +126,5 @@ class TestPackageUtilCheckPackageExists(unittest.TestCase):
         )
 
     def test_check_package_zip(self):
-        """Test for an installed zip package"""
+        """Test for an installed zip package."""
         self.assertFalse(package.check_package_exists(TEST_ZIP_REQ, None))
