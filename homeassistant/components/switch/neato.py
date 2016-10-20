@@ -8,6 +8,7 @@ import time
 import logging
 from datetime import timedelta
 from urllib.error import HTTPError
+from requests.exceptions import HTTPError as req_HTTPError
 
 import voluptuous as vol
 
@@ -102,11 +103,12 @@ class NeatoConnectedSwitch(ToggleEntity):
     @property
     def state(self):
         """Return the state."""
-        if not self._state['availableCommands']['start'] and \
+        if not self._state or \
+           ( not self._state['availableCommands']['start'] and \
            not self._state['availableCommands']['stop'] and \
            not self._state['availableCommands']['pause'] and \
            not self._state['availableCommands']['resume'] and \
-           not self._state['availableCommands']['goToBase']:
+           not self._state['availableCommands']['goToBase'] ):
             return STATE_UNAVAILABLE
         return STATE_ON if self.is_on else STATE_OFF
 
@@ -139,7 +141,7 @@ class NeatoConnectedSwitch(ToggleEntity):
         """Refresh Robot state from Neato API."""
         try:
             self._state = self.robot.state
-        except HTTPError:
+        except req_HTTPError:
             _LOGGER.error("Unable to retrieve to Robot State.")
             self._state = None
             return False
