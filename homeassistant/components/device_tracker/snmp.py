@@ -57,14 +57,14 @@ class SnmpScanner(object):
 
         self.host = cmdgen.UdpTransportTarget((config[CONF_HOST], 161))
         if config[CONF_AUTHKEY] is None or config[CONF_PRIVKEY] is None:
-          self.version = 1
-          self.community = cmdgen.CommunityData(config[CONF_COMMUNITY])
+            self.version = 1
+            self.community = cmdgen.CommunityData(config[CONF_COMMUNITY])
         else:
-          self.version = 3
-          self.userdata = cmdgen.UsmUserData(config[CONF_COMMUNITY],
-              config[CONF_AUTHKEY], config[CONF_PRIVKEY],
-              authProtocol=cfg.usmHMACSHAAuthProtocol, 
-              privProtocol=cfg.usmAesCfb128Protocol)
+            self.version = 3
+            self.userdata = cmdgen.UsmUserData(config[CONF_COMMUNITY],
+                config[CONF_AUTHKEY], config[CONF_PRIVKEY],
+                authProtocol=cfg.usmHMACSHAAuthProtocol,
+                privProtocol=cfg.usmAesCfb128Protocol)
         self.baseoid = cmdgen.MibVariable(config[CONF_BASEOID])
 
         self.lock = threading.Lock()
@@ -110,11 +110,11 @@ class SnmpScanner(object):
         devices = []
 
         if self.version == 3:
-          errindication, errstatus, errindex, restable = self.snmp.nextCmd(
-              self.userdata, self.host, self.baseoid)
+            errindication, errstatus, errindex, restable = self.snmp.nextCmd(
+                self.userdata, self.host, self.baseoid)
         else:
-          errindication, errstatus, errindex, restable = self.snmp.nextCmd(
-              self.community, self.host, self.baseoid)
+            errindication, errstatus, errindex, restable = self.snmp.nextCmd(
+                self.community, self.host, self.baseoid)
 
         if errindication:
             _LOGGER.error("SNMPLIB error: %s", errindication)
