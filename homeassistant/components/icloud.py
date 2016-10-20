@@ -10,15 +10,17 @@ from math import floor
 import random
 import re
 
+import voluptuous as vol
+
 from pytz import timezone
 import pytz
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity import (Entity, generate_entity_id)
 from homeassistant.components.device_tracker import see
-from homeassistant.helpers.event import track_state_change
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.event import (track_state_change,
+    track_utc_time_change)
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
 
@@ -30,13 +32,14 @@ DEPENDENCIES = ['zone', 'device_tracker']
 
 CONF_EVENTS = 'events'
 DEFAULT_EVENTS = False
-
+CONF_IGNORED_DEVICES = 'ignored_devices'
+CONF_GMTT = 'google_maps_travel_time'
 CONF_COOKIEDIRECTORY = 'cookiedirectory'
 
 # entity attributes
-ATTR_ACCOUNTNAME = 'accountname'
+ATTR_ACCOUNTNAME = 'account_name'
 ATTR_INTERVAL = 'interval'
-ATTR_DEVICENAME = 'devicename'
+ATTR_DEVICENAME = 'device_name'
 ATTR_BATTERY = 'battery'
 ATTR_DISTANCE = 'distance'
 ATTR_STARTTIME = 'start_time'
@@ -78,40 +81,44 @@ DEVICESTATUSSET = ['features', 'maxMsgChar', 'darkWake', 'fmlyShare',
                    'wipedTimestamp', 'modelDisplayName', 'locationEnabled',
                    'isMac', 'locFoundEnabled']
 
+SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ACCOUNTNAME): cv.string,
+    vol.Optional(ATTR_DEVICENAME): cv.string,
+    vol.Optional(ATTR_INTERVAL): cv.positive_int,
+})
+
+CONFIG_SCHEMA = vol.Schema({DOMAIN: {
+    cv.slug: vol.Any({
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_COOKIEDIRECTORY, default=None): cv.string,
+        vol.Optional(CONF_EVENTS, default=DEFAULT_EVENTS): cv.boolean,
+        vol.Optional(CONF_IGNORED_DEVICES):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_GMTT):
+            vol.All({vol.All(cv.string, vol.Length(min=1)):
+                     vol.All(cv.string, vol.Length(min=1))}),
+    }, None)}}, extra=vol.ALLOW_EXTRA)
+
 
 def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
     """Set up the iCloud Scanner."""
-    if config.get(DOMAIN) is None:
-        return False
-
     for account, account_config in config[DOMAIN].items():
-        if not isinstance(account_config, dict):
-            _LOGGER.error("Missing configuration data for account %s", account)
-            continue
-        if CONF_USERNAME not in account_config:
-            _LOGGER.error("Missing username for account %s", account)
-            continue
-        if CONF_PASSWORD not in account_config:
-            _LOGGER.error("Missing password for account %s", account)
-            continue
-
         # Get the username and password from the configuration
         username = account_config.get(CONF_USERNAME)
         password = account_config.get(CONF_PASSWORD)
-        cookiedirectory = account_config.get(CONF_COOKIEDIRECTORY, None)
+        cookiedirectory = account_config.get(CONF_COOKIEDIRECTORY)
         getevents = account_config.get(CONF_EVENTS, DEFAULT_EVENTS)
 
         ignored_devices = []
-        if 'ignored_devices' in account_config:
-            ignored_dev = account_config.get('ignored_devices')
-            for each_dev in ignored_dev:
-                ignored_devices.append(each_dev)
+        ignored_dev = account_config.get(CONF_IGNORED_DEVICES, [])
+        for each_dev in ignored_dev:
+            ignored_devices.append(each_dev)
 
         googletraveltime = {}
-        if 'googletraveltime' in account_config:
-            gttconfig = account_config.get('googletraveltime')
-            for google, googleconfig in gttconfig.items():
-                googletraveltime[google] = googleconfig
+        gttconfig = account_config.get(CONF_GMTT, {})
+        for google, googleconfig in gttconfig.items():
+            googletraveltime[google] = googleconfig
 
         icloudaccount = Icloud(hass, username, password, cookiedirectory,
                                account, ignored_devices, getevents,
@@ -134,8 +141,8 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
 
     def lost_iphone(call):
         """Call the lost iphone function if the device is found."""
-        accountname = call.data.get('accountname')
-        devicename = call.data.get('devicename')
+        accountname = call.data.get(ATTR_ACCOUNTNAME)
+        devicename = call.data.get(ATTR_DEVICENAME)
         if accountname is None:
             for account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].lost_iphone(devicename)
@@ -147,8 +154,8 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
 
     def update_icloud(call):
         """Call the update function of an icloud account."""
-        accountname = call.data.get('accountname')
-        devicename = call.data.get('devicename')
+        accountname = call.data.get(ATTR_ACCOUNTNAME)
+        devicename = call.data.get(ATTR_DEVICENAME)
         if accountname is None:
             for account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].update_icloud(devicename)
@@ -173,9 +180,9 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
 
     def setinterval(call):
         """Call the update function of an icloud account."""
-        accountname = call.data.get('accountname')
-        interval = call.data.get('interval')
-        devicename = call.data.get('devicename')
+        accountname = call.data.get(ATTR_ACCOUNTNAME)
+        interval = call.data.get(ATTR_INTERVAL)
+        devicename = call.data.get(ATTR_DEVICENAME)
         if accountname is None:
             for account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].setinterval(interval, devicename)
@@ -265,9 +272,7 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
         currentminutes = dt_util.now().hour * 60 + dt_util.now().minute
         if currentminutes % self._interval == 0:
             self.update_icloud()
-        elif self._interval > 10 and currentminutes % self._interval == 2:
-            self.update_icloud()
-        elif self._interval > 10 and currentminutes % self._interval == 4:
+        elif self._interval > 10 and currentminutes % self._interval in [2, 4]:
             self.update_icloud()
 
         self._gttduration = None
