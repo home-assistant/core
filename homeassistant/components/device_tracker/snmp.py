@@ -23,11 +23,17 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pysnmp==4.3.2']
 
 CONF_COMMUNITY = "community"
+CONF_AUTHKEY = "authkey"
+CONF_PRIVKEY = "privkey"
 CONF_BASEOID = "baseoid"
+
+DEFAULT_COMMUNITY = "public"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_COMMUNITY): cv.string,
+    vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+    vol.Optional(CONF_AUTHKEY, default=None): cv.string,
+    vol.Optional(CONF_PRIVKEY, default=None): cv.string,
     vol.Required(CONF_BASEOID): cv.string
 })
 
@@ -46,10 +52,19 @@ class SnmpScanner(object):
     def __init__(self, config):
         """Initialize the scanner."""
         from pysnmp.entity.rfc3413.oneliner import cmdgen
+        from pysnmp.entity import config as cfg
         self.snmp = cmdgen.CommandGenerator()
 
         self.host = cmdgen.UdpTransportTarget((config[CONF_HOST], 161))
-        self.community = cmdgen.CommunityData(config[CONF_COMMUNITY])
+        if config[CONF_AUTHKEY] is None or config[CONF_PRIVKEY] is None:
+          self.version = 1
+          self.community = cmdgen.CommunityData(config[CONF_COMMUNITY])
+        else:
+          self.version = 3
+          self.userdata = cmdgen.UsmUserData(config[CONF_COMMUNITY],
+              config[CONF_AUTHKEY], config[CONF_PRIVKEY],
+              authProtocol=cfg.usmHMACSHAAuthProtocol, 
+              privProtocol=cfg.usmAesCfb128Protocol)
         self.baseoid = cmdgen.MibVariable(config[CONF_BASEOID])
 
         self.lock = threading.Lock()
@@ -94,8 +109,12 @@ class SnmpScanner(object):
         """Fetch MAC addresses from access point via SNMP."""
         devices = []
 
-        errindication, errstatus, errindex, restable = self.snmp.nextCmd(
-            self.community, self.host, self.baseoid)
+        if self.version == 3:
+          errindication, errstatus, errindex, restable = self.snmp.nextCmd(
+              self.userdata, self.host, self.baseoid)
+        else:
+          errindication, errstatus, errindex, restable = self.snmp.nextCmd(
+              self.community, self.host, self.baseoid)
 
         if errindication:
             _LOGGER.error("SNMPLIB error: %s", errindication)
