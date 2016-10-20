@@ -15,20 +15,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup lights for the LiteJet platform."""
     litejet_ = litejet.CONNECTION
 
-    add_devices(LiteJetLight(hass, litejet_, i) for i in litejet_.loads())
+    devices = []
+    for i in litejet_.loads():
+        name = litejet_.get_load_name(i)
+        if not litejet.is_ignored(name):
+            devices.append(LiteJetLight(hass, litejet_, i, name))
+    add_devices(devices)
 
 
 class LiteJetLight(Light):
     """Represents a single LiteJet light."""
 
-    def __init__(self, hass, lj, i):
+    def __init__(self, hass, lj, i, name):
         """Initialize a LiteJet light."""
         self._hass = hass
         self._lj = lj
         self._index = i
         self._brightness = 0
-
-        self._name = lj.get_load_name(i)
+        self._name = name
 
         lj.on_load_activated(i, self._on_load_changed)
         lj.on_load_deactivated(i, self._on_load_changed)

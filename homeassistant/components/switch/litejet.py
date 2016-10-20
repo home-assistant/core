@@ -1,7 +1,9 @@
 """Creates switches for the switches in the LiteJet lighting system."""
+import voluptuous as vol
 import logging
 import homeassistant.components.litejet as litejet
-from homeassistant.components.switch import SwitchDevice
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 
 DEPENDENCIES = ['litejet']
 
@@ -14,22 +16,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the LiteJet switch platform."""
     litejet_ = litejet.CONNECTION
 
-    add_devices(LiteJetSwitch(hass, litejet_, i)
-                for i in litejet_.button_switches())
+    devices = []
+    for i in litejet_.button_switches():
+        name = litejet_.get_switch_name(i)
+        if not litejet.is_ignored(name):
+            devices.append(LiteJetSwitch(hass, litejet_, i, name))
+    add_devices(devices)
 
 
 class LiteJetSwitch(SwitchDevice):
     """Represents a single LiteJet switch."""
 
-    def __init__(self, hass, lj, i):
+    def __init__(self, hass, lj, i, name):
         """Initialize a LiteJet switch."""
         self._hass = hass
         self._lj = lj
         self._index = i
         self._state = False
         self._new_state = None
-
-        self._name = lj.get_switch_name(i)
+        self._name = name
 
         lj.on_switch_pressed(i, self._on_switch_pressed)
         lj.on_switch_released(i, self._on_switch_released)
