@@ -42,6 +42,7 @@ SERVICE_UNJOIN = 'sonos_unjoin'
 SERVICE_SNAPSHOT = 'sonos_snapshot'
 SERVICE_RESTORE = 'sonos_restore'
 SERVICE_SET_TIMER = 'sonos_set_sleep_timer'
+SERVICE_CLEAR_TIMER = 'sonos_clear_sleep_timer'
 
 SUPPORT_SOURCE_LINEIN = 'Line-in'
 SUPPORT_SOURCE_TV = 'TV'
@@ -55,7 +56,8 @@ SONOS_SCHEMA = vol.Schema({
 })
 
 SONOS_SET_TIMER_SCHEMA = SONOS_SCHEMA.extend({
-    vol.Required(ATTR_SLEEP_TIME): cv.positive_int,
+    vol.Required(ATTR_SLEEP_TIME): vol.All(vol.Coerce(int),
+                                           vol.Range(min=0, max=86399))
 })
 
 # List of devices that have been registered
@@ -139,6 +141,11 @@ def register_services(hass):
                            descriptions.get(SERVICE_SET_TIMER),
                            schema=SONOS_SET_TIMER_SCHEMA)
 
+    hass.services.register(DOMAIN, SERVICE_CLEAR_TIMER,
+                           _clear_sleep_timer_service,
+                           descriptions.get(SERVICE_CLEAR_TIMER),
+                           schema=SONOS_SCHEMA)
+
 
 def _apply_service(service, service_func, *service_func_args):
     """Internal func for applying a service."""
@@ -180,6 +187,12 @@ def _set_sleep_timer_service(service):
     _apply_service(service,
                    SonosDevice.set_sleep_timer,
                    service.data[ATTR_SLEEP_TIME])
+
+
+def _clear_sleep_timer_service(service):
+    """Set a timer."""
+    _apply_service(service,
+                   SonosDevice.clear_sleep_timer)
 
 
 def only_if_coordinator(func):
@@ -463,12 +476,12 @@ class SonosDevice(MediaPlayerDevice):
     @only_if_coordinator
     def set_sleep_timer(self, sleep_time):
         """Set the timer on the player."""
-        if sleep_time != '':
-            if int(sleep_time) > 86399:
-                raise ValueError("Can only set timers less than one day")
-        else:
-            sleep_time = None
         self._player.set_sleep_timer(sleep_time)
+
+    @only_if_coordinator
+    def clear_sleep_timer(self):
+        """Clear the timer on the player."""
+        self._player.set_sleep_timer(None)
 
     @property
     def available(self):
