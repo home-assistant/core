@@ -34,6 +34,11 @@ def get_service(hass, config):
     consumer_secret = config.get(CONF_CONSUMER_SECRET)
     phone_number = config.get(CONF_PHONE_NUMBER)
 
+    # Attempt an initial authentication to confirm credentials
+    if _authenticate(consumer_key, consumer_secret) is False:
+        _LOGGER.exception('Error obtaining authorization from Telstra API')
+        return None
+
     return TelstraNotificationService(consumer_key,
                                       consumer_secret,
                                       phone_number)
@@ -54,18 +59,9 @@ class TelstraNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE)
 
         # Retrieve authorization first
-        token_data = {
-            'client_id': self._consumer_key,
-            'client_secret': self._consumer_secret,
-            'grant_type': 'client_credentials',
-            'scope': 'SMS'
-        }
-        token_resource = 'https://api.telstra.com/v1/oauth/token'
-        token_response = requests.get(token_resource,
-                                      params=token_data,
-                                      timeout=10).json()
-
-        if 'error' in token_response:
+        token_response = _authenticate(self._consumer_key,
+                                       self._consumer_secret)
+        if token_response is False:
             _LOGGER.exception('Error obtaining authorization from Telstra API')
             return
 
@@ -92,3 +88,22 @@ class TelstraNotificationService(BaseNotificationService):
         if message_response.status_code != 202:
             _LOGGER.exception("Failed to send SMS. Status code: %d",
                               message_response.status_code)
+
+
+def _authenticate(consumer_key, consumer_secret):
+    """Authenticate with the Telstra API."""
+    token_data = {
+        'client_id': consumer_key,
+        'client_secret': consumer_secret,
+        'grant_type': 'client_credentials',
+        'scope': 'SMS'
+    }
+    token_resource = 'https://api.telstra.com/v1/oauth/token'
+    token_response = requests.get(token_resource,
+                                  params=token_data,
+                                  timeout=10).json()
+
+    if 'error' in token_response:
+        return False
+
+    return token_response
