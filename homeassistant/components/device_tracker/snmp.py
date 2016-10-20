@@ -61,10 +61,13 @@ class SnmpScanner(object):
             self.community = cmdgen.CommunityData(config[CONF_COMMUNITY])
         else:
             self.version = 3
-            self.userdata = cmdgen.UsmUserData(config[CONF_COMMUNITY],
-                config[CONF_AUTHKEY], config[CONF_PRIVKEY],
+            self.userdata = cmdgen.UsmUserData(
+                config[CONF_COMMUNITY],
+                config[CONF_AUTHKEY],
+                config[CONF_PRIVKEY],
                 authProtocol=cfg.usmHMACSHAAuthProtocol,
-                privProtocol=cfg.usmAesCfb128Protocol)
+                privProtocol=cfg.usmAesCfb128Protocol
+            )
         self.baseoid = cmdgen.MibVariable(config[CONF_BASEOID])
 
         self.lock = threading.Lock()
