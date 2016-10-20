@@ -74,6 +74,7 @@ class VerisureHub(object):
         self.climate_status = {}
         self.mouse_status = {}
         self.smartplug_status = {}
+        self.smartcam_status = {}
 
         self.config = domain_config
         self._verisure = verisure
@@ -134,6 +135,13 @@ class VerisureHub(object):
         self.update_component(
             self.my_pages.smartplug.get,
             self.smartplug_status)
+
+    @Throttle(timedelta(seconds=30))
+    def update_smartcam(self):
+        """Update the status of the smartcam."""
+        self.update_component(
+            self.my_pages.smartcam.get,
+            self.smartcam_status)
 
     @property
     def available(self):
