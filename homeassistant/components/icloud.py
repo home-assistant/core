@@ -54,6 +54,8 @@ ATTR_FRIENDLY_NAME = 'friendly_name'
 ATTR_GOOGLE_MAPS_TRAVEL_TIME = 'google_maps_travel_time'
 ATTR_GOOGLE_MAPS_TRAVEL_TIME_DURATION = 'gmtt_duration'
 ATTR_GOOGLE_MAPS_TRAVEL_TIME_ORIGIN = 'gmtt_origin'
+ATTR_CURRENT_EVENTS = 'current_events'
+ATTR_NEXT_EVENTS = 'next_events'
 
 TYPE_CURRENT = 'currentevent'
 TYPE_NEXT = 'nextevent'
@@ -87,18 +89,22 @@ SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_INTERVAL): cv.positive_int,
 })
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {
-    cv.slug: vol.Any({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_COOKIEDIRECTORY, default=None): cv.string,
-        vol.Optional(CONF_EVENTS, default=DEFAULT_EVENTS): cv.boolean,
-        vol.Optional(CONF_IGNORED_DEVICES):
-            vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_GMTT):
-            vol.All({vol.All(cv.string, vol.Length(min=1)):
-                     vol.All(cv.string, vol.Length(min=1))}),
-    }, None)}}, extra=vol.ALLOW_EXTRA)
+ACCOUNT_SCHEMA = vol.Schema({
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_COOKIEDIRECTORY, default=None): cv.string,
+    vol.Optional(CONF_EVENTS, default=DEFAULT_EVENTS): cv.boolean,
+    vol.Optional(CONF_IGNORED_DEVICES, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_GMTT, default={}):
+        vol.Schema({cv.string: cv.string}),
+}, extra=vol.ALLOW_EXTRA)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(cv.slug): ACCOUNT_SCHEMA,
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
@@ -111,12 +117,12 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
         getevents = account_config.get(CONF_EVENTS, DEFAULT_EVENTS)
 
         ignored_devices = []
-        ignored_dev = account_config.get(CONF_IGNORED_DEVICES, [])
+        ignored_dev = account_config.get(CONF_IGNORED_DEVICES)
         for each_dev in ignored_dev:
             ignored_devices.append(each_dev)
 
         googletraveltime = {}
-        gttconfig = account_config.get(CONF_GMTT, {})
+        gttconfig = account_config.get(CONF_GMTT)
         for google, googleconfig in gttconfig.items():
             googletraveltime[google] = googleconfig
 
@@ -746,8 +752,8 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         if self.getevents:
             return {
                 ATTR_ACCOUNTNAME: self.accountname,
-                'current events': self._currentevents,
-                'next events': self._nextevents
+                ATTR_CURRENT_EVENTS: self._currentevents,
+                ATTR_NEXT_EVENTS: self._nextevents
             }
         else:
             return {
