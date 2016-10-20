@@ -283,7 +283,6 @@ omit =
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/worldclock.py
     homeassistant/components/sensor/xbox_live.py
-    homeassistant/components/sensor/yahoo_finance.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/anel_pwrctrl.py
