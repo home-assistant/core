@@ -82,7 +82,7 @@ def setup(hass, config):
             ('light', pywink.get_bulbs),
             ('switch', lambda: pywink.get_switches or pywink.get_sirens or
              pywink.get_powerstrip_outlets),
-            ('binary_sensor', pywink.get_sensors),
+            ('binary_sensor', lambda:  pywink.get_sensors or pywink.get_smoke_and_co_detectors),
             ('sensor', lambda: pywink.get_sensors or pywink.get_eggtrays),
             ('lock', pywink.get_locks),
             ('cover', pywink.get_shades),
