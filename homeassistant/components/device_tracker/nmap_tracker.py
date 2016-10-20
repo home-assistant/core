@@ -30,7 +30,7 @@ CONF_EXCLUDE = 'exclude'
 REQUIREMENTS = ['python-nmap==0.6.1']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOSTS): cv.string,
+    vol.Required(CONF_HOSTS): cv.ensure_list,
     vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
     vol.Optional(CONF_EXCLUDE, default=[]):
         vol.All(cv.ensure_list, vol.Length(min=1))
@@ -120,7 +120,8 @@ class NmapDeviceScanner(object):
             options += ' --exclude {}'.format(','.join(exclude_hosts))
 
         try:
-            result = scanner.scan(hosts=self.hosts, arguments=options)
+            result = scanner.scan(hosts=' '.join(self.hosts),
+                                  arguments=options)
         except PortScannerError:
             return False
 
