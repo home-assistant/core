@@ -1,12 +1,13 @@
 """The tests for the Yahoo Finance platform."""
-import unittest
 import json
 
+import unittest
 from unittest.mock import patch
 
 import homeassistant.components.sensor as sensor
 from homeassistant.bootstrap import setup_component
-from tests.common import get_test_home_assistant, load_fixture
+from tests.common import (
+    get_test_home_assistant, load_fixture, assert_setup_component)
 
 VALID_CONFIG = {
     'platform': 'yahoo_finance',
@@ -28,10 +29,11 @@ class TestYahooFinanceSetup(unittest.TestCase):
 
     @patch('yahoo_finance.Base._request',
            return_value=json.loads(load_fixture('yahoo_finance.json')))
-    def test_default_setup(self, m):
+    def test_default_setup(self, m):  # pylint: disable=invalid-name
         """Test the default setup."""
-        self.assertTrue(setup_component(self.hass, sensor.DOMAIN, {
-                        'sensor': VALID_CONFIG}))
+        with assert_setup_component(1, sensor.DOMAIN):
+            assert setup_component(self.hass, sensor.DOMAIN, {
+                'sensor': VALID_CONFIG})
 
         state = self.hass.states.get('sensor.yahoo_stock')
         self.assertEqual("41.69", state.attributes.get('open'))
