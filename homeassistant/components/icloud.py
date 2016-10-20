@@ -19,7 +19,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.entity import (Entity, generate_entity_id)
 from homeassistant.components.device_tracker import see
 from homeassistant.helpers.event import (track_state_change,
-    track_utc_time_change)
+                                         track_utc_time_change)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
