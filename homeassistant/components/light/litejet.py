@@ -73,7 +73,8 @@ class LiteJetLight(Light):
     def turn_on(self, **kwargs):
         """Turn on the light."""
         if ATTR_BRIGHTNESS in kwargs:
-            self._lj.activate_load_at(self._index, int(kwargs[ATTR_BRIGHTNESS] / 255 * 99), 0)
+            brightness = int(kwargs[ATTR_BRIGHTNESS] / 255 * 99)
+            self._lj.activate_load_at(self._index, brightness, 0)
         else:
             self._lj.activate_load(self._index)
 

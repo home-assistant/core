@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_URL): cv.string,
-        vol.Optional(CONF_IGNORE) : vol.All(cv.ensure_list, [cv.string])
+        vol.Optional(CONF_IGNORE): vol.All(cv.ensure_list, [cv.string])
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -44,8 +44,11 @@ def setup(hass, config):
 
     return True
 
+
 def is_ignored(name):
-    """Determines if a load, switch, or scene should be ignored based on its name."""
+    """Determines if a load, switch, or scene should be ignored
+    based on its name. This is called by each platform during setup.
+    """
     for prefix in CONFIG.get(CONF_IGNORE, []):
         if name.startswith(prefix):
             return True

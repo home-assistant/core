@@ -1,9 +1,7 @@
 """Creates switches for the switches in the LiteJet lighting system."""
-import voluptuous as vol
 import logging
 import homeassistant.components.litejet as litejet
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['litejet']
 

@@ -44,7 +44,7 @@ class LiteJetScene(Scene):
         return {
             ATTR_NUMBER: self._index
         }
- 
+
     def activate(self, **kwargs):
         self._lj.activate_scene(self._index)
         self._on = True
