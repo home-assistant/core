@@ -67,6 +67,10 @@ class SoCoMock():
         """Cause the speaker to separate itself from other speakers."""
         return
 
+    def uid(self):
+        """Return a player uid."""
+        return "RINCON_XXXXXXXXXXXXXXXXX"
+
 
 class TestSonosMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
