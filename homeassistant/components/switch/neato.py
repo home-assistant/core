@@ -136,4 +136,10 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.robot.send_to_base()
 
     def update(self):
-        self._state = self.robot.state
+        """Refresh Robot state from Neato API."""
+        try:
+            self._state = self.robot.state
+        except HTTPError:
+            _LOGGER.error("Unable to retrieve to Robot State.")
+            self._state = None
+            return False
