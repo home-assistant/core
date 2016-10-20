@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (BaseNotificationService,
                                              ATTR_TITLE,
                                              PLATFORM_SCHEMA)
+from homeassistant.const import CONTENT_TYPE_JSON
 import homeassistant.helpers.config_validation as cv
 
 CONF_CONSUMER_KEY = 'consumer_key'
@@ -28,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config):
-    """Get the Telstra API notification service."""
+    """Get the Telstra SMS API notification service."""
     consumer_key = config.get(CONF_CONSUMER_KEY)
     consumer_secret = config.get(CONF_CONSUMER_SECRET)
     phone_number = config.get(CONF_PHONE_NUMBER)
@@ -40,7 +41,7 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods, too-many-arguments
 class TelstraNotificationService(BaseNotificationService):
-    """Implementation of a notification service for REST."""
+    """Implementation of a notification service for the Telstra SMS API."""
 
     def __init__(self, consumer_key, consumer_secret, phone_number):
         """Initialize the service."""
@@ -52,7 +53,7 @@ class TelstraNotificationService(BaseNotificationService):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE)
 
-        """Retrieve authorization first"""
+        # Retrieve authorization first
         token_data = {
             'client_id': self._consumer_key,
             'client_secret': self._consumer_secret,
@@ -60,13 +61,15 @@ class TelstraNotificationService(BaseNotificationService):
             'scope': 'SMS'
         }
         token_resource = 'https://api.telstra.com/v1/oauth/token'
-        token_response = requests.get(token_resource, params=token_data).json()
+        token_response = requests.get(token_resource,
+                                      params=token_data,
+                                      timeout=10).json()
 
         if 'error' in token_response:
             _LOGGER.exception('Error obtaining authorization from Telstra API')
             return
 
-        """Send the SMS"""
+        # Send the SMS
         if title:
             text = '{} {}'.format(title, message)
         else:
@@ -78,12 +81,13 @@ class TelstraNotificationService(BaseNotificationService):
         }
         message_resource = 'https://api.telstra.com/v1/sms/messages'
         message_headers = {
-            'Content-Type': 'application/json',
+            'Content-Type': CONTENT_TYPE_JSON,
             'Authorization': 'Bearer ' + token_response['access_token']
         }
         message_response = requests.post(message_resource,
                                          headers=message_headers,
-                                         json=message_data)
+                                         json=message_data,
+                                         timeout=10)
 
         if message_response.status_code != 202:
             _LOGGER.exception("Failed to send SMS. Status code: %d",
