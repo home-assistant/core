@@ -21,6 +21,7 @@ from homeassistant.components.device_tracker import see
 from homeassistant.helpers.event import (track_state_change,
                                          track_utc_time_change)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
 
@@ -308,8 +309,7 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
             try:
                 # Loop through every device registered with the iCloud account
                 status = self.identifier.status(DEVICESTATUSSET)
-                dev_id = re.sub(r"(\s|\W|')", '',
-                                status['name']).lower()
+                dev_id = slugify(status['name'].replace(' ', '', 99))
                 self._devicestatuscode = status['deviceStatus']
                 if self._devicestatuscode == '200':
                     self._devicestatus = 'online'
@@ -641,8 +641,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                                            verify=True)
                 for device in self.api.devices:
                     status = device.status(DEVICESTATUSSET)
-                    devicename = re.sub(r"(\s|\W|')", '',
-                                        status['name']).lower()
+                    devicename = slugify(status['name'].replace(' ', '', 99))
                     if (devicename not in self.devices and
                             devicename not in self._ignored_devices):
                         gtt = None
@@ -783,7 +782,8 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                               error)
 
         if self.api is not None:
-            self.api.authenticate()
+            if not self.getevents:
+                self.api.authenticate()
             for devicename in self.devices:
                 self.devices[devicename].keep_alive()
             if self.getevents:
