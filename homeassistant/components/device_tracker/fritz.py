@@ -79,7 +79,7 @@ class FritzBoxScanner(object):
         self._update_info()
         active_hosts = []
         for known_host in self.last_results:
-            if known_host['status'] == '1':
+            if known_host['status'] == '1' and known_host.get('mac'):
                 active_hosts.append(known_host['mac'])
         return active_hosts
 
