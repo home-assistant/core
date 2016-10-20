@@ -38,7 +38,7 @@ INTERVAL_DEFAULT = 60
 
 def setup(hass, config):
     """ main setup function """
-    
+
     def get_temp(call):
     """ function for getting sensor values """
         while True:
@@ -50,7 +50,8 @@ def setup(hass, config):
             temperature_value = get_average(temperature_value)
             humidity_value = sense.get_humidity()
             pressure_value = sense.get_pressure()
-            hass.states.set('sensehat.temperature', round(temperature_value, 2))
+            hass.states.set('sensehat.temperature', 
+              round(temperature_value, 2))
             hass.states.set('sensehat.humidity', round(humidity_value, 2))
             hass.states.set('sensehat.pressure', round(pressure_value, 2))
             interval = config[DOMAIN].get('interval', INTERVAL_DEFAULT)

@@ -44,12 +44,12 @@ class SensehatSensor_temperature(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+    """Return the name of the sensor."""
         return 'Temperature'
 
     @property
     def state(self):
-        """ Return state of the sensor"""
+    """ Return state of the sensor"""
         t1 = sense.get_temperature_from_humidity()
         t2 = sense.get_temperature_from_pressure()
         t_cpu = get_cpu_temp()
@@ -60,7 +60,7 @@ class SensehatSensor_temperature(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement."""
+    """Return the unit of measurement."""
         return TEMP_CELSIUS
 
 
@@ -69,18 +69,18 @@ class SensehatSensor_humidity(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+    """Return the name of the sensor."""
         return 'Humidity'
 
     @property
     def state(self):
-        """ Return state of the sensor"""
+    """ Return state of the sensor"""
         humidity = sense.get_humidity()
         return humidity
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement."""
+    """Return the unit of measurement."""
         return '%'
 
 
@@ -89,16 +89,16 @@ class SensehatSensor_pressure(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+    """Return the name of the sensor."""
         return 'Pressure'
 
     @property
     def state(self):
-        """ Return state of the sensor"""
+    """ Return state of the sensor."""
         pressure = sense.get_pressure()
         return pressure
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement."""
+    """Return the unit of measurement."""
         return 'mb'
