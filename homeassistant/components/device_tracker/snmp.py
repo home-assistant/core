@@ -32,8 +32,8 @@ DEFAULT_COMMUNITY = "public"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
-    vol.Optional(CONF_AUTHKEY, default=None): cv.string,
-    vol.Optional(CONF_PRIVKEY, default=None): cv.string,
+    vol.Inclusive(CONF_AUTHKEY, "keys"): cv.string,
+    vol.Inclusive(CONF_PRIVKEY, "keys"): cv.string,
     vol.Required(CONF_BASEOID): cv.string
 })
 
@@ -57,12 +57,10 @@ class SnmpScanner(object):
         self.snmp = cmdgen.CommandGenerator()
 
         self.host = cmdgen.UdpTransportTarget((config[CONF_HOST], 161))
-        if config[CONF_AUTHKEY] is None or config[CONF_PRIVKEY] is None:
-            self.version = 1
-            self.community = cmdgen.CommunityData(config[CONF_COMMUNITY])
+        if CONF_AUTHKEY not in config or CONF_PRIVKEY not in config:
+            self.auth = cmdgen.CommunityData(config[CONF_COMMUNITY])
         else:
-            self.version = 3
-            self.userdata = cmdgen.UsmUserData(
+            self.auth = cmdgen.UsmUserData(
                 config[CONF_COMMUNITY],
                 config[CONF_AUTHKEY],
                 config[CONF_PRIVKEY],
@@ -113,12 +111,8 @@ class SnmpScanner(object):
         """Fetch MAC addresses from access point via SNMP."""
         devices = []
 
-        if self.version == 3:
-            errindication, errstatus, errindex, restable = self.snmp.nextCmd(
-                self.userdata, self.host, self.baseoid)
-        else:
-            errindication, errstatus, errindex, restable = self.snmp.nextCmd(
-                self.community, self.host, self.baseoid)
+        errindication, errstatus, errindex, restable = self.snmp.nextCmd(
+            self.auth, self.host, self.baseoid)
 
         if errindication:
             _LOGGER.error("SNMPLIB error: %s", errindication)
