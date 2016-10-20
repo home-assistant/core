@@ -8,7 +8,6 @@ import logging
 from datetime import datetime, timedelta
 from math import floor
 import random
-import re
 
 import voluptuous as vol
 
