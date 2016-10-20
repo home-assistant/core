@@ -33,17 +33,6 @@ class SafeLineLoader(yaml.SafeLoader):
         return node
 
 
-def escape_yaml_value(value: Union[str, bool, None]) -> str:
-    """Escape a yaml value."""
-    if isinstance(value, bool):
-        return 'yes' if value else 'no'
-    if value is None:
-        return ''
-    value = str(value)
-    escape = value.startswith('[') or ':' in value
-    return '"{}"'.format(value.replace('"', r'\"')) if escape else value
-
-
 def load_yaml(fname: str) -> Union[List, Dict]:
     """Load a YAML file."""
     try:
@@ -74,7 +63,7 @@ def _include_yaml(loader: SafeLineLoader,
 
 def _find_files(directory, pattern):
     """Recursively load files in a directory."""
-    for root, _, files in os.walk(directory):
+    for root, _dirs, files in os.walk(directory):
         for basename in files:
             if fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)

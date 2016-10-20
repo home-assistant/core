@@ -14,6 +14,7 @@ import threading
 from typing import Any, Sequence, Callable
 
 import voluptuous as vol
+import yaml
 
 from homeassistant.bootstrap import (
     prepare_setup_platform, log_exception)
@@ -25,7 +26,6 @@ from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.yaml import escape_yaml_value
 import homeassistant.util as util
 from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
@@ -469,13 +469,15 @@ def update_config(path: str, dev_id: str, device: Device):
     """Add device to YAML configuration file."""
     with open(path, 'a') as out:
         out.write('\n')
-        out.write('{}:\n'.format(device.dev_id))
 
-        for key, value in (('name', device.name), ('mac', device.mac),
-                           ('picture', device.config_picture),
-                           ('track', device.track),
-                           (CONF_AWAY_HIDE, device.away_hide)):
-            out.write('  {}: {}\n'.format(key, escape_yaml_value(value)))
+        device = {device.dev_id: {
+            'name': device.name,
+            'mac': device.mac,
+            'picture': device.config_picture,
+            'track': device.track,
+            CONF_AWAY_HIDE: device.away_hide
+        }}
+        yaml.dump(device, out, default_flow_style=False)
 
 
 def get_gravatar_for_email(email: str):
