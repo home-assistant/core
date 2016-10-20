@@ -38,6 +38,7 @@ INTERVAL_DEFAULT = 60
 
 def setup(hass, config):
     """ main setup function """
+    
     def get_temp(call):
     """ function for getting sensor values """
         while True:
