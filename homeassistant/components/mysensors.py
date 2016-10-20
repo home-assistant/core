@@ -42,7 +42,7 @@ GATEWAYS = None
 MQTT_COMPONENT = 'mqtt'
 REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
-    '8ce98b7fb56f7921a808eb66845ce8b2c455c81e.zip#pymysensors==0.7.1']
+    '0b705119389be58332f17753c53167f551254b6c.zip#pymysensors==0.8']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
