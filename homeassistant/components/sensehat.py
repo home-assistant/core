@@ -16,14 +16,14 @@ DOMAIN = "sensehat"
 
 
 def get_cpu_temp():
-    """ get CPU temperature """
+    # get CPU temperature
     res = os.popen("vcgencmd measure_temp").readline()
     t = float(res.replace("temp=", "").replace("'C\n", ""))
     return t
 
 
 def get_average(x):
-    """ use moving average to get better readings """
+    # use moving average to get better readings
     if not hasattr(get_average, "t"):
         get_average.t = [x, x, x]
     get_average.t[2] = get_average.t[1]
@@ -37,10 +37,11 @@ INTERVAL_DEFAULT = 60
 
 
 def setup(hass, config):
-    """ main setup function """
+    # main setup function
 
     def get_temp(call):
-    """ function for getting sensor values """
+        # function for getting sensor values
+
         while True:
             t1 = sense.get_temperature_from_humidity()
             t2 = sense.get_temperature_from_pressure()
@@ -51,7 +52,7 @@ def setup(hass, config):
             humidity_value = sense.get_humidity()
             pressure_value = sense.get_pressure()
             hass.states.set('sensehat.temperature', 
-              round(temperature_value, 2))
+                round(temperature_value, 2))
             hass.states.set('sensehat.humidity', round(humidity_value, 2))
             hass.states.set('sensehat.pressure', round(pressure_value, 2))
             interval = config[DOMAIN].get('interval', INTERVAL_DEFAULT)

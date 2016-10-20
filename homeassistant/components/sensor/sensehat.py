@@ -13,14 +13,14 @@ from sense_hat import SenseHat
 
 
 def get_cpu_temp():
-    """ get CPU temperature """
+    # get CPU temperature 
     res = os.popen("vcgencmd measure_temp").readline()
     t = float(res.replace("temp=", "").replace("'C\n", ""))
     return t
 
 
 def get_average(x):
-    """ use moving average to get better readings """
+    # use moving average to get better readings
     if not hasattr(get_average, "t"):
         get_average.t = [x, x, x]
     get_average.t[2] = get_average.t[1]
@@ -40,16 +40,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SensehatSensor_temperature(Entity):
-    """Representation of a  Temperature Sensor."""
+    #Representation of a  Temperature Sensor.
 
     @property
     def name(self):
-    """Return the name of the sensor."""
+    # Return the name of the sensor.
         return 'Temperature'
 
     @property
     def state(self):
-    """ Return state of the sensor"""
+    # Return state of the sensor
         t1 = sense.get_temperature_from_humidity()
         t2 = sense.get_temperature_from_pressure()
         t_cpu = get_cpu_temp()
@@ -60,45 +60,45 @@ class SensehatSensor_temperature(Entity):
 
     @property
     def unit_of_measurement(self):
-    """Return the unit of measurement."""
+    # Return the unit of measurement
         return TEMP_CELSIUS
 
 
 class SensehatSensor_humidity(Entity):
-    """Representation of a Humidity Sensor."""
+    # Representation of a Humidity Sensor.
 
     @property
     def name(self):
-    """Return the name of the sensor."""
+    # Return the name of the sensor.
         return 'Humidity'
 
     @property
     def state(self):
-    """ Return state of the sensor"""
+    # Return state of the sensor
         humidity = sense.get_humidity()
         return humidity
 
     @property
     def unit_of_measurement(self):
-    """Return the unit of measurement."""
+    # Return the unit of measurement.
         return '%'
 
 
 class SensehatSensor_pressure(Entity):
-    """Representation of a Pressure Sensor."""
+    # Representation of a Pressure Sensor.
 
     @property
     def name(self):
-    """Return the name of the sensor."""
+    # Return the name of the sensor.
         return 'Pressure'
 
     @property
     def state(self):
-    """ Return state of the sensor."""
+    # Return state of the sensor.
         pressure = sense.get_pressure()
         return pressure
 
     @property
     def unit_of_measurement(self):
-    """Return the unit of measurement."""
+    # Return the unit of measurement.
         return 'mb'
