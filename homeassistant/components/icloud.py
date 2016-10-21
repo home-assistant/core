@@ -20,6 +20,7 @@ from homeassistant.components.device_tracker import see
 from homeassistant.helpers.event import (track_state_change,
                                          track_utc_time_change)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import template
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
@@ -30,8 +31,6 @@ REQUIREMENTS = ['pyicloud==0.9.1']
 
 DEPENDENCIES = ['zone', 'device_tracker']
 
-CONF_EVENTS = 'events'
-DEFAULT_EVENTS = False
 CONF_IGNORED_DEVICES = 'ignored_devices'
 CONF_GMTT = 'google_maps_travel_time'
 CONF_COOKIEDIRECTORY = 'cookiedirectory'
@@ -42,33 +41,20 @@ ATTR_INTERVAL = 'interval'
 ATTR_DEVICENAME = 'device_name'
 ATTR_BATTERY = 'battery'
 ATTR_DISTANCE = 'distance'
-ATTR_STARTTIME = 'start_time'
-ATTR_ENDTIME = 'end_time'
-ATTR_DURATION = 'duration'
-ATTR_REMAINING = 'remaining_time'
 ATTR_DEVICESTATUS = 'device_status'
 ATTR_LOWPOWERMODE = 'low_power_mode'
 ATTR_BATTERYSTATUS = 'battery_status'
-ATTR_LOCATION = 'location'
-ATTR_FRIENDLY_NAME = 'friendly_name'
-ATTR_GOOGLE_MAPS_TRAVEL_TIME = 'google_maps_travel_time'
-ATTR_GOOGLE_MAPS_TRAVEL_TIME_DURATION = 'gmtt_duration'
-ATTR_GOOGLE_MAPS_TRAVEL_TIME_ORIGIN = 'gmtt_origin'
-ATTR_CURRENT_EVENTS = 'current_events'
-ATTR_NEXT_EVENTS = 'next_events'
-
-TYPE_CURRENT = 'currentevent'
-TYPE_NEXT = 'nextevent'
+ATTR_GMTT = 'google_maps_travel_time'
+ATTR_GMTT_DURATION = 'gmtt_duration'
+ATTR_GMTT_ORIGIN = 'gmtt_origin'
 
 ICLOUDTRACKERS = {}
 
 DOMAIN = 'icloud'
 DOMAIN2 = 'idevice'
-DOMAIN3 = 'ievent'
 
 ENTITY_ID_FORMAT_ICLOUD = DOMAIN + '.{}'
 ENTITY_ID_FORMAT_DEVICE = DOMAIN2 + '.{}'
-ENTITY_ID_FORMAT_EVENT = DOMAIN3 + '.{}'
 
 DEVICESTATUSSET = ['features', 'maxMsgChar', 'darkWake', 'fmlyShare',
                    'deviceStatus', 'remoteLock', 'activationLocked',
@@ -93,12 +79,11 @@ ACCOUNT_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_COOKIEDIRECTORY, default=None): cv.string,
-    vol.Optional(CONF_EVENTS, default=DEFAULT_EVENTS): cv.boolean,
     vol.Optional(CONF_IGNORED_DEVICES, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_GMTT, default={}):
         vol.Schema({cv.string: cv.string}),
-}, extra=vol.ALLOW_EXTRA)
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -114,7 +99,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
         username = account_config.get(CONF_USERNAME)
         password = account_config.get(CONF_PASSWORD)
         cookiedirectory = account_config.get(CONF_COOKIEDIRECTORY)
-        getevents = account_config.get(CONF_EVENTS, DEFAULT_EVENTS)
 
         ignored_devices = []
         ignored_dev = account_config.get(CONF_IGNORED_DEVICES)
@@ -127,8 +111,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
             googletraveltime[google] = googleconfig
 
         icloudaccount = Icloud(hass, username, password, cookiedirectory,
-                               account, ignored_devices, getevents,
-                               googletraveltime)
+                               account, ignored_devices, googletraveltime)
         icloudaccount.update_ha_state()
         ICLOUDTRACKERS[account] = icloudaccount
         if ICLOUDTRACKERS[account].api is not None:
@@ -210,24 +193,20 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
         # pylint: disable=too-many-arguments
         self.hass = hass
         self.icloudobject = icloudobject
-        self.devicename = name
         self.identifier = identifier
         self._request_interval_seconds = 60
         self._interval = 1
         self.api = icloudobject.api
-        self._distance = None
-        self._battery = None
         self._overridestate = None
         self._devicestatuscode = None
-        self._devicestatus = None
-        self._lowpowermode = None
-        self._batterystatus = None
-        self._googletraveltime = googletraveltime
-        self._gttduration = None
-        self._gttorigin = None
+
+        self._attrs = {}
+        self._attrs[ATTR_DEVICENAME] = name
+        if googletraveltime is not None:
+            self._attrs[ATTR_GMTT] = googletraveltime
 
         self.entity_id = generate_entity_id(
-            ENTITY_ID_FORMAT_DEVICE, self.devicename,
+            ENTITY_ID_FORMAT_DEVICE, self._attrs[ATTR_DEVICENAME],
             hass=self.hass)
 
     @property
@@ -242,36 +221,18 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
 
     @property
     def state_attributes(self):
-        """Return the friendlyname of the iDevice."""
-        if self._googletraveltime is None:
-            return {
-                ATTR_DEVICENAME: self.devicename,
-                ATTR_BATTERY: self._battery,
-                ATTR_DISTANCE: self._distance,
-                ATTR_DEVICESTATUS: self._devicestatus,
-                ATTR_LOWPOWERMODE: self._lowpowermode,
-                ATTR_BATTERYSTATUS: self._batterystatus,
-                ATTR_GOOGLE_MAPS_TRAVEL_TIME: self._googletraveltime
-            }
-        else:
-            return {
-                ATTR_DEVICENAME: self.devicename,
-                ATTR_BATTERY: self._battery,
-                ATTR_DISTANCE: self._distance,
-                ATTR_DEVICESTATUS: self._devicestatus,
-                ATTR_LOWPOWERMODE: self._lowpowermode,
-                ATTR_BATTERYSTATUS: self._batterystatus,
-                ATTR_GOOGLE_MAPS_TRAVEL_TIME: self._googletraveltime,
-                ATTR_GOOGLE_MAPS_TRAVEL_TIME_DURATION:
-                    self._gttduration,
-                ATTR_GOOGLE_MAPS_TRAVEL_TIME_ORIGIN:
-                    self._gttorigin
-            }
+        """Return the attributes of the iDevice."""
+        return self._attrs
 
     @property
     def icon(self):
         """Return the icon to use for device if any."""
         return 'mdi:cellphone-iphone'
+
+    @property
+    def devicename(self):
+        """Return the devicename of the device."""
+        return self._attrs[ATTR_DEVICENAME]
 
     def keep_alive(self):
         """Keep the api alive."""
@@ -281,14 +242,14 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
         elif self._interval > 10 and currentminutes % self._interval in [2, 4]:
             self.update_icloud()
 
-        self._gttduration = None
-        self._gttorigin = None
-        if self._googletraveltime is not None:
-            gttstate = self.hass.states.get(self._googletraveltime)
+        if ATTR_GMTT in self._attrs:
+            gttstate = self.hass.states.get(self._attrs[ATTR_GMTT])
             if gttstate is not None:
                 if 'origin_addresses' in gttstate.attributes:
-                    self._gttduration = gttstate.state
-                    self._gttorigin = gttstate.attributes['origin_addresses']
+                    duration = gttstate.state
+                    origin = gttstate.attributes['origin_addresses']
+                    self._attrs[ATTR_GMTT_DURATION] = duration
+                    self._attrs[ATTR_GMTT_ORIGIN] = origin
                     self.update_ha_state()
 
     def lost_iphone(self):
@@ -306,56 +267,51 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
             return False
         return True
 
-    def update_icloud(self, ):
+    def update_icloud(self):
         """Authenticate against iCloud and scan for devices."""
         if self.api is not None:
             from pyicloud.exceptions import PyiCloudNoDevicesException
 
             try:
-                # Loop through every device registered with the iCloud account
                 status = self.identifier.status(DEVICESTATUSSET)
                 dev_id = slugify(status['name'].replace(' ', '', 99))
                 self._devicestatuscode = status['deviceStatus']
                 if self._devicestatuscode == '200':
-                    self._devicestatus = 'online'
+                    self._attrs[ATTR_DEVICESTATUS] = 'online'
                 elif self._devicestatuscode == '201':
-                    self._devicestatus = 'offline'
+                    self._attrs[ATTR_DEVICESTATUS] = 'offline'
                 elif self._devicestatuscode == '203':
-                    self._devicestatus = 'pending'
+                    self._attrs[ATTR_DEVICESTATUS] = 'pending'
                 elif self._devicestatuscode == '204':
-                    self._devicestatus = 'unregistered'
+                    self._attrs[ATTR_DEVICESTATUS] = 'unregistered'
                 else:
-                    self._devicestatus = 'error'
-                self._lowpowermode = status['lowPowerMode']
-                self._batterystatus = status['batteryStatus']
+                    self._attrs[ATTR_DEVICESTATUS] = 'error'
+                self._attrs[ATTR_LOWPOWERMODE] = status['lowPowerMode']
+                self._attrs[ATTR_BATTERYSTATUS] = status['batteryStatus']
                 self.update_ha_state()
                 status = self.identifier.status(DEVICESTATUSSET)
                 battery = status['batteryLevel']*100
                 location = status['location']
                 if location:
-                    see(
-                        hass=self.hass,
-                        dev_id=dev_id,
-                        host_name=status['name'],
-                        gps=(location['latitude'],
-                             location['longitude']),
+                    see(hass=self.hass, dev_id=dev_id,
+                        host_name=status['name'], gps=(location['latitude'],
+                                                       location['longitude']),
                         battery=battery,
-                        gps_accuracy=location['horizontalAccuracy']
-                    )
+                        gps_accuracy=location['horizontalAccuracy'])
             except PyiCloudNoDevicesException:
                 _LOGGER.error('No iCloud Devices found!')
 
     def get_default_interval(self):
         """Get default interval of iDevice."""
-        devid = 'device_tracker.' + self.devicename
+        devid = 'device_tracker.' + self._attrs[ATTR_DEVICENAME]
         devicestate = self.hass.states.get(devid)
         self._overridestate = None
-        self.devicechanged(self.devicename, None, devicestate)
+        self.devicechanged(self._attrs[ATTR_DEVICENAME], None, devicestate)
 
     def setinterval(self, interval=None):
         """Set interval of iDevice."""
         if interval is not None:
-            devid = 'device_tracker.' + self.devicename
+            devid = 'device_tracker.' + self._attrs[ATTR_DEVICENAME]
             devicestate = self.hass.states.get(devid)
             if devicestate is not None:
                 self._overridestate = devicestate.state
@@ -371,18 +327,20 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
         if entity is None:
             return
 
-        self._distance = None
+        self._attrs[ATTR_DISTANCE] = None
         if 'latitude' in new_state.attributes:
             device_state_lat = new_state.attributes['latitude']
             device_state_long = new_state.attributes['longitude']
             zone_state = self.hass.states.get('zone.home')
             zone_state_lat = zone_state.attributes['latitude']
             zone_state_long = zone_state.attributes['longitude']
-            self._distance = distance(device_state_lat, device_state_long,
-                                      zone_state_lat, zone_state_long)
-            self._distance = round(self._distance / 1000, 1)
+            self._attrs[ATTR_DISTANCE] = distance(
+                device_state_lat, device_state_long, zone_state_lat,
+                zone_state_long)
+            self._attrs[ATTR_DISTANCE] = self._attrs[ATTR_DISTANCE] / 1000
+            self._attrs[ATTR_DISTANCE] = round(self._attrs[ATTR_DISTANCE], 1)
         if 'battery' in new_state.attributes:
-            self._battery = new_state.attributes['battery']
+            self._attrs[ATTR_BATTERY] = new_state.attributes['battery']
 
         if new_state.state == self._overridestate:
             self.update_ha_state()
@@ -394,209 +352,28 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
             self._interval = 30
             self.update_ha_state()
         else:
-            if self._distance is None:
+            if self._attrs[ATTR_DISTANCE] is None:
                 self.update_ha_state()
                 return
-            if self._distance > 100:
-                self._interval = round(self._distance, 0)
-                if self._googletraveltime is not None:
-                    gttstate = self.hass.states.get(self._googletraveltime)
+            if self._attrs[ATTR_DISTANCE] > 100:
+                self._interval = round(self._attrs[ATTR_DISTANCE], 0)
+                if (ATTR_GMTT in
+                    self._attrs[ATTR_GMTT]):
+                    gttstate = self.hass.states.get(self._attrs[ATTR_GMTT])
                     if gttstate is not None:
                         self._interval = round(float(gttstate.state) - 10, 0)
-            elif self._distance > 50:
+            elif self._attrs[ATTR_DISTANCE] > 50:
                 self._interval = 30
-            elif self._distance > 25:
+            elif self._attrs[ATTR_DISTANCE] > 25:
                 self._interval = 15
-            elif self._distance > 10:
+            elif self._attrs[ATTR_DISTANCE] > 10:
                 self._interval = 5
             else:
                 self._interval = 1
-            if self._battery is not None:
-                if self._battery <= 33 and self._distance > 3:
+            if self._attrs[ATTR_BATTERY] is not None:
+                if (self._attrs[ATTR_BATTERY] <= 33 and
+                    self._attrs[ATTR_DISTANCE] > 3):
                     self._interval = self._interval * 2
-            self.update_ha_state()
-
-
-class IEvent(Entity):  # pylint: disable=too-many-instance-attributes
-    """Represent an icloud calendar event in Home Assistant."""
-
-    def __init__(self, hass, icloudobject, name, typeevent=None):
-        """Initialize an iEvent."""
-        # pylint: disable=too-many-arguments
-        self.hass = hass
-        self.icloudobject = icloudobject
-        self.api = icloudobject.api
-        self.eventguid = name
-        self._starttime = None
-        self._starttext = None
-        self._endtime = None
-        self._endtext = None
-        self._duration = None
-        self._title = None
-        self._remaining = 0
-        self._remainingtext = None
-        self._location = None
-        self._type = typeevent
-        self._tz = None
-
-        self.entity_id = generate_entity_id(
-            ENTITY_ID_FORMAT_EVENT, self.eventguid,
-            hass=self.hass)
-
-    @property
-    def state(self):
-        """Return the state of the icloud event."""
-        return self._title
-
-    @property
-    def state_attributes(self):
-        """Return the attributes of the icloud event."""
-        return {
-            ATTR_STARTTIME: self._starttext,
-            ATTR_ENDTIME: self._endtext,
-            ATTR_DURATION: self._duration,
-            ATTR_REMAINING: self._remainingtext,
-            ATTR_LOCATION: self._location,
-            ATTR_FRIENDLY_NAME: self._type
-        }
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        if self._type == TYPE_CURRENT:
-            return 'mdi:calendar'
-        elif self._type == TYPE_NEXT:
-            return 'mdi:calendar-clock'
-
-    def keep_alive(self, starttime, endtime, duration, title, tzone, location):
-        """Keep the api alive."""
-        # pylint: disable=too-many-arguments,too-many-branches
-        current = self._type == TYPE_CURRENT
-        nextev = self._type == TYPE_NEXT
-        self._remaining = 0
-        tempnow = dt_util.now(tzone)
-        if tzone is None:
-            self._tz = pytz.utc
-        else:
-            self._tz = tzone
-
-        if starttime is None:
-            self._starttime = None
-            self._starttext = None
-        else:
-            self._starttime = datetime(starttime[1], starttime[2],
-                                       starttime[3], starttime[4],
-                                       starttime[5], 0, 0, self._tz)
-            self._starttext = self._starttime.strftime("%A %d %B %Y %H.%M.%S")
-            if nextev:
-                self._remaining = self._starttime - tempnow
-                remainingdays = self._remaining.days
-                remainingseconds = (self._starttime.hour * 3600 +
-                                    self._starttime.minute * 60 +
-                                    self._starttime.second -
-                                    tempnow.hour * 3600 -
-                                    tempnow.minute * 60 -
-                                    tempnow.second)
-                if ((self._starttime.year > tempnow.year or
-                     self._starttime.month > tempnow.month or
-                     self._starttime.day > tempnow.day) and
-                        remainingseconds < 0):
-                    remainingseconds = 86400 + remainingseconds
-                self._remaining = (remainingdays * 1440 +
-                                   round(remainingseconds / 60, 0))
-        if endtime is None:
-            self._endtime = None
-            self._endtext = None
-        else:
-            self._endtime = datetime(endtime[1], endtime[2], endtime[3],
-                                     endtime[4], endtime[5], 0, 0,
-                                     self._tz)
-            self._endtext = self._endtime.strftime("%A %d %B %Y %H.%M.%S")
-            if current:
-                self._remaining = self._endtime - tempnow
-                remainingdays = self._remaining.days
-                remainingseconds = (self._endtime.hour * 3600 +
-                                    self._endtime.minute * 60 +
-                                    self._endtime.second -
-                                    tempnow.hour * 3600 -
-                                    tempnow.minute * 60 -
-                                    tempnow.second)
-                if ((self._endtime.year > tempnow.year or
-                     self._endtime.month > tempnow.month or
-                     self._endtime.day > tempnow.day) and
-                        remainingseconds < 0):
-                    remainingseconds = 86400 + remainingseconds
-                self._remaining = (remainingdays * 1440 +
-                                   round(remainingseconds / 60, 0))
-        self._duration = duration
-        self._title = title
-        if (current or nextev) and title is None:
-            self._title = 'Free'
-        self._location = location
-
-        tempdays = floor(self._remaining / 1440)
-        temphours = floor((self._remaining % 1440) / 60)
-        tempminutes = floor(self._remaining % 60)
-        self._remainingtext = (str(tempdays) + "d " +
-                               str(temphours) + "h " +
-                               str(tempminutes) + "m")
-
-        if self._remaining <= 0:
-            self.hass.states.remove(self.entity_id)
-        else:
-            self.update_ha_state()
-
-    def check_alive(self):
-        """Check if event is over."""
-        current = self._type == TYPE_CURRENT
-        nextev = self._type == TYPE_NEXT
-        self._remaining = 0
-        tempnow = dt_util.now(self._tz)
-        if self._starttime is not None:
-            if nextev:
-                self._remaining = self._starttime - tempnow
-                remainingdays = self._remaining.days
-                remainingseconds = (self._starttime.hour * 3600 +
-                                    self._starttime.minute * 60 +
-                                    self._starttime.second -
-                                    tempnow.hour * 3600 -
-                                    tempnow.minute * 60 -
-                                    tempnow.second)
-                if ((self._starttime.year > tempnow.year or
-                     self._starttime.month > tempnow.month or
-                     self._starttime.day > tempnow.day) and
-                        remainingseconds < 0):
-                    remainingseconds = 86400 + remainingseconds
-                self._remaining = (remainingdays * 1440 +
-                                   round(remainingseconds / 60, 0))
-        if self._endtime is not None:
-            if current:
-                self._remaining = self._endtime - tempnow
-                remainingdays = self._remaining.days
-                remainingseconds = (self._endtime.hour * 3600 +
-                                    self._endtime.minute * 60 +
-                                    self._endtime.second -
-                                    tempnow.hour * 3600 -
-                                    tempnow.minute * 60 -
-                                    tempnow.second)
-                if ((self._endtime.year > tempnow.year or
-                     self._endtime.month > tempnow.month or
-                     self._endtime.day > tempnow.day) and
-                        remainingseconds < 0):
-                    remainingseconds = 86400 + remainingseconds
-                self._remaining = (remainingdays * 1440 +
-                                   round(remainingseconds / 60, 0))
-
-        tempdays = floor(self._remaining / 1440)
-        temphours = floor((self._remaining % 1440) / 60)
-        tempminutes = floor(self._remaining % 60)
-        self._remainingtext = (str(tempdays) + "d " +
-                               str(temphours) + "h " +
-                               str(tempminutes) + "m")
-
-        if self._remaining <= 0:
-            self.hass.states.remove(self.entity_id)
-        else:
             self.update_ha_state()
 
 
@@ -604,7 +381,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
     """Represent an icloud account in Home Assistant."""
 
     def __init__(self, hass, username, password, cookiedirectory, name,
-                 ignored_devices, getevents, googletraveltime):
+                 ignored_devices, googletraveltime):
         """Initialize an iCloud account."""
         # pylint: disable=too-many-arguments,too-many-branches
         # pylint: disable=too-many-statements,too-many-locals
@@ -612,25 +389,20 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         self.username = username
         self.password = password
         self.cookiedir = cookiedirectory
-        self.accountname = name
         self._max_wait_seconds = 120
         self._request_interval_seconds = 10
         self._interval = 1
         self.api = None
         self.devices = {}
-        self.getevents = getevents
-        self.events = {}
-        self.currentevents = {}
-        self.nextevents = {}
         self._ignored_devices = ignored_devices
         self._ignored_identifiers = {}
         self.googletraveltime = googletraveltime
 
-        self._currentevents = 0
-        self._nextevents = 0
+        self._attrs = {}
+        self._attrs[ATTR_ACCOUNTNAME] = name
 
         self.entity_id = generate_entity_id(
-            ENTITY_ID_FORMAT_ICLOUD, self.accountname,
+            ENTITY_ID_FORMAT_ICLOUD, self._attrs[ATTR_ACCOUNTNAME],
             hass=self.hass)
 
         if self.username is None or self.password is None:
@@ -640,10 +412,9 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
             from pyicloud.exceptions import PyiCloudFailedLoginException
             try:
                 # Attempt the login to iCloud
-                self.api = PyiCloudService(self.username,
-                                           self.password,
-                                           cookie_directory=self.cookiedir,
-                                           verify=True)
+                self.api = PyiCloudService(
+                    self.username, self.password,
+                    cookie_directory=self.cookiedir, verify=True)
                 for device in self.api.devices:
                     status = device.status(DEVICESTATUSSET)
                     devicename = slugify(status['name'].replace(' ', '', 99))
@@ -659,84 +430,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                     elif devicename in self._ignored_devices:
                         self._ignored_identifiers[devicename] = device
 
-                if self.getevents:
-                    from_dt = dt_util.now()
-                    to_dt = from_dt + timedelta(days=7)
-                    events = self.api.calendar.events(from_dt, to_dt)
-                    new_events = sorted(events, key=self.get_key)
-                    for event in new_events:
-                        tzone = event['tz']
-                        if tzone is None:
-                            tzone = pytz.utc
-                        else:
-                            tzone = timezone(tzone)
-                        tempnow = dt_util.now(tzone)
-                        guid = event['guid']
-                        starttime = event['startDate']
-                        startdate = datetime(starttime[1], starttime[2],
-                                             starttime[3], starttime[4],
-                                             starttime[5], 0, 0, tzone)
-                        endtime = event['endDate']
-                        enddate = datetime(endtime[1], endtime[2], endtime[3],
-                                           endtime[4], endtime[5], 0, 0, tzone)
-                        duration = event['duration']
-                        title = event['title']
-                        location = event['location']
-
-                        strnow = tempnow.strftime("%Y%m%d%H%M%S")
-                        strstart = startdate.strftime("%Y%m%d%H%M%S")
-                        strend = enddate.strftime("%Y%m%d%H%M%S")
-
-                        if strnow > strstart and strend > strnow:
-                            ievent = IEvent(self.hass, self, guid,
-                                            TYPE_CURRENT)
-                            ievent.update_ha_state()
-                            self.currentevents[guid] = ievent
-                            self.currentevents[guid].keep_alive(starttime,
-                                                                endtime,
-                                                                duration,
-                                                                title,
-                                                                tzone,
-                                                                location)
-
-                    for event in new_events:
-                        tzone = event['tz']
-                        if tzone is None:
-                            tzone = pytz.utc
-                        else:
-                            tzone = timezone(tzone)
-                        tempnow = dt_util.now(tzone)
-                        guid = event['guid']
-                        starttime = event['startDate']
-                        startdate = datetime(starttime[1],
-                                             starttime[2],
-                                             starttime[3],
-                                             starttime[4],
-                                             starttime[5], 0, 0, tzone)
-                        endtime = event['endDate']
-                        enddate = datetime(endtime[1], endtime[2],
-                                           endtime[3], endtime[4],
-                                           endtime[5], 0, 0, tzone)
-                        duration = event['duration']
-                        title = event['title']
-                        location = event['location']
-
-                        strnow = tempnow.strftime("%Y%m%d%H%M%S")
-                        strstart = startdate.strftime("%Y%m%d%H%M%S")
-                        strend = enddate.strftime("%Y%m%d%H%M%S")
-
-                        if strnow < strstart:
-                            ievent = IEvent(self.hass, self, guid,
-                                            TYPE_NEXT)
-                            ievent.update_ha_state()
-                            self.nextevents[guid] = ievent
-                            self.nextevents[guid].keep_alive(starttime,
-                                                             endtime,
-                                                             duration,
-                                                             title,
-                                                             tzone,
-                                                             location)
-
             except PyiCloudFailedLoginException as error:
                 _LOGGER.error('Error logging into iCloud Service: %s',
                               error)
@@ -749,16 +442,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
     @property
     def state_attributes(self):
         """Return the attributes of the icloud account."""
-        if self.getevents:
-            return {
-                ATTR_ACCOUNTNAME: self.accountname,
-                ATTR_CURRENT_EVENTS: self._currentevents,
-                ATTR_NEXT_EVENTS: self._nextevents
-            }
-        else:
-            return {
-                ATTR_ACCOUNTNAME: self.accountname
-            }
+        return self._attrs
 
     @property
     def icon(self):
@@ -778,138 +462,17 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
             from pyicloud.exceptions import PyiCloudFailedLoginException
             try:
                 # Attempt the login to iCloud
-                self.api = PyiCloudService(self.username,
-                                           self.password,
-                                           cookie_directory=self.cookiedir,
-                                           verify=True)
+                self.api = PyiCloudService(
+                    self.username, self.password,
+                    cookie_directory=self.cookiedir, verify=True)
             except PyiCloudFailedLoginException as error:
                 _LOGGER.error('Error logging into iCloud Service: %s',
                               error)
 
         if self.api is not None:
-            if not self.getevents:
-                self.api.authenticate()
+            self.api.authenticate()
             for devicename in self.devices:
                 self.devices[devicename].keep_alive()
-            if self.getevents:
-                from_dt = dt_util.now()
-                to_dt = from_dt + timedelta(days=7)
-                events = self.api.calendar.events(from_dt, to_dt)
-                new_events = sorted(events, key=self.get_key)
-                for event in new_events:
-                    tzone = event['tz']
-                    if tzone is None:
-                        tzone = pytz.utc
-                    else:
-                        tzone = timezone(tzone)
-                    tempnow = dt_util.now(tzone)
-                    guid = event['guid']
-                    starttime = event['startDate']
-                    startdate = datetime(starttime[1], starttime[2],
-                                         starttime[3], starttime[4],
-                                         starttime[5], 0, 0, tzone)
-                    endtime = event['endDate']
-                    enddate = datetime(endtime[1], endtime[2], endtime[3],
-                                       endtime[4], endtime[5], 0, 0, tzone)
-                    duration = event['duration']
-                    title = event['title']
-                    location = event['location']
-
-                    strnow = tempnow.strftime("%Y%m%d%H%M%S")
-                    strstart = startdate.strftime("%Y%m%d%H%M%S")
-                    strend = enddate.strftime("%Y%m%d%H%M%S")
-
-                    if strnow > strstart and strend > strnow:
-                        if guid not in self.currentevents:
-                            ievent = IEvent(self.hass, self, guid,
-                                            TYPE_CURRENT)
-                            ievent.update_ha_state()
-                            self.currentevents[guid] = ievent
-                        self.currentevents[guid].keep_alive(starttime,
-                                                            endtime,
-                                                            duration,
-                                                            title,
-                                                            tzone,
-                                                            location)
-
-                for addedevent in self.currentevents:
-                    found = False
-                    eventguid = self.currentevents[addedevent].eventguid
-                    for event in new_events:
-                        if event['guid'] == eventguid:
-                            found = True
-                    if not found:
-                        ent_id = generate_entity_id(ENTITY_ID_FORMAT_EVENT,
-                                                    eventguid,
-                                                    hass=self.hass)
-                        self.hass.states.remove(ent_id)
-                        del self.currentevents[addedevent]
-                    else:
-                        self.currentevents[addedevent].check_alive()
-
-                for event in new_events:
-                    tzone = event['tz']
-                    if tzone is None:
-                        tzone = pytz.utc
-                    else:
-                        tzone = timezone(tzone)
-                    tempnow = dt_util.now(tzone)
-                    guid = event['guid']
-                    starttime = event['startDate']
-                    startdate = datetime(starttime[1],
-                                         starttime[2],
-                                         starttime[3],
-                                         starttime[4],
-                                         starttime[5], 0, 0, tzone)
-                    endtime = event['endDate']
-                    enddate = datetime(endtime[1], endtime[2],
-                                       endtime[3], endtime[4],
-                                       endtime[5], 0, 0, tzone)
-                    duration = event['duration']
-                    title = event['title']
-                    location = event['location']
-
-                    strnow = tempnow.strftime("%Y%m%d%H%M%S")
-                    strstart = startdate.strftime("%Y%m%d%H%M%S")
-                    strend = enddate.strftime("%Y%m%d%H%M%S")
-
-                    if strnow < strstart:
-                        if guid not in self.nextevents:
-                            ievent = IEvent(self.hass, self, guid,
-                                            TYPE_NEXT)
-                            ievent.update_ha_state()
-                            self.nextevents[guid] = ievent
-                        self.nextevents[guid].keep_alive(starttime,
-                                                         endtime,
-                                                         duration,
-                                                         title,
-                                                         tzone,
-                                                         location)
-                for addedevent in self.nextevents:
-                    found = False
-                    eventguid = self.nextevents[addedevent].eventguid
-                    for event in new_events:
-                        if event['guid'] == eventguid:
-                            found = True
-                    if not found:
-                        ent_id = generate_entity_id(ENTITY_ID_FORMAT_EVENT,
-                                                    eventguid,
-                                                    hass=self.hass)
-                        self.hass.states.remove(ent_id)
-                        del self.nextevents[addedevent]
-                    else:
-                        self.nextevents[addedevent].check_alive()
-
-                self._currentevents = 0
-                self._nextevents = 0
-                for entity_id in self.hass.states.entity_ids('ievent'):
-                    state = self.hass.states.get(entity_id)
-                    friendlyname = state.attributes.get(ATTR_FRIENDLY_NAME)
-                    if friendlyname == 'nextevent':
-                        self._nextevents = self._nextevents + 1
-                    elif friendlyname == 'currentevent':
-                        self._currentevents = self._currentevents + 1
-                self.update_ha_state()
 
     def lost_iphone(self, devicename):
         """Call the lost iphone function if the device is found."""
@@ -920,7 +483,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                     self.devices[devicename].lost_iphone()
                 else:
                     _LOGGER.error("devicename %s unknown for account %s",
-                                  devicename, self.accountname)
+                                  devicename, self._attrs[ATTR_ACCOUNTNAME])
             else:
                 for device in self.devices:
                     self.devices[device].lost_iphone()
@@ -938,7 +501,8 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                         self.devices[devicename].update_icloud()
                     else:
                         _LOGGER.error("devicename %s unknown for account %s",
-                                      devicename, self.accountname)
+                                      devicename,
+                                      self._attrs[ATTR_ACCOUNTNAME])
                 else:
                     for device in self.devices:
                         self.devices[device].update_icloud()
