@@ -184,11 +184,11 @@ class AlarmControlPanel(Entity):
 
     def alarm_keypress(self, keypress=None):
         """Send custom key sequence to alarm."""
-        pass
+        raise NotImplementedError()
 
     def alarm_output_control(self, output=None):
         """Control an output on the alarm."""
-        pass
+        raise NotImplementedError()
 
     @property
     def state_attributes(self):

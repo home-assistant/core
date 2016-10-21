@@ -16,7 +16,7 @@ from homeassistant.components.envisalink import (EVL_CONTROLLER,
                                                  SIGNAL_KEYPAD_UPDATE)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
+    STATE_UNKNOWN, STATE_ALARM_TRIGGERED, STATE_ALARM_PENDING)
 
 DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
@@ -70,8 +70,12 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """The characters if code is defined."""
-        return self._code
+        """Regex for code format or None if no code is required."""
+        """If code is specified in config, don't prompt for it"""
+        if self._code:
+            return None
+        else:
+            return '^\\d{4,6}$'
 
     @property
     def state(self):
@@ -82,33 +86,48 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
             return STATE_ALARM_ARMED_AWAY
         elif self._info['status']['armed_stay']:
             return STATE_ALARM_ARMED_HOME
+        elif self._info['status']['exit_delay']:
+            return STATE_ALARM_PENDING
+        elif self._info['status']['entry_delay']:
+            return STATE_ALARM_PENDING
         elif self._info['status']['alpha']:
             return STATE_ALARM_DISARMED
         else:
             return STATE_UNKNOWN
 
     def alarm_disarm(self, code=None):
-        """Send disarm command."""
-        if self._code:
+        """Disarm alarm using the code from the service call, or the
+        code from configuration."""
+        if code:
             EVL_CONTROLLER.disarm_partition(str(code),
+                                            self._partition_number)
+        else:
+            EVL_CONTROLLER.disarm_partition(str(self._code),
                                             self._partition_number)
 
     def alarm_arm_home(self, code=None):
-        """Send arm home command."""
-        if self._code:
+        """Arm alarm in home mode using code from the service call
+        or the code from configuration."""
+        if code:
             EVL_CONTROLLER.arm_stay_partition(str(code),
+                                              self._partition_number)
+        else:
+            EVL_CONTROLLER.arm_stay_partition(str(self._code),
                                               self._partition_number)
 
     def alarm_arm_away(self, code=None):
-        """Send arm away command."""
-        if self._code:
+        """Arm alarm in away mode using code from the service call
+        or the code from configuration."""
+        if code:
             EVL_CONTROLLER.arm_away_partition(str(code),
+                                              self._partition_number)
+        else: 
+            EVL_CONTROLLER.arm_away_partition(str(self._code),
                                               self._partition_number)
 
     def alarm_trigger(self, code=None):
         """Alarm trigger command. Will be used to trigger a panic alarm."""
-        if self._code:
-            EVL_CONTROLLER.panic_alarm(self._panic_type)
+        EVL_CONTROLLER.panic_alarm(self._panic_type)
 
     def alarm_keypress(self, keypress=None):
         """Send custom keypress."""
