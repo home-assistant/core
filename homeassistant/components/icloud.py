@@ -5,14 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/icloud/
 """
 import logging
-from datetime import datetime, timedelta
-from math import floor
 import random
 
 import voluptuous as vol
-
-from pytz import timezone
-import pytz
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.entity import (Entity, generate_entity_id)
@@ -20,7 +15,6 @@ from homeassistant.components.device_tracker import see
 from homeassistant.helpers.event import (track_state_change,
                                          track_utc_time_change)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import template
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
@@ -356,8 +350,7 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
                 return
             if self._attrs[ATTR_DISTANCE] > 100:
                 self._interval = round(self._attrs[ATTR_DISTANCE], 0)
-                if (ATTR_GMTT in
-                    self._attrs[ATTR_GMTT]):
+                if ATTR_GMTT in self._attrs[ATTR_GMTT]:
                     gttstate = self.hass.states.get(self._attrs[ATTR_GMTT])
                     if gttstate is not None:
                         self._interval = round(float(gttstate.state) - 10, 0)
@@ -371,7 +364,7 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
                 self._interval = 1
             if self._attrs[ATTR_BATTERY] is not None:
                 if (self._attrs[ATTR_BATTERY] <= 33 and
-                    self._attrs[ATTR_DISTANCE] > 3):
+                        self._attrs[ATTR_DISTANCE] > 3):
                     self._interval = self._interval * 2
             self.update_ha_state()
 
