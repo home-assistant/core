@@ -194,7 +194,6 @@ class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
         self.hass = hass
         self.icloudobject = icloudobject
         self.identifier = identifier
-        self._request_interval_seconds = 60
         self._interval = 1
         self.api = icloudobject.api
         self._overridestate = None
@@ -389,9 +388,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         self.username = username
         self.password = password
         self.cookiedir = cookiedirectory
-        self._max_wait_seconds = 120
-        self._request_interval_seconds = 10
-        self._interval = 1
         self.api = None
         self.devices = {}
         self._ignored_devices = ignored_devices
@@ -448,11 +444,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
     def icon(self):
         """Return the icon to use for device if any."""
         return 'mdi:account'
-
-    @staticmethod
-    def get_key(item):
-        """Sort key of events."""
-        return item.get('startDate')
 
     def keep_alive(self):
         """Keep the api alive."""
