@@ -163,7 +163,7 @@ def _construct_seq(loader, node):
 
     class NodeClass(list):
         """Wrapper class to be able to add attributes on a list."""
-        
+
         pass
 
     processed = NodeClass(obj)
