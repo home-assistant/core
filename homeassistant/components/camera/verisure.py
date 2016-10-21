@@ -58,11 +58,8 @@ class VerisureSmartcam(Camera):
     def check_imagelist(self):
         """Check the contents of the image list."""
         hub.update_smartcam_imagelist()
-        try:
-            if (self._device_id not in hub.smartcam_dict or
-                    not hub.smartcam_dict[self._device_id]):
-                return
-        except KeyError:
+        if (self._device_id not in hub.smartcam_dict or
+             not hub.smartcam_dict[self._device_id]):
             return
         images = hub.smartcam_dict[self._device_id]
         new_image_id = images[0]
