@@ -26,17 +26,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hub.update_smartcam()
     smartcams = []
     smartcams.extend([
-        VerisureSmartcam(value.deviceLabel, directory_path)
+        VerisureSmartcam(hass, value.deviceLabel, directory_path)
         for value in hub.smartcam_status.values()])
     add_devices(smartcams)
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                         VerisureSmartcam.delete_image)
 
 
 class VerisureSmartcam(Camera):
     """Local camera."""
 
-    def __init__(self, device_id, directory_path):
+    def __init__(self, hass, device_id, directory_path):
         """Initialize Verisure File Camera component."""
         super().__init__()
 
@@ -44,23 +42,29 @@ class VerisureSmartcam(Camera):
         self._directory_path = directory_path
         self._image = None
         self._image_id = None
-        self._smartcam_dict = hub.update_smartcam_imagelist()
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
+                             self.delete_image)
 
     def camera_image(self):
         """Return image response."""
         self.check_imagelist()
-        _LOGGER.debug('trying to open %s', self._image)
+        if not self._image:
+            _LOGGER.debug('No image to display')
+            return
+        _LOGGER.debug('Trying to open %s', self._image)
         with open(self._image, 'rb') as file:
             return file.read()
 
     def check_imagelist(self):
         """Check the contents of the image list."""
-        self._smartcam_dict = hub.update_smartcam_imagelist()
-        if not self._smartcam_dict:
+        hub.update_smartcam_imagelist()
+        try:
+            if (self._device_id not in hub.smartcam_dict or
+                    not hub.smartcam_dict[self._device_id]):
+                return
+        except KeyError:
             return
-        images = self._smartcam_dict[self._device_id]
-        if not images:
-            return
+        images = hub.smartcam_dict[self._device_id]
         new_image_id = images[0]
         _LOGGER.debug('self._device_id=%s, self._images=%s, '
                       'self._new_image_id=%s', self._device_id,
@@ -75,7 +79,7 @@ class VerisureSmartcam(Camera):
                                              self._directory_path)
         if self._image_id:
             _LOGGER.debug('Old image_id=%s', self._image_id)
-            self.delete_image()
+            self.delete_image(self)
 
         else:
             _LOGGER.debug('No old image, only new %s', new_image_id)
@@ -86,7 +90,7 @@ class VerisureSmartcam(Camera):
                                        self._image_id,
                                        '.jpg'))
 
-    def delete_image(self):
+    def delete_image(self, event):
         """Delete an old image."""
         remove_image = os.path.join(self._directory_path,
                                     '{}{}'.format(

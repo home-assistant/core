@@ -149,7 +149,7 @@ class VerisureHub(object):
         """Update the imagelist for the camera."""
         _LOGGER.debug('Running update imagelist')
         self.smartcam_dict = self.my_pages.smartcam.get_imagelist()
-        return self.smartcam_dict
+        _LOGGER.debug('New dict: %s', self.smartcam_dict)
 
     @property
     def available(self):
