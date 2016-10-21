@@ -103,12 +103,13 @@ class NeatoConnectedSwitch(ToggleEntity):
     @property
     def state(self):
         """Return the state."""
-        if not self._state or \
-           ( not self._state['availableCommands']['start'] and \
+        if not self._state:
+            return STATE_UNAVAILABLE
+        if not self._state['availableCommands']['start'] and \
            not self._state['availableCommands']['stop'] and \
            not self._state['availableCommands']['pause'] and \
            not self._state['availableCommands']['resume'] and \
-           not self._state['availableCommands']['goToBase'] ):
+           not self._state['availableCommands']['goToBase']:
             return STATE_UNAVAILABLE
         return STATE_ON if self.is_on else STATE_OFF
 
