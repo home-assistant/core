@@ -11,7 +11,6 @@ import logging
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import JobPriority
 from homeassistant.helpers.entity import Entity
-from sense_hat import SenseHat
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +31,6 @@ def get_average(x):
     get_average.t[0] = x
     xs = (get_average.t[0]+get_average.t[1]+get_average.t[2])/3
     return xs
-
-sense = SenseHat()
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -70,6 +67,8 @@ class SensehatSensor_temperature(Entity):
 
     def update(self, *args):
         # Get the latest data
+        from sense_hat import SenseHat
+        sense = SenseHat()
         temp_from_h = sense.get_temperature_from_humidity()
         temp_from_p = sense.get_temperature_from_pressure()
         t_cpu = get_cpu_temp()
@@ -107,6 +106,8 @@ class SensehatSensor_humidity(Entity):
 
     def update(self, *args):
         # Get the latest data
+        from sense_hat import SenseHat
+        sense = SenseHat()
         self._humidity = sense.get_humidity()
 
 
@@ -138,4 +139,6 @@ class SensehatSensor_pressure(Entity):
 
     def update(self, *args):
         # Get the latest data
+        from sense_hat import SenseHat
+        sense = SenseHat()
         self._pressure = sense.get_pressure()
