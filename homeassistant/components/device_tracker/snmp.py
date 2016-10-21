@@ -23,11 +23,17 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pysnmp==4.3.2']
 
 CONF_COMMUNITY = "community"
+CONF_AUTHKEY = "authkey"
+CONF_PRIVKEY = "privkey"
 CONF_BASEOID = "baseoid"
+
+DEFAULT_COMMUNITY = "public"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_COMMUNITY): cv.string,
+    vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+    vol.Inclusive(CONF_AUTHKEY, "keys"): cv.string,
+    vol.Inclusive(CONF_PRIVKEY, "keys"): cv.string,
     vol.Required(CONF_BASEOID): cv.string
 })
 
@@ -43,13 +49,24 @@ def get_scanner(hass, config):
 class SnmpScanner(object):
     """Queries any SNMP capable Access Point for connected devices."""
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, config):
         """Initialize the scanner."""
         from pysnmp.entity.rfc3413.oneliner import cmdgen
+        from pysnmp.entity import config as cfg
         self.snmp = cmdgen.CommandGenerator()
 
         self.host = cmdgen.UdpTransportTarget((config[CONF_HOST], 161))
-        self.community = cmdgen.CommunityData(config[CONF_COMMUNITY])
+        if CONF_AUTHKEY not in config or CONF_PRIVKEY not in config:
+            self.auth = cmdgen.CommunityData(config[CONF_COMMUNITY])
+        else:
+            self.auth = cmdgen.UsmUserData(
+                config[CONF_COMMUNITY],
+                config[CONF_AUTHKEY],
+                config[CONF_PRIVKEY],
+                authProtocol=cfg.usmHMACSHAAuthProtocol,
+                privProtocol=cfg.usmAesCfb128Protocol
+            )
         self.baseoid = cmdgen.MibVariable(config[CONF_BASEOID])
 
         self.lock = threading.Lock()
@@ -95,7 +112,7 @@ class SnmpScanner(object):
         devices = []
 
         errindication, errstatus, errindex, restable = self.snmp.nextCmd(
-            self.community, self.host, self.baseoid)
+            self.auth, self.host, self.baseoid)
 
         if errindication:
             _LOGGER.error("SNMPLIB error: %s", errindication)
