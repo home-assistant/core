@@ -5,6 +5,7 @@ import sys
 import fnmatch
 from collections import OrderedDict
 from typing import Union, List, Dict
+from yaml.constructor import SafeConstructor
 
 import yaml
 try:
@@ -156,6 +157,18 @@ def _ordered_dict(loader: SafeLineLoader,
     return processed
 
 
+def _construct_seq(loader, node):
+    obj, = SafeConstructor.construct_yaml_seq(loader, node)
+
+    class NodeClass(list):
+        """Wrapper class to be able to add attributes on a list."""
+        pass
+    processed = NodeClass(obj)
+    setattr(processed, '__config_file__', loader.name)
+    setattr(processed, '__line__', node.start_mark.line)
+    return processed
+
+
 def _env_var_yaml(loader: SafeLineLoader,
                   node: yaml.nodes.Node):
     """Load environment variables and embed it into the configuration YAML."""
@@ -219,9 +232,12 @@ def _secret_yaml(loader: SafeLineLoader,
     _LOGGER.error('Secret %s not defined.', node.value)
     raise HomeAssistantError(node.value)
 
+
 yaml.SafeLoader.add_constructor('!include', _include_yaml)
 yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
                                 _ordered_dict)
+yaml.SafeLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq)
 yaml.SafeLoader.add_constructor('!env_var', _env_var_yaml)
 yaml.SafeLoader.add_constructor('!secret', _secret_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_list', _include_dir_list_yaml)

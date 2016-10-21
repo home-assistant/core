@@ -430,9 +430,10 @@ def log_exception(ex, domain, config, hass=None):
     else:
         message += '{}.'.format(humanize_error(config, ex))
 
-    if hasattr(config, '__line__'):
+    domain_config = config.get(domain, config)
+    if hasattr(domain_config, '__line__'):
         message += " (See {}:{})".format(
-            config.__config_file__, config.__line__ or '?')
+            domain_config.__config_file__, domain_config.__line__ or '?')
 
     if domain != 'homeassistant':
         message += (' Please check the docs at '
