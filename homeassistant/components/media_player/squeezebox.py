@@ -55,8 +55,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         ip = socket.gethostbyname(host)
     except (OSError) as error:
-      _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
-      return False
+        _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
+        return False
 
     # Combine it with port to allow multiple servers at the same host
     key = "{}:{}".format(ip, port)
@@ -114,7 +114,7 @@ class LogitechMediaServer(object):
         return response.split(' ')[-1].strip()
 
     def get_player_status(self, player):
-        """Get ithe status of a player."""
+        """Get the status of a player."""
         #   (title) : Song title
         # Requested Information
         # a (artist): Artist name 'artist'
@@ -123,7 +123,8 @@ class LogitechMediaServer(object):
         # l (album): Album, including the server's  "(N of M)"
         tags = 'adKl'
         new_status = {}
-        response = self.get('{player} status - 1 tags:{tags}\n'.format(player=player, tags=tags))
+        response = self.get('{player} status - 1 tags:{tags}\n'
+                            .format(player=player, tags=tags))
 
         if not response:
             return {}
@@ -136,7 +137,7 @@ class LogitechMediaServer(object):
         return new_status
 
     def get(self, command):
-        """Abstracts out the telnet connection."""
+        """Abstract out the telnet connection."""
         try:
             telnet = telnetlib.Telnet(self.host, self.port)
 
@@ -155,7 +156,6 @@ class LogitechMediaServer(object):
             response = telnet.read_until(b'\n', timeout=3)\
                              .decode('UTF-8')\
 
-            #response = urllib.parse.unquote(response)
             telnet.write(b'exit\n')
             _LOGGER.debug("Response: %s", response)
 
