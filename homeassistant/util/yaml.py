@@ -158,11 +158,14 @@ def _ordered_dict(loader: SafeLineLoader,
 
 
 def _construct_seq(loader, node):
+    """Add line number and file name to Load YAML sequence."""
     obj, = SafeConstructor.construct_yaml_seq(loader, node)
 
     class NodeClass(list):
         """Wrapper class to be able to add attributes on a list."""
+        
         pass
+
     processed = NodeClass(obj)
     setattr(processed, '__config_file__', loader.name)
     setattr(processed, '__line__', node.start_mark.line)
