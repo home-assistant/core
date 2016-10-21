@@ -546,4 +546,4 @@ zeroconf==0.17.6
 
 # homeassistant.components.sensehat
 # homeassistant.components.sensor.sensehat
-sense-hat==2.2.0
+https://github.com/RPi-Distro/python-sense-hat/archive/master.zip
