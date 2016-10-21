@@ -27,7 +27,7 @@ CONF_LOCKS = 'locks'
 CONF_MOUSE = 'mouse'
 CONF_SMARTPLUGS = 'smartplugs'
 CONF_THERMOMETERS = 'thermometers'
-
+CONF_SMARTCAM = 'smartcam'
 DOMAIN = 'verisure'
 
 HUB = None
@@ -43,6 +43,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_MOUSE, default=True): cv.boolean,
         vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
         vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
+        vol.Optional(CONF_SMARTCAM, default=True): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -55,7 +56,8 @@ def setup(hass, config):
     if not HUB.login():
         return False
 
-    for component in ('sensor', 'switch', 'alarm_control_panel', 'lock'):
+    for component in ('sensor', 'switch', 'alarm_control_panel', 'lock',
+                      'camera'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
@@ -72,6 +74,8 @@ class VerisureHub(object):
         self.climate_status = {}
         self.mouse_status = {}
         self.smartplug_status = {}
+        self.smartcam_status = {}
+        self.smartcam_dict = {}
 
         self.config = domain_config
         self._verisure = verisure
@@ -132,6 +136,20 @@ class VerisureHub(object):
         self.update_component(
             self.my_pages.smartplug.get,
             self.smartplug_status)
+
+    @Throttle(timedelta(seconds=30))
+    def update_smartcam(self):
+        """Update the status of the smartcam."""
+        self.update_component(
+            self.my_pages.smartcam.get,
+            self.smartcam_status)
+
+    @Throttle(timedelta(seconds=30))
+    def update_smartcam_imagelist(self):
+        """Update the imagelist for the camera."""
+        _LOGGER.debug('Running update imagelist')
+        self.smartcam_dict = self.my_pages.smartcam.get_imagelist()
+        _LOGGER.debug('New dict: %s', self.smartcam_dict)
 
     @property
     def available(self):
