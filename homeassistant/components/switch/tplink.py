@@ -47,6 +47,11 @@ class SmartPlugSwitch(SwitchDevice):
         """Initialize the switch."""
         self.smartplug = smartplug
         self._name = name
+        self._state = None
+        self._emeter_present = (smartplug.model == 110)
+        _LOGGER.debug("Setting up TP-Link Smart Plug HS%i", smartplug.model)
+        # Set up emeter cache
+        self._emeter_params = {}
 
     @property
     def name(self):
@@ -56,7 +61,7 @@ class SmartPlugSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.smartplug.state == 'ON'
+        return self._state == 'ON'
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -69,23 +74,20 @@ class SmartPlugSwitch(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        _LOGGER.debug("Updating TP-Link energy meter data")
+        return self._emeter_params
 
-        emeter_readings = self.smartplug.get_emeter_realtime()
+    def update(self):
+        """Update the TP-Link switch's state"""
+        self._state = self.smartplug.state
 
-        if emeter_readings is False:
-            return {}
+        if self._emeter_present:
+            emeter_readings = self.smartplug.get_emeter_realtime()
 
-        current_consumption = "%.1f W" % emeter_readings["power"]
-        current = "%.1f A" % emeter_readings["current"]
-        voltage = "%.2f V" % emeter_readings["voltage"]
-        total_consumption = "%.2f kW" % emeter_readings["total"]
-
-        attrs = {
-            ATTR_CURRENT_CONSUMPTION: current_consumption,
-            ATTR_TOTAL_CONSUMPTION: total_consumption,
-            ATTR_VOLTAGE: voltage,
-            ATTR_CURRENT: current
-        }
-
-        return attrs
+            self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
+                = "%.1f W" % emeter_readings["power"]
+            self._emeter_params[ATTR_TOTAL_CONSUMPTION] \
+                = "%.2f kW" % emeter_readings["total"]
+            self._emeter_params[ATTR_VOLTAGE] \
+                = "%.2f V" % emeter_readings["voltage"]
+            self._emeter_params[ATTR_CURRENT] \
+                = "%.1f A" % emeter_readings["current"]
