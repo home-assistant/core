@@ -75,6 +75,7 @@ class VerisureHub(object):
         self.mouse_status = {}
         self.smartplug_status = {}
         self.smartcam_status = {}
+        self.smartcam_dict = {}
 
         self.config = domain_config
         self._verisure = verisure
@@ -142,6 +143,13 @@ class VerisureHub(object):
         self.update_component(
             self.my_pages.smartcam.get,
             self.smartcam_status)
+
+    @Throttle(timedelta(seconds=30))
+    def update_smartcam_imagelist(self):
+        """Update the imagelist for the camera."""
+        _LOGGER.debug('Running update imagelist')
+        self.smartcam_dict = self.my_pages.smartcam.get_imagelist()
+        return self.smartcam_dict
 
     @property
     def available(self):
