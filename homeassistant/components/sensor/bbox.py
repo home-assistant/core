@@ -1,5 +1,5 @@
 """
-Support for Bbox Bouygues Modem Routeur.
+Support for Bbox Bouygues Modem Router.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bbox/
@@ -10,8 +10,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (BANDWIDTH_MEGABITS_SECONDS, CONF_NAME,
-                                 CONF_MONITORED_VARIABLES, ATTR_ATTRIBUTION)
+from homeassistant.const import (CONF_NAME, CONF_MONITORED_VARIABLES,
+                                 ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -25,6 +25,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Powered by Bouygues Telecom"
 DEFAULT_NAME = 'Bbox'
+
+# Bandwidth units
+BANDWIDTH_MEGABITS_SECONDS = 'Mb/s'  # type: str
 
 # Sensor types are defined like so:
 # Name, unit, icon
@@ -113,13 +116,17 @@ class BboxSensor(Entity):
         """Get the latest data from Bbox and update the state."""
         self.bbox_data.update()
         if self.type == 'down_max_bandwidth':
-            self._state = self.bbox_data.data['rx']['maxBandwidth'] / 1000
+            self._state = round(
+                self.bbox_data.data['rx']['maxBandwidth'] / 1000, 2)
         elif self.type == 'up_max_bandwidth':
-            self._state = self.bbox_data.data['tx']['maxBandwidth'] / 1000
+            self._state = round(
+                self.bbox_data.data['tx']['maxBandwidth'] / 1000, 2)
         elif self.type == 'current_down_bandwidth':
-            self._state = self.bbox_data.data['rx']['bandwidth'] / 1000
+            self._state = round(self.bbox_data.data['rx']['bandwidth'] / 1000,
+                                2)
         elif self.type == 'current_up_bandwidth':
-            self._state = self.bbox_data.data['tx']['bandwidth'] / 1000
+            self._state = round(self.bbox_data.data['tx']['bandwidth'] / 1000,
+                                2)
 
 
 # pylint: disable=too-few-public-methods
