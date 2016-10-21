@@ -291,6 +291,7 @@ class Device(Entity):
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
                  track: bool, dev_id: str, mac: str, name: str=None,
                  picture: str=None, gravatar: str=None,
+                 icon: str=None,
                  hide_if_away: bool=False) -> None:
         """Initialize a device."""
         self.hass = hass
@@ -316,6 +317,9 @@ class Device(Entity):
         else:
             self.config_picture = picture
 
+        # Configured icon
+        self._icon = icon
+
         self.away_hide = hide_if_away
 
     @property
@@ -327,6 +331,11 @@ class Device(Entity):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def icon(self):
+        """Return the picture of the device."""
+        return self._icon
 
     @property
     def entity_picture(self):
@@ -415,6 +424,7 @@ def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
         vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
         vol.Optional('gravatar', default=None): vol.Any(None, cv.string),
         vol.Optional('picture', default=None): vol.Any(None, cv.string),
+        vol.Optional('icon', default=None): vol.Any(None, cv.icon),
         vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
             cv.time_period, cv.positive_timedelta)
     })
