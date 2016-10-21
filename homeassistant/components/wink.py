@@ -82,7 +82,7 @@ def setup(hass, config):
 
     # Load components for the devices in Wink that we support
     for component in WINK_COMPONENTS:
-      discovery.load_platform(hass, component, DOMAIN, {}, config)
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
     return True
 
 
