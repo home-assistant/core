@@ -7,7 +7,6 @@ https://home-assistant.io/components/media_player.squeezebox/
 import logging
 import telnetlib
 import urllib.parse
-import socket
 
 import voluptuous as vol
 
@@ -41,6 +40,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the squeezebox platform."""
+    import socket
+    
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
