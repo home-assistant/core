@@ -7,9 +7,13 @@ https://home-assistant.io/components/
 """
 
 import os
+import logging
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import JobPriority
 from homeassistant.helpers.entity import Entity
 from sense_hat import SenseHat
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_cpu_temp():
@@ -34,71 +38,104 @@ sense = SenseHat()
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    add_devices([SensehatSensor_temperature()])
-    add_devices([SensehatSensor_humidity()])
-    add_devices([SensehatSensor_pressure()])
+    add_devices([SensehatSensor_temperature(hass)])
+    add_devices([SensehatSensor_humidity(hass)])
+    add_devices([SensehatSensor_pressure(hass)])
 
 
 class SensehatSensor_temperature(Entity):
     #Representation of a  Temperature Sensor.
+    
+    def __init__(self, hass):
+        #Initialize the sensor
+        self._temp = None
+        # Get initial state
+        hass.pool.add_job(
+            JobPriority.EVENT_STATE, (self.update_ha_state, True))
 
     @property
     def name(self):
-    # Return the name of the sensor.
+        # Return the name of the sensor.
         return 'Temperature'
 
     @property
     def state(self):
-    # Return state of the sensor
-        t1 = sense.get_temperature_from_humidity()
-        t2 = sense.get_temperature_from_pressure()
-        t_cpu = get_cpu_temp()
-        t = (t1+t2)/2
-        t_corr = t - ((t_cpu-t)/1.5)
-        t_corr = get_average(t_corr)
-        return t_corr
+        # Return state of the sensor
+        return self._temp
 
     @property
     def unit_of_measurement(self):
-    # Return the unit of measurement
+        # Return the unit of measurement
         return TEMP_CELSIUS
+
+    def update(self, *args):
+        # Get the latest data
+        temp_from_h = sense.get_temperature_from_humidity()
+        temp_from_p = sense.get_temperature_from_pressure()
+        t_cpu = get_cpu_temp()
+        t_total = (temp_from_h+temp_from_p)/2
+        t_correct = t_total - ((t_cpu-t_total)/1.5)
+        t_correct = get_average(t_correct)
+        self._temp = t_correct
+        
 
 
 class SensehatSensor_humidity(Entity):
     # Representation of a Humidity Sensor.
 
+    def __init__(self, hass):
+        #Initialize the sensor.
+        self._humidity = None
+        # Get initial state
+        hass.pool.add_job(
+            JobPriority.EVENT_STATE, (self.update_ha_state, True))
+
     @property
     def name(self):
-    # Return the name of the sensor.
+        # Return the name of the sensor.
         return 'Humidity'
 
     @property
     def state(self):
-    # Return state of the sensor
-        humidity = sense.get_humidity()
-        return humidity
+        # Return state of the sensor
+        return self._humidity
 
     @property
     def unit_of_measurement(self):
-    # Return the unit of measurement.
+        # Return the unit of measurement.
         return '%'
+
+    def update(self, *args):
+        # Get the latest data
+        self._humidity = sense.get_humidity()
+
 
 
 class SensehatSensor_pressure(Entity):
     # Representation of a Pressure Sensor.
 
+    def __init__(self, hass):
+        # Initialize the sensor.
+        self._pressure = None
+        # Get initial state
+        hass.pool.add_job(
+            JobPriority.EVENT_STATE, (self.update_ha_state, True))
+
     @property
     def name(self):
-    # Return the name of the sensor.
+        # Return the name of the sensor.
         return 'Pressure'
 
     @property
     def state(self):
-    # Return state of the sensor.
-        pressure = sense.get_pressure()
-        return pressure
+        # Return state of the sensor.
+        return self._pressure
 
     @property
     def unit_of_measurement(self):
-    # Return the unit of measurement.
+        # Return the unit of measurement.
         return 'mb'
+
+    def update(self, *args):
+        # Get the latest data
+        self._pressure = sense.get_pressure()
