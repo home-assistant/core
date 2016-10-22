@@ -107,6 +107,7 @@ def get_service(hass, config):
 # pylint: disable=too-many-instance-attributes
 class NFAndroidTVNotificationService(BaseNotificationService):
     """Notification service for Notifications for Android TV."""
+
     # pylint: disable=too-many-arguments,too-few-public-methods
     def __init__(self, remoteip, duration, position, transparency,
                  color, interrupt, timeout):
