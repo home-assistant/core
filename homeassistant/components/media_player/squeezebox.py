@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the squeezebox platform."""
     import socket
-    
+
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
@@ -54,13 +54,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Get IP of host, to prevent duplication of same host (different DNS names)
     try:
-        ip = socket.gethostbyname(host)
+        ipaddr = socket.gethostbyname(host)
     except (OSError) as error:
         _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
         return False
 
     # Combine it with port to allow multiple servers at the same host
-    key = "{}:{}".format(ip, port)
+    key = "{}:{}".format(ipaddr, port)
 
     # Only add a media server once
     if key in KNOWN_DEVICES:
@@ -248,6 +248,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
                 player=self._id)
 
         if self._lms._username:
+            # pylint: disable=protected-access
             base_url = 'http://{username}:{password}@{server}:{port}/'.format(
                 username=self._lms._username,
                 password=self._lms._password,
