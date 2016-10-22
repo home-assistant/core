@@ -11,6 +11,7 @@ import mimetypes
 import threading
 import re
 import ssl
+from ipaddress import ip_address, ip_network
 
 import voluptuous as vol
 
@@ -27,16 +28,16 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components import persistent_notification
 
 DOMAIN = 'http'
-REQUIREMENTS = ('cherrypy==8.1.0', 'static3==0.7.0', 'Werkzeug==0.11.11')
+REQUIREMENTS = ('cherrypy==8.1.2', 'static3==0.7.0', 'Werkzeug==0.11.11')
 
 CONF_API_PASSWORD = 'api_password'
-CONF_APPROVED_IPS = 'approved_ips'
 CONF_SERVER_HOST = 'server_host'
 CONF_SERVER_PORT = 'server_port'
 CONF_DEVELOPMENT = 'development'
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
 CONF_CORS_ORIGINS = 'cors_allowed_origins'
+CONF_TRUSTED_NETWORKS = 'trusted_networks'
 
 DATA_API_PASSWORD = 'api_password'
 NOTIFICATION_ID_LOGIN = 'http-login'
@@ -76,7 +77,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
         vol.Optional(CONF_SSL_KEY): cv.isfile,
         vol.Optional(CONF_CORS_ORIGINS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_APPROVED_IPS): vol.All(cv.ensure_list, [cv.string])
+        vol.Optional(CONF_TRUSTED_NETWORKS):
+            vol.All(cv.ensure_list, [ip_network])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -113,7 +115,9 @@ def setup(hass, config):
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf.get(CONF_CORS_ORIGINS, [])
-    approved_ips = conf.get(CONF_APPROVED_IPS, [])
+    trusted_networks = [
+        ip_network(trusted_network)
+        for trusted_network in conf.get(CONF_TRUSTED_NETWORKS, [])]
 
     server = HomeAssistantWSGI(
         hass,
@@ -124,7 +128,7 @@ def setup(hass, config):
         ssl_certificate=ssl_certificate,
         ssl_key=ssl_key,
         cors_origins=cors_origins,
-        approved_ips=approved_ips
+        trusted_networks=trusted_networks
     )
 
     def start_wsgi_server(event):
@@ -257,7 +261,7 @@ class HomeAssistantWSGI(object):
 
     def __init__(self, hass, development, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
-                 approved_ips):
+                 trusted_networks):
         """Initilalize the WSGI Home Assistant server."""
         from werkzeug.wrappers import Response
 
@@ -276,7 +280,7 @@ class HomeAssistantWSGI(object):
         self.server_host = server_host
         self.server_port = server_port
         self.cors_origins = cors_origins
-        self.approved_ips = approved_ips
+        self.trusted_networks = trusted_networks
         self.event_forwarder = None
         self.server = None
 
@@ -431,6 +435,19 @@ class HomeAssistantWSGI(object):
             environ['PATH_INFO'] = '{}.{}'.format(*fingerprinted.groups())
         return app(environ, start_response)
 
+    @staticmethod
+    def get_real_ip(request):
+        """Return the clients correct ip address, even in proxied setups."""
+        if request.access_route:
+            return request.access_route[-1]
+        else:
+            return request.remote_addr
+
+    def is_trusted_ip(self, remote_addr):
+        """Match an ip address against trusted CIDR networks."""
+        return any(ip_address(remote_addr) in trusted_network
+                   for trusted_network in self.hass.wsgi.trusted_networks)
+
 
 class HomeAssistantView(object):
     """Base view for all views."""
@@ -471,13 +488,15 @@ class HomeAssistantView(object):
         except AttributeError:
             raise MethodNotAllowed
 
+        remote_addr = HomeAssistantWSGI.get_real_ip(request)
+
         # Auth code verbose on purpose
         authenticated = False
 
         if self.hass.wsgi.api_password is None:
             authenticated = True
 
-        elif request.remote_addr in self.hass.wsgi.approved_ips:
+        elif self.hass.wsgi.is_trusted_ip(remote_addr):
             authenticated = True
 
         elif hmac.compare_digest(request.headers.get(HTTP_HEADER_HA_AUTH, ''),
@@ -491,17 +510,17 @@ class HomeAssistantView(object):
 
         if self.requires_auth and not authenticated:
             _LOGGER.warning('Login attempt or request with an invalid '
-                            'password from %s', request.remote_addr)
+                            'password from %s', remote_addr)
             persistent_notification.create(
                 self.hass,
-                'Invalid password used from {}'.format(request.remote_addr),
+                'Invalid password used from {}'.format(remote_addr),
                 'Login attempt failed', NOTIFICATION_ID_LOGIN)
             raise Unauthorized()
 
         request.authenticated = authenticated
 
         _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, request.remote_addr, authenticated)
+                     request.path, remote_addr, authenticated)
 
         result = handler(request, **values)
 

@@ -179,19 +179,16 @@ class TestEventBus(unittest.TestCase):
 
         def listener(_): pass
 
-        self.bus.listen('test', listener)
+        unsub = self.bus.listen('test', listener)
 
         self.assertEqual(old_count + 1, len(self.bus.listeners))
 
-        # Try deleting a non registered listener, nothing should happen
-        self.bus._remove_listener('test', lambda x: len)
-
         # Remove listener
-        self.bus._remove_listener('test', listener)
+        unsub()
         self.assertEqual(old_count, len(self.bus.listeners))
 
-        # Try deleting listener while category doesn't exist either
-        self.bus._remove_listener('test', listener)
+        # Should do nothing now
+        unsub()
 
     def test_unsubscribe_listener(self):
         """Test unsubscribe listener from returned function."""
@@ -215,11 +212,48 @@ class TestEventBus(unittest.TestCase):
 
         assert len(calls) == 1
 
-    def test_listen_once_event(self):
+    def test_listen_once_event_with_callback(self):
         """Test listen_once_event method."""
         runs = []
 
-        self.bus.listen_once('test_event', lambda x: runs.append(1))
+        @ha.callback
+        def event_handler(event):
+            runs.append(event)
+
+        self.bus.listen_once('test_event', event_handler)
+
+        self.bus.fire('test_event')
+        # Second time it should not increase runs
+        self.bus.fire('test_event')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(runs))
+
+    def test_listen_once_event_with_coroutine(self):
+        """Test listen_once_event method."""
+        runs = []
+
+        @asyncio.coroutine
+        def event_handler(event):
+            runs.append(event)
+
+        self.bus.listen_once('test_event', event_handler)
+
+        self.bus.fire('test_event')
+        # Second time it should not increase runs
+        self.bus.fire('test_event')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(runs))
+
+    def test_listen_once_event_with_thread(self):
+        """Test listen_once_event method."""
+        runs = []
+
+        def event_handler(event):
+            runs.append(event)
+
+        self.bus.listen_once('test_event', event_handler)
 
         self.bus.fire('test_event')
         # Second time it should not increase runs
@@ -604,7 +638,7 @@ class TestWorkerPoolMonitor(object):
         schedule_handle = MagicMock()
         hass.loop.call_later.return_value = schedule_handle
 
-        ha.async_monitor_worker_pool(hass)
+        ha._async_monitor_worker_pool(hass)
         assert hass.loop.call_later.called
         assert hass.bus.async_listen_once.called
         assert not schedule_handle.called
@@ -650,7 +684,7 @@ class TestAsyncCreateTimer(object):
         now.second = 1
         mock_utcnow.reset_mock()
 
-        ha.async_create_timer(hass)
+        ha._async_create_timer(hass)
         assert len(hass.bus.async_listen_once.mock_calls) == 2
         start_timer = hass.bus.async_listen_once.mock_calls[1][1][1]
 

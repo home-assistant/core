@@ -55,7 +55,7 @@ MODULE_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATION): cv.string,
-    vol.Required(CONF_MODULES): MODULE_SCHEMA,
+    vol.Optional(CONF_MODULES): MODULE_SCHEMA,
 })
 
 
@@ -65,18 +65,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = NetAtmoData(netatmo.NETATMO_AUTH, config.get(CONF_STATION, None))
 
     dev = []
+    import lnetatmo
     try:
-        # Iterate each module
-        for module_name, monitored_conditions in config[CONF_MODULES].items():
-            # Test if module exist """
-            if module_name not in data.get_module_names():
-                _LOGGER.error('Module name: "%s" not found', module_name)
-                continue
-            # Only create sensor for monitored """
-            for variable in monitored_conditions:
-                dev.append(NetAtmoSensor(data, module_name, variable))
-    except KeyError:
-        pass
+        if CONF_MODULES in config:
+            # Iterate each module
+            for module_name, monitored_conditions in\
+                    config[CONF_MODULES].items():
+                # Test if module exist """
+                if module_name not in data.get_module_names():
+                    _LOGGER.error('Module name: "%s" not found', module_name)
+                    continue
+                # Only create sensor for monitored """
+                for variable in monitored_conditions:
+                    dev.append(NetAtmoSensor(data, module_name, variable))
+        else:
+            for module_name in data.get_module_names():
+                for variable in\
+                        data.station_data.monitoredConditions(module_name):
+                    dev.append(NetAtmoSensor(data, module_name, variable))
+    except lnetatmo.NoDevice:
+        return None
 
     add_devices(dev)
 
@@ -94,12 +102,22 @@ class NetAtmoSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        module_id = self.netatmo_data.\
+            station_data.moduleByName(module=module_name)['_id']
+        self._unique_id = "Netatmo Sensor {0} - {1} ({2})".format(self._name,
+                                                                  module_id,
+                                                                  self.type)
         self.update()
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique ID for this sensor."""
+        return self._unique_id
 
     @property
     def icon(self):
@@ -222,6 +240,7 @@ class NetAtmoData(object):
         """Initialize the data object."""
         self.auth = auth
         self.data = None
+        self.station_data = None
         self.station = station
 
     def get_module_names(self):
@@ -233,9 +252,10 @@ class NetAtmoData(object):
     def update(self):
         """Call the Netatmo API to update the data."""
         import lnetatmo
-        dev_list = lnetatmo.DeviceList(self.auth)
+        self.station_data = lnetatmo.DeviceList(self.auth)
 
         if self.station is not None:
-            self.data = dev_list.lastData(station=self.station, exclude=3600)
+            self.data = self.station_data.lastData(station=self.station,
+                                                   exclude=3600)
         else:
-            self.data = dev_list.lastData(exclude=3600)
+            self.data = self.station_data.lastData(exclude=3600)

@@ -60,6 +60,7 @@ class NX584Alarm(alarm.AlarmControlPanel):
         # talk to the API and trigger a requests exception for setup_platform()
         # to catch
         self._alarm.list_zones()
+        self._state = STATE_UNKNOWN
 
     @property
     def should_poll(self):
@@ -79,16 +80,20 @@ class NX584Alarm(alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
+        return self._state
+
+    def update(self):
+        """Process new events from panel."""
         try:
             part = self._alarm.list_partitions()[0]
             zones = self._alarm.list_zones()
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error('Unable to connect to %(host)s: %(reason)s',
                           dict(host=self._url, reason=ex))
-            return STATE_UNKNOWN
+            self._state = STATE_UNKNOWN
         except IndexError:
             _LOGGER.error('nx584 reports no partitions')
-            return STATE_UNKNOWN
+            self._state = STATE_UNKNOWN
 
         bypassed = False
         for zone in zones:
@@ -100,11 +105,11 @@ class NX584Alarm(alarm.AlarmControlPanel):
                 break
 
         if not part['armed']:
-            return STATE_ALARM_DISARMED
+            self._state = STATE_ALARM_DISARMED
         elif bypassed:
-            return STATE_ALARM_ARMED_HOME
+            self._state = STATE_ALARM_ARMED_HOME
         else:
-            return STATE_ALARM_ARMED_AWAY
+            self._state = STATE_ALARM_ARMED_AWAY
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

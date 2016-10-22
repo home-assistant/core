@@ -199,9 +199,10 @@ def check(config_path):
         res['secrets'][node.value] = val
         return val
 
-    def mock_except(ex, domain, config):  # pylint: disable=unused-variable
+    def mock_except(ex, domain, config,  # pylint: disable=unused-variable
+                    hass=None):
         """Mock bootstrap.log_exception."""
-        MOCKS['except'][1](ex, domain, config)
+        MOCKS['except'][1](ex, domain, config, hass)
         res['except'][domain] = config.get(domain, config)
 
     # Patches to skip functions
