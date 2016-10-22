@@ -3,6 +3,7 @@ from collections import OrderedDict
 from datetime import timedelta
 import enum
 import os
+from socket import _GLOBAL_DEFAULT_TIMEOUT
 
 import pytest
 import voluptuous as vol
@@ -436,3 +437,22 @@ def test_enum():
         schema('value3')
 
     TestEnum['value1']
+
+
+def test_socket_timeout():
+    """Test socket timeout validator."""
+    TEST_CONF_TIMEOUT = 'timeout'
+
+    schema = vol.Schema(
+        {vol.Required(TEST_CONF_TIMEOUT, default=None): cv.socket_timeout})
+
+    with pytest.raises(vol.Invalid):
+        schema({TEST_CONF_TIMEOUT: 0.0})
+
+    with pytest.raises(vol.Invalid):
+        schema({TEST_CONF_TIMEOUT: -1})
+
+    assert _GLOBAL_DEFAULT_TIMEOUT == schema({TEST_CONF_TIMEOUT:
+                                              None})[TEST_CONF_TIMEOUT]
+
+    assert 1.0 == schema({TEST_CONF_TIMEOUT: 1})[TEST_CONF_TIMEOUT]
