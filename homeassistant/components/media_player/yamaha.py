@@ -47,7 +47,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     source_ignore = config.get(CONF_SOURCE_IGNORE)
     source_names = config.get(CONF_SOURCE_NAMES)
 
-    if host is None:
+    if discovery_info is not None:
+        name = discovery_info[0]
+        model = discovery_info[1]
+        ctrl_url = discovery_info[2]
+        desc_url = discovery_info[3]
+        receivers = rxv.RXV(
+            ctrl_url,
+            model_name=model,
+            friendly_name=name,
+            unit_desc_url=desc_url).zone_controllers()
+        _LOGGER.info("Receivers: %s", receivers)
+    elif host is None:
         receivers = []
         for recv in rxv.find():
             receivers.extend(recv.zone_controllers())
@@ -73,8 +84,8 @@ class YamahaDevice(MediaPlayerDevice):
         self._pwstate = STATE_OFF
         self._current_source = None
         self._source_list = None
-        self._source_ignore = source_ignore
-        self._source_names = source_names
+        self._source_ignore = source_ignore or []
+        self._source_names = source_names or {}
         self._reverse_mapping = None
         self.update()
         self._name = name
