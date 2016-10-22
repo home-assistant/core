@@ -5,6 +5,7 @@ from unittest.mock import patch
 import os
 
 import requests
+import requests_mock
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import updater
@@ -111,3 +112,19 @@ class TestUpdater(unittest.TestCase):
             assert uuid != uuid2
         finally:
             os.remove(path)
+
+    @requests_mock.Mocker()
+    def test_reporting_false_works(self, m):
+        """Test we do not send any data."""
+        m.post(updater.UPDATER_URL,
+               json={'version': '0.15',
+                     'release-notes': 'https://home-assistant.io'})
+
+        response = updater.get_newest_version(None)
+
+        assert response == ('0.15', 'https://home-assistant.io')
+
+        history = m.request_history
+
+        assert len(history) == 1
+        assert history[0].json() == {}
