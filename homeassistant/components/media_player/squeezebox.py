@@ -247,8 +247,8 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             media_url = ('/music/current/cover.jpg?player={player}').format(
                 player=self._id)
 
+        # pylint: disable=protected-access
         if self._lms._username:
-            # pylint: disable=protected-access
             base_url = 'http://{username}:{password}@{server}:{port}/'.format(
                 username=self._lms._username,
                 password=self._lms._password,
