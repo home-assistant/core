@@ -103,6 +103,7 @@ def get_service(hass, config):
                                           interrupt,
                                           timeout)
 
+
 # pylint: disable=too-many-instance-attributes
 class NFAndroidTVNotificationService(BaseNotificationService):
     """Notification service for Notifications for Android TV."""
@@ -147,13 +148,15 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 try:
                     payload[ATTR_DURATION] = "%i" % int(duration)
                 except ValueError:
-                    _LOGGER.warning("Invalid duration-value: %s", str(duration))
+                    _LOGGER.warning("Invalid duration-value: %s",
+                                    str(duration))
             if ATTR_POSITION in data:
                 position = data.get(ATTR_POSITION)
                 if position in POSITIONS:
                     payload[ATTR_POSITION] = "%i" % POSITIONS.get(position)
                 else:
-                    _LOGGER.warning("Invalid position-value: %s", str(position))
+                    _LOGGER.warning("Invalid position-value: %s",
+                                    str(position))
             if ATTR_TRANSPARENCY in data:
                 transparency = data.get(ATTR_TRANSPARENCY)
                 if transparency in TRANSPARENCIES:
