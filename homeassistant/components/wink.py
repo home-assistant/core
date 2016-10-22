@@ -53,6 +53,7 @@ WINK_COMPONENTS = [
     'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover'
 ]
 
+
 def setup(hass, config):
     """Setup the Wink component."""
     import pywink
