@@ -9,6 +9,7 @@ import logging
 import json
 import platform
 import uuid
+import os
 # pylint: disable=no-name-in-module,import-error
 from distutils.version import StrictVersion
 
@@ -63,6 +64,7 @@ def setup(hass, config):
         _LOGGER.warning('Updater not supported in development version')
         return False
 
+    config = config.get(DOMAIN, {})
     huuid = _load_uuid(hass) if config.get(CONF_REPORTING) else None
 
     # Update daily, start 1 hour after startup
@@ -91,7 +93,9 @@ def get_newest_version(huuid):
     info_object = {'uuid': huuid, 'version': CURRENT_VERSION,
                    'timezone': dt_util.DEFAULT_TIME_ZONE.zone,
                    'os_name': platform.system(), "arch": platform.machine(),
-                   'python_version': platform.python_version()}
+                   'python_version': platform.python_version(),
+                   'virtualenv': (os.environ.get('VIRTUAL_ENV') is not None),
+                   'docker': False}
 
     if platform.system() == 'Windows':
         info_object['os_version'] = platform.win32_ver()[0]
@@ -102,6 +106,7 @@ def get_newest_version(huuid):
         linux_dist = distro.linux_distribution(full_distribution_name=False)
         info_object['distribution'] = linux_dist[0]
         info_object['os_version'] = linux_dist[1]
+        info_object['docker'] = os.path.isfile('/.dockerenv')
 
     if not huuid:
         info_object = {}
@@ -109,6 +114,9 @@ def get_newest_version(huuid):
     try:
         req = requests.post(UPDATER_URL, json=info_object)
         res = req.json()
+        _LOGGER.info(('The latest version is %s. '
+                      'Information submitted includes %s'),
+                     res['version'], info_object)
         return (res['version'], res['release-notes'])
     except requests.RequestException:
         _LOGGER.exception('Could not contact HASS Update to check for updates')
