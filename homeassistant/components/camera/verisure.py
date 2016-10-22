@@ -4,6 +4,7 @@ Camera that loads a picture from a local file.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.verisure/
 """
+import errno
 import logging
 import os
 
@@ -93,7 +94,7 @@ class VerisureSmartcam(Camera):
             os.remove(remove_image)
             _LOGGER.debug('Deleting old image %s', remove_image)
         except OSError as error:
-            if error.errno != 2:
+            if error.errno != errno.ENOENT:
                 raise
 
     @property
