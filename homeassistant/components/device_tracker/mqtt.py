@@ -11,13 +11,14 @@ import voluptuous as vol
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import CONF_DEVICES
 from homeassistant.components.mqtt import CONF_QOS
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['mqtt']
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend({
     vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic},
 })
 

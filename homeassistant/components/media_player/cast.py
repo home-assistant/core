@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pychromecast==0.7.4']
+REQUIREMENTS = ['pychromecast==0.7.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,12 +68,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     casts = []
 
+    # get_chromecasts() returns Chromecast objects
+    # with the correct friendly name for grouped devices
+    all_chromecasts = pychromecast.get_chromecasts()
+
     for host in hosts:
-        try:
-            casts.append(CastDevice(*host))
-            KNOWN_HOSTS.append(host)
-        except pychromecast.ChromecastConnectionError:
-            pass
+        found = [device for device in all_chromecasts
+                 if (device.host, device.port) == host]
+        if found:
+            try:
+                casts.append(CastDevice(found[0]))
+                KNOWN_HOSTS.append(host)
+            except pychromecast.ChromecastConnectionError:
+                pass
 
     add_devices(casts)
 
@@ -83,10 +90,9 @@ class CastDevice(MediaPlayerDevice):
 
     # pylint: disable=abstract-method
     # pylint: disable=too-many-public-methods
-    def __init__(self, host, port):
+    def __init__(self, chromecast):
         """Initialize the Cast device."""
-        import pychromecast
-        self.cast = pychromecast.Chromecast(host, port)
+        self.cast = chromecast
 
         self.cast.socket_client.receiver_controller.register_status_listener(
             self)

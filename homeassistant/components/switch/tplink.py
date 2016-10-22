@@ -12,12 +12,17 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/gadgetreactor/pyHS100/archive/'
-                'ef85f939fd5b07064a0f34dfa673fa7d6140bd95.zip#pyHS100==0.1.2']
+REQUIREMENTS = ['https://github.com/GadgetReactor/pyHS100/archive/'
+                '1f771b7d8090a91c6a58931532e42730b021cbde.zip#pyHS100==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'TPLink Switch HS100'
+
+ATTR_CURRENT_CONSUMPTION = 'Current consumption'
+ATTR_TOTAL_CONSUMPTION = 'Total consumption'
+ATTR_VOLTAGE = 'Voltage'
+ATTR_CURRENT = 'Current'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -42,6 +47,11 @@ class SmartPlugSwitch(SwitchDevice):
         """Initialize the switch."""
         self.smartplug = smartplug
         self._name = name
+        self._state = None
+        self._emeter_present = (smartplug.model == 110)
+        _LOGGER.debug("Setting up TP-Link Smart Plug HS%i", smartplug.model)
+        # Set up emeter cache
+        self._emeter_params = {}
 
     @property
     def name(self):
@@ -51,7 +61,7 @@ class SmartPlugSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.smartplug.state == 'ON'
+        return self._state == 'ON'
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -60,3 +70,24 @@ class SmartPlugSwitch(SwitchDevice):
     def turn_off(self):
         """Turn the switch off."""
         self.smartplug.state = 'OFF'
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        return self._emeter_params
+
+    def update(self):
+        """Update the TP-Link switch's state."""
+        self._state = self.smartplug.state
+
+        if self._emeter_present:
+            emeter_readings = self.smartplug.get_emeter_realtime()
+
+            self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
+                = "%.1f W" % emeter_readings["power"]
+            self._emeter_params[ATTR_TOTAL_CONSUMPTION] \
+                = "%.2f kW" % emeter_readings["total"]
+            self._emeter_params[ATTR_VOLTAGE] \
+                = "%.2f V" % emeter_readings["voltage"]
+            self._emeter_params[ATTR_CURRENT] \
+                = "%.1f A" % emeter_readings["current"]

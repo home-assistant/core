@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_NAME, STATE_UNKNOWN)
+    TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_NAME, STATE_UNKNOWN,
+    ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -20,6 +21,7 @@ REQUIREMENTS = ["yahooweather==0.8"]
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 CONF_FORECAST = 'forecast'
 CONF_WOEID = 'woeid'
 
@@ -140,9 +142,7 @@ class YahooWeatherSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            'about': "Weather forecast delivered by Yahoo! Inc. are provided"
-                     " free of charge for use by individuals and non-profit"
-                     " organizations for personal, non-commercial uses."
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
     def update(self):

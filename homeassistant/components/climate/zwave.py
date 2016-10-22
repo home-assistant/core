@@ -209,7 +209,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         return self._swing_list
 
     @property
-    def unit_of_measurement(self):
+    def temperature_unit(self):
         """Return the unit of measurement."""
         if self._unit == 'C':
             return TEMP_CELSIUS

@@ -74,7 +74,7 @@ class StatisticsSensor(Entity):
         self.min = self.max = self.total = self.count = 0
         self.update()
 
-        def calculate_sensor_state_listener(entity, old_state, new_state):
+        def stats_sensor_state_listener(entity, old_state, new_state):
             """Called when the sensor changes state."""
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
@@ -87,7 +87,7 @@ class StatisticsSensor(Entity):
 
             self.update_ha_state(True)
 
-        track_state_change(hass, entity_id, calculate_sensor_state_listener)
+        track_state_change(hass, entity_id, stats_sensor_state_listener)
 
     @property
     def name(self):
