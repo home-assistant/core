@@ -89,6 +89,8 @@ class VerisureSmartcam(Camera):
 
     def delete_image(self, event):
         """Delete an old image."""
+        if not self._image_id:
+            return
         remove_image = os.path.join(self._directory_path,
                                     '{}{}'.format(
                                         self._image_id,
