@@ -3,6 +3,7 @@ from collections import OrderedDict
 from datetime import timedelta
 import os
 from urllib.parse import urlparse
+from socket import _GLOBAL_DEFAULT_TIMEOUT
 
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
@@ -304,6 +305,24 @@ def time_zone(value):
         'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones')
 
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
+
+
+def socket_timeout(value):
+    """Validate timeout float > 0.0.
+
+    None coerced to socket._GLOBAL_DEFAULT_TIMEOUT bare object.
+    """
+    if value is None:
+        return _GLOBAL_DEFAULT_TIMEOUT
+    else:
+        try:
+            float_value = float(value)
+            if float_value > 0.0:
+                return float_value
+            raise vol.Invalid('Invalid socket timeout value.'
+                              ' float > 0.0 required.')
+        except Exception as _:
+            raise vol.Invalid('Invalid socket timeout: {err}'.format(err=_))
 
 
 # pylint: disable=no-value-for-parameter
