@@ -14,15 +14,17 @@ import voluptuous as vol
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.helpers.discovery import load_platform, discover
 
-REQUIREMENTS = ['netdisco==0.7.1']
+REQUIREMENTS = ['netdisco==0.7.2']
 
 DOMAIN = 'discovery'
 
 SCAN_INTERVAL = 300  # seconds
 SERVICE_NETGEAR = 'netgear_router'
 SERVICE_WEMO = 'belkin_wemo'
+SERVICE_HASS_IOS_APP = 'hass_ios'
 
 SERVICE_HANDLERS = {
+    SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
     'philips_hue': ('light', 'hue'),
