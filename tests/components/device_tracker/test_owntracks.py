@@ -2,18 +2,16 @@
 import json
 import os
 import unittest
+from collections import defaultdict
 from unittest.mock import patch
 
-from collections import defaultdict
+from tests.common import (assert_setup_component, fire_mqtt_message,
+                          get_test_home_assistant, mock_mqtt_component)
 
+import homeassistant.components.device_tracker.owntracks as owntracks
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import device_tracker
-from homeassistant.const import (STATE_NOT_HOME, CONF_PLATFORM)
-import homeassistant.components.device_tracker.owntracks as owntracks
-
-from tests.common import (
-    assert_setup_component, get_test_home_assistant, mock_mqtt_component,
-    fire_mqtt_message)
+from homeassistant.const import CONF_PLATFORM, STATE_NOT_HOME
 
 USER = 'greg'
 DEVICE = 'phone'
@@ -684,23 +682,6 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         new_wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
         self.assertTrue(wayp == new_wayp)
 
-    try:
-        import libnacl
-    except (ImportError, OSError):
-        libnacl = None
-
-    @unittest.skipUnless(libnacl, "libnacl/libsodium is not installed")
-    def test_encrypted_payload_libsodium(self):
-        """Test sending encrypted message payload."""
-        self.assertTrue(device_tracker.setup(self.hass, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: SECRET_KEY,
-            }}))
-
-        self.send_message(LOCATION_TOPIC, ENCRYPTED_LOCATION_MESSAGE)
-        self.assert_location_latitude(2.0)
-
 
 class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
     """Test the OwnTrack sensor."""
@@ -803,3 +784,21 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
                     }}})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
         self.assert_location_latitude(None)
+
+    try:
+        import libnacl
+    except (ImportError, OSError):
+        libnacl = None
+
+    @unittest.skipUnless(libnacl, "libnacl/libsodium is not installed")
+    def test_encrypted_payload_libsodium(self):
+        """Test sending encrypted message payload."""
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_SECRET: SECRET_KEY,
+                    }})
+
+        self.send_message(LOCATION_TOPIC, ENCRYPTED_LOCATION_MESSAGE)
+        self.assert_location_latitude(2.0)
