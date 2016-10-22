@@ -116,7 +116,7 @@ def get_newest_version(huuid):
         res = req.json()
         _LOGGER.info(('The latest version is %s. '
                       'Information submitted includes %s'),
-                     str(res['version']), str(info_object))
+                     res['version'], info_object)
         return (res['version'], res['release-notes'])
     except requests.RequestException:
         _LOGGER.exception('Could not contact HASS Update to check for updates')
