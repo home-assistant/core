@@ -339,6 +339,7 @@ pyasn1-modules==0.0.8
 pyasn1==0.1.9
 
 # homeassistant.components.device_tracker.bbox
+# homeassistant.components.sensor.bbox
 pybbox==0.0.5-alpha
 
 # homeassistant.components.device_tracker.bluetooth_tracker
