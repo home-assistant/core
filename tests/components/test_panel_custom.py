@@ -1,9 +1,8 @@
 """The tests for the panel_custom component."""
 import os
 import shutil
-from tempfile import NamedTemporaryFile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from homeassistant import bootstrap
 from homeassistant.components import panel_custom
@@ -47,31 +46,40 @@ class TestPanelCustom(unittest.TestCase):
     @patch('homeassistant.components.panel_custom.register_panel')
     def test_webcomponent_custom_path(self, mock_register, _mock_setup):
         """Test if a web component is found in config panels dir."""
-        with NamedTemporaryFile() as fp:
-            config = {
-                'panel_custom': {
-                    'name': 'todomvc',
-                    'webcomponent_path': fp.name,
-                    'sidebar_title': 'Sidebar Title',
-                    'sidebar_icon': 'mdi:iconicon',
-                    'url_path': 'nice_url',
-                    'config': 5,
-                }
-            }
+        filename = 'mock.file'
 
-            with patch('os.path.isfile', return_value=False):
-                assert not bootstrap.setup_component(self.hass, 'panel_custom',
-                                                     config)
-                assert not mock_register.called
-
-            assert bootstrap.setup_component(self.hass, 'panel_custom', config)
-            assert mock_register.called
-            args = mock_register.mock_calls[0][1]
-            kwargs = mock_register.mock_calls[0][2]
-            assert args == (self.hass, 'todomvc', fp.name)
-            assert kwargs == {
-                'config': 5,
-                'url_path': 'nice_url',
+        config = {
+            'panel_custom': {
+                'name': 'todomvc',
+                'webcomponent_path': filename,
+                'sidebar_title': 'Sidebar Title',
                 'sidebar_icon': 'mdi:iconicon',
-                'sidebar_title': 'Sidebar Title'
+                'url_path': 'nice_url',
+                'config': 5,
             }
+        }
+
+        with patch('os.path.isfile', Mock(return_value=False)):
+            assert not bootstrap.setup_component(
+                self.hass, 'panel_custom', config
+            )
+            assert not mock_register.called
+
+        with patch('os.path.isfile', Mock(return_value=True)):
+            with patch('os.access', Mock(return_value=True)):
+                assert bootstrap.setup_component(
+                    self.hass, 'panel_custom', config
+                )
+
+                assert mock_register.called
+
+                args = mock_register.mock_calls[0][1]
+                assert args == (self.hass, 'todomvc', filename)
+
+                kwargs = mock_register.mock_calls[0][2]
+                assert kwargs == {
+                    'config': 5,
+                    'url_path': 'nice_url',
+                    'sidebar_icon': 'mdi:iconicon',
+                    'sidebar_title': 'Sidebar Title'
+                }

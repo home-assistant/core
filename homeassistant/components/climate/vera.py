@@ -93,7 +93,7 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         self._state = self.vera_device.get_hvac_mode()
 
     @property
-    def unit_of_measurement(self):
+    def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
 

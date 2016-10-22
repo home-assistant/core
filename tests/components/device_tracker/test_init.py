@@ -2,7 +2,7 @@
 # pylint: disable=protected-access,too-many-public-methods
 import logging
 import unittest
-from unittest.mock import patch
+from unittest.mock import call, patch
 from datetime import datetime, timedelta
 import os
 
@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import (
     get_test_home_assistant, fire_time_changed, fire_service_discovered,
-    patch_yaml_files)
+    patch_yaml_files, assert_setup_component)
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
 
@@ -288,7 +288,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         device_tracker.see(self.hass, **params)
         self.hass.block_till_done()
         assert mock_see.call_count == 1
-        mock_see.assert_called_once_with(**params)
+        self.assertEqual(mock_see.call_count, 1)
+        self.assertEqual(mock_see.call_args, call(**params))
 
         mock_see.reset_mock()
         params['dev_id'] += chr(233)  # e' acute accent from icloud
@@ -296,7 +297,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         device_tracker.see(self.hass, **params)
         self.hass.block_till_done()
         assert mock_see.call_count == 1
-        mock_see.assert_called_once_with(**params)
+        self.assertEqual(mock_see.call_count, 1)
+        self.assertEqual(mock_see.call_args, call(**params))
 
     def test_not_write_duplicate_yaml_keys(self): \
             # pylint: disable=invalid-name
@@ -351,6 +353,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     @patch('homeassistant.components.device_tracker.log_exception')
     def test_config_failure(self, mock_ex):
         """Test that the device tracker see failures."""
-        assert not setup_component(self.hass, device_tracker.DOMAIN,
-                                   {device_tracker.DOMAIN: {
-                                    device_tracker.CONF_CONSIDER_HOME: -1}})
+        with assert_setup_component(0, device_tracker.DOMAIN):
+            setup_component(self.hass, device_tracker.DOMAIN,
+                            {device_tracker.DOMAIN: {
+                                device_tracker.CONF_CONSIDER_HOME: -1}})

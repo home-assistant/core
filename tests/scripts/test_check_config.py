@@ -74,13 +74,15 @@ class TestCheckConfig(unittest.TestCase):
         with patch_yaml_files(files):
             res = check_config.check(get_test_config_dir('component.yaml'))
             change_yaml_files(res)
-            self.assertDictEqual({
-                'components': {},
-                'except': {'http': {'password': 'err123'}},
-                'secret_cache': {},
-                'secrets': {},
-                'yaml_files': ['.../component.yaml']
-            }, res)
+
+            self.assertDictEqual({}, res['components'])
+            self.assertDictEqual(
+                {'http': {'password': 'err123'}},
+                res['except']
+            )
+            self.assertDictEqual({}, res['secret_cache'])
+            self.assertDictEqual({}, res['secrets'])
+            self.assertListEqual(['.../component.yaml'], res['yaml_files'])
 
         files = {
             'platform.yaml': (BASE_CONFIG + 'mqtt:\n\n'
@@ -89,14 +91,18 @@ class TestCheckConfig(unittest.TestCase):
         with patch_yaml_files(files):
             res = check_config.check(get_test_config_dir('platform.yaml'))
             change_yaml_files(res)
-            self.assertDictEqual({
-                'components': {'mqtt': {'keepalive': 60, 'port': 1883,
-                                        'protocol': '3.1.1'}},
-                'except': {'light.mqtt_json': {'platform': 'mqtt_json'}},
-                'secret_cache': {},
-                'secrets': {},
-                'yaml_files': ['.../platform.yaml']
-            }, res)
+            self.assertDictEqual(
+                {'mqtt': {'keepalive': 60, 'port': 1883, 'protocol': '3.1.1'},
+                 'light': []},
+                res['components']
+            )
+            self.assertDictEqual(
+                {'light.mqtt_json': {'platform': 'mqtt_json'}},
+                res['except']
+            )
+            self.assertDictEqual({}, res['secret_cache'])
+            self.assertDictEqual({}, res['secrets'])
+            self.assertListEqual(['.../platform.yaml'], res['yaml_files'])
 
     def test_component_platform_not_found(self, mock_get_loop):
         """Test errors if component or platform not found."""
@@ -107,25 +113,23 @@ class TestCheckConfig(unittest.TestCase):
         with patch_yaml_files(files):
             res = check_config.check(get_test_config_dir('badcomponent.yaml'))
             change_yaml_files(res)
-            self.assertDictEqual({
-                'components': {},
-                'except': {check_config.ERROR_STR:
-                           ['Component not found: beer']},
-                'secret_cache': {},
-                'secrets': {},
-                'yaml_files': ['.../badcomponent.yaml']
-            }, res)
+            self.assertDictEqual({}, res['components'])
+            self.assertDictEqual({check_config.ERROR_STR:
+                                  ['Component not found: beer']},
+                                 res['except'])
+            self.assertDictEqual({}, res['secret_cache'])
+            self.assertDictEqual({}, res['secrets'])
+            self.assertListEqual(['.../badcomponent.yaml'], res['yaml_files'])
 
             res = check_config.check(get_test_config_dir('badplatform.yaml'))
             change_yaml_files(res)
-            self.assertDictEqual({
-                'components': {},
-                'except': {check_config.ERROR_STR:
-                           ['Platform not found: light.beer']},
-                'secret_cache': {},
-                'secrets': {},
-                'yaml_files': ['.../badplatform.yaml']
-            }, res)
+            self.assertDictEqual({'light': []}, res['components'])
+            self.assertDictEqual({check_config.ERROR_STR:
+                                  ['Platform not found: light.beer']},
+                                 res['except'])
+            self.assertDictEqual({}, res['secret_cache'])
+            self.assertDictEqual({}, res['secrets'])
+            self.assertListEqual(['.../badplatform.yaml'], res['yaml_files'])
 
     def test_secrets(self, mock_get_loop):
         """Test secrets config checking method."""

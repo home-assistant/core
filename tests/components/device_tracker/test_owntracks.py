@@ -2,17 +2,16 @@
 import json
 import os
 import unittest
+from collections import defaultdict
 from unittest.mock import patch
 
-from collections import defaultdict
+from tests.common import (assert_setup_component, fire_mqtt_message,
+                          get_test_home_assistant, mock_mqtt_component)
 
+import homeassistant.components.device_tracker.owntracks as owntracks
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import device_tracker
-from homeassistant.const import (STATE_NOT_HOME, CONF_PLATFORM)
-import homeassistant.components.device_tracker.owntracks as owntracks
-
-from tests.common import (
-    get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
+from homeassistant.const import CONF_PLATFORM, STATE_NOT_HOME
 
 USER = 'greg'
 DEVICE = 'phone'
@@ -207,20 +206,60 @@ MOCK_ENCRYPTED_LOCATION_MESSAGE = {
 }
 
 
-class TestDeviceTrackerOwnTracks(unittest.TestCase):
+class BaseMQTT(unittest.TestCase):
+    """Base MQTT assert functions."""
+
+    hass = None
+
+    def send_message(self, topic, message, corrupt=False):
+        """Test the sending of a message."""
+        str_message = json.dumps(message)
+        if corrupt:
+            mod_message = BAD_JSON_PREFIX + str_message + BAD_JSON_SUFFIX
+        else:
+            mod_message = str_message
+        fire_mqtt_message(self.hass, topic, mod_message)
+        self.hass.block_till_done()
+
+    def assert_location_state(self, location):
+        """Test the assertion of a location state."""
+        state = self.hass.states.get(DEVICE_TRACKER_STATE)
+        self.assertEqual(state.state, location)
+
+    def assert_location_latitude(self, latitude):
+        """Test the assertion of a location latitude."""
+        state = self.hass.states.get(DEVICE_TRACKER_STATE)
+        self.assertEqual(state.attributes.get('latitude'), latitude)
+
+    def assert_location_longitude(self, longitude):
+        """Test the assertion of a location longitude."""
+        state = self.hass.states.get(DEVICE_TRACKER_STATE)
+        self.assertEqual(state.attributes.get('longitude'), longitude)
+
+    def assert_location_accuracy(self, accuracy):
+        """Test the assertion of a location accuracy."""
+        state = self.hass.states.get(DEVICE_TRACKER_STATE)
+        self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
+
+
+# pylint: disable=too-many-public-methods
+class TestDeviceTrackerOwnTracks(BaseMQTT):
     """Test the OwnTrack sensor."""
 
-    def setup_method(self, method):
+    # pylint: disable=invalid-name
+
+    def setup_method(self, _):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
-        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_MAX_GPS_ACCURACY: 200,
-                CONF_WAYPOINT_IMPORT: True,
-                CONF_WAYPOINT_WHITELIST: ['jon', 'greg']
-            }}))
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_MAX_GPS_ACCURACY: 200,
+                    CONF_WAYPOINT_IMPORT: True,
+                    CONF_WAYPOINT_WHITELIST: ['jon', 'greg']
+                }})
 
         self.hass.states.set(
             'zone.inner', 'zoning',
@@ -254,7 +293,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         owntracks.REGIONS_ENTERED = defaultdict(list)
         owntracks.MOBILE_BEACONS_ACTIVE = defaultdict(list)
 
-    def teardown_method(self, method):
+    def teardown_method(self, _):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -262,40 +301,6 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
             os.remove(self.hass.config.path(device_tracker.YAML_DEVICES))
         except FileNotFoundError:
             pass
-
-    def mock_see(**kwargs):
-        """Fake see method for owntracks."""
-        return
-
-    def send_message(self, topic, message, corrupt=False):
-        """Test the sending of a message."""
-        str_message = json.dumps(message)
-        if corrupt:
-            mod_message = BAD_JSON_PREFIX + str_message + BAD_JSON_SUFFIX
-        else:
-            mod_message = str_message
-        fire_mqtt_message(self.hass, topic, mod_message)
-        self.hass.block_till_done()
-
-    def assert_location_state(self, location):
-        """Test the assertion of a location state."""
-        state = self.hass.states.get(DEVICE_TRACKER_STATE)
-        self.assertEqual(state.state, location)
-
-    def assert_location_latitude(self, latitude):
-        """Test the assertion of a location latitude."""
-        state = self.hass.states.get(DEVICE_TRACKER_STATE)
-        self.assertEqual(state.attributes.get('latitude'), latitude)
-
-    def assert_location_longitude(self, longitude):
-        """Test the assertion of a location longitude."""
-        state = self.hass.states.get(DEVICE_TRACKER_STATE)
-        self.assertEqual(state.attributes.get('longitude'), longitude)
-
-    def assert_location_accuracy(self, accuracy):
-        """Test the assertion of a location accuracy."""
-        state = self.hass.states.get(DEVICE_TRACKER_STATE)
-        self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
 
     def assert_tracker_state(self, location):
         """Test the assertion of a tracker state."""
@@ -312,7 +317,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         state = self.hass.states.get(REGION_TRACKER_STATE)
         self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
 
-    def test_location_invalid_devid(self):
+    def test_location_invalid_devid(self):  # pylint: disable=invalid-name
         """Test the update of a location."""
         self.send_message('owntracks/paulus/nexus-5x', LOCATION_MESSAGE)
 
@@ -588,7 +593,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         exit_message = REGION_LEAVE_MESSAGE.copy()
         exit_message['desc'] = IBEACON_DEVICE
 
-        for i in range(0, 20):
+        for _ in range(0, 20):
             fire_mqtt_message(
                 self.hass, EVENT_TOPIC, json.dumps(enter_message))
             fire_mqtt_message(
@@ -637,12 +642,16 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
 
     def test_waypoint_import_no_whitelist(self):
         """Test import of list of waypoints with no whitelist set."""
+        def mock_see(**kwargs):
+            """Fake see method for owntracks."""
+            return
+
         test_config = {
             CONF_PLATFORM: 'owntracks',
             CONF_MAX_GPS_ACCURACY: 200,
             CONF_WAYPOINT_IMPORT: True
         }
-        owntracks.setup_scanner(self.hass, test_config, self.mock_see)
+        owntracks.setup_scanner(self.hass, test_config, mock_see)
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
         self.send_message(WAYPOINT_TOPIC_BLOCKED, waypoints_message)
         # Check if it made it into states
@@ -673,24 +682,18 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         new_wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
         self.assertTrue(wayp == new_wayp)
 
-    try:
-        import libnacl
-    except (ImportError, OSError):
-        libnacl = None
 
-    @unittest.skipUnless(libnacl, "libnacl/libsodium is not installed")
-    def test_encrypted_payload_libsodium(self):
-        """Test sending encrypted message payload."""
-        self.assertTrue(device_tracker.setup(self.hass, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: SECRET_KEY,
-            }}))
+class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
+    """Test the OwnTrack sensor."""
 
-        self.send_message(LOCATION_TOPIC, ENCRYPTED_LOCATION_MESSAGE)
-        self.assert_location_latitude(2.0)
+    # pylint: disable=invalid-name
 
-    def mock_cipher():
+    def setup_method(self, method):
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        mock_mqtt_component(self.hass)
+
+    def mock_cipher():  # pylint: disable=no-method-argument
         """Return a dummy pickle-based cipher."""
         def mock_decrypt(ciphertext, key):
             """Decrypt/unpickle."""
@@ -705,11 +708,12 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
            mock_cipher)
     def test_encrypted_payload(self):
         """Test encrypted payload."""
-        self.assertTrue(device_tracker.setup(self.hass, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: SECRET_KEY,
-            }}))
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_SECRET: SECRET_KEY,
+                }})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
         self.assert_location_latitude(2.0)
 
@@ -717,24 +721,26 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
            mock_cipher)
     def test_encrypted_payload_topic_key(self):
         """Test encrypted payload with a topic key."""
-        self.assertTrue(device_tracker.setup(self.hass, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: {
-                    LOCATION_TOPIC: SECRET_KEY,
-                }}}))
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_SECRET: {
+                        LOCATION_TOPIC: SECRET_KEY,
+                    }}})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
         self.assert_location_latitude(2.0)
 
     @patch('homeassistant.components.device_tracker.owntracks.get_cipher',
            mock_cipher)
     def test_encrypted_payload_no_key(self):
-        """Test encrypted payload with no key."""
-        self.assertTrue(device_tracker.setup(self.hass, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                # key missing
-            }}))
+        """Test encrypted payload with no key, ."""
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    # key missing
+                }})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
         self.assert_location_latitude(None)
 
@@ -742,11 +748,12 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
            mock_cipher)
     def test_encrypted_payload_wrong_key(self):
         """Test encrypted payload with wrong key."""
-        self.assertTrue(device_tracker.setup(self.hass, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: 'wrong key',
-            }}))
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_SECRET: 'wrong key',
+                }})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
         self.assert_location_latitude(None)
 
@@ -754,12 +761,13 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
            mock_cipher)
     def test_encrypted_payload_wrong_topic_key(self):
         """Test encrypted payload with wrong  topic key."""
-        self.assertTrue(device_tracker.setup(self.hass, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: {
-                    LOCATION_TOPIC: 'wrong key'
-                }}}))
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_SECRET: {
+                        LOCATION_TOPIC: 'wrong key'
+                    }}})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
         self.assert_location_latitude(None)
 
@@ -767,11 +775,30 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
            mock_cipher)
     def test_encrypted_payload_no_topic_key(self):
         """Test encrypted payload with no topic key."""
-        self.assertTrue(device_tracker.setup(self.hass, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks',
-                CONF_SECRET: {
-                    'owntracks/{}/{}'.format(USER, 'otherdevice'): 'foobar'
-                }}}))
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_SECRET: {
+                        'owntracks/{}/{}'.format(USER, 'otherdevice'): 'foobar'
+                    }}})
         self.send_message(LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
         self.assert_location_latitude(None)
+
+    try:
+        import libnacl
+    except (ImportError, OSError):
+        libnacl = None
+
+    @unittest.skipUnless(libnacl, "libnacl/libsodium is not installed")
+    def test_encrypted_payload_libsodium(self):
+        """Test sending encrypted message payload."""
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: 'owntracks',
+                    CONF_SECRET: SECRET_KEY,
+                    }})
+
+        self.send_message(LOCATION_TOPIC, ENCRYPTED_LOCATION_MESSAGE)
+        self.assert_location_latitude(2.0)

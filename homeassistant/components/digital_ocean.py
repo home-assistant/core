@@ -13,7 +13,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-digitalocean==1.9.0']
+REQUIREMENTS = ['python-digitalocean==1.10.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 # pylint: disable=unused-argument,too-few-public-methods
 def setup(hass, config):
-    """Setup the Digital Ocean component."""
+    """Set up the Digital Ocean component."""
     conf = config[DOMAIN]
     access_token = conf.get(CONF_ACCESS_TOKEN)
 

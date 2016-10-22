@@ -27,9 +27,16 @@ class TestUnifiScanner(unittest.TestCase):
         }
         result = unifi.get_scanner(None, config)
         self.assertEqual(mock_scanner.return_value, result)
-        mock_ctrl.assert_called_once_with('localhost', 'foo', 'password',
-                                          8443, 'v4', 'default')
-        mock_scanner.assert_called_once_with(mock_ctrl.return_value)
+        self.assertEqual(mock_ctrl.call_count, 1)
+        self.assertEqual(
+            mock_ctrl.call_args,
+            mock.call('localhost', 'foo', 'password', 8443, 'v4', 'default')
+        )
+        self.assertEqual(mock_scanner.call_count, 1)
+        self.assertEqual(
+            mock_scanner.call_args,
+            mock.call(mock_ctrl.return_value)
+        )
 
     @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
     @mock.patch.object(controller, 'Controller')
@@ -47,9 +54,16 @@ class TestUnifiScanner(unittest.TestCase):
         }
         result = unifi.get_scanner(None, config)
         self.assertEqual(mock_scanner.return_value, result)
-        mock_ctrl.assert_called_once_with('myhost', 'foo', 'password',
-                                          123, 'v4', 'abcdef01')
-        mock_scanner.assert_called_once_with(mock_ctrl.return_value)
+        self.assertEqual(mock_ctrl.call_count, 1)
+        self.assertEqual(
+            mock_ctrl.call_args,
+            mock.call('myhost', 'foo', 'password', 123, 'v4', 'abcdef01')
+        )
+        self.assertEqual(mock_scanner.call_count, 1)
+        self.assertEqual(
+            mock_scanner.call_args,
+            mock.call(mock_ctrl.return_value)
+        )
 
     def test_config_error(self):
         """Test for configuration errors."""
@@ -94,7 +108,8 @@ class TestUnifiScanner(unittest.TestCase):
         ]
         ctrl.get_clients.return_value = fake_clients
         unifi.UnifiScanner(ctrl)
-        ctrl.get_clients.assert_called_once_with()
+        self.assertEqual(ctrl.get_clients.call_count, 1)
+        self.assertEqual(ctrl.get_clients.call_args, mock.call())
 
     def test_scanner_update_error(self):  # pylint: disable=no-self-use
         """Test the scanner update for error."""
