@@ -93,7 +93,7 @@ class BboxSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return round(self._state, 2)
+        return self._state
 
     @property
     def unit_of_measurement(self):
