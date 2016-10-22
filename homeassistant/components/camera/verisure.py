@@ -4,6 +4,7 @@ Camera that loads a picture from a local file.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.verisure/
 """
+import errno
 import logging
 import os
 
@@ -74,12 +75,8 @@ class VerisureSmartcam(Camera):
         hub.my_pages.smartcam.download_image(self._device_id,
                                              new_image_id,
                                              self._directory_path)
-        if self._image_id:
-            _LOGGER.debug('Old image_id=%s', self._image_id)
-            self.delete_image(self)
-
-        else:
-            _LOGGER.debug('No old image, only new %s', new_image_id)
+        _LOGGER.debug('Old image_id=%s', self._image_id)
+        self.delete_image(self)
 
         self._image_id = new_image_id
         self._image = os.path.join(self._directory_path,
@@ -93,8 +90,12 @@ class VerisureSmartcam(Camera):
                                     '{}{}'.format(
                                         self._image_id,
                                         '.jpg'))
-        _LOGGER.debug('Deleting old image %s', remove_image)
-        os.remove(remove_image)
+        try:
+            os.remove(remove_image)
+            _LOGGER.debug('Deleting old image %s', remove_image)
+        except OSError as error:
+            if error.errno != errno.ENOENT:
+                raise
 
     @property
     def name(self):
