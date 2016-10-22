@@ -27,12 +27,12 @@ DOMAIN = 'updater'
 ENTITY_ID = 'updater.updater'
 ATTR_RELEASE_NOTES = 'release_notes'
 UPDATER_UUID_FILE = '.uuid'
-CONF_OPT_OUT = 'opt_out'
+CONF_REPORTING = 'reporting'
 
 REQUIREMENTS = ['distro==1.0.0']
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {
-    vol.Optional(CONF_OPT_OUT, default=False): cv.boolean
+    vol.Optional(CONF_REPORTING, default=True): cv.boolean
 }}, extra=vol.ALLOW_EXTRA)
 
 
@@ -63,7 +63,7 @@ def setup(hass, config):
         _LOGGER.warning('Updater not supported in development version')
         return False
 
-    huuid = None if config.get(CONF_OPT_OUT) else _load_uuid(hass)
+    huuid = _load_uuid(hass) if config.get(CONF_REPORTING) else None
 
     # Update daily, start 1 hour after startup
     _dt = datetime.now() + timedelta(hours=1)
