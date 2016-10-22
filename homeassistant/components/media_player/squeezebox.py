@@ -40,6 +40,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the squeezebox platform."""
+    import socket
+
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
@@ -50,11 +52,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
 
-    # Only add a media server once
-    if host in KNOWN_DEVICES:
+    # Get IP of host, to prevent duplication of same host (different DNS names)
+    try:
+        ipaddr = socket.gethostbyname(host)
+    except (OSError) as error:
+        _LOGGER.error("Could not communicate with %s:%d: %s",
+                      host, port, error)
         return False
-    KNOWN_DEVICES.append(host)
 
+    # Combine it with port to allow multiple servers at the same host
+    key = "{}:{}".format(ipaddr, port)
+
+    # Only add a media server once
+    if key in KNOWN_DEVICES:
+        return False
+    KNOWN_DEVICES.append(key)
+
+    _LOGGER.debug("Creating LMS object for %s", key)
     lms = LogitechMediaServer(host, port, username, password)
 
     if not lms.init_success:
@@ -97,30 +111,12 @@ class LogitechMediaServer(object):
 
     def query(self, *parameters):
         """Send request and await response from server."""
-        try:
-            telnet = telnetlib.Telnet(self.host, self.port)
-            if self._username and self._password:
-                telnet.write('login {username} {password}\n'.format(
-                    username=self._username,
-                    password=self._password).encode('UTF-8'))
-                telnet.read_until(b'\n', timeout=3)
-            message = '{}\n'.format(' '.join(parameters))
-            telnet.write(message.encode('UTF-8'))
-            response = telnet.read_until(b'\n', timeout=3)\
-                             .decode('UTF-8')\
-                             .split(' ')[-1]\
-                             .strip()
-            telnet.write(b'exit\n')
-            return urllib.parse.unquote(response)
-        except (OSError, ConnectionError) as error:
-            _LOGGER.error("Could not communicate with %s:%d: %s",
-                          self.host,
-                          self.port,
-                          error)
-            return None
+        response = urllib.parse.unquote(self.get(' '.join(parameters)))
+
+        return response.split(' ')[-1].strip()
 
     def get_player_status(self, player):
-        """Get ithe status of a player."""
+        """Get the status of a player."""
         #   (title) : Song title
         # Requested Information
         # a (artist): Artist name 'artist'
@@ -129,25 +125,50 @@ class LogitechMediaServer(object):
         # l (album): Album, including the server's  "(N of M)"
         tags = 'adKl'
         new_status = {}
+        response = self.get('{player} status - 1 tags:{tags}\n'
+                            .format(player=player, tags=tags))
+
+        if not response:
+            return {}
+
+        response = response.split(' ')
+
+        for item in response:
+            parts = urllib.parse.unquote(item).partition(':')
+            new_status[parts[0]] = parts[2]
+        return new_status
+
+    def get(self, command):
+        """Abstract out the telnet connection."""
         try:
             telnet = telnetlib.Telnet(self.host, self.port)
-            telnet.write('{player} status - 1 tags:{tags}\n'.format(
-                player=player,
-                tags=tags
-            ).encode('UTF-8'))
+
+            if self._username and self._password:
+                _LOGGER.debug("Logging in")
+
+                telnet.write('login {username} {password}\n'.format(
+                    username=self._username,
+                    password=self._password).encode('UTF-8'))
+                telnet.read_until(b'\n', timeout=3)
+
+            _LOGGER.debug("About to send message: %s", command)
+            message = '{}\n'.format(command)
+            telnet.write(message.encode('UTF-8'))
+
             response = telnet.read_until(b'\n', timeout=3)\
                              .decode('UTF-8')\
-                             .split(' ')
+
             telnet.write(b'exit\n')
-            for item in response:
-                parts = urllib.parse.unquote(item).partition(':')
-                new_status[parts[0]] = parts[2]
-        except (OSError, ConnectionError) as error:
+            _LOGGER.debug("Response: %s", response)
+
+            return response
+
+        except (OSError, ConnectionError, EOFError) as error:
             _LOGGER.error("Could not communicate with %s:%d: %s",
                           self.host,
                           self.port,
                           error)
-        return new_status
+            return None
 
 
 # pylint: disable=too-many-instance-attributes
@@ -228,11 +249,22 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             media_url = ('/music/current/cover.jpg?player={player}').format(
                 player=self._id)
 
-        base_url = 'http://{server}:{port}/'.format(
-            server=self._lms.host,
-            port=self._lms.http_port)
+        # pylint: disable=protected-access
+        if self._lms._username:
+            base_url = 'http://{username}:{password}@{server}:{port}/'.format(
+                username=self._lms._username,
+                password=self._lms._password,
+                server=self._lms.host,
+                port=self._lms.http_port)
+        else:
+            base_url = 'http://{server}:{port}/'.format(
+                server=self._lms.host,
+                port=self._lms.http_port)
 
-        return urllib.parse.urljoin(base_url, media_url)
+        url = urllib.parse.urljoin(base_url, media_url)
+
+        _LOGGER.debug("Media image url: %s", url)
+        return url
 
     @property
     def media_title(self):
@@ -337,7 +369,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """
         Replace the current play list with the uri.
 
-        Telnet Command Strucutre:
+        Telnet Command Structure:
         <playerid> playlist play <item> <title> <fadeInSecs>
 
         The "playlist play" command puts the specified song URL,
@@ -361,7 +393,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """
         Add a items to the existing playlist.
 
-        Telnet Command Strucutre:
+        Telnet Command Structure:
         <playerid> playlist add <item>
 
         The "playlist add" command adds the specified song URL, playlist or
