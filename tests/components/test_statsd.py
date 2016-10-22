@@ -114,7 +114,7 @@ class TestStatsd(unittest.TestCase):
             handler_method(mock.MagicMock(data={
                 'new_state': ha.State('domain.test', invalid, {})}))
             self.assertFalse(mock_client.return_value.gauge.called)
-            self.assertFalse(mock_client.return_value.incr.called)
+            self.assertTrue(mock_client.return_value.incr.called)
 
     @mock.patch('statsd.StatsClient')
     def test_event_listener_attr_details(self, mock_client):
@@ -162,4 +162,4 @@ class TestStatsd(unittest.TestCase):
             handler_method(mock.MagicMock(data={
                 'new_state': ha.State('domain.test', invalid, {})}))
             self.assertFalse(mock_client.return_value.gauge.called)
-            self.assertFalse(mock_client.return_value.incr.called)
+            self.assertTrue(mock_client.return_value.incr.called)

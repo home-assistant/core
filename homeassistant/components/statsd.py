@@ -66,10 +66,10 @@ def setup(hass, config):
 
         states = dict(state.attributes)
 
-        _LOGGER.debug('Sending %s.%s', state.entity_id, _state)
+        _LOGGER.debug('Sending %s', state.entity_id)
 
         if show_attribute_flag is True:
-            if _state is not None:
+            if isinstance(_state, (float, int)):
                 statsd_client.gauge(
                     "%s.state" % state.entity_id,
                     _state,
@@ -84,7 +84,8 @@ def setup(hass, config):
                     statsd_client.gauge(stat, value, sample_rate)
 
         else:
-            statsd_client.gauge(state.entity_id, _state, sample_rate)
+            if isinstance(_state, (float, int)):
+                statsd_client.gauge(state.entity_id, _state, sample_rate)
 
         # Increment the count
         statsd_client.incr(state.entity_id, rate=sample_rate)
