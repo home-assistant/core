@@ -56,7 +56,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         ipaddr = socket.gethostbyname(host)
     except (OSError) as error:
-        _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
+        _LOGGER.error("Could not communicate with %s:%d: %s",
+                      host, port, error)
         return False
 
     # Combine it with port to allow multiple servers at the same host
@@ -168,6 +169,7 @@ class LogitechMediaServer(object):
                           self.port,
                           error)
             return None
+
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-public-methods
