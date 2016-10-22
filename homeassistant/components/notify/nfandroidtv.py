@@ -4,9 +4,9 @@ Notifications for Android TV notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.nfandroidtv/
 """
+import os
 import logging
 import requests
-import os
 import voluptuous as vol
 
 from homeassistant.components.notify import (ATTR_TITLE,
@@ -14,7 +14,7 @@ from homeassistant.components.notify import (ATTR_TITLE,
                                              ATTR_DATA,
                                              BaseNotificationService,
                                              PLATFORM_SCHEMA)
-from homeassistant.helpers import config_validation as cv
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,9 +84,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+# pylint: disable=unused-argument
 def get_service(hass, config):
     """Get the Notifications for Android TV notification service."""
-    ip = config.get(CONF_IP)
+    remoteip = config.get(CONF_IP)
     duration = config.get(CONF_DURATION)
     position = config.get(CONF_POSITION)
     transparency = config.get(CONF_TRANSPARENCY)
@@ -94,7 +95,7 @@ def get_service(hass, config):
     interrupt = config.get(CONF_INTERRUPT)
     timeout = config.get(CONF_TIMEOUT)
 
-    return NFAndroidTVNotificationService(ip,
+    return NFAndroidTVNotificationService(remoteip,
                                           duration,
                                           position,
                                           transparency,
@@ -102,15 +103,14 @@ def get_service(hass, config):
                                           interrupt,
                                           timeout)
 
-
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-many-instance-attributes
 class NFAndroidTVNotificationService(BaseNotificationService):
     """Notification service for Notifications for Android TV."""
-
-    def __init__(self, ip, duration, position, transparency,
+    # pylint: disable=too-many-arguments,too-few-public-methods
+    def __init__(self, remoteip, duration, position, transparency,
                  color, interrupt, timeout):
         """Initialize the service."""
-        self._target = "http://%s:7676" % ip
+        self._target = "http://%s:7676" % remoteip
         self._default_duration = duration
         self._default_position = position
         self._default_transparency = transparency
@@ -122,6 +122,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                                        "www_static", "icons",
                                        "favicon-192x192.png")
 
+    # pylint: disable=too-many-branches
     def send_message(self, message="", **kwargs):
         """Send a message to a Android TV device."""
         _LOGGER.debug("Sending notification to: %s", self._target)
@@ -135,42 +136,45 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                        position="%i" % POSITIONS.get(self._default_position),
                        bkgcolor="%s" % COLORS.get(self._default_color),
                        transparency="%i" % TRANSPARENCIES.get(
-                               self._default_transparency), offset="0",
-                       app=ATTR_TITLE_DEFAULT, force="true",
+                           self._default_transparency),
+                       offset="0", app=ATTR_TITLE_DEFAULT, force="true",
                        interrupt="%i" % self._default_interrupt)
 
         data = kwargs.get(ATTR_DATA)
         if data:
             if ATTR_DURATION in data:
-                d = data.get(ATTR_DURATION)
+                duration = data.get(ATTR_DURATION)
                 try:
-                    payload[ATTR_DURATION] = "%i" % int(d)
+                    payload[ATTR_DURATION] = "%i" % int(duration)
                 except ValueError:
-                    _LOGGER.warning("Invalid duration-value: %s", str(d))
+                    _LOGGER.warning("Invalid duration-value: %s", str(duration))
             if ATTR_POSITION in data:
-                p = data.get(ATTR_POSITION)
-                if p in POSITIONS:
-                    payload[ATTR_POSITION] = "%i" % POSITIONS.get(p)
+                position = data.get(ATTR_POSITION)
+                if position in POSITIONS:
+                    payload[ATTR_POSITION] = "%i" % POSITIONS.get(position)
                 else:
-                    _LOGGER.warning("Invalid position-value: %s", str(p))
+                    _LOGGER.warning("Invalid position-value: %s", str(position))
             if ATTR_TRANSPARENCY in data:
-                t = data.get(ATTR_TRANSPARENCY)
-                if t in TRANSPARENCIES:
-                    payload[ATTR_TRANSPARENCY] = "%i" % TRANSPARENCIES.get(t)
+                transparency = data.get(ATTR_TRANSPARENCY)
+                if transparency in TRANSPARENCIES:
+                    payload[ATTR_TRANSPARENCY] = "%i" % TRANSPARENCIES.get(
+                        transparency)
                 else:
-                    _LOGGER.warning("Invalid transparency-value: %s", str(t))
+                    _LOGGER.warning("Invalid transparency-value: %s",
+                                    str(transparency))
             if ATTR_COLOR in data:
-                c = data.get(ATTR_COLOR)
-                if c in COLORS:
-                    payload[ATTR_BKGCOLOR] = "%s" % COLORS.get(c)
+                color = data.get(ATTR_COLOR)
+                if color in COLORS:
+                    payload[ATTR_BKGCOLOR] = "%s" % COLORS.get(color)
                 else:
-                    _LOGGER.warning("Invalid color-value: %s", str(c))
+                    _LOGGER.warning("Invalid color-value: %s", str(color))
             if ATTR_INTERRUPT in data:
-                i = data.get(ATTR_INTERRUPT)
+                interrupt = data.get(ATTR_INTERRUPT)
                 try:
-                    payload[ATTR_INTERRUPT] = "%i" % cv.boolean(i)
+                    payload[ATTR_INTERRUPT] = "%i" % cv.boolean(interrupt)
                 except vol.Invalid:
-                    _LOGGER.warning("Invalid interrupt-value: %s", str(i))
+                    _LOGGER.warning("Invalid interrupt-value: %s",
+                                    str(interrupt))
 
         try:
             _LOGGER.debug("Payload: %s", str(payload))
@@ -179,6 +183,6 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                                      timeout=self._timeout)
             if response.status_code != 200:
                 _LOGGER.error("Error sending message: %s", str(response))
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError as err:
             _LOGGER.error("Error communicating with %s: %s",
-                          self._target, str(e))
+                          self._target, str(err))
