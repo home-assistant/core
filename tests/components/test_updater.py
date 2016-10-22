@@ -41,7 +41,7 @@ class TestUpdater(unittest.TestCase):
         with assert_setup_component(1) as config:
             setup_component(self.hass, updater.DOMAIN, {updater.DOMAIN: {}})
             _dt = datetime.now() + timedelta(hours=1)
-            assert config['updater'] == {'opt_out': False}
+            assert config['updater'] == {'reporting': True}
 
         for secs in [-1, 0, 1]:
             fire_time_changed(self.hass, _dt + timedelta(seconds=secs))
@@ -61,7 +61,7 @@ class TestUpdater(unittest.TestCase):
             assert setup_component(
                 self.hass, updater.DOMAIN, {updater.DOMAIN: {}})
             _dt = datetime.now() + timedelta(hours=1)
-            assert config['updater'] == {'opt_out': False}
+            assert config['updater'] == {'reporting': True}
 
         self.assertIsNone(self.hass.states.get(updater.ENTITY_ID))
 
@@ -95,7 +95,7 @@ class TestUpdater(unittest.TestCase):
         with assert_setup_component(1) as config:
             assert not setup_component(
                 self.hass, updater.DOMAIN, {updater.DOMAIN: {}})
-            assert config['updater'] == {'opt_out': False}
+            assert config['updater'] == {'reporting': True}
 
     def test_uuid_function(self):
         """Test if the uuid function works."""
