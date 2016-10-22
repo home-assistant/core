@@ -63,7 +63,7 @@ class KNXThermostat(KNXMultiAddressDevice, ClimateDevice):
         return True
 
     @property
-    def unit_of_measurement(self):
+    def temperature_unit(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 

@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['proliphix==0.3.1']
+REQUIREMENTS = ['proliphix==0.4.0']
 
 ATTR_FAN = 'fan'
 
@@ -69,7 +69,7 @@ class ProliphixThermostat(ClimateDevice):
         }
 
     @property
-    def unit_of_measurement(self):
+    def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
 

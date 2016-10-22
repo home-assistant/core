@@ -1,7 +1,6 @@
 """Test config utils."""
 # pylint: disable=too-many-public-methods,protected-access
 import os
-import tempfile
 import unittest
 import unittest.mock as mock
 
@@ -212,49 +211,56 @@ class TestConfig(unittest.TestCase):
 
         assert state.attributes['hidden']
 
-    def test_remove_lib_on_upgrade(self):
+    @mock.patch('homeassistant.config.shutil')
+    @mock.patch('homeassistant.config.os')
+    def test_remove_lib_on_upgrade(self, mock_os, mock_shutil):
         """Test removal of library on upgrade."""
-        with tempfile.TemporaryDirectory() as config_dir:
-            version_path = os.path.join(config_dir, '.HA_VERSION')
-            lib_dir = os.path.join(config_dir, 'deps')
-            check_file = os.path.join(lib_dir, 'check')
+        ha_version = '0.7.0'
 
-            with open(version_path, 'wt') as outp:
-                outp.write('0.7.0')
+        mock_os.path.isdir = mock.Mock(return_value=True)
 
-            os.mkdir(lib_dir)
-
-            with open(check_file, 'w'):
-                pass
+        mock_open = mock.mock_open()
+        with mock.patch('homeassistant.config.open', mock_open, create=True):
+            opened_file = mock_open.return_value
+            opened_file.readline.return_value = ha_version
 
             self.hass = get_test_home_assistant()
-            self.hass.config.config_dir = config_dir
+            self.hass.config.path = mock.Mock()
 
-            assert os.path.isfile(check_file)
             config_util.process_ha_config_upgrade(self.hass)
-            assert not os.path.isfile(check_file)
 
-    def test_not_remove_lib_if_not_upgrade(self):
+            hass_path = self.hass.config.path.return_value
+
+            self.assertEqual(mock_os.path.isdir.call_count, 1)
+            self.assertEqual(
+                mock_os.path.isdir.call_args, mock.call(hass_path)
+            )
+
+            self.assertEqual(mock_shutil.rmtree.call_count, 1)
+            self.assertEqual(
+                mock_shutil.rmtree.call_args, mock.call(hass_path)
+            )
+
+    @mock.patch('homeassistant.config.shutil')
+    @mock.patch('homeassistant.config.os')
+    def test_not_remove_lib_if_not_upgrade(self, mock_os, mock_shutil):
         """Test removal of library with no upgrade."""
-        with tempfile.TemporaryDirectory() as config_dir:
-            version_path = os.path.join(config_dir, '.HA_VERSION')
-            lib_dir = os.path.join(config_dir, 'deps')
-            check_file = os.path.join(lib_dir, 'check')
+        ha_version = __version__
 
-            with open(version_path, 'wt') as outp:
-                outp.write(__version__)
+        mock_os.path.isdir = mock.Mock(return_value=True)
 
-            os.mkdir(lib_dir)
-
-            with open(check_file, 'w'):
-                pass
+        mock_open = mock.mock_open()
+        with mock.patch('homeassistant.config.open', mock_open, create=True):
+            opened_file = mock_open.return_value
+            opened_file.readline.return_value = ha_version
 
             self.hass = get_test_home_assistant()
-            self.hass.config.config_dir = config_dir
+            self.hass.config.path = mock.Mock()
 
             config_util.process_ha_config_upgrade(self.hass)
 
-            assert os.path.isfile(check_file)
+            assert mock_os.path.isdir.call_count == 0
+            assert mock_shutil.rmtree.call_count == 0
 
     def test_loading_configuration(self):
         """Test loading core config onto hass object."""

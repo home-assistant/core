@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 30
-PATCH_VERSION = '2'
+MINOR_VERSION = 31
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -104,6 +104,7 @@ CONF_NAME = 'name'
 CONF_OFFSET = 'offset'
 CONF_OPTIMISTIC = 'optimistic'
 CONF_PASSWORD = 'password'
+CONF_PATH = 'path'
 CONF_PAYLOAD = 'payload'
 CONF_PAYLOAD_OFF = 'payload_off'
 CONF_PAYLOAD_ON = 'payload_on'
@@ -173,6 +174,9 @@ STATE_UNLOCKED = 'unlocked'
 STATE_UNAVAILABLE = 'unavailable'
 
 # #### STATE AND EVENT ATTRIBUTES ####
+# Attribution
+ATTR_ATTRIBUTION = 'attribution'
+
 # Contains current time for a TIME_CHANGED event
 ATTR_NOW = 'now'
 
