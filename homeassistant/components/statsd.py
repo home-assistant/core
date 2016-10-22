@@ -61,18 +61,21 @@ def setup(hass, config):
         try:
             _state = state_helper.state_as_number(state)
         except ValueError:
-            return
+            # Set the state to none and continue for any numeric attributes.
+            _state = None
 
         states = dict(state.attributes)
 
         _LOGGER.debug('Sending %s.%s', state.entity_id, _state)
 
         if show_attribute_flag is True:
-            statsd_client.gauge(
-                "%s.state" % state.entity_id,
-                _state,
-                sample_rate
-            )
+            if _state is not None:
+                statsd_client.gauge(
+                    "%s.state" % state.entity_id,
+                    _state,
+                    sample_rate
+                )
+
 
             # Send attribute values
             for key, value in states.items():
