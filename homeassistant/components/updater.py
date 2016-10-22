@@ -63,6 +63,7 @@ def setup(hass, config):
         _LOGGER.warning('Updater not supported in development version')
         return False
 
+    config = config.get(DOMAIN, {})
     huuid = _load_uuid(hass) if config.get(CONF_REPORTING) else None
 
     # Update daily, start 1 hour after startup
