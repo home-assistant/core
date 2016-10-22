@@ -10,7 +10,8 @@ import threading
 from contextlib import contextmanager
 
 from homeassistant import core as ha, loader
-from homeassistant.bootstrap import setup_component, prepare_setup_component
+from homeassistant.bootstrap import (
+    setup_component, async_prepare_setup_component)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
@@ -234,6 +235,7 @@ class MockModule(object):
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
         self.REQUIREMENTS = requirements or []
+        self._setup = setup
 
         if config_schema is not None:
             self.CONFIG_SCHEMA = config_schema
@@ -241,11 +243,11 @@ class MockModule(object):
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
 
-        # Setup a mock setup if none given.
-        if setup is None:
-            self.setup = lambda hass, config: True
-        else:
-            self.setup = setup
+    def setup(self, hass, config):
+        """Setup the component."""
+        if self._setup is not None:
+            return self._setup(hass, config)
+        return True
 
 
 class MockPlatform(object):
@@ -366,16 +368,19 @@ def assert_setup_component(count, domain=None):
     """
     config = {}
 
+    @asyncio.coroutine
     def mock_psc(hass, config_input, domain):
         """Mock the prepare_setup_component to capture config."""
-        res = prepare_setup_component(hass, config_input, domain)
+        res = yield from async_prepare_setup_component(
+            hass, config_input, domain)
         config[domain] = None if res is None else res.get(domain)
         _LOGGER.debug('Configuration for %s, Validated: %s, Original %s',
                       domain, config[domain], config_input.get(domain))
         return res
 
     assert isinstance(config, dict)
-    with patch('homeassistant.bootstrap.prepare_setup_component', mock_psc):
+    with patch('homeassistant.bootstrap.async_prepare_setup_component',
+               mock_psc):
         yield config
 
     if domain is None:

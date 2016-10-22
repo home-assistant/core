@@ -359,41 +359,54 @@ class TestAutomation(unittest.TestCase):
 
         automation.toggle(self.hass, entity_id)
         self.hass.block_till_done()
-
-        assert automation.is_on(self.hass, entity_id)
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
         assert len(self.calls) == 2
 
-        automation.trigger(self.hass, entity_id)
+        assert automation.is_on(self.hass, entity_id)
+        self.hass.bus.fire('test_event')
         self.hass.block_till_done()
         assert len(self.calls) == 3
 
+        automation.trigger(self.hass, entity_id)
+        self.hass.block_till_done()
+        self.hass.bus.fire('test_event')
+        self.hass.block_till_done()
+        assert len(self.calls) == 5
+
         automation.turn_off(self.hass, entity_id)
+        self.hass.block_till_done()
+        self.hass.bus.fire('test_event')
         self.hass.block_till_done()
         automation.trigger(self.hass, entity_id)
         self.hass.block_till_done()
-        assert len(self.calls) == 4
+        self.hass.bus.fire('test_event')
+        self.hass.block_till_done()
+        assert len(self.calls) == 6
 
         automation.turn_on(self.hass, entity_id)
         self.hass.block_till_done()
+        self.hass.bus.fire('test_event')
+        self.hass.block_till_done()
         assert automation.is_on(self.hass, entity_id)
+        assert len(self.calls) == 7
 
-    @patch('homeassistant.config.load_yaml_config_file', return_value={
-        automation.DOMAIN: {
-            'alias': 'bye',
-            'trigger': {
-                'platform': 'event',
-                'event_type': 'test_event2',
-            },
-            'action': {
-                'service': 'test.automation',
-                'data_template': {
-                    'event': '{{ trigger.event.event_type }}'
+    @patch('homeassistant.config.load_yaml_config_file', autospec=True,
+           return_value={
+                automation.DOMAIN: {
+                    'alias': 'bye',
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'test_event2',
+                    },
+                    'action': {
+                        'service': 'test.automation',
+                        'data_template': {
+                            'event': '{{ trigger.event.event_type }}'
+                        }
+                    }
                 }
-            }
-        }
-    })
+            })
     def test_reload_config_service(self, mock_load_yaml):
         """Test the reload config service."""
         assert setup_component(self.hass, automation.DOMAIN, {
@@ -443,9 +456,8 @@ class TestAutomation(unittest.TestCase):
         assert len(self.calls) == 2
         assert self.calls[1].data.get('event') == 'test_event2'
 
-    @patch('homeassistant.config.load_yaml_config_file', return_value={
-        automation.DOMAIN: 'not valid',
-    })
+    @patch('homeassistant.config.load_yaml_config_file', autospec=True,
+           return_value={automation.DOMAIN: 'not valid'})
     def test_reload_config_when_invalid_config(self, mock_load_yaml):
         """Test the reload config service handling invalid config."""
         with assert_setup_component(1):

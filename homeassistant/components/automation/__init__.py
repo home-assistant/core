@@ -25,7 +25,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import get_platform
 from homeassistant.util.dt import utcnow
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_coroutine_threadsafe
 
 DOMAIN = 'automation'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -144,19 +143,21 @@ def reload(hass):
     hass.services.call(DOMAIN, SERVICE_RELOAD)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Setup the automation."""
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_ALL_AUTOMATIONS)
 
-    success = run_coroutine_threadsafe(
-        _async_process_config(hass, config, component), hass.loop).result()
+    success = yield from _async_process_config(hass, config, component)
 
     if not success:
         return False
 
-    descriptions = conf_util.load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.loop.run_in_executor(
+        None, conf_util.load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml')
+    )
 
     @callback
     def trigger_service_handler(service_call):
@@ -189,22 +190,22 @@ def setup(hass, config):
             return
         hass.loop.create_task(_async_process_config(hass, conf, component))
 
-    hass.services.register(DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
-                           descriptions.get(SERVICE_TRIGGER),
-                           schema=TRIGGER_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
+        descriptions.get(SERVICE_TRIGGER), schema=TRIGGER_SERVICE_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_RELOAD, reload_service_handler,
-                           descriptions.get(SERVICE_RELOAD),
-                           schema=RELOAD_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_RELOAD, reload_service_handler,
+        descriptions.get(SERVICE_RELOAD), schema=RELOAD_SERVICE_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_TOGGLE, toggle_service_handler,
-                           descriptions.get(SERVICE_TOGGLE),
-                           schema=SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TOGGLE, toggle_service_handler,
+        descriptions.get(SERVICE_TOGGLE), schema=SERVICE_SCHEMA)
 
     for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
-        hass.services.register(DOMAIN, service, turn_onoff_service_handler,
-                               descriptions.get(service),
-                               schema=SERVICE_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, service, turn_onoff_service_handler,
+            descriptions.get(service), schema=SERVICE_SCHEMA)
 
     return True
 

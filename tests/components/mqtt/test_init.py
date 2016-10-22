@@ -6,7 +6,7 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
@@ -52,7 +52,7 @@ class TestMQTT(unittest.TestCase):
         with mock.patch('homeassistant.components.mqtt.MQTT',
                         side_effect=socket.error()):
             self.hass.config.components = []
-            assert not _setup_component(self.hass, mqtt.DOMAIN, {
+            assert not setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'test-broker',
                 }
@@ -62,7 +62,7 @@ class TestMQTT(unittest.TestCase):
         """Test for setup failure if connection to broker is missing."""
         with mock.patch('paho.mqtt.client.Client'):
             self.hass.config.components = []
-            assert _setup_component(self.hass, mqtt.DOMAIN, {
+            assert setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'test-broker',
                     mqtt.CONF_PROTOCOL: 3.1,
@@ -222,7 +222,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         with mock.patch('paho.mqtt.client.Client'):
             self.hass.config.components = []
-            assert _setup_component(self.hass, mqtt.DOMAIN, {
+            assert setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
                 }

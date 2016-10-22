@@ -23,7 +23,10 @@ DATETIME_RE = re.compile(
 
 
 def set_default_time_zone(time_zone: dt.tzinfo) -> None:
-    """Set a default time zone to be used when none is specified."""
+    """Set a default time zone to be used when none is specified.
+
+    Async friendly.
+    """
     global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
 
     # NOTE: Remove in the future in favour of typing

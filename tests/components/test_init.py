@@ -11,6 +11,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 import homeassistant.components as comps
 from homeassistant.helpers import entity
+from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, mock_service, patch_yaml_files)
@@ -22,7 +23,9 @@ class TestComponentsCore(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.assertTrue(comps.setup(self.hass, {}))
+        self.assertTrue(run_coroutine_threadsafe(
+            comps.async_setup(self.hass, {}), self.hass.loop
+        ).result())
 
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
@@ -65,29 +68,6 @@ class TestComponentsCore(unittest.TestCase):
         comps.toggle(self.hass, 'light.Bowl')
         self.hass.block_till_done()
         self.assertEqual(1, len(calls))
-
-    @patch('homeassistant.core.ServiceRegistry.call')
-    def test_turn_on_to_not_block_for_domains_without_service(self, mock_call):
-        """Test if turn_on is blocking domain with no service."""
-        mock_service(self.hass, 'light', SERVICE_TURN_ON)
-
-        # We can't test if our service call results in services being called
-        # because by mocking out the call service method, we mock out all
-        # So we mimick how the service registry calls services
-        service_call = ha.ServiceCall('homeassistant', 'turn_on', {
-            'entity_id': ['light.test', 'sensor.bla', 'light.bla']
-        })
-        service = self.hass.services._services['homeassistant']['turn_on']
-        service.func(service_call)
-
-        self.assertEqual(2, mock_call.call_count)
-        self.assertEqual(
-            ('light', 'turn_on', {'entity_id': ['light.bla', 'light.test']},
-             True),
-            mock_call.call_args_list[0][0])
-        self.assertEqual(
-            ('sensor', 'turn_on', {'entity_id': ['sensor.bla']}, False),
-            mock_call.call_args_list[1][0])
 
     @patch('homeassistant.config.os.path.isfile', Mock(return_value=True))
     def test_reload_core_conf(self):

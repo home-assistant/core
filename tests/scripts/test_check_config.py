@@ -5,6 +5,8 @@ import os
 import unittest
 from unittest.mock import patch
 
+import pytest
+
 import homeassistant.scripts.check_config as check_config
 from tests.common import patch_yaml_files, get_test_config_dir
 
@@ -45,6 +47,7 @@ def tearDownModule(self):  # pylint: disable=invalid-name
         os.remove(path)
 
 
+@pytest.mark.skipif("os.environ.get('check_config') != 'RUN'")
 @patch('asyncio.get_event_loop', return_value=asyncio.new_event_loop())
 class TestCheckConfig(unittest.TestCase):
     """Tests for the homeassistant.scripts.check_config module."""

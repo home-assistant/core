@@ -49,7 +49,10 @@ def load_yaml(fname: str) -> Union[List, Dict]:
 
 
 def clear_secret_cache() -> None:
-    """Clear the secret cache."""
+    """Clear the secret cache.
+
+    Async friendly.
+    """
     __SECRET_CACHE.clear()
 
 
