@@ -27,7 +27,7 @@ CONF_ATTRIBUTION = "Weather forecast from yr.no, delivered by the Norwegian " \
 # Sensor types are defined like so:
 SENSOR_TYPES = {
     'symbol': ['Symbol', None],
-    'precipitation': ['Condition', 'mm'],
+    'precipitation': ['Precipitation', 'mm'],
     'temperature': ['Temperature', '°C'],
     'windSpeed': ['Wind speed', 'm/s'],
     'windGust': ['Wind gust', 'm/s'],

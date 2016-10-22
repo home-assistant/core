@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_USERNAME, CONF_ICON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['slacker==0.9.25']
+REQUIREMENTS = ['slacker==0.9.28']
 
 _LOGGER = logging.getLogger(__name__)
 

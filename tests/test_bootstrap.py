@@ -1,6 +1,5 @@
 """Test the bootstrapping."""
 # pylint: disable=too-many-public-methods,protected-access
-import tempfile
 from unittest import mock
 import threading
 import logging
@@ -12,7 +11,8 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 
 from tests.common import \
-    get_test_home_assistant, MockModule, MockPlatform, assert_setup_component
+    get_test_home_assistant, MockModule, MockPlatform, \
+    assert_setup_component, patch_yaml_files
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
@@ -45,17 +45,27 @@ class TestBootstrap:
         self.hass.stop()
         loader._COMPONENT_CACHE = self.backup_cache
 
+    @mock.patch(
+        # prevent .HA_VERISON file from being written
+        'homeassistant.bootstrap.conf_util.process_ha_config_upgrade',
+        mock.Mock()
+    )
     @mock.patch('homeassistant.util.location.detect_location_info',
                 return_value=None)
     def test_from_config_file(self, mock_detect):
         """Test with configuration file."""
         components = ['browser', 'conversation', 'script']
-        with tempfile.NamedTemporaryFile() as fp:
-            for comp in components:
-                fp.write('{}:\n'.format(comp).encode('utf-8'))
-            fp.flush()
+        files = {
+            'config.yaml': ''.join(
+                '{}:\n'.format(comp)
+                for comp in components
+            )
+        }
 
-            self.hass = bootstrap.from_config_file(fp.name)
+        with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
+                mock.patch('os.access', mock.Mock(return_value=True)), \
+                patch_yaml_files(files, True):
+            self.hass = bootstrap.from_config_file('config.yaml')
 
         components.append('group')
         assert sorted(components) == sorted(self.hass.config.components)

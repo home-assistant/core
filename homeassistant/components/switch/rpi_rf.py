@@ -28,7 +28,7 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Required(CONF_CODE_OFF): cv.positive_int,
     vol.Required(CONF_CODE_ON): cv.positive_int,
     vol.Optional(CONF_PULSELENGTH): cv.positive_int,
-    vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): cv.string,
+    vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): cv.positive_int,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

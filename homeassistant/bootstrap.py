@@ -355,6 +355,11 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     logging.basicConfig(level=logging.INFO)
     fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
            "[%(name)s] %(message)s%(reset)s")
+
+    # suppress overly verbose logs from libraries that aren't helpful
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+
     try:
         from colorlog import ColoredFormatter
         logging.getLogger().handlers[0].setFormatter(ColoredFormatter(

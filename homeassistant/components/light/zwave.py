@@ -40,6 +40,10 @@ ACT = 0x01
 ACT_ZDP100_DIMMER = 0x3030
 ACT_ZDP100_DIMMER_LIGHT = (ACT, ACT_ZDP100_DIMMER)
 
+HOMESEER = 0x0c
+HOMESEER_WD100_DIMMER = 0x3034
+HOMESEER_WD100_DIMMER_LIGHT = (HOMESEER, HOMESEER_WD100_DIMMER)
+
 COLOR_CHANNEL_WARM_WHITE = 0x01
 COLOR_CHANNEL_COLD_WHITE = 0x02
 COLOR_CHANNEL_RED = 0x04
@@ -54,7 +58,8 @@ DEVICE_MAPPINGS = {
     LINEAR_WD500Z_DIMMER_LIGHT: WORKAROUND_DELAY,
     GE_12724_DIMMER_LIGHT: WORKAROUND_DELAY,
     DRAGONTECH_PD100_DIMMER_LIGHT: WORKAROUND_DELAY,
-    ACT_ZDP100_DIMMER_LIGHT: WORKAROUND_DELAY
+    ACT_ZDP100_DIMMER_LIGHT: WORKAROUND_DELAY,
+    HOMESEER_WD100_DIMMER_LIGHT: WORKAROUND_DELAY,
 }
 
 # Generate midpoint color temperatures for bulbs that have limited
@@ -115,7 +120,6 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._brightness = None
         self._state = None
-        self.update_properties()
         self._alt_delay = None
         self._zw098 = None
 
@@ -133,6 +137,8 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
                     _LOGGER.debug("Dimmer delay workaround enabled for node:"
                                   " %s", value.parent_id)
                     self._alt_delay = 1
+
+        self.update_properties()
 
         # Used for value change event handling
         self._refreshing = False
@@ -222,17 +228,12 @@ class ZwaveColorLight(ZwaveDimmer):
         self._rgb = None
         self._ct = None
 
-        # Here we attempt to find a zwave color value with the same instance
-        # id as the dimmer value. Currently zwave nodes that change colors
-        # only include one dimmer and one color command, but this will
-        # hopefully provide some forward compatibility for new devices that
-        # have multiple color changing elements.
+        # Currently zwave nodes only exist with one color element per node.
         for value_color in value.node.get_rgbbulbs().values():
-            if value.instance == value_color.instance:
-                self._value_color = value_color
+            self._value_color = value_color
 
         if self._value_color is None:
-            raise ValueError("No matching color command found.")
+            raise ValueError("No color command found.")
 
         for value_color_channels in value.node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_SWITCH_COLOR,

@@ -1,59 +1,65 @@
 """The tests for the TCP binary sensor platform."""
-from copy import copy
+import unittest
 from unittest.mock import patch, Mock
 
-from homeassistant.components.sensor import tcp
+from homeassistant.bootstrap import setup_component
 from homeassistant.components.binary_sensor import tcp as bin_tcp
-from tests.common import get_test_home_assistant
+from homeassistant.components.sensor import tcp
+from tests.common import (get_test_home_assistant, assert_setup_component)
 from tests.components.sensor import test_tcp
 
 
-@patch('homeassistant.components.sensor.tcp.Sensor.update')
-def test_setup_platform_valid_config(mock_update):
-    """Should check the supplied config and call add_entities with Sensor."""
-    add_entities = Mock()
-    ret = bin_tcp.setup_platform(None, test_tcp.TEST_CONFIG, add_entities)
-    assert ret is None, "setup_platform() should return None if successful."
-    assert add_entities.called
-    assert isinstance(add_entities.call_args[0][0][0], bin_tcp.BinarySensor)
-
-
-def test_setup_platform_invalid_config():
-    """Should check the supplied config and return False if it is invalid."""
-    config = copy(test_tcp.TEST_CONFIG)
-    del config[tcp.CONF_HOST]
-    assert bin_tcp.setup_platform(None, config, None) is False
-
-
-class TestTCPBinarySensor():
+class TestTCPBinarySensor(unittest.TestCase):
     """Test the TCP Binary Sensor."""
 
-    def setup_class(cls):
+    def setup_method(self, method):
         """Setup things to be run when tests are started."""
-        cls.hass = get_test_home_assistant()
+        self.hass = get_test_home_assistant()
 
-    def teardown_class(cls):
+    def teardown_method(self, method):
         """Stop down everything that was started."""
-        cls.hass.stop()
+        self.hass.stop()
 
-    def test_requires_additional_values(self):
-        """Should require the additional config values specified."""
-        config = copy(test_tcp.TEST_CONFIG)
-        for key in bin_tcp.BinarySensor.required:
-            del config[key]
-        assert len(config) != len(test_tcp.TEST_CONFIG)
-        assert not bin_tcp.BinarySensor.validate_config(config)
+    def test_setup_platform_valid_config(self):
+        """Check a valid configuration."""
+        with assert_setup_component(0, 'binary_sensor'):
+            assert setup_component(
+                self.hass, 'binary_sensor', test_tcp.TEST_CONFIG)
 
-    @patch('homeassistant.components.sensor.tcp.Sensor.update')
+    def test_setup_platform_invalid_config(self):
+        """Check the invalid configuration."""
+        with assert_setup_component(0):
+            assert setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
+                    'platform': 'tcp',
+                    'porrt': 1234,
+                }
+            })
+
+    @patch('homeassistant.components.sensor.tcp.TcpSensor.update')
+    def test_setup_platform_devices(self, mock_update):
+        """Check the supplied config and call add_devices with sensor."""
+        add_devices = Mock()
+        ret = bin_tcp.setup_platform(None, test_tcp.TEST_CONFIG, add_devices)
+        assert ret is None
+        assert add_devices.called
+        assert isinstance(
+            add_devices.call_args[0][0][0], bin_tcp.TcpBinarySensor)
+
+    @patch('homeassistant.components.sensor.tcp.TcpSensor.update')
     def test_is_on_true(self, mock_update):
-        """Should return True if _state is the same as value_on."""
-        sensor = bin_tcp.BinarySensor(self.hass, test_tcp.TEST_CONFIG)
-        sensor._state = test_tcp.TEST_CONFIG[tcp.CONF_VALUE_ON]
+        """Check the return that _state is value_on."""
+        sensor = bin_tcp.TcpBinarySensor(
+            self.hass, test_tcp.TEST_CONFIG['sensor'])
+        sensor._state = test_tcp.TEST_CONFIG['sensor'][tcp.CONF_VALUE_ON]
+        print(sensor._state)
         assert sensor.is_on
 
-    @patch('homeassistant.components.sensor.tcp.Sensor.update')
+    @patch('homeassistant.components.sensor.tcp.TcpSensor.update')
     def test_is_on_false(self, mock_update):
-        """Should return False if _state is not the same as value_on."""
-        sensor = bin_tcp.BinarySensor(self.hass, test_tcp.TEST_CONFIG)
-        sensor._state = "%s abc" % test_tcp.TEST_CONFIG[tcp.CONF_VALUE_ON]
+        """Check the return that _state is not the same as value_on."""
+        sensor = bin_tcp.TcpBinarySensor(
+            self.hass, test_tcp.TEST_CONFIG['sensor'])
+        sensor._state = '{} abc'.format(
+            test_tcp.TEST_CONFIG['sensor'][tcp.CONF_VALUE_ON])
         assert not sensor.is_on
