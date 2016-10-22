@@ -14,6 +14,7 @@ import threading
 from typing import Any, Sequence, Callable
 
 import voluptuous as vol
+import yaml
 
 from homeassistant.bootstrap import (
     prepare_setup_platform, log_exception)
@@ -420,7 +421,12 @@ def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     })
     try:
         result = []
-        devices = load_yaml_config_file(path)
+        try:
+            devices = load_yaml_config_file(path)
+        except HomeAssistantError as err:
+            _LOGGER.error('Unable to load %s: %s', path, str(err))
+            return []
+
         for dev_id, device in devices.items():
             try:
                 device = dev_schema(device)
@@ -463,14 +469,15 @@ def update_config(path: str, dev_id: str, device: Device):
     """Add device to YAML configuration file."""
     with open(path, 'a') as out:
         out.write('\n')
-        out.write('{}:\n'.format(device.dev_id))
 
-        for key, value in (('name', device.name), ('mac', device.mac),
-                           ('picture', device.config_picture),
-                           ('track', 'yes' if device.track else 'no'),
-                           (CONF_AWAY_HIDE,
-                            'yes' if device.away_hide else 'no')):
-            out.write('  {}: {}\n'.format(key, '' if value is None else value))
+        device = {device.dev_id: {
+            'name': device.name,
+            'mac': device.mac,
+            'picture': device.config_picture,
+            'track': device.track,
+            CONF_AWAY_HIDE: device.away_hide
+        }}
+        yaml.dump(device, out, default_flow_style=False)
 
 
 def get_gravatar_for_email(email: str):
