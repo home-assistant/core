@@ -76,7 +76,6 @@ def setup(hass, config):
                     sample_rate
                 )
 
-
             # Send attribute values
             for key, value in states.items():
                 if isinstance(value, (float, int)):
