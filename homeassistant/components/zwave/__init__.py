@@ -430,7 +430,8 @@ def setup(hass, config):
         """Stop Z-Wave network."""
         _LOGGER.info("Stopping ZWave network.")
         NETWORK.stop()
-        hass.bus.fire(const.EVENT_NETWORK_STOP)
+        if hass.state == 'RUNNING':
+            hass.bus.fire(const.EVENT_NETWORK_STOP)
 
     def rename_node(service):
         """Rename a node."""
