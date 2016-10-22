@@ -106,7 +106,6 @@ def get_newest_version(huuid):
         linux_dist = distro.linux_distribution(full_distribution_name=False)
         info_object['distribution'] = linux_dist[0]
         info_object['os_version'] = linux_dist[1]
-
         info_object['docker'] = os.path.isfile('/.dockerenv')
 
     if not huuid:
@@ -115,6 +114,9 @@ def get_newest_version(huuid):
     try:
         req = requests.post(UPDATER_URL, json=info_object)
         res = req.json()
+        _LOGGER.info(('The latest version is %s. '
+                      'Information submitted includes %s'),
+                     str(res['version']), str(info_object))
         return (res['version'], res['release-notes'])
     except requests.RequestException:
         _LOGGER.exception('Could not contact HASS Update to check for updates')
