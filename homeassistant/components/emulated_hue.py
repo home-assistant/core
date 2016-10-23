@@ -217,7 +217,7 @@ class HueUsernameView(HomeAssistantView):
         """Handle a POST request."""
         try:
             data = yield from request.json()
-        except json.decoder.JSONDecodeError:
+        except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
         if 'devicetype' not in data:
@@ -264,7 +264,7 @@ class HueLightsView(HomeAssistantView):
 
         try:
             json_data = yield from request.json()
-        except json.decoder.JSONDecodeError:
+        except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
         result = yield from self.async_put_light_state(json_data, entity_id)
