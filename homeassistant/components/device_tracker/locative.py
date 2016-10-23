@@ -21,7 +21,7 @@ DEPENDENCIES = ['http']
 
 def setup_scanner(hass, config, see):
     """Setup an endpoint for the Locative application."""
-    hass.wsgi.register_view(LocativeView(hass, see))
+    hass.http.register_view(LocativeView(hass, see))
 
     return True
 

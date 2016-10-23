@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     email = config.get(CONF_EMAIL)
     sensors = {}
 
-    hass.wsgi.register_view(TorqueReceiveDataView(
+    hass.http.register_view(TorqueReceiveDataView(
         hass, email, vehicle, sensors, add_devices))
     return True
 

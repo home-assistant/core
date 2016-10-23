@@ -43,7 +43,7 @@ def register_built_in_panel(hass, component_name, sidebar_title=None,
     # pylint: disable=too-many-arguments
     path = 'panels/ha-panel-{}.html'.format(component_name)
 
-    if hass.wsgi.development:
+    if hass.http.development:
         url = ('/static/home-assistant-polymer/panels/'
                '{0}/ha-panel-{0}.html'.format(component_name))
     else:
@@ -102,7 +102,7 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
         url = URL_PANEL_COMPONENT.format(component_name)
 
         if url not in _REGISTERED_COMPONENTS:
-            hass.wsgi.register_static_path(url, path)
+            hass.http.register_static_path(url, path)
             _REGISTERED_COMPONENTS.add(url)
 
         fprinted_url = URL_PANEL_COMPONENT_FP.format(component_name, md5)
@@ -118,23 +118,23 @@ def add_manifest_json_key(key, val):
 
 def setup(hass, config):
     """Setup serving the frontend."""
-    hass.wsgi.register_view(BootstrapView)
-    hass.wsgi.register_view(ManifestJSONView)
+    hass.http.register_view(BootstrapView)
+    hass.http.register_view(ManifestJSONView)
 
-    if hass.wsgi.development:
+    if hass.http.development:
         sw_path = "home-assistant-polymer/build/service_worker.js"
     else:
         sw_path = "service_worker.js"
 
-    hass.wsgi.register_static_path("/service_worker.js",
+    hass.http.register_static_path("/service_worker.js",
                                    os.path.join(STATIC_PATH, sw_path), 0)
-    hass.wsgi.register_static_path("/robots.txt",
+    hass.http.register_static_path("/robots.txt",
                                    os.path.join(STATIC_PATH, "robots.txt"))
-    hass.wsgi.register_static_path("/static", STATIC_PATH)
+    hass.http.register_static_path("/static", STATIC_PATH)
 
     local = hass.config.path('www')
     if os.path.isdir(local):
-        hass.wsgi.register_static_path("/local", local)
+        hass.http.register_static_path("/local", local)
 
     register_built_in_panel(hass, 'map', 'Map', 'mdi:account-location')
 
@@ -147,7 +147,7 @@ def setup(hass, config):
 
         Done when Home Assistant is started so that all panels are known.
         """
-        hass.wsgi.register_view(IndexView(
+        hass.http.register_view(IndexView(
             hass, ['/{}'.format(name) for name in PANELS]))
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, register_frontend_index)
@@ -204,7 +204,7 @@ class IndexView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request, entity_id=None):
         """Serve the index view."""
-        if self.hass.wsgi.development:
+        if self.hass.http.development:
             core_url = '/static/home-assistant-polymer/build/core.js'
             ui_url = '/static/home-assistant-polymer/src/home-assistant.html'
         else:
@@ -224,8 +224,8 @@ class IndexView(HomeAssistantView):
         if self.hass.config.api.api_password:
             # require password if set
             no_auth = 'false'
-            if self.hass.wsgi.is_trusted_ip(
-                    self.hass.wsgi.get_real_ip(request)):
+            if self.hass.http.is_trusted_ip(
+                    self.hass.http.get_real_ip(request)):
                 # bypass for trusted networks
                 no_auth = 'true'
 

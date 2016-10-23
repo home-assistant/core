@@ -56,7 +56,7 @@ def setUpModule():
 
     bootstrap.setup_component(hass, 'api')
 
-    hass.wsgi.trusted_networks = [
+    hass.http.trusted_networks = [
         ip_network(trusted_network)
         for trusted_network in TRUSTED_NETWORKS]
 

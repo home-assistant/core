@@ -104,8 +104,8 @@ def setup(hass, config):
     intents = config[DOMAIN].get(CONF_INTENTS, {})
     flash_briefings = config[DOMAIN].get(CONF_FLASH_BRIEFINGS, {})
 
-    hass.wsgi.register_view(AlexaIntentsView(hass, intents))
-    hass.wsgi.register_view(AlexaFlashBriefingView(hass, flash_briefings))
+    hass.http.register_view(AlexaIntentsView(hass, intents))
+    hass.http.register_view(AlexaFlashBriefingView(hass, flash_briefings))
 
     return True
 

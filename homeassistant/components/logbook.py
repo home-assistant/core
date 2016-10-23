@@ -101,7 +101,7 @@ def setup(hass, config):
         message = message.async_render()
         async_log_entry(hass, name, message, domain, entity_id)
 
-    hass.wsgi.register_view(LogbookView(hass, config))
+    hass.http.register_view(LogbookView(hass, config))
 
     register_built_in_panel(hass, 'logbook', 'Logbook',
                             'mdi:format-list-bulleted-type')

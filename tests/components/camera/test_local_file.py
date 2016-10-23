@@ -25,7 +25,7 @@ def test_loading_file(hass, test_client):
 
     yield from hass.loop.run_in_executor(None, setup_platform)
 
-    client = yield from test_client(hass.wsgi.app)
+    client = yield from test_client(hass.http.app)
 
     m_open = mock.mock_open(read_data=test_string.encode('utf-8'))
     with mock.patch(

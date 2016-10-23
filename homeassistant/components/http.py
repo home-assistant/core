@@ -105,10 +105,10 @@ class HideSensitiveFilter(logging.Filter):
 
     def filter(self, record):
         """Hide sensitive data in messages."""
-        if self.hass.wsgi.api_password is None:
+        if self.hass.http.api_password is None:
             return True
 
-        record.msg = record.msg.replace(self.hass.wsgi.api_password, '*******')
+        record.msg = record.msg.replace(self.hass.http.api_password, '*******')
 
         return True
 
@@ -155,7 +155,7 @@ def setup(hass, config):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_server)
 
-    hass.wsgi = server
+    hass.http = server
     hass.config.api = rem.API(server_host if server_host != '0.0.0.0'
                               else util.get_local_ip(),
                               api_password, server_port,
@@ -378,12 +378,13 @@ class HomeAssistantWSGI(object):
     def is_trusted_ip(self, remote_addr):
         """Match an ip address against trusted CIDR networks."""
         return any(ip_address(remote_addr) in trusted_network
-                   for trusted_network in self.hass.wsgi.trusted_networks)
+                   for trusted_network in self.hass.http.trusted_networks)
 
 
 class HomeAssistantView(object):
     """Base view for all views."""
 
+    url = None
     extra_urls = []
     requires_auth = True  # Views inheriting from this class can override this
 
@@ -421,6 +422,7 @@ class HomeAssistantView(object):
 
     def register(self, router):
         """Register the view with a router."""
+        assert self.url is not None, 'No url set for view'
         urls = [self.url] + self.extra_urls
 
         for method in ('get', 'post', 'delete', 'put'):
@@ -454,19 +456,19 @@ def request_handler_factory(view, handler):
         # Auth code verbose on purpose
         authenticated = False
 
-        if view.hass.wsgi.api_password is None:
+        if view.hass.http.api_password is None:
             authenticated = True
 
-        elif view.hass.wsgi.is_trusted_ip(remote_addr):
+        elif view.hass.http.is_trusted_ip(remote_addr):
             authenticated = True
 
         elif hmac.compare_digest(request.headers.get(HTTP_HEADER_HA_AUTH, ''),
-                                 view.hass.wsgi.api_password):
+                                 view.hass.http.api_password):
             # A valid auth header has been set
             authenticated = True
 
         elif hmac.compare_digest(request.GET.get(DATA_API_PASSWORD, ''),
-                                 view.hass.wsgi.api_password):
+                                 view.hass.http.api_password):
             authenticated = True
 
         if view.requires_auth and not authenticated:

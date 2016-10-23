@@ -23,7 +23,7 @@ def test_fetching_url(aioclient_mock, hass, test_client):
 
     yield from hass.loop.run_in_executor(None, setup_platform)
 
-    client = yield from test_client(hass.wsgi.app)
+    client = yield from test_client(hass.http.app)
 
     resp = yield from client.get('/api/camera_proxy/camera.config_test')
 
@@ -57,7 +57,7 @@ def test_limit_refetch(aioclient_mock, hass, test_client):
 
     yield from hass.loop.run_in_executor(None, setup_platform)
 
-    client = yield from test_client(hass.wsgi.app)
+    client = yield from test_client(hass.http.app)
 
     resp = yield from client.get('/api/camera_proxy/camera.config_test')
 

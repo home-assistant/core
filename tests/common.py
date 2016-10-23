@@ -198,9 +198,9 @@ def mock_state_change_event(hass, new_state, old_state=None):
 
 def mock_http_component(hass):
     """Mock the HTTP component."""
-    hass.wsgi = mock.MagicMock()
+    hass.http = mock.MagicMock()
     hass.config.components.append('http')
-    hass.wsgi.views = {}
+    hass.http.views = {}
 
     def mock_register_view(view):
         """Store registered view."""
@@ -208,9 +208,9 @@ def mock_http_component(hass):
             # Instantiate the view, if needed
             view = view(hass)
 
-        hass.wsgi.views[view.name] = view
+        hass.http.views[view.name] = view
 
-    hass.wsgi.register_view = mock_register_view
+    hass.http.register_view = mock_register_view
 
 
 def mock_mqtt_component(hass):

@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
 
     if len(DEVICES) == 0:
-        hass.wsgi.register_view(NetioApiView)
+        hass.http.register_view(NetioApiView)
 
     dev = Netio(host, port, username, password)
 

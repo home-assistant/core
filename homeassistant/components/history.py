@@ -184,8 +184,8 @@ def setup(hass, config):
         filters.included_entities = include[CONF_ENTITIES]
         filters.included_domains = include[CONF_DOMAINS]
 
-    hass.wsgi.register_view(Last5StatesView(hass))
-    hass.wsgi.register_view(HistoryPeriodView(hass, filters))
+    hass.http.register_view(Last5StatesView(hass))
+    hass.http.register_view(HistoryPeriodView(hass, filters))
     register_built_in_panel(hass, 'history', 'History', 'mdi:poll-box')
 
     return True

@@ -76,7 +76,7 @@ def setup(hass, config):
                            descriptions[DOMAIN][SERVICE_CHECKIN],
                            schema=CHECKIN_SERVICE_SCHEMA)
 
-    hass.wsgi.register_view(FoursquarePushReceiver(
+    hass.http.register_view(FoursquarePushReceiver(
         hass, config[CONF_PUSH_SECRET]))
 
     return True

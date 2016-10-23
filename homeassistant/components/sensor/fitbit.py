@@ -274,8 +274,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             scope=['activity', 'heartrate', 'nutrition', 'profile',
                    'settings', 'sleep', 'weight'])
 
-        hass.wsgi.register_redirect(FITBIT_AUTH_START, fitbit_auth_start_url)
-        hass.wsgi.register_view(FitbitAuthCallbackView(
+        hass.http.register_redirect(FITBIT_AUTH_START, fitbit_auth_start_url)
+        hass.http.register_view(FitbitAuthCallbackView(
             hass, config, add_devices, oauth))
 
         request_oauth_completion(hass)

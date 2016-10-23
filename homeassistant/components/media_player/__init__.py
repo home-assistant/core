@@ -293,7 +293,7 @@ def setup(hass, config):
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
-    hass.wsgi.register_view(MediaPlayerImageView(hass, component.entities))
+    hass.http.register_view(MediaPlayerImageView(hass, component.entities))
 
     component.setup(config)
 

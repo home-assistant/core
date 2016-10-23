@@ -108,9 +108,9 @@ def get_service(hass, config):
     if registrations is None:
         return None
 
-    hass.wsgi.register_view(
+    hass.http.register_view(
         HTML5PushRegistrationView(hass, registrations, json_path))
-    hass.wsgi.register_view(HTML5PushCallbackView(hass, registrations))
+    hass.http.register_view(HTML5PushCallbackView(hass, registrations))
 
     gcm_api_key = config.get(ATTR_GCM_API_KEY)
     gcm_sender_id = config.get(ATTR_GCM_SENDER_ID)
