@@ -86,17 +86,18 @@ class EntityComponent(object):
         discovery.async_listen_platform(
             self.hass, self.domain, component_platform_discovered)
 
-    def extract_from_service(self, service):
+    def extract_from_service(self, service, expand_group=True):
         """Extract all known entities from a service call.
 
         Will return all entities if no entities specified in call.
         Will return an empty list if entities specified but unknown.
         """
         return run_callback_threadsafe(
-            self.hass.loop, self.async_extract_from_service, service
+            self.hass.loop, self.async_extract_from_service, service,
+            expand_group
         ).result()
 
-    def async_extract_from_service(self, service):
+    def async_extract_from_service(self, service, expand_group=True):
         """Extract all known entities from a service call.
 
         Will return all entities if no entities specified in call.
@@ -108,7 +109,7 @@ class EntityComponent(object):
             return list(self.entities.values())
 
         return [self.entities[entity_id] for entity_id
-                in extract_entity_ids(self.hass, service)
+                in extract_entity_ids(self.hass, service, expand_group)
                 if entity_id in self.entities]
 
     @asyncio.coroutine
