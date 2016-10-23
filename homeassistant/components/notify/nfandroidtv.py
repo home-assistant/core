@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_IP = 'ip'
+CONF_IP = 'host'
 CONF_DURATION = 'duration'
 CONF_POSITION = 'position'
 CONF_TRANSPARENCY = 'transparency'
