@@ -1,4 +1,10 @@
-"""A single LiteJet light."""
+"""
+Support for LiteJet lights.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.litejet/
+"""
+
 import logging
 
 import homeassistant.components.litejet as litejet

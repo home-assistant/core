@@ -1,4 +1,9 @@
-"""Creates switches for the switches in the LiteJet lighting system."""
+"""
+Support for LiteJet switch.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.litejet/
+"""
 import logging
 import homeassistant.components.litejet as litejet
 from homeassistant.components.switch import SwitchDevice
