@@ -132,9 +132,9 @@ class RestSwitch(SwitchDevice):
             else:
                 self._state = None
         else:
-            if request.text == self._body_on:
+            if request.text == self._body_on.template:
                 self._state = True
-            elif request.text == self._body_off:
+            elif request.text == self._body_off.template:
                 self._state = False
             else:
                 self._state = None
