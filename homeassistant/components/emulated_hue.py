@@ -8,7 +8,6 @@ import asyncio
 import threading
 import socket
 import logging
-import json
 import os
 import select
 
