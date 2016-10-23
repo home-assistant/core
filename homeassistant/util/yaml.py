@@ -45,7 +45,7 @@ def load_yaml(fname: str) -> Union[List, Dict]:
         raise HomeAssistantError(exc)
     catch UnicodeDecodeError as exc:
         _LOGGER.error('Unable to read file %s: %s', fname, exc)
-        raise HomeAssistantError
+        raise HomeAssistantError(exc)
 
 
 def clear_secret_cache() -> None:
