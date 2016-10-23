@@ -124,7 +124,8 @@ class TestDdwrt(unittest.TestCase):
 
         The created known_devices.yaml device info is compared
         to the DD-WRT Lan Status request response fixture.
-        This effectively checks the data parsing functions."""
+        This effectively checks the data parsing functions.
+        """
         with requests_mock.Mocker() as mock_request:
             mock_request.register_uri(
                 'GET', r'http://%s/Status_Wireless.live.asp' % TEST_HOST,
