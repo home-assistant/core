@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_NAME, CONF_RESOURCE, CONF_IS_ON_TEMPLATE, CONF_TIMEOUT)
+    CONF_NAME, CONF_RESOURCE, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 # from homeassistant.helpers import template
 
@@ -21,6 +21,7 @@ DEFAULT_BODY_OFF = 'OFF'
 DEFAULT_BODY_ON = 'ON'
 DEFAULT_NAME = 'REST Switch'
 DEFAULT_TIMEOUT = 10
+CONF_IS_ON_TEMPLATE = 'is_on_template'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
@@ -42,6 +43,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     body_on = config.get(CONF_BODY_ON)
     body_off = config.get(CONF_BODY_OFF)
     is_on_template = config.get(CONF_IS_ON_TEMPLATE)
+    
     is_on_template.hass = hass
     body_on.hass = hass
     body_off.hass = hass
