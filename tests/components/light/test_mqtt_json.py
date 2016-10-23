@@ -161,8 +161,14 @@ class TestLightMQTTJSON(unittest.TestCase):
                 'command_topic': 'test_light_rgb/set',
                 'brightness': True,
                 'rgb': True,
-                'rgb_value_template': '{{ value_json.color[0] }},{{ value_json.color[1] }},{{ value_json.color[2] }}',
-                'rgb_set_template': '{"color": [{{ value_json.r }},{{ value_json.g}},{{ value_json.b }}]}',
+                'rgb_value_template': '{{ value_json.color[0] }},'
+                                      '{{ value_json.color[1] }},'
+                                      '{{ value_json.color[2] }}',
+                'rgb_set_template': '{"color":['
+                                    '{{ value_json.r }},'
+                                    '{{ value_json.g }},'
+                                    '{{ value_json.b }}'
+                                    ']}',
                 'qos': '0'
             }
         })

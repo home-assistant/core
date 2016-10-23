@@ -61,8 +61,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
     vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
-    vol.Optional(CONF_RGB_VALUE_TEMPLATE, default=DEFAULT_RGB_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_RGB_SET_TEMPLATE, default=DEFAULT_RGB_SET_TEMPLATE): cv.template,
+    vol.Optional(CONF_RGB_VALUE_TEMPLATE, default=DEFAULT_RGB_VALUE_TEMPLATE):
+        cv.template,
+    vol.Optional(CONF_RGB_SET_TEMPLATE, default=DEFAULT_RGB_SET_TEMPLATE):
+        cv.template,
     vol.Optional(CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT):
         cv.positive_int,
     vol.Optional(CONF_FLASH_TIME_LONG, default=DEFAULT_FLASH_TIME_LONG):
@@ -144,7 +146,8 @@ class MqttJson(Light):
             if self._rgb is not None:
                 try:
                     self._rgb = [int(val) for val in
-                                 self._templates[CONF_RGB_VALUE_TEMPLATE](payload).split(',')]
+                                 self._templates[CONF_RGB_VALUE_TEMPLATE](
+                                     payload).split(',')]
                 except KeyError:
                     pass
                 except ValueError:
@@ -201,11 +204,13 @@ class MqttJson(Light):
         message = {'state': 'ON'}
 
         if ATTR_RGB_COLOR in kwargs:
-            message.update(json.loads(self._templates[CONF_RGB_SET_TEMPLATE](json.dumps({
-                'r': kwargs[ATTR_RGB_COLOR][0],
-                'g': kwargs[ATTR_RGB_COLOR][1],
-                'b': kwargs[ATTR_RGB_COLOR][2]
-            }))))
+            message.update(json.loads(self._templates[CONF_RGB_SET_TEMPLATE](
+                json.dumps({
+                    'r': kwargs[ATTR_RGB_COLOR][0],
+                    'g': kwargs[ATTR_RGB_COLOR][1],
+                    'b': kwargs[ATTR_RGB_COLOR][2]
+                })
+            )))
 
             if self._optimistic:
                 self._rgb = kwargs[ATTR_RGB_COLOR]
