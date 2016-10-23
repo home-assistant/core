@@ -10,3 +10,4 @@ pytest-catchlog>=1.2.2
 pydocstyle>=1.0.0
 requests_mock>=1.0
 mypy-lang>=0.4
+mock-open>=1.3.1

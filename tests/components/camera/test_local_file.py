@@ -2,6 +2,10 @@
 import asyncio
 from unittest import mock
 
+# Using third party package because of a bug reading binary data in Python 3.4
+# https://bugs.python.org/issue23004
+from mock_open import MockOpen
+
 from homeassistant.bootstrap import setup_component
 
 from tests.common import assert_setup_component, mock_http_component
@@ -10,24 +14,22 @@ from tests.common import assert_setup_component, mock_http_component
 @asyncio.coroutine
 def test_loading_file(hass, test_client):
     """Test that it loads image from disk."""
-    test_string = 'hello'
-
+    @mock.patch('os.path.isfile', mock.Mock(return_value=True))
+    @mock.patch('os.access', mock.Mock(return_value=True))
     def setup_platform():
         """Setup platform inside callback."""
-        with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
-                mock.patch('os.access', mock.Mock(return_value=True)):
-            assert setup_component(hass, 'camera', {
-                'camera': {
-                    'name': 'config_test',
-                    'platform': 'local_file',
-                    'file_path': 'mock.file',
-                }})
+        assert setup_component(hass, 'camera', {
+            'camera': {
+                'name': 'config_test',
+                'platform': 'local_file',
+                'file_path': 'mock.file',
+            }})
 
     yield from hass.loop.run_in_executor(None, setup_platform)
 
     client = yield from test_client(hass.http.app)
 
-    m_open = mock.mock_open(read_data=test_string.encode('utf-8'))
+    m_open = MockOpen(read_data=b'hello')
     with mock.patch(
             'homeassistant.components.camera.local_file.open',
             m_open, create=True
@@ -36,7 +38,7 @@ def test_loading_file(hass, test_client):
 
     assert resp.status == 200
     body = yield from resp.text()
-    assert body == test_string
+    assert body == 'hello'
 
 
 @asyncio.coroutine
