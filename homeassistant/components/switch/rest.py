@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     body_on = config.get(CONF_BODY_ON)
     body_off = config.get(CONF_BODY_OFF)
     is_on_template = config.get(CONF_IS_ON_TEMPLATE)
-    
+
     if is_on_template is not None:
         is_on_template.hass = hass
     if body_on is not None:
