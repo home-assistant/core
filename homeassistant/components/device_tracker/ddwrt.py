@@ -107,7 +107,6 @@ class DdWrtDeviceScanner(object):
 
         Return boolean if scanning successful.
         """
-
         with self.lock:
             _LOGGER.info('Checking ARP')
 
