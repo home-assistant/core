@@ -240,6 +240,7 @@ class TestYaml(unittest.TestCase):
 
     @patch('homeassistant.util.yaml.open')
     def test_load_yaml_encoding_error(self, mock_open):
+        """Test raising a UnicodeDecodeError."""
         mock_open.side_effect = UnicodeDecodeError('', b'', 1, 0, '')
         self.assertRaises(HomeAssistantError, yaml.load_yaml, 'test')
 
