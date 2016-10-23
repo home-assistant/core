@@ -7,7 +7,6 @@ https://home-assistant.io/components/foursquare/
 import asyncio
 import logging
 import os
-import json
 
 import requests
 import voluptuous as vol
@@ -99,7 +98,7 @@ class FoursquarePushReceiver(HomeAssistantView):
         """Accept the POST from Foursquare."""
         try:
             data = yield from request.json()
-        except json.decoder.JSONDecodeError:
+        except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
         secret = data.pop('secret', None)
