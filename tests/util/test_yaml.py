@@ -237,8 +237,7 @@ class TestYaml(unittest.TestCase):
                     "key4": "four"
                 }
 
-
-    @patch('homeassistant.util.yaml.open')
+    @patch('homeassistant.util.yaml.open', create=True)
     def test_load_yaml_encoding_error(self, mock_open):
         """Test raising a UnicodeDecodeError."""
         mock_open.side_effect = UnicodeDecodeError('', b'', 1, 0, '')
