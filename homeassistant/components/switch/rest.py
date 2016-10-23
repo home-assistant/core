@@ -13,7 +13,6 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_NAME, CONF_RESOURCE, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
-# from homeassistant.helpers import template
 
 CONF_BODY_OFF = 'body_off'
 CONF_BODY_ON = 'body_on'
@@ -44,9 +43,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     body_off = config.get(CONF_BODY_OFF)
     is_on_template = config.get(CONF_IS_ON_TEMPLATE)
     
-    is_on_template.hass = hass
-    body_on.hass = hass
-    body_off.hass = hass
+    if is_on_template is not None:
+        is_on_template.hass = hass
+    if body_on is not None:
+        body_on.hass = hass
+    if body_off is not None:
+        body_off.hass = hass
     timeout = config.get(CONF_TIMEOUT)
 
     try:
