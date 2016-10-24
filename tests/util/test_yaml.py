@@ -95,7 +95,6 @@ class TestYaml(unittest.TestCase):
         mock_walk.return_value = [
             ['/tmp', ['tmp2', '.ignore', 'ignore'], ['zero.yaml']],
             ['/tmp/tmp2', [], ['one.yaml', 'two.yaml']],
-            ['/tmp/.ignore', [], []],
             ['/tmp/ignore', [], ['.ignore.yaml']]
         ]
 
@@ -136,7 +135,6 @@ class TestYaml(unittest.TestCase):
         mock_walk.return_value = [
             ['/tmp', ['tmp2', '.ignore', 'ignore'], ['first.yaml']],
             ['/tmp/tmp2', [], ['second.yaml', 'third.yaml']],
-            ['/tmp/.ignore', [], []],
             ['/tmp/ignore', [], ['.ignore.yaml']]
         ]
 
@@ -175,7 +173,6 @@ class TestYaml(unittest.TestCase):
         mock_walk.return_value = [
             ['/tmp', ['tmp2', '.ignore', 'ignore'], ['first.yaml']],
             ['/tmp/tmp2', [], ['second.yaml', 'third.yaml']],
-            ['/tmp/.ignore', [], []],
             ['/tmp/ignore', [], ['.ignore.yaml']]
         ]
 
@@ -218,7 +215,6 @@ class TestYaml(unittest.TestCase):
         mock_walk.return_value = [
             ['/tmp', ['tmp2', '.ignore', 'ignore'], ['first.yaml']],
             ['/tmp/tmp2', [], ['second.yaml', 'third.yaml']],
-            ['/tmp/.ignore', [], []],
             ['/tmp/ignore', [], ['.ignore.yaml']]
         ]
 
@@ -240,6 +236,13 @@ class TestYaml(unittest.TestCase):
                     "key3": "three",
                     "key4": "four"
                 }
+
+    @patch('homeassistant.util.yaml.open', create=True)
+    def test_load_yaml_encoding_error(self, mock_open):
+        """Test raising a UnicodeDecodeError."""
+        mock_open.side_effect = UnicodeDecodeError('', b'', 1, 0, '')
+        self.assertRaises(HomeAssistantError, yaml.load_yaml, 'test')
+
 
 FILES = {}
 
