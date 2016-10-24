@@ -355,7 +355,7 @@ class APIEventForwardingView(HomeAssistantView):
 
     @asyncio.coroutine
     def delete(self, request):
-        """Remove event forwarer."""
+        """Remove event forwarder."""
         try:
             data = yield from request.json()
         except ValueError:
