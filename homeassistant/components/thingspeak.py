@@ -1,4 +1,4 @@
-""" A component to submit data to thingspeak """
+"""A component to submit data to thingspeak"""
 import logging
 
 import voluptuous as vol
@@ -20,14 +20,14 @@ TIMEOUT = 5
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_ID): cv.int,
+        vol.Required(CONF_ID): int,
         vol.Required(CONF_WHITELIST): cv.string
         }),
     }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
-    """ Setup the thingspeak environment """
+    """Setup the thingspeak environment"""
     import thingspeak
 
     # Read out config values
