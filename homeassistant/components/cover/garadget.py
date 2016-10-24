@@ -39,7 +39,7 @@ STATES_MAP = {
 
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICE): cv.string,
+    vol.Required(CONF_DEVICE): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_ACCESS_TOKEN): cv.string,
