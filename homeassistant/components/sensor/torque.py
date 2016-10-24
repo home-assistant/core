@@ -143,6 +143,7 @@ class TorqueSensor(Entity):
         """Return the default icon of the sensor."""
         return 'mdi:car'
 
+    @callback
     def async_on_update(self, value):
         """Receive an update."""
         self._state = value

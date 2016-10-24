@@ -7,6 +7,7 @@ import os
 
 from aiohttp import web
 
+from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.components import api
 from homeassistant.components.http import HomeAssistantView
@@ -168,7 +169,7 @@ class BootstrapView(HomeAssistantView):
     url = "/api/bootstrap"
     name = "api:bootstrap"
 
-    @asyncio.coroutine
+    @callback
     def get(self, request):
         """Return all data needed to bootstrap Home Assistant."""
         return self.json({
@@ -230,10 +231,12 @@ class IndexView(HomeAssistantView):
                 no_auth = 'true'
 
         icons_url = '/static/mdi-{}.html'.format(FINGERPRINTS['mdi.html'])
-        template = self.templates.get_template('index.html')
+        template = yield from self.hass.loop.run_in_executor(
+            None, self.templates.get_template, 'index.html')
 
         # pylint is wrong
         # pylint: disable=no-member
+        # This is a jinja2 template, not a HA template so we call 'render'.
         resp = template.render(
             core_url=core_url, ui_url=ui_url, no_auth=no_auth,
             icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],

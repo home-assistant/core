@@ -86,30 +86,21 @@ def setup(hass, yaml_config):
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr, config.listen_port)
 
-    # @core.callback
-    def start_emulated_hue_bridge(event):
-        """Start the emulated hue bridge."""
-        # hass.loop.create_task(server.start())
-        # Temp, while fixing listen_once
-        from homeassistant.util.async import run_coroutine_threadsafe
-
-        run_coroutine_threadsafe(server.start(), hass.loop).result()
-
-        upnp_listener.start()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
-
-    # @core.callback
+    @core.callback
     def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
         upnp_listener.stop()
-        # hass.loop.create_task(server.stop())
-        # Temp, while fixing listen_once
-        from homeassistant.util.async import run_coroutine_threadsafe
+        hass.loop.create_task(server.stop())
 
-        run_coroutine_threadsafe(server.stop(), hass.loop).result()
+    @core.callback
+    def start_emulated_hue_bridge(event):
+        """Start the emulated hue bridge."""
+        hass.loop.create_task(server.start())
+        upnp_listener.start()
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                   stop_emulated_hue_bridge)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
 
     return True
 
@@ -269,6 +260,7 @@ class HueLightsView(HomeAssistantView):
         result = yield from self.async_put_light_state(json_data, entity_id)
         return result
 
+    @core.callback
     def async_get_lights_list(self):
         """Process a request to get the list of available lights."""
         json_response = {}
@@ -279,6 +271,7 @@ class HueLightsView(HomeAssistantView):
 
         return self.json(json_response)
 
+    @core.callback
     def async_get_light_state(self, entity_id):
         """Process a request to get the state of an individual light."""
         entity = self.hass.states.get(entity_id)
@@ -353,7 +346,10 @@ class HueLightsView(HomeAssistantView):
         return self.json(json_response)
 
     def is_entity_exposed(self, entity):
-        """Determine if an entity should be exposed on the emulated bridge."""
+        """Determine if an entity should be exposed on the emulated bridge.
+
+        Async friendly.
+        """
         config = self.config
 
         if entity.attributes.get('view') is not None:
