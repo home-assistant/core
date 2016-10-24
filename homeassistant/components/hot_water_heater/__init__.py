@@ -91,7 +91,8 @@ SET_HOLIDAY_MODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_HOLIDAY_DURATION): cv.number,
 })
 SET_WATER_TEMPERATURE_SCHEMA = vol.Schema({
-    vol.Exclusive(ATTR_TARGET_WATER_TEMPERATURE, 'temperature'): vol.Coerce(float),
+    vol.Exclusive(ATTR_TARGET_WATER_TEMPERATURE,
+                  'temperature'): vol.Coerce(float),
     vol.Optional(ATTR_PANEL_DIFF_TEMP, 'temperature'): vol.Coerce(float),
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
