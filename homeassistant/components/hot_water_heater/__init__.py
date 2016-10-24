@@ -71,7 +71,7 @@ ATTR_OPERATION_LIST = "operation_list"
 
 CONVERTIBLE_ATTRIBUTE = [
     ATTR_TEMPERATURE,
-    ATTR_TARGET_WATER_TEMP,
+    ATTR_TARGET_WATER_TEMPERATURE,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ SET_HOLIDAY_MODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_HOLIDAY_DURATION): cv.number,
 })
 SET_WATER_TEMPERATURE_SCHEMA = vol.Schema({
-    vol.Exclusive(ATTR_TARGET_WATER_TEMP, 'temperature'): vol.Coerce(float),
+    vol.Exclusive(ATTR_TARGET_WATER_TEMPERATURE, 'temperature'): vol.Coerce(float),
     vol.Optional(ATTR_PANEL_DIFF_TEMP, 'temperature'): vol.Coerce(float),
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
@@ -153,7 +153,7 @@ def set_temperature(hass, entity_id=None,
     """
     kwargs = {
         key: value for key, value in [
-            (ATTR_TARGET_WATER_TEMP, target_water_temp),
+            (ATTR_TARGET_WATER_TEMPERATURE, target_water_temp),
             (ATTR_PANEL_DIFF_TEMP, panel_diff_temp),
             (ATTR_ENTITY_ID, entity_id),
         ] if value is not None
