@@ -6,12 +6,13 @@ https://home-assistant.io/components/icloud/
 """
 import logging
 import random
+import re
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.entity import (Entity, generate_entity_id)
-from homeassistant.components.device_tracker import see
+from homeassistant.components.device_tracker import (see, ATTR_ATTRIBUTES)
 from homeassistant.helpers.event import (track_state_change,
                                          track_utc_time_change)
 import homeassistant.helpers.config_validation as cv
@@ -45,10 +46,8 @@ ATTR_GMTT_ORIGIN = 'gmtt_origin'
 ICLOUDTRACKERS = {}
 
 DOMAIN = 'icloud'
-DOMAIN2 = 'idevice'
 
 ENTITY_ID_FORMAT_ICLOUD = DOMAIN + '.{}'
-ENTITY_ID_FORMAT_DEVICE = DOMAIN2 + '.{}'
 
 DEVICESTATUSSET = ['features', 'maxMsgChar', 'darkWake', 'fmlyShare',
                    'deviceStatus', 'remoteLock', 'activationLocked',
@@ -86,7 +85,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
+def setup(hass, config):
     """Set up the iCloud Scanner."""
     for account, account_config in config[DOMAIN].items():
         # Get the username and password from the configuration
@@ -108,19 +107,10 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
                                account, ignored_devices, googletraveltime)
         icloudaccount.update_ha_state()
         ICLOUDTRACKERS[account] = icloudaccount
-        if ICLOUDTRACKERS[account].api is not None:
-            for device in ICLOUDTRACKERS[account].devices:
-                iclouddevice = ICLOUDTRACKERS[account].devices[device]
-                devicename = iclouddevice.devicename.lower()
-                track_state_change(hass,
-                                   'device_tracker.' + devicename,
-                                   iclouddevice.devicechanged)
 
     if not ICLOUDTRACKERS:
         _LOGGER.error("No ICLOUDTRACKERS added")
         return False
-
-    randomseconds = random.randint(10, 59)
 
     def lost_iphone(call):
         """Call the lost iphone function if the device is found."""
@@ -147,20 +137,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
     hass.services.register(DOMAIN,
                            'update_icloud', update_icloud)
 
-    def keep_alive(now):
-        """Keep the api logged in of all account."""
-        for accountname in ICLOUDTRACKERS:
-            try:
-                ICLOUDTRACKERS[accountname].keep_alive()
-            except ValueError:
-                _LOGGER.error("something went wrong for account %s, " +
-                              "retrying in a minute", accountname)
-
-    track_utc_time_change(
-        hass, keep_alive,
-        second=randomseconds
-    )
-
     def setinterval(call):
         """Call the update function of an icloud account."""
         accountname = call.data.get(ATTR_ACCOUNTNAME)
@@ -179,196 +155,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-branches
     return True
 
 
-class IDevice(Entity):  # pylint: disable=too-many-instance-attributes
-    """Represent an iDevice in Home Assistant."""
-
-    def __init__(self, hass, icloudobject, name, identifier, googletraveltime):
-        """Initialize the iDevice."""
-        # pylint: disable=too-many-arguments
-        self.hass = hass
-        self.icloudobject = icloudobject
-        self.identifier = identifier
-        self._interval = 1
-        self.api = icloudobject.api
-        self._overridestate = None
-        self._devicestatuscode = None
-
-        self._attrs = {}
-        self._attrs[ATTR_DEVICENAME] = name
-        if googletraveltime is not None:
-            self._attrs[ATTR_GMTT] = googletraveltime
-
-        self.entity_id = generate_entity_id(
-            ENTITY_ID_FORMAT_DEVICE, self._attrs[ATTR_DEVICENAME],
-            hass=self.hass)
-
-    @property
-    def state(self):
-        """Return the state of the iDevice."""
-        return self._interval
-
-    @property
-    def unit_of_measurement(self):
-        """Unit of measurement of this entity."""
-        return "minutes"
-
-    @property
-    def state_attributes(self):
-        """Return the attributes of the iDevice."""
-        return self._attrs
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return 'mdi:cellphone-iphone'
-
-    @property
-    def devicename(self):
-        """Return the devicename of the device."""
-        return self._attrs[ATTR_DEVICENAME]
-
-    def keep_alive(self):
-        """Keep the api alive."""
-        currentminutes = dt_util.now().hour * 60 + dt_util.now().minute
-        if currentminutes % self._interval == 0:
-            self.update_icloud()
-        elif self._interval > 10 and currentminutes % self._interval in [2, 4]:
-            self.update_icloud()
-
-        if ATTR_GMTT in self._attrs:
-            gttstate = self.hass.states.get(self._attrs[ATTR_GMTT])
-            if gttstate is not None:
-                if 'origin_addresses' in gttstate.attributes:
-                    duration = gttstate.state
-                    origin = gttstate.attributes['origin_addresses']
-                    self._attrs[ATTR_GMTT_DURATION] = duration
-                    self._attrs[ATTR_GMTT_ORIGIN] = origin
-                    self.update_ha_state()
-
-    def lost_iphone(self):
-        """Call the lost iphone function if the device is found."""
-        if self.api is not None:
-            self.api.authenticate()
-            self.identifier.play_sound()
-
-    @staticmethod
-    def data_is_accurate(data):
-        """Check if location data is accurate."""
-        if not data:
-            return False
-        elif not data['locationFinished']:
-            return False
-        return True
-
-    def update_icloud(self):
-        """Authenticate against iCloud and scan for devices."""
-        if self.api is not None:
-            from pyicloud.exceptions import PyiCloudNoDevicesException
-
-            try:
-                status = self.identifier.status(DEVICESTATUSSET)
-                dev_id = slugify(status['name'].replace(' ', '', 99))
-                self._devicestatuscode = status['deviceStatus']
-                if self._devicestatuscode == '200':
-                    self._attrs[ATTR_DEVICESTATUS] = 'online'
-                elif self._devicestatuscode == '201':
-                    self._attrs[ATTR_DEVICESTATUS] = 'offline'
-                elif self._devicestatuscode == '203':
-                    self._attrs[ATTR_DEVICESTATUS] = 'pending'
-                elif self._devicestatuscode == '204':
-                    self._attrs[ATTR_DEVICESTATUS] = 'unregistered'
-                else:
-                    self._attrs[ATTR_DEVICESTATUS] = 'error'
-                self._attrs[ATTR_LOWPOWERMODE] = status['lowPowerMode']
-                self._attrs[ATTR_BATTERYSTATUS] = status['batteryStatus']
-                self.update_ha_state()
-                status = self.identifier.status(DEVICESTATUSSET)
-                battery = status['batteryLevel']*100
-                location = status['location']
-                if location:
-                    see(hass=self.hass, dev_id=dev_id,
-                        host_name=status['name'], gps=(location['latitude'],
-                                                       location['longitude']),
-                        battery=battery,
-                        gps_accuracy=location['horizontalAccuracy'])
-            except PyiCloudNoDevicesException:
-                _LOGGER.error('No iCloud Devices found!')
-
-    def get_default_interval(self):
-        """Get default interval of iDevice."""
-        devid = 'device_tracker.' + self._attrs[ATTR_DEVICENAME]
-        devicestate = self.hass.states.get(devid)
-        self._overridestate = None
-        self.devicechanged(self._attrs[ATTR_DEVICENAME], None, devicestate)
-
-    def setinterval(self, interval=None):
-        """Set interval of iDevice."""
-        if interval is not None:
-            devid = 'device_tracker.' + self._attrs[ATTR_DEVICENAME]
-            devicestate = self.hass.states.get(devid)
-            if devicestate is not None:
-                self._overridestate = devicestate.state
-            self._interval = interval
-        else:
-            self.get_default_interval()
-        self.update_ha_state()
-        self.update_icloud()
-
-    def devicechanged(self, entity, old_state, new_state):
-        """Calculate new interval."""
-        # pylint: disable=too-many-branches
-        if entity is None:
-            return
-
-        self._attrs[ATTR_DISTANCE] = None
-        if 'latitude' in new_state.attributes:
-            device_state_lat = new_state.attributes['latitude']
-            device_state_long = new_state.attributes['longitude']
-            zone_state = self.hass.states.get('zone.home')
-            zone_state_lat = zone_state.attributes['latitude']
-            zone_state_long = zone_state.attributes['longitude']
-            self._attrs[ATTR_DISTANCE] = distance(
-                device_state_lat, device_state_long, zone_state_lat,
-                zone_state_long)
-            self._attrs[ATTR_DISTANCE] = self._attrs[ATTR_DISTANCE] / 1000
-            self._attrs[ATTR_DISTANCE] = round(self._attrs[ATTR_DISTANCE], 1)
-        if 'battery' in new_state.attributes:
-            self._attrs[ATTR_BATTERY] = new_state.attributes['battery']
-
-        if new_state.state == self._overridestate:
-            self.update_ha_state()
-            return
-
-        self._overridestate = None
-
-        if new_state.state != 'not_home':
-            self._interval = 30
-            self.update_ha_state()
-        else:
-            if self._attrs[ATTR_DISTANCE] is None:
-                self.update_ha_state()
-                return
-            if self._attrs[ATTR_DISTANCE] > 100:
-                self._interval = round(self._attrs[ATTR_DISTANCE], 0)
-                if ATTR_GMTT in self._attrs[ATTR_GMTT]:
-                    gttstate = self.hass.states.get(self._attrs[ATTR_GMTT])
-                    if gttstate is not None:
-                        self._interval = round(float(gttstate.state) - 10, 0)
-            elif self._attrs[ATTR_DISTANCE] > 50:
-                self._interval = 30
-            elif self._attrs[ATTR_DISTANCE] > 25:
-                self._interval = 15
-            elif self._attrs[ATTR_DISTANCE] > 10:
-                self._interval = 5
-            else:
-                self._interval = 1
-            if self._attrs[ATTR_BATTERY] is not None:
-                if (self._attrs[ATTR_BATTERY] <= 33 and
-                        self._attrs[ATTR_DISTANCE] > 3):
-                    self._interval = self._interval * 2
-            self.update_ha_state()
-
-
 class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
     """Represent an icloud account in Home Assistant."""
 
@@ -382,10 +168,13 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         self.password = password
         self.cookiedir = cookiedirectory
         self.api = None
+        self.accountname = name
         self.devices = {}
         self._ignored_devices = ignored_devices
         self._ignored_identifiers = {}
         self.googletraveltime = googletraveltime
+        self._overridestates = {}
+        self._intervals = {}
 
         self._attrs = {}
         self._attrs[ATTR_ACCOUNTNAME] = name
@@ -409,19 +198,25 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                     devicename = slugify(status['name'].replace(' ', '', 99))
                     if (devicename not in self.devices and
                             devicename not in self._ignored_devices):
-                        gtt = None
-                        if devicename in self.googletraveltime:
-                            gtt = self.googletraveltime[devicename]
-                        idevice = IDevice(self.hass, self, devicename, device,
-                                          gtt)
-                        idevice.update_ha_state()
-                        self.devices[devicename] = idevice
+                        track_state_change(
+                            hass, 'device_tracker.' + devicename,
+                            self.devicechanged)
+                        self.devices[devicename] = device
+                        self._intervals[devicename] = 1
+                        self._overridestates[devicename] = None
                     elif devicename in self._ignored_devices:
                         self._ignored_identifiers[devicename] = device
 
             except PyiCloudFailedLoginException as error:
                 _LOGGER.error('Error logging into iCloud Service: %s',
                               error)
+
+        randomseconds = random.randint(10, 59)
+        track_utc_time_change(
+            self.hass, self.keep_alive,
+            second=randomseconds
+        )
+
 
     @property
     def state(self):
@@ -438,7 +233,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         """Return the icon to use for device if any."""
         return 'mdi:account'
 
-    def keep_alive(self):
+    def keep_alive(self, now):
         """Keep the api alive."""
         # pylint: disable=too-many-locals,too-many-branches,too-many-statements
         if self.api is None:
@@ -455,22 +250,147 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
 
         if self.api is not None:
             self.api.authenticate()
+            for device in self.api.devices:
+                if (device not in self.devices.values() and
+                        device not in self._ignored_identifiers.values()):
+                    status = device.status(DEVICESTATUSSET)
+                    devicename = slugify(status['name'].replace(' ', '', 99))
+                    if (devicename not in self.devices and
+                            devicename not in self._ignored_devices):
+                        track_state_change(
+                            hass, 'device_tracker.' + devicename,
+                            self.devicechanged)
+                        self.devices[devicename] = device
+                        self._intervals[devicename] = 1
+                        self._overridestates[devicename] = None
+                    elif devicename in self._ignored_devices:
+                        self._ignored_identifiers[devicename] = device
             for devicename in self.devices:
-                self.devices[devicename].keep_alive()
+                self.update_device(devicename)
+
+    def devicechanged(self, entity, old_state, new_state):
+        """Calculate new interval."""
+        # pylint: disable=too-many-branches
+        if entity is None:
+            return
+
+        devicename = re.sub('device_tracker.', '', entity)
+
+        distancefromhome = None
+        if 'latitude' in new_state.attributes:
+            device_state_lat = new_state.attributes['latitude']
+            device_state_long = new_state.attributes['longitude']
+            zone_state = self.hass.states.get('zone.home')
+            zone_state_lat = zone_state.attributes['latitude']
+            zone_state_long = zone_state.attributes['longitude']
+            distancefromhome = distance(
+                device_state_lat, device_state_long, zone_state_lat,
+                zone_state_long)
+            distancefromhome = round(distancefromhome / 1000, 1)
+        if 'battery' in new_state.attributes:
+            battery = new_state.attributes['battery']
+
+        if new_state.state == self._overridestates.get(devicename):
+            return
+
+        self._overridestates[devicename] = None
+
+        if new_state.state != 'not_home':
+            self._intervals[devicename] = 30
+        else:
+            if distancefromhome is None:
+                self.update_ha_state()
+                return
+            if distancefromhome > 100:
+                self._intervals[devicename] = round(distancefromhome, 0)
+                gtt = self.googletraveltime.get(devicename)
+                if gtt is not None:
+                    gttstate = self.hass.states.get(gtt)
+                    if gttstate is not None:
+                        self._intervals[devicename] = round(
+                            float(gttstate.state) - 10, 0)
+            elif distancefromhome > 50:
+                self._intervals[devicename] = 30
+            elif distancefromhome > 25:
+                self._intervals[devicename] = 15
+            elif distancefromhome > 10:
+                self._intervals[devicename] = 5
+            else:
+                self._intervals[devicename] = 1
+            if battery is not None and battery <= 33 and distancefromhome > 3:
+                self._intervals[devicename] = self._intervals[devicename] * 2
+
+    def update_device(self, devicename):
+        """Update the device_tracker entity."""
+        devstate = self.hass.states.get('device_tracker.' + devicename)
+        attrs = {}
+        kwargs = {}
+        if devstate is not None:
+            gtt = self.googletraveltime.get(devicename)
+            if gtt is not None:
+                gttstate = self.hass.states.get(gtt)
+                if gttstate is not None:
+                    if 'origin_addresses' in gttstate.attributes:
+                        duration = gttstate.state
+                        origin = gttstate.attributes['origin_addresses']
+                        attrs[ATTR_GMTT_DURATION] = duration
+                        attrs[ATTR_GMTT_ORIGIN] = origin
+
+            currentminutes = dt_util.now().hour * 60 + dt_util.now().minute
+            interval = self._intervals.get(devicename, 1)
+            if ((currentminutes % interval == 0) or
+                    (interval > 10 and currentminutes % interval in [2, 4])):
+                if self.api is not None:
+                    from pyicloud.exceptions import PyiCloudNoDevicesException
+
+                    try:
+                        for device in self.api.devices:
+                            if str(device) == str(self.devices[devicename]):
+                                status = device.status(DEVICESTATUSSET)
+                                dev_id = status['name'].replace(' ', '', 99)
+                                dev_id = slugify(dev_id)
+                                self._devicestatuscode = status['deviceStatus']
+                                if self._devicestatuscode == '200':
+                                    attrs[ATTR_DEVICESTATUS] = 'online'
+                                elif self._devicestatuscode == '201':
+                                    attrs[ATTR_DEVICESTATUS] = 'offline'
+                                elif self._devicestatuscode == '203':
+                                    attrs[ATTR_DEVICESTATUS] = 'pending'
+                                elif self._devicestatuscode == '204':
+                                    attrs[ATTR_DEVICESTATUS] = 'unregistered'
+                                else:
+                                    attrs[ATTR_DEVICESTATUS] = 'error'
+                                lowpowermode = status['lowPowerMode']
+                                attrs[ATTR_LOWPOWERMODE] = lowpowermode
+                                batterystatus = status['batteryStatus']
+                                attrs[ATTR_BATTERYSTATUS] = batterystatus
+                                attrs[ATTR_INTERVAL] = interval
+                                attrs[ATTR_ACCOUNTNAME] = self.accountname
+                                status = device.status(DEVICESTATUSSET)
+                                battery = status['batteryLevel']*100
+                                location = status['location']
+                                if location:
+                                    accuracy = location['horizontalAccuracy']
+                                    kwargs['hass'] = self.hass
+                                    kwargs['dev_id'] = dev_id
+                                    kwargs['host_name'] = status['name']
+                                    kwargs['gps'] = (location['latitude'],
+                                                     location['longitude'])
+                                    kwargs['battery'] = battery
+                                    kwargs['gps_accuracy'] = accuracy
+                                    kwargs[ATTR_ATTRIBUTES] = attrs
+                                    see(**kwargs)
+                    except PyiCloudNoDevicesException:
+                        _LOGGER.error('No iCloud Devices found!')
 
     def lost_iphone(self, devicename):
         """Call the lost iphone function if the device is found."""
         if self.api is not None:
             self.api.authenticate()
-            if devicename is not None:
-                if devicename in self.devices:
-                    self.devices[devicename].lost_iphone()
-                else:
-                    _LOGGER.error("devicename %s unknown for account %s",
-                                  devicename, self._attrs[ATTR_ACCOUNTNAME])
-            else:
-                for device in self.devices:
-                    self.devices[device].lost_iphone()
+
+            for device in self.api.devices:
+                if devicename is None or device == self.devices[devicename]:
+                    device.play_sound()
 
     def update_icloud(self, devicename=None):
         """Authenticate against iCloud and scan for devices."""
@@ -502,3 +422,18 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         elif devicename in self.devices:
             self.devices[devicename].setinterval(interval)
             self.devices[devicename].update_icloud()
+            
+        
+        for device in self.devices:
+            if devicename is None or device == devicename:
+                devid = 'device_tracker.' + devicename
+                devicestate = self.hass.states.get(devid)
+                if interval is not None:
+                    if devicestate is not None:
+                        self._overridestates[devicename] = devicestate.state
+                    self._intervals[devicename] = interval
+                else:
+                    self._overridestates[devicename] = None
+                    self.devicechanged('device_tracker.' + devicename, None,
+                                       devicestate)
+                self.update_device(devicename)
