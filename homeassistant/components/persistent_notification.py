@@ -4,6 +4,7 @@ A component which is collecting configuration errors.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/persistent_notification/
 """
+import asyncio
 import os
 import logging
 
@@ -14,6 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
+from homeassistant.util.async import run_coroutine_threadsafe
 
 DOMAIN = 'persistent_notification'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -36,6 +38,14 @@ _LOGGER = logging.getLogger(__name__)
 
 def create(hass, message, title=None, notification_id=None):
     """Generate a notification."""
+    run_coroutine_threadsafe(
+        async_create(hass, message, title, notification_id), hass.loop
+    ).result()
+
+
+@asyncio.coroutine
+def async_create(hass, message, title=None, notification_id=None):
+    """Generate a notification."""
     data = {
         key: value for key, value in [
             (ATTR_TITLE, title),
@@ -44,7 +54,7 @@ def create(hass, message, title=None, notification_id=None):
         ] if value is not None
     }
 
-    hass.services.call(DOMAIN, SERVICE_CREATE, data)
+    yield from hass.services.async_call(DOMAIN, SERVICE_CREATE, data)
 
 
 def setup(hass, config):

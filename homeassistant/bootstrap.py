@@ -359,6 +359,7 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     # suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
 
     try:
         from colorlog import ColoredFormatter
