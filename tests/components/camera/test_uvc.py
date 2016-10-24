@@ -18,7 +18,7 @@ class TestUVCSetup(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.wsgi = mock.MagicMock()
+        self.hass.http = mock.MagicMock()
         self.hass.config.components = ['http']
 
     def tearDown(self):

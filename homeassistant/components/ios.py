@@ -247,7 +247,7 @@ def setup(hass, config):
 
     discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
 
-    hass.wsgi.register_view(iOSIdentifyDeviceView(hass))
+    hass.http.register_view(iOSIdentifyDeviceView(hass))
 
     app_config = config.get(DOMAIN, {})
     hass.wsgi.register_view(iOSPushConfigView(hass,

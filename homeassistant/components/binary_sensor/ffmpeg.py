@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from haffmpeg import SensorNoise, SensorMotion
 
     # check source
-    if not run_test(config.get(CONF_INPUT)):
+    if not run_test(hass, config.get(CONF_INPUT)):
         return
 
     # generate sensor object
