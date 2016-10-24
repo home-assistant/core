@@ -4,12 +4,15 @@ HTML5 Push Messaging notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.html5/
 """
-import os
-import logging
-import json
-import time
+import base64
 import datetime
+import hashlib
+import json
+import logging
+import os
+import time
 import uuid
+import ecdsa
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -25,14 +28,16 @@ from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.helpers import config_validation as cv
 
 REQUIREMENTS = ['https://github.com/web-push-libs/pywebpush/archive/'
-                'e743dc92558fc62178d255c0018920d74fa778ed.zip#'
-                'pywebpush==0.5.0', 'PyJWT==1.4.2']
+                '65954b119153868b3a74b1ffdb83159213f8a4c6.zip#'
+                'pywebpush==0.6.1', 'PyJWT==1.4.2']
 
 DEPENDENCIES = ['frontend']
 
 _LOGGER = logging.getLogger(__name__)
 
 REGISTRATIONS_FILE = 'html5_push_registrations.conf'
+KEYS_FILE = 'html5_push_key.pem'
+VAPID_EMAIL = 'mailto:webpush@home-assistant.io'
 
 ATTR_GCM_SENDER_ID = 'gcm_sender_id'
 ATTR_GCM_API_KEY = 'gcm_api_key'
@@ -98,18 +103,151 @@ HTML5_SHOWNOTIFICATION_PARAMETERS = ('actions', 'badge', 'body', 'dir',
                                      'vibrate')
 
 
+class VapidException(Exception):
+    """An exception wrapper for Vapid."""
+    pass
+
+
+class Vapid(object):
+    """Minimal VAPID signature generation library. """
+    _private_key = None
+    _public_key = None
+    _hasher = hashlib.sha256
+
+    def __init__(self, private_key_file=None, private_key=None):
+        """Initialize VAPID using an optional file containing a private key
+        in PEM format.
+        :param private_key_file: The name of the file containing the
+        private key
+        """
+        if private_key_file:
+            if not os.path.isfile(private_key_file):
+                self.save_key(private_key_file)
+                return
+            private_key = open(private_key_file, 'r').read()
+        if private_key:
+            try:
+                if "BEGIN EC" in private_key:
+                    self._private_key = ecdsa.SigningKey.from_pem(private_key)
+                else:
+                    self._private_key = \
+                        ecdsa.SigningKey.from_der(
+                            base64.urlsafe_b64decode(private_key))
+            except Exception as exc:
+                logging.error("Could not open private key file: %s", repr(exc))
+                raise VapidException(exc)
+            self._public_key = self._private_key.get_verifying_key()
+
+    @property
+    def private_key(self):
+        """Return the private key."""
+        if not self._private_key:
+            raise VapidException(
+                "No private key defined. Please import or generate a key.")
+        return self._private_key
+
+    @private_key.setter
+    def private_key(self, value):
+        """Set the private key."""
+        self._private_key = value
+
+    @property
+    def public_key(self):
+        """Return the public key."""
+        if not self._public_key:
+            self._public_key = self.private_key.get_verifying_key()
+        return self._public_key
+
+    @property
+    def private_key_base64(self):
+        """Return the base64'ed private key."""
+        return base64.urlsafe_b64encode(self.private_key.to_string())
+
+    @property
+    def public_key_base64(self):
+        """Return the base64'ed public key."""
+        return base64.urlsafe_b64encode(self.public_key.to_string())
+
+    def generate_keys(self):
+        """Generate a valid ECDSA Key Pair."""
+        self.private_key = ecdsa.SigningKey.generate(curve=ecdsa.NIST256p)
+        self.public_key
+
+    def save_key(self, key_file):
+        """Save the private key to a PEM file."""
+        file = open(key_file, "wb")
+        if not self._private_key:
+            self.generate_keys()
+        file.write(self._private_key.to_pem())
+        file.close()
+
+    def save_public_key(self, key_file):
+        """Save the public key to a PEM file.
+        :param key_file: The name of the file to save the public key
+        """
+        with open(key_file, "wb") as file:
+            file.write(self.public_key.to_pem())
+            file.close()
+
+    def validate(self, token):
+        """Sign a Valdiation token from the dashboard"""
+        sig = self.private_key.sign(token, hashfunc=self._hasher)
+        token = base64.urlsafe_b64encode(sig)
+        return token
+
+    def verify_token(self, sig, token):
+        """Verify the signature against the token."""
+        hsig = base64.urlsafe_b64decode(sig)
+        return self.public_key.verify(hsig, token,
+                                      hashfunc=self._hasher)
+
+    def sign(self, claims, crypto_key=None):
+        """Sign a set of claims.
+        :param claims: JSON object containing the JWT claims to use.
+        :param crypto_key: Optional existing crypto_key header content. The
+            vapid public key will be appended to this data.
+        :returns result: a hash containing the header fields to use in
+            the subscription update.
+        """
+        from jose import jws
+        if not claims.get('exp'):
+            claims['exp'] = int(time.time()) + 86400
+        if not claims.get('sub'):
+            raise VapidException(
+                "Missing 'sub' from claims. "
+                "'sub' is your admin email as a mailto: link.")
+        sig = jws.sign(claims, self.private_key, algorithm="ES256")
+        pkey = 'p256ecdsa='
+        pkey += base64.urlsafe_b64encode(self.public_key.to_string())
+        if crypto_key:
+            crypto_key = crypto_key + ',' + pkey
+        else:
+            crypto_key = pkey
+
+        return {"Authorization": "Bearer " + sig.strip('='),
+                "Crypto-Key": crypto_key}
+
+
 def get_service(hass, config):
     """Get the HTML5 push notification service."""
-    json_path = hass.config.path(REGISTRATIONS_FILE)
+    reg_json_path = hass.config.path(REGISTRATIONS_FILE)
+    keys_path = hass.config.path(KEYS_FILE)
 
-    registrations = _load_config(json_path)
+    registrations = _load_config(reg_json_path)
 
     if registrations is None:
         return None
 
+    print("Path", keys_path)
+
+    vapid = Vapid(private_key_file=keys_path)
+
+    print("Keys input", vapid)
+
     hass.wsgi.register_view(
-        HTML5PushRegistrationView(hass, registrations, json_path))
+        HTML5PushRegistrationView(hass, registrations, reg_json_path))
     hass.wsgi.register_view(HTML5PushCallbackView(hass, registrations))
+    hass.wsgi.register_view(HTML5PushKeysView(hass, vapid))
 
     gcm_api_key = config.get(ATTR_GCM_API_KEY)
     gcm_sender_id = config.get(ATTR_GCM_SENDER_ID)
@@ -118,7 +256,8 @@ def get_service(hass, config):
         add_manifest_json_key(ATTR_GCM_SENDER_ID,
                               config.get(ATTR_GCM_SENDER_ID))
 
-    return HTML5NotificationService(gcm_api_key, registrations)
+    return HTML5NotificationService(gcm_api_key, registrations,
+                                    reg_json_path, vapid)
 
 
 def _load_config(filename):
@@ -301,15 +440,34 @@ class HTML5PushCallbackView(HomeAssistantView):
                           'event': event_payload[ATTR_TYPE]})
 
 
+class HTML5PushKeysView(HomeAssistantView):
+    """Provides the VAPID keys to the browser."""
+
+    url = '/api/notify.html5/vapid'
+    name = 'api:notify.html5:vapid'
+
+    def __init__(self, hass, vapid):
+        """Init HTML5PushKeysView."""
+        super().__init__(hass)
+        self.vapid = vapid
+
+    def get(self, request):
+        """Return VAPID keys to browser."""
+        return self.Response(self.vapid.public_key_base64,
+                             mimetype="text/plain", status=200)
+
+
 # pylint: disable=too-few-public-methods
 class HTML5NotificationService(BaseNotificationService):
     """Implement the notification service for HTML5."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, gcm_key, registrations):
+    def __init__(self, gcm_key, registrations, json_path, vapid):
         """Initialize the service."""
         self._gcm_key = gcm_key
         self.registrations = registrations
+        self.json_path = json_path
+        self.vapid = vapid
 
     @property
     def targets(self):
@@ -319,7 +477,7 @@ class HTML5NotificationService(BaseNotificationService):
             targets[registration] = registration
         return targets
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals, too-many-branches
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         import jwt
@@ -370,14 +528,50 @@ class HTML5NotificationService(BaseNotificationService):
                               ' target!', target)
                 continue
 
+            found_sub = info[ATTR_SUBSCRIPTION]
+
             jwt_exp = (datetime.datetime.fromtimestamp(timestamp) +
                        datetime.timedelta(days=JWT_VALID_DAYS))
-            jwt_secret = info[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
+            jwt_secret = found_sub[ATTR_KEYS][ATTR_AUTH]
             jwt_claims = {'exp': jwt_exp, 'nbf': timestamp,
                           'iat': timestamp, ATTR_TARGET: target,
                           ATTR_TAG: payload[ATTR_TAG]}
             jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
             payload[ATTR_DATA][ATTR_JWT] = jwt_token
 
-            WebPusher(info[ATTR_SUBSCRIPTION]).send(
-                json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
+            headers = {}
+
+            if "https://fcm.googleapis.com/" in found_sub.ATTR_ENDPOINT:
+                headers = self.vapid.sign({"aud": "https://fcm.googleapis.com",
+                                           "sub": VAPID_EMAIL})
+
+            # Send the notification
+            resp = WebPusher(found_sub).send(
+                json.dumps(payload), headers=headers,
+                gcm_key=self._gcm_key, ttl='86400')
+
+            if resp.status_code == 410:
+                found = None
+
+                for key, registration in self.registrations.items():
+                    if registration.get(ATTR_SUBSCRIPTION) == found_sub:
+                        found = key
+                        break
+
+                if not found:
+                    # If not found, unregistering was already done. Return 200
+                    _LOGGER.error(("Unable to delete registration because",
+                                   "it was not found in the file."))
+                    return
+
+                reg = self.registrations.pop(found)
+
+                if not _save_config(self.json_path, self.registrations):
+                    self.registrations[found] = reg
+                    _LOGGER.error('Error saving registrations file.')
+
+                _LOGGER.info(('Push service notified us that the target',
+                              '(%s) was unregistered so it has been',
+                              'removed from the registrations file.'),
+                             found_sub)
+                return
