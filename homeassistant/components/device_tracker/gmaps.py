@@ -11,9 +11,7 @@ from homeassistant.const import (CONF_API_KEY, CONF_ID,
                                  CONF_ACCURACY, CONF_SCAN_INTERVAL,
                                  EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.util import slugify
-from homeassistant.components.device_tracker import (ENTITY_ID_FORMAT,
-                                                     PLATFORM_SCHEMA)
+from homeassistant.components.device_tracker import (PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,35 +35,31 @@ def setup_scanner(hass, config, see):
     import json
 
     api_key = config[CONF_API_KEY]
-    dev_id  = config[CONF_ID]
-    max_accuracy  = config[CONF_ACCURACY]
+    dev_id = config[CONF_ID]
+    max_accuracy = config[CONF_ACCURACY]
 
     def get_position(now):
         """Get device position"""
-        try:
-            r = requests.post("https://www.googleapis.com/geolocation/v1/geolocate?key="+api_key)
-            if r.ok == True:
-                location = json.loads(r.text)
+        r = requests.post("https://www.googleapis.com/geolocation/v1/geolocate?key="+api_key)
+        if r.ok:
+            location = json.loads(r.text)
 
-                accuracy = location["accuracy"]
-                latitude = location["location"]["lat"]
-                longitude = location["location"]["lng"]
+            accuracy = location["accuracy"]
+            latitude = location["location"]["lat"]
+            longitude = location["location"]["lng"]
 
-                if max_accuracy is not None and\
-                        accuracy > max_accuracy:
-                    _LOGGER.warning('Ignoring update because expected GPS '
-                                    'accuracy %s is not met: %s',
-                                    max_accuracy, accuracy)
-                    return None
+            if max_accuracy is not None and\
+                    accuracy > max_accuracy:
+                _LOGGER.warning('Ignoring update because expected GPS '
+                                'accuracy %s is not met: %s',
+                                max_accuracy, accuracy)
+                return None
 
-                see(
-                    dev_id=dev_id,
-                    gps=(latitude, longitude),
-                    gps_accuracy=accuracy,
-                )
-        except:
-            _LOGGER.info('Google Location API error')
-
+            see(
+                dev_id=dev_id,
+                gps=(latitude, longitude),
+                gps_accuracy=accuracy,
+            )
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, get_position)
 
@@ -74,4 +68,3 @@ def setup_scanner(hass, config, see):
     track_utc_time_change(hass, get_position, second=0, minute=update_minutes)
 
     return True
-
