@@ -83,12 +83,12 @@ SET_AWAY_MODE_SCHEMA = vol.Schema({
 SET_GUEST_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_GUEST_MODE): cv.boolean,
-    vol.Required(ATTR_TOTAL_GUESTS): cv.number,
+    vol.Required(ATTR_TOTAL_GUESTS): cv.total_guests,
 })
 SET_HOLIDAY_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_HOLIDAY_MODE): cv.boolean,
-    vol.Required(ATTR_HOLIDAY_DURATION): cv.number,
+    vol.Required(ATTR_HOLIDAY_DURATION): cv.duration,
 })
 SET_WATER_TEMPERATURE_SCHEMA = vol.Schema({
     vol.Exclusive(ATTR_TARGET_WATER_TEMPERATURE,
