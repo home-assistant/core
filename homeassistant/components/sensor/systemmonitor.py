@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['psutil==4.3.1']
+REQUIREMENTS = ['psutil==4.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the System sensors."""
+    """Set up the system monitor sensors."""
     dev = []
     for resource in config[CONF_RESOURCES]:
         if 'arg' not in resource:
