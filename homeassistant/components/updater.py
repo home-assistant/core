@@ -90,6 +90,9 @@ def check_newest_version(hass, huuid):
             ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available',
                                 ATTR_RELEASE_NOTES: releasenotes}
         )
+    elif StrictVersion(newest) == StrictVersion(CURRENT_VERSION):
+        _LOGGER.info('You are on the latest version (%s) of Home Assistant.',
+                     newest)
 
 
 def get_newest_version(huuid):
