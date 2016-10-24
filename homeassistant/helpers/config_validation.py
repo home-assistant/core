@@ -241,11 +241,13 @@ def string(value: Any) -> str:
         return str(value)
     raise vol.Invalid('string value is None')
 
+
 def int(value):
     """Coerce value to int, except for None."""
     if value is not None:
         return int(value)
     raise vol.Invalid('Value is no parsable integer')
+    
 
 def temperature_unit(value) -> str:
     """Validate and transform temperature unit."""

@@ -1,6 +1,4 @@
-"""
-A component to submit data to thingspeak
-"""
+""" A component to submit data to thingspeak """
 import logging
 
 import voluptuous as vol
