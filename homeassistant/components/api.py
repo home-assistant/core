@@ -401,7 +401,9 @@ class APIErrorLogView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):
         """Serve error log."""
-        return self.file(request, self.hass.config.path(ERROR_LOG_FILENAME))
+        resp = yield from self.file(
+            request, self.hass.config.path(ERROR_LOG_FILENAME))
+        return resp
 
 
 class APITemplateView(HomeAssistantView):

@@ -1,5 +1,6 @@
 """The tests for the Home Assistant API component."""
 # pylint: disable=protected-access,too-many-public-methods
+import asyncio
 from contextlib import closing
 import json
 import time
@@ -246,8 +247,13 @@ class TestAPI(unittest.TestCase):
         """Test the return of the error log."""
         test_string = 'Test String°'
 
+        @asyncio.coroutine
+        def mock_send():
+            """Mock file send."""
+            return web.Response(text=test_string)
+
         with patch('homeassistant.components.http.HomeAssistantView.file',
-                   Mock(return_value=web.Response(text=test_string))):
+                   Mock(return_value=mock_send())):
             req = requests.get(_url(const.URL_API_ERROR_LOG),
                                headers=HA_HEADERS)
             self.assertEqual(test_string, req.text)

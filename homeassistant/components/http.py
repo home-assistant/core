@@ -415,10 +415,12 @@ class HomeAssistantView(object):
         """Return a JSON message response."""
         return self.json({'message': error}, status_code)
 
+    @asyncio.coroutine
     def file(self, request, fil):  # pylint: disable=no-self-use
         """Return a file."""
         assert isinstance(fil, str), 'only string paths allowed'
-        return _GZIP_FILE_SENDER.send(request, Path(fil))
+        response = yield from _GZIP_FILE_SENDER.send(request, Path(fil))
+        return response
 
     def register(self, router):
         """Register the view with a router."""
