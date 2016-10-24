@@ -38,7 +38,7 @@ set_holiday_mode:
       description: New value of holiday mode
       example: true
 
-    duration:
+    holiday_duration:
       description: Holiday duration in number of days
       example: 10
 
