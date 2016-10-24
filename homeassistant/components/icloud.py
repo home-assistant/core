@@ -87,6 +87,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the iCloud Scanner."""
+    # pylint: disable=too-many-locals
     for account, account_config in config[DOMAIN].items():
         # Get the username and password from the configuration
         username = account_config.get(CONF_USERNAME)
@@ -199,7 +200,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                     if (devicename not in self.devices and
                             devicename not in self._ignored_devices):
                         track_state_change(
-                            hass, 'device_tracker.' + devicename,
+                            self.hass, 'device_tracker.' + devicename,
                             self.devicechanged)
                         self.devices[devicename] = device
                         self._intervals[devicename] = 1
@@ -216,7 +217,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
             self.hass, self.keep_alive,
             second=randomseconds
         )
-
 
     @property
     def state(self):
@@ -258,7 +258,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                     if (devicename not in self.devices and
                             devicename not in self._ignored_devices):
                         track_state_change(
-                            hass, 'device_tracker.' + devicename,
+                            self.hass, 'device_tracker.' + devicename,
                             self.devicechanged)
                         self.devices[devicename] = device
                         self._intervals[devicename] = 1
@@ -322,6 +322,8 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
 
     def update_device(self, devicename):
         """Update the device_tracker entity."""
+        # pylint: disable=too-many-branches,too-many-statements
+        # pylint: disable=too-many-nested-blocks,too-many-locals
         devstate = self.hass.states.get('device_tracker.' + devicename)
         attrs = {}
         kwargs = {}
@@ -349,14 +351,14 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                                 status = device.status(DEVICESTATUSSET)
                                 dev_id = status['name'].replace(' ', '', 99)
                                 dev_id = slugify(dev_id)
-                                self._devicestatuscode = status['deviceStatus']
-                                if self._devicestatuscode == '200':
+                                devicestatuscode = status['deviceStatus']
+                                if devicestatuscode == '200':
                                     attrs[ATTR_DEVICESTATUS] = 'online'
-                                elif self._devicestatuscode == '201':
+                                elif devicestatuscode == '201':
                                     attrs[ATTR_DEVICESTATUS] = 'offline'
-                                elif self._devicestatuscode == '203':
+                                elif devicestatuscode == '203':
                                     attrs[ATTR_DEVICESTATUS] = 'pending'
-                                elif self._devicestatuscode == '204':
+                                elif devicestatuscode == '204':
                                     attrs[ATTR_DEVICESTATUS] = 'unregistered'
                                 else:
                                     attrs[ATTR_DEVICESTATUS] = 'error'
@@ -422,8 +424,7 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         elif devicename in self.devices:
             self.devices[devicename].setinterval(interval)
             self.devices[devicename].update_icloud()
-            
-        
+
         for device in self.devices:
             if devicename is None or device == devicename:
                 devid = 'device_tracker.' + devicename
