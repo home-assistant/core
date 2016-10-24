@@ -81,13 +81,15 @@ def check_newest_version(hass, huuid):
     """Check if a new version is available and report if one is."""
     newest, releasenotes = get_newest_version(huuid)
 
-    if newest is not None and 'dev' not in CURRENT_VERSION:
-        if StrictVersion(newest) > StrictVersion(CURRENT_VERSION):
-            _LOGGER.info('The latest available version is %s.', newest)
-            hass.states.set(
-                ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available',
-                                    ATTR_RELEASE_NOTES: releasenotes}
-            )
+    if newest is None or 'dev' in CURRENT_VERSION:
+        return
+
+    if StrictVersion(newest) > StrictVersion(CURRENT_VERSION):
+        _LOGGER.info('The latest available version is %s.', newest)
+        hass.states.set(
+            ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available',
+                                ATTR_RELEASE_NOTES: releasenotes}
+        )
 
 
 def get_newest_version(huuid):
