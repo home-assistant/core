@@ -34,7 +34,7 @@ class DemoGeyser(GeyserDevice):
         self._name = name
         self._geyser_type = geyser_type
         self._target_temperature = target_temperature
-        self._panel_diff_temp = panel_differential_temp
+        self._panel_differential_temp = panel_differential_temp
         self._unit_of_measurement = unit_of_measurement
         self._away = away
         self._guest = guest
