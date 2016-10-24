@@ -82,7 +82,7 @@ class iOSNotificationService(BaseNotificationService):
 
             req = requests.post(PUSH_URL, json=data, timeout=10)
 
-            if req.status_code is not 201:
+            if req.status_code != 201:
                 fallback_error = req.json().get("errorMessage",
                                                 "Unknown error")
                 fallback_message = ("Internal server error, "
