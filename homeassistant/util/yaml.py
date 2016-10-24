@@ -43,6 +43,9 @@ def load_yaml(fname: str) -> Union[List, Dict]:
     except yaml.YAMLError as exc:
         _LOGGER.error(exc)
         raise HomeAssistantError(exc)
+    except UnicodeDecodeError as exc:
+        _LOGGER.error('Unable to read file %s: %s', fname, exc)
+        raise HomeAssistantError(exc)
 
 
 def clear_secret_cache() -> None:
