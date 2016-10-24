@@ -1,4 +1,4 @@
-"""A component to submit data to thingspeak"""
+"""A component to submit data to thingspeak."""
 import logging
 
 import voluptuous as vol
@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the thingspeak environment"""
+    """Setup the thingspeak environment."""
     import thingspeak
 
     # Read out config values
@@ -47,7 +47,7 @@ def setup(hass, config):
         return False
 
     def thingspeak_event_listener(event):
-        """ Listens for new events and send them to thingspeak """
+        """Listen for new events and send them to thingspeak."""
         state = event.data.get('new_state')
         if state is None or state.state in (
                 STATE_UNKNOWN, '', STATE_UNAVAILABLE):
