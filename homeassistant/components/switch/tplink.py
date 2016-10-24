@@ -53,6 +53,18 @@ class SmartPlugSwitch(SwitchDevice):
         # Set up emeter cache
         self._emeter_params = {}
 
+        if self._emeter_present:
+            emeter_readings = self.smartplug.get_emeter_realtime()
+
+            self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
+                = "%.1f W" % emeter_readings["power"]
+            self._emeter_params[ATTR_TOTAL_CONSUMPTION] \
+                = "%.2f kW" % emeter_readings["total"]
+            self._emeter_params[ATTR_VOLTAGE] \
+                = "%.2f V" % emeter_readings["voltage"]
+            self._emeter_params[ATTR_CURRENT] \
+                = "%.1f A" % emeter_readings["current"]
+
     @property
     def name(self):
         """Return the name of the Smart Plug, if any."""
