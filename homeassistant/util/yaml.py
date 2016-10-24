@@ -43,6 +43,9 @@ def load_yaml(fname: str) -> Union[List, Dict]:
     except yaml.YAMLError as exc:
         _LOGGER.error(exc)
         raise HomeAssistantError(exc)
+    except UnicodeDecodeError as exc:
+        _LOGGER.error('Unable to read file %s: %s', fname, exc)
+        raise HomeAssistantError(exc)
 
 
 def clear_secret_cache() -> None:
@@ -61,11 +64,17 @@ def _include_yaml(loader: SafeLineLoader,
     return load_yaml(fname)
 
 
-def _find_files(directory, pattern):
+def _is_file_valid(name: str) -> bool:
+    """Decide if a file is valid."""
+    return not name.startswith('.')
+
+
+def _find_files(directory: str, pattern: str):
     """Recursively load files in a directory."""
-    for root, _dirs, files in os.walk(directory):
+    for root, dirs, files in os.walk(directory, topdown=True):
+        dirs[:] = [d for d in dirs if _is_file_valid(d)]
         for basename in files:
-            if fnmatch.fnmatch(basename, pattern):
+            if _is_file_valid(basename) and fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)
                 yield filename
 
