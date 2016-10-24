@@ -1,11 +1,9 @@
 """
-A component which show the value of temperature, humidity and pressure
-from Sense HAT board in the form of platform with graphs in history.
+Support for Sense HAT sensors.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/
 """
-
 import os
 import logging
 from homeassistant.const import TEMP_CELSIUS
@@ -16,14 +14,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_cpu_temp():
-    """get CPU temperature."""
+    """Get CPU temperature."""
     res = os.popen("vcgencmd measure_temp").readline()
     t_cpu = float(res.replace("temp=", "").replace("'C\n", ""))
     return t_cpu
 
 
 def get_average(temp_base):
-    """use moving average to get better readings."""
+    """Use moving average to get better readings."""
     if not hasattr(get_average, "temp"):
         get_average.temp = [temp_base, temp_base, temp_base]
     get_average.temp[2] = get_average.temp[1]
@@ -35,13 +33,14 @@ def get_average(temp_base):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    add_devices([addtemperature(hass)])
-    add_devices([addhumidity(hass)])
-    add_devices([addpressure(hass)])
+    add_devices([AddTemperature(hass)])
+    add_devices([AddHumidity(hass)])
+    add_devices([AddPressure(hass)])
 
 
-class addtemperature(Entity):
+class AddTemperature(Entity):
     """Representation of a Temperature Sensor."""
+
     def __init__(self, hass):
         """Initialize the sensor."""
         self._temp = None
@@ -77,7 +76,7 @@ class addtemperature(Entity):
         self._temp = t_correct
 
 
-class addhumidity(Entity):
+class AddHumidity(Entity):
     """Representation of a Humidity Sensor."""
 
     def __init__(self, hass):
@@ -109,7 +108,7 @@ class addhumidity(Entity):
         self._humidity = sense.get_humidity()
 
 
-class addpressure(Entity):
+class AddPressure(Entity):
     """Representation of a Pressure Sensor."""
 
     def __init__(self, hass):
