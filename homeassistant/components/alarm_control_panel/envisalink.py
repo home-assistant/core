@@ -67,7 +67,6 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Regex for code format or None if no code is required."""
-        """If code is specified in config, don't prompt for it"""
         if self._code:
             return None
         else:
@@ -76,20 +75,21 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
+        state = STATE_UNKNOWN
+
         if self._info['status']['alarm']:
-            return STATE_ALARM_TRIGGERED
+            state = STATE_ALARM_TRIGGERED
         elif self._info['status']['armed_away']:
-            return STATE_ALARM_ARMED_AWAY
+            state = STATE_ALARM_ARMED_AWAY
         elif self._info['status']['armed_stay']:
-            return STATE_ALARM_ARMED_HOME
+            state = STATE_ALARM_ARMED_HOME
         elif self._info['status']['exit_delay']:
-            return STATE_ALARM_PENDING
+            state = STATE_ALARM_PENDING
         elif self._info['status']['entry_delay']:
-            return STATE_ALARM_PENDING
+            state = STATE_ALARM_PENDING
         elif self._info['status']['alpha']:
-            return STATE_ALARM_DISARMED
-        else:
-            return STATE_UNKNOWN
+            state = STATE_ALARM_DISARMED
+        return state
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -114,7 +114,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
         if code:
             EVL_CONTROLLER.arm_away_partition(str(code),
                                               self._partition_number)
-        else: 
+        else:
             EVL_CONTROLLER.arm_away_partition(str(self._code),
                                               self._partition_number)
 

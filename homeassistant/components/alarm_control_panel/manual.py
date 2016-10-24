@@ -162,6 +162,14 @@ class ManualAlarm(alarm.AlarmControlPanel):
                 self._hass, self.update_ha_state,
                 self._state_ts + self._pending_time + self._trigger_time)
 
+    def alarm_keypress(self, keypress=None):
+        """Disarm/arm the alarm using keypresses like a traditional keypad."""
+        _LOGGER.warning('Got to alarm keypress')
+        if self._state == STATE_ALARM_DISARMED:
+            self.alarm_arm_away(keypress)
+        else:
+            self.alarm_disarm(keypress)
+
     def _validate_code(self, code, state):
         """Validate given code."""
         check = self._code is None or code == self._code
