@@ -283,7 +283,7 @@ def async_template(hass, value_template, variables=None):
     try:
         value = value_template.async_render(variables)
     except TemplateError as ex:
-        _LOGGER.error('Error duriong template condition: %s', ex)
+        _LOGGER.error('Error during template condition: %s', ex)
         return False
 
     return value.lower() == 'true'
