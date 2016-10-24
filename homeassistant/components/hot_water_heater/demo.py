@@ -13,9 +13,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Demo hot water heater controller."""
     add_devices([
         DemoGeyser("GeyserWise", "electric", 55, None, TEMP_CELSIUS,
-                   None, None, None, "auto", None),
+                   None, None, None, "heat", None),
         DemoGeyser("GeyserWise Max", "pumped solar", 65, 7, TEMP_CELSIUS,
-                   None, None, None,"defrost", None),
+                   None, None, None,"pump", None),
         DemoGeyser("QwikSwitch", "electric", 60, None, TEMP_CELSIUS,
                    None, None, None, "idle", None)
     ])
@@ -38,19 +38,21 @@ class DemoGeyser(GeyserDevice):
         self._unit_of_measurement = unit_of_measurement
         self._away = away
         self._guest = guest
+        self._total_guests = 0  # Will never be initialised with non-zero
         self._holiday = holiday
+        self._holiday_duration = 0  # Will never be initialised with non-zero
         self._current_operation = current_operation
         self._boost = boost
         self._current_temperature = None
         self._current_element_status = None
         self._current_pump_mode = None
         self._fault_code = fault_code
-        self._operation_list = ["auto",
-                                "cool",   # Prevent overheating
+        self._operation_list = ["cool",   # Prevent overheating
                                 "error",  # Geyser needs attention
                                 "frost",  # Prevent freezing of collector
                                 "heat",   # Heating water
                                 "idle",   # Water on temp
+                                "kill",   # Heat above 60 for Legionella
                                 "off"     # Only applicable to normal units
                                 ]
 
@@ -91,7 +93,7 @@ class DemoGeyser(GeyserDevice):
 
     @property
     def current_operation(self):
-        """Return current operation ie. heating, cooling, auto."""
+        """Return current operation ie. heat, cool, defrost."""
         return self._current_operation
 
     @property
@@ -110,9 +112,19 @@ class DemoGeyser(GeyserDevice):
         return self._guest
 
     @property
+    def total_guests(self):
+        """Return the total number of guests."""
+        return self._total_guests
+
+    @property
     def is_holiday_mode_on(self):
         """Return if holiday mode is on."""
         return self._holiday
+
+    @property
+    def holiday_duration(self):
+        """Return the duration of the holiday, in days."""
+        return self._holiday_duration
 
     @property
     def is_element_on(self):
@@ -126,8 +138,10 @@ class DemoGeyser(GeyserDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_TARGET_TEMPERATURE) is not None:
-            self._target_temperature = kwargs.get(ATTR_TARGET_TEMPERATURE)
+        # Ideally this should be a self learning formula,
+        # based on crowd sourced data and taking many variables into account
+        # But let start with based on user preference ;-)
+        self._target_temperature = kwargs.get(ATTR_TARGET_TEMPERATURE)
         if kwargs.get(ATTR_PANEL_DIFF_TEMP) is not None:
             self._target_temperature = kwargs.get(ATTR_PANEL_DIFF_TEMP)
         self.update_ha_state()
@@ -167,22 +181,30 @@ class DemoGeyser(GeyserDevice):
         self._away = False
         self.update_ha_state()
 
-    def turn_guest_mode_on(self):
+    def turn_guest_mode_on(self, total_guests):
         """Turn guest mode on."""
+        # We need a formula that set the target temp based on
+        # number of people, geyser volume, element rating, weather, etc.
         self._guest = True
+        self._total_guests = total_guests
         self.update_ha_state()
 
     def turn_guest_mode_off(self):
         """Turn guest mode off."""
         self._guest = False
+        self._total_guests = 0
         self.update_ha_state()
 
-    def turn_holiday_mode_on(self):
+    def turn_holiday_mode_on(self, holiday_duration):
         """Turn holiday mode on."""
+        # We need a formula that set the target temp based on
+        # number of days away, geyser volume, element rating, weather, etc.
         self._holiday = True
+        self._holiday_duration = holiday_duration
         self.update_ha_state()
 
     def turn_holiday_mode_off(self):
         """Turn holiday mode off."""
         self._away = False
+        self._holiday_duration = 0
         self.update_ha_state()

@@ -21,6 +21,7 @@ from homeassistant.const import (
     TEMP_CELSIUS)
 
 DOMAIN = "hot_water_heater"
+
 GEYSER_CLASSES = [
     None,                   # Default - electric?
     'electric',             # Normal electric element
@@ -35,7 +36,7 @@ GEYSER_CLASSES = [
 GEYSER_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(GEYSER_CLASSES))
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-SCAN_INTERVAL = 60
+SCAN_INTERVAL = 60  # Every hour
 
 SERVICE_SET_AWAY_MODE = "set_away_mode"  # trigger to lower target water temp
 SERVICE_SET_GUEST_MODE = "set_guest_mode"  # trigger to raise min temp
@@ -43,13 +44,17 @@ SERVICE_SET_HOLIDAY_MODE = "set_holiday_mode"  # trigger to power off
 SERVICE_SET_WATER_TEMP = "set_water_temperature"  # adjust temps
 SERVICE_SET_OPERATION_MODE = "set_operation_mode"  
 
-STATE_IDLE = "idle"  # element is off
-STATE_HEAT = "heat"  # element is on
-STATE_COOL = "cool"
-# circulate hot water to cold solar collector at night to control heat buildup
-# during holiday mode
-STATE_DEFROST = "defrost"  # heat solar collector on cold nights
-# circulate hot water to icy solar collector at night to prevent freezing
+STATE_IDLE = "idle"  # element off
+STATE_HEAT = "heat"  # element on
+# exchange colder collector water at night with hot geyser water
+STATE_COOL = "cool"  # pump on/element off; relevant in holiday mode
+# exchange hot collector water with warm geyser water
+STATE_PUMP = "pump"  # pump on/element off
+# exchange warm/hot geyser water with cold collector water to prevent freezing
+STATE_DEFROST = "defrost"  # pump on/element might need to be switched on
+# bump temp to kill bacteria if geyser temp has been below 50C for n days
+STATE_KILL = "kill" # element on
+# geyser controller detected an error
 STATE_ERROR = "error"
 
 ATTR_CURRENT_WATER_TEMPERATURE = "current_water_temperature"
@@ -58,7 +63,9 @@ ATTR_TARGET_WATER_TEMP = "target_water_temp"
 ATTR_PANEL_DIFF_TEMP = "panel_differential_temp"
 ATTR_AWAY_MODE = "away_mode"
 ATTR_GUEST_MODE = "guest_mode"
+ATTR_TOTAL_GUESTS = "total_guests"
 ATTR_HOLIDAY_MODE = "holiday_mode"
+ATTR_HOLIDAY_DURATION = "holiday_duration"
 ATTR_OPERATION_MODE = "operation_mode"
 ATTR_OPERATION_LIST = "operation_list"
 
@@ -76,10 +83,12 @@ SET_AWAY_MODE_SCHEMA = vol.Schema({
 SET_GUEST_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_GUEST_MODE): cv.boolean,
+    vol.Required(ATTR_TOTAL_GUESTS): cv.number,
 })
 SET_HOLIDAY_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_HOLIDAY_MODE): cv.boolean,
+    vol.Required(ATTR_HOLIDAY_DURATION): cv.number,
 })
 SET_WATER_TEMPERATURE_SCHEMA = vol.Schema({
     vol.Exclusive(ATTR_TARGET_WATER_TEMP, 'temperature'): vol.Coerce(float),
@@ -96,6 +105,8 @@ def set_away_mode(hass, away_mode, entity_id=None):
     """Turn all or specified water heater devices away mode on."""
     data = {
         ATTR_AWAY_MODE: away_mode
+        # Add duration to work out new idle temp
+        # e.g. off to work, out to dinner or overnight
     }
 
     if entity_id:
@@ -104,11 +115,11 @@ def set_away_mode(hass, away_mode, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
 
 
-def set_guest_mode(hass, guest_mode, entity_id=None):
+def set_guest_mode(hass, entity_id=None, guest_mode, total_guests):
     """Turn all or specified water heater devices guest mode on."""
     data = {
-        ATTR_GUEST_MODE: guest_mode
-        # Add no of guest to work out new target temp
+        ATTR_GUEST_MODE: guest_mode,
+        ATTR_TOTAL_GUESTS: total_guests
     }
 
     if entity_id:
@@ -117,12 +128,12 @@ def set_guest_mode(hass, guest_mode, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_GUEST_MODE, data)
 
 
-def set_holiday_mode(hass, holiday_mode, entity_id=None):
+def set_holiday_mode(hass, entity_id=None, holiday_mode, holiday_duration):
     """Turn all or specified water heater devices holiday mode on."""
     # Can away mode be used for this?
     data = {
-        ATTR_HOLIDAY_MODE: holiday_mode
-        # Add no of days to determine power off feasibility
+        ATTR_HOLIDAY_MODE: holiday_mode,
+        ATTR_HOLIDAY_DURATION: holiday_duration
     }
 
     if entity_id:
@@ -135,7 +146,11 @@ def set_holiday_mode(hass, holiday_mode, entity_id=None):
 def set_temperature(hass, entity_id=None,
                     target_water_temp=None,
                     panel_diff_temp=None):
-    """Set new target temperatures."""
+    """
+    Set new target temperatures.
+    
+    Used when either new target temp or panel differential temp is required.
+    """
     kwargs = {
         key: value for key, value in [
             (ATTR_TARGET_WATER_TEMP, target_water_temp),
@@ -197,6 +212,7 @@ def setup(hass, config):
         target_geyser = component.extract_from_service(service)
 
         guest_mode = service.data.get(ATTR_GUEST_MODE)
+        total_guests = service.data.get(ATTR_TOTAL_GUESTS)
 
         if guest_mode is None:
             _LOGGER.error(
@@ -206,8 +222,9 @@ def setup(hass, config):
 
         for geyser in target_geyser:
             if guest_mode:
-                geyser.turn_guest_mode_on()
+                geyser.turn_guest_mode_on(total_guests)
             else:
+                # Assuming no needs to set days to zero, thus no kwargs
                 geyser.turn_guest_mode_off()
 
             if geyser.should_poll:
@@ -223,6 +240,7 @@ def setup(hass, config):
         target_geyser = component.extract_from_service(service)
 
         holiday_mode = service.data.get(ATTR_HOLIDAY_MODE)
+        holiday_duration = service.data.get(ATTR_HOLIDAY_DURATION)
 
         if holiday_mode is None:
             _LOGGER.error(
@@ -232,8 +250,9 @@ def setup(hass, config):
 
         for geyser in target_geyser:
             if holiday_mode:
-                geyser.turn_holiday_mode_on()
+                geyser.turn_holiday_mode_on(holiday_duration)
             else:
+                # Assuming no needs to set days to zero, thus no kwargs
                 geyser.turn_holiday_mode_off()
 
             if geyser.should_poll:
@@ -245,10 +264,10 @@ def setup(hass, config):
         schema=SET_HOLIDAY_MODE_SCHEMA)
 
     def temperature_set_service(service):
-        """Set temperature on the target climate devices."""
-        target_gyeser = component.extract_from_service(service)
+        """Set temperatures on the target climate devices."""
+        target_geyser = component.extract_from_service(service)
 
-        for gyeser in target_gyeser:
+        for gyeser in target_geyser:
             kwargs = {}
             for value, temp in service.data.items():
                 if value in CONVERTIBLE_ATTRIBUTE:
@@ -260,6 +279,7 @@ def setup(hass, config):
                 else:
                     kwargs[value] = temp
 
+            # why kwargs and not target_temp and diff_temp?
             geyser.set_temperature(**kwargs)
             if geyser.should_poll:
                 geyser.update_ha_state(True)
@@ -331,10 +351,12 @@ class GeyserDevice(Entity):
         is_guest = self.is_guest_mode_on
         if is_guest is not None:
             data[ATTR_GUEST_MODE] = STATE_ON if is_guest else STATE_OFF
+            data[ATTR_TOTAL_GUESTS] = self.total_guests
 
         is_holiday = self.is_holiday_mode_on
         if is_holiday is not None:
             data[ATTR_HOLIDAY_MODE] = STATE_ON if is_holiday else STATE_OFF
+            data[ATTR_HOLIDAY_DURATION] = self.holiday_duration
 
         return data
 
@@ -384,8 +406,18 @@ class GeyserDevice(Entity):
         return None
 
     @property
+    def total_guests(self):
+        """Return number of guests."""
+        return None
+
+    @property
     def is_holiday_mode_on(self):
         """Return true if holiday mode is on."""
+        return None
+
+    @property
+    def holiday_duration(self):
+        """Return the duration of the holiday, in days."""
         return None
 
     @property
@@ -400,6 +432,7 @@ class GeyserDevice(Entity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        # Number of guests and holiday duration are deviation off target temp.
         raise NotImplementedError()
 
     def set_operation_mode(self, operation_mode):
@@ -430,7 +463,7 @@ class GeyserDevice(Entity):
         """Turn away mode off."""
         raise NotImplementedError()
 
-    def turn_guest_mode_on(self):
+    def turn_guest_mode_on(self, total_guests):
         """Turn guest mode on."""
         raise NotImplementedError()
 
@@ -438,7 +471,7 @@ class GeyserDevice(Entity):
         """Turn guest mode off."""
         raise NotImplementedError()
 
-    def turn_holiday_mode_on(self):
+    def turn_holiday_mode_on(self, holiday_duration):
         """Turn holiday mode on."""
         raise NotImplementedError()
 
