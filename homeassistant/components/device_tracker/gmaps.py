@@ -39,9 +39,9 @@ def setup_scanner(hass, config, see):
 
     def get_position(now):
         """Get device position."""
-        r = requests.post("https://www.googleapis.com/geolocation/v1/geolocate?key="+api_key)
+        api_request = requests.post("https://www.googleapis.com/geolocation/v1/geolocate?key="+api_key)
         if r.ok:
-            location = json.loads(r.text)
+            location = json.loads(api_request.text)
 
             accuracy = location["accuracy"]
             latitude = location["location"]["lat"]
