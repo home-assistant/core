@@ -103,7 +103,7 @@ def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
              (ATTR_GPS_ACCURACY, gps_accuracy),
              (ATTR_BATTERY, battery)) if value is not None}
     if attributes:
-        for key, value in attributes:
+        for key, value in attributes.items():
             data[key] = value
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
