@@ -54,6 +54,7 @@ SUN_EVENT_SUNRISE = 'sunrise'
 # #### CONFIG ####
 CONF_ABOVE = 'above'
 CONF_ACCESS_TOKEN = 'access_token'
+CONF_ACCURACY = 'accuracy'
 CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
