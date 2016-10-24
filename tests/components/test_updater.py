@@ -89,15 +89,6 @@ class TestUpdater(unittest.TestCase):
         mock_get.side_effect = KeyError
         self.assertIsNone(updater.get_newest_version(uuid))
 
-    def test_updater_disabled_on_dev(self):
-        """Test if the updater component is disabled on dev."""
-        updater.CURRENT_VERSION = MOCK_CURRENT_VERSION + 'dev'
-
-        with assert_setup_component(1) as config:
-            assert not setup_component(
-                self.hass, updater.DOMAIN, {updater.DOMAIN: {}})
-            assert config['updater'] == {'reporting': True}
-
     def test_uuid_function(self):
         """Test if the uuid function works."""
         path = self.hass.config.path(updater.UPDATER_UUID_FILE)
