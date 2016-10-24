@@ -59,7 +59,7 @@ STATE_ERROR = "error"
 
 ATTR_CURRENT_WATER_TEMPERATURE = "current_water_temperature"
 ATTR_CURRENT_PANEL_TEMPERATURE = "current_panel_temperature"
-ATTR_TARGET_WATER_TEMP = "target_water_temp"
+ATTR_TARGET_WATER_TEMPERATURE = "target_water_temp"
 ATTR_PANEL_DIFF_TEMP = "panel_differential_temp"
 ATTR_AWAY_MODE = "away_mode"
 ATTR_GUEST_MODE = "guest_mode"
@@ -159,7 +159,7 @@ def set_temperature(hass, entity_id=None,
         ] if value is not None
     }
     _LOGGER.debug("set_temperature start data=%s", kwargs)
-    hass.services.call(DOMAIN, SERVICE_SET_WATER_TEMPERATURE, kwargs)
+    hass.services.call(DOMAIN, SERVICE_SET_WATER_TEMP, kwargs)
 
 
 def set_operation_mode(hass, operation_mode, entity_id=None):
@@ -267,7 +267,7 @@ def setup(hass, config):
         """Set temperatures on the target climate devices."""
         target_geyser = component.extract_from_service(service)
 
-        for gyeser in target_geyser:
+        for geyser in target_geyser:
             kwargs = {}
             for value, temp in service.data.items():
                 if value in CONVERTIBLE_ATTRIBUTE:
@@ -285,8 +285,8 @@ def setup(hass, config):
                 geyser.update_ha_state(True)
 
     hass.services.register(
-        DOMAIN, SERVICE_SET_WATER_TEMPERATURE, temperature_set_service,
-        descriptions.get(SERVICE_SET_WATER_TEMPERATURE),
+        DOMAIN, SERVICE_SET_WATER_TEMP, temperature_set_service,
+        descriptions.get(SERVICE_SET_WATER_TEMP),
         schema=SET_WATER_TEMPERATURE_SCHEMA)
 
     def operation_set_service(service):
@@ -331,9 +331,9 @@ class GeyserDevice(Entity):
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
-            ATTR_CURRENT_TEMPERATURE:
+            ATTR_CURRENT_WATER_TEMPERATURE:
             self._convert_for_display(self.current_temperature),
-            ATTR_TARGET_TEMPERATURE:
+            ATTR_TARGET_WATER_TEMPERATURE:
             self._convert_for_display(self.target_temperature),
             ATTR_PANEL_DIFF_TEMP:
             self._convert_for_display(self.panel_differential_temperature)

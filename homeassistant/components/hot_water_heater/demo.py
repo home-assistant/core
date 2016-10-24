@@ -6,7 +6,7 @@ https://home-assistant.io/components/demo/
 """
 from homeassistant.components.hot_water_heater import (
     GeyserDevice, ATTR_TARGET_WATER_TEMP, ATTR_PANEL_DIFF_TEMP)
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
+from homeassistant.const import TEMP_CELSIUS  # TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
