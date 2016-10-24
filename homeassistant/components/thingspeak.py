@@ -21,9 +21,9 @@ TIMEOUT = 5
 # Validate the config
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Inclusive(CONF_API_KEY): cv.string,
-        vol.Inclusive(CONF_ID): cv.int,
-        vol.Inclusive(CONF_WHITELIST): cv.string
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_ID): cv.int,
+        vol.Required(CONF_WHITELIST): cv.string
         }),
     }, extra=vol.ALLOW_EXTRA)
 
