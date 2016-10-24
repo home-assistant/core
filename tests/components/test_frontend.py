@@ -34,12 +34,12 @@ def setUpModule():   # pylint: disable=invalid-name
     hass.bus.listen('test_event', lambda _: _)
     hass.states.set('test.test', 'a_state')
 
-    bootstrap.setup_component(
+    assert bootstrap.setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
                        http.CONF_SERVER_PORT: SERVER_PORT}})
 
-    bootstrap.setup_component(hass, 'frontend')
+    assert bootstrap.setup_component(hass, 'frontend')
 
     hass.start()
     time.sleep(0.05)
@@ -71,7 +71,7 @@ class TestFrontend(unittest.TestCase):
 
         self.assertIsNotNone(frontendjs)
 
-        req = requests.head(_url(frontendjs.groups(0)[0]))
+        req = requests.get(_url(frontendjs.groups(0)[0]))
 
         self.assertEqual(200, req.status_code)
 

@@ -1,6 +1,7 @@
 """The tests for the InfluxDB component."""
 import unittest
 from unittest import mock
+from unittest.mock import patch
 
 import influxdb as influx_client
 
@@ -60,6 +61,8 @@ class TestInfluxDB(unittest.TestCase):
 
         assert setup_component(self.hass, influxdb.DOMAIN, config)
 
+    @patch('homeassistant.components.persistent_notification.create',
+           mock.MagicMock())
     def test_setup_missing_password(self, mock_client):
         """Test the setup with existing username and missing password."""
         config = {

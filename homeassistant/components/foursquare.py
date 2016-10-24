@@ -4,14 +4,14 @@ Allows utilizing the Foursquare (Swarm) API.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/foursquare/
 """
+import asyncio
 import logging
 import os
-import json
 
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_BAD_REQUEST
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
@@ -75,7 +75,7 @@ def setup(hass, config):
                            descriptions[DOMAIN][SERVICE_CHECKIN],
                            schema=CHECKIN_SERVICE_SCHEMA)
 
-    hass.wsgi.register_view(FoursquarePushReceiver(
+    hass.http.register_view(FoursquarePushReceiver(
         hass, config[CONF_PUSH_SECRET]))
 
     return True
@@ -93,16 +93,21 @@ class FoursquarePushReceiver(HomeAssistantView):
         super().__init__(hass)
         self.push_secret = push_secret
 
+    @asyncio.coroutine
     def post(self, request):
         """Accept the POST from Foursquare."""
-        raw_data = request.form
-        _LOGGER.debug("Received Foursquare push: %s", raw_data)
-        if self.push_secret != raw_data["secret"]:
+        try:
+            data = yield from request.json()
+        except ValueError:
+            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+
+        secret = data.pop('secret', None)
+
+        _LOGGER.debug("Received Foursquare push: %s", data)
+
+        if self.push_secret != secret:
             _LOGGER.error("Received Foursquare push with invalid"
-                          "push secret! Data: %s", raw_data)
-            return
-        parsed_payload = {
-            key: json.loads(val) for key, val in raw_data.items()
-            if key != "secret"
-        }
-        self.hass.bus.fire(EVENT_PUSH, parsed_payload)
+                          "push secret: %s", secret)
+            return self.json_message('Incorrect secret', HTTP_BAD_REQUEST)
+
+        self.hass.bus.async_fire(EVENT_PUSH, data)

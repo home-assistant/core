@@ -153,7 +153,7 @@ def setup(hass, config):
         # Create Alpr device / render engine
         if render == RENDER_FFMPEG:
             use_render_fffmpeg = True
-            if not run_test(input_source):
+            if not run_test(hass, input_source):
                 _LOGGER.error("'%s' is not valid ffmpeg input", input_source)
                 continue
 

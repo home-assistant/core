@@ -1,4 +1,5 @@
 """Test state helpers."""
+import asyncio
 from datetime import timedelta
 import unittest
 from unittest.mock import patch
@@ -18,6 +19,42 @@ from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
                                           STATE_BELOW_HORIZON)
 
 from tests.common import get_test_home_assistant, mock_service
+
+
+def test_async_track_states(event_loop):
+    """Test AsyncTrackStates context manager."""
+    hass = get_test_home_assistant()
+
+    try:
+        point1 = dt_util.utcnow()
+        point2 = point1 + timedelta(seconds=5)
+        point3 = point2 + timedelta(seconds=5)
+
+        @asyncio.coroutine
+        @patch('homeassistant.core.dt_util.utcnow')
+        def run_test(mock_utcnow):
+            """Run the test."""
+            mock_utcnow.return_value = point2
+
+            with state.AsyncTrackStates(hass) as states:
+                mock_utcnow.return_value = point1
+                hass.states.set('light.test', 'on')
+
+                mock_utcnow.return_value = point2
+                hass.states.set('light.test2', 'on')
+                state2 = hass.states.get('light.test2')
+
+                mock_utcnow.return_value = point3
+                hass.states.set('light.test3', 'on')
+                state3 = hass.states.get('light.test3')
+
+            assert [state2, state3] == \
+                sorted(states, key=lambda state: state.entity_id)
+
+        event_loop.run_until_complete(run_test())
+
+    finally:
+        hass.stop()
 
 
 class TestStateHelpers(unittest.TestCase):
@@ -53,31 +90,6 @@ class TestStateHelpers(unittest.TestCase):
         self.assertEqual(
             [state2, state3],
             state.get_changed_since([state1, state2, state3], point2))
-
-    def test_track_states(self):
-        """Test tracking of states."""
-        point1 = dt_util.utcnow()
-        point2 = point1 + timedelta(seconds=5)
-        point3 = point2 + timedelta(seconds=5)
-
-        with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
-            mock_utcnow.return_value = point2
-
-            with state.TrackStates(self.hass) as states:
-                mock_utcnow.return_value = point1
-                self.hass.states.set('light.test', 'on')
-
-                mock_utcnow.return_value = point2
-                self.hass.states.set('light.test2', 'on')
-                state2 = self.hass.states.get('light.test2')
-
-                mock_utcnow.return_value = point3
-                self.hass.states.set('light.test3', 'on')
-                state3 = self.hass.states.get('light.test3')
-
-        self.assertEqual(
-            sorted([state2, state3], key=lambda state: state.entity_id),
-            sorted(states, key=lambda state: state.entity_id))
 
     def test_reproduce_with_no_entity(self):
         """Test reproduce_state with no entity."""
