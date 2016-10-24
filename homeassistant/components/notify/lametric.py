@@ -1,3 +1,4 @@
+
 """
 LaMetric platform for notify component.
 For more details about this platform, please refer to the documentation at
@@ -6,7 +7,7 @@ https://home-assistant.io/components/notify.Lametric/
 import logging
 import voluptuous as vol
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
@@ -45,7 +46,6 @@ class LaMetricNotificationService(BaseNotificationService):
         """Send a message to a user."""
         from pylametric import send_notification
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data = kwargs.get(ATTR_DATA) or {}
         send_notification(host=self._host,
-                          text=message,
+                          text=data,
                           api_key=self._api_key)
