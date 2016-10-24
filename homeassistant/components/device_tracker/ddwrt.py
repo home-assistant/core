@@ -54,7 +54,6 @@ class DdWrtDeviceScanner(object):
         self.lock = threading.Lock()
 
         self.last_results = {}
-
         self.mac2name = {}
 
         # Test the router is accessible
@@ -85,14 +84,15 @@ class DdWrtDeviceScanner(object):
                 if not dhcp_leases:
                     return None
 
-                # Remove leading and trailing single quotes.
-                cleaned_str = dhcp_leases.replace("\'", "").replace(" ", "")
+                # Remove leading and trailing quotes and spaces
+                cleaned_str = dhcp_leases.replace(
+                    "\"", "").replace("\'", "").replace(" ", "")
                 elements = cleaned_str.split(',')
                 num_clients = int(len(elements) / 5)
                 self.mac2name = {}
                 for idx in range(0, num_clients):
                     # The data is a single array
-                    # every 5 elements represents one hosts, the MAC
+                    # every 5 elements represents one host, the MAC
                     # is the third element and the name is the first.
                     mac_index = (idx * 5) + 2
                     if mac_index < len(elements):
