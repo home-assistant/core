@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 from homeassistant.components.hot_water_heater import (
-    GeyserDevice, ATTR_TARGET_WATER_TEMP, ATTR_PANEL_DIFF_TEMP)
+    GeyserDevice, ATTR_TARGET_WATER_TEMPERATURE, ATTR_PANEL_DIFF_TEMP)
 from homeassistant.const import TEMP_CELSIUS  # TEMP_FAHRENHEIT
 
 
@@ -141,7 +141,7 @@ class DemoGeyser(GeyserDevice):
         # Ideally this should be a self learning formula,
         # based on crowd sourced data and taking many variables into account
         # But let start with based on user preference ;-)
-        self._target_temperature = kwargs.get(ATTR_TARGET_WATER_TEMP)
+        self._target_temperature = kwargs.get(ATTR_TARGET_WATER_TEMPERATURE)
         if kwargs.get(ATTR_PANEL_DIFF_TEMP) is not None:
             self._target_temperature = kwargs.get(ATTR_PANEL_DIFF_TEMP)
         self.update_ha_state()
