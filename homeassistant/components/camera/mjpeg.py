@@ -4,9 +4,14 @@ Support for IP Cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.mjpeg/
 """
+import asyncio
 import logging
 from contextlib import closing
 
+import aiohttp
+from aiohttp import web
+from aiohttp.web_exceptions import HTTPGatewayTimeout
+import async_timeout
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
@@ -34,10 +39,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+@asyncio.coroutine
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a MJPEG IP Camera."""
-    add_devices([MjpegCamera(config)])
+    hass.loop.create_task(async_add_devices([MjpegCamera(hass, config)]))
 
 
 def extract_image_from_mjpeg(stream):
@@ -56,7 +62,7 @@ def extract_image_from_mjpeg(stream):
 class MjpegCamera(Camera):
     """An implementation of an IP camera that is reachable over a URL."""
 
-    def __init__(self, device_info):
+    def __init__(self, hass, device_info):
         """Initialize a MJPEG camera."""
         super().__init__()
         self._name = device_info.get(CONF_NAME)
@@ -65,32 +71,57 @@ class MjpegCamera(Camera):
         self._password = device_info.get(CONF_PASSWORD)
         self._mjpeg_url = device_info[CONF_MJPEG_URL]
 
-    def camera_stream(self):
-        """Return a MJPEG stream image response directly from the camera."""
+        auth = None
+        if self._authentication == HTTP_BASIC_AUTHENTICATION:
+            auth = aiohttp.BasicAuth(self._username, password=self._password)
+
+        self._session = aiohttp.ClientSession(loop=hass.loop, auth=auth)
+
+    def camera_image(self):
+        """Return a still image response from the camera."""
         if self._username and self._password:
             if self._authentication == HTTP_DIGEST_AUTHENTICATION:
                 auth = HTTPDigestAuth(self._username, self._password)
             else:
                 auth = HTTPBasicAuth(self._username, self._password)
-            return requests.get(self._mjpeg_url,
-                                auth=auth,
-                                stream=True, timeout=10)
+            req = requests.get(
+                self._mjpeg_url, auth=auth, stream=True, timeout=10)
         else:
-            return requests.get(self._mjpeg_url, stream=True, timeout=10)
+            req = requests.get(self._mjpeg_url, stream=True, timeout=10)
 
-    def camera_image(self):
-        """Return a still image response from the camera."""
-        with closing(self.camera_stream()) as response:
-            return extract_image_from_mjpeg(response.iter_content(1024))
+        with closing(req) as response:
+            return extract_image_from_mjpeg(response.iter_content(102400))
 
-    def mjpeg_stream(self, response):
+    @asyncio.coroutine
+    def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        stream = self.camera_stream()
-        return response(
-            stream.iter_content(chunk_size=1024),
-            mimetype=stream.headers[CONTENT_TYPE_HEADER],
-            direct_passthrough=True
-        )
+        # aiohttp don't support DigestAuth -> Fallback
+        if self._authentication == HTTP_DIGEST_AUTHENTICATION:
+            yield from super().handle_async_mjpeg_stream(request)
+            return
+
+        # connect to stream
+        try:
+            with async_timeout.timeout(10, loop=self.hass.loop):
+                stream = yield from self._session.get(self._mjpeg_url)
+        except asyncio.TimeoutError:
+            raise HTTPGatewayTimeout()
+
+        response = web.StreamResponse()
+        response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
+        response.enable_chunked_encoding()
+
+        yield from response.prepare(request)
+
+        try:
+            while True:
+                data = yield from stream.content.read(102400)
+                if not data:
+                    break
+                response.write(data)
+        finally:
+            self.hass.loop.create_task(stream.release())
+            self.hass.loop.create_task(response.write_eof())
 
     @property
     def name(self):
