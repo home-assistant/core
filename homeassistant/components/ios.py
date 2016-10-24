@@ -13,8 +13,6 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.helpers import config_validation as cv
 
-import homeassistant.bootstrap as bootstrap
-
 from homeassistant.helpers import discovery
 
 from homeassistant.components.http import HomeAssistantView
@@ -26,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ios"
 
-DEPENDENCIES = ["http"]
+DEPENDENCIES = ["device_tracker", "http", "zeroconf"]
 
 CONF_PUSH = "push"
 CONF_PUSH_CATEGORIES = "categories"
@@ -243,13 +241,9 @@ def setup(hass, config):
     if CONFIG_FILE == {}:
         CONFIG_FILE[ATTR_DEVICES] = {}
 
-    bootstrap.setup_component(hass, "device_tracker")
-
     # Notify needs to have discovery
     # notify_config = {"notify": {CONF_PLATFORM: "ios"}}
     # bootstrap.setup_component(hass, "notify", notify_config)
-
-    bootstrap.setup_component(hass, "zeroconf")
 
     discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
 
