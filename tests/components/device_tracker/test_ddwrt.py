@@ -9,21 +9,15 @@ import requests_mock
 from homeassistant import config
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import device_tracker
-from homeassistant.const import (CONF_PLATFORM,
-                                 CONF_HOST,
-                                 CONF_PASSWORD,
-                                 CONF_USERNAME)
+from homeassistant.const import (
+    CONF_PLATFORM, CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.util import slugify
 
-from tests.common import (get_test_home_assistant,
-                          assert_setup_component,
-                          load_fixture)
-
+from tests.common import (
+    get_test_home_assistant, assert_setup_component, load_fixture)
 
 TEST_HOST = '127.0.0.1'
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -212,7 +206,7 @@ class TestDdwrt(unittest.TestCase):
         with requests_mock.Mocker() as mock_request:
             mock_request.register_uri(
                 'GET', r'http://%s/Status_Wireless.live.asp' % TEST_HOST,
-                # First request has to work to setup connecion
+                # First request has to work to setup connection
                 [{'text': load_fixture('Ddwrt_Status_Wireless.txt')},
                  # Second request to get active devices fails
                  {'text': None}])
