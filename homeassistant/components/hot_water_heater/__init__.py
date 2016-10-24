@@ -1,5 +1,5 @@
 """
-Provides functionality to interact with hot water heater (geyser) controller units.
+Provides functionality to interact with hot water heater controller units.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/hot_water_heater_controller/
@@ -42,7 +42,7 @@ SERVICE_SET_AWAY_MODE = "set_away_mode"  # trigger to lower target water temp
 SERVICE_SET_GUEST_MODE = "set_guest_mode"  # trigger to raise min temp
 SERVICE_SET_HOLIDAY_MODE = "set_holiday_mode"  # trigger to power off
 SERVICE_SET_WATER_TEMP = "set_water_temperature"  # adjust temps
-SERVICE_SET_OPERATION_MODE = "set_operation_mode"  
+SERVICE_SET_OPERATION_MODE = "set_operation_mode"
 
 STATE_IDLE = "idle"  # element off
 STATE_HEAT = "heat"  # element on
@@ -53,7 +53,7 @@ STATE_PUMP = "pump"  # pump on/element off
 # exchange warm/hot geyser water with cold collector water to prevent freezing
 STATE_DEFROST = "defrost"  # pump on/element might need to be switched on
 # bump temp to kill bacteria if geyser temp has been below 50C for n days
-STATE_KILL = "kill" # element on
+STATE_KILL = "kill"  # element on
 # geyser controller detected an error
 STATE_ERROR = "error"
 
@@ -115,7 +115,7 @@ def set_away_mode(hass, away_mode, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
 
 
-def set_guest_mode(hass, entity_id=None, guest_mode, total_guests):
+def set_guest_mode(hass, guest_mode, total_guests, entity_id=None):
     """Turn all or specified water heater devices guest mode on."""
     data = {
         ATTR_GUEST_MODE: guest_mode,
@@ -128,7 +128,7 @@ def set_guest_mode(hass, entity_id=None, guest_mode, total_guests):
     hass.services.call(DOMAIN, SERVICE_SET_GUEST_MODE, data)
 
 
-def set_holiday_mode(hass, entity_id=None, holiday_mode, holiday_duration):
+def set_holiday_mode(hass, holiday_mode, holiday_duration, entity_id=None):
     """Turn all or specified water heater devices holiday mode on."""
     # Can away mode be used for this?
     data = {
@@ -148,7 +148,7 @@ def set_temperature(hass, entity_id=None,
                     panel_diff_temp=None):
     """
     Set new target temperatures.
-    
+
     Used when either new target temp or panel differential temp is required.
     """
     kwargs = {

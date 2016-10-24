@@ -15,7 +15,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DemoGeyser("GeyserWise", "electric", 55, None, TEMP_CELSIUS,
                    None, None, None, "heat", None),
         DemoGeyser("GeyserWise Max", "pumped solar", 65, 7, TEMP_CELSIUS,
-                   None, None, None,"pump", None),
+                   None, None, None, "pump", None),
         DemoGeyser("QwikSwitch", "electric", 60, None, TEMP_CELSIUS,
                    None, None, None, "idle", None)
     ])
@@ -27,7 +27,7 @@ class DemoGeyser(GeyserDevice):
 
     # pylint: disable=too-many-instance-attributes
     def __init__(self, name, geyser_type,
-                 target_temperature, panel_differential_temp, 
+                 target_temperature, panel_differential_temp,
                  unit_of_measurement, away, guest, holiday, current_operation,
                  boost):
         """Initialize the hot water heater controller."""
@@ -46,7 +46,7 @@ class DemoGeyser(GeyserDevice):
         self._current_temperature = None
         self._current_element_status = None
         self._current_pump_mode = None
-        self._fault_code = fault_code
+        self._fault_code = None  # Cannot be initialised with a fault code
         self._operation_list = ["cool",   # Prevent overheating
                                 "error",  # Geyser needs attention
                                 "frost",  # Prevent freezing of collector
@@ -141,7 +141,7 @@ class DemoGeyser(GeyserDevice):
         # Ideally this should be a self learning formula,
         # based on crowd sourced data and taking many variables into account
         # But let start with based on user preference ;-)
-        self._target_temperature = kwargs.get(ATTR_TARGET_TEMPERATURE)
+        self._target_temperature = kwargs.get(ATTR_TARGET_WATER_TEMP)
         if kwargs.get(ATTR_PANEL_DIFF_TEMP) is not None:
             self._target_temperature = kwargs.get(ATTR_PANEL_DIFF_TEMP)
         self.update_ha_state()
