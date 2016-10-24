@@ -250,7 +250,7 @@ def setup(hass, config):
     hass.http.register_view(iOSIdentifyDeviceView(hass))
 
     app_config = config.get(DOMAIN, {})
-    hass.wsgi.register_view(iOSPushConfigView(hass,
+    hass.http.register_view(iOSPushConfigView(hass,
                                               app_config.get(CONF_PUSH, {})))
 
     return True
