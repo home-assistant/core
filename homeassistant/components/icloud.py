@@ -417,14 +417,6 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
 
     def setinterval(self, interval=None, devicename=None):
         """Set the interval of the given devices."""
-        if devicename is None:
-            for device in self.devices:
-                self.devices[device].setinterval(interval)
-                self.devices[device].update_icloud()
-        elif devicename in self.devices:
-            self.devices[devicename].setinterval(interval)
-            self.devices[devicename].update_icloud()
-
         for device in self.devices:
             if devicename is None or device == devicename:
                 devid = 'device_tracker.' + devicename
