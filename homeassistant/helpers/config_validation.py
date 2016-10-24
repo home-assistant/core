@@ -241,7 +241,7 @@ def string(value: Any) -> str:
         return str(value)
     raise vol.Invalid('string value is None')
 
-def int(value)
+def int(value):
     """Coerce value to int, except for None."""
     if value is not None:
         return int(value)
