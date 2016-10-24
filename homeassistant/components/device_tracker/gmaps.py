@@ -28,9 +28,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL, default=1): vol.Coerce(int)
     })
 
-
 def setup_scanner(hass, config, see):
-    """"Define constants"""
+    """Define constants."""
     import requests
     import json
 
@@ -39,7 +38,7 @@ def setup_scanner(hass, config, see):
     max_accuracy = config[CONF_ACCURACY]
 
     def get_position(now):
-        """Get device position"""
+        """Get device position."""
         r = requests.post("https://www.googleapis.com/geolocation/v1/geolocate?key="+api_key)
         if r.ok:
             location = json.loads(r.text)
