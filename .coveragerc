@@ -314,6 +314,7 @@ omit =
     homeassistant/components/thermostat/proliphix.py
     homeassistant/components/thermostat/radiotherm.py
     homeassistant/components/upnp.py
+    homeassistant/components/weather/openweathermap.py
     homeassistant/components/zeroconf.py
 
 
