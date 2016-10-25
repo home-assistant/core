@@ -26,6 +26,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class Mipow(Light):
+    """main class"""
     def __init__(self, serial, name=None):
         """Initialize the light."""
         if name is not None:
@@ -48,7 +49,7 @@ class Mipow(Light):
         self._rgb_bright = self.rgb_bright
 
     def _start_adapter(self):
-        """Start the adapter"""
+        """Start the adapter."""
         import pygatt
         if self._adapter is not None:
             self._adapter.stop()
@@ -61,11 +62,11 @@ class Mipow(Light):
         return adapter
 
     def _stop_adapter(self):
-        """Stop the adapter"""
+        """Stop the adapter."""
         self._adapter.stop()
 
     def connect(self):
-        """Connect to lamp"""
+        """Connect to lamp."""
         import pygatt
         if self._connection is not None:
             if self._connection._connected:
@@ -93,7 +94,7 @@ class Mipow(Light):
 
     @property
     def rgb_color(self):
-        """read rgb color"""
+        """read rgb color."""
         self._connection = self.connect()
 
         device_status = (
@@ -109,12 +110,12 @@ class Mipow(Light):
 
     @property
     def rgb_bright(self):
-        """Read brightness"""
+        """Read brightness."""
 
         self._connection = self.connect()
 
         device_status = (
-         self._connection.char_read("0000fffc-0000-1000-8000-00805f9b34fb"))
+            self._connection.char_read("0000fffc-0000-1000-8000-00805f9b34fb"))
 
         device_bright = [x for x in device_status]
 
@@ -128,7 +129,7 @@ class Mipow(Light):
 
     @property
     def brightness(self):
-        """return brightness"""
+        """Return brightness."""
         return self._rgb_bright
 
     @property
@@ -144,7 +145,7 @@ class Mipow(Light):
                 and ATTR_RGB_COLOR in kwargs and ATTR_FLASH not in kwargs):
             self._rgb_color = [x for x in kwargs[ATTR_RGB_COLOR]]
             brgb = ([kwargs[ATTR_BRIGHTNESS], self._rgb_color[0],
-                    self._rgb_color[1], self._rgb_color[2]])
+                     self._rgb_color[1], self._rgb_color[2]])
 
             self._connection.char_write_handle(0x0025, brgb)
         elif (ATTR_RGB_COLOR in kwargs and ATTR_BRIGHTNESS not in kwargs
@@ -157,8 +158,8 @@ class Mipow(Light):
 
             self._connection.char_write_handle(0x0025, brgb)
         elif (
-            ATTR_BRIGHTNESS in kwargs and ATTR_RGB_COLOR not in kwargs
-                and ATTR_FLASH not in kwargs):
+          ATTR_BRIGHTNESS in kwargs and ATTR_RGB_COLOR not in kwargs
+          and ATTR_FLASH not in kwargs):
             brgb = [kwargs[ATTR_BRIGHTNESS], 0, 0, 0]
             self._rgb_color = [255, 255, 255]
             self._connection.char_write_handle(0x0025, brgb)
