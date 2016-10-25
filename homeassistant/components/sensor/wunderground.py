@@ -117,11 +117,10 @@ class WUndergroundSensor(Entity):
             else:
                 return self.rest.data[self._condition]
 
-        if self._condition == 'alerts':
-            if self.rest.alerts:
-                return len(self.rest.alerts)
-            else:
-                return 0
+        if self.rest.alerts and self._condition == 'alerts':
+            return len(self.rest.alerts)
+        else:
+            return 0
         return STATE_UNKNOWN
 
     @property
