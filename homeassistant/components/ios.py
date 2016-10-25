@@ -4,6 +4,7 @@ Native Home Assistant iOS app component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/ios/
 """
+import asyncio
 import os
 import json
 import logging
@@ -14,6 +15,8 @@ from voluptuous.humanize import humanize_error
 from homeassistant.helpers import config_validation as cv
 
 from homeassistant.helpers import discovery
+
+from homeassistant.core import callback
 
 from homeassistant.components.http import HomeAssistantView
 
@@ -268,6 +271,7 @@ class iOSPushConfigView(HomeAssistantView):
         super().__init__(hass)
         self.push_config = push_config
 
+    @callback
     def get(self, request):
         """Handle the GET request for the push configuration."""
         return self.json(self.push_config)
@@ -283,10 +287,16 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         """Init the view."""
         super().__init__(hass)
 
+    @asyncio.coroutine
     def post(self, request):
         """Handle the POST request for device identification."""
         try:
-            data = IDENTIFY_SCHEMA(request.json)
+            req_data = yield from request.json()
+        except ValueError:
+            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+
+        try:
+            data = IDENTIFY_SCHEMA(req_data)
         except vol.Invalid as ex:
             return self.json_message(humanize_error(request.json, ex),
                                      HTTP_BAD_REQUEST)
