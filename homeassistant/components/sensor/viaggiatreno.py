@@ -6,11 +6,12 @@ status.
 """
 import datetime
 import logging
-import urllib.request
 import json
 import re
-import voluptuous as vol
+import urllib.request
 from urllib.parse import quote, urljoin
+
+import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -114,3 +115,4 @@ class ViaggiatrenoSensor(Entity):
             return None
         else:
             return delay
+
