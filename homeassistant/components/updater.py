@@ -108,6 +108,8 @@ def get_newest_version(huuid):
         info_object['os_version'] = platform.win32_ver()[0]
     elif platform.system() == 'Darwin':
         info_object['os_version'] = platform.mac_ver()[0]
+    elif platform.system() == 'FreeBSD':
+        info_object['os_version'] = platform.release()
     elif platform.system() == 'Linux':
         import distro
         linux_dist = distro.linux_distribution(full_distribution_name=False)
