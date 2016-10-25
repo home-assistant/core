@@ -73,13 +73,11 @@ class ViaggiatrenoSensor(Entity):
     
     def __init__(self, station_name, train_no, origin_station):
         """Sensor initialization."""
-        self.train_no = train_no
-        self.station_name = station_name
-        self.station_id = get_station_id(station_name)
-        self.origin_station = origin_station
+        v = ViaggiaTrenoData(train_no, origin_station)
+        self.delay = v.fetch_delay()
+        programmed_arrival = v.programmed_arrival()
         self._unit_of_measurement = 'min'
-        self._state = self.update()
-        self._name = "Train {} h: {} at {}".format(train_no, self.programmed_arrival, station_name)
+        self._name = "Train {} h: {} at {}".format(train_no, programmed_arrival, station_name)
 
     @property
     def name(self):
@@ -99,10 +97,19 @@ class ViaggiatrenoSensor(Entity):
     @property
     def state(self):
         """Return the current delay for the train."""
-        return self._state
+        return self.delay
+
+class ViaggiaTrenoData(object):
+    """Actually gets data."""
+
+    def __init__(train_no, origin_station):
+        """Sensor initialization."""
+        self.train_no = train_no
+        self.station_id = get_station_id(station_name)
+        self.origin_station = origin_station
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def fetch_delay(self):
         """Actually updates data."""
         url = urljoin(RESOURCE_URL, "tratteCanvas/{}/{}".format(self.origin_station, self.train_no))
         r = urllib.request.urlopen(url, timeout=TIMEOUT)
@@ -111,10 +118,8 @@ class ViaggiatrenoSensor(Entity):
         h = station['programmata']
         self.programmed_arrival = datetime.datetime.fromtimestamp(h/1000).strftime('%H:%M:%S')
         delay = station['ritardo']
-        # If the train is already passed return None
+        # If the train is already arrived return None
         if datetime.datetime.fromtimestamp(station['programmata']/1000) < datetime.datetime.now():
             return None
         else:
             return delay
-
-
