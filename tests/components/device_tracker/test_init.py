@@ -283,7 +283,10 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             'dev_id': 'some_device',
             'host_name': 'example.com',
             'location_name': 'Work',
-            'gps': [.3, .8]
+            'gps': [.3, .8],
+            'attributes': {
+                'test': 'test'
+            }
         }
         device_tracker.see(self.hass, **params)
         self.hass.block_till_done()
