@@ -17,8 +17,10 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Worldclock Sensor'
+
 ICON = 'mdi:clock'
-TIME_STR_FORMAT = "%H:%M"
+
+TIME_STR_FORMAT = '%H:%M'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TIME_ZONE): cv.time_zone,
@@ -27,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Worldclock sensor."""
+    """Setup the World clock sensor."""
     name = config.get(CONF_NAME)
     time_zone = dt_util.get_time_zone(config.get(CONF_TIME_ZONE))
 
@@ -35,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WorldClockSensor(Entity):
-    """Representation of a Worldclock sensor."""
+    """Representation of a World clock sensor."""
 
     def __init__(self, time_zone, name):
         """Initialize the sensor."""
