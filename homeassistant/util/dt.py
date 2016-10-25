@@ -36,7 +36,10 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
 
 
 def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
-    """Get time zone from string. Return None if unable to determine."""
+    """Get time zone from string. Return None if unable to determine.
+
+    Async friendly.
+    """
     try:
         return pytz.timezone(time_zone_str)
     except pytz.exceptions.UnknownTimeZoneError:

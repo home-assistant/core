@@ -54,7 +54,8 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
         _LOGGER.debug('Component %s already set up.', domain)
         return True
 
-    yield from hass.loop.run_in_executor(None, _ensure_loader_prepared, hass)
+    if not loader.PREPARED:
+        yield from hass.loop.run_in_executor(None, loader.prepare, hass)
 
     if config is None:
         config = defaultdict(dict)
@@ -254,7 +255,8 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
 
     This method is a coroutine.
     """
-    yield from hass.loop.run_in_executor(None, _ensure_loader_prepared, hass)
+    if not loader.PREPARED:
+        yield from hass.loop.run_in_executor(None, loader.prepare, hass)
 
     platform_path = PLATFORM_FORMAT.format(domain, platform_name)
 
@@ -314,12 +316,6 @@ def from_config_dict(config: Dict[str, Any],
             hass.config.config_dir = config_dir
             mount_local_lib_path(config_dir)
 
-    # async loop allready running
-    if hass.loop.is_running():
-        return run_coroutine_threadsafe(async_from_config_dict(
-            config, hass, config_dir, enable_log, verbose, skip_pip
-        ), hass.loop).result()
-
     @asyncio.coroutine
     def _async_init_from_config_dict(future):
         try:
@@ -366,16 +362,15 @@ def async_from_config_dict(config: Dict[str, Any],
         None, conf_util.process_ha_config_upgrade, hass)
 
     if enable_log:
-        yield from hass.loop.run_in_executor(
-            None, enable_logging, hass, verbose, log_rotate_days)
+        enable_logging(hass, verbose, log_rotate_days)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
         _LOGGER.warning('Skipping pip installation of required modules. '
                         'This may cause issues.')
 
-    yield from hass.loop.run_in_executor(
-        None, _ensure_loader_prepared, hass)
+    if not loader.PREPARED:
+        yield from hass.loop.run_in_executor(None, loader.prepare, hass)
 
     # Make a copy because we are mutating it.
     # Convert it to defaultdict so components can always have config dict
@@ -428,12 +423,6 @@ def from_config_file(config_path: str,
     hass.config.config_dir = config_dir
     mount_local_lib_path(config_dir)
 
-    # async loop allready running
-    if hass.loop.is_running():
-        return run_coroutine_threadsafe(async_from_config_file(
-            config_path, hass, verbose, skip_pip, log_rotate_days
-        ), hass.loop).result()
-
     @asyncio.coroutine
     def _async_init_from_config_file(future):
         try:
@@ -463,8 +452,7 @@ def async_from_config_file(config_path: str,
     Will add functionality to 'hass' parameter.
     This method is a coroutine.
     """
-    yield from hass.loop.run_in_executor(
-        None, enable_logging, hass, verbose, log_rotate_days)
+    enable_logging(hass, verbose, log_rotate_days)
 
     try:
         config_dict = yield from hass.loop.run_in_executor(
@@ -483,8 +471,7 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
                    log_rotate_days=None) -> None:
     """Setup the logging.
 
-    Asyncio don't support file operation jet.
-    This method need to run in a executor.
+    Async friendly.
     """
     logging.basicConfig(level=logging.INFO)
     fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
@@ -539,16 +526,6 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     else:
         _LOGGER.error(
             'Unable to setup error log %s (access denied)', err_log_path)
-
-
-def _ensure_loader_prepared(hass: core.HomeAssistant) -> None:
-    """Ensure Home Assistant loader is prepared.
-
-    Asyncio don't support file operation jet.
-    This method need to run in a executor.
-    """
-    if not loader.PREPARED:
-        loader.prepare(hass)
 
 
 def log_exception(ex, domain, config, hass):

@@ -83,7 +83,7 @@ def reload_core_config(hass):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup general services related to Home Assistant."""
-    @asyncio.coroutine
+    @ha.callback
     def handle_turn_service(service):
         """Method to handle calls to homeassistant.turn_on/off."""
         entity_ids = extract_entity_ids(hass, service)
@@ -114,8 +114,8 @@ def async_setup(hass, config):
             # ent_ids is a generator, convert it to a list.
             data[ATTR_ENTITY_ID] = list(ent_ids)
 
-            yield from hass.services.async_call(
-                domain, service.service, data, blocking)
+            hass.loop.create_task(hass.services.async_call(
+                domain, service.service, data, blocking))
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)

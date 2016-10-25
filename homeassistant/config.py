@@ -17,7 +17,6 @@ from homeassistant.const import (
     __version__)
 from homeassistant.core import valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import set_customize
@@ -249,12 +248,6 @@ def process_ha_config_upgrade(hass):
         outp.write(__version__)
 
 
-def process_ha_core_config(hass, config):
-    """Process the [homeassistant] section from the config."""
-    return run_coroutine_threadsafe(
-        async_process_ha_core_config(hass, config), loop=hass.loop).result()
-
-
 @asyncio.coroutine
 def async_process_ha_core_config(hass, config):
     """Process the [homeassistant] section from the config.
@@ -265,14 +258,12 @@ def async_process_ha_core_config(hass, config):
     config = CORE_CONFIG_SCHEMA(config)
     hac = hass.config
 
-    @asyncio.coroutine
     def set_time_zone(time_zone_str):
         """Helper method to set time zone."""
         if time_zone_str is None:
             return
 
-        time_zone = yield from hass.loop.run_in_executor(
-            None, date_util.get_time_zone, time_zone_str)
+        time_zone = date_util.get_time_zone(time_zone_str)
 
         if time_zone:
             hac.time_zone = time_zone
@@ -288,7 +279,7 @@ def async_process_ha_core_config(hass, config):
             setattr(hac, attr, config[key])
 
     if CONF_TIME_ZONE in config:
-        yield from set_time_zone(config.get(CONF_TIME_ZONE))
+        set_time_zone(config.get(CONF_TIME_ZONE))
 
     set_customize(config.get(CONF_CUSTOMIZE) or {})
 
@@ -339,7 +330,7 @@ def async_process_ha_core_config(hass, config):
             discovered.append(('name', info.city))
 
         if hac.time_zone is None:
-            yield from set_time_zone(info.time_zone)
+            set_time_zone(info.time_zone)
             discovered.append(('time_zone', info.time_zone))
 
     if hac.elevation is None and hac.latitude is not None and \

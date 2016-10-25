@@ -318,6 +318,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             light.DOMAIN, const.SERVICE_TURN_OFF,
             {const.ATTR_ENTITY_ID: 'light.ceiling_lights'},
             blocking=True)
+        self.hass.block_till_done()
 
         ceiling_lights = self.hass.states.get('light.ceiling_lights')
         self.assertEqual(ceiling_lights.state, STATE_OFF)
@@ -345,6 +346,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             BRIDGE_URL_BASE.format(
                 '/api/username/lights/{}'.format(entity_id)), timeout=5)
 
+        self.hass.block_till_done()
         self.assertEqual(result.status_code, expected_status)
 
         if expected_status == 200:
@@ -370,6 +372,8 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         result = requests.put(
             url, data=json.dumps(data), timeout=5, headers=req_headers)
+
+        self.hass.block_till_done()
         return result
 
 

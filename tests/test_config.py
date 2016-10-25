@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
     CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT)
 from homeassistant.util import location as location_util, dt as dt_util
+from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.helpers.entity import Entity
 
 from tests.common import (
@@ -200,7 +201,9 @@ class TestConfig(unittest.TestCase):
                   CONF_NAME: 'Test',
                   CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
 
-        config_util.process_ha_core_config(self.hass, config)
+        run_coroutine_threadsafe(
+            config_util.async_process_ha_core_config(self.hass, config),
+            self.hass.loop).result()
 
         entity = Entity()
         entity.entity_id = 'test.test'
@@ -266,14 +269,15 @@ class TestConfig(unittest.TestCase):
         """Test loading core config onto hass object."""
         self.hass.config = mock.Mock()
 
-        config_util.process_ha_core_config(self.hass, {
-            'latitude': 60,
-            'longitude': 50,
-            'elevation': 25,
-            'name': 'Huis',
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
-            'time_zone': 'America/New_York',
-        })
+        run_coroutine_threadsafe(
+            config_util.async_process_ha_core_config(self.hass, {
+                'latitude': 60,
+                'longitude': 50,
+                'elevation': 25,
+                'name': 'Huis',
+                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+                'time_zone': 'America/New_York',
+            }), self.hass.loop).result()
 
         assert self.hass.config.latitude == 60
         assert self.hass.config.longitude == 50
@@ -286,14 +290,15 @@ class TestConfig(unittest.TestCase):
         """Test backward compatibility when loading core config."""
         self.hass.config = mock.Mock()
 
-        config_util.process_ha_core_config(self.hass, {
-            'latitude': 60,
-            'longitude': 50,
-            'elevation': 25,
-            'name': 'Huis',
-            CONF_TEMPERATURE_UNIT: 'C',
-            'time_zone': 'America/New_York',
-        })
+        run_coroutine_threadsafe(
+            config_util.async_process_ha_core_config(self.hass, {
+                'latitude': 60,
+                'longitude': 50,
+                'elevation': 25,
+                'name': 'Huis',
+                CONF_TEMPERATURE_UNIT: 'C',
+                'time_zone': 'America/New_York',
+            }), self.hass.loop).result()
 
         assert self.hass.config.latitude == 60
         assert self.hass.config.longitude == 50
@@ -316,7 +321,11 @@ class TestConfig(unittest.TestCase):
         self.hass.config.elevation = None
         self.hass.config.location_name = None
         self.hass.config.time_zone = None
-        config_util.process_ha_core_config(self.hass, {})
+
+        run_coroutine_threadsafe(
+            config_util.async_process_ha_core_config(
+                self.hass, {}), self.hass.loop
+            ).result()
 
         assert self.hass.config.latitude == 32.8594
         assert self.hass.config.longitude == -117.2073
@@ -334,7 +343,10 @@ class TestConfig(unittest.TestCase):
         """Test config remains unchanged if discovery fails."""
         self.hass.config = Config()
 
-        config_util.process_ha_core_config(self.hass, {})
+        run_coroutine_threadsafe(
+            config_util.async_process_ha_core_config(
+                self.hass, {}), self.hass.loop
+            ).result()
 
         blankConfig = Config()
         assert self.hass.config.latitude == blankConfig.latitude
