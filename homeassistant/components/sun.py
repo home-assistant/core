@@ -163,8 +163,8 @@ class Sun(Entity):
     def state_attributes(self):
         """Return the state attributes of the sun."""
         return {
-            STATE_ATTR_NEXT_RISING: self.next_rising.isoformat(),
-            STATE_ATTR_NEXT_SETTING: self.next_setting.isoformat(),
+            STATE_ATTR_NEXT_RISING: self.next_rising,
+            STATE_ATTR_NEXT_SETTING: self.next_setting,
             STATE_ATTR_ELEVATION: round(self.solar_elevation, 2),
             STATE_ATTR_AZIMUTH: round(self.solar_azimuth, 2)
         }
