@@ -73,9 +73,9 @@ class ViaggiatrenoSensor(Entity):
     
     def __init__(self, station_name, train_no, origin_station):
         """Sensor initialization."""
-        v = ViaggiaTrenoData(train_no, origin_station)
+        v = ViaggiaTrenoData(train_no, station_name, origin_station)
         self.delay = v.fetch_delay()
-        programmed_arrival = v.programmed_arrival()
+        programmed_arrival = v.programmed_arrival
         self._unit_of_measurement = 'min'
         self._name = "Train {} h: {} at {}".format(train_no, programmed_arrival, station_name)
 
@@ -102,7 +102,7 @@ class ViaggiatrenoSensor(Entity):
 class ViaggiaTrenoData(object):
     """Actually gets data."""
 
-    def __init__(train_no, origin_station):
+    def __init__(self, train_no, station_name, origin_station):
         """Sensor initialization."""
         self.train_no = train_no
         self.station_id = get_station_id(station_name)
@@ -120,6 +120,7 @@ class ViaggiaTrenoData(object):
         delay = station['ritardo']
         # If the train is already arrived return None
         if datetime.datetime.fromtimestamp(station['programmata']/1000) < datetime.datetime.now():
+            _LOGGER.info('Train {} is already arrived'.format(self.train_no))
             return None
         else:
             return delay
