@@ -370,6 +370,9 @@ pylast==1.6.0
 # homeassistant.components.sensor.loopenergy
 pyloopenergy==0.0.15
 
+# homeassistant.components.mochad
+pymochad==0.1.1
+
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.3
 
