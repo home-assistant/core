@@ -7,11 +7,18 @@ https://home-assistant.io/components/light.mipow/
 
 import logging
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_RAINBOW)
-from homeassistant.components.light import (
-    EFFECT_CANDLE, ATTR_FLASH, FLASH_LONG, FLASH_SHORT, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
+    ATTR_FLASH,
+    ATTR_RGB_COLOR,
+    EFFECT_RAINBOW,
+    EFFECT_CANDLE,
+    FLASH_LONG,
+    FLASH_SHORT,
+    Light,
+)
 _LOGGER = logging.getLogger(__name__)
-
+CHARNAME = "0000fffc-0000-1000-8000-00805f9b34fb"
 REQUIREMENTS = ['pygatt[GATTTOOL]==3.0.0', 'pexpect==4.0.1']
 # pylint: disable=unused-argument
 
@@ -30,6 +37,7 @@ class Mipow(Light):
 
     def __init__(self, serial, name=None):
         """Initialize the light."""
+        from pygatt.exceptions import NotificationTimeout
         if name is not None:
             self._name = name
         else:
@@ -40,14 +48,18 @@ class Mipow(Light):
         self._connection = None
         try:
             self.update()
-        except:
+        except NotificationTimeout:
             self._rgb_color = [0, 0, 0]
             self._rgb_bright = [0]
 
     def update(self):
-        """Read back the device state."""
-        self._rgb_color = self.rgb_color
-        self._rgb_bright = self.rgb_bright
+        """Read device state."""
+        self._connection = self.connect()
+
+        device_state = list(self._connection.char_read(CHARNAME))
+
+        self._rgb_bright = device_state[:-3]
+        self._rgb_color = device_state[1:]
 
     def _start_adapter(self):
         """Start the adapter."""
@@ -96,34 +108,12 @@ class Mipow(Light):
     @property
     def rgb_color(self):
         """Read rgb color."""
-        self._connection = self.connect()
-
-        device_status = (
-            self._connection.char_read("0000fffc-0000-1000-8000-00805f9b34fb"))
-
-        device_colors = [x for x in device_status]
-
-        device_colors.pop(0)
-
-        self._rgb_color = device_colors
 
         return self._rgb_color
 
     @property
     def rgb_bright(self):
         """Read brightness."""
-        self._connection = self.connect()
-
-        device_status = (
-            self._connection.char_read("0000fffc-0000-1000-8000-00805f9b34fb"))
-
-        device_bright = [x for x in device_status]
-
-        device_bright.pop()
-        device_bright.pop()
-        device_bright.pop()
-
-        self._rgb_bright = device_bright
 
         return self._rgb_bright
 
