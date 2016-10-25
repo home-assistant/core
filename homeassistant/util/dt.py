@@ -166,11 +166,11 @@ def get_age(date: dt.datetime) -> str:
     # pylint: disable=too-many-return-statements
     """Take a datetime and return its "age" as a string."""
     delta = now() - date if now() > date else date - now()
-    return human_time(seconds=delta.seconds)
+    return human_time(delta)
 
 
 # Found on this post: http://stackoverflow.com/a/34654259/1038813
-def human_time(*args, **kwargs):
+def human_time(delta -> timedelta):
     """
     Take a value of units and return its "age" as a string.
 
@@ -178,8 +178,7 @@ def human_time(*args, **kwargs):
     biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
     be returned.
     """
-
-    secs  = float(dt.timedelta(*args, **kwargs).total_seconds())
+    secs = float(delta.total_seconds())
     units = [('year',   60*60*24*365),
              ('month',  60*60*24*30),
              ('day',    60*60*24),
