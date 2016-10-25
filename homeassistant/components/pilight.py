@@ -24,8 +24,12 @@ REQUIREMENTS = ['pilight==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+
+CONF_SEND_DELAY = "send_delay"
+
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 5000
+DEFAULT_SEND_DELAY = 0.0
 DOMAIN = 'pilight'
 
 EVENT = 'pilight_received'
@@ -43,7 +47,9 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_WHITELIST, default={}): {cv.string: [cv.string]}
+        vol.Optional(CONF_WHITELIST, default={}): {cv.string: [cv.string]},
+        vol.Optional(CONF_SEND_DELAY, default=DEFAULT_SEND_DELAY):
+            vol.Coerce(float),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -54,6 +60,8 @@ def setup(hass, config):
 
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
+    send_throttler = CallRateDelayThrottle(hass,
+                                           config[DOMAIN][CONF_SEND_DELAY])
 
     try:
         pilight_client = pilight.Client(host=host, port=port)
@@ -74,6 +82,7 @@ def setup(hass, config):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_pilight_client)
 
+    @send_throttler.limited
     def send_code(call):
         """Send RF code to the pilight-daemon."""
         # Change type to dict from mappingproxy since data has to be JSON
