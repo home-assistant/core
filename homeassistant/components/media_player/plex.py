@@ -183,7 +183,7 @@ def request_configuration(host, hass, add_devices_callback):
     _CONFIGURING[host] = configurator.request_config(
         hass, 'Plex Media Server', plex_configuration_callback,
         description=('Enter the X-Plex-Token'),
-        description_image='/static/images/config_plex_mediaserver.png',
+        entity_picture='/static/images/logo_plex_mediaserver.png',
         submit_caption='Confirm',
         fields=[{'id': 'token', 'name': 'X-Plex-Token', 'type': ''}]
     )
