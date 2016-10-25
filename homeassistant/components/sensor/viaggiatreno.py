@@ -30,6 +30,7 @@ ICON = 'mdi:train'
 RESOURCE_URL = "http://www.viaggiatreno.it/viaggiatrenonew/resteasy/viaggiatreno/"
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=120)
+TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_NAME): cv.string,
@@ -40,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_origin_station(train_no):
     """Get station id from train number."""
     url = urljoin(RESOURCE_URL, "cercaNumeroTrenoTrenoAutocomplete/{}".format(train_no))
-    r = urllib.request.urlopen(url)
+    r = urllib.request.urlopen(url, timeout=TIMEOUT)
     content = r.read().decode('utf-8')
     m = re.search('.*\|\d*-(.*)', content)
     return m.group(1)
@@ -48,7 +49,7 @@ def get_origin_station(train_no):
 def get_station_id(station_name):
     """Retrieve station ID by exact name match."""
     url = urljoin(RESOURCE_URL, "autocompletaStazione/{}".format(quote(station_name.upper())))
-    r = urllib.request.urlopen(url)
+    r = urllib.request.urlopen(url, timeout=TIMEOUT)
     # Get only first match
     content = r.read().decode('utf-8').split('\n')[0]
     if not content:
@@ -104,7 +105,7 @@ class ViaggiatrenoSensor(Entity):
     def update(self):
         """Actually updates data."""
         url = urljoin(RESOURCE_URL, "tratteCanvas/{}/{}".format(self.origin_station, self.train_no))
-        r = urllib.request.urlopen(url)
+        r = urllib.request.urlopen(url, timeout=TIMEOUT)
         data = json.loads(r.read().decode('utf-8'))
         station = [x['fermata'] for x in data if x['fermata']['id'] == str(self.station_id)][0]
         h = station['programmata']
@@ -115,4 +116,5 @@ class ViaggiatrenoSensor(Entity):
             return None
         else:
             return delay
+
 
