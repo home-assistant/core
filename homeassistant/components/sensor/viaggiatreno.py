@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = []
 
-log = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 CONF_STATION_NAME = 'station_name'
 CONF_TRAIN_NO = 'train_no'
@@ -37,9 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 def get_origin_station(train_no):
-    '''
-    Get station id from train number.
-    '''
+    """Get station id from train number."""
     url = urljoin(RESOURCE_URL, "cercaNumeroTrenoTrenoAutocomplete/{}".format(train_no))
     r = urllib.request.urlopen(url)
     content = r.read().decode('utf-8')
@@ -47,23 +45,19 @@ def get_origin_station(train_no):
     return m.group(1)
 
 def get_station_id(station_name):
-    '''
-    Retrieve station ID by exact name match
-    '''
+    """Retrieve station ID by exact name match."""
     url = urljoin(RESOURCE_URL, "autocompletaStazione/{}".format(quote(station_name.upper())))
     r = urllib.request.urlopen(url)
     # Get only first match
     content = r.read().decode('utf-8').split('\n')[0]
     if not content:
-        log.error('Cannot retrieve data for station: {}'.format(station_name))
+        _LOGGER.error('Cannot retrieve data for station: {}'.format(station_name))
         raise Exception
     m = re.search('.*\|(.*)', content)
     return m.group(1)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    '''
-    Setup Viaggiatreno sensor.
-    '''
+    """Setup Viaggiatreno sensor."""
     station_name = config.get(CONF_STATION_NAME)
     train_no = config.get(CONF_TRAIN_NO)
     if config.get(CONF_ORIGIN_STATION):
@@ -73,13 +67,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([ViaggiatrenoSensor(station_name, train_no, origin_station)])
 
 class ViaggiatrenoSensor(Entity):
-    '''
-    Implements Viaggiatreno sensor
-    '''
+    """Implements Viaggiatreno sensor."""
+    
     def __init__(self, station_name, train_no, origin_station):
-        '''
-        Sensor initialization
-        '''
+        """Sensor initialization."""
         self.train_no = train_no
         self.station_name = station_name
         self.station_id = get_station_id(station_name)
@@ -90,37 +81,27 @@ class ViaggiatrenoSensor(Entity):
 
     @property
     def name(self):
-        '''
-        Returns the name of the sensor
-        '''
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def icon(self):
-        '''
-        Returns icon for the frontend
-        '''
+        """Return icon for the frontend."""
         return ICON
 
     @property
     def unit_of_measurement(self):
-        '''
-        Returns the unit this sensor is expressed in
-        '''
+        """Return the unit this sensor is expressed in."""
         return self._unit_of_measurement
 
     @property
     def state(self):
-        '''
-        Returns the current delay for the train
-        '''
+        """Return the current delay for the train."""
         return self._state
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        '''
-        Actually updates data
-        '''
+        """Actually updates data."""
         url = urljoin(RESOURCE_URL, "tratteCanvas/{}/{}".format(self.origin_station, self.train_no))
         r = urllib.request.urlopen(url)
         data = json.loads(r.read().decode('utf-8'))
@@ -133,5 +114,8 @@ class ViaggiatrenoSensor(Entity):
             return None
         else: 
             return delay
+
+
+
 
 
