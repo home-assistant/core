@@ -19,6 +19,16 @@ class socoDiscoverMock():
         return {SoCoMock('192.0.2.1')}
 
 
+class AvTransportMock():
+    """Mock class for the avTransport property on soco.SoCo object."""
+    def __init__(self):
+        pass
+
+    def GetMediaInfo(self, _):
+        return {'CurrentURI': '',
+                'CurrentURIMetaData': ''}
+
+
 class SoCoMock():
     """Mock class for the soco.SoCo object."""
 
@@ -26,6 +36,7 @@ class SoCoMock():
         """Initialize soco object."""
         self.ip_address = ip
         self.is_visible = True
+        self.avTransport = AvTransportMock()
 
     def get_speaker_info(self):
         """Return a dict with various data points about the speaker."""
