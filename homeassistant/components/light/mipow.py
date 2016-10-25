@@ -108,13 +108,11 @@ class Mipow(Light):
     @property
     def rgb_color(self):
         """Read rgb color."""
-
         return self._rgb_color
 
     @property
     def rgb_bright(self):
         """Read brightness."""
-
         return self._rgb_bright
 
     @property
