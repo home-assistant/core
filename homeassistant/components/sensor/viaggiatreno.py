@@ -106,16 +106,11 @@ class ViaggiatrenoSensor(Entity):
         r = urllib.request.urlopen(url)
         data = json.loads(r.read().decode('utf-8'))
         station = [x['fermata'] for x in data if x['fermata']['id'] == str(self.station_id)][0]
-        h = station['programmata'] 
+        h = station['programmata']
         self.programmed_arrival = datetime.datetime.fromtimestamp(h/1000).strftime('%H:%M:%S')
         delay = station['ritardo']
         # If the train is already passed return None
         if datetime.datetime.fromtimestamp(station['programmata']/1000) < datetime.datetime.now():
             return None
-        else: 
+        else:
             return delay
-
-
-
-
-
