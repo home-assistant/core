@@ -134,11 +134,8 @@ def _ordered_dict(loader: SafeLineLoader,
     nodes = loader.construct_pairs(node)
 
     seen = {}  # type: Dict
-    min_line = None
-    for (key, _), (node, _) in zip(nodes, node.value):
-        line = getattr(node, '__line__', 'unknown')
-        if line != 'unknown' and (min_line is None or line < min_line):
-            min_line = line
+    for (key, _), (child_node, _) in zip(nodes, node.value):
+        line = child_node.start_mark.line
 
         try:
             hash(key)
@@ -146,7 +143,7 @@ def _ordered_dict(loader: SafeLineLoader,
             fname = getattr(loader.stream, 'name', '')
             raise yaml.MarkedYAMLError(
                 context="invalid key: \"{}\"".format(key),
-                context_mark=yaml.Mark(fname, 0, min_line, -1, None, None)
+                context_mark=yaml.Mark(fname, 0, line, -1, None, None)
             )
 
         if key in seen:
@@ -161,7 +158,22 @@ def _ordered_dict(loader: SafeLineLoader,
 
     processed = OrderedDict(nodes)
     setattr(processed, '__config_file__', loader.name)
-    setattr(processed, '__line__', min_line)
+    setattr(processed, '__line__', node.start_mark.line)
+    return processed
+
+
+def _construct_seq(loader: SafeLineLoader, node: yaml.nodes.Node):
+    """Add line number and file name to Load YAML sequence."""
+    obj, = loader.construct_yaml_seq(node)
+
+    class NodeClass(list):
+        """Wrapper class to be able to add attributes on a list."""
+
+        pass
+
+    processed = NodeClass(obj)
+    setattr(processed, '__config_file__', loader.name)
+    setattr(processed, '__line__', node.start_mark.line)
     return processed
 
 
@@ -231,6 +243,8 @@ def _secret_yaml(loader: SafeLineLoader,
 yaml.SafeLoader.add_constructor('!include', _include_yaml)
 yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
                                 _ordered_dict)
+yaml.SafeLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq)
 yaml.SafeLoader.add_constructor('!env_var', _env_var_yaml)
 yaml.SafeLoader.add_constructor('!secret', _secret_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_list', _include_dir_list_yaml)
