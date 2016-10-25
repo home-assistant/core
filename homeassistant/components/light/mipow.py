@@ -149,7 +149,7 @@ class Mipow(Light):
 
             self._connection.char_write_handle(0x0025, brgb)
         elif (ATTR_RGB_COLOR in kwargs and ATTR_BRIGHTNESS not in kwargs
-                and ATTR_FLASH not in kwargs):
+              and ATTR_FLASH not in kwargs):
             self._rgb_color = [x for x in kwargs[ATTR_RGB_COLOR]]
             brgb = [0]
             brgb.append(self._rgb_color[0])
@@ -157,9 +157,8 @@ class Mipow(Light):
             brgb.append(self._rgb_color[2])
 
             self._connection.char_write_handle(0x0025, brgb)
-        elif (
-          ATTR_BRIGHTNESS in kwargs and ATTR_RGB_COLOR not in kwargs
-          and ATTR_FLASH not in kwargs):
+        elif (ATTR_BRIGHTNESS in kwargs and ATTR_RGB_COLOR not in kwargs
+              and ATTR_FLASH not in kwargs):
             brgb = [kwargs[ATTR_BRIGHTNESS], 0, 0, 0]
             self._rgb_color = [255, 255, 255]
             self._connection.char_write_handle(0x0025, brgb)
