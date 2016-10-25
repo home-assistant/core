@@ -1,5 +1,5 @@
 """
-Get location from Google Maps Geolocation API
+Get location from Google Maps Geolocation API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.gmaps/
@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['requests==2.11.1']
+REQUIREMENTS = ['requests>=2,<3']
 
 CONF_INTERVAL = 'interval'
 KEEPALIVE_INTERVAL = 1
@@ -28,6 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL, default=1): vol.Coerce(int)
     })
 
+
 def setup_scanner(hass, config, see):
     """Define constants."""
     import requests
@@ -39,8 +40,10 @@ def setup_scanner(hass, config, see):
 
     def get_position(now):
         """Get device position."""
-        api_request = requests.post("https://www.googleapis.com/geolocation/v1/geolocate?key="+api_key)
-        if r.ok:
+        api_request = requests.post("https://www.googleapis.com/"
+                                    "geolocation/v1/geolocate?key="
+                                    +api_key)
+        if api_request.ok:
             location = json.loads(api_request.text)
 
             accuracy = location["accuracy"]
