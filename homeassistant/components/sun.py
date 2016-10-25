@@ -62,8 +62,7 @@ def next_setting_utc(hass, entity_id=None):
     state = hass.states.get(ENTITY_ID)
 
     try:
-        return dt_util.parse_datetime(
-            state.attributes[STATE_ATTR_NEXT_SETTING])
+        return state.attributes[STATE_ATTR_NEXT_SETTING]
     except (AttributeError, KeyError):
         # AttributeError if state is None
         # KeyError if STATE_ATTR_NEXT_SETTING does not exist
@@ -84,7 +83,7 @@ def next_rising_utc(hass, entity_id=None):
     state = hass.states.get(ENTITY_ID)
 
     try:
-        return dt_util.parse_datetime(state.attributes[STATE_ATTR_NEXT_RISING])
+        return state.attributes[STATE_ATTR_NEXT_RISING]
     except (AttributeError, KeyError):
         # AttributeError if state is None
         # KeyError if STATE_ATTR_NEXT_RISING does not exist
