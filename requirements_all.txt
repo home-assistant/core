@@ -295,7 +295,8 @@ pexpect==4.0.1
 
 # homeassistant.components.light.hue
 phue==0.8
-
+# homeassistant.components.light.mipow
+pygatt==3.0.0
 # homeassistant.components.pilight
 pilight==0.1.1
 
