@@ -314,11 +314,6 @@ SERVICE_SET_COVER_TILT_POSITION = 'set_cover_tilt_position'
 SERVICE_STOP_COVER = 'stop_cover'
 SERVICE_STOP_COVER_TILT = 'stop_cover_tilt'
 
-SERVICE_MOVE_UP = 'move_up'
-SERVICE_MOVE_DOWN = 'move_down'
-SERVICE_MOVE_POSITION = 'move_position'
-SERVICE_STOP = 'stop'
-
 # #### API / REMOTE ####
 SERVER_PORT = 8123
 
