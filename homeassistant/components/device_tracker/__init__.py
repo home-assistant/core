@@ -473,6 +473,7 @@ def update_config(path: str, dev_id: str, device: Device):
             'track': device.track,
             CONF_AWAY_HIDE: device.away_hide
         }}
+        device = {key: val for key, val in device.items() if val is not None}
         yaml.dump(device, out, default_flow_style=False)
 
 
