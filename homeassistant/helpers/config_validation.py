@@ -2,6 +2,7 @@
 from collections import OrderedDict
 from datetime import timedelta
 import os
+import re
 from urllib.parse import urlparse
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 
@@ -334,6 +335,14 @@ def url(value: Any) -> str:
         return vol.Schema(vol.Url())(url_in)
 
     raise vol.Invalid('invalid url')
+
+
+def x10_address(value):
+    """Validate an x10 address."""
+    regex = re.compile(r'([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$')
+    if not regex.match(value):
+        raise vol.Invalid('Invalid X10 Address')
+    return str(value).lower()
 
 
 def ordered_dict(value_validator, key_validator=match_all):
