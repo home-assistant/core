@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yahoo-finance==1.2.1']
+REQUIREMENTS = ['yahoo-finance==1.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
