@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_DURATION, ATTR_MEDIA_EPISODE,
     ATTR_MEDIA_PLAYLIST, ATTR_MEDIA_SEASON, ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK,
-    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, ATTR_INPUT_SOURCE_LIST,
     ATTR_SUPPORTED_MEDIA_COMMANDS, DOMAIN, SERVICE_PLAY_MEDIA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
@@ -325,6 +325,11 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def current_source(self):
         """"Return the current input source of the device."""
         return self._child_attr(ATTR_INPUT_SOURCE)
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return self._child_attr(ATTR_INPUT_SOURCE_LIST)
 
     @property
     def supported_media_commands(self):
