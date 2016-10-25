@@ -166,11 +166,11 @@ def get_age(date: dt.datetime) -> str:
     # pylint: disable=too-many-return-statements
     """Take a datetime and return its "age" as a string."""
     delta = now() - date if now() > date else date - now()
-    return human_time(delta)
+    return _human_time(delta)
 
 
 # Found on this post: http://stackoverflow.com/a/34654259/1038813
-def human_time(delta -> timedelta):
+def _human_time(delta -> timedelta):
     """
     Take a value of units and return its "age" as a string.
 
