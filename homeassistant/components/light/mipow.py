@@ -27,6 +27,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 class Mipow(Light):
     """Main class."""
+
     def __init__(self, serial, name=None):
         """Initialize the light."""
         if name is not None:
@@ -94,7 +95,7 @@ class Mipow(Light):
 
     @property
     def rgb_color(self):
-        """read rgb color."""
+        """Read rgb color."""
         self._connection = self.connect()
 
         device_status = (
@@ -111,7 +112,6 @@ class Mipow(Light):
     @property
     def rgb_bright(self):
         """Read brightness."""
-
         self._connection = self.connect()
 
         device_status = (
