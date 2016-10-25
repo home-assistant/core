@@ -384,6 +384,7 @@ pynetio==0.1.6
 pynx584==0.2
 
 # homeassistant.components.sensor.openweathermap
+# homeassistant.components.weather.openweathermap
 pyowm==2.5.0
 
 # homeassistant.components.switch.acer_projector
