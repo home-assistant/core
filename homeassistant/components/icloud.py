@@ -319,6 +319,9 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                 self._intervals[devicename] = 1
             if battery is not None and battery <= 33 and distancefromhome > 3:
                 self._intervals[devicename] = self._intervals[devicename] * 2
+        orig_int = new_state.attributes.get(ATTR_INTERVAL, 1)
+        if self._intervals[devicename] != orig_int:
+            self.update_device(devicename)
 
     def update_device(self, devicename):
         """Update the device_tracker entity."""
