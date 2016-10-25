@@ -82,7 +82,7 @@ class Mipow(Light):
         """Connect to lamp."""
         import pygatt
         if self._connection is not None:
-            if self._connection._connected:
+            if self._connection.connected:
                 return self._connection
         else:
             if self._adapter is not None:
