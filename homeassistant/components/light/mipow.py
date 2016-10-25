@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class Mipow(Light):
-    """main class"""
+    """Main class."""
     def __init__(self, serial, name=None):
         """Initialize the light."""
         if name is not None:
