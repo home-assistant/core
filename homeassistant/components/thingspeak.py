@@ -4,10 +4,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_STATE_CHANGED, CONF_API_KEY, CONF_ID, CONF_WHITELIST,
+    CONF_API_KEY, CONF_ID, CONF_WHITELIST,
     STATE_UNAVAILABLE, STATE_UNKNOWN)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.event as event
 
 REQUIREMENTS = ['thingspeak==0.4.0']
 
@@ -48,14 +49,13 @@ def setup(hass, config):
 
     def thingspeak_listener(entity_id, old_state, new_state):
         """Listen for new events and send them to thingspeak."""
-        state = event.data.get('new_state')
-        if state is None or state.state in (
+        if new_state is None or new_state.state in (
                 STATE_UNKNOWN, '', STATE_UNAVAILABLE):
             return
         try:
-            if state.entity_id != entity:
+            if new_state.entity_id != entity:
                 return
-            _state = state_helper.state_as_number(state)
+            _state = state_helper.state_as_number(new_state)
         except ValueError:
             return
         try:
@@ -65,6 +65,6 @@ def setup(hass, config):
                 'Error while sending value "%s" to Thingspeak',
                 _state)
 
-    track_state_change(hass, entity, thingspeak_listener)
+    event.track_state_change(hass, entity, thingspeak_listener)
 
     return True
