@@ -20,5 +20,6 @@ else
 fi
 
 git checkout python3
+pip3 install --upgrade cython==0.24.1
 PYTHON_EXEC=`which python3` make build
 PYTHON_EXEC=`which python3` make install

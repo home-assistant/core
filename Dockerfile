@@ -20,7 +20,7 @@ RUN script/build_python_openzwave && \
 
 COPY requirements_all.txt requirements_all.txt
 RUN pip3 install --no-cache-dir -r requirements_all.txt && \
-    pip3 install --upgrade cython==0.24.1 mysqlclient psycopg2 uvloop
+    pip3 install mysqlclient psycopg2 uvloop
 
 # Copy source
 COPY . .
