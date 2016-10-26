@@ -11,7 +11,7 @@ from homeassistant.core import JobPriority
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['https://github.com/RPi-Distro/python-sense-hat'
-                '/archive/master.zip']
+                '/archive/master.zip#sense-hat==2.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
