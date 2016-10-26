@@ -23,7 +23,7 @@ PyMata==2.13
 # RPi.GPIO==0.6.1
 
 # homeassistant.components.media_player.sonos
-SoCo==0.11.1
+SoCo==0.12
 
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.2
@@ -70,6 +70,9 @@ cherrypy==8.1.2
 coinmarketcap==2.0.1
 
 # homeassistant.scripts.check_config
+colorama<=1
+
+# homeassistant.scripts.check_config
 colorlog>2.1,<3
 
 # homeassistant.components.alarm_control_panel.concord232
@@ -78,6 +81,9 @@ concord232==0.14
 
 # homeassistant.components.media_player.directv
 directpy==0.1
+
+# homeassistant.components.updater
+distro==1.0.0
 
 # homeassistant.components.notify.xmpp
 dnspython3==1.15.0
@@ -151,6 +157,9 @@ hikvision==0.4
 # homeassistant.components.light.flux_led
 https://github.com/Danielhiversen/flux_led/archive/0.7.zip#flux_led==0.8
 
+# homeassistant.components.switch.tplink
+https://github.com/GadgetReactor/pyHS100/archive/1f771b7d8090a91c6a58931532e42730b021cbde.zip#pyHS100==0.2.0
+
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.5.zip#pyW215==0.3.5
 
@@ -180,11 +189,11 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 # homeassistant.components.device_tracker.fritz
 # https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
 
-# homeassistant.components.switch.tplink
-https://github.com/gadgetreactor/pyHS100/archive/ef85f939fd5b07064a0f34dfa673fa7d6140bd95.zip#pyHS100==0.1.2
-
 # homeassistant.components.netatmo
 https://github.com/jabesq/netatmo-api-python/archive/v0.6.0.zip#lnetatmo==0.6.0
+
+# homeassistant.components.switch.neato
+https://github.com/jabesq/pybotvac/archive/v0.0.1.zip#pybotvac==0.0.1
 
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
@@ -218,7 +227,7 @@ https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e22462
 https://github.com/sander76/powerviewApi/archive/246e782d60d5c0addcc98d7899a0186f9d5640b0.zip#powerviewApi==0.3.15
 
 # homeassistant.components.mysensors
-https://github.com/theolind/pymysensors/archive/8ce98b7fb56f7921a808eb66845ce8b2c455c81e.zip#pymysensors==0.7.1
+https://github.com/theolind/pymysensors/archive/0b705119389be58332f17753c53167f551254b6c.zip#pymysensors==0.8
 
 # homeassistant.components.alarm_control_panel.simplisafe
 https://github.com/w1ll1am23/simplisafe-python/archive/586fede0e85fd69e56e516aaa8e97eb644ca8866.zip#simplisafe-python==0.0.1
@@ -257,6 +266,9 @@ lightify==1.0.3
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.2
 
+# homeassistant.components.notify.matrix
+matrix-client==0.0.5
+
 # homeassistant.components.notify.message_bird
 messagebird==1.2.0
 
@@ -268,7 +280,7 @@ mficlient==0.3.0
 miflora==0.1.9
 
 # homeassistant.components.discovery
-netdisco==0.7.1
+netdisco==0.7.2
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
@@ -291,7 +303,7 @@ pexpect==4.0.1
 phue==0.8
 
 # homeassistant.components.pilight
-pilight==0.0.2
+pilight==0.1.1
 
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
@@ -330,6 +342,7 @@ pyasn1-modules==0.0.8
 pyasn1==0.1.9
 
 # homeassistant.components.device_tracker.bbox
+# homeassistant.components.sensor.bbox
 pybbox==0.0.5-alpha
 
 # homeassistant.components.device_tracker.bluetooth_tracker
@@ -386,6 +399,9 @@ pysnmp==4.3.2
 # homeassistant.components.digital_ocean
 python-digitalocean==1.10.0
 
+# homeassistant.components.sensor.forecast
+python-forecastio==1.3.4
+
 # homeassistant.components.sensor.darksky
 python-forecastio==1.3.5
 
@@ -436,7 +452,7 @@ radiotherm==1.2
 # rpi-rf==0.9.5
 
 # homeassistant.components.media_player.yamaha
-rxv==0.1.11
+rxv==0.2.0
 
 # homeassistant.components.media_player.samsungtv
 samsungctl==0.5.1
@@ -543,6 +559,3 @@ yahooweather==0.8
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.6
-
-# homeassistant.components.sensor.sensehat
-https://github.com/RPi-Distro/python-sense-hat/archive/master.zip

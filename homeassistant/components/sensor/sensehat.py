@@ -10,6 +10,9 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import JobPriority
 from homeassistant.helpers.entity import Entity
 
+REQUIREMENTS = ['https://github.com/RPi-Distro/python-sense-hat'
+                '/archive/master.zip']
+
 _LOGGER = logging.getLogger(__name__)
 
 
