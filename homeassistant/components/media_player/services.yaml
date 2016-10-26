@@ -185,3 +185,22 @@ sonos_restore:
     entity_id:
       description: Name(s) of entites that will be restored. Platform dependent.
       example: 'media_player.living_room_sonos'
+
+sonos_set_sleep_timer:
+  description: Set a Sonos timer
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will have a timer set.
+      example: 'media_player.living_room_sonos'
+    sleep_time:
+      description: Number of seconds to set the timer
+      example: '900'
+
+sonos_clear_sleep_timer:
+  description: Clear a Sonos timer
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will have the timer cleared.
+      example: 'media_player.living_room_sonos'
