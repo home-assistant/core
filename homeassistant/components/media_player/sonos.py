@@ -268,7 +268,6 @@ class _AsyncProcessSonosEventQueue():
 
     def put(self, item, block=True, timeout=None):
         """Queue up event for processing."""
-
         # Instead of putting events on a queue, dispatch them to the event
         # processing coroutine.
         run_coroutine_threadsafe(
