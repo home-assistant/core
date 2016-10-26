@@ -684,8 +684,10 @@ class MediaPlayerDevice(Entity):
 
 @functools.lru_cache(maxsize=16)
 def _fetch_image(url):
-    """Helper method to fetch image. Up to 16 images are cached in memory (the
-    images are typically 10-100kB in size).
+    """Helper method to fetch image.
+
+    Up to 16 images are cached in memory (the images are typically 10-100kB in
+    size).
     """
     try:
         response = requests.get(url)

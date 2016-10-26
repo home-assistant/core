@@ -41,8 +41,8 @@ def _patch_soco():
 
         # pylint: disable=unused-variable
         class DidlSonosFavorite(DidlPlaylistContainer):
-
             """Class that represents a Sonos favorite play list."""
+
             item_class = 'object.container.playlistContainer.sonos-favorite'
 
         _SOCO_PATCHED = True
@@ -262,12 +262,15 @@ def _parse_timespan(timespan):
 # pylint: disable=too-few-public-methods
 class _AsyncProcessSonosEventQueue():
     """Queue like object for dispatching sonos events."""
+
     def __init__(self, sonos_device):
         self._sonos_device = sonos_device
 
     def put(self, item, block=True, timeout=None):
-        """Instead of putting items on a queue, dispatch them to the event
-        processing coroutine."""
+        """Queue up event for processing."""
+
+        # Instead of putting events on a queue, dispatch them to the event
+        # processing coroutine.
         run_coroutine_threadsafe(
             self._sonos_device.async_process_sonos_event(item),
             self._sonos_device.hass.loop).result()
