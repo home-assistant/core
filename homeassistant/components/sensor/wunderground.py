@@ -25,8 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ATTRIBUTION = "Data provided by the WUnderground weather service"
 CONF_PWS_ID = 'pws_id'
 
-MIN_TIME_BETWEEN_UPDATES_ALERTS = timedelta(seconds=900)
-MIN_TIME_BETWEEN_UPDATES_OBSERVATION = timedelta(seconds=300)
+MIN_TIME_BETWEEN_UPDATES_ALERTS = timedelta(minutes=15)
+MIN_TIME_BETWEEN_UPDATES_OBSERVATION = timedelta(minutes=5)
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
