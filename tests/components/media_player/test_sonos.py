@@ -38,6 +38,10 @@ class SoCoMock():
         self.is_visible = True
         self.avTransport = AvTransportMock()
 
+    def clear_sleep_timer(self):
+        """Clear the sleep timer."""
+        return
+
     def get_speaker_info(self):
         """Return a dict with various data points about the speaker."""
         return {'serial_number': 'B8-E9-37-BO-OC-BA:2',
@@ -72,6 +76,10 @@ class SoCoMock():
 
     def partymode(self):
         """Cause the speaker to join all other speakers in the network."""
+        return
+
+    def set_sleep_timer(self, sleep_time_seconds):
+        """Set the sleep timer."""
         return
 
     def unjoin(self):
@@ -153,6 +161,24 @@ class TestSonosMediaPlayer(unittest.TestCase):
         device.unjoin()
         self.assertEqual(unjoinMock.call_count, 1)
         self.assertEqual(unjoinMock.call_args, mock.call())
+
+    @mock.patch('soco.SoCo', new=SoCoMock)
+    @mock.patch.object(SoCoMock, 'set_sleep_timer')
+    def test_sonos_set_sleep_timer(self, set_sleep_timerMock):
+        """Ensuring soco methods called for sonos_set_sleep_timer service."""
+        sonos.setup_platform(self.hass, {}, mock.MagicMock(), '192.0.2.1')
+        device = sonos.DEVICES[-1]
+        device.set_sleep_timer(30)
+        set_sleep_timerMock.assert_called_once_with(30)
+
+    @mock.patch('soco.SoCo', new=SoCoMock)
+    @mock.patch.object(SoCoMock, 'set_sleep_timer')
+    def test_sonos_clear_sleep_timer(self, set_sleep_timerMock):
+        """Ensuring soco methods called for sonos_clear_sleep_timer service."""
+        sonos.setup_platform(self.hass, {}, mock.MagicMock(), '192.0.2.1')
+        device = sonos.DEVICES[-1]
+        device.set_sleep_timer(None)
+        set_sleep_timerMock.assert_called_once_with(None)
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch.object(soco.snapshot.Snapshot, 'snapshot')
