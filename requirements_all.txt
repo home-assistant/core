@@ -230,6 +230,7 @@ https://github.com/web-push-libs/pywebpush/archive/e743dc92558fc62178d255c001892
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
 # homeassistant.components.influxdb
+# homeassistant.components.sensor.influxdb
 influxdb==3.0.0
 
 # homeassistant.components.insteon_hub
