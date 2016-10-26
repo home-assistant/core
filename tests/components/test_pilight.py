@@ -3,9 +3,12 @@ import logging
 import unittest
 from unittest.mock import patch
 import socket
+from datetime import timedelta
 
+from homeassistant import core as ha
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import pilight
+from homeassistant.util import dt as dt_util
 
 from tests.common import get_test_home_assistant, assert_setup_component
 
@@ -149,6 +152,42 @@ class TestPilight(unittest.TestCase):
                 self.hass.block_till_done()
                 error_log_call = mock_pilight_error.call_args_list[-1]
                 self.assertTrue('Pilight send failed' in str(error_log_call))
+
+    @patch('pilight.pilight.Client', PilightDaemonSim)
+    @patch('tests.components.test_pilight._LOGGER.error')
+    def test_send_code_delay(self, mock_pilight_error):
+        """Try to send proper data with delay afterwards."""
+        with assert_setup_component(4):
+            self.assertTrue(setup_component(
+                self.hass, pilight.DOMAIN,
+                {pilight.DOMAIN: {pilight.CONF_SEND_DELAY: 5.0}}))
+
+            # Call with protocol info, should not give error
+            service_data1 = {'protocol': 'test11',
+                             'value': 42}
+            service_data2 = {'protocol': 'test22',
+                             'value': 42}
+            self.hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
+                                    service_data=service_data1,
+                                    blocking=True)
+            self.hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
+                                    service_data=service_data2,
+                                    blocking=True)
+            service_data1['protocol'] = [service_data1['protocol']]
+            service_data2['protocol'] = [service_data2['protocol']]
+
+            self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
+                               {ha.ATTR_NOW: dt_util.utcnow()})
+            self.hass.block_till_done()
+            error_log_call = mock_pilight_error.call_args_list[-1]
+            self.assertTrue(str(service_data1) in str(error_log_call))
+
+            new_time = dt_util.utcnow() + timedelta(seconds=5)
+            self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
+                               {ha.ATTR_NOW: new_time})
+            self.hass.block_till_done()
+            error_log_call = mock_pilight_error.call_args_list[-1]
+            self.assertTrue(str(service_data2) in str(error_log_call))
 
     @patch('pilight.pilight.Client', PilightDaemonSim)
     @patch('tests.components.test_pilight._LOGGER.error')
