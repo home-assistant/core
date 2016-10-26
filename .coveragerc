@@ -172,6 +172,7 @@ omit =
     homeassistant/components/light/limitlessled.py
     homeassistant/components/light/osramlightify.py
     homeassistant/components/light/x10.py
+    homeassistant/components/light/yeelight.py
     homeassistant/components/lirc.py
     homeassistant/components/media_player/braviatv.py
     homeassistant/components/media_player/cast.py
