@@ -52,11 +52,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Demo covers."""
     covers = []
-
-    _LOGGER.debug(config)
     covers_conf = config.get(CONF_COVERS)
 
-    _LOGGER.debug(covers_conf)
     for cover in covers_conf:
         args = {
             "name": cover.get(CONF_NAME),
@@ -133,16 +130,8 @@ class GaradgetCover(CoverDevice):
         return True
 
     @property
-    def state(self):
-        """Return the state of the cover."""
-        closed = self.is_closed
-        if closed is None:
-            return STATE_UNKNOWN
-        return self._state
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes."""
+    def device_state_attributes(self):
+        """Return the device state attributes."""
         data = {}
 
         if self.signal is not None:
