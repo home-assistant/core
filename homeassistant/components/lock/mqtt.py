@@ -13,7 +13,6 @@ from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE)
-from homeassistant.helpers import template
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 
@@ -42,6 +41,9 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MQTT lock."""
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+    if value_template is not None:
+        value_template.hass = hass
     add_devices([MqttLock(
         hass,
         config.get(CONF_NAME),
@@ -52,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_LOCK),
         config.get(CONF_PAYLOAD_UNLOCK),
         config.get(CONF_OPTIMISTIC),
-        config.get(CONF_VALUE_TEMPLATE)
+        value_template,
     )])
 
 
@@ -77,8 +79,8 @@ class MqttLock(LockDevice):
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
             if value_template is not None:
-                payload = template.render_with_possible_json_value(
-                    hass, value_template, payload)
+                payload = value_template.render_with_possible_json_value(
+                    payload)
             if payload == self._payload_lock:
                 self._state = True
                 self.update_ha_state()

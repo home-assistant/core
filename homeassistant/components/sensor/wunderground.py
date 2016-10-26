@@ -11,22 +11,25 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    STATE_UNKNOWN)
+    STATE_UNKNOWN, ATTR_ATTRIBUTION)
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 _RESOURCE = 'http://api.wunderground.com/api/{}/conditions/q/'
+_ALERTS = 'http://api.wunderground.com/api/{}/alerts/q/'
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ATTRIBUTION = "Data provided by the WUnderground weather service"
 CONF_PWS_ID = 'pws_id'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
+    'alerts': ['Alerts', None],
     'weather': ['Weather Summary', None],
     'station_id': ['Station ID', None],
     'feelslike_c': ['Feels Like (°C)', TEMP_CELSIUS],
@@ -55,6 +58,14 @@ SENSOR_TYPES = {
     'precip_today_string': ['Precipitation today', None],
     'solarradiation': ['Solar Radiation', None]
 }
+
+# Alert Attributes
+ALERTS_ATTRS = [
+    'date',
+    'description',
+    'expires',
+    'message',
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -105,8 +116,31 @@ class WUndergroundSensor(Entity):
                 return int(self.rest.data[self._condition][:-1])
             else:
                 return self.rest.data[self._condition]
-        else:
-            return STATE_UNKNOWN
+
+        if self.rest.alerts and self._condition == 'alerts':
+            return len(self.rest.alerts)
+        return STATE_UNKNOWN
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attrs = {}
+
+        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+
+        if not self.rest.alerts or self._condition != 'alerts':
+            return attrs
+
+        multiple_alerts = len(self.rest.alerts) > 1
+        for data in self.rest.alerts:
+            for alert in ALERTS_ATTRS:
+                if data[alert]:
+                    if multiple_alerts:
+                        dkey = alert.capitalize() + '_' + data['type']
+                    else:
+                        dkey = alert.capitalize()
+                    attrs[dkey] = data[alert]
+        return attrs
 
     @property
     def entity_picture(self):
@@ -121,11 +155,13 @@ class WUndergroundSensor(Entity):
 
     def update(self):
         """Update current conditions."""
-        self.rest.update()
+        if self._condition == 'alerts':
+            self.rest.update_alerts()
+        else:
+            self.rest.update()
+
 
 # pylint: disable=too-few-public-methods
-
-
 class WUndergroundData(object):
     """Get data from WUnderground."""
 
@@ -137,9 +173,10 @@ class WUndergroundData(object):
         self._latitude = hass.config.latitude
         self._longitude = hass.config.longitude
         self.data = None
+        self.alerts = None
 
-    def _build_url(self):
-        url = _RESOURCE.format(self._api_key)
+    def _build_url(self, baseurl=_RESOURCE):
+        url = baseurl.format(self._api_key)
         if self._pws_id:
             url = url + 'pws:{}'.format(self._pws_id)
         else:
@@ -160,4 +197,19 @@ class WUndergroundData(object):
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
             self.data = None
+            raise
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update_alerts(self):
+        """Get the latest alerts data from WUnderground."""
+        try:
+            result = requests.get(self._build_url(_ALERTS), timeout=10).json()
+            if "error" in result['response']:
+                raise ValueError(result['response']["error"]
+                                 ["description"])
+            else:
+                self.alerts = result["alerts"]
+        except ValueError as err:
+            _LOGGER.error("Check WUnderground API %s", err.args)
+            self.alerts = None
             raise

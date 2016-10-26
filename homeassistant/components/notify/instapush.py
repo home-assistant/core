@@ -15,10 +15,14 @@ from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 
+_LOGGER = logging.getLogger(__name__)
+_RESOURCE = 'https://api.instapush.im/v1/'
 
 CONF_APP_SECRET = 'app_secret'
 CONF_EVENT = 'event'
 CONF_TRACKER = 'tracker'
+
+DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -28,18 +32,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-_LOGGER = logging.getLogger(__name__)
-_RESOURCE = 'https://api.instapush.im/v1/'
-
-
 def get_service(hass, config):
-    """Get the instapush notification service."""
+    """Get the Instapush notification service."""
     headers = {'x-instapush-appid': config[CONF_API_KEY],
                'x-instapush-appsecret': config[CONF_APP_SECRET]}
 
     try:
-        response = requests.get(_RESOURCE + 'events/list',
-                                headers=headers).json()
+        response = requests.get(
+            '{}{}'.format(_RESOURCE, 'events/list'), headers=headers,
+            timeout=DEFAULT_TIMEOUT).json()
     except ValueError:
         _LOGGER.error('Unexpected answer from Instapush API.')
         return None
@@ -50,19 +51,18 @@ def get_service(hass, config):
 
     if len([app for app in response
             if app['title'] == config[CONF_EVENT]]) == 0:
-        _LOGGER.error(
-            "No app match your given value. "
-            "Please create an app at https://instapush.im")
+        _LOGGER.error("No app match your given value. "
+                      "Please create an app at https://instapush.im")
         return None
 
     return InstapushNotificationService(
-        config[CONF_API_KEY], config[CONF_APP_SECRET], config[CONF_EVENT],
-        config[CONF_TRACKER])
+        config.get(CONF_API_KEY), config.get(CONF_APP_SECRET),
+        config.get(CONF_EVENT), config.get(CONF_TRACKER))
 
 
 # pylint: disable=too-few-public-methods
 class InstapushNotificationService(BaseNotificationService):
-    """Implement the notification service for Instapush."""
+    """Implementation of the notification service for Instapush."""
 
     def __init__(self, api_key, app_secret, event, tracker):
         """Initialize the service."""
@@ -78,13 +78,15 @@ class InstapushNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data = {"event": self._event,
-                "trackers": {self._tracker: title + " : " + message}}
+        data = {
+            'event': self._event,
+            'trackers': {self._tracker: title + ' : ' + message}
+        }
 
-        response = requests.post(_RESOURCE + 'post', data=json.dumps(data),
-                                 headers=self._headers)
+        response = requests.post(
+            '{}{}'.format(_RESOURCE, 'post'), data=json.dumps(data),
+            headers=self._headers, timeout=DEFAULT_TIMEOUT)
 
         if response.json()['status'] == 401:
-            _LOGGER.error(
-                response.json()['msg'],
-                "Please check your details at https://instapush.im/")
+            _LOGGER.error(response.json()['msg'],
+                          "Please check your Instapush settings")

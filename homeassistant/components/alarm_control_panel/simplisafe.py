@@ -26,7 +26,7 @@ DEFAULT_NAME = 'SimpliSafe'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_CODE): cv.positive_int,
+    vol.Optional(CONF_CODE): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 

@@ -13,7 +13,7 @@ from homeassistant.const import (
 from homeassistant.const import CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['PyMata==2.12']
+REQUIREMENTS = ['PyMata==2.13']
 
 _LOGGER = logging.getLogger(__name__)
 

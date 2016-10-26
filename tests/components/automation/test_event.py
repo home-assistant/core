@@ -41,14 +41,14 @@ class TestAutomationEvent(unittest.TestCase):
         })
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
         automation.turn_off(self.hass)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_event_with_data(self):
@@ -68,7 +68,7 @@ class TestAutomationEvent(unittest.TestCase):
 
         self.hass.bus.fire('test_event', {'some_attr': 'some_value',
                                           'another': 'value'})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_not_fires_if_event_data_not_matches(self):
@@ -87,5 +87,5 @@ class TestAutomationEvent(unittest.TestCase):
         })
 
         self.hass.bus.fire('test_event', {'some_attr': 'some_other_value'})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))

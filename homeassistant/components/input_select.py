@@ -8,19 +8,17 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.util import slugify
+
 
 DOMAIN = 'input_select'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NAME = 'name'
 CONF_INITIAL = 'initial'
-CONF_ICON = 'icon'
 CONF_OPTIONS = 'options'
 
 ATTR_OPTION = 'option'
@@ -33,57 +31,79 @@ SERVICE_SELECT_OPTION_SCHEMA = vol.Schema({
     vol.Required(ATTR_OPTION): cv.string,
 })
 
+SERVICE_SELECT_NEXT = 'select_next'
+
+SERVICE_SELECT_NEXT_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+SERVICE_SELECT_PREVIOUS = 'select_previous'
+
+SERVICE_SELECT_PREVIOUS_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+
+def _cv_input_select(cfg):
+    """Config validation helper for input select (Voluptuous)."""
+    options = cfg[CONF_OPTIONS]
+    state = cfg.get(CONF_INITIAL, options[0])
+    if state not in options:
+        raise vol.Invalid('initial state "{}" is not part of the options: {}'
+                          .format(state, ','.join(options)))
+    return cfg
+
+
+CONFIG_SCHEMA = vol.Schema({DOMAIN: {
+    cv.slug: vol.All({
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1),
+                                            [cv.string]),
+        vol.Optional(CONF_INITIAL): cv.string,
+        vol.Optional(CONF_ICON): cv.icon,
+    }, _cv_input_select)}}, required=True, extra=vol.ALLOW_EXTRA)
+
 
 def select_option(hass, entity_id, option):
-    """Set input_select to False."""
+    """Set value of input_select."""
     hass.services.call(DOMAIN, SERVICE_SELECT_OPTION, {
         ATTR_ENTITY_ID: entity_id,
         ATTR_OPTION: option,
     })
 
 
+def select_next(hass, entity_id):
+    """Set next value of input_select."""
+    hass.services.call(DOMAIN, SERVICE_SELECT_NEXT, {
+        ATTR_ENTITY_ID: entity_id,
+    })
+
+
+def select_previous(hass, entity_id):
+    """Set previous value of input_select."""
+    hass.services.call(DOMAIN, SERVICE_SELECT_PREVIOUS, {
+        ATTR_ENTITY_ID: entity_id,
+    })
+
+
 def setup(hass, config):
     """Setup input select."""
-    if not isinstance(config.get(DOMAIN), dict):
-        _LOGGER.error('Expected %s config to be a dictionary', DOMAIN)
-        return False
-
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
-        if object_id != slugify(object_id):
-            _LOGGER.warning("Found invalid key for boolean input: %s. "
-                            "Use %s instead", object_id, slugify(object_id))
-            continue
-        if not cfg:
-            _LOGGER.warning("No configuration specified for %s", object_id)
-            continue
-
         name = cfg.get(CONF_NAME)
         options = cfg.get(CONF_OPTIONS)
-
-        if not isinstance(options, list) or len(options) == 0:
-            _LOGGER.warning('Key %s should be a list of options', CONF_OPTIONS)
-            continue
-
-        options = [str(val) for val in options]
-
-        state = cfg.get(CONF_INITIAL)
-
-        if state not in options:
-            state = options[0]
-
+        state = cfg.get(CONF_INITIAL, options[0])
         icon = cfg.get(CONF_ICON)
-
         entities.append(InputSelect(object_id, name, state, options, icon))
 
     if not entities:
         return False
 
     def select_option_service(call):
-        """Handle a calls to the input select services."""
+        """Handle a calls to the input select option service."""
         target_inputs = component.extract_from_service(call)
 
         for input_select in target_inputs:
@@ -92,6 +112,28 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_SELECT_OPTION,
                            select_option_service,
                            schema=SERVICE_SELECT_OPTION_SCHEMA)
+
+    def select_next_service(call):
+        """Handle a calls to the input select next service."""
+        target_inputs = component.extract_from_service(call)
+
+        for input_select in target_inputs:
+            input_select.offset_index(1)
+
+    hass.services.register(DOMAIN, SERVICE_SELECT_NEXT,
+                           select_next_service,
+                           schema=SERVICE_SELECT_NEXT_SCHEMA)
+
+    def select_previous_service(call):
+        """Handle a calls to the input select previous service."""
+        target_inputs = component.extract_from_service(call)
+
+        for input_select in target_inputs:
+            input_select.offset_index(-1)
+
+    hass.services.register(DOMAIN, SERVICE_SELECT_PREVIOUS,
+                           select_previous_service,
+                           schema=SERVICE_SELECT_PREVIOUS_SCHEMA)
 
     component.add_entities(entities)
 
@@ -144,4 +186,11 @@ class InputSelect(Entity):
                             option, ', '.join(self._options))
             return
         self._current_option = option
+        self.update_ha_state()
+
+    def offset_index(self, offset):
+        """Offset current index."""
+        current_index = self._options.index(self._current_option)
+        new_index = (current_index + offset) % len(self._options)
+        self._current_option = self._options[new_index]
         self.update_ha_state()

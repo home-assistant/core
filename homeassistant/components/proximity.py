@@ -9,106 +9,92 @@ https://home-assistant.io/components/proximity/
 """
 import logging
 
+import voluptuous as vol
+
+from homeassistant.const import (
+    CONF_ZONE, CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
-from homeassistant.util.location import distance
 from homeassistant.util.distance import convert
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
-
-DEPENDENCIES = ['zone', 'device_tracker']
-
-DOMAIN = 'proximity'
-
-NOT_SET = 'not set'
-
-# Default tolerance
-DEFAULT_TOLERANCE = 1
-
-# Default zone
-DEFAULT_PROXIMITY_ZONE = 'home'
-
-# Default distance to zone
-DEFAULT_DIST_TO_ZONE = NOT_SET
-
-# Default direction of travel
-DEFAULT_DIR_OF_TRAVEL = NOT_SET
-
-# Default nearest device
-DEFAULT_NEAREST = NOT_SET
-
-# Entity attributes
-ATTR_DIST_FROM = 'dist_to_zone'
-ATTR_DIR_OF_TRAVEL = 'dir_of_travel'
-ATTR_NEAREST = 'nearest'
+from homeassistant.util.location import distance
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_DIR_OF_TRAVEL = 'dir_of_travel'
+ATTR_DIST_FROM = 'dist_to_zone'
+ATTR_NEAREST = 'nearest'
 
-def setup_proximity_component(hass, config):
+CONF_IGNORED_ZONES = 'ignored_zones'
+CONF_TOLERANCE = 'tolerance'
+
+DEFAULT_DIR_OF_TRAVEL = 'not set'
+DEFAULT_DIST_TO_ZONE = 'not set'
+DEFAULT_NEAREST = 'not set'
+DEFAULT_PROXIMITY_ZONE = 'home'
+DEFAULT_TOLERANCE = 1
+DEPENDENCIES = ['zone', 'device_tracker']
+DOMAIN = 'proximity'
+
+UNITS = ['km', 'm', 'mi', 'ft']
+
+ZONE_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ZONE, default=DEFAULT_PROXIMITY_ZONE): cv.string,
+    vol.Optional(CONF_DEVICES, default=[]):
+        vol.All(cv.ensure_list, [cv.entity_id]),
+    vol.Optional(CONF_IGNORED_ZONES, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE): cv.positive_int,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(cv.string, vol.In(UNITS)),
+})
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        cv.slug: ZONE_SCHEMA,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+
+def setup_proximity_component(hass, name, config):
     """Set up individual proximity component."""
-    # Get the devices from configuration.yaml.
-    if 'devices' not in config:
-        _LOGGER.error('devices not found in config')
-        return False
-
-    ignored_zones = []
-    if 'ignored_zones' in config:
-        for variable in config['ignored_zones']:
-            ignored_zones.append(variable)
-
-    proximity_devices = []
-    for variable in config['devices']:
-        proximity_devices.append(variable)
-
-    # Get the direction of travel tolerance from configuration.yaml.
-    tolerance = config.get('tolerance', DEFAULT_TOLERANCE)
-
-    # Get the zone to monitor proximity to from configuration.yaml.
-    proximity_zone = config.get('zone', DEFAULT_PROXIMITY_ZONE)
-
-    # Get the unit of measurement from configuration.yaml.
-    unit_of_measure = config.get(ATTR_UNIT_OF_MEASUREMENT,
-                                 hass.config.units.length_unit)
-
+    ignored_zones = config.get(CONF_IGNORED_ZONES)
+    proximity_devices = config.get(CONF_DEVICES)
+    tolerance = config.get(CONF_TOLERANCE)
+    proximity_zone = name
+    unit_of_measurement = config.get(
+        CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit)
     zone_id = 'zone.{}'.format(proximity_zone)
-    state = hass.states.get(zone_id)
-    zone_friendly_name = (state.name).lower()
 
-    proximity = Proximity(hass, zone_friendly_name, DEFAULT_DIST_TO_ZONE,
+    proximity = Proximity(hass, proximity_zone, DEFAULT_DIST_TO_ZONE,
                           DEFAULT_DIR_OF_TRAVEL, DEFAULT_NEAREST,
                           ignored_zones, proximity_devices, tolerance,
-                          zone_id, unit_of_measure)
+                          zone_id, unit_of_measurement)
     proximity.entity_id = '{}.{}'.format(DOMAIN, proximity_zone)
 
     proximity.update_ha_state()
 
-    # Main command to monitor proximity of devices.
-    track_state_change(hass, proximity_devices,
-                       proximity.check_proximity_state_change)
+    track_state_change(
+        hass, proximity_devices, proximity.check_proximity_state_change)
 
     return True
 
 
 def setup(hass, config):
     """Get the zones and offsets from configuration.yaml."""
-    result = True
-    if isinstance(config[DOMAIN], list):
-        for proximity_config in config[DOMAIN]:
-            if not setup_proximity_component(hass, proximity_config):
-                result = False
-    elif not setup_proximity_component(hass, config[DOMAIN]):
-        result = False
+    for zone, proximity_config in config[DOMAIN].items():
+        setup_proximity_component(hass, zone, proximity_config)
 
-    return result
+    return True
 
 
-class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes
+class Proximity(Entity):
     """Representation of a Proximity."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, zone_friendly_name, dist_to, dir_of_travel,
                  nearest, ignored_zones, proximity_devices, tolerance,
-                 proximity_zone, unit_of_measure):
+                 proximity_zone, unit_of_measurement):
         """Initialize the proximity."""
         self.hass = hass
         self.friendly_name = zone_friendly_name
@@ -119,7 +105,7 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
         self.proximity_devices = proximity_devices
         self.tolerance = tolerance
         self.proximity_zone = proximity_zone
-        self.unit_of_measure = unit_of_measure
+        self._unit_of_measurement = unit_of_measurement
 
     @property
     def name(self):
@@ -134,7 +120,7 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return self.unit_of_measure
+        return self._unit_of_measurement
 
     @property
     def state_attributes(self):
@@ -209,7 +195,7 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
 
             # Add the device and distance to a dictionary.
             distances_to_zone[device] = round(
-                convert(dist_to_zone, 'm', self.unit_of_measure), 1)
+                convert(dist_to_zone, 'm', self.unit_of_measurement), 1)
 
         # Loop through each of the distances collected and work out the
         # closest.

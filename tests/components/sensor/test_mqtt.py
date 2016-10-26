@@ -33,7 +33,7 @@ class TestSensorMQTT(unittest.TestCase):
         })
 
         fire_mqtt_message(self.hass, 'test-topic', '100')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('sensor.test')
 
         self.assertEqual('100', state.state)
@@ -54,7 +54,7 @@ class TestSensorMQTT(unittest.TestCase):
         })
 
         fire_mqtt_message(self.hass, 'test-topic', '{ "val": "100" }')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get('sensor.test')
 
         self.assertEqual('100', state.state)

@@ -50,6 +50,7 @@ def media_prev_track(hass):
 
 def setup(hass, config):
     """Listen for keyboard events."""
+    # pylint: disable=import-error
     import pykeyboard
 
     keyboard = pykeyboard.PyKeyboard()

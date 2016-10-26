@@ -4,18 +4,19 @@ Allows the creation of a sensor that breaks out state_attributes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.template/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
-    ATTR_ENTITY_ID, MATCH_ALL, CONF_SENSORS)
+    ATTR_ENTITY_ID, CONF_SENSORS)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
-from homeassistant.helpers.entity import Entity, generate_entity_id
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(ATTR_ENTITY_ID, default=MATCH_ALL): cv.entity_ids
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -32,16 +33,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+@asyncio.coroutine
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the template sensors."""
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
         state_template = device_config[CONF_VALUE_TEMPLATE]
-        entity_ids = device_config[ATTR_ENTITY_ID]
+        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
+                      state_template.extract_entities())
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        state_template.hass = hass
 
         sensors.append(
             SensorTemplate(
@@ -55,7 +60,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not sensors:
         _LOGGER.error("No sensors added")
         return False
-    add_devices(sensors)
+
+    hass.loop.create_task(async_add_devices(sensors))
     return True
 
 
@@ -67,20 +73,23 @@ class SensorTemplate(Entity):
                  state_template, entity_ids):
         """Initialize the sensor."""
         self.hass = hass
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id,
-                                            hass=hass)
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id,
+                                                  hass=hass)
         self._name = friendly_name
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
         self._state = None
 
-        self.update()
+        # update state
+        self._async_render()
 
+        @callback
         def template_sensor_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
-            self.update_ha_state(True)
+            hass.loop.create_task(self.async_update_ha_state(True))
 
-        track_state_change(hass, entity_ids, template_sensor_state_listener)
+        async_track_state_change(
+            hass, entity_ids, template_sensor_state_listener)
 
     @property
     def name(self):
@@ -102,10 +111,15 @@ class SensorTemplate(Entity):
         """No polling needed."""
         return False
 
-    def update(self):
-        """Get the latest data and update the states."""
+    @asyncio.coroutine
+    def async_update(self):
+        """Update the state from the template."""
+        self._async_render()
+
+    def _async_render(self):
+        """Render the state from the template."""
         try:
-            self._state = template.render(self.hass, self._template)
+            self._state = self._template.async_render()
         except TemplateError as ex:
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):

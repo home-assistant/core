@@ -46,10 +46,20 @@ class TestConfigurator(unittest.TestCase):
             configurator.ATTR_DESCRIPTION_IMAGE: "config image url",
             configurator.ATTR_SUBMIT_CAPTION: "config submit caption",
             configurator.ATTR_FIELDS: [],
+            configurator.ATTR_LINK_NAME: "link name",
+            configurator.ATTR_LINK_URL: "link url",
+            configurator.ATTR_ENTITY_PICTURE: "config entity picture",
             configurator.ATTR_CONFIGURE_ID: configurator.request_config(
-                self.hass, "Test Request", lambda _: None,
-                "config description", "config image url",
-                "config submit caption"
+                self.hass,
+                name="Test Request",
+                callback=lambda _: None,
+                description="config description",
+                description_image="config image url",
+                submit_caption="config submit caption",
+                fields=None,
+                link_name="link name",
+                link_url="link url",
+                entity_picture="config entity picture",
             )
         }
 
@@ -70,7 +80,7 @@ class TestConfigurator(unittest.TestCase):
             configurator.DOMAIN, configurator.SERVICE_CONFIGURE,
             {configurator.ATTR_CONFIGURE_ID: request_id})
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(calls), "Callback not called")
 
     def test_state_change_on_notify_errors(self):
@@ -95,7 +105,7 @@ class TestConfigurator(unittest.TestCase):
         self.assertEqual(1, len(self.hass.states.all()))
 
         self.hass.bus.fire(EVENT_TIME_CHANGED)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(self.hass.states.all()))
 
     def test_request_done_fail_silently_on_bad_request_id(self):

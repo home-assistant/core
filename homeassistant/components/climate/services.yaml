@@ -34,6 +34,18 @@ set_temperature:
       description: New target temperature for hvac
       example: 25
 
+    target_temp_high:
+      description: New target high tempereature for hvac
+      example: 26
+ 
+    target_temp_low:
+      description: New target low temperature for hvac
+      example: 20
+
+    operation_mode:
+      description: Operation mode to set temperature to. This defaults to current_operation mode if not set, or set incorrectly.
+      example: 'Heat'
+
 set_humidity:
   description: Set target humidity of climate device
 

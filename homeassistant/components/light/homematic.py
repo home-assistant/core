@@ -17,7 +17,7 @@ DEPENDENCIES = ['homematic']
 SUPPORT_HOMEMATIC = SUPPORT_BRIGHTNESS
 
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Homematic light platform."""
     if discovery_info is None:
         return
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     return homematic.setup_hmdevice_discovery_helper(
         HMLight,
         discovery_info,
-        add_callback_devices
+        add_devices
     )
 
 

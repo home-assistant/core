@@ -7,64 +7,69 @@ https://github.com/andrewshilliday/garage-door-controller
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.rpi_gpio/
 """
-
 import logging
 from time import sleep
+
 import voluptuous as vol
 
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
 import homeassistant.components.rpi_gpio as rpi_gpio
 import homeassistant.helpers.config_validation as cv
 
-RELAY_TIME = 'relay_time'
-STATE_PULL_MODE = 'state_pull_mode'
-DEFAULT_PULL_MODE = 'UP'
-DEFAULT_RELAY_TIME = .2
-DEPENDENCIES = ['rpi_gpio']
-
 _LOGGER = logging.getLogger(__name__)
+
+CONF_COVERS = 'covers'
+CONF_RELAY_PIN = 'relay_pin'
+CONF_RELAY_TIME = 'relay_time'
+CONF_STATE_PIN = 'state_pin'
+CONF_STATE_PULL_MODE = 'state_pull_mode'
+
+DEFAULT_RELAY_TIME = .2
+DEFAULT_STATE_PULL_MODE = 'UP'
+DEPENDENCIES = ['rpi_gpio']
 
 _COVERS_SCHEMA = vol.All(
     cv.ensure_list,
     [
         vol.Schema({
-            'name': str,
-            'relay_pin': int,
-            'state_pin': int,
+            CONF_NAME: cv.string,
+            CONF_RELAY_PIN: cv.positive_int,
+            CONF_STATE_PIN: cv.positive_int,
         })
     ]
 )
-PLATFORM_SCHEMA = vol.Schema({
-    'platform': str,
-    vol.Required('covers'): _COVERS_SCHEMA,
-    vol.Optional(STATE_PULL_MODE, default=DEFAULT_PULL_MODE): cv.string,
-    vol.Optional(RELAY_TIME, default=DEFAULT_RELAY_TIME): vol.Coerce(int),
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_COVERS): _COVERS_SCHEMA,
+    vol.Optional(CONF_STATE_PULL_MODE, default=DEFAULT_STATE_PULL_MODE):
+        cv.string,
+    vol.Optional(CONF_RELAY_TIME, default=DEFAULT_RELAY_TIME): cv.positive_int,
 })
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the cover platform."""
-    relay_time = config.get(RELAY_TIME)
-    state_pull_mode = config.get(STATE_PULL_MODE)
+    """Setup the RPi cover platform."""
+    relay_time = config.get(CONF_RELAY_TIME)
+    state_pull_mode = config.get(CONF_STATE_PULL_MODE)
     covers = []
-    covers_conf = config.get('covers')
+    covers_conf = config.get(CONF_COVERS)
 
     for cover in covers_conf:
-        covers.append(RPiGPIOCover(cover['name'], cover['relay_pin'],
-                                   cover['state_pin'],
-                                   state_pull_mode,
-                                   relay_time))
+        covers.append(RPiGPIOCover(
+            cover[CONF_NAME], cover[CONF_RELAY_PIN], cover[CONF_STATE_PIN],
+            state_pull_mode, relay_time))
     add_devices(covers)
 
 
 # pylint: disable=abstract-method
 class RPiGPIOCover(CoverDevice):
-    """Representation of a Raspberry cover."""
+    """Representation of a Raspberry GPIO cover."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, name, relay_pin, state_pin,
-                 state_pull_mode, relay_time):
+    def __init__(self, name, relay_pin, state_pin, state_pull_mode,
+                 relay_time):
         """Initialize the cover."""
         self._name = name
         self._state = False
@@ -79,7 +84,7 @@ class RPiGPIOCover(CoverDevice):
     @property
     def unique_id(self):
         """Return the ID of this cover."""
-        return "{}.{}".format(self.__class__, self._name)
+        return '{}.{}'.format(self.__class__, self._name)
 
     @property
     def name(self):

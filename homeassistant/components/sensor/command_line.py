@@ -14,7 +14,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers import template
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -39,7 +38,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     command = config.get(CONF_COMMAND)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template = config.get(CONF_VALUE_TEMPLATE)
-
+    if value_template is not None:
+        value_template.hass = hass
     data = CommandSensorData(command)
 
     add_devices([CommandSensor(hass, data, name, unit, value_template)])
@@ -80,8 +80,8 @@ class CommandSensor(Entity):
         value = self.data.value
 
         if self._value_template is not None:
-            self._state = template.render_with_possible_json_value(
-                self._hass, self._value_template, value, 'N/A')
+            self._state = self._value_template.render_with_possible_json_value(
+                value, 'N/A')
         else:
             self._state = value
 

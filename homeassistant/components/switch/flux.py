@@ -15,8 +15,9 @@ from homeassistant.components.sun import next_setting, next_rising
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.util.color import color_temperature_to_rgb as temp_to_rgb
-from homeassistant.util.color import color_RGB_to_xy
+from homeassistant.util.color import (
+    color_temperature_to_rgb, color_RGB_to_xy,
+    color_temperature_kelvin_to_mired, HASS_COLOR_MIN, HASS_COLOR_MAX)
 from homeassistant.util.dt import now as dt_now
 from homeassistant.util.dt import as_local
 import homeassistant.helpers.config_validation as cv
@@ -36,7 +37,6 @@ CONF_MODE = 'mode'
 
 MODE_XY = 'xy'
 MODE_MIRED = 'mired'
-MODE_KELVIN = 'kelvin'
 DEFAULT_MODE = MODE_XY
 
 PLATFORM_SCHEMA = vol.Schema({
@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_BRIGHTNESS):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     vol.Optional(CONF_MODE, default=DEFAULT_MODE):
-        vol.Any(MODE_XY, MODE_MIRED, MODE_KELVIN)
+        vol.Any(MODE_XY, MODE_MIRED)
 })
 
 
@@ -68,15 +68,13 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness):
                     transition=30)
 
 
-def set_lights_temp(hass, lights, kelvin, mode):
+def set_lights_temp(hass, lights, mired, brightness):
     """Set color of array of lights."""
-    temp = kelvin
-    if mode == MODE_MIRED:
-        temp = 1000000 / kelvin
     for light in lights:
         if is_on(hass, light):
             turn_on(hass, light,
-                    color_temp=int(temp),
+                    color_temp=int(mired),
+                    brightness=brightness,
                     transition=30)
 
 
@@ -194,9 +192,9 @@ class FluxSwitch(SwitchDevice):
                 temp = self._sunset_colortemp - temp_offset
             else:
                 temp = self._sunset_colortemp + temp_offset
+        x_val, y_val, b_val = color_RGB_to_xy(*color_temperature_to_rgb(temp))
+        brightness = self._brightness if self._brightness else b_val
         if self._mode == MODE_XY:
-            x_val, y_val, b_val = color_RGB_to_xy(*temp_to_rgb(temp))
-            brightness = self._brightness if self._brightness else b_val
             set_lights_xy(self.hass, self._lights, x_val,
                           y_val, brightness)
             _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%%"
@@ -205,9 +203,12 @@ class FluxSwitch(SwitchDevice):
                              percentage_complete * 100), time_state,
                          as_local(now))
         else:
-            set_lights_temp(self.hass, self._lights, temp, self._mode)
-            _LOGGER.info("Lights updated to temp:%s, %s%%"
-                         " of %s cycle complete at %s", temp,
+            # Convert to mired and clamp to allowed values
+            mired = color_temperature_kelvin_to_mired(temp)
+            mired = max(HASS_COLOR_MIN, min(mired, HASS_COLOR_MAX))
+            set_lights_temp(self.hass, self._lights, mired, brightness)
+            _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%%"
+                         " of %s cycle complete at %s", mired, brightness,
                          round(percentage_complete * 100),
                          time_state, as_local(now))
 

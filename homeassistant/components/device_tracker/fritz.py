@@ -79,13 +79,15 @@ class FritzBoxScanner(object):
         self._update_info()
         active_hosts = []
         for known_host in self.last_results:
-            if known_host['status'] == '1':
+            if known_host['status'] == '1' and known_host.get('mac'):
                 active_hosts.append(known_host['mac'])
         return active_hosts
 
     def get_device_name(self, mac):
         """Return the name of the given device or None if is not known."""
-        ret = self.fritz_box.get_specific_host_entry(mac)['NewHostName']
+        ret = self.fritz_box.get_specific_host_entry(mac).get(
+            'NewHostName'
+        )
         if ret == {}:
             return None
         return ret

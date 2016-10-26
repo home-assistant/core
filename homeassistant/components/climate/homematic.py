@@ -41,7 +41,7 @@ class HMThermostat(homematic.HMDevice, ClimateDevice):
     """Representation of a Homematic thermostat."""
 
     @property
-    def unit_of_measurement(self):
+    def temperature_unit(self):
         """Return the unit of measurement that is used."""
         return TEMP_CELSIUS
 
@@ -99,6 +99,9 @@ class HMThermostat(homematic.HMDevice, ClimateDevice):
             return None
         if temperature is None:
             return
+
+        if self.current_operation == STATE_AUTO:
+            return self._hmdevice.actionNodeData('MANU_MODE', temperature)
         self._hmdevice.set_temperature(temperature)
 
     def set_operation_mode(self, operation_mode):

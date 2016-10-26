@@ -4,18 +4,29 @@ Support KNX switching actuators.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.knx/
 """
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.knx import (
-    KNXConfig, KNXGroupAddress)
+import voluptuous as vol
 
-DEPENDENCIES = ["knx"]
+from homeassistant.components.knx import (KNXConfig, KNXGroupAddress)
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
+
+CONF_ADDRESS = 'address'
+CONF_STATE_ADDRESS = 'state_address'
+
+DEFAULT_NAME = 'KNX Switch'
+DEPENDENCIES = ['knx']
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_ADDRESS): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_STATE_ADDRESS): cv.string,
+})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the KNX switch platform."""
-    add_entities([
-        KNXSwitch(hass, KNXConfig(config))
-    ])
+    add_devices([KNXSwitch(hass, KNXConfig(config))])
 
 
 class KNXSwitch(KNXGroupAddress, SwitchDevice):

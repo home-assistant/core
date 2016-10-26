@@ -14,7 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (ATTR_ENTITY_ID, TEMP_CELSIUS)
 
-REQUIREMENTS = ['pyRFXtrx==0.11.0']
+REQUIREMENTS = ['pyRFXtrx==0.13.0']
 
 DOMAIN = "rfxtrx"
 
@@ -153,13 +153,15 @@ def setup(hass, config):
 
     if dummy_connection:
         RFXOBJECT =\
-            rfxtrxmod.Core(device, handle_receive, debug=debug,
-                           transport_protocol=rfxtrxmod.DummyTransport2)
+            rfxtrxmod.Connect(device, handle_receive, debug=debug,
+                              transport_protocol=rfxtrxmod.DummyTransport2)
     else:
-        RFXOBJECT = rfxtrxmod.Core(device, handle_receive, debug=debug)
+        RFXOBJECT = rfxtrxmod.Connect(device, handle_receive, debug=debug)
 
     def _shutdown_rfxtrx(event):
+        """Close connection with RFXtrx."""
         RFXOBJECT.close_connection()
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
 
     return True

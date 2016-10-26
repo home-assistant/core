@@ -35,7 +35,8 @@ DEFAULT_CORE_CONFIG = (
     (CONF_LATITUDE, 0, 'latitude', 'Location required to calculate the time'
      ' the sun rises and sets'),
     (CONF_LONGITUDE, 0, 'longitude', None),
-    (CONF_ELEVATION, 0, None, 'Impacts weather/sunrise data'),
+    (CONF_ELEVATION, 0, None, 'Impacts weather/sunrise data'
+                              ' (altitude above sea level in meters)'),
     (CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC, None,
      '{} for Metric, {} for Imperial'.format(CONF_UNIT_SYSTEM_METRIC,
                                              CONF_UNIT_SYSTEM_IMPERIAL)),

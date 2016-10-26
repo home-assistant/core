@@ -60,7 +60,7 @@ class TestLocative(unittest.TestCase):
 
     def tearDown(self):
         """Stop everything that was started."""
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
     def test_missing_data(self, update_config):
         """Test missing data."""

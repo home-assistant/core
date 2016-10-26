@@ -38,11 +38,11 @@ class TestHelpersDiscovery:
 
         discovery.discover(self.hass, 'test service', 'discovery info',
                            'test_component')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         discovery.discover(self.hass, 'another service', 'discovery info',
                            'test_component')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert mock_setup_component.called
         assert mock_setup_component.call_args[0] == \
@@ -69,15 +69,15 @@ class TestHelpersDiscovery:
 
         discovery.load_platform(self.hass, 'test_component', 'test_platform',
                                 'discovery info')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         assert mock_setup_component.called
         assert mock_setup_component.call_args[0] == \
             (self.hass, 'test_component', None)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         discovery.load_platform(self.hass, 'test_component_2', 'test_platform',
                                 'discovery info')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[0] == ('test_platform', 'discovery info')
@@ -86,7 +86,7 @@ class TestHelpersDiscovery:
             discovery.ATTR_SERVICE:
             discovery.EVENT_LOAD_PLATFORM.format('test_component')
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
 
@@ -122,7 +122,7 @@ class TestHelpersDiscovery:
                 'platform': 'test_circular',
             }],
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert 'test_component' in self.hass.config.components
         assert 'switch' in self.hass.config.components

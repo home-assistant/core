@@ -7,51 +7,88 @@ https://home-assistant.io/components/wink/
 import logging
 import json
 
-from homeassistant.helpers import validate_config, discovery
-from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL
-from homeassistant.helpers.entity import Entity
+import voluptuous as vol
 
-DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.7.13', 'pubnub==3.8.2']
+from homeassistant.helpers import discovery
+from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL, \
+                                CONF_EMAIL, CONF_PASSWORD
+from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['python-wink==0.9.0', 'pubnub==3.8.2']
+
+_LOGGER = logging.getLogger(__name__)
+
+CHANNELS = []
+
+DOMAIN = 'wink'
 
 SUBSCRIPTION_HANDLER = None
-CHANNELS = []
+CONF_CLIENT_ID = 'client_id'
+CONF_CLIENT_SECRET = 'client_secret'
+CONF_USER_AGENT = 'user_agent'
+CONF_OATH = 'oath'
+CONF_DEFINED_BOTH_MSG = 'Remove access token to use oath2.'
+CONF_MISSING_OATH_MSG = 'Missing oath2 credentials.'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Inclusive(CONF_EMAIL, CONF_OATH,
+                      msg=CONF_MISSING_OATH_MSG): cv.string,
+        vol.Inclusive(CONF_PASSWORD, CONF_OATH,
+                      msg=CONF_MISSING_OATH_MSG): cv.string,
+        vol.Inclusive(CONF_CLIENT_ID, CONF_OATH,
+                      msg=CONF_MISSING_OATH_MSG): cv.string,
+        vol.Inclusive(CONF_CLIENT_SECRET, CONF_OATH,
+                      msg=CONF_MISSING_OATH_MSG): cv.string,
+        vol.Exclusive(CONF_EMAIL, CONF_OATH,
+                      msg=CONF_DEFINED_BOTH_MSG): cv.string,
+        vol.Exclusive(CONF_ACCESS_TOKEN, CONF_OATH,
+                      msg=CONF_DEFINED_BOTH_MSG): cv.string,
+        vol.Optional(CONF_USER_AGENT, default=None): cv.string
+    })
+}, extra=vol.ALLOW_EXTRA)
+
+WINK_COMPONENTS = [
+    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover'
+]
 
 
 def setup(hass, config):
     """Setup the Wink component."""
-    logger = logging.getLogger(__name__)
-
-    if not validate_config(config, {DOMAIN: [CONF_ACCESS_TOKEN]}, logger):
-        return False
-
     import pywink
+
+    user_agent = config[DOMAIN][CONF_USER_AGENT]
+
+    if user_agent:
+        pywink.set_user_agent(user_agent)
+
     from pubnub import Pubnub
-    pywink.set_bearer_token(config[DOMAIN][CONF_ACCESS_TOKEN])
+    access_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)
+
+    if access_token:
+        pywink.set_bearer_token(access_token)
+    else:
+        email = config[DOMAIN][CONF_EMAIL]
+        password = config[DOMAIN][CONF_PASSWORD]
+        client_id = config[DOMAIN]['client_id']
+        client_secret = config[DOMAIN]['client_secret']
+        pywink.set_wink_credentials(email, password, client_id,
+                                    client_secret)
+
     global SUBSCRIPTION_HANDLER
-    SUBSCRIPTION_HANDLER = Pubnub("N/A", pywink.get_subscription_key(),
-                                  ssl_on=True)
+    SUBSCRIPTION_HANDLER = Pubnub(
+        'N/A', pywink.get_subscription_key(), ssl_on=True)
     SUBSCRIPTION_HANDLER.set_heartbeat(120)
 
-    # Load components for the devices in the Wink that we support
-    for component_name, func_exists in (
-            ('light', pywink.get_bulbs),
-            ('switch', lambda: pywink.get_switches or pywink.get_sirens or
-             pywink.get_powerstrip_outlets),
-            ('binary_sensor', pywink.get_sensors),
-            ('sensor', lambda: pywink.get_sensors or pywink.get_eggtrays),
-            ('lock', pywink.get_locks),
-            ('cover', pywink.get_shades),
-            ('cover', pywink.get_garage_doors)):
-
-        if func_exists():
-            discovery.load_platform(hass, component_name, DOMAIN, {}, config)
-
+    # Load components for the devices in Wink that we support
+    for component in WINK_COMPONENTS:
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
     return True
 
 
 class WinkDevice(Entity):
-    """Represents a base Wink device."""
+    """Representation a base Wink device."""
 
     def __init__(self, wink):
         """Initialize the Wink device."""
@@ -59,7 +96,7 @@ class WinkDevice(Entity):
         self.wink = wink
         self._battery = self.wink.battery_level
         if self.wink.pubnub_channel in CHANNELS:
-            pubnub = Pubnub("N/A", self.wink.pubnub_key, ssl_on=True)
+            pubnub = Pubnub('N/A', self.wink.pubnub_key, ssl_on=True)
             pubnub.set_heartbeat(120)
             pubnub.subscribe(self.wink.pubnub_channel,
                              self._pubnub_update,
@@ -75,13 +112,12 @@ class WinkDevice(Entity):
         self.update_ha_state()
 
     def _pubnub_error(self, message):
-        logging.getLogger(__name__).error(
-            "Error on pubnub update for " + self.wink.name())
+        _LOGGER.error("Error on pubnub update for " + self.wink.name())
 
     @property
     def unique_id(self):
         """Return the ID of this Wink device."""
-        return "{}.{}".format(self.__class__, self.wink.device_id())
+        return '{}.{}'.format(self.__class__, self.wink.device_id())
 
     @property
     def name(self):

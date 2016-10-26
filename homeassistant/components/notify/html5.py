@@ -4,6 +4,7 @@ HTML5 Push Messaging notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.html5/
 """
+import asyncio
 import os
 import logging
 import json
@@ -107,9 +108,9 @@ def get_service(hass, config):
     if registrations is None:
         return None
 
-    hass.wsgi.register_view(
+    hass.http.register_view(
         HTML5PushRegistrationView(hass, registrations, json_path))
-    hass.wsgi.register_view(HTML5PushCallbackView(hass, registrations))
+    hass.http.register_view(HTML5PushCallbackView(hass, registrations))
 
     gcm_api_key = config.get(ATTR_GCM_API_KEY)
     gcm_sender_id = config.get(ATTR_GCM_SENDER_ID)
@@ -144,7 +145,7 @@ def _save_config(filename, config):
     """Save configuration."""
     try:
         with open(filename, 'w') as fdesc:
-            fdesc.write(json.dumps(config, indent=4, sort_keys=True))
+            fdesc.write(json.dumps(config))
     except (IOError, TypeError) as error:
         _LOGGER.error('Saving config file failed: %s', error)
         return False
@@ -163,12 +164,18 @@ class HTML5PushRegistrationView(HomeAssistantView):
         self.registrations = registrations
         self.json_path = json_path
 
+    @asyncio.coroutine
     def post(self, request):
         """Accept the POST request for push registrations from a browser."""
         try:
-            data = REGISTER_SCHEMA(request.json)
+            data = yield from request.json()
+        except ValueError:
+            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+
+        try:
+            data = REGISTER_SCHEMA(data)
         except vol.Invalid as ex:
-            return self.json_message(humanize_error(request.json, ex),
+            return self.json_message(humanize_error(data, ex),
                                      HTTP_BAD_REQUEST)
 
         name = ensure_unique_string('unnamed device',
@@ -182,9 +189,15 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         return self.json_message('Push notification subscriber registered.')
 
+    @asyncio.coroutine
     def delete(self, request):
         """Delete a registration."""
-        subscription = request.json.get(ATTR_SUBSCRIPTION)
+        try:
+            data = yield from request.json()
+        except ValueError:
+            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+
+        subscription = data.get(ATTR_SUBSCRIPTION)
 
         found = None
 
@@ -270,23 +283,29 @@ class HTML5PushCallbackView(HomeAssistantView):
                                      status_code=HTTP_UNAUTHORIZED)
         return payload
 
+    @asyncio.coroutine
     def post(self, request):
         """Accept the POST request for push registrations event callback."""
         auth_check = self.check_authorization_header(request)
         if not isinstance(auth_check, dict):
             return auth_check
 
+        try:
+            data = yield from request.json()
+        except ValueError:
+            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+
         event_payload = {
-            ATTR_TAG: request.json.get(ATTR_TAG),
-            ATTR_TYPE: request.json[ATTR_TYPE],
+            ATTR_TAG: data.get(ATTR_TAG),
+            ATTR_TYPE: data[ATTR_TYPE],
             ATTR_TARGET: auth_check[ATTR_TARGET],
         }
 
-        if request.json.get(ATTR_ACTION) is not None:
-            event_payload[ATTR_ACTION] = request.json.get(ATTR_ACTION)
+        if data.get(ATTR_ACTION) is not None:
+            event_payload[ATTR_ACTION] = data.get(ATTR_ACTION)
 
-        if request.json.get(ATTR_DATA) is not None:
-            event_payload[ATTR_DATA] = request.json.get(ATTR_DATA)
+        if data.get(ATTR_DATA) is not None:
+            event_payload[ATTR_DATA] = data.get(ATTR_DATA)
 
         try:
             event_payload = CALLBACK_EVENT_PAYLOAD_SCHEMA(event_payload)
@@ -314,7 +333,10 @@ class HTML5NotificationService(BaseNotificationService):
     @property
     def targets(self):
         """Return a dictionary of registered targets."""
-        return self.registrations.keys()
+        targets = {}
+        for registration in self.registrations:
+            targets[registration] = registration
+        return targets
 
     # pylint: disable=too-many-locals
     def send_message(self, message="", **kwargs):
@@ -341,12 +363,15 @@ class HTML5NotificationService(BaseNotificationService):
             # Pick out fields that should go into the notification directly vs
             # into the notification data dictionary.
 
-            for key, val in data.copy().items():
+            data_tmp = {}
+
+            for key, val in data.items():
                 if key in HTML5_SHOWNOTIFICATION_PARAMETERS:
                     payload[key] = val
-                    del data[key]
+                else:
+                    data_tmp[key] = val
 
-            payload[ATTR_DATA] = data
+            payload[ATTR_DATA] = data_tmp
 
         if (payload[ATTR_DATA].get(ATTR_URL) is None and
                 payload.get(ATTR_ACTIONS) is None):
@@ -356,8 +381,6 @@ class HTML5NotificationService(BaseNotificationService):
 
         if not targets:
             targets = self.registrations.keys()
-        elif not isinstance(targets, list):
-            targets = [targets]
 
         for target in targets:
             info = self.registrations.get(target)

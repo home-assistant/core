@@ -6,6 +6,7 @@ https://home-assistant.io/components/device_tracker/
 """
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 # pylint: disable=too-many-locals
+import asyncio
 from datetime import timedelta
 import logging
 import os
@@ -13,6 +14,7 @@ import threading
 from typing import Any, Sequence, Callable
 
 import voluptuous as vol
+import yaml
 
 from homeassistant.bootstrap import (
     prepare_setup_platform, log_exception)
@@ -25,6 +27,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
+from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.event import track_utc_time_change
@@ -46,7 +49,7 @@ CONF_TRACK_NEW = 'track_new_devices'
 DEFAULT_TRACK_NEW = True
 
 CONF_CONSIDER_HOME = 'consider_home'
-DEFAULT_CONSIDER_HOME = 180  # seconds
+DEFAULT_CONSIDER_HOME = 180
 
 CONF_SCAN_INTERVAL = 'interval_seconds'
 DEFAULT_SCAN_INTERVAL = 12
@@ -66,13 +69,11 @@ ATTR_ATTRIBUTES = 'attributes'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,  # seconds
-}, extra=vol.ALLOW_EXTRA)
-
-_CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.All(cv.ensure_list, [
-    vol.Schema({
-        vol.Optional(CONF_TRACK_NEW): cv.boolean,
-        vol.Optional(CONF_CONSIDER_HOME): cv.positive_int  # seconds
-    }, extra=vol.ALLOW_EXTRA)])}, extra=vol.ALLOW_EXTRA)
+    vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
+    vol.Optional(CONF_CONSIDER_HOME,
+                 default=timedelta(seconds=DEFAULT_CONSIDER_HOME)): vol.All(
+                     cv.time_period, cv.positive_timedelta)
+})
 
 DISCOVERY_PLATFORMS = {
     SERVICE_NETGEAR: 'netgear',
@@ -102,8 +103,7 @@ def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
              (ATTR_GPS_ACCURACY, gps_accuracy),
              (ATTR_BATTERY, battery)) if value is not None}
     if attributes:
-        for key, value in attributes:
-            data[key] = value
+        data[ATTR_ATTRIBUTES] = attributes
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
@@ -112,14 +112,14 @@ def setup(hass: HomeAssistantType, config: ConfigType):
     yaml_path = hass.config.path(YAML_DEVICES)
 
     try:
-        conf = _CONFIG_SCHEMA(config).get(DOMAIN, [])
+        conf = config.get(DOMAIN, [])
     except vol.Invalid as ex:
         log_exception(ex, DOMAIN, config)
         return False
     else:
         conf = conf[0] if len(conf) > 0 else {}
-        consider_home = timedelta(
-            seconds=conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME))
+        consider_home = conf.get(CONF_CONSIDER_HOME,
+                                 timedelta(seconds=DEFAULT_CONSIDER_HOME))
         track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = load_config(yaml_path, hass, consider_home)
@@ -250,9 +250,18 @@ class DeviceTracker(object):
 
     def setup_group(self):
         """Initialize group for all tracked devices."""
+        run_coroutine_threadsafe(
+            self.async_setup_group(), self.hass.loop).result()
+
+    @asyncio.coroutine
+    def async_setup_group(self):
+        """Initialize group for all tracked devices.
+
+        This method must be run in the event loop.
+        """
         entity_ids = (dev.entity_id for dev in self.devices.values()
                       if dev.track)
-        self.group = group.Group(
+        self.group = yield from group.Group.async_create_group(
             self.hass, GROUP_NAME_ALL_DEVICES, entity_ids, False)
 
     def update_stale(self, now: dt_util.dt.datetime):
@@ -282,7 +291,7 @@ class Device(Entity):
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
                  track: bool, dev_id: str, mac: str, name: str=None,
                  picture: str=None, gravatar: str=None,
-                 away_hide: bool=False) -> None:
+                 hide_if_away: bool=False) -> None:
         """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
@@ -307,7 +316,7 @@ class Device(Entity):
         else:
             self.config_picture = picture
 
-        self.away_hide = away_hide
+        self.away_hide = hide_if_away
 
     @property
     def name(self):
@@ -338,7 +347,7 @@ class Device(Entity):
             attr[ATTR_BATTERY] = self.battery
 
         if self.attributes:
-            for key, value in self.attributes:
+            for key, value in self.attributes.items():
                 attr[key] = value
 
         return attr
@@ -398,15 +407,34 @@ class Device(Entity):
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     """Load devices from YAML configuration file."""
+    dev_schema = vol.Schema({
+        vol.Required('name'): cv.string,
+        vol.Optional('track', default=False): cv.boolean,
+        vol.Optional('mac', default=None): vol.Any(None, vol.All(cv.string,
+                                                                 vol.Upper)),
+        vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
+        vol.Optional('gravatar', default=None): vol.Any(None, cv.string),
+        vol.Optional('picture', default=None): vol.Any(None, cv.string),
+        vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
+            cv.time_period, cv.positive_timedelta)
+    })
     try:
-        return [
-            Device(hass, consider_home, device.get('track', False),
-                   str(dev_id).lower(), None if device.get('mac') is None
-                   else str(device.get('mac')).upper(),
-                   device.get('name'), device.get('picture'),
-                   device.get('gravatar'),
-                   device.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
-            for dev_id, device in load_yaml_config_file(path).items()]
+        result = []
+        try:
+            devices = load_yaml_config_file(path)
+        except HomeAssistantError as err:
+            _LOGGER.error('Unable to load %s: %s', path, str(err))
+            return []
+
+        for dev_id, device in devices.items():
+            try:
+                device = dev_schema(device)
+                device['dev_id'] = cv.slugify(dev_id)
+            except vol.Invalid as exp:
+                log_exception(exp, dev_id, devices)
+            else:
+                result.append(Device(hass, **device))
+        return result
     except (HomeAssistantError, FileNotFoundError):
         # When YAML file could not be loaded/did not contain a dict
         return []
@@ -440,14 +468,15 @@ def update_config(path: str, dev_id: str, device: Device):
     """Add device to YAML configuration file."""
     with open(path, 'a') as out:
         out.write('\n')
-        out.write('{}:\n'.format(device.dev_id))
 
-        for key, value in (('name', device.name), ('mac', device.mac),
-                           ('picture', device.config_picture),
-                           ('track', 'yes' if device.track else 'no'),
-                           (CONF_AWAY_HIDE,
-                            'yes' if device.away_hide else 'no')):
-            out.write('  {}: {}\n'.format(key, '' if value is None else value))
+        device = {device.dev_id: {
+            'name': device.name,
+            'mac': device.mac,
+            'picture': device.config_picture,
+            'track': device.track,
+            CONF_AWAY_HIDE: device.away_hide
+        }}
+        yaml.dump(device, out, default_flow_style=False)
 
 
 def get_gravatar_for_email(email: str):

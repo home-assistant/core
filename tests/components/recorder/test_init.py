@@ -3,11 +3,10 @@
 import json
 from datetime import datetime, timedelta
 import unittest
-from unittest.mock import patch
 
 from homeassistant.const import MATCH_ALL
 from homeassistant.components import recorder
-
+from homeassistant.bootstrap import _setup_component
 from tests.common import get_test_home_assistant
 
 
@@ -17,19 +16,19 @@ class TestRecorder(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        db_uri = 'sqlite://'
-        with patch('homeassistant.core.Config.path', return_value=db_uri):
-            recorder.setup(self.hass, config={
-                "recorder": {
-                    "db_url": db_uri}})
+        db_uri = 'sqlite://'  # In memory DB
+        _setup_component(self.hass, recorder.DOMAIN, {
+            recorder.DOMAIN: {recorder.CONF_DB_URL: db_uri}})
         self.hass.start()
-        recorder._INSTANCE.block_till_db_ready()
+        recorder._verify_instance()
         self.session = recorder.Session()
         recorder._INSTANCE.block_till_done()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
+        recorder._INSTANCE.shutdown(None)
         self.hass.stop()
+        assert recorder._INSTANCE is None
 
     def _add_test_states(self):
         """Add multiple states to the db for testing."""
@@ -37,7 +36,7 @@ class TestRecorder(unittest.TestCase):
         five_days_ago = now - timedelta(days=5)
         attributes = {'test_attr': 5, 'test_attr_10': 'nice'}
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
 
         for event_id in range(5):
@@ -67,7 +66,7 @@ class TestRecorder(unittest.TestCase):
         five_days_ago = now - timedelta(days=5)
         event_data = {'test_attr': 5, 'test_attr_10': 'nice'}
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
         for event_id in range(5):
             if event_id < 2:
@@ -93,7 +92,7 @@ class TestRecorder(unittest.TestCase):
 
         self.hass.states.set(entity_id, state, attributes)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
 
         db_states = recorder.query('States')
@@ -120,7 +119,7 @@ class TestRecorder(unittest.TestCase):
 
         self.hass.bus.fire(event_type, event_data)
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
 
         db_events = recorder.execute(

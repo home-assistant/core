@@ -308,7 +308,7 @@ class ThreadPool(object):
     """A priority queue-based thread pool."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, job_handler, worker_count=0, busy_callback=None):
+    def __init__(self, job_handler, worker_count=0):
         """Initialize the pool.
 
         job_handler: method to be called from worker thread to handle job
@@ -318,13 +318,10 @@ class ThreadPool(object):
                                    pending_jobs_count
         """
         self._job_handler = job_handler
-        self._busy_callback = busy_callback
 
         self.worker_count = 0
-        self.busy_warning_limit = 0
         self._work_queue = queue.PriorityQueue()
         self.current_jobs = []
-        self._lock = threading.RLock()
         self._quit_task = object()
 
         self.running = True
@@ -332,50 +329,45 @@ class ThreadPool(object):
         for _ in range(worker_count):
             self.add_worker()
 
+    @property
+    def queue_size(self):
+        """Return estimated number of jobs that are waiting to be processed."""
+        return self._work_queue.qsize()
+
     def add_worker(self):
         """Add worker to the thread pool and reset warning limit."""
-        with self._lock:
-            if not self.running:
-                raise RuntimeError("ThreadPool not running")
+        if not self.running:
+            raise RuntimeError("ThreadPool not running")
 
-            worker = threading.Thread(
-                target=self._worker,
-                name='ThreadPool Worker {}'.format(self.worker_count))
-            worker.daemon = True
-            worker.start()
+        threading.Thread(
+            target=self._worker, daemon=True,
+            name='ThreadPool Worker {}'.format(self.worker_count)).start()
 
-            self.worker_count += 1
-            self.busy_warning_limit = self.worker_count * 3
+        self.worker_count += 1
 
     def remove_worker(self):
         """Remove worker from the thread pool and reset warning limit."""
-        with self._lock:
-            if not self.running:
-                raise RuntimeError("ThreadPool not running")
+        if not self.running:
+            raise RuntimeError("ThreadPool not running")
 
-            self._work_queue.put(PriorityQueueItem(0, self._quit_task))
+        self._work_queue.put(PriorityQueueItem(0, self._quit_task))
 
-            self.worker_count -= 1
-            self.busy_warning_limit = self.worker_count * 3
+        self.worker_count -= 1
 
     def add_job(self, priority, job):
         """Add a job to the queue."""
-        with self._lock:
-            if not self.running:
-                raise RuntimeError("ThreadPool not running")
+        if not self.running:
+            raise RuntimeError("ThreadPool not running")
 
+        self._work_queue.put(PriorityQueueItem(priority, job))
+
+    def add_many_jobs(self, jobs):
+        """Add a list of jobs to the queue."""
+        if not self.running:
+            raise RuntimeError("ThreadPool not running")
+
+        for priority, job in jobs:
             self._work_queue.put(PriorityQueueItem(priority, job))
-
-            # Check if our queue is getting too big.
-            if self._work_queue.qsize() > self.busy_warning_limit \
-               and self._busy_callback is not None:
-
-                # Increase limit we will issue next warning.
-                self.busy_warning_limit *= 2
-
-                self._busy_callback(
-                    self.worker_count, self.current_jobs,
-                    self._work_queue.qsize())
 
     def block_till_done(self):
         """Block till current work is done."""
@@ -385,18 +377,17 @@ class ThreadPool(object):
         """Finish all the jobs and stops all the threads."""
         self.block_till_done()
 
-        with self._lock:
-            if not self.running:
-                return
+        if not self.running:
+            return
 
-            # Tell the workers to quit
-            for _ in range(self.worker_count):
-                self.remove_worker()
+        # Tell the workers to quit
+        for _ in range(self.worker_count):
+            self.remove_worker()
 
-            self.running = False
+        self.running = False
 
-            # Wait till all workers have quit
-            self.block_till_done()
+        # Wait till all workers have quit
+        self.block_till_done()
 
     def _worker(self):
         """Handle jobs for the thread pool."""

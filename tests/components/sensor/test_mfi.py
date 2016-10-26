@@ -4,6 +4,7 @@ import unittest.mock as mock
 
 import requests
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.mfi as mfi
 from homeassistant.const import TEMP_CELSIUS
@@ -69,18 +70,28 @@ class TestMfiSensorSetup(unittest.TestCase):
         """Test setup with minimum configuration."""
         config = dict(self.GOOD_CONFIG)
         del config[self.THING]['port']
-        assert self.COMPONENT.setup(self.hass, config)
-        mock_client.assert_called_once_with(
-            'foo', 'user', 'pass', port=6443, use_tls=True, verify=True)
+        assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.assertEqual(mock_client.call_count, 1)
+        self.assertEqual(
+            mock_client.call_args,
+            mock.call(
+                'foo', 'user', 'pass', port=6443, use_tls=True, verify=True
+            )
+        )
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_with_port(self, mock_client):
         """Test setup with port."""
         config = dict(self.GOOD_CONFIG)
         config[self.THING]['port'] = 6123
-        assert self.COMPONENT.setup(self.hass, config)
-        mock_client.assert_called_once_with(
-            'foo', 'user', 'pass', port=6123, use_tls=True, verify=True)
+        assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.assertEqual(mock_client.call_count, 1)
+        self.assertEqual(
+            mock_client.call_args,
+            mock.call(
+                'foo', 'user', 'pass', port=6123, use_tls=True, verify=True
+            )
+        )
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_with_tls_disabled(self, mock_client):
@@ -89,9 +100,14 @@ class TestMfiSensorSetup(unittest.TestCase):
         del config[self.THING]['port']
         config[self.THING]['ssl'] = False
         config[self.THING]['verify_ssl'] = False
-        assert self.COMPONENT.setup(self.hass, config)
-        mock_client.assert_called_once_with(
-            'foo', 'user', 'pass', port=6080, use_tls=False, verify=False)
+        assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.assertEqual(mock_client.call_count, 1)
+        self.assertEqual(
+            mock_client.call_args,
+            mock.call(
+                'foo', 'user', 'pass', port=6080, use_tls=False, verify=False
+            )
+        )
 
     @mock.patch('mficlient.client.MFiClient')
     @mock.patch('homeassistant.components.sensor.mfi.MfiSensor')
@@ -103,7 +119,7 @@ class TestMfiSensorSetup(unittest.TestCase):
         print(ports['bad'].model)
         mock_client.return_value.get_devices.return_value = \
             [mock.MagicMock(ports=ports)]
-        assert sensor.setup(self.hass, self.GOOD_CONFIG)
+        assert setup_component(self.hass, sensor.DOMAIN, self.GOOD_CONFIG)
         for ident, port in ports.items():
             if ident != 'bad':
                 mock_sensor.assert_any_call(port, self.hass)
@@ -179,4 +195,5 @@ class TestMfiSensor(unittest.TestCase):
     def test_update(self):
         """Test the update."""
         self.sensor.update()
-        self.port.refresh.assert_called_once_with()
+        self.assertEqual(self.port.refresh.call_count, 1)
+        self.assertEqual(self.port.refresh.call_args, mock.call())

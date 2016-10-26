@@ -6,27 +6,36 @@ https://home-assistant.io/components/statsd/
 """
 import logging
 
-import homeassistant.util as util
-from homeassistant.const import EVENT_STATE_CHANGED
+import voluptuous as vol
+
+from homeassistant.const import (
+    CONF_HOST, CONF_PORT, CONF_PREFIX, EVENT_STATE_CHANGED)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import state as state_helper
+
+REQUIREMENTS = ['statsd==3.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "statsd"
-DEPENDENCIES = []
+CONF_ATTR = 'log_attributes'
+CONF_RATE = 'rate'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8125
 DEFAULT_PREFIX = 'hass'
 DEFAULT_RATE = 1
+DOMAIN = 'statsd'
 
-REQUIREMENTS = ['statsd==3.2.1']
-
-CONF_HOST = 'host'
-CONF_PORT = 'port'
-CONF_PREFIX = 'prefix'
-CONF_RATE = 'rate'
-CONF_ATTR = 'log_attributes'
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_ATTR, default=False): cv.boolean,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
+        vol.Optional(CONF_RATE, default=DEFAULT_RATE):
+            vol.All(vol.Coerce(int), vol.Range(min=1)),
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -34,18 +43,13 @@ def setup(hass, config):
     import statsd
 
     conf = config[DOMAIN]
+    host = conf.get(CONF_HOST)
+    port = conf.get(CONF_PORT)
+    sample_rate = conf.get(CONF_RATE)
+    prefix = conf.get(CONF_PREFIX)
+    show_attribute_flag = conf.get(CONF_ATTR)
 
-    host = conf[CONF_HOST]
-    port = util.convert(conf.get(CONF_PORT), int, DEFAULT_PORT)
-    sample_rate = util.convert(conf.get(CONF_RATE), int, DEFAULT_RATE)
-    prefix = util.convert(conf.get(CONF_PREFIX), str, DEFAULT_PREFIX)
-    show_attribute_flag = conf.get(CONF_ATTR, False)
-
-    statsd_client = statsd.StatsClient(
-        host=host,
-        port=port,
-        prefix=prefix
-    )
+    statsd_client = statsd.StatsClient(host=host, port=port, prefix=prefix)
 
     def statsd_event_listener(event):
         """Listen for new messages on the bus and sends them to StatsD."""
@@ -57,18 +61,20 @@ def setup(hass, config):
         try:
             _state = state_helper.state_as_number(state)
         except ValueError:
-            return
+            # Set the state to none and continue for any numeric attributes.
+            _state = None
 
         states = dict(state.attributes)
 
-        _LOGGER.debug('Sending %s.%s', state.entity_id, _state)
+        _LOGGER.debug('Sending %s', state.entity_id)
 
         if show_attribute_flag is True:
-            statsd_client.gauge(
-                "%s.state" % state.entity_id,
-                _state,
-                sample_rate
-            )
+            if isinstance(_state, (float, int)):
+                statsd_client.gauge(
+                    "%s.state" % state.entity_id,
+                    _state,
+                    sample_rate
+                )
 
             # Send attribute values
             for key, value in states.items():
@@ -77,7 +83,8 @@ def setup(hass, config):
                     statsd_client.gauge(stat, value, sample_rate)
 
         else:
-            statsd_client.gauge(state.entity_id, _state, sample_rate)
+            if isinstance(_state, (float, int)):
+                statsd_client.gauge(state.entity_id, _state, sample_rate)
 
         # Increment the count
         statsd_client.incr(state.entity_id, rate=sample_rate)

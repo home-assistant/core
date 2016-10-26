@@ -1,6 +1,7 @@
 """The tests for the Demo lock platform."""
 import unittest
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import lock
 
 from tests.common import get_test_home_assistant
@@ -16,7 +17,7 @@ class TestLockDemo(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.assertTrue(lock.setup(self.hass, {
+        self.assertTrue(setup_component(self.hass, lock.DOMAIN, {
             'lock': {
                 'platform': 'demo'
             }
@@ -37,13 +38,13 @@ class TestLockDemo(unittest.TestCase):
     def test_locking(self):
         """Test the locking of a lock."""
         lock.lock(self.hass, KITCHEN)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertTrue(lock.is_locked(self.hass, KITCHEN))
 
     def test_unlocking(self):
         """Test the unlocking of a lock."""
         lock.unlock(self.hass, FRONT)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertFalse(lock.is_locked(self.hass, FRONT))

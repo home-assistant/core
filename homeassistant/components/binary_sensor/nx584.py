@@ -1,41 +1,56 @@
 """
-Support for exposing nx584 elements as sensors.
+Support for exposing NX584 elements as sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.nx584/
+https://home-assistant.io/components/binary_sensor.nx584/
 """
 import logging
 import threading
 import time
 
 import requests
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    SENSOR_CLASSES, BinarySensorDevice)
+    SENSOR_CLASSES, BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_HOST, CONF_PORT)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pynx584==0.2']
+
 _LOGGER = logging.getLogger(__name__)
+
+CONF_EXCLUDE_ZONES = 'exclude_zones'
+CONF_ZONE_TYPES = 'zone_types'
+
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = '5007'
+DEFAULT_SSL = False
+
+ZONE_TYPES_SCHEMA = vol.Schema({
+    cv.positive_int: vol.In(SENSOR_CLASSES),
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_EXCLUDE_ZONES, default=[]):
+        vol.All(cv.ensure_list, [cv.positive_int]),
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup nx584 binary sensor platform."""
+    """Setup the NX584 binary sensor platform."""
     from nx584 import client as nx584_client
 
-    host = config.get('host', 'localhost:5007')
-    exclude = config.get('exclude_zones', [])
-    zone_types = config.get('zone_types', {})
-
-    if not all(isinstance(zone, int) for zone in exclude):
-        _LOGGER.error('Invalid excluded zone specified (use zone number)')
-        return False
-
-    if not all(isinstance(zone, int) and ztype in SENSOR_CLASSES
-               for zone, ztype in zone_types.items()):
-        _LOGGER.error('Invalid zone_types entry')
-        return False
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
+    exclude = config.get(CONF_EXCLUDE_ZONES)
+    zone_types = config.get(CONF_ZONE_TYPES)
 
     try:
-        client = nx584_client.Client('http://%s' % host)
+        client = nx584_client.Client('http://{}:{}'.format(host, port))
         zones = client.list_zones()
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error('Unable to connect to NX584: %s', str(ex))
@@ -43,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     version = [int(v) for v in client.get_version().split('.')]
     if version < [1, 1]:
-        _LOGGER.error('NX584 is too old to use for sensors (>=0.2 required)')
+        _LOGGER.error("NX584 is too old to use for sensors (>=0.2 required)")
         return False
 
     zone_sensors = {
@@ -57,13 +72,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         watcher = NX584Watcher(client, zone_sensors)
         watcher.start()
     else:
-        _LOGGER.warning('No zones found on NX584')
-
+        _LOGGER.warning("No zones found on NX584")
     return True
 
 
 class NX584ZoneSensor(BinarySensorDevice):
-    """Represents a NX584 zone as a sensor."""
+    """Representation of a NX584 zone as a sensor."""
 
     def __init__(self, zone, zone_type):
         """Initialize the nx594 binary sensor."""
@@ -96,7 +110,7 @@ class NX584Watcher(threading.Thread):
     """Event listener thread to process NX584 events."""
 
     def __init__(self, client, zone_sensors):
-        """Initialize nx584 watcher thread."""
+        """Initialize NX584 watcher thread."""
         super(NX584Watcher, self).__init__()
         self.daemon = True
         self._client = client
@@ -130,5 +144,5 @@ class NX584Watcher(threading.Thread):
             try:
                 self._run()
             except requests.exceptions.ConnectionError:
-                _LOGGER.error('Failed to reach NX584 server')
+                _LOGGER.error("Failed to reach NX584 server")
                 time.sleep(10)

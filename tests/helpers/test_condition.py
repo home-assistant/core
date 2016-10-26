@@ -44,6 +44,32 @@ class TestConditionHelper:
         self.hass.states.set('sensor.temperature', 100)
         assert test(self.hass)
 
+    def test_and_condition_with_template(self):
+        """Test the 'and' condition."""
+        test = condition.from_config({
+            'condition': 'and',
+            'conditions': [
+                {
+                    'condition': 'template',
+                    'value_template':
+                    '{{ states.sensor.temperature.state == "100" }}',
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 110,
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 105)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert test(self.hass)
+
     def test_or_condition(self):
         """Test the 'or' condition."""
         test = condition.from_config({
@@ -53,6 +79,32 @@ class TestConditionHelper:
                     'condition': 'state',
                     'entity_id': 'sensor.temperature',
                     'state': '100',
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 110,
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert not test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 105)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert test(self.hass)
+
+    def test_or_condition_with_template(self):
+        """Test the 'or' condition."""
+        test = condition.from_config({
+            'condition': 'or',
+            'conditions': [
+                {
+                    'condition': 'template',
+                    'value_template':
+                    '{{ states.sensor.temperature.state == "100" }}',
                 }, {
                     'condition': 'numeric_state',
                     'entity_id': 'sensor.temperature',

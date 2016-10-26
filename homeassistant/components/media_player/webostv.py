@@ -8,23 +8,30 @@ import logging
 from datetime import timedelta
 from urllib.parse import urlparse
 
+import voluptuous as vol
+
 import homeassistant.util as util
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
-    MediaPlayerDevice)
+    MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_CUSTOMIZE, STATE_OFF, STATE_PLAYING, STATE_PAUSED,
-    STATE_UNKNOWN)
+    STATE_UNKNOWN, CONF_NAME)
 from homeassistant.loader import get_component
-
-_CONFIGURING = {}
-_LOGGER = logging.getLogger(__name__)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv'
                 '/archive/v0.1.2.zip'
                 '#pylgtv==0.1.2']
+
+_CONFIGURING = {}
+_LOGGER = logging.getLogger(__name__)
+
+CONF_SOURCES = 'sources'
+
+DEFAULT_NAME = 'LG WebOS Smart TV'
 
 SUPPORT_WEBOSTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                   SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
@@ -44,6 +51,17 @@ WEBOS_APPS_SHORT = {
     'makotv': WEBOS_APP_MAKO
 }
 
+CUSTOMIZE_SCHEMA = vol.Schema({
+    vol.Optional(CONF_SOURCES):
+        vol.All(cv.ensure_list, [vol.In(WEBOS_APPS_SHORT)]),
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
+})
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -51,21 +69,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
     else:
-        host = config.get(CONF_HOST, None)
+        host = config.get(CONF_HOST)
 
         if host is None:
-            _LOGGER.error('No host found in configuration')
+            _LOGGER.error("No host found in configuration")
             return False
 
     # Only act if we are not already configuring this host
     if host in _CONFIGURING:
         return
 
-    customize = config.get(CONF_CUSTOMIZE, {})
-    setup_tv(host, customize, hass, add_devices)
+    name = config.get(CONF_NAME)
+    customize = config.get(CONF_CUSTOMIZE)
+    setup_tv(host, name, customize, hass, add_devices)
 
 
-def setup_tv(host, customize, hass, add_devices):
+def setup_tv(host, name, customize, hass, add_devices):
     """Setup a phue bridge based on host parameter."""
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
@@ -79,15 +98,15 @@ def setup_tv(host, customize, hass, add_devices):
                 client.register()
             except PyLGTVPairException:
                 _LOGGER.warning(
-                    'Connected to LG WebOS TV at %s but not paired.', host)
+                    "Connected to LG WebOS TV at %s but not paired", host)
                 return
             except OSError:
-                _LOGGER.error('Unable to connect to host %s.', host)
+                _LOGGER.error("Unable to connect to host %s", host)
                 return
         else:
             # Not registered, request configuration.
             _LOGGER.warning('LG WebOS TV at %s needs to be paired.', host)
-            request_configuration(host, customize, hass, add_devices)
+            request_configuration(host, name, customize, hass, add_devices)
             return
 
     # If we came here and configuring this host, mark as done.
@@ -96,10 +115,10 @@ def setup_tv(host, customize, hass, add_devices):
         configurator = get_component('configurator')
         configurator.request_done(request_id)
 
-    add_devices([LgWebOSDevice(host, customize)])
+    add_devices([LgWebOSDevice(host, name, customize)])
 
 
-def request_configuration(host, customize, hass, add_devices):
+def request_configuration(host, name, customize, hass, add_devices):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
@@ -112,7 +131,7 @@ def request_configuration(host, customize, hass, add_devices):
     # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_tv(host, customize, hass, add_devices)
+        setup_tv(host, name, customize, hass, add_devices)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, 'LG WebOS TV', lgtv_configuration_callback,
@@ -128,13 +147,13 @@ class LgWebOSDevice(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
     # pylint: disable=too-many-public-methods
-    def __init__(self, host, customize):
+    def __init__(self, host, name, customize):
         """Initialize the webos device."""
         from pylgtv import WebOsClient
         self._client = WebOsClient(host)
         self._customize = customize
 
-        self._name = 'LG WebOS TV Remote'
+        self._name = name
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -160,7 +179,7 @@ class LgWebOSDevice(MediaPlayerDevice):
             self._app_list = {}
 
             custom_sources = []
-            for source in self._customize.get('sources', []):
+            for source in self._customize.get(CONF_SOURCES, []):
                 app_id = WEBOS_APPS_SHORT.get(source, None)
                 if app_id:
                     custom_sources.append(app_id)

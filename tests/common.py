@@ -1,13 +1,16 @@
 """Test the helper method for writing tests."""
+import asyncio
 import os
 from datetime import timedelta
 from unittest import mock
 from unittest.mock import patch
 from io import StringIO
 import logging
+import threading
+from contextlib import contextmanager
 
 from homeassistant import core as ha, loader
-from homeassistant.bootstrap import setup_component
+from homeassistant.bootstrap import setup_component, prepare_setup_component
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
@@ -29,25 +32,85 @@ def get_test_config_dir(*add_path):
 
 def get_test_home_assistant(num_threads=None):
     """Return a Home Assistant object pointing at test config dir."""
+    loop = asyncio.new_event_loop()
+
     if num_threads:
         orig_num_threads = ha.MIN_WORKER_THREAD
         ha.MIN_WORKER_THREAD = num_threads
 
-    hass = ha.HomeAssistant()
+    hass = loop.run_until_complete(async_test_home_assistant(loop))
 
     if num_threads:
         ha.MIN_WORKER_THREAD = orig_num_threads
 
-    hass.config.config_dir = get_test_config_dir()
-    hass.config.latitude = 32.87336
-    hass.config.longitude = -117.22743
-    hass.config.elevation = 0
-    hass.config.time_zone = date_util.get_time_zone('US/Pacific')
-    hass.config.units = METRIC_SYSTEM
-    hass.config.skip_pip = True
+    # FIXME should not be a daemon. Means hass.stop() not called in teardown
+    stop_event = threading.Event()
 
-    if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
-        loader.prepare(hass)
+    def run_loop():
+        """Run event loop."""
+        # pylint: disable=protected-access
+        loop._thread_ident = threading.get_ident()
+        loop.run_forever()
+        loop.close()
+        stop_event.set()
+
+    threading.Thread(name="LoopThread", target=run_loop, daemon=True).start()
+
+    orig_start = hass.start
+    orig_stop = hass.stop
+
+    @asyncio.coroutine
+    def fake_stop():
+        """Fake stop."""
+        yield None
+
+    @patch.object(ha, '_async_create_timer')
+    @patch.object(ha, '_async_monitor_worker_pool')
+    @patch.object(hass.loop, 'add_signal_handler')
+    @patch.object(hass.loop, 'run_forever')
+    @patch.object(hass.loop, 'close')
+    @patch.object(hass, 'async_stop', return_value=fake_stop())
+    def start_hass(*mocks):
+        """Helper to start hass."""
+        orig_start()
+        hass.block_till_done()
+
+    def stop_hass():
+        """Stop hass."""
+        orig_stop()
+        stop_event.wait()
+
+    hass.start = start_hass
+    hass.stop = stop_hass
+
+    return hass
+
+
+@asyncio.coroutine
+def async_test_home_assistant(loop):
+    """Return a Home Assistant object pointing at test config dir."""
+    loop._thread_ident = threading.get_ident()
+
+    def get_hass():
+        """Temp while we migrate core HASS over to be async constructors."""
+        hass = ha.HomeAssistant(loop)
+
+        hass.config.location_name = 'test home'
+        hass.config.config_dir = get_test_config_dir()
+        hass.config.latitude = 32.87336
+        hass.config.longitude = -117.22743
+        hass.config.elevation = 0
+        hass.config.time_zone = date_util.get_time_zone('US/Pacific')
+        hass.config.units = METRIC_SYSTEM
+        hass.config.skip_pip = True
+
+        if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
+            loader.prepare(hass)
+
+        hass.state = ha.CoreState.running
+        return hass
+
+    hass = yield from loop.run_in_executor(None, get_hass)
 
     return hass
 
@@ -71,7 +134,8 @@ def mock_service(hass, domain, service):
     """
     calls = []
 
-    hass.services.register(domain, service, calls.append)
+    # pylint: disable=unnecessary-lambda
+    hass.services.register(domain, service, lambda call: calls.append(call))
 
     return calls
 
@@ -134,8 +198,19 @@ def mock_state_change_event(hass, new_state, old_state=None):
 
 def mock_http_component(hass):
     """Mock the HTTP component."""
-    hass.wsgi = mock.MagicMock()
+    hass.http = mock.MagicMock()
     hass.config.components.append('http')
+    hass.http.views = {}
+
+    def mock_register_view(view):
+        """Store registered view."""
+        if isinstance(view, type):
+            # Instantiate the view, if needed
+            view = view(hass)
+
+        hass.http.views[view.name] = view
+
+    hass.http.register_view = mock_register_view
 
 
 def mock_mqtt_component(hass):
@@ -274,3 +349,41 @@ def patch_yaml_files(files_dict, endswith=True):
         raise FileNotFoundError('File not found: {}'.format(fname))
 
     return patch.object(yaml, 'open', mock_open_f, create=True)
+
+
+@contextmanager
+def assert_setup_component(count, domain=None):
+    """Collect valid configuration from setup_component.
+
+    - count: The amount of valid platforms that should be setup
+    - domain: The domain to count is optional. It can be automatically
+              determined most of the time
+
+    Use as a context manager aroung bootstrap.setup_component
+        with assert_setup_component(0) as result_config:
+            setup_component(hass, start_config, domain)
+            # using result_config is optional
+    """
+    config = {}
+
+    def mock_psc(hass, config_input, domain):
+        """Mock the prepare_setup_component to capture config."""
+        res = prepare_setup_component(hass, config_input, domain)
+        config[domain] = None if res is None else res.get(domain)
+        _LOGGER.debug('Configuration for %s, Validated: %s, Original %s',
+                      domain, config[domain], config_input.get(domain))
+        return res
+
+    assert isinstance(config, dict)
+    with patch('homeassistant.bootstrap.prepare_setup_component', mock_psc):
+        yield config
+
+    if domain is None:
+        assert len(config) == 1, ('assert_setup_component requires DOMAIN: {}'
+                                  .format(list(config.keys())))
+        domain = list(config.keys())[0]
+
+    res = config.get(domain)
+    res_len = 0 if res is None else len(res)
+    assert res_len == count, 'setup_component failed, expected {} got {}: {}' \
+        .format(count, res_len, res)

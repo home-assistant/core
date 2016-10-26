@@ -73,11 +73,6 @@ class XboxSensor(Entity):
         return self._gamertag
 
     @property
-    def entity_id(self):
-        """Return the entity ID."""
-        return 'sensor.xbox_' + self._gamertag
-
-    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state

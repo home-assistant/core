@@ -100,3 +100,6 @@ virtualization/vagrant/config
 
 # Built docs
 docs/build
+
+# Windows Explorer
+desktop.ini

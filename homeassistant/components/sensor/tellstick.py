@@ -7,25 +7,43 @@ https://home-assistant.io/components/sensor.tellstick/
 import logging
 from collections import namedtuple
 
-import homeassistant.util as util
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-
-DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['tellcore-py==1.1.2']
+
+DatatypeDescription = namedtuple('DatatypeDescription', ['name', 'unit'])
+
+CONF_DATATYPE_MASK = 'datatype_mask'
+CONF_ONLY_NAMED = 'only_named'
+CONF_TEMPERATURE_SCALE = 'temperature_scale'
+
+DEFAULT_DATATYPE_MASK = 127
+DEFAULT_ONLY_NAMED = False
+DEFAULT_TEMPERATURE_SCALE = TEMP_CELSIUS
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_ONLY_NAMED, default=DEFAULT_ONLY_NAMED): cv.boolean,
+    vol.Optional(CONF_TEMPERATURE_SCALE, default=DEFAULT_TEMPERATURE_SCALE):
+        cv.string,
+    vol.Optional(CONF_DATATYPE_MASK, default=DEFAULT_DATATYPE_MASK):
+        cv.positive_int,
+})
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Tellstick sensors."""
+    """Setup the Tellstick sensors."""
     import tellcore.telldus as telldus
     import tellcore.constants as tellcore_constants
 
     sensor_value_descriptions = {
         tellcore_constants.TELLSTICK_TEMPERATURE:
-        DatatypeDescription(
-            'temperature', config.get('temperature_scale', TEMP_CELSIUS)),
+        DatatypeDescription('temperature', config.get(CONF_TEMPERATURE_SCALE)),
 
         tellcore_constants.TELLSTICK_HUMIDITY:
         DatatypeDescription('humidity', '%'),
@@ -49,29 +67,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         core = telldus.TelldusCore()
     except OSError:
-        logging.getLogger(__name__).exception(
-            'Could not initialize Tellstick.')
+        logging.getLogger(__name__).exception('Could not initialize Tellstick')
         return
 
     sensors = []
-    datatype_mask = util.convert(config.get('datatype_mask'), int, 127)
+    datatype_mask = config.get(CONF_DATATYPE_MASK)
 
     for ts_sensor in core.sensors():
         try:
             sensor_name = config[ts_sensor.id]
         except KeyError:
-            if util.convert(config.get('only_named'), bool, False):
+            if config.get(CONF_ONLY_NAMED):
                 continue
             sensor_name = str(ts_sensor.id)
 
         for datatype in sensor_value_descriptions:
             if datatype & datatype_mask and ts_sensor.has_value(datatype):
-
                 sensor_info = sensor_value_descriptions[datatype]
-
-                sensors.append(
-                    TellstickSensor(
-                        sensor_name, ts_sensor, datatype, sensor_info))
+                sensors.append(TellstickSensor(
+                    sensor_name, ts_sensor, datatype, sensor_info))
 
     add_devices(sensors)
 
@@ -85,7 +99,7 @@ class TellstickSensor(Entity):
         self.sensor = sensor
         self._unit_of_measurement = sensor_info.unit or None
 
-        self._name = "{} {}".format(name, sensor_info.name)
+        self._name = '{} {}'.format(name, sensor_info.name)
 
     @property
     def name(self):

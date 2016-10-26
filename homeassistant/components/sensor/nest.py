@@ -16,7 +16,7 @@ from homeassistant.const import (
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
-                'mode',
+                'operation_mode',
                 'last_ip',
                 'local_ip',
                 'last_connection',
@@ -109,7 +109,10 @@ class NestBasicSensor(NestSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return getattr(self.device, self.variable)
+        if self.variable == 'operation_mode':
+            return getattr(self.device, "mode")
+        else:
+            return getattr(self.device, self.variable)
 
     @property
     def unit_of_measurement(self):
@@ -132,7 +135,11 @@ class NestTempSensor(NestSensor):
         if temp is None:
             return None
 
-        return round(temp, 1)
+        if isinstance(temp, tuple):
+            low, high = temp
+            return "%s-%s" % (int(low), int(high))
+        else:
+            return round(temp, 1)
 
 
 class NestWeatherSensor(NestSensor):

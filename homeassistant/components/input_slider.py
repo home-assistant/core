@@ -8,21 +8,19 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.util import slugify
 
 DOMAIN = 'input_slider'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NAME = 'name'
 CONF_INITIAL = 'initial'
 CONF_MIN = 'min'
 CONF_MAX = 'max'
-CONF_ICON = 'icon'
 CONF_STEP = 'step'
 
 ATTR_VALUE = 'value'
@@ -38,6 +36,33 @@ SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
 })
 
 
+def _cv_input_slider(cfg):
+    """Config validation helper for input slider (Voluptuous)."""
+    minimum = cfg.get(CONF_MIN)
+    maximum = cfg.get(CONF_MAX)
+    if minimum >= maximum:
+        raise vol.Invalid('Maximum ({}) is not greater than minimum ({})'
+                          .format(minimum, maximum))
+    state = cfg.get(CONF_INITIAL, minimum)
+    if state < minimum or state > maximum:
+        raise vol.Invalid('Initial value {} not in range {}-{}'
+                          .format(state, minimum, maximum))
+    cfg[CONF_INITIAL] = state
+    return cfg
+
+CONFIG_SCHEMA = vol.Schema({DOMAIN: {
+    cv.slug: vol.All({
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_MIN): vol.Coerce(float),
+        vol.Required(CONF_MAX): vol.Coerce(float),
+        vol.Optional(CONF_INITIAL): vol.Coerce(float),
+        vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float),
+                                                    vol.Range(min=1e-3)),
+        vol.Optional(CONF_ICON): cv.icon,
+        vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
+    }, _cv_input_slider)}}, required=True, extra=vol.ALLOW_EXTRA)
+
+
 def select_value(hass, entity_id, value):
     """Set input_slider to value."""
     hass.services.call(DOMAIN, SERVICE_SELECT_VALUE, {
@@ -48,35 +73,18 @@ def select_value(hass, entity_id, value):
 
 def setup(hass, config):
     """Set up input slider."""
-    if not isinstance(config.get(DOMAIN), dict):
-        _LOGGER.error('Expected %s config to be a dictionary', DOMAIN)
-        return False
-
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
-        if object_id != slugify(object_id):
-            _LOGGER.warning("Found invalid key for boolean input: %s. "
-                            "Use %s instead", object_id, slugify(object_id))
-            continue
-        if not cfg:
-            _LOGGER.warning("No configuration specified for %s", object_id)
-            continue
-
         name = cfg.get(CONF_NAME)
         minimum = cfg.get(CONF_MIN)
         maximum = cfg.get(CONF_MAX)
         state = cfg.get(CONF_INITIAL, minimum)
-        step = cfg.get(CONF_STEP, 1)
+        step = cfg.get(CONF_STEP)
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
-
-        if state < minimum:
-            state = minimum
-        if state > maximum:
-            state = maximum
 
         entities.append(InputSlider(object_id, name, state, minimum, maximum,
                                     step, icon, unit))

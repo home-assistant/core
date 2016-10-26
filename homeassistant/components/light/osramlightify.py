@@ -9,30 +9,24 @@ import socket
 import random
 from datetime import timedelta
 
+import voluptuous as vol
+
 from homeassistant import util
 from homeassistant.const import CONF_HOST
 from homeassistant.components.light import (
-    Light,
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
-    ATTR_EFFECT,
-    ATTR_RGB_COLOR,
-    ATTR_TRANSITION,
-    EFFECT_RANDOM,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION,
-)
+    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_RGB_COLOR,
+    ATTR_TRANSITION, EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
+    SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, PLATFORM_SCHEMA)
+import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['lightify==1.0.3']
 
-TEMP_MIN = 2000               # lightify minimum temperature
-TEMP_MAX = 6500               # lightify maximum temperature
-TEMP_MIN_HASS = 154           # home assistant minimum temperature
-TEMP_MAX_HASS = 500           # home assistant maximum temperature
+_LOGGER = logging.getLogger(__name__)
+
+TEMP_MIN = 2000  # lightify minimum temperature
+TEMP_MAX = 6500  # lightify maximum temperature
+TEMP_MIN_HASS = 154  # home assistant minimum temperature
+TEMP_MAX_HASS = 500  # home assistant maximum temperature
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
@@ -40,9 +34,13 @@ SUPPORT_OSRAMLIGHTIFY = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
                          SUPPORT_EFFECT | SUPPORT_RGB_COLOR |
                          SUPPORT_TRANSITION)
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+})
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup Osram Lightify lights."""
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the Osram Lightify lights."""
     import lightify
     host = config.get(CONF_HOST)
     if host:
@@ -53,7 +51,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                                                                      str(err))
             _LOGGER.exception(msg)
             return False
-        setup_bridge(bridge, add_devices_callback)
+        setup_bridge(bridge, add_devices)
     else:
         _LOGGER.error('No host found in configuration')
         return False

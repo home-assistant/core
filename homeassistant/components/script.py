@@ -23,6 +23,7 @@ from homeassistant.helpers.script import Script
 
 DOMAIN = "script"
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+GROUP_NAME_ALL_SCRIPTS = 'all scripts'
 DEPENDENCIES = ["group"]
 
 CONF_SEQUENCE = "sequence"
@@ -50,7 +51,7 @@ SCRIPT_TURN_ONOFF_SCHEMA = vol.Schema({
 
 
 def is_on(hass, entity_id):
-    """Return if the switch is on based on the statemachine."""
+    """Return if the script is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
 
 
@@ -73,7 +74,8 @@ def toggle(hass, entity_id):
 
 def setup(hass, config):
     """Load the scripts from the configuration."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass,
+                                group_name=GROUP_NAME_ALL_SCRIPTS)
 
     def service_handler(service):
         """Execute a service call to script.<script name>."""
@@ -124,7 +126,7 @@ class ScriptEntity(ToggleEntity):
     def __init__(self, hass, object_id, name, sequence):
         """Initialize the script."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self.script = Script(hass, sequence, name, self.update_ha_state)
+        self.script = Script(hass, sequence, name, self.async_update_ha_state)
 
     @property
     def should_poll(self):
@@ -152,7 +154,7 @@ class ScriptEntity(ToggleEntity):
         return self.script.is_running
 
     def turn_on(self, **kwargs):
-        """Turn the entity on."""
+        """Turn the script on."""
         self.script.run(kwargs.get(ATTR_VARIABLES))
 
     def turn_off(self, **kwargs):
