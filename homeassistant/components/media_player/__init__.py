@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/media_player/
 """
 import asyncio
+import functools
 import hashlib
 import logging
 import os
@@ -672,6 +673,29 @@ class MediaPlayerDevice(Entity):
 
         return state_attr
 
+    def preload_media_image_url(self, image_url):
+        """Preload and cache a media image for future use."""
+        self.hass.loop.call_later(
+            0.1,
+            _fetch_image,
+            image_url
+        )
+
+
+@functools.lru_cache(maxsize=16)
+def _fetch_image(url):
+    """Helper method to fetch image. Up to 16 images are cached in memory (the
+    images are typically 10-100kB in size).
+    """
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.content, response.headers.get('content-type')
+    except requests.RequestException:
+        pass
+
+    return None, None
+
 
 class MediaPlayerImageView(HomeAssistantView):
     """Media player view to serve an image."""
@@ -698,21 +722,13 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=401)
 
-        image_url = player.media_image_url
+        data, content_type = yield from self.hass.loop.run_in_executor(
+            None,
+            _fetch_image,
+            player.media_image_url
+        )
 
-        if image_url is None:
-            return web.Response(status=404)
-
-        def fetch_image():
-            """Helper method to fetch image."""
-            try:
-                return requests.get(image_url).content
-            except requests.RequestException:
-                return None
-
-        response = yield from self.hass.loop.run_in_executor(None, fetch_image)
-
-        if response is None:
+        if data is None:
             return web.Response(status=500)
 
-        return web.Response(body=response)
+        return web.Response(body=data, content_type=content_type)
