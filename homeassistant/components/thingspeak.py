@@ -46,7 +46,7 @@ def setup(hass, config):
                       "API key is correct.")
         return False
 
-    def thingspeak_event_listener(event):
+    def thingspeak_listener(entity_id, old_state, new_state):
         """Listen for new events and send them to thingspeak."""
         state = event.data.get('new_state')
         if state is None or state.state in (
@@ -65,6 +65,6 @@ def setup(hass, config):
                 'Error while sending value "%s" to Thingspeak',
                 _state)
 
-    hass.bus.listen(EVENT_STATE_CHANGED, thingspeak_event_listener)
+    track_state_change(hass, entity, thingspeak_listener)
 
     return True
