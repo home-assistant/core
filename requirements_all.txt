@@ -358,6 +358,7 @@ pyfttt==0.3
 # homeassistant.components.homematic
 pyhomematic==0.1.16
 
+# homeassistant.components.icloud
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
 

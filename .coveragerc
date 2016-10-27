@@ -28,6 +28,9 @@ omit =
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
 
+    homeassistant/components/icloud.py
+    homeassistant/components/*/icloud.py
+
     homeassistant/components/insteon_hub.py
     homeassistant/components/*/insteon_hub.py
 
@@ -143,7 +146,6 @@ omit =
     homeassistant/components/device_tracker/bluetooth_tracker.py
     homeassistant/components/device_tracker/bt_home_hub_5.py
     homeassistant/components/device_tracker/fritz.py
-    homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py

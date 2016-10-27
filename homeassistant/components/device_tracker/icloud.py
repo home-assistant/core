@@ -36,6 +36,9 @@ def setup_scanner(hass, config, see):
     from pyicloud.exceptions import PyiCloudNoDevicesException
     logging.getLogger("pyicloud.base").setLevel(logging.WARNING)
 
+    _LOGGER.warning(
+        "This component is deprecated. Update to the new icloud platform.")
+
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
 
