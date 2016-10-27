@@ -37,7 +37,7 @@ def async_setup(hass, config):
     hass.http.register_view(CameraImageView(hass, component.entities))
     hass.http.register_view(CameraMjpegStream(hass, component.entities))
 
-    hass.loop.create_task(component.async_setup(config))
+    yield from component.async_setup(config)
     return True
 
 
