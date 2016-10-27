@@ -277,8 +277,8 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
 
     def icloud_trusted_device_callback(self, callback_data):
         """The trusted device is chosen."""
-        self._trusted_device = int(callback_data.get('0', '0'))
-        self._trusted_device = self.api.trusted_devices[self._trusted_device]
+        trusted_device = int(callback_data.get('0', '0'))
+        self._trusted_device = self.api.trusted_devices[trusted_device]
         if self.accountname in _CONFIGURING:
             request_id = _CONFIGURING.pop(self.accountname)
             configurator = get_component('configurator')
@@ -308,15 +308,13 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
             fields=[{'id': '0'}]
         )
 
-    def icloud_verification_code_callback(self, callback_data):
+    def icloud_verification_callback(self, callback_data):
         """The trusted device is chosen."""
         self._verification_code = callback_data.get('0')
         if self.accountname in _CONFIGURING:
             request_id = _CONFIGURING.pop(self.accountname)
             configurator = get_component('configurator')
             configurator.request_done(request_id)
-            _LOGGER.info('iCloud: Verification code entered for %s',
-                         self.accountname)
 
     def icloud_need_verification_code(self):
         """We need a verification code."""
@@ -325,13 +323,11 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
             return
 
         if self.api.send_verification_code(self._trusted_device):
-            _LOGGER.info('Verification code sent to device %s',
-                         self._trusted_device.get('deviceName'))
             self._verification_code = 'waiting'
 
         _CONFIGURING[self.accountname] = configurator.request_config(
             self.hass, 'iCloud {}'.format(self.accountname),
-            self.icloud_verification_code_callback,
+            self.icloud_verification_callback,
             description=('Please enter the validation code:'),
             description_image="/static/images/config_icloud.png",
             submit_caption='Confirm',
