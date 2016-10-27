@@ -296,3 +296,46 @@ class TestPilight(unittest.TestCase):
             info_log_call = mock_info.call_args_list[-1]
 
             self.assertFalse('Event pilight_received' in info_log_call)
+
+
+class TestPilightCallrateThrottler(unittest.TestCase):
+    """Test the Throttler used to throttle calls to send_code."""
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+    def test_call_rate_delay_throttle_disabled(self):
+        """Test that the limiter is a noop if no delay set."""
+        runs = []
+
+        limit = pilight.CallRateDelayThrottle(self.hass, 0.0)
+        action = limit.limited(lambda x: runs.append(x))
+
+        for i in range(3):
+            action(i)
+
+        self.assertEqual(runs, [0, 1, 2])
+
+    def test_call_rate_delay_throttle_enabled(self):
+        """Test that throttling actually work."""
+        runs = []
+        delay = 5.0
+
+        limit = pilight.CallRateDelayThrottle(self.hass, delay)
+        action = limit.limited(lambda x: runs.append(x))
+
+        for i in range(3):
+            action(i)
+
+        self.assertEqual(runs, [])
+
+        exp = []
+        now = dt_util.utcnow()
+        for i in range(3):
+            exp.append(i)
+            shifted_time = now + (timedelta(seconds=delay + 0.1) * i)
+            self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
+                               {ha.ATTR_NOW: shifted_time})
+            self.hass.block_till_done()
+            self.assertEqual(runs, exp)
