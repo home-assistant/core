@@ -360,7 +360,7 @@ pyenvisalink==1.7
 pyfttt==0.3
 
 # homeassistant.components.light.mipow
-pygatt[GATTTOOL]==3.0.0
+pygatt==3.0.0
 
 # homeassistant.components.homematic
 pyhomematic==0.1.16
