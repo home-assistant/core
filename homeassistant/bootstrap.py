@@ -418,11 +418,6 @@ def from_config_file(config_path: str,
     if hass is None:
         hass = core.HomeAssistant()
 
-    # Set config dir to directory holding config file
-    config_dir = os.path.abspath(os.path.dirname(config_path))
-    hass.config.config_dir = config_dir
-    mount_local_lib_path(config_dir)
-
     @asyncio.coroutine
     def _async_init_from_config_file(future):
         try:
@@ -452,6 +447,12 @@ def async_from_config_file(config_path: str,
     Will add functionality to 'hass' parameter.
     This method is a coroutine.
     """
+    # Set config dir to directory holding config file
+    config_dir = os.path.abspath(os.path.dirname(config_path))
+    hass.config.config_dir = config_dir
+    yield from hass.loop.run_in_executor(
+        None, mount_local_lib_path, config_dir)
+
     enable_logging(hass, verbose, log_rotate_days)
 
     try:
@@ -544,24 +545,24 @@ def async_log_exception(ex, domain, config, hass):
     _PERSISTENT_VALIDATION.add(domain)
     message = ('The following platforms contain invalid configuration:  ' +
                ', '.join(list(_PERSISTENT_VALIDATION)) +
-               '  (please check your configuration)')
+               '  (please check your configuration). ')
     persistent_notification.async_create(
         hass, message, 'Invalid config', 'invalid_config')
 
     if 'extra keys not allowed' in ex.error_message:
         message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
                    .format(ex.path[-1], domain, domain,
-                           '->'.join('%s' % m for m in ex.path))
+                           '->'.join(str(m) for m in ex.path))
     else:
         message += '{}.'.format(humanize_error(config, ex))
 
     domain_config = config.get(domain, config)
-    message += " (See {}:{})".format(
+    message += " (See {}:{}). ".format(
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
 
     if domain != 'homeassistant':
-        message += (' Please check the docs at '
+        message += ('Please check the docs at '
                     'https://home-assistant.io/components/{}/'.format(domain))
 
     _LOGGER.error(message)

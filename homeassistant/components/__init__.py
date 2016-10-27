@@ -83,7 +83,7 @@ def reload_core_config(hass):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup general services related to Home Assistant."""
-    @ha.callback
+    @asyncio.coroutine
     def handle_turn_service(service):
         """Method to handle calls to homeassistant.turn_on/off."""
         entity_ids = extract_entity_ids(hass, service)
@@ -98,6 +98,8 @@ def async_setup(hass, config):
         # Group entity_ids by domain. groupby requires sorted data.
         by_domain = it.groupby(sorted(entity_ids),
                                lambda item: ha.split_entity_id(item)[0])
+
+        tasks = []
 
         for domain, ent_ids in by_domain:
             # We want to block for all calls and only return when all calls
@@ -114,8 +116,10 @@ def async_setup(hass, config):
             # ent_ids is a generator, convert it to a list.
             data[ATTR_ENTITY_ID] = list(ent_ids)
 
-            hass.loop.create_task(hass.services.async_call(
+            tasks.append(hass.services.async_call(
                 domain, service.service, data, blocking))
+
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)

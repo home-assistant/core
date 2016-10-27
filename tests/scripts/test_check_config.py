@@ -5,8 +5,6 @@ import os
 import unittest
 from unittest.mock import patch
 
-import pytest
-
 import homeassistant.scripts.check_config as check_config
 from tests.common import patch_yaml_files, get_test_config_dir
 
@@ -47,13 +45,11 @@ def tearDownModule(self):  # pylint: disable=invalid-name
         os.remove(path)
 
 
-@pytest.mark.skipif("os.environ.get('check_config') != 'RUN'")
-@patch('asyncio.get_event_loop', return_value=asyncio.new_event_loop())
 class TestCheckConfig(unittest.TestCase):
     """Tests for the homeassistant.scripts.check_config module."""
 
     # pylint: disable=no-self-use,invalid-name
-    def test_config_platform_valid(self, mock_get_loop):
+    def test_config_platform_valid(self):
         """Test a valid platform setup."""
         files = {
             'light.yaml': BASE_CONFIG + 'light:\n  platform: demo',
@@ -69,7 +65,7 @@ class TestCheckConfig(unittest.TestCase):
                 'yaml_files': ['.../light.yaml']
             }, res)
 
-    def test_config_component_platform_fail_validation(self, mock_get_loop):
+    def test_config_component_platform_fail_validation(self):
         """Test errors if component & platform not found."""
         files = {
             'component.yaml': BASE_CONFIG + 'http:\n  password: err123',
@@ -107,7 +103,7 @@ class TestCheckConfig(unittest.TestCase):
             self.assertDictEqual({}, res['secrets'])
             self.assertListEqual(['.../platform.yaml'], res['yaml_files'])
 
-    def test_component_platform_not_found(self, mock_get_loop):
+    def test_component_platform_not_found(self):
         """Test errors if component or platform not found."""
         files = {
             'badcomponent.yaml': BASE_CONFIG + 'beer:',
@@ -134,7 +130,7 @@ class TestCheckConfig(unittest.TestCase):
             self.assertDictEqual({}, res['secrets'])
             self.assertListEqual(['.../badplatform.yaml'], res['yaml_files'])
 
-    def test_secrets(self, mock_get_loop):
+    def test_secrets(self):
         """Test secrets config checking method."""
         files = {
             get_test_config_dir('secret.yaml'): (

@@ -359,37 +359,25 @@ class TestAutomation(unittest.TestCase):
 
         automation.toggle(self.hass, entity_id)
         self.hass.block_till_done()
+
+        assert automation.is_on(self.hass, entity_id)
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
         assert len(self.calls) == 2
 
-        assert automation.is_on(self.hass, entity_id)
-        self.hass.bus.fire('test_event')
+        automation.trigger(self.hass, entity_id)
         self.hass.block_till_done()
         assert len(self.calls) == 3
 
-        automation.trigger(self.hass, entity_id)
-        self.hass.block_till_done()
-        self.hass.bus.fire('test_event')
-        self.hass.block_till_done()
-        assert len(self.calls) == 5
-
         automation.turn_off(self.hass, entity_id)
         self.hass.block_till_done()
-        self.hass.bus.fire('test_event')
-        self.hass.block_till_done()
         automation.trigger(self.hass, entity_id)
         self.hass.block_till_done()
-        self.hass.bus.fire('test_event')
-        self.hass.block_till_done()
-        assert len(self.calls) == 6
+        assert len(self.calls) == 4
 
         automation.turn_on(self.hass, entity_id)
         self.hass.block_till_done()
-        self.hass.bus.fire('test_event')
-        self.hass.block_till_done()
         assert automation.is_on(self.hass, entity_id)
-        assert len(self.calls) == 7
 
     @patch('homeassistant.config.load_yaml_config_file', autospec=True,
            return_value={
