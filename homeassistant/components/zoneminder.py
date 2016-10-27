@@ -14,7 +14,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_PATH, CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
+    CONF_PATH, CONF_HOST, CONF_SSL, CONF_PASSWORD, CONF_USERNAME)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,6 +26,7 @@ DOMAIN = 'zoneminder'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_PATH, default="/zm/"): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string
@@ -42,7 +43,12 @@ def setup(hass, config):
     ZM = {}
 
     conf = config[DOMAIN]
-    url = urljoin("http://" + conf[CONF_HOST], conf[CONF_PATH])
+    if conf[CONF_SSL]:
+        schema = "https"
+    else:
+        schema = "http"
+
+    url = urljoin(schema + "://" + conf[CONF_HOST], conf[CONF_PATH])
     username = conf.get(CONF_USERNAME, None)
     password = conf.get(CONF_PASSWORD, None)
 
