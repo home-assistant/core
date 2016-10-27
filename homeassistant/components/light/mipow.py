@@ -22,7 +22,7 @@ from homeassistant.components.light import (
 )
 _LOGGER = logging.getLogger(__name__)
 CHARNAME = "0000fffc-0000-1000-8000-00805f9b34fb"
-REQUIREMENTS = ['pygatt[GATTTOOL]==3.0.0']
+REQUIREMENTS = ['pygatt==3.0.0', 'pexpect==4.0.1']
 # pylint: disable=unused-argument
 SUPPORT_MIPOW = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH |
                  SUPPORT_RGB_COLOR)
@@ -87,7 +87,7 @@ class Mipow(Light):
         """Connect to lamp."""
         import pygatt
         if self._connection is not None:
-            if self._connection._connected:
+            if self._connection.connected:
                 return self._connection
         else:
             if self._adapter is not None:
@@ -113,13 +113,11 @@ class Mipow(Light):
     @property
     def rgb_color(self):
         """Read rgb color."""
-
         return self._rgb_color
 
     @property
     def rgb_bright(self):
         """Read brightness."""
-
         return self._rgb_bright
 
     @property
@@ -140,16 +138,13 @@ class Mipow(Light):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         self._connection = self.connect()
-        cm = ([0x00, 0x00, 0x14, 0x01])
-        cmd = ([0x00, 0x00, 0x14, 0x02])
-        if (ATTR_RGB_COLOR in kwargs):
-                self._rgb_color = [x for x in kwargs[ATTR_RGB_COLOR]]
-                brgb = [0]
-                brgb.append(self._rgb_color[0])
-                brgb.append(self._rgb_color[1])
-                brgb.append(self._rgb_color[2])
+        cms = [0x00, 0x00, 0x14, 0x01]
+        cmd = [0x00, 0x00, 0x14, 0x02]
+        if ATTR_RGB_COLOR in kwargs:
+            self._rgb_color = kwargs[ATTR_RGB_COLOR]
+            brgb = [0] + self._rgb_color
         elif ATTR_BRIGHTNESS in kwargs:
-                brgb = ([kwargs[ATTR_BRIGHTNESS], 0, 0, 0])
+            brgb = ([kwargs[ATTR_BRIGHTNESS], 0, 0, 0])
         effect = kwargs.get(ATTR_EFFECT)
         if ATTR_EFFECT in kwargs:
             if effect == EFFECT_COLORLOOP:
@@ -166,7 +161,7 @@ class Mipow(Light):
                 outp = brgb + cmd
                 self._connection.char_write_handle(0x0023, outp)
             if flash == FLASH_SHORT:
-                outp = brgb + cm
+                outp = brgb + cms
                 self._connection.char_write_handle(0x0023, outp)
         elif not self.is_on:
             self._connection.char_write_handle(0x0025, [255, 0, 0, 0])
