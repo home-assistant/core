@@ -14,7 +14,7 @@ from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import CONF_DEVICE, CONF_USERNAME, CONF_PASSWORD,\
     CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN, STATE_CLOSED, STATE_OPEN,\
-    CONF_COVERS, ATTR_HIDDEN
+    CONF_COVERS
 import homeassistant.helpers.config_validation as cv
 
 DEFAULT_NAME = 'Garadget'
@@ -22,6 +22,7 @@ DEFAULT_NAME = 'Garadget'
 ATTR_SIGNAL_STRENGTH = "wifi signal strength (dB)"
 ATTR_TIME_IN_STATE = "time in state"
 ATTR_SENSOR_STRENGTH = "sensor reflection rate"
+ATTR_AVAILABLE = "available"
 
 STATE_OPENING = "opening"
 STATE_CLOSING = "closing"
@@ -87,7 +88,7 @@ class GaradgetCover(CoverDevice):
         self.signal = None
         self.sensor = None
         self._unsub_listener_cover = None
-        self._hidden = False
+        self._available = True
 
         if self.access_token is None:
             self.access_token = self.get_token()
@@ -104,14 +105,14 @@ class GaradgetCover(CoverDevice):
             _LOGGER.error('Unable to connect to server: %(reason)s',
                           dict(reason=ex))
             self._state = STATE_OFFLINE
-            self._hidden = True
+            self._available = False
             self._name = DEFAULT_NAME
         except KeyError as ex:
             _LOGGER.warning('Garadget device %(device)s seems to be offline',
                             dict(device=self.device_id))
             self._name = DEFAULT_NAME
             self._state = STATE_OFFLINE
-            self._hidden = True
+            self._available = False
 
     def __del__(self):
         """Try to remove token."""
@@ -130,6 +131,11 @@ class GaradgetCover(CoverDevice):
         return True
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
+    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         data = {}
@@ -143,8 +149,8 @@ class GaradgetCover(CoverDevice):
         if self.sensor is not None:
             data[ATTR_SENSOR_STRENGTH] = self.sensor
 
-        if self._hidden is not None:
-            data[ATTR_HIDDEN] = self._hidden
+        if self._available is not None:
+            data[ATTR_AVAILABLE] = self._available
 
         if self.access_token is not None:
             data[CONF_ACCESS_TOKEN] = self.access_token
@@ -199,7 +205,6 @@ class GaradgetCover(CoverDevice):
             ret = self._put_command("setState", "close")
             self._start_watcher('close')
             return ret.get('return_value') == 1
-        return
 
     def open_cover(self):
         """Open the cover."""
@@ -207,7 +212,6 @@ class GaradgetCover(CoverDevice):
             ret = self._put_command("setState", "open")
             self._start_watcher('open')
             return ret.get('return_value') == 1
-        return
 
     def stop_cover(self):
         """Stop the door where it is."""
@@ -215,7 +219,6 @@ class GaradgetCover(CoverDevice):
             ret = self._put_command("setState", "stop")
             self._start_watcher('stop')
             return ret['return_value'] == 1
-        return
 
     def update(self):
         """Get updated status from API."""
@@ -226,7 +229,7 @@ class GaradgetCover(CoverDevice):
             self.time_in_state = status['time']
             self.signal = status['signal']
             self.sensor = status['sensor']
-            self._hidden = False
+            self._availble = True
         except requests.exceptions.ConnectionError as ex:
             _LOGGER.error('Unable to connect to server: %(reason)s',
                           dict(reason=ex))
@@ -240,8 +243,6 @@ class GaradgetCover(CoverDevice):
             if self._unsub_listener_cover is not None:
                 self._unsub_listener_cover()
                 self._unsub_listener_cover = None
-
-        return
 
     def _get_variable(self, var):
         """Get latest status."""
