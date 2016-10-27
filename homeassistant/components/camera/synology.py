@@ -207,7 +207,7 @@ class SynologyCamera(Camera):
     def async_read_sid(self):
         """Get a session id."""
         self._session_id = yield from get_session_id(
-            self.hass
+            self.hass,
             self._username,
             self._password,
             self._login_url,
