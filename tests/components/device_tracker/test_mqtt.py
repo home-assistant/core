@@ -4,7 +4,7 @@ from unittest.mock import patch
 import logging
 import os
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM
 
@@ -42,7 +42,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
             dev_id = 'paulus'
             topic = '/location/paulus'
             self.hass.config.components = ['mqtt', 'zone']
-            assert _setup_component(self.hass, device_tracker.DOMAIN, {
+            assert setup_component(self.hass, device_tracker.DOMAIN, {
                 device_tracker.DOMAIN: {
                     CONF_PLATFORM: 'mqtt',
                     'devices': {dev_id: topic}
@@ -58,7 +58,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         location = 'work'
 
         self.hass.config.components = ['mqtt', 'zone']
-        assert _setup_component(self.hass, device_tracker.DOMAIN, {
+        assert setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'mqtt',
                 'devices': {dev_id: topic}

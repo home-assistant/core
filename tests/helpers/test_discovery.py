@@ -127,4 +127,4 @@ class TestHelpersDiscovery:
         assert 'test_component' in self.hass.config.components
         assert 'switch' in self.hass.config.components
         assert len(component_calls) == 1
-        assert len(platform_calls) == 2
+        assert len(platform_calls) == 1

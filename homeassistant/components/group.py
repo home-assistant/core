@@ -144,15 +144,17 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
             if ent_id.startswith(domain_filter)]
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Setup all groups found definded in the configuration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    run_coroutine_threadsafe(
-        _async_process_config(hass, config, component), hass.loop).result()
+    yield from _async_process_config(hass, config, component)
 
-    descriptions = conf_util.load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.loop.run_in_executor(
+        None, conf_util.load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml')
+    )
 
     @asyncio.coroutine
     def reload_service_handler(service_call):
@@ -162,9 +164,9 @@ def setup(hass, config):
             return
         hass.loop.create_task(_async_process_config(hass, conf, component))
 
-    hass.services.register(DOMAIN, SERVICE_RELOAD, reload_service_handler,
-                           descriptions[DOMAIN][SERVICE_RELOAD],
-                           schema=RELOAD_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_RELOAD, reload_service_handler,
+        descriptions[DOMAIN][SERVICE_RELOAD], schema=RELOAD_SERVICE_SCHEMA)
 
     return True
 
