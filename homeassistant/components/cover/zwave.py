@@ -122,7 +122,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
                'Open' or value.command_class == \
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Down':
+               'Up':
                 self._lozwmgr.pressButton(value.value_id)
                 break
 
@@ -132,7 +132,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                 class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == \
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Up' or value.command_class == \
+               'Down' or value.command_class == \
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
                'Close':
                 self._lozwmgr.pressButton(value.value_id)
