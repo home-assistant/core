@@ -107,9 +107,8 @@ class HomeAssistant(object):
 
     def __init__(self, loop=None):
         """Initialize new Home Assistant object."""
-        if sys.platform == "win32" and loop is None:
-            self.loop = asyncio.ProactorEventLoop()
-            asyncio.set_event_loop(self.loop)
+        if sys.platform == "win32":
+            self.loop = loop or asyncio.ProactorEventLoop()
         else:
             self.loop = loop or asyncio.get_event_loop()
 
