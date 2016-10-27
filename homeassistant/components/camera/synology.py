@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
