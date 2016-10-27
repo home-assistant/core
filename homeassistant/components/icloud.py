@@ -19,6 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
+from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +45,8 @@ ATTR_GMTT_DURATION = 'gmtt_duration'
 ATTR_GMTT_ORIGIN = 'gmtt_origin'
 
 ICLOUDTRACKERS = {}
+
+_CONFIGURING = {}
 
 DOMAIN = 'icloud'
 
@@ -138,6 +141,17 @@ def setup(hass, config):
     hass.services.register(DOMAIN,
                            'update_icloud', update_icloud)
 
+    def reset_account_icloud(call):
+        """Reset an icloud account."""
+        accountname = call.data.get(ATTR_ACCOUNTNAME)
+        if accountname is None:
+            for account in ICLOUDTRACKERS:
+                ICLOUDTRACKERS[account].reset_account_icloud()
+        elif accountname in ICLOUDTRACKERS:
+            ICLOUDTRACKERS[accountname].reset_account_icloud()
+    hass.services.register(DOMAIN,
+                           'reset_account_icloud', reset_account_icloud)
+
     def setinterval(call):
         """Call the update function of an icloud account."""
         accountname = call.data.get(ATTR_ACCOUNTNAME)
@@ -176,6 +190,9 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         self.googletraveltime = googletraveltime
         self._overridestates = {}
         self._intervals = {}
+
+        self._trusted_device = None
+        self._verification_code = None
 
         self._attrs = {}
         self._attrs[ATTR_ACCOUNTNAME] = name
@@ -233,6 +250,94 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
         """Return the icon to use for device if any."""
         return 'mdi:account'
 
+    def reset_account_icloud(self):
+        """Reset an icloud account."""
+        from pyicloud import PyiCloudService
+        from pyicloud.exceptions import PyiCloudFailedLoginException
+        try:
+            self.api = PyiCloudService(
+                self.username, self.password,
+                cookie_directory=self.cookiedir, verify=True)
+            for device in self.api.devices:
+                status = device.status(DEVICESTATUSSET)
+                devicename = slugify(status['name'].replace(' ', '', 99))
+                if (devicename not in self.devices and
+                        devicename not in self._ignored_devices):
+                    track_state_change(
+                        self.hass, 'device_tracker.' + devicename,
+                        self.devicechanged)
+                    self.devices[devicename] = device
+                    self._intervals[devicename] = 1
+                    self._overridestates[devicename] = None
+                elif devicename in self._ignored_devices:
+                    self._ignored_identifiers[devicename] = device
+
+        except PyiCloudFailedLoginException as error:
+            _LOGGER.error('Error logging into iCloud Service: %s', error)
+
+    def icloud_trusted_device_callback(self, callback_data):
+        """The trusted device is chosen."""
+        self._trusted_device = int(callback_data.get('0', '0'))
+        self._trusted_device = self.api.trusted_devices[self._trusted_device]
+        if self.accountname in _CONFIGURING:
+            request_id = _CONFIGURING.pop(self.accountname)
+            configurator = get_component('configurator')
+            configurator.request_done(request_id)
+            _LOGGER.info('iCloud: Trusted device chosen for %s',
+                         self.accountname)
+
+    def icloud_need_trusted_device(self):
+        """We need a trusted device."""
+        configurator = get_component('configurator')
+        if self.accountname in _CONFIGURING:
+            return
+
+        devicesstring = ''
+        devices = self.api.trusted_devices
+        for i, device in enumerate(devices):
+            devicesstring += "{}: {};".format(i, device.get('deviceName'))
+
+        _CONFIGURING[self.accountname] = configurator.request_config(
+            self.hass, 'iCloud {}'.format(self.accountname),
+            self.icloud_trusted_device_callback,
+            description=(
+                'Please choose your trusted device by entering'
+                ' the index from this list: ' + devicesstring),
+            description_image="/static/images/config_icloud.png",
+            submit_caption='Confirm',
+            fields=[{'id': '0'}]
+        )
+
+    def icloud_verification_code_callback(self, callback_data):
+        """The trusted device is chosen."""
+        self._verification_code = callback_data.get('0')
+        if self.accountname in _CONFIGURING:
+            request_id = _CONFIGURING.pop(self.accountname)
+            configurator = get_component('configurator')
+            configurator.request_done(request_id)
+            _LOGGER.info('iCloud: Verification code entered for %s',
+                         self.accountname)
+
+    def icloud_need_verification_code(self):
+        """We need a verification code."""
+        configurator = get_component('configurator')
+        if self.accountname in _CONFIGURING:
+            return
+
+        if self.api.send_verification_code(self._trusted_device):
+            _LOGGER.info('Verification code sent to device %s',
+                         self._trusted_device.get('deviceName'))
+            self._verification_code = 'waiting'
+
+        _CONFIGURING[self.accountname] = configurator.request_config(
+            self.hass, 'iCloud {}'.format(self.accountname),
+            self.icloud_verification_code_callback,
+            description=('Please enter the validation code:'),
+            description_image="/static/images/config_icloud.png",
+            submit_caption='Confirm',
+            fields=[{'code': '0'}]
+        )
+
     def keep_alive(self, now):
         """Keep the api alive."""
         # pylint: disable=too-many-locals,too-many-branches,too-many-statements
@@ -249,22 +354,28 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
                               error)
 
         if self.api is not None:
-            self.api.authenticate()
-            for device in self.api.devices:
-                if (device not in self.devices.values() and
-                        device not in self._ignored_identifiers.values()):
-                    status = device.status(DEVICESTATUSSET)
-                    devicename = slugify(status['name'].replace(' ', '', 99))
-                    if (devicename not in self.devices and
-                            devicename not in self._ignored_devices):
-                        track_state_change(
-                            self.hass, 'device_tracker.' + devicename,
-                            self.devicechanged)
-                        self.devices[devicename] = device
-                        self._intervals[devicename] = 1
-                        self._overridestates[devicename] = None
-                    elif devicename in self._ignored_devices:
-                        self._ignored_identifiers[devicename] = device
+            if self.api.requires_2fa:
+                from pyicloud.exceptions import PyiCloud2FARequiredError
+                try:
+                    self.api.authenticate()
+                except PyiCloud2FARequiredError as error:
+                    if self._trusted_device is None:
+                        self.icloud_need_trusted_device()
+                        return
+
+                    if self._verification_code is None:
+                        self.icloud_need_verification_code()
+                        return
+
+                    if self._verification_code == 'waiting':
+                        return
+
+                    if self.api.validate_verification_code(
+                            self._trusted_device, self._verification_code):
+                        self._verification_code = None
+            else:
+                self.api.authenticate()
+
             for devicename in self.devices:
                 self.update_device(devicename)
 
