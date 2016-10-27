@@ -2,7 +2,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 import homeassistant.util.dt as dt_util
 from tests.common import get_test_home_assistant, load_fixture
 
@@ -28,7 +28,7 @@ class TestSensorYr:
 
         with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
                    return_value=now):
-                assert _setup_component(self.hass, 'sensor', {
+                assert setup_component(self.hass, 'sensor', {
                                 'sensor': {'platform': 'yr',
                                            'elevation': 0}})
 
@@ -46,7 +46,7 @@ class TestSensorYr:
 
         with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
                    return_value=now):
-            assert _setup_component(self.hass, 'sensor', {
+            assert setup_component(self.hass, 'sensor', {
                                     'sensor': {'platform': 'yr',
                                                'elevation': 0,
                                                'monitored_conditions': [

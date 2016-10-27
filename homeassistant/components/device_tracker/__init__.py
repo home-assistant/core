@@ -114,7 +114,7 @@ def setup(hass: HomeAssistantType, config: ConfigType):
     try:
         conf = config.get(DOMAIN, [])
     except vol.Invalid as ex:
-        log_exception(ex, DOMAIN, config)
+        log_exception(ex, DOMAIN, config, hass)
         return False
     else:
         conf = conf[0] if len(conf) > 0 else {}
@@ -431,7 +431,7 @@ def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
                 device = dev_schema(device)
                 device['dev_id'] = cv.slugify(dev_id)
             except vol.Invalid as exp:
-                log_exception(exp, dev_id, devices)
+                log_exception(exp, dev_id, devices, hass)
             else:
                 result.append(Device(hass, **device))
         return result
