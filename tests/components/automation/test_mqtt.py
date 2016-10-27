@@ -1,7 +1,7 @@
 """The tests for the MQTT automation."""
 import unittest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.automation as automation
 from tests.common import (
     mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
@@ -28,7 +28,7 @@ class TestAutomationMQTT(unittest.TestCase):
 
     def test_if_fires_on_topic_match(self):
         """Test if message is fired on topic match."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'mqtt',
@@ -58,7 +58,7 @@ class TestAutomationMQTT(unittest.TestCase):
 
     def test_if_fires_on_topic_and_payload_match(self):
         """Test if message is fired on topic and payload match."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'mqtt',
@@ -77,7 +77,7 @@ class TestAutomationMQTT(unittest.TestCase):
 
     def test_if_not_fires_on_topic_but_no_payload_match(self):
         """Test if message is not fired on topic but no payload."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'mqtt',

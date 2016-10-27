@@ -1,7 +1,7 @@
 """The tests for numeric state automation."""
 import unittest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.automation as automation
 
 from tests.common import get_test_home_assistant
@@ -28,7 +28,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_fires_on_entity_change_below(self):
         """"Test the firing with changed entity."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -58,7 +58,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity', 11)
         self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -81,7 +81,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity', 9)
         self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -101,7 +101,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_fires_on_entity_change_above(self):
         """"Test the firing with changed entity."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -124,7 +124,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity', 9)
         self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -148,7 +148,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity', 11)
         self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -168,7 +168,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_fires_on_entity_change_below_range(self):
         """"Test the firing with changed entity."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -188,7 +188,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_fires_on_entity_change_below_above_range(self):
         """"Test the firing with changed entity."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -211,7 +211,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity', 11)
         self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -235,7 +235,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity', 11)
         self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -256,7 +256,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_not_fires_if_entity_not_match(self):
         """"Test if not fired with non matching entity."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -275,7 +275,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_fires_on_entity_change_below_with_attribute(self):
         """"Test attributes change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -294,7 +294,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_not_fires_on_entity_change_not_below_with_attribute(self):
         """"Test attributes."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -313,7 +313,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_fires_on_attribute_change_with_attribute_below(self):
         """"Test attributes change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -333,7 +333,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_not_fires_on_attribute_change_with_attribute_not_below(self):
         """"Test attributes change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -353,7 +353,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_not_fires_on_entity_change_with_attribute_below(self):
         """"Test attributes change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -373,7 +373,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_not_fires_on_entity_change_with_not_attribute_below(self):
         """"Test attributes change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -393,7 +393,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_fires_on_attr_change_with_attribute_below_and_multiple_attr(self):
         """"Test attributes change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -414,7 +414,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_template_list(self):
         """"Test template list."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -436,7 +436,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_template_string(self):
         """"Test template string."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -469,7 +469,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_not_fires_on_attr_change_with_attr_not_below_multiple_attr(self):
         """"Test if not fired changed attributes."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
@@ -492,7 +492,7 @@ class TestAutomationNumericState(unittest.TestCase):
         """"Test if action."""
         entity_id = 'domain.test_entity'
         test_state = 10
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',

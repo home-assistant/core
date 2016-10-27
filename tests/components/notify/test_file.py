@@ -8,9 +8,8 @@ import homeassistant.components.notify as notify
 from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT)
 import homeassistant.util.dt as dt_util
-from homeassistant.bootstrap import _setup_component
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, assert_setup_component
 
 
 class TestNotifyFile(unittest.TestCase):
@@ -26,12 +25,13 @@ class TestNotifyFile(unittest.TestCase):
 
     def test_bad_config(self):
         """Test set up the platform with bad/missing config."""
-        self.assertFalse(_setup_component(self.hass, notify.DOMAIN, {
-            'notify': {
-                'name': 'test',
-                'platform': 'file',
-            },
-        }))
+        with assert_setup_component(0):
+            assert not setup_component(self.hass, notify.DOMAIN, {
+                'notify': {
+                    'name': 'test',
+                    'platform': 'file',
+                },
+            })
 
     @patch('homeassistant.components.notify.file.os.stat')
     @patch('homeassistant.util.dt.utcnow')

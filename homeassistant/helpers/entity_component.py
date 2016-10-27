@@ -2,8 +2,8 @@
 import asyncio
 
 from homeassistant import config as conf_util
-from homeassistant.bootstrap import (prepare_setup_platform,
-                                     prepare_setup_component)
+from homeassistant.bootstrap import (
+    async_prepare_setup_platform, async_prepare_setup_component)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
@@ -118,10 +118,8 @@ class EntityComponent(object):
 
         This method must be run in the event loop.
         """
-        platform = yield from self.hass.loop.run_in_executor(
-            None, prepare_setup_platform, self.hass, self.config, self.domain,
-            platform_type
-        )
+        platform = yield from async_prepare_setup_platform(
+            self.hass, self.config, self.domain, platform_type)
 
         if platform is None:
             return
@@ -238,20 +236,8 @@ class EntityComponent(object):
 
     def prepare_reload(self):
         """Prepare reloading this entity component."""
-        try:
-            path = conf_util.find_config_file(self.hass.config.config_dir)
-            conf = conf_util.load_yaml_config_file(path)
-        except HomeAssistantError as err:
-            self.logger.error(err)
-            return None
-
-        conf = prepare_setup_component(self.hass, conf, self.domain)
-
-        if conf is None:
-            return None
-
-        self.reset()
-        return conf
+        return run_coroutine_threadsafe(
+            self.async_prepare_reload(), loop=self.hass.loop).result()
 
     @asyncio.coroutine
     def async_prepare_reload(self):
@@ -259,9 +245,20 @@ class EntityComponent(object):
 
         This method must be run in the event loop.
         """
-        conf = yield from self.hass.loop.run_in_executor(
-            None, self.prepare_reload
-        )
+        try:
+            conf = yield from \
+                conf_util.async_hass_config_yaml(self.hass)
+        except HomeAssistantError as err:
+            self.logger.error(err)
+            return None
+
+        conf = yield from async_prepare_setup_component(
+            self.hass, conf, self.domain)
+
+        if conf is None:
+            return None
+
+        yield from self.async_reset()
         return conf
 
 
