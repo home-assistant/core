@@ -3,7 +3,6 @@ import asyncio
 import logging
 import os
 import unittest
-from unittest.mock import patch
 
 import homeassistant.scripts.check_config as check_config
 from tests.common import patch_yaml_files, get_test_config_dir
@@ -47,6 +46,15 @@ def tearDownModule(self):  # pylint: disable=invalid-name
 
 class TestCheckConfig(unittest.TestCase):
     """Tests for the homeassistant.scripts.check_config module."""
+
+    def setUp(self):
+        """Prepare the test."""
+        # Somewhere in the tests our event loop gets killed,
+        # this ensures we have one.
+        try:
+            asyncio.get_event_loop()
+        except RuntimeError:
+            asyncio.set_event_loop(asyncio.new_event_loop())
 
     # pylint: disable=no-self-use,invalid-name
     def test_config_platform_valid(self):

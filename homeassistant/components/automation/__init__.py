@@ -11,7 +11,6 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant import config as conf_util
 from homeassistant.const import (
@@ -159,28 +158,34 @@ def async_setup(hass, config):
             os.path.dirname(__file__), 'services.yaml')
     )
 
-    @callback
+    @asyncio.coroutine
     def trigger_service_handler(service_call):
         """Handle automation triggers."""
+        tasks = []
         for entity in component.async_extract_from_service(service_call):
-            hass.loop.create_task(entity.async_trigger(
+            tasks.append(entity.async_trigger(
                 service_call.data.get(ATTR_VARIABLES), True))
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
-    @callback
+    @asyncio.coroutine
     def turn_onoff_service_handler(service_call):
         """Handle automation turn on/off service calls."""
+        tasks = []
         method = 'async_{}'.format(service_call.service)
         for entity in component.async_extract_from_service(service_call):
-            hass.loop.create_task(getattr(entity, method)())
+            tasks.append(getattr(entity, method)())
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
-    @callback
+    @asyncio.coroutine
     def toggle_service_handler(service_call):
         """Handle automation toggle service calls."""
+        tasks = []
         for entity in component.async_extract_from_service(service_call):
             if entity.is_on:
-                hass.loop.create_task(entity.async_turn_off())
+                tasks.append(entity.async_turn_off())
             else:
-                hass.loop.create_task(entity.async_turn_on())
+                tasks.append(entity.async_turn_on())
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
     @asyncio.coroutine
     def reload_service_handler(service_call):
@@ -188,7 +193,7 @@ def async_setup(hass, config):
         conf = yield from component.async_prepare_reload()
         if conf is None:
             return
-        hass.loop.create_task(_async_process_config(hass, conf, component))
+        yield from _async_process_config(hass, conf, component)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TRIGGER, trigger_service_handler,

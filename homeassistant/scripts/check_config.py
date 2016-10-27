@@ -150,7 +150,6 @@ def run(script_args: List) -> int:
     return 0
 
 
-
 def check(config_path):
     """Perform a check by mocking hass load functions."""
     res = {
