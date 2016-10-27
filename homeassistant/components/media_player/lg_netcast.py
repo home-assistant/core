@@ -104,7 +104,8 @@ class LgTVDevice(MediaPlayerDevice):
                 channel_list = client.query_data('channel_list')
                 if channel_list:
                     channel_names = [str(c.find('chname').text) for
-                                     c in channel_list]
+                                     c in channel_list if
+                                     c.find('chname') is not None]
                     self._sources = dict(zip(channel_names, channel_list))
                     # sort source names by the major channel number
                     source_tuples = [(k, self._sources[k].find('major').text)
