@@ -11,7 +11,7 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import prepare_setup_platform
+from homeassistant.bootstrap import async_prepare_setup_platform
 from homeassistant import config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
@@ -401,9 +401,8 @@ def _async_process_trigger(hass, config, trigger_configs, name, action):
     removes = []
 
     for conf in trigger_configs:
-        platform = yield from hass.loop.run_in_executor(
-            None, prepare_setup_platform, hass, config, DOMAIN,
-            conf.get(CONF_PLATFORM))
+        platform = yield from async_prepare_setup_platform(
+            hass, config, DOMAIN, conf.get(CONF_PLATFORM))
 
         if platform is None:
             return None
