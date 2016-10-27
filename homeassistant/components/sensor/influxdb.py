@@ -40,14 +40,14 @@ REQUIREMENTS = ['influxdb==3.0.0']
 
 _QUERY_SCHEME = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Required(CONF_MEASUREMENT_NAME): cv.string,
     vol.Required(CONF_WHERE): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
     vol.Optional(CONF_GROUP_FUNCTION, default=DEFAULT_GROUP_FUNCTION):
         cv.string,
-    vol.Optional(CONF_FIELD, default=DEFAULT_FIELD): cv.string,
+    vol.Optional(CONF_FIELD, default=DEFAULT_FIELD): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
