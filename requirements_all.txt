@@ -271,7 +271,7 @@ mficlient==0.3.0
 miflora==0.1.9
 
 # homeassistant.components.discovery
-netdisco==0.7.2
+netdisco==0.7.5
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
