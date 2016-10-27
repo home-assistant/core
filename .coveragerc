@@ -139,8 +139,8 @@ omit =
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/bbox.py
-    homeassistant/components/device_tracker/bluetooth_tracker.py
     homeassistant/components/device_tracker/bluetooth_le_tracker.py
+    homeassistant/components/device_tracker/bluetooth_tracker.py
     homeassistant/components/device_tracker/bt_home_hub_5.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/icloud.py
@@ -253,9 +253,9 @@ omit =
     homeassistant/components/sensor/gtfs.py
     homeassistant/components/sensor/haveibeenpwned.py
     homeassistant/components/sensor/hp_ilo.py
-    homeassistant/components/sensor/influxdb.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
+    homeassistant/components/sensor/influxdb.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
