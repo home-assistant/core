@@ -13,6 +13,7 @@ from homeassistant.components import emulated_hue, http, light
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.emulated_hue import (
     HUE_API_STATE_ON, HUE_API_STATE_BRI)
+from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import get_test_instance_port, get_test_home_assistant
 
@@ -28,7 +29,9 @@ def setup_hass_instance(emulated_hue_config):
     hass = get_test_home_assistant()
 
     # We need to do this to get access to homeassistant/turn_(on,off)
-    core_components.setup(hass, {core.DOMAIN: {}})
+    run_coroutine_threadsafe(
+        core_components.async_setup(hass, {core.DOMAIN: {}}), hass.loop
+    ).result()
 
     bootstrap.setup_component(
         hass, http.DOMAIN,
@@ -367,6 +370,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         result = requests.put(
             url, data=json.dumps(data), timeout=5, headers=req_headers)
+
         return result
 
 

@@ -56,7 +56,10 @@ def async_generate_entity_id(entity_id_format: str, name: Optional[str],
 
 
 def set_customize(customize: Dict[str, Any]) -> None:
-    """Overwrite all current customize settings."""
+    """Overwrite all current customize settings.
+
+    Async friendly.
+    """
     global _OVERWRITE
 
     _OVERWRITE = {key.lower(): val for key, val in customize.items()}

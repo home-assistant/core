@@ -65,11 +65,11 @@ class TestSleepIQ(unittest.TestCase):
         """Test the setup when no login is configured."""
         conf = self.config.copy()
         del conf['sleepiq']['username']
-        assert not bootstrap._setup_component(self.hass, sleepiq.DOMAIN, conf)
+        assert not bootstrap.setup_component(self.hass, sleepiq.DOMAIN, conf)
 
     def test_setup_component_no_password(self):
         """Test the setup when no password is configured."""
         conf = self.config.copy()
         del conf['sleepiq']['password']
 
-        assert not bootstrap._setup_component(self.hass, sleepiq.DOMAIN, conf)
+        assert not bootstrap.setup_component(self.hass, sleepiq.DOMAIN, conf)

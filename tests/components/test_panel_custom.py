@@ -10,7 +10,8 @@ from homeassistant.components import panel_custom
 from tests.common import get_test_home_assistant
 
 
-@patch('homeassistant.components.frontend.setup', return_value=True)
+@patch('homeassistant.components.frontend.setup',
+       autospec=True, return_value=True)
 class TestPanelCustom(unittest.TestCase):
     """Test the panel_custom component."""
 

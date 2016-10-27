@@ -1,4 +1,5 @@
 """Module to help with parsing and generating configuration files."""
+import asyncio
 import logging
 import os
 import shutil
@@ -180,6 +181,24 @@ def create_default_config(config_dir, detect_location=True):
         return None
 
 
+@asyncio.coroutine
+def async_hass_config_yaml(hass):
+    """Load YAML from hass config File.
+
+    This function allow component inside asyncio loop to reload his config by
+    self.
+
+    This method is a coroutine.
+    """
+    def _load_hass_yaml_config():
+        path = find_config_file(hass.config.config_dir)
+        conf = load_yaml_config_file(path)
+        return conf
+
+    conf = yield from hass.loop.run_in_executor(None, _load_hass_yaml_config)
+    return conf
+
+
 def find_config_file(config_dir):
     """Look in given directory for supported configuration files."""
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
@@ -201,7 +220,11 @@ def load_yaml_config_file(config_path):
 
 
 def process_ha_config_upgrade(hass):
-    """Upgrade config if necessary."""
+    """Upgrade config if necessary.
+
+    Asyncio don't support file operation jet.
+    This method need to run in a executor.
+    """
     version_path = hass.config.path(VERSION_FILE)
 
     try:
@@ -225,8 +248,12 @@ def process_ha_config_upgrade(hass):
         outp.write(__version__)
 
 
-def process_ha_core_config(hass, config):
-    """Process the [homeassistant] section from the config."""
+@asyncio.coroutine
+def async_process_ha_core_config(hass, config):
+    """Process the [homeassistant] section from the config.
+
+    This method is a coroutine.
+    """
     # pylint: disable=too-many-branches
     config = CORE_CONFIG_SCHEMA(config)
     hac = hass.config
@@ -282,7 +309,8 @@ def process_ha_core_config(hass, config):
     # If we miss some of the needed values, auto detect them
     if None in (hac.latitude, hac.longitude, hac.units,
                 hac.time_zone):
-        info = loc_util.detect_location_info()
+        info = yield from hass.loop.run_in_executor(
+            None, loc_util.detect_location_info)
 
         if info is None:
             _LOGGER.error('Could not detect location information')
@@ -307,7 +335,8 @@ def process_ha_core_config(hass, config):
 
     if hac.elevation is None and hac.latitude is not None and \
        hac.longitude is not None:
-        elevation = loc_util.elevation(hac.latitude, hac.longitude)
+        elevation = yield from hass.loop.run_in_executor(
+            None, loc_util.elevation, hac.latitude, hac.longitude)
         hac.elevation = elevation
         discovered.append(('elevation', elevation))
 
