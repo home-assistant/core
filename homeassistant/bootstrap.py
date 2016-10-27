@@ -48,7 +48,7 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
                           config: Optional[Dict]=None) -> bool:
     """Setup a component and all its dependencies.
 
-    This method need to run in a executor.
+    This method must be run in the event loop.
     """
     if domain in hass.config.components:
         _LOGGER.debug('Component %s already set up.', domain)
@@ -79,8 +79,7 @@ def _handle_requirements(hass: core.HomeAssistant, component,
                          name: str) -> bool:
     """Install the requirements for a component.
 
-    Asyncio don't support file operation jet.
-    This method need to run in a executor.
+    This method needs to run in a executor.
     """
     if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
         return True
@@ -99,7 +98,7 @@ def _async_setup_component(hass: core.HomeAssistant,
                            domain: str, config) -> bool:
     """Setup a component for Home Assistant.
 
-    This method is a coroutine.
+    This method must be run in the event loop.
     """
     # pylint: disable=too-many-return-statements,too-many-branches
     # pylint: disable=too-many-statements
@@ -168,7 +167,7 @@ def async_prepare_setup_component(hass: core.HomeAssistant, config: dict,
                                   domain: str):
     """Prepare setup of a component and return processed config.
 
-    This method is a coroutine.
+    This method must be run in the event loop.
     """
     # pylint: disable=too-many-return-statements
     component = loader.get_component(domain)
@@ -253,7 +252,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
                                  -> Optional[ModuleType]:
     """Load a platform and makes sure dependencies are setup.
 
-    This method is a coroutine.
+    This method must be run in the event loop.
     """
     if not loader.PREPARED:
         yield from hass.loop.run_in_executor(None, loader.prepare, hass)
@@ -348,7 +347,7 @@ def async_from_config_dict(config: Dict[str, Any],
     """Try to configure Home Assistant from a config dict.
 
     Dynamically loads required components and its dependencies.
-    This method is a coroutine.
+    This method must be run in the event loop.
     """
     core_config = config.get(core.DOMAIN, {})
 
@@ -445,7 +444,7 @@ def async_from_config_file(config_path: str,
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter.
-    This method is a coroutine.
+    This method must be run in the event loop.
     """
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
@@ -539,7 +538,7 @@ def log_exception(ex, domain, config, hass):
 def async_log_exception(ex, domain, config, hass):
     """Generate log exception for config validation.
 
-    Need to run in a async loop.
+    This method must be run in the event loop.
     """
     message = 'Invalid config for [{}]: '.format(domain)
     _PERSISTENT_VALIDATION.add(domain)
