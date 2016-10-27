@@ -27,7 +27,7 @@ omit =
 
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
-    
+
     homeassistant/components/icloud.py
     homeassistant/components/*/icloud.py
 
