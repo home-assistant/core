@@ -188,7 +188,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         for value in (self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_OPERATING_STATE)
                       .values()):
-            value.data = self._operating_state
+            self._operating_state = value.data
 
     @property
     def should_poll(self):
