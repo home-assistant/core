@@ -18,7 +18,8 @@ class AiohttpClientMocker:
                 status=200,
                 text=None,
                 content=None,
-                json=None):
+                json=None,
+                auth=None):
         """Mock a request."""
         if json:
             text = _json.dumps(json)
