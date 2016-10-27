@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+from requests.exceptions import RequestException
 
 from homeassistant.const import (
     CONF_API_KEY, CONF_ID, CONF_WHITELIST,
@@ -41,7 +42,7 @@ def setup(hass, config):
         channel = thingspeak.Channel(
             channel_id, api_key=api_key, timeout=TIMEOUT)
         channel.get()
-    except:
+    except RequestException:
         _LOGGER.error("Error while accessing the ThingSpeak channel. "
                       "Please check that the channel exists and your "
                       "API key is correct.")
@@ -60,7 +61,7 @@ def setup(hass, config):
             return
         try:
             channel.update({'field1': _state})
-        except:
+        except RequestException:
             _LOGGER.error(
                 'Error while sending value "%s" to Thingspeak',
                 _state)
