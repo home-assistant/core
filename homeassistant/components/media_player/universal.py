@@ -38,6 +38,7 @@ CONF_COMMANDS = 'commands'
 CONF_PLATFORM = 'platform'
 CONF_SERVICE = 'service'
 CONF_SERVICE_DATA = 'service_data'
+ATTR_DATA = 'data'
 CONF_STATE = 'state'
 
 OFF_STATES = [STATE_IDLE, STATE_OFF]
@@ -118,7 +119,7 @@ def validate_attributes(config):
     elif not isinstance(config[CONF_ATTRS], dict):
         _LOGGER.warning(
             'Universal Media Player (%s) specified attributes '
-            'not dict in config. They will be ignored.',
+        'not dict in config. They will be ignored.',
             config[CONF_NAME])
         config[CONF_ATTRS] = {}
 
@@ -178,13 +179,18 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def _call_service(self, service_name, service_data=None,
                       allow_override=False):
         """Call either a specified or active child's service."""
-        if allow_override and service_name in self._cmds:
-            call_from_config(
-                self.hass, self._cmds[service_name], blocking=True)
-            return
-
         if service_data is None:
             service_data = {}
+
+        if allow_override and service_name in self._cmds:
+            print(service_name)
+            print(self._cmds)
+            print(self._cmds[service_name][ATTR_DATA])
+            print(self._cmds[service_name][ATTR_DATA][ATTR_ENTITY_ID])
+            service_data[ATTR_ENTITY_ID] = self._cmds[service_name][ATTR_DATA][ATTR_ENTITY_ID]
+            self.hass.services.call(DOMAIN, service_name, service_data,
+                                    blocking=True)
+            return
 
         active_child = self._child_state
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
@@ -233,7 +239,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of entity specified in attributes or active child."""
-        return self._child_attr(ATTR_MEDIA_VOLUME_LEVEL)
+        return self._override_or_child_attr(ATTR_MEDIA_VOLUME_LEVEL)
 
     @property
     def is_volume_muted(self):
@@ -322,14 +328,14 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         return self._child_attr(ATTR_APP_NAME)
 
     @property
-    def current_source(self):
+    def source(self):
         """"Return the current input source of the device."""
-        return self._child_attr(ATTR_INPUT_SOURCE)
+        return self._override_or_child_attr(ATTR_INPUT_SOURCE)
 
     @property
     def source_list(self):
         """List of available input sources."""
-        return self._child_attr(ATTR_INPUT_SOURCE_LIST)
+        return self._override_or_child_attr(ATTR_INPUT_SOURCE_LIST)
 
     @property
     def supported_media_commands(self):
@@ -345,6 +351,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
                                               SERVICE_VOLUME_DOWN]]):
             flags |= SUPPORT_VOLUME_STEP
             flags &= ~SUPPORT_VOLUME_SET
+        elif SERVICE_VOLUME_SET in self._cmds:
+            flags |= SUPPORT_VOLUME_SET
 
         if SERVICE_VOLUME_MUTE in self._cmds and \
                 ATTR_MEDIA_VOLUME_MUTED in self._attrs:
@@ -381,7 +389,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def set_volume_level(self, volume_level):
         """Set volume level, range 0..1."""
         data = {ATTR_MEDIA_VOLUME_LEVEL: volume_level}
-        self._call_service(SERVICE_VOLUME_SET, data)
+        self._call_service(SERVICE_VOLUME_SET, data, allow_override=True)
 
     def media_play(self):
         """Send play commmand."""
@@ -429,7 +437,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def select_source(self, source):
         """Set the input source."""
         data = {ATTR_INPUT_SOURCE: source}
-        self._call_service(SERVICE_SELECT_SOURCE, data)
+        self._call_service(SERVICE_SELECT_SOURCE, data, allow_override=True)
 
     def clear_playlist(self):
         """Clear players playlist."""
