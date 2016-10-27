@@ -10,6 +10,7 @@ import logging
 import voluptuous as vol
 
 from aiohttp import web
+from aiohttp.web_exceptions import HTTPGatewayTimeout
 import async_timeout
 
 from homeassistant.const import (
@@ -40,6 +41,7 @@ WEBAPI_PATH = '/webapi/'
 AUTH_PATH = 'auth.cgi'
 CAMERA_PATH = 'camera.cgi'
 STREAMING_PATH = 'SurveillanceStation/videoStreaming.cgi'
+CONTENT_TYPE_HEADER = 'Content-Type'
 
 SYNO_API_URL = '{0}{1}{2}'
 
@@ -91,6 +93,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_URL), WEBAPI_PATH, auth_path)
 
     session_id = yield from get_session_id(
+        hass,
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD),
         syno_auth_url,
@@ -98,9 +101,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     )
 
     # Use SessionID to get cameras in system
-    syno_camera_url = SYNO_API_URL.format(config.get(CONF_URL),
-                                          WEBAPI_PATH,
-                                          camera_api)
+    syno_camera_url = SYNO_API_URL.format(
+        config.get(CONF_URL), WEBAPI_PATH, camera_api)
+
     camera_payload = {
         'api': CAMERA_API,
         'method': 'List',
@@ -147,7 +150,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 @asyncio.coroutine
-def get_session_id(username, password, login_url, valid_cert):
+def get_session_id(hass, username, password, login_url, valid_cert):
     """Get a session id."""
     auth_payload = {
         'api': AUTH_API,
@@ -198,16 +201,23 @@ class SynologyCamera(Camera):
         self._streaming_path = streaming_path
         self._camera_path = camera_path
         self._auth_path = auth_path
+        self._session_id = None
 
     @asyncio.coroutine
     def async_read_sid(self):
         """Get a session id."""
         self._session_id = yield from get_session_id(
+            self.hass
             self._username,
             self._password,
             self._login_url,
             self._valid_cert
         )
+
+    def camera_image(self):
+        """Return bytes of camera image."""
+        return run_coroutine_threadsafe(
+            self.async_camera_image(), self.hass.loop).result()
 
     @asyncio.coroutine
     def async_camera_image(self):
