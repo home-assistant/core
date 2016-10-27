@@ -55,7 +55,6 @@ blinkstick==1.1.8
 blockchain==1.3.3
 
 # homeassistant.components.climate.eq3btsmart
-# homeassistant.components.thermostat.eq3btsmart
 # bluepy_devices==0.2.0
 
 # homeassistant.components.notify.aws_lambda
@@ -96,7 +95,6 @@ enocean==0.31
 # evdev==0.6.1
 
 # homeassistant.components.climate.honeywell
-# homeassistant.components.thermostat.honeywell
 evohomeclient==0.2.5
 
 # homeassistant.components.sensor.fastdotcom
@@ -139,7 +137,6 @@ ha-ffmpeg==0.14
 hbmqtt==0.7.1
 
 # homeassistant.components.climate.heatmiser
-# homeassistant.components.thermostat.heatmiser
 heatmiserV3==0.9.1
 
 # homeassistant.components.switch.hikvisioncam
@@ -233,6 +230,7 @@ https://github.com/web-push-libs/pywebpush/archive/e743dc92558fc62178d255c001892
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
 # homeassistant.components.influxdb
+# homeassistant.components.sensor.influxdb
 influxdb==3.0.0
 
 # homeassistant.components.insteon_hub
@@ -274,7 +272,7 @@ mficlient==0.3.0
 miflora==0.1.9
 
 # homeassistant.components.discovery
-netdisco==0.7.2
+netdisco==0.7.5
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
@@ -308,11 +306,10 @@ plexapi==2.0.2
 pmsensor==0.3
 
 # homeassistant.components.climate.proliphix
-# homeassistant.components.thermostat.proliphix
 proliphix==0.4.0
 
 # homeassistant.components.sensor.systemmonitor
-psutil==4.3.1
+psutil==4.4.0
 
 # homeassistant.components.wink
 pubnub==3.8.2
@@ -370,6 +367,9 @@ pylast==1.6.0
 # homeassistant.components.sensor.loopenergy
 pyloopenergy==0.0.15
 
+# homeassistant.components.mochad
+pymochad==0.1.1
+
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.3
 
@@ -381,6 +381,7 @@ pynetio==0.1.6
 pynx584==0.2
 
 # homeassistant.components.sensor.openweathermap
+# homeassistant.components.weather.openweathermap
 pyowm==2.5.0
 
 # homeassistant.components.switch.acer_projector
@@ -418,7 +419,7 @@ python-nmap==0.6.1
 python-pushover==0.2
 
 # homeassistant.components.notify.telegram
-python-telegram-bot==5.1.0
+python-telegram-bot==5.1.1
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
@@ -436,7 +437,6 @@ pyvera==0.2.20
 pywemo==0.4.7
 
 # homeassistant.components.climate.radiotherm
-# homeassistant.components.thermostat.radiotherm
 radiotherm==1.2
 
 # homeassistant.components.switch.rpi_rf
@@ -458,7 +458,7 @@ scsgate==0.1.0
 sendgrid==3.6.0
 
 # homeassistant.components.notify.slack
-slacker==0.9.28
+slacker==0.9.29
 
 # homeassistant.components.notify.xmpp
 sleekxmpp==1.3.1
@@ -470,7 +470,6 @@ sleepyq==0.6
 snapcast==1.2.2
 
 # homeassistant.components.climate.honeywell
-# homeassistant.components.thermostat.honeywell
 somecomfort==0.3.2
 
 # homeassistant.components.sensor.speedtest
@@ -478,7 +477,7 @@ speedtest-cli==0.3.4
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.1.1
+sqlalchemy==1.1.2
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -542,7 +541,7 @@ xboxapi==0.1.1
 xmltodict==0.10.2
 
 # homeassistant.components.sensor.yahoo_finance
-yahoo-finance==1.2.1
+yahoo-finance==1.3.2
 
 # homeassistant.components.sensor.yweather
 yahooweather==0.8
