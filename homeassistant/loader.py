@@ -42,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 def prepare(hass: 'HomeAssistant'):
     """Prepare the loading of components.
 
-    This method needs to run in a executor.
+    This method needs to run in an executor.
     """
     global PREPARED  # pylint: disable=global-statement
 

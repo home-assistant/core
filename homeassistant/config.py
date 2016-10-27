@@ -133,7 +133,7 @@ def create_default_config(config_dir, detect_location=True):
     """Create a default configuration file in given configuration directory.
 
     Return path to new config file if success, None if failed.
-    This method needs to run in a executor.
+    This method needs to run in an executor.
     """
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     version_path = os.path.join(config_dir, VERSION_FILE)
@@ -213,7 +213,7 @@ def find_config_file(config_dir):
 def load_yaml_config_file(config_path):
     """Parse a YAML configuration file.
 
-    This method needs to run in a executor.
+    This method needs to run in an executor.
     """
     conf_dict = load_yaml(config_path)
 
@@ -229,7 +229,7 @@ def load_yaml_config_file(config_path):
 def process_ha_config_upgrade(hass):
     """Upgrade config if necessary.
 
-    This method needs to run in a executor.
+    This method needs to run in an executor.
     """
     version_path = hass.config.path(VERSION_FILE)
 

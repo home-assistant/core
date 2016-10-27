@@ -79,7 +79,7 @@ def _handle_requirements(hass: core.HomeAssistant, component,
                          name: str) -> bool:
     """Install the requirements for a component.
 
-    This method needs to run in a executor.
+    This method needs to run in an executor.
     """
     if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
         return True
