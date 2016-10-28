@@ -70,7 +70,7 @@ icloud:
         example: 'iphonebart'
 
   icloud_reset_account:
-    description: Service to restart an iCloud account. Helpful when not all devices are found after initializing or when you bought a new device.
+    description: Service to restart an iCloud account. Helpful when not all devices are found after initializing or when you add a new device.
 
     fields:
       account_name:
