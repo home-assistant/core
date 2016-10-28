@@ -102,7 +102,7 @@ def setup_scanner(hass, config: dict, see):
         for account in accounts:
             if account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].lost_iphone(devicename)
-    hass.services.register(DOMAIN, 'lost_iphone', lost_iphone,
+    hass.services.register(DOMAIN, 'icloud_lost_iphone', lost_iphone,
                            schema=SERVICE_SCHEMA)
 
     def update_icloud(call):
@@ -112,7 +112,7 @@ def setup_scanner(hass, config: dict, see):
         for account in accounts:
             if account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].update_icloud(devicename)
-    hass.services.register(DOMAIN, 'update_icloud', update_icloud,
+    hass.services.register(DOMAIN, 'icloud_update', update_icloud,
                            schema=SERVICE_SCHEMA)
 
     def reset_account_icloud(call):
@@ -121,7 +121,7 @@ def setup_scanner(hass, config: dict, see):
         for account in accounts:
             if account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].reset_account_icloud()
-    hass.services.register(DOMAIN, 'reset_account_icloud',
+    hass.services.register(DOMAIN, 'icloud_reset_account',
                            reset_account_icloud, schema=SERVICE_SCHEMA)
 
     def setinterval(call):
@@ -133,8 +133,8 @@ def setup_scanner(hass, config: dict, see):
             if account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].setinterval(interval, devicename)
 
-    hass.services.register(DOMAIN,
-                           'setinterval', setinterval, schema=SERVICE_SCHEMA)
+    hass.services.register(DOMAIN, 'icloud_set_interval', setinterval,
+                           schema=SERVICE_SCHEMA)
 
     # Tells the bootstrapper that the component was successfully initialized
     return True
