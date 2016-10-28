@@ -183,10 +183,6 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             service_data = {}
 
         if allow_override and service_name in self._cmds:
-            print(service_name)
-            print(self._cmds)
-            print(self._cmds[service_name][ATTR_DATA])
-            print(self._cmds[service_name][ATTR_DATA][ATTR_ENTITY_ID])
             service_data[ATTR_ENTITY_ID] = self._cmds[service_name][ATTR_DATA][ATTR_ENTITY_ID]
             self.hass.services.call(DOMAIN, service_name, service_data,
                                     blocking=True)
