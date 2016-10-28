@@ -6,6 +6,7 @@ https://home-assistant.io/components/device_tracker.icloud/
 """
 import logging
 import random
+import os
 
 import voluptuous as vol
 
@@ -44,6 +45,8 @@ ATTR_GMTT_ORIGIN = 'gmtt_origin'
 
 ICLOUDTRACKERS = {}
 
+ICLOUD_DIR = None
+
 _CONFIGURING = {}
 
 DEVICESTATUSSET = ['features', 'maxMsgChar', 'darkWake', 'fmlyShare',
@@ -80,6 +83,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_scanner(hass, config: dict, see):
     """Set up the iCloud Scanner."""
     # pylint: disable=too-many-locals
+    ICLOUD_DIR = hass.config.path('icloud')
+    if not os.path.exists(ICLOUD_DIR):
+        os.makedirs(ICLOUD_DIR)
+
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     account = config.get(CONF_ACCOUNTNAME, slugify(username))
@@ -180,7 +187,7 @@ class Icloud(object):  # pylint: disable=too-many-instance-attributes
         try:
             self.api = PyiCloudService(
                 self.username, self.password,
-                cookie_directory=self.hass.config.get('.icloud_cookies'),
+                cookie_directory=ICLOUD_DIR,
                 verify=True)
             self.devices = {}
             self._overridestates = {}
@@ -256,19 +263,8 @@ class Icloud(object):  # pylint: disable=too-many-instance-attributes
     def keep_alive(self, now):
         """Keep the api alive."""
         # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-        from pyicloud import PyiCloudService
-        from pyicloud.exceptions import PyiCloudFailedLoginException
-        from pyicloud.exceptions import PyiCloud2FARequiredError
-
         if self.api is None:
-            try:
-                self.api = PyiCloudService(
-                    self.username, self.password,
-                    cookie_directory=self.hass.config.get('.icloud_cookies'),
-                    verify=True)
-            except PyiCloudFailedLoginException as error:
-                _LOGGER.error('Error logging into iCloud Service: %s',
-                              error)
+            self.reset_account_icloud()
 
         if self.api is None:
             return
