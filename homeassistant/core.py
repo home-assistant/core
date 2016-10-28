@@ -17,9 +17,9 @@ import threading
 import time
 
 from types import MappingProxyType
-
 from typing import Optional, Any, Callable, List  # NOQA
 
+import aiohttp
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -143,6 +143,7 @@ class HomeAssistant(object):
         self.config = Config()  # type: Config
         self.state = CoreState.not_running
         self.exit_code = None
+        self.websession = aiohttp.ClientSession(loop=self.loop)
 
     @property
     def is_running(self) -> bool:
