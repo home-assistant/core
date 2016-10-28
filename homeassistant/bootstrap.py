@@ -48,7 +48,7 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
                           config: Optional[Dict]=None) -> bool:
     """Setup a component and all its dependencies.
 
-    This method need to run in a executor.
+    This method is a coroutine.
     """
     if domain in hass.config.components:
         _LOGGER.debug('Component %s already set up.', domain)
@@ -79,8 +79,7 @@ def _handle_requirements(hass: core.HomeAssistant, component,
                          name: str) -> bool:
     """Install the requirements for a component.
 
-    Asyncio don't support file operation jet.
-    This method need to run in a executor.
+    This method needs to run in an executor.
     """
     if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
         return True
@@ -539,7 +538,7 @@ def log_exception(ex, domain, config, hass):
 def async_log_exception(ex, domain, config, hass):
     """Generate log exception for config validation.
 
-    Need to run in a async loop.
+    This method must be run in the event loop.
     """
     message = 'Invalid config for [{}]: '.format(domain)
     _PERSISTENT_VALIDATION.add(domain)
