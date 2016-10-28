@@ -73,7 +73,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(ATTR_ACCOUNTNAME): cv.slug,
     vol.Optional(CONF_GMTT, default={}):
-        vol.Schema({cv.slug: cv.slug}),
+        vol.Schema({cv.slug: cv.entity_id}),
 })
 
 
