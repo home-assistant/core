@@ -19,7 +19,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==5.1.1']
+REQUIREMENTS = ['python-telegram-bot==5.2.0']
 
 ATTR_PHOTO = 'photo'
 ATTR_DOCUMENT = 'document'
