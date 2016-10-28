@@ -32,8 +32,7 @@ CONFIG = None
 
 
 def setup(hass, config):
-    """Initializes the LiteJet component."""
-
+    """Initialize the LiteJet component."""
     from pylitejet import LiteJet
 
     global CONNECTION, CONFIG
@@ -52,9 +51,7 @@ def setup(hass, config):
 
 
 def is_ignored(name):
-    """Determines if a load, switch, or scene should be ignored
-    based on its name. This is called by each platform during setup.
-    """
+    """Determine if a load, switch, or scene should be ignored."""
     for prefix in CONFIG.get(CONF_EXCLUDE_NAMES, []):
         if name.startswith(prefix):
             return True

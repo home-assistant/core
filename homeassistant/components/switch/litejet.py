@@ -56,28 +56,35 @@ class LiteJetSwitch(SwitchDevice):
 
     @property
     def name(self):
+        """Return the name of the switch."""
         return self._name
 
     @property
     def is_on(self):
+        """Return if the switch is pressed."""
         return self._state
 
     @property
     def should_poll(self):
+        """Return that polling is not necessary."""
         return False
 
     @property
     def device_state_attributes(self):
+        """Return the device-specific state attributes."""
         return {
             ATTR_NUMBER: self._index
         }
 
     def turn_on(self, **kwargs):
+        """Press the switch."""
         self._lj.press_switch(self._index)
 
     def turn_off(self, **kwargs):
+        """Release the switch."""
         self._lj.release_switch(self._index)
 
     def update(self):
+        """Update the state."""
         if self._new_state is not None:
             self._state = self._new_state

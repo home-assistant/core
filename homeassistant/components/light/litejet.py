@@ -57,21 +57,22 @@ class LiteJetLight(Light):
 
     @property
     def brightness(self):
-        """The light's brightness."""
+        """Return the light's brightness."""
         return self._brightness
 
     @property
     def is_on(self):
-        """Is the light on?"""
+        """Return if the light is on."""
         return self._brightness != 0
 
     @property
     def should_poll(self):
-        """LiteJet lights do not require polling."""
+        """Return that lights do not require polling."""
         return False
 
     @property
     def device_state_attributes(self):
+        """Return the device state attributes."""
         return {
             ATTR_NUMBER: self._index
         }

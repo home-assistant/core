@@ -31,6 +31,7 @@ class LiteJetScene(Scene):
     """Represents a single LiteJet scene."""
 
     def __init__(self, lj, i, name):
+        """Initialize the scene."""
         self._lj = lj
         self._index = i
         self._on = False
@@ -38,18 +39,22 @@ class LiteJetScene(Scene):
 
     @property
     def name(self):
+        """Return the name of the scene."""
         return self._name
 
     @property
     def should_poll(self):
+        """Return that polling is not necessary."""
         return False
 
     @property
     def device_state_attributes(self):
+        """Return the device-specific state attributes."""
         return {
             ATTR_NUMBER: self._index
         }
 
     def activate(self, **kwargs):
+        """Activate the scene."""
         self._lj.activate_scene(self._index)
         self._on = True
