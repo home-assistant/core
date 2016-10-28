@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
 DOMAIN = 'ffmpeg'
-REQUIREMENTS = ["ha-ffmpeg==0.14"]
+REQUIREMENTS = ["ha-ffmpeg==0.15"]
 
 _LOGGER = logging.getLogger(__name__)
 
