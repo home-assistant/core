@@ -328,7 +328,8 @@ class SonosDevice(MediaPlayerDevice):
     def _async_get_speaker_info(self):
         return self.hass.loop.run_in_executor(
             None,
-            self._player.get_speaker_info
+            self._player.get_speaker_info,
+            True
         )
 
     @asyncio.coroutine
@@ -412,9 +413,10 @@ class SonosDevice(MediaPlayerDevice):
     # pylint: disable=too-many-branches, too-many-statements
     def async_update(self):
         """Retrieve latest state."""
-        self._speaker_info = yield from self._async_get_speaker_info()
-        self._name = self._speaker_info['zone_name'].replace(
-            ' (R)', '').replace(' (L)', '')
+        if self._speaker_info is None:
+            self._speaker_info = yield from self._async_get_speaker_info()
+            self._name = self._speaker_info['zone_name'].replace(
+                ' (R)', '').replace(' (L)', '')
 
         if self._last_avtransport_event:
             is_available = True
