@@ -26,7 +26,7 @@ DOMAIN = 'openalpr'
 DEPENDENCIES = ['ffmpeg']
 REQUIREMENTS = [
     'https://github.com/pvizeli/cloudapi/releases/download/1.0.2/'
-    'python-1.0.2.zip#cloud_api==1.0.2',
+    'python-1.0.2.zip#openalpr_api==1.0.2',
     'ha-alpr==0.3']
 
 _LOGGER = logging.getLogger(__name__)
