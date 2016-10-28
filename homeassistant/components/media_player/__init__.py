@@ -703,7 +703,7 @@ def _async_fetch_image(hass, url):
 
     try:
         with async_timeout.timeout(10, loop=hass.loop):
-            response = yield from hass.http_session.get(url)
+            response = yield from hass.websession.get(url)
             if response.status == 200:
                 content = yield from response.read()
                 content_type = response.headers.get(CONTENT_TYPE_HEADER)
