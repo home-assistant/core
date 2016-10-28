@@ -9,7 +9,6 @@ import datetime
 import logging
 from os import path
 import socket
-import threading
 import urllib
 import voluptuous as vol
 
