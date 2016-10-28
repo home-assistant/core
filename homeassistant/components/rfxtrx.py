@@ -119,9 +119,9 @@ DEVICE_SCHEMA_SENSOR = vol.Schema({
 
 DEVICE_SCHEMA_BINARYSENSOR = vol.Schema({
     vol.Optional(ATTR_NAME, default=None): cv.string,
-    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
     vol.Optional(CONF_SENSOR_CLASS, default=None): cv.string,
-    vol.Optional(ATTR_OFF_DELAY, default=None): vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
+    vol.Optional(ATTR_OFF_DELAY, default=None): vol.Any(cv.time_period, cv.positive_timedelta),
     vol.Optional(ATTR_DATABITS, default=None): cv.positive_int,
     vol.Optional(ATTR_CMD_ON, default=None): cv.byte,
     vol.Optional(ATTR_CMD_OFF, default=None): cv.byte
