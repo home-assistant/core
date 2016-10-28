@@ -358,7 +358,7 @@ class Icloud(object):  # pylint: disable=too-many-instance-attributes
             gttstate = self.hass.states.get(gtt)
             attrs[ATTR_GMTT_DURATION] = gttstate.state
             attrs[ATTR_GMTT_ORIGIN] = gttstate.attributes['origin_addresses']
-        except AttributeError, KeyError:
+        except (AttributeError, KeyError):
             pass
 
         if self.api is None:
