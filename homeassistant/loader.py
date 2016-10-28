@@ -42,8 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 def prepare(hass: 'HomeAssistant'):
     """Prepare the loading of components.
 
-    Asyncio don't support file operation jet.
-    This method need to run in a executor.
+    This method needs to run in an executor.
     """
     global PREPARED  # pylint: disable=global-statement
 
