@@ -153,7 +153,7 @@ class TestLightMQTTJSON(unittest.TestCase):
             # pylint: disable=invalid-name
         """Test the controlling of the color with templates via topic."""
         self.hass.config.components = ['mqtt']
-        assert _setup_component(self.hass, light.DOMAIN, {
+        assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {
                 'platform': 'mqtt_json',
                 'name': 'test',
