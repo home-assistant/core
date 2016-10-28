@@ -71,11 +71,11 @@ class MjpegCamera(Camera):
         self._password = device_info.get(CONF_PASSWORD)
         self._mjpeg_url = device_info[CONF_MJPEG_URL]
 
-        auth = None
+        self._auth = None
         if self._authentication == HTTP_BASIC_AUTHENTICATION:
-            auth = aiohttp.BasicAuth(self._username, password=self._password)
-
-        self._session = aiohttp.ClientSession(loop=hass.loop, auth=auth)
+            self._auth = aiohttp.BasicAuth(
+                self._username, password=self._password
+            )
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -103,7 +103,10 @@ class MjpegCamera(Camera):
         # connect to stream
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                stream = yield from self._session.get(self._mjpeg_url)
+                stream = yield from self.hass.websession.get(
+                    self._mjpeg_url,
+                    auth=self._auth
+                )
         except asyncio.TimeoutError:
             raise HTTPGatewayTimeout()
 

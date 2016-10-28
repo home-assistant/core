@@ -73,7 +73,6 @@ class GenericCamera(Camera):
 
         self._last_url = None
         self._last_image = None
-        self._session = aiohttp.ClientSession(loop=hass.loop, auth=self._auth)
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -111,7 +110,10 @@ class GenericCamera(Camera):
         else:
             try:
                 with async_timeout.timeout(10, loop=self.hass.loop):
-                    respone = yield from self._session.get(url)
+                    respone = yield from self.hass.websession.get(
+                        url,
+                        auth=self._auth
+                    )
                     self._last_image = yield from respone.read()
                     self.hass.loop.create_task(respone.release())
             except asyncio.TimeoutError:
