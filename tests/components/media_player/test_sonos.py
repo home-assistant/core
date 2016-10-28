@@ -42,7 +42,7 @@ class SoCoMock():
         """Clear the sleep timer."""
         return
 
-    def get_speaker_info(self):
+    def get_speaker_info(self, force):
         """Return a dict with various data points about the speaker."""
         return {'serial_number': 'B8-E9-37-BO-OC-BA:2',
                 'software_version': '32.11-30071',
