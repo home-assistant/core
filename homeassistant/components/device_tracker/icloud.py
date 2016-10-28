@@ -179,7 +179,7 @@ class Icloud(object):  # pylint: disable=too-many-instance-attributes
         from pyicloud import PyiCloudService
         from pyicloud.exceptions import PyiCloudFailedLoginException
         try:
-            icloud_dir = hass.config.path('icloud')
+            icloud_dir = self.hass.config.path('icloud')
             if not os.path.exists(icloud_dir):
                 os.makedirs(icloud_dir)
             self.api = PyiCloudService(
