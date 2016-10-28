@@ -209,8 +209,8 @@ def get_rfx_object(packetid):
     return obj
 
 def get_pt2262_deviceid(device_id, nb_data_bits):
-    import binascii
     """Extract and return the address bits from a Lighting4/PT2262 packet"""
+    import binascii
     try:
         data = bytearray.fromhex(device_id)
     except ValueError:
@@ -223,7 +223,6 @@ def get_pt2262_deviceid(device_id, nb_data_bits):
     return binascii.hexlify(data)
 
 def get_pt2262_cmd(device_id, data_bits):
-    import binascii
     """Extract and return the data bits from a Lighting4/PT2262 packet"""
     try:
         data = bytearray.fromhex(device_id)
@@ -232,21 +231,28 @@ def get_pt2262_cmd(device_id, data_bits):
 
     mask = 0xFF & ((1 << data_bits) - 1)
 
-    return hex(data[-1] & mask);
-    
-    
+    return hex(data[-1] & mask)
+
+# pylint: disable=unused-variable
 def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter """
-    for id, device in RFX_DEVICES.items():
+    for dev_id, device in RFX_DEVICES.items():
         try:
-            if device.is_pt2262 == True and device.masked_id == get_pt2262_deviceid(device_id, device.data_bits):
-                _LOGGER.info("rfxtrx: found matching device %s for %s", device_id, get_pt2262_deviceid(device_id, device.data_bits))
+            if (
+                    device.is_pt2262 and
+                    device.masked_id == get_pt2262_deviceid(
+                        device_id, device.data_bits
+                    )
+                ):
+                _LOGGER.info("rfxtrx: found matching device %s for %s",
+                             device_id,
+                             get_pt2262_deviceid(device_id, device.data_bits))
                 return device
         except AttributeError:
             continue
     return None
 
-    
+
 def get_devices_from_config(config, device):
     """Read rfxtrx configuration."""
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
@@ -369,7 +375,7 @@ class RfxtrxDevice(Entity):
     def is_pt2262(self):
         """Return true if the device is PT2262-based"""
         return False
-        
+
     @property
     def is_on(self):
         """Return true if device is on."""
