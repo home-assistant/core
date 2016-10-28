@@ -48,7 +48,7 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
                           config: Optional[Dict]=None) -> bool:
     """Setup a component and all its dependencies.
 
-    This method must be run in the event loop.
+    This method is a coroutine.
     """
     if domain in hass.config.components:
         _LOGGER.debug('Component %s already set up.', domain)
@@ -98,7 +98,7 @@ def _async_setup_component(hass: core.HomeAssistant,
                            domain: str, config) -> bool:
     """Setup a component for Home Assistant.
 
-    This method must be run in the event loop.
+    This method is a coroutine.
     """
     # pylint: disable=too-many-return-statements,too-many-branches
     # pylint: disable=too-many-statements
@@ -167,7 +167,7 @@ def async_prepare_setup_component(hass: core.HomeAssistant, config: dict,
                                   domain: str):
     """Prepare setup of a component and return processed config.
 
-    This method must be run in the event loop.
+    This method is a coroutine.
     """
     # pylint: disable=too-many-return-statements
     component = loader.get_component(domain)
@@ -252,7 +252,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
                                  -> Optional[ModuleType]:
     """Load a platform and makes sure dependencies are setup.
 
-    This method must be run in the event loop.
+    This method is a coroutine.
     """
     if not loader.PREPARED:
         yield from hass.loop.run_in_executor(None, loader.prepare, hass)
@@ -347,7 +347,7 @@ def async_from_config_dict(config: Dict[str, Any],
     """Try to configure Home Assistant from a config dict.
 
     Dynamically loads required components and its dependencies.
-    This method must be run in the event loop.
+    This method is a coroutine.
     """
     core_config = config.get(core.DOMAIN, {})
 
@@ -444,7 +444,7 @@ def async_from_config_file(config_path: str,
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter.
-    This method must be run in the event loop.
+    This method is a coroutine.
     """
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))

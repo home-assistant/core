@@ -189,7 +189,7 @@ def async_hass_config_yaml(hass):
     This function allow component inside asyncio loop to reload his config by
     self.
 
-    This method must be run in the event loop.
+    This method is a coroutine.
     """
     def _load_hass_yaml_config():
         path = find_config_file(hass.config.config_dir)
@@ -258,7 +258,7 @@ def process_ha_config_upgrade(hass):
 def async_process_ha_core_config(hass, config):
     """Process the [homeassistant] section from the config.
 
-    This method must be run in the event loop.
+    This method is a coroutine.
     """
     # pylint: disable=too-many-branches
     config = CORE_CONFIG_SCHEMA(config)
