@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     value.set_change_verified(False)
 
-    if node.has_command_class(zwave.const.COMMAND_CLASS_COLOR):
+    if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
         add_devices([ZwaveColorLight(value)])
     else:
         add_devices([ZwaveDimmer(value)])
@@ -245,7 +245,7 @@ class ZwaveColorLight(ZwaveDimmer):
 
         if self._value_color_channels is None:
             for value_color_channels in self._value.node.get_values(
-                    class_id=zwave.const.COMMAND_CLASS_COLOR,
+                    class_id=zwave.const.COMMAND_CLASS_SWITCH_COLOR,
                     genre=zwave.const.GENRE_SYSTEM,
                     type=zwave.const.TYPE_INT).values():
                 self._value_color_channels = value_color_channels
