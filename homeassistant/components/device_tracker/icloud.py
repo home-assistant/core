@@ -196,6 +196,7 @@ class Icloud(object):  # pylint: disable=too-many-instance-attributes
                     self.devices[devicename] = device
                     self._intervals[devicename] = 1
                     self._overridestates[devicename] = None
+                    self.update_device(devicename)
 
         except PyiCloudFailedLoginException as error:
             _LOGGER.error('Error logging into iCloud Service: %s', error)
