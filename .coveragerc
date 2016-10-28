@@ -252,6 +252,7 @@ omit =
     homeassistant/components/sensor/gpsd.py
     homeassistant/components/sensor/gtfs.py
     homeassistant/components/sensor/haveibeenpwned.py
+    homeassistant/components/sensor/hddtemp.py
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
