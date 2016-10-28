@@ -24,28 +24,9 @@ from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
-REQUIREMENTS = ['SoCo==0.12']  # If you change this: see patch below
-
-
-_SOCO_PATCHED = False
-
-
-def _patch_soco():
-    # Patch in support for sonos-favorite play list into SoCo.
-    # This should be removed once a new version of SoCo is available.
-    # See SoCo PR: https://github.com/SoCo/SoCo/pull/438
-
-    global _SOCO_PATCHED
-    if not _SOCO_PATCHED:
-        from soco.data_structures import DidlPlaylistContainer
-
-        # pylint: disable=unused-variable
-        class DidlSonosFavorite(DidlPlaylistContainer):
-            """Class that represents a Sonos favorite play list."""
-
-            item_class = 'object.container.playlistContainer.sonos-favorite'
-
-        _SOCO_PATCHED = True
+REQUIREMENTS = ['https://github.com/SoCo/SoCo/archive/'
+                'cf8c2701165562eccbf1ecc879bf7060ceb0993e.zip#'
+                'SoCo==0.12']
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,10 +67,6 @@ SONOS_SET_TIMER_SCHEMA = SONOS_SCHEMA.extend({
 
 # List of devices that have been registered
 DEVICES = []
-
-# Make sure that concurrent .subscribe calls are not sent to SoCo
-SUBSCRIBE_LOCK = threading.Lock()
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Sonos platform."""
@@ -417,26 +394,15 @@ class SonosDevice(MediaPlayerDevice):
     @asyncio.coroutine
     # pylint: disable=invalid-name
     def _async_subscribe_to_player_events(self):
-        _patch_soco()
-
         def _subscribe():
-            # if there are multiple speakers detected initially, SoCo
-            # may try to start multiple instances of the event listener
-            # server causing a thread crash (harmless). Prevent that
-            # from happening by making sure that calls to subscribe
-            # are serialized.
-
-            # pull request has been made for changes to SoCo:
-            # https://github.com/SoCo/SoCo/pull/437
-            with SUBSCRIBE_LOCK:
-                if self._queue is None:
-                    self._queue = _AsyncProcessSonosEventQueue(self)
-                    self._player.avTransport.subscribe(
-                        auto_renew=True,
-                        event_queue=self._queue)
-                    self._player.renderingControl.subscribe(
-                        auto_renew=True,
-                        event_queue=self._queue)
+            if self._queue is None:
+                self._queue = _AsyncProcessSonosEventQueue(self)
+                self._player.avTransport.subscribe(
+                    auto_renew=True,
+                    event_queue=self._queue)
+                self._player.renderingControl.subscribe(
+                    auto_renew=True,
+                    event_queue=self._queue)
 
         return self.hass.loop.run_in_executor(
             None,

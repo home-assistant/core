@@ -25,7 +25,7 @@ PyMata==2.13
 # RPi.GPIO==0.6.1
 
 # homeassistant.components.media_player.sonos
-SoCo==0.12
+https://github.com/SoCo/SoCo/archive/cf8c2701165562eccbf1ecc879bf7060ceb0993e.zip#SoCo==0.12
 
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.2
