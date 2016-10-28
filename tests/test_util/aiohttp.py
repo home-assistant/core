@@ -18,8 +18,7 @@ class AiohttpClientMocker:
                 status=200,
                 text=None,
                 content=None,
-                json=None,
-                auth=None):
+                json=None):
         """Mock a request."""
         if json:
             text = _json.dumps(json)
@@ -57,7 +56,7 @@ class AiohttpClientMocker:
         return len(self.mock_calls)
 
     @asyncio.coroutine
-    def match_request(self, method, url, auth=None):
+    def match_request(self, method, url):
         """Match a request against pre-registered requests."""
         for response in self._mocks:
             if response.match_request(method, url):
