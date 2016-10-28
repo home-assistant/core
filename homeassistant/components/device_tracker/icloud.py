@@ -301,7 +301,7 @@ class Icloud(object):  # pylint: disable=too-many-instance-attributes
     def determine_interval(self, devicename, latitude, longitude, battery,
                            gmtt_duration):
         """Calculate new interval."""
-        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-branches,too-many-arguments
         distancefromhome = None
         zone_state = self.hass.states.get('zone.home')
         zone_state_lat = zone_state.attributes['latitude']
