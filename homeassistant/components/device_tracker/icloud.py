@@ -83,7 +83,7 @@ def setup_scanner(hass, config: dict, see):
     # pylint: disable=too-many-locals
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    account = config.get(CONF_ACCOUNTNAME, slugify(username))
+    account = config.get(CONF_ACCOUNTNAME, slugify(username.partition('@')[0]))
 
     googletraveltime = config.get(CONF_GMTT)
 
