@@ -153,25 +153,26 @@ class TestLightMQTTJSON(unittest.TestCase):
             # pylint: disable=invalid-name
         """Test the controlling of the color with templates via topic."""
         self.hass.config.components = ['mqtt']
-        assert setup_component(self.hass, light.DOMAIN, {
-            light.DOMAIN: {
-                'platform': 'mqtt_json',
-                'name': 'test',
-                'state_topic': 'test_light_rgb',
-                'command_topic': 'test_light_rgb/set',
-                'brightness': True,
-                'rgb': True,
-                'rgb_value_template': '{{ value_json.color[0] }},'
-                                      '{{ value_json.color[1] }},'
-                                      '{{ value_json.color[2] }}',
-                'rgb_set_template': '{"color":['
-                                    '{{ value_json.r }},'
-                                    '{{ value_json.g }},'
-                                    '{{ value_json.b }}'
-                                    ']}',
-                'qos': '0'
-            }
-        })
+        with assert_setup_component(1):
+            assert setup_component(self.hass, light.DOMAIN, {
+                light.DOMAIN: {
+                    'platform': 'mqtt_json',
+                    'name': 'test',
+                    'state_topic': 'test_light_rgb',
+                    'command_topic': 'test_light_rgb/set',
+                    'brightness': True,
+                    'rgb': True,
+                    'rgb_value_template': '{{ value_json.color[0] }},'
+                                          '{{ value_json.color[1] }},'
+                                          '{{ value_json.color[2] }}',
+                    'rgb_set_template': '{"color":['
+                                        '{{ value_json.r }},'
+                                        '{{ value_json.g }},'
+                                        '{{ value_json.b }}'
+                                        ']}',
+                    'qos': '0'
+                }
+            })
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
