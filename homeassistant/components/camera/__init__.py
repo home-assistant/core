@@ -27,8 +27,9 @@ STATE_IDLE = 'idle'
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 
 
+@asyncio.coroutine
 # pylint: disable=too-many-branches
-def setup(hass, config):
+def async_setup(hass, config):
     """Setup the camera component."""
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
@@ -36,8 +37,7 @@ def setup(hass, config):
     hass.http.register_view(CameraImageView(hass, component.entities))
     hass.http.register_view(CameraMjpegStream(hass, component.entities))
 
-    component.setup(config)
-
+    yield from component.async_setup(config)
     return True
 
 
