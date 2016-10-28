@@ -3,10 +3,11 @@ from collections import OrderedDict
 from datetime import timedelta
 import enum
 import os
-import tempfile
+from socket import _GLOBAL_DEFAULT_TIMEOUT
 
 import pytest
 import voluptuous as vol
+from unittest.mock import Mock, patch
 
 import homeassistant.helpers.config_validation as cv
 
@@ -68,18 +69,18 @@ def test_isfile():
     """Validate that the value is an existing file."""
     schema = vol.Schema(cv.isfile)
 
-    with tempfile.NamedTemporaryFile() as fp:
-        pass
+    fake_file = 'this-file-does-not.exist'
+    assert not os.path.isfile(fake_file)
 
-    for value in ('invalid', None, -1, 0, 80000, fp.name):
+    for value in ('invalid', None, -1, 0, 80000, fake_file):
         with pytest.raises(vol.Invalid):
             schema(value)
 
-    with tempfile.TemporaryDirectory() as tmp_path:
-        tmp_file = os.path.join(tmp_path, "test.txt")
-        with open(tmp_file, "w") as tmp_handl:
-            tmp_handl.write("test file")
-        schema(tmp_file)
+    # patching methods that allow us to fake a file existing
+    # with write access
+    with patch('os.path.isfile', Mock(return_value=True)), \
+            patch('os.access', Mock(return_value=True)):
+        schema('test.txt')
 
 
 def test_url():
@@ -299,6 +300,18 @@ def test_temperature_unit():
     schema('F')
 
 
+def test_x10_address():
+    """Test x10 addr validator."""
+    schema = vol.Schema(cv.x10_address)
+    with pytest.raises(vol.Invalid):
+        schema('Q1')
+        schema('q55')
+        schema('garbage_addr')
+
+    schema('a1')
+    schema('C11')
+
+
 def test_template():
     """Test template validator."""
     schema = vol.Schema(cv.template)
@@ -436,3 +449,22 @@ def test_enum():
         schema('value3')
 
     TestEnum['value1']
+
+
+def test_socket_timeout():
+    """Test socket timeout validator."""
+    TEST_CONF_TIMEOUT = 'timeout'
+
+    schema = vol.Schema(
+        {vol.Required(TEST_CONF_TIMEOUT, default=None): cv.socket_timeout})
+
+    with pytest.raises(vol.Invalid):
+        schema({TEST_CONF_TIMEOUT: 0.0})
+
+    with pytest.raises(vol.Invalid):
+        schema({TEST_CONF_TIMEOUT: -1})
+
+    assert _GLOBAL_DEFAULT_TIMEOUT == schema({TEST_CONF_TIMEOUT:
+                                              None})[TEST_CONF_TIMEOUT]
+
+    assert 1.0 == schema({TEST_CONF_TIMEOUT: 1})[TEST_CONF_TIMEOUT]

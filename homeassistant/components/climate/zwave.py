@@ -84,6 +84,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._current_temperature = None
         self._current_operation = None
         self._operation_list = None
+        self._operating_state = None
         self._current_fan_mode = None
         self._fan_list = None
         self._current_swing_mode = None
@@ -120,6 +121,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             self.update_ha_state()
             _LOGGER.debug("Value changed on network %s", value)
 
+    # pylint: disable=too-many-branches
     def update_properties(self):
         """Callback on data change for the registered node/value pair."""
         # Operation Mode
@@ -182,6 +184,11 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             _LOGGER.debug("Device can't set setpoint based on operation mode."
                           " Defaulting to index=1")
             self._target_temperature = int(value.data)
+        # Operating state
+        for value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_OPERATING_STATE)
+                      .values()):
+            self._operating_state = value.data
 
     @property
     def should_poll(self):
@@ -323,3 +330,13 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                    value.index == 33:
                     value.data = bytes(swing_mode, 'utf-8')
                     break
+
+    @property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+        if self._operating_state:
+            return {
+                "operating_state": self._operating_state,
+            }
+        else:
+            return {}

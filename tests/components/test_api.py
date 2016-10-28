@@ -1,12 +1,13 @@
 """The tests for the Home Assistant API component."""
 # pylint: disable=protected-access,too-many-public-methods
+import asyncio
 from contextlib import closing
 import json
-import tempfile
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+from aiohttp import web
 import requests
 
 from homeassistant import bootstrap, const
@@ -145,14 +146,14 @@ class TestAPI(unittest.TestCase):
         requests.post(_url(const.URL_API_STATES_ENTITY.format("test.test")),
                       data=json.dumps({"state": "not_to_be_set"}),
                       headers=HA_HEADERS)
-        hass.bus._pool.block_till_done()
+        hass.block_till_done()
         self.assertEqual(0, len(events))
 
         requests.post(_url(const.URL_API_STATES_ENTITY.format("test.test")),
                       data=json.dumps({"state": "not_to_be_set",
                                        "force_update": True}),
                       headers=HA_HEADERS)
-        hass.bus._pool.block_till_done()
+        hass.block_till_done()
         self.assertEqual(1, len(events))
 
     # pylint: disable=invalid-name
@@ -244,15 +245,18 @@ class TestAPI(unittest.TestCase):
 
     def test_api_get_error_log(self):
         """Test the return of the error log."""
-        test_content = 'Test String°'
-        with tempfile.NamedTemporaryFile() as log:
-            log.write(test_content.encode('utf-8'))
-            log.flush()
+        test_string = 'Test String°'
 
-            with patch.object(hass.config, 'path', return_value=log.name):
-                req = requests.get(_url(const.URL_API_ERROR_LOG),
-                                   headers=HA_HEADERS)
-            self.assertEqual(test_content, req.text)
+        @asyncio.coroutine
+        def mock_send():
+            """Mock file send."""
+            return web.Response(text=test_string)
+
+        with patch('homeassistant.components.http.HomeAssistantView.file',
+                   Mock(return_value=mock_send())):
+            req = requests.get(_url(const.URL_API_ERROR_LOG),
+                               headers=HA_HEADERS)
+            self.assertEqual(test_string, req.text)
             self.assertIsNone(req.headers.get('expires'))
 
     def test_api_get_event_listeners(self):

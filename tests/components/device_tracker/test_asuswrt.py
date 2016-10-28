@@ -1,5 +1,6 @@
 """The tests for the ASUSWRT device tracker platform."""
 import os
+from datetime import timedelta
 import unittest
 from unittest import mock
 
@@ -7,8 +8,11 @@ import voluptuous as vol
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import device_tracker
+from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME, CONF_TRACK_NEW)
 from homeassistant.components.device_tracker.asuswrt import (
-    CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, PLATFORM_SCHEMA, DOMAIN)
+    CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, DOMAIN,
+    PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
 
@@ -70,7 +74,9 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
                 CONF_PLATFORM: 'asuswrt',
                 CONF_HOST: 'fake_host',
                 CONF_USERNAME: 'fake_user',
-                CONF_PASSWORD: 'fake_pass'
+                CONF_PASSWORD: 'fake_pass',
+                CONF_TRACK_NEW: True,
+                CONF_CONSIDER_HOME: timedelta(seconds=180)
             }
         }
 
@@ -79,7 +85,8 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
 
         conf_dict[DOMAIN][CONF_MODE] = 'router'
         conf_dict[DOMAIN][CONF_PROTOCOL] = 'ssh'
-        asuswrt_mock.assert_called_once_with(conf_dict[DOMAIN])
+        self.assertEqual(asuswrt_mock.call_count, 1)
+        self.assertEqual(asuswrt_mock.call_args, mock.call(conf_dict[DOMAIN]))
 
     @mock.patch(
         'homeassistant.components.device_tracker.asuswrt.AsusWrtDeviceScanner',
@@ -92,7 +99,9 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
                 CONF_PLATFORM: 'asuswrt',
                 CONF_HOST: 'fake_host',
                 CONF_USERNAME: 'fake_user',
-                CONF_PUB_KEY: FAKEFILE
+                CONF_PUB_KEY: FAKEFILE,
+                CONF_TRACK_NEW: True,
+                CONF_CONSIDER_HOME: timedelta(seconds=180)
             }
         }
 
@@ -101,7 +110,8 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
 
         conf_dict[DOMAIN][CONF_MODE] = 'router'
         conf_dict[DOMAIN][CONF_PROTOCOL] = 'ssh'
-        asuswrt_mock.assert_called_once_with(conf_dict[DOMAIN])
+        self.assertEqual(asuswrt_mock.call_count, 1)
+        self.assertEqual(asuswrt_mock.call_args, mock.call(conf_dict[DOMAIN]))
 
     def test_ssh_login_with_pub_key(self):
         """Test that login is done with pub_key when configured to."""
@@ -122,8 +132,11 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.addCleanup(update_mock.stop)
         asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
         asuswrt.ssh_connection()
-        ssh.login.assert_called_once_with('fake_host', 'fake_user',
-                                          ssh_key=FAKEFILE)
+        self.assertEqual(ssh.login.call_count, 1)
+        self.assertEqual(
+            ssh.login.call_args,
+            mock.call('fake_host', 'fake_user', ssh_key=FAKEFILE)
+        )
 
     def test_ssh_login_with_password(self):
         """Test that login is done with password when configured to."""
@@ -144,8 +157,11 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.addCleanup(update_mock.stop)
         asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
         asuswrt.ssh_connection()
-        ssh.login.assert_called_once_with('fake_host', 'fake_user',
-                                          password='fake_pass')
+        self.assertEqual(ssh.login.call_count, 1)
+        self.assertEqual(
+            ssh.login.call_args,
+            mock.call('fake_host', 'fake_user', password='fake_pass')
+        )
 
     def test_ssh_login_without_password_or_pubkey(self):  \
             # pylint: disable=invalid-name

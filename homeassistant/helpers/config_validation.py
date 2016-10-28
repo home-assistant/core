@@ -2,7 +2,9 @@
 from collections import OrderedDict
 from datetime import timedelta
 import os
+import re
 from urllib.parse import urlparse
+from socket import _GLOBAL_DEFAULT_TIMEOUT
 
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
@@ -306,6 +308,24 @@ def time_zone(value):
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
 
 
+def socket_timeout(value):
+    """Validate timeout float > 0.0.
+
+    None coerced to socket._GLOBAL_DEFAULT_TIMEOUT bare object.
+    """
+    if value is None:
+        return _GLOBAL_DEFAULT_TIMEOUT
+    else:
+        try:
+            float_value = float(value)
+            if float_value > 0.0:
+                return float_value
+            raise vol.Invalid('Invalid socket timeout value.'
+                              ' float > 0.0 required.')
+        except Exception as _:
+            raise vol.Invalid('Invalid socket timeout: {err}'.format(err=_))
+
+
 # pylint: disable=no-value-for-parameter
 def url(value: Any) -> str:
     """Validate an URL."""
@@ -315,6 +335,14 @@ def url(value: Any) -> str:
         return vol.Schema(vol.Url())(url_in)
 
     raise vol.Invalid('invalid url')
+
+
+def x10_address(value):
+    """Validate an x10 address."""
+    regex = re.compile(r'([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$')
+    if not regex.match(value):
+        raise vol.Invalid('Invalid X10 Address')
+    return str(value).lower()
 
 
 def ordered_dict(value_validator, key_validator=match_all):
@@ -358,7 +386,8 @@ def key_dependency(key, dependency):
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): string,
-    CONF_SCAN_INTERVAL: vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_SCAN_INTERVAL):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
 }, extra=vol.ALLOW_EXTRA)
 
 EVENT_SCHEMA = vol.Schema({

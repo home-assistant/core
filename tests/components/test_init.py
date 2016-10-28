@@ -1,8 +1,8 @@
 """The testd for Core components."""
 # pylint: disable=protected-access,too-many-public-methods
+import asyncio
 import unittest
-from unittest.mock import patch
-from tempfile import TemporaryDirectory
+from unittest.mock import patch, Mock
 
 import yaml
 
@@ -12,8 +12,10 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 import homeassistant.components as comps
 from homeassistant.helpers import entity
+from homeassistant.util.async import run_coroutine_threadsafe
 
-from tests.common import get_test_home_assistant, mock_service
+from tests.common import (
+    get_test_home_assistant, mock_service, patch_yaml_files)
 
 
 class TestComponentsCore(unittest.TestCase):
@@ -22,7 +24,9 @@ class TestComponentsCore(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.assertTrue(comps.setup(self.hass, {}))
+        self.assertTrue(run_coroutine_threadsafe(
+            comps.async_setup(self.hass, {}), self.hass.loop
+        ).result())
 
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
@@ -66,6 +70,7 @@ class TestComponentsCore(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(calls))
 
+    @asyncio.coroutine
     @patch('homeassistant.core.ServiceRegistry.call')
     def test_turn_on_to_not_block_for_domains_without_service(self, mock_call):
         """Test if turn_on is blocking domain with no service."""
@@ -78,7 +83,7 @@ class TestComponentsCore(unittest.TestCase):
             'entity_id': ['light.test', 'sensor.bla', 'light.bla']
         })
         service = self.hass.services._services['homeassistant']['turn_on']
-        service.func(service_call)
+        yield from service.func(service_call)
 
         self.assertEqual(2, mock_call.call_count)
         self.assertEqual(
@@ -89,6 +94,7 @@ class TestComponentsCore(unittest.TestCase):
             ('sensor', 'turn_on', {'entity_id': ['sensor.bla']}, False),
             mock_call.call_args_list[1][0])
 
+    @patch('homeassistant.config.os.path.isfile', Mock(return_value=True))
     def test_reload_core_conf(self):
         """Test reload core conf service."""
         ent = entity.Entity()
@@ -101,23 +107,20 @@ class TestComponentsCore(unittest.TestCase):
         assert state.state == 'unknown'
         assert state.attributes == {}
 
-        with TemporaryDirectory() as conf_dir:
-            self.hass.config.config_dir = conf_dir
-            conf_yaml = self.hass.config.path(config.YAML_CONFIG_FILE)
-
-            with open(conf_yaml, 'a') as fp:
-                fp.write(yaml.dump({
-                    ha.DOMAIN: {
-                        'latitude': 10,
-                        'longitude': 20,
-                        'customize': {
-                            'test.Entity': {
-                                'hello': 'world'
-                            }
+        files = {
+            config.YAML_CONFIG_FILE: yaml.dump({
+                ha.DOMAIN: {
+                    'latitude': 10,
+                    'longitude': 20,
+                    'customize': {
+                        'test.Entity': {
+                            'hello': 'world'
                         }
                     }
-                }))
-
+                }
+            })
+        }
+        with patch_yaml_files(files, True):
             comps.reload_core_config(self.hass)
             self.hass.block_till_done()
 
@@ -131,17 +134,15 @@ class TestComponentsCore(unittest.TestCase):
         assert state.state == 'unknown'
         assert state.attributes.get('hello') == 'world'
 
+    @patch('homeassistant.config.os.path.isfile', Mock(return_value=True))
     @patch('homeassistant.components._LOGGER.error')
-    @patch('homeassistant.config.process_ha_core_config')
+    @patch('homeassistant.config.async_process_ha_core_config')
     def test_reload_core_with_wrong_conf(self, mock_process, mock_error):
         """Test reload core conf service."""
-        with TemporaryDirectory() as conf_dir:
-            self.hass.config.config_dir = conf_dir
-            conf_yaml = self.hass.config.path(config.YAML_CONFIG_FILE)
-
-            with open(conf_yaml, 'a') as fp:
-                fp.write(yaml.dump(['invalid', 'config']))
-
+        files = {
+            config.YAML_CONFIG_FILE: yaml.dump(['invalid', 'config'])
+        }
+        with patch_yaml_files(files, True):
             comps.reload_core_config(self.hass)
             self.hass.block_till_done()
 

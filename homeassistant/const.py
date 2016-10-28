@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 31
+MINOR_VERSION = 32
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -104,6 +104,7 @@ CONF_NAME = 'name'
 CONF_OFFSET = 'offset'
 CONF_OPTIMISTIC = 'optimistic'
 CONF_PASSWORD = 'password'
+CONF_PATH = 'path'
 CONF_PAYLOAD = 'payload'
 CONF_PAYLOAD_OFF = 'payload_off'
 CONF_PAYLOAD_ON = 'payload_on'
@@ -312,11 +313,6 @@ SERVICE_SET_COVER_POSITION = 'set_cover_position'
 SERVICE_SET_COVER_TILT_POSITION = 'set_cover_tilt_position'
 SERVICE_STOP_COVER = 'stop_cover'
 SERVICE_STOP_COVER_TILT = 'stop_cover_tilt'
-
-SERVICE_MOVE_UP = 'move_up'
-SERVICE_MOVE_DOWN = 'move_down'
-SERVICE_MOVE_POSITION = 'move_position'
-SERVICE_STOP = 'stop'
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123

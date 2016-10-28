@@ -1,12 +1,10 @@
 """The tests for the notify demo platform."""
-import tempfile
 import unittest
 
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import demo
 from homeassistant.helpers import script
-from homeassistant.util import yaml
 
 from tests.common import get_test_home_assistant
 
@@ -70,21 +68,18 @@ class TestNotifyDemo(unittest.TestCase):
 
     def test_calling_notify_from_script_loaded_from_yaml_without_title(self):
         """Test if we can call a notify from a script."""
-        yaml_conf = """
-service: notify.notify
-data:
-  data:
-    push:
-      sound: US-EN-Morgan-Freeman-Roommate-Is-Arriving.wav
-data_template:
-  message: >
-          Test 123 {{ 2 + 2 }}
-"""
-
-        with tempfile.NamedTemporaryFile() as fp:
-            fp.write(yaml_conf.encode('utf-8'))
-            fp.flush()
-            conf = yaml.load_yaml(fp.name)
+        conf = {
+            'service': 'notify.notify',
+            'data': {
+                'data': {
+                    'push': {
+                        'sound':
+                        'US-EN-Morgan-Freeman-Roommate-Is-Arriving.wav'
+                    }
+                }
+            },
+            'data_template': {'message': 'Test 123 {{ 2 + 2 }}\n'},
+        }
 
         script.call_from_config(self.hass, conf)
         self.hass.block_till_done()
@@ -99,22 +94,21 @@ data_template:
 
     def test_calling_notify_from_script_loaded_from_yaml_with_title(self):
         """Test if we can call a notify from a script."""
-        yaml_conf = """
-service: notify.notify
-data:
-  data:
-    push:
-      sound: US-EN-Morgan-Freeman-Roommate-Is-Arriving.wav
-data_template:
-  title: Test
-  message: >
-          Test 123 {{ 2 + 2 }}
-"""
-
-        with tempfile.NamedTemporaryFile() as fp:
-            fp.write(yaml_conf.encode('utf-8'))
-            fp.flush()
-            conf = yaml.load_yaml(fp.name)
+        conf = {
+            'service': 'notify.notify',
+            'data': {
+                'data': {
+                    'push': {
+                        'sound':
+                        'US-EN-Morgan-Freeman-Roommate-Is-Arriving.wav'
+                    }
+                }
+            },
+            'data_template': {
+                'message': 'Test 123 {{ 2 + 2 }}\n',
+                'title': 'Test'
+            }
+        }
 
         script.call_from_config(self.hass, conf)
         self.hass.pool.block_till_done()

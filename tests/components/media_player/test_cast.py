@@ -7,7 +7,10 @@ from homeassistant.components.media_player import cast
 
 
 class FakeChromeCast(object):
+    """A fake Chrome Cast."""
+
     def __init__(self, host, port):
+        """Initialize the fake Chrome Cast."""
         self.host = host
         self.port = port
 
@@ -19,7 +22,6 @@ class TestCastMediaPlayer(unittest.TestCase):
     @patch('pychromecast.get_chromecasts')
     def test_filter_duplicates(self, mock_get_chromecasts, mock_device):
         """Test filtering of duplicates."""
-
         mock_get_chromecasts.return_value = [
             FakeChromeCast('some_host', cast.DEFAULT_PORT)
         ]

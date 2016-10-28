@@ -61,18 +61,20 @@ def setup(hass, config):
         try:
             _state = state_helper.state_as_number(state)
         except ValueError:
-            return
+            # Set the state to none and continue for any numeric attributes.
+            _state = None
 
         states = dict(state.attributes)
 
-        _LOGGER.debug('Sending %s.%s', state.entity_id, _state)
+        _LOGGER.debug('Sending %s', state.entity_id)
 
         if show_attribute_flag is True:
-            statsd_client.gauge(
-                "%s.state" % state.entity_id,
-                _state,
-                sample_rate
-            )
+            if isinstance(_state, (float, int)):
+                statsd_client.gauge(
+                    "%s.state" % state.entity_id,
+                    _state,
+                    sample_rate
+                )
 
             # Send attribute values
             for key, value in states.items():
@@ -81,7 +83,8 @@ def setup(hass, config):
                     statsd_client.gauge(stat, value, sample_rate)
 
         else:
-            statsd_client.gauge(state.entity_id, _state, sample_rate)
+            if isinstance(_state, (float, int)):
+                statsd_client.gauge(state.entity_id, _state, sample_rate)
 
         # Increment the count
         statsd_client.incr(state.entity_id, rate=sample_rate)

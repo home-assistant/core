@@ -19,6 +19,16 @@ class socoDiscoverMock():
         return {SoCoMock('192.0.2.1')}
 
 
+class AvTransportMock():
+    """Mock class for the avTransport property on soco.SoCo object."""
+    def __init__(self):
+        pass
+
+    def GetMediaInfo(self, _):
+        return {'CurrentURI': '',
+                'CurrentURIMetaData': ''}
+
+
 class SoCoMock():
     """Mock class for the soco.SoCo object."""
 
@@ -26,6 +36,11 @@ class SoCoMock():
         """Initialize soco object."""
         self.ip_address = ip
         self.is_visible = True
+        self.avTransport = AvTransportMock()
+
+    def clear_sleep_timer(self):
+        """Clear the sleep timer."""
+        return
 
     def get_speaker_info(self):
         """Return a dict with various data points about the speaker."""
@@ -63,9 +78,17 @@ class SoCoMock():
         """Cause the speaker to join all other speakers in the network."""
         return
 
+    def set_sleep_timer(self, sleep_time_seconds):
+        """Set the sleep timer."""
+        return
+
     def unjoin(self):
         """Cause the speaker to separate itself from other speakers."""
         return
+
+    def uid(self):
+        """Return a player uid."""
+        return "RINCON_XXXXXXXXXXXXXXXXX"
 
 
 class TestSonosMediaPlayer(unittest.TestCase):
@@ -125,7 +148,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         device = sonos.DEVICES[-1]
         partymodeMock.return_value = True
         device.group_players()
-        partymodeMock.assert_called_once_with()
+        self.assertEqual(partymodeMock.call_count, 1)
+        self.assertEqual(partymodeMock.call_args, mock.call())
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch.object(SoCoMock, 'unjoin')
@@ -135,7 +159,26 @@ class TestSonosMediaPlayer(unittest.TestCase):
         device = sonos.DEVICES[-1]
         unjoinMock.return_value = True
         device.unjoin()
-        unjoinMock.assert_called_once_with()
+        self.assertEqual(unjoinMock.call_count, 1)
+        self.assertEqual(unjoinMock.call_args, mock.call())
+
+    @mock.patch('soco.SoCo', new=SoCoMock)
+    @mock.patch.object(SoCoMock, 'set_sleep_timer')
+    def test_sonos_set_sleep_timer(self, set_sleep_timerMock):
+        """Ensuring soco methods called for sonos_set_sleep_timer service."""
+        sonos.setup_platform(self.hass, {}, mock.MagicMock(), '192.0.2.1')
+        device = sonos.DEVICES[-1]
+        device.set_sleep_timer(30)
+        set_sleep_timerMock.assert_called_once_with(30)
+
+    @mock.patch('soco.SoCo', new=SoCoMock)
+    @mock.patch.object(SoCoMock, 'set_sleep_timer')
+    def test_sonos_clear_sleep_timer(self, set_sleep_timerMock):
+        """Ensuring soco methods called for sonos_clear_sleep_timer service."""
+        sonos.setup_platform(self.hass, {}, mock.MagicMock(), '192.0.2.1')
+        device = sonos.DEVICES[-1]
+        device.set_sleep_timer(None)
+        set_sleep_timerMock.assert_called_once_with(None)
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch.object(soco.snapshot.Snapshot, 'snapshot')
@@ -145,7 +188,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         device = sonos.DEVICES[-1]
         snapshotMock.return_value = True
         device.snapshot()
-        snapshotMock.assert_called_once_with()
+        self.assertEqual(snapshotMock.call_count, 1)
+        self.assertEqual(snapshotMock.call_args, mock.call())
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch.object(soco.snapshot.Snapshot, 'restore')
@@ -155,4 +199,5 @@ class TestSonosMediaPlayer(unittest.TestCase):
         device = sonos.DEVICES[-1]
         restoreMock.return_value = True
         device.restore()
-        restoreMock.assert_called_once_with(True)
+        self.assertEqual(restoreMock.call_count, 1)
+        self.assertEqual(restoreMock.call_args, mock.call(True))

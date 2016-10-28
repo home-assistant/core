@@ -31,6 +31,9 @@ omit =
     homeassistant/components/insteon_hub.py
     homeassistant/components/*/insteon_hub.py
 
+    homeassistant/components/ios.py
+    homeassistant/components/*/ios.py
+
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
 
@@ -95,8 +98,7 @@ omit =
     homeassistant/components/homematic.py
     homeassistant/components/*/homematic.py
 
-    homeassistant/components/pilight.py
-    homeassistant/components/*/pilight.py
+    homeassistant/components/switch/pilight.py
 
     homeassistant/components/knx.py
     homeassistant/components/*/knx.py
@@ -107,10 +109,15 @@ omit =
     homeassistant/components/zoneminder.py
     homeassistant/components/*/zoneminder.py
 
+    homeassistant/components/mochad.py
+    homeassistant/components/*/mochad.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
+    homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
     homeassistant/components/binary_sensor/arest.py
+    homeassistant/components/binary_sensor/concord232.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/bloomsky.py
@@ -132,10 +139,9 @@ omit =
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/bbox.py
-    homeassistant/components/device_tracker/bluetooth_tracker.py
     homeassistant/components/device_tracker/bluetooth_le_tracker.py
+    homeassistant/components/device_tracker/bluetooth_tracker.py
     homeassistant/components/device_tracker/bt_home_hub_5.py
-    homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/luci.py
@@ -149,11 +155,10 @@ omit =
     homeassistant/components/device_tracker/volvooncall.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
+    homeassistant/components/emoncms_history.py
     homeassistant/components/fan/mqtt.py
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
-    homeassistant/components/garage_door/rpi_gpio.py
-    homeassistant/components/garage_door/wink.py
     homeassistant/components/hdmi_cec.py
     homeassistant/components/ifttt.py
     homeassistant/components/joaoapps_join.py
@@ -202,7 +207,9 @@ omit =
     homeassistant/components/notify/joaoapps_join.py
     homeassistant/components/notify/kodi.py
     homeassistant/components/notify/llamalab_automate.py
+    homeassistant/components/notify/matrix.py
     homeassistant/components/notify/message_bird.py
+    homeassistant/components/notify/nfandroidtv.py
     homeassistant/components/notify/nma.py
     homeassistant/components/notify/pushbullet.py
     homeassistant/components/notify/pushetta.py
@@ -214,6 +221,7 @@ omit =
     homeassistant/components/notify/smtp.py
     homeassistant/components/notify/syslog.py
     homeassistant/components/notify/telegram.py
+    homeassistant/components/notify/telstra.py
     homeassistant/components/notify/twilio_sms.py
     homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
@@ -222,10 +230,12 @@ omit =
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/arwn.py
+    homeassistant/components/sensor/bbox.py
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/cpuspeed.py
+    homeassistant/components/sensor/currencylayer.py
     homeassistant/components/sensor/darksky.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
@@ -245,6 +255,7 @@ omit =
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
+    homeassistant/components/sensor/influxdb.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
@@ -261,6 +272,7 @@ omit =
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/sabnzbd.py
+    homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/speedtest.py
@@ -277,9 +289,7 @@ omit =
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/vasttrafik.py
-    homeassistant/components/sensor/worldclock.py
     homeassistant/components/sensor/xbox_live.py
-    homeassistant/components/sensor/yahoo_finance.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/anel_pwrctrl.py
@@ -288,6 +298,7 @@ omit =
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/mystrom.py
+    homeassistant/components/switch/neato.py
     homeassistant/components/switch/netio.py
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/pulseaudio_loopback.py
@@ -296,12 +307,9 @@ omit =
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
-    homeassistant/components/thermostat/eq3btsmart.py
-    homeassistant/components/thermostat/heatmiser.py
-    homeassistant/components/thermostat/homematic.py
-    homeassistant/components/thermostat/proliphix.py
-    homeassistant/components/thermostat/radiotherm.py
+    homeassistant/components/thingspeak.py
     homeassistant/components/upnp.py
+    homeassistant/components/weather/openweathermap.py
     homeassistant/components/zeroconf.py
 
 

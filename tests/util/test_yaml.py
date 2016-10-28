@@ -2,7 +2,6 @@
 import io
 import unittest
 import os
-import tempfile
 from unittest.mock import patch
 
 from homeassistant.exceptions import HomeAssistantError
@@ -68,146 +67,140 @@ class TestYaml(unittest.TestCase):
 
     def test_include_yaml(self):
         """Test include yaml."""
-        with tempfile.NamedTemporaryFile() as include_file:
-            include_file.write(b"value")
-            include_file.seek(0)
-            conf = "key: !include {}".format(include_file.name)
+        with patch_yaml_files({'test.yaml': 'value'}):
+            conf = 'key: !include test.yaml'
             with io.StringIO(conf) as file:
                 doc = yaml.yaml.safe_load(file)
                 assert doc["key"] == "value"
 
-    def test_include_dir_list(self):
+    @patch('homeassistant.util.yaml.os.walk')
+    def test_include_dir_list(self, mock_walk):
         """Test include dir list yaml."""
-        with tempfile.TemporaryDirectory() as include_dir:
-            file_1 = tempfile.NamedTemporaryFile(dir=include_dir,
-                                                 suffix=".yaml", delete=False)
-            file_1.write(b"one")
-            file_1.close()
-            file_2 = tempfile.NamedTemporaryFile(dir=include_dir,
-                                                 suffix=".yaml", delete=False)
-            file_2.write(b"two")
-            file_2.close()
-            conf = "key: !include_dir_list {}".format(include_dir)
+        mock_walk.return_value = [
+            ['/tmp', [], ['one.yaml', 'two.yaml']],
+        ]
+
+        with patch_yaml_files({
+            '/tmp/one.yaml': 'one',
+            '/tmp/two.yaml': 'two',
+        }):
+            conf = "key: !include_dir_list /tmp"
             with io.StringIO(conf) as file:
                 doc = yaml.yaml.safe_load(file)
                 assert sorted(doc["key"]) == sorted(["one", "two"])
 
-    def test_include_dir_list_recursive(self):
+    @patch('homeassistant.util.yaml.os.walk')
+    def test_include_dir_list_recursive(self, mock_walk):
         """Test include dir recursive list yaml."""
-        with tempfile.TemporaryDirectory() as include_dir:
-            file_0 = tempfile.NamedTemporaryFile(dir=include_dir,
-                                                 suffix=".yaml", delete=False)
-            file_0.write(b"zero")
-            file_0.close()
-            temp_dir = tempfile.TemporaryDirectory(dir=include_dir)
-            file_1 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
-                                                 suffix=".yaml", delete=False)
-            file_1.write(b"one")
-            file_1.close()
-            file_2 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
-                                                 suffix=".yaml", delete=False)
-            file_2.write(b"two")
-            file_2.close()
-            conf = "key: !include_dir_list {}".format(include_dir)
+        mock_walk.return_value = [
+            ['/tmp', ['tmp2', '.ignore', 'ignore'], ['zero.yaml']],
+            ['/tmp/tmp2', [], ['one.yaml', 'two.yaml']],
+            ['/tmp/ignore', [], ['.ignore.yaml']]
+        ]
+
+        with patch_yaml_files({
+            '/tmp/zero.yaml': 'zero',
+            '/tmp/tmp2/one.yaml': 'one',
+            '/tmp/tmp2/two.yaml': 'two'
+        }):
+            conf = "key: !include_dir_list /tmp"
             with io.StringIO(conf) as file:
+                assert '.ignore' in mock_walk.return_value[0][1], \
+                    "Expecting .ignore in here"
                 doc = yaml.yaml.safe_load(file)
+                assert 'tmp2' in mock_walk.return_value[0][1]
+                assert '.ignore' not in mock_walk.return_value[0][1]
                 assert sorted(doc["key"]) == sorted(["zero", "one", "two"])
 
-    def test_include_dir_named(self):
+    @patch('homeassistant.util.yaml.os.walk')
+    def test_include_dir_named(self, mock_walk):
         """Test include dir named yaml."""
-        with tempfile.TemporaryDirectory() as include_dir:
-            file_1 = tempfile.NamedTemporaryFile(dir=include_dir,
-                                                 suffix=".yaml", delete=False)
-            file_1.write(b"one")
-            file_1.close()
-            file_2 = tempfile.NamedTemporaryFile(dir=include_dir,
-                                                 suffix=".yaml", delete=False)
-            file_2.write(b"two")
-            file_2.close()
-            conf = "key: !include_dir_named {}".format(include_dir)
-            correct = {}
-            correct[os.path.splitext(os.path.basename(file_1.name))[0]] = "one"
-            correct[os.path.splitext(os.path.basename(file_2.name))[0]] = "two"
+        mock_walk.return_value = [
+            ['/tmp', [], ['first.yaml', 'second.yaml']]
+        ]
+
+        with patch_yaml_files({
+            '/tmp/first.yaml': 'one',
+            '/tmp/second.yaml': 'two'
+        }):
+            conf = "key: !include_dir_named /tmp"
+            correct = {'first': 'one', 'second': 'two'}
             with io.StringIO(conf) as file:
                 doc = yaml.yaml.safe_load(file)
                 assert doc["key"] == correct
 
-    def test_include_dir_named_recursive(self):
+    @patch('homeassistant.util.yaml.os.walk')
+    def test_include_dir_named_recursive(self, mock_walk):
         """Test include dir named yaml."""
-        with tempfile.TemporaryDirectory() as include_dir:
-            file_0 = tempfile.NamedTemporaryFile(dir=include_dir,
-                                                 suffix=".yaml", delete=False)
-            file_0.write(b"zero")
-            file_0.close()
-            temp_dir = tempfile.TemporaryDirectory(dir=include_dir)
-            file_1 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
-                                                 suffix=".yaml", delete=False)
-            file_1.write(b"one")
-            file_1.close()
-            file_2 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
-                                                 suffix=".yaml", delete=False)
-            file_2.write(b"two")
-            file_2.close()
-            conf = "key: !include_dir_named {}".format(include_dir)
-            correct = {}
-            correct[os.path.splitext(
-                            os.path.basename(file_0.name))[0]] = "zero"
-            correct[os.path.splitext(os.path.basename(file_1.name))[0]] = "one"
-            correct[os.path.splitext(os.path.basename(file_2.name))[0]] = "two"
+        mock_walk.return_value = [
+            ['/tmp', ['tmp2', '.ignore', 'ignore'], ['first.yaml']],
+            ['/tmp/tmp2', [], ['second.yaml', 'third.yaml']],
+            ['/tmp/ignore', [], ['.ignore.yaml']]
+        ]
+
+        with patch_yaml_files({
+            '/tmp/first.yaml': 'one',
+            '/tmp/tmp2/second.yaml': 'two',
+            '/tmp/tmp2/third.yaml': 'three'
+        }):
+            conf = "key: !include_dir_named /tmp"
+            correct = {'first': 'one', 'second': 'two', 'third': 'three'}
             with io.StringIO(conf) as file:
+                assert '.ignore' in mock_walk.return_value[0][1], \
+                    "Expecting .ignore in here"
                 doc = yaml.yaml.safe_load(file)
+                assert 'tmp2' in mock_walk.return_value[0][1]
+                assert '.ignore' not in mock_walk.return_value[0][1]
                 assert doc["key"] == correct
 
-    def test_include_dir_merge_list(self):
+    @patch('homeassistant.util.yaml.os.walk')
+    def test_include_dir_merge_list(self, mock_walk):
         """Test include dir merge list yaml."""
-        with tempfile.TemporaryDirectory() as include_dir:
-            file_1 = tempfile.NamedTemporaryFile(dir=include_dir,
-                                                 suffix=".yaml", delete=False)
-            file_1.write(b"- one")
-            file_1.close()
-            file_2 = tempfile.NamedTemporaryFile(dir=include_dir,
-                                                 suffix=".yaml", delete=False)
-            file_2.write(b"- two\n- three")
-            file_2.close()
-            conf = "key: !include_dir_merge_list {}".format(include_dir)
+        mock_walk.return_value = [['/tmp', [], ['first.yaml', 'second.yaml']]]
+
+        with patch_yaml_files({
+            '/tmp/first.yaml': '- one',
+            '/tmp/second.yaml': '- two\n- three'
+        }):
+            conf = "key: !include_dir_merge_list /tmp"
             with io.StringIO(conf) as file:
                 doc = yaml.yaml.safe_load(file)
                 assert sorted(doc["key"]) == sorted(["one", "two", "three"])
 
-    def test_include_dir_merge_list_recursive(self):
+    @patch('homeassistant.util.yaml.os.walk')
+    def test_include_dir_merge_list_recursive(self, mock_walk):
         """Test include dir merge list yaml."""
-        with tempfile.TemporaryDirectory() as include_dir:
-            file_0 = tempfile.NamedTemporaryFile(dir=include_dir,
-                                                 suffix=".yaml", delete=False)
-            file_0.write(b"- zero")
-            file_0.close()
-            temp_dir = tempfile.TemporaryDirectory(dir=include_dir)
-            file_1 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
-                                                 suffix=".yaml", delete=False)
-            file_1.write(b"- one")
-            file_1.close()
-            file_2 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
-                                                 suffix=".yaml", delete=False)
-            file_2.write(b"- two\n- three")
-            file_2.close()
-            conf = "key: !include_dir_merge_list {}".format(include_dir)
-            with io.StringIO(conf) as file:
-                doc = yaml.yaml.safe_load(file)
-                assert sorted(doc["key"]) == sorted(["zero", "one", "two",
-                                                     "three"])
+        mock_walk.return_value = [
+            ['/tmp', ['tmp2', '.ignore', 'ignore'], ['first.yaml']],
+            ['/tmp/tmp2', [], ['second.yaml', 'third.yaml']],
+            ['/tmp/ignore', [], ['.ignore.yaml']]
+        ]
 
-    def test_include_dir_merge_named(self):
+        with patch_yaml_files({
+            '/tmp/first.yaml': '- one',
+            '/tmp/tmp2/second.yaml': '- two',
+            '/tmp/tmp2/third.yaml': '- three\n- four'
+        }):
+            conf = "key: !include_dir_merge_list /tmp"
+            with io.StringIO(conf) as file:
+                assert '.ignore' in mock_walk.return_value[0][1], \
+                    "Expecting .ignore in here"
+                doc = yaml.yaml.safe_load(file)
+                assert 'tmp2' in mock_walk.return_value[0][1]
+                assert '.ignore' not in mock_walk.return_value[0][1]
+                assert sorted(doc["key"]) == sorted(["one", "two",
+                                                     "three", "four"])
+
+    @patch('homeassistant.util.yaml.os.walk')
+    def test_include_dir_merge_named(self, mock_walk):
         """Test include dir merge named yaml."""
-        with tempfile.TemporaryDirectory() as include_dir:
-            file_1 = tempfile.NamedTemporaryFile(dir=include_dir,
-                                                 suffix=".yaml", delete=False)
-            file_1.write(b"key1: one")
-            file_1.close()
-            file_2 = tempfile.NamedTemporaryFile(dir=include_dir,
-                                                 suffix=".yaml", delete=False)
-            file_2.write(b"key2: two\nkey3: three")
-            file_2.close()
-            conf = "key: !include_dir_merge_named {}".format(include_dir)
+        mock_walk.return_value = [['/tmp', [], ['first.yaml', 'second.yaml']]]
+
+        with patch_yaml_files({
+                '/tmp/first.yaml': 'key1: one',
+                '/tmp/second.yaml': 'key2: two\nkey3: three'
+        }):
+            conf = "key: !include_dir_merge_named /tmp"
             with io.StringIO(conf) as file:
                 doc = yaml.yaml.safe_load(file)
                 assert doc["key"] == {
@@ -216,31 +209,40 @@ class TestYaml(unittest.TestCase):
                     "key3": "three"
                 }
 
-    def test_include_dir_merge_named_recursive(self):
+    @patch('homeassistant.util.yaml.os.walk')
+    def test_include_dir_merge_named_recursive(self, mock_walk):
         """Test include dir merge named yaml."""
-        with tempfile.TemporaryDirectory() as include_dir:
-            file_0 = tempfile.NamedTemporaryFile(dir=include_dir,
-                                                 suffix=".yaml", delete=False)
-            file_0.write(b"key0: zero")
-            file_0.close()
-            temp_dir = tempfile.TemporaryDirectory(dir=include_dir)
-            file_1 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
-                                                 suffix=".yaml", delete=False)
-            file_1.write(b"key1: one")
-            file_1.close()
-            file_2 = tempfile.NamedTemporaryFile(dir=temp_dir.name,
-                                                 suffix=".yaml", delete=False)
-            file_2.write(b"key2: two\nkey3: three")
-            file_2.close()
-            conf = "key: !include_dir_merge_named {}".format(include_dir)
+        mock_walk.return_value = [
+            ['/tmp', ['tmp2', '.ignore', 'ignore'], ['first.yaml']],
+            ['/tmp/tmp2', [], ['second.yaml', 'third.yaml']],
+            ['/tmp/ignore', [], ['.ignore.yaml']]
+        ]
+
+        with patch_yaml_files({
+            '/tmp/first.yaml': 'key1: one',
+            '/tmp/tmp2/second.yaml': 'key2: two',
+            '/tmp/tmp2/third.yaml': 'key3: three\nkey4: four'
+        }):
+            conf = "key: !include_dir_merge_named /tmp"
             with io.StringIO(conf) as file:
+                assert '.ignore' in mock_walk.return_value[0][1], \
+                    "Expecting .ignore in here"
                 doc = yaml.yaml.safe_load(file)
+                assert 'tmp2' in mock_walk.return_value[0][1]
+                assert '.ignore' not in mock_walk.return_value[0][1]
                 assert doc["key"] == {
-                    "key0": "zero",
                     "key1": "one",
                     "key2": "two",
-                    "key3": "three"
+                    "key3": "three",
+                    "key4": "four"
                 }
+
+    @patch('homeassistant.util.yaml.open', create=True)
+    def test_load_yaml_encoding_error(self, mock_open):
+        """Test raising a UnicodeDecodeError."""
+        mock_open.side_effect = UnicodeDecodeError('', b'', 1, 0, '')
+        self.assertRaises(HomeAssistantError, yaml.load_yaml, 'test')
+
 
 FILES = {}
 

@@ -51,7 +51,7 @@ SCRIPT_TURN_ONOFF_SCHEMA = vol.Schema({
 
 
 def is_on(hass, entity_id):
-    """Return if the switch is on based on the statemachine."""
+    """Return if the script is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
 
 
@@ -154,7 +154,7 @@ class ScriptEntity(ToggleEntity):
         return self.script.is_running
 
     def turn_on(self, **kwargs):
-        """Turn the entity on."""
+        """Turn the script on."""
         self.script.run(kwargs.get(ATTR_VARIABLES))
 
     def turn_off(self, **kwargs):

@@ -26,8 +26,8 @@ MOCKS = {
     'load*': ("homeassistant.config.load_yaml", yaml.load_yaml),
     'get': ("homeassistant.loader.get_component", loader.get_component),
     'secrets': ("homeassistant.util.yaml._secret_yaml", yaml._secret_yaml),
-    'except': ("homeassistant.bootstrap.log_exception",
-               bootstrap.log_exception)
+    'except': ("homeassistant.bootstrap.async_log_exception",
+               bootstrap.async_log_exception)
 }
 SILENCE = (
     'homeassistant.bootstrap.clear_secret_cache',
@@ -185,8 +185,14 @@ def check(config_path):
         # Test if platform/component and overwrite setup
         if '.' in comp_name:
             module.setup_platform = mock_setup
+
+            if hasattr(module, 'async_setup_platform'):
+                del module.async_setup_platform
         else:
             module.setup = mock_setup
+
+            if hasattr(module, 'async_setup'):
+                del module.async_setup
 
         return module
 
