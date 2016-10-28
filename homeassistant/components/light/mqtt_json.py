@@ -128,11 +128,8 @@ class MqttJson(Light):
 
         self._templates = {}
         for key, tpl in list(templates.items()):
-            if tpl is None:
-                self._templates[key] = lambda value: value
-            else:
-                tpl.hass = hass
-                self._templates[key] = tpl.render_with_possible_json_value
+            tpl.hass = hass
+            self._templates[key] = tpl.render_with_possible_json_value
 
         def state_received(topic, payload, qos):
             """A new MQTT message has been received."""
