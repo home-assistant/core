@@ -623,6 +623,7 @@ class SonosDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_process_sonos_event(self, event):
         """Process a service event coming from the speaker."""
+        next_track_image_url = None
         if event.service == self._player.avTransport:
             self._last_avtransport_event = event
 
@@ -639,10 +640,6 @@ class SonosDevice(MediaPlayerDevice):
             if next_track_uri:
                 next_track_image_url = self._format_media_image_url(
                     next_track_uri
-                )
-
-                self.preload_media_image_url(
-                    next_track_image_url
                 )
 
             next_track_metadata = event.variables.get('next_track_meta_data')
@@ -667,6 +664,11 @@ class SonosDevice(MediaPlayerDevice):
                     event.variables['mute'].get('Master') == '1'
 
         yield from self.async_update_ha_state(True)
+
+        if next_track_image_url:
+            yield from self.async_preload_media_image_url(
+                next_track_image_url
+            )
 
     @property
     def volume_level(self):
