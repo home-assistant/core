@@ -152,52 +152,8 @@ class HomeAssistant(object):
 
     def start(self) -> None:
         """Start home assistant."""
-        _LOGGER.info(
-            "Starting Home Assistant (%d threads)", self.pool.worker_count)
-        self.state = CoreState.starting
-
         # Register the async start
         self.loop.create_task(self.async_start())
-
-        @callback
-        def stop_homeassistant(*args):
-            """Stop Home Assistant."""
-            self.exit_code = 0
-            self.async_add_job(self.async_stop)
-
-        @callback
-        def restart_homeassistant(*args):
-            """Restart Home Assistant."""
-            self.exit_code = RESTART_EXIT_CODE
-            self.async_add_job(self.async_stop)
-
-        # Register the restart/stop event
-        self.loop.call_soon(
-            self.services.async_register,
-            DOMAIN, SERVICE_HOMEASSISTANT_STOP, stop_homeassistant
-        )
-        self.loop.call_soon(
-            self.services.async_register,
-            DOMAIN, SERVICE_HOMEASSISTANT_RESTART, restart_homeassistant
-        )
-
-        # Setup signal handling
-        if sys.platform != 'win32':
-            try:
-                self.loop.add_signal_handler(
-                    signal.SIGTERM,
-                    stop_homeassistant
-                )
-            except ValueError:
-                _LOGGER.warning('Could not bind to SIGTERM.')
-
-            try:
-                self.loop.add_signal_handler(
-                    signal.SIGHUP,
-                    restart_homeassistant
-                )
-            except ValueError:
-                _LOGGER.warning('Could not bind to SIGHUP.')
 
         # Run forever and catch keyboard interrupt
         try:
@@ -205,7 +161,7 @@ class HomeAssistant(object):
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
         except KeyboardInterrupt:
-            self.loop.call_soon(stop_homeassistant)
+            self.loop.call_soon(self._async_stop_homeassistant_handler)
             self.loop.run_forever()
         finally:
             self.loop.close()
@@ -216,6 +172,39 @@ class HomeAssistant(object):
 
         This method is a coroutine.
         """
+        _LOGGER.info(
+            "Starting Home Assistant (%d threads)", self.pool.worker_count)
+
+        self.state = CoreState.starting
+
+        # Register the restart/stop event
+        self.services.async_register(
+            DOMAIN, SERVICE_HOMEASSISTANT_STOP,
+            self._async_stop_homeassistant_handler
+        )
+        self.services.async_register(
+            DOMAIN, SERVICE_HOMEASSISTANT_RESTART,
+            self._async_restart_homeassistant_handler
+        )
+
+        # Setup signal handling
+        if sys.platform != 'win32':
+            try:
+                self.loop.add_signal_handler(
+                    signal.SIGTERM,
+                    self._async_stop_homeassistant_handler
+                )
+            except ValueError:
+                _LOGGER.warning('Could not bind to SIGTERM.')
+
+            try:
+                self.loop.add_signal_handler(
+                    signal.SIGHUP,
+                    self._async_restart_homeassistant_handler
+                )
+            except ValueError:
+                _LOGGER.warning('Could not bind to SIGHUP.')
+
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
         _async_create_timer(self)
@@ -330,6 +319,7 @@ class HomeAssistant(object):
         self.loop.stop()
 
     # pylint: disable=no-self-use
+    @callback
     def _async_exception_handler(self, loop, context):
         """Handle all exception inside the core loop."""
         message = context.get('message')
@@ -347,6 +337,18 @@ class HomeAssistant(object):
                 "Exception inside async loop: ",
                 exc_info=exc_info
             )
+
+    @callback
+    def _async_stop_homeassistant_handler(self, *args):
+        """Stop Home Assistant."""
+        self.exit_code = 0
+        self.async_add_job(self.async_stop)
+
+    @callback
+    def _async_restart_homeassistant_handler(self, *args):
+        """Restart Home Assistant."""
+        self.exit_code = RESTART_EXIT_CODE
+        self.async_add_job(self.async_stop)
 
 
 class EventOrigin(enum.Enum):
