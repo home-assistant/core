@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.panasonic_viera/
 """
 import logging
-import socket
 
 import voluptuous as vol
 
@@ -60,9 +59,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         remote.get_mute()
-    except (socket.timeout, TimeoutError, OSError):
-        _LOGGER.error('Panasonic Viera TV is not available at %s:%d',
-                      host, port)
+    except OSError as error:
+        _LOGGER.error('Panasonic Viera TV is not available at %s:%d: %s',
+                      host, port, error)
         return False
 
     add_devices([PanasonicVieraTVDevice(name, remote)])
@@ -88,7 +87,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         try:
             self._muted = self._remote.get_mute()
             self._state = STATE_ON
-        except (socket.timeout, TimeoutError, OSError):
+        except OSError:
             self._state = STATE_OFF
             return False
         return True
@@ -98,7 +97,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         try:
             self._remote.send_key(key)
             self._state = STATE_ON
-        except (socket.timeout, TimeoutError, OSError):
+        except OSError:
             self._state = STATE_OFF
             return False
         return True
@@ -120,7 +119,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         try:
             volume = self._remote.get_volume() / 100
             self._state = STATE_ON
-        except (socket.timeout, TimeoutError, OSError):
+        except OSError:
             self._state = STATE_OFF
         return volume
 
@@ -156,7 +155,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         try:
             self._remote.set_volume(volume)
             self._state = STATE_ON
-        except (socket.timeout, TimeoutError, OSError):
+        except OSError:
             self._state = STATE_OFF
 
     def media_play_pause(self):
