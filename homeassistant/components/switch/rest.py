@@ -10,8 +10,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_NAME, CONF_RESOURCE, CONF_TIMEOUT)
+from homeassistant.const import (CONF_NAME, CONF_RESOURCE, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
 CONF_BODY_OFF = 'body_off'
@@ -35,8 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument,
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the RESTful switch."""
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the RESTful switch."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
     body_on = config.get(CONF_BODY_ON)
@@ -61,9 +60,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.error("No route to resource/endpoint: %s", resource)
         return False
 
-    add_devices_callback(
-        [RestSwitch(hass, name, resource,
-                    body_on, body_off, is_on_template, timeout)])
+    add_devices(
+        [RestSwitch(
+            hass, name, resource, body_on, body_off, is_on_template, timeout)])
 
 
 # pylint: disable=too-many-arguments
@@ -71,8 +70,8 @@ class RestSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using REST."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, hass, name, resource, body_on, body_off,
-                 is_on_template, timeout):
+    def __init__(self, hass, name, resource, body_on, body_off, is_on_template,
+                 timeout):
         """Initialize the REST switch."""
         self._state = None
         self._hass = hass
@@ -96,9 +95,8 @@ class RestSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         body_on_t = self._body_on.render()
-        request = requests.post(self._resource,
-                                data=body_on_t,
-                                timeout=self._timeout)
+        request = requests.post(
+            self._resource, data=body_on_t, timeout=self._timeout)
         if request.status_code == 200:
             self._state = True
         else:
@@ -108,9 +106,8 @@ class RestSwitch(SwitchDevice):
     def turn_off(self, **kwargs):
         """Turn the device off."""
         body_off_t = self._body_off.render()
-        request = requests.post(self._resource,
-                                data=body_off_t,
-                                timeout=self._timeout)
+        request = requests.post(
+            self._resource, data=body_off_t, timeout=self._timeout)
         if request.status_code == 200:
             self._state = False
         else:
