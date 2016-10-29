@@ -4,22 +4,18 @@ Support for Concord232 alarm control panels.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.concord232/
 """
-
 import datetime
-
 import logging
+
+import requests
+import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT,
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED, STATE_UNKNOWN)
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
-
-import requests
-
-import voluptuous as vol
 
 REQUIREMENTS = ['concord232==0.14']
 
@@ -29,17 +25,17 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'CONCORD232'
 DEFAULT_PORT = 5007
 
+SCAN_INTERVAL = 1
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
 })
 
-SCAN_INTERVAL = 1
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup concord232 platform."""
+    """Set up the Concord232 alarm control panel platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -49,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         add_devices([Concord232Alarm(hass, url, name)])
     except requests.exceptions.ConnectionError as ex:
-        _LOGGER.error('Unable to connect to Concord232: %s', str(ex))
+        _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
         return False
 
 
@@ -57,7 +53,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
     """Represents the Concord232-based alarm panel."""
 
     def __init__(self, hass, url, name):
-        """Initalize the concord232 alarm panel."""
+        """Initialize the Concord232 alarm panel."""
         from concord232 import client as concord232_client
 
         self._state = STATE_UNKNOWN
@@ -68,7 +64,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         try:
             client = concord232_client.Client(self._url)
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error('Unable to connect to Concord232: %s', str(ex))
+            _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
 
         self._alarm = client
         self._alarm.partitions = self._alarm.list_partitions()
@@ -100,16 +96,16 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         try:
             part = self._alarm.list_partitions()[0]
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error('Unable to connect to %(host)s: %(reason)s',
+            _LOGGER.error("Unable to connect to %(host)s: %(reason)s",
                           dict(host=self._url, reason=ex))
             newstate = STATE_UNKNOWN
         except IndexError:
-            _LOGGER.error('concord232 reports no partitions')
+            _LOGGER.error("Concord232 reports no partitions")
             newstate = STATE_UNKNOWN
 
-        if part['arming_level'] == "Off":
+        if part['arming_level'] == 'Off':
             newstate = STATE_ALARM_DISARMED
-        elif "Home" in part['arming_level']:
+        elif 'Home' in part['arming_level']:
             newstate = STATE_ALARM_ARMED_HOME
         else:
             newstate = STATE_ALARM_ARMED_AWAY
