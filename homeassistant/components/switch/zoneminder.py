@@ -1,5 +1,5 @@
 """
-Support for Zoneminder switches.
+Support for ZoneMinder switches.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.zoneminder/
@@ -10,23 +10,21 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_COMMAND_ON, CONF_COMMAND_OFF)
+import homeassistant.components.zoneminder as zoneminder
 import homeassistant.helpers.config_validation as cv
 
-import homeassistant.components.zoneminder as zoneminder
+_LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['zoneminder']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND_ON): cv.string,
     vol.Required(CONF_COMMAND_OFF): cv.string,
 })
 
-_LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['zoneminder']
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Zoneminder switch."""
+    """Set up the ZoneMinder switch platform."""
     on_state = config.get(CONF_COMMAND_ON)
     off_state = config.get(CONF_COMMAND_OFF)
 
@@ -47,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ZMSwitchMonitors(SwitchDevice):
-    """Representation of an zoneminder switch."""
+    """Representation of a ZoneMinder switch."""
 
     icon = 'mdi:record-rec'
 
