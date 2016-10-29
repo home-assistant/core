@@ -72,10 +72,11 @@ class MjpegCamera(Camera):
         self._mjpeg_url = device_info[CONF_MJPEG_URL]
 
         self._auth = None
-        if self._authentication == HTTP_BASIC_AUTHENTICATION:
-            self._auth = aiohttp.BasicAuth(
-                self._username, password=self._password
-            )
+        if self._username and self._password:
+            if self._authentication == HTTP_BASIC_AUTHENTICATION:
+                self._auth = aiohttp.BasicAuth(
+                    self._username, password=self._password
+                )
 
     def camera_image(self):
         """Return a still image response from the camera."""
