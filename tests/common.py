@@ -348,6 +348,16 @@ def patch_yaml_files(files_dict, endswith=True):
     return patch.object(yaml, 'open', mock_open_f, create=True)
 
 
+def mock_coro(return_value=None):
+    """Helper method to return a coro that returns a value."""
+    @asyncio.coroutine
+    def coro():
+        """Fake coroutine."""
+        return return_value
+
+    return coro
+
+
 @contextmanager
 def assert_setup_component(count, domain=None):
     """Collect valid configuration from setup_component.

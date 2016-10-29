@@ -102,56 +102,68 @@ def _async_setup_component(hass: core.HomeAssistant,
     """
     # pylint: disable=too-many-return-statements,too-many-branches
     # pylint: disable=too-many-statements
+    if not hasattr(hass, 'setup_lock'):
+        hass.setup_lock = asyncio.Lock(loop=hass.loop)
+
     if domain in hass.config.components:
         return True
 
-    if domain in _CURRENT_SETUP:
-        _LOGGER.error('Attempt made to setup %s during setup of %s',
-                      domain, domain)
-        return False
-
-    config = yield from async_prepare_setup_component(hass, config, domain)
-
-    if config is None:
-        return False
-
-    component = loader.get_component(domain)
-    _CURRENT_SETUP.append(domain)
+    did_lock = False
+    if not hass.setup_lock.locked():
+        yield from hass.setup_lock.acquire()
+        did_lock = True
 
     try:
-        if hasattr(component, 'async_setup'):
-            result = yield from component.async_setup(hass, config)
-        else:
-            result = yield from hass.loop.run_in_executor(
-                None, component.setup, hass, config)
+        if domain in _CURRENT_SETUP:
+            _LOGGER.error('Attempt made to setup %s during setup of %s',
+                          domain, domain)
+            return False
 
-        if result is False:
-            _LOGGER.error('component %s failed to initialize', domain)
+        config = yield from async_prepare_setup_component(hass, config, domain)
+
+        if config is None:
             return False
-        elif result is not True:
-            _LOGGER.error('component %s did not return boolean if setup '
-                          'was successful. Disabling component.', domain)
-            loader.set_component(domain, None)
+
+        component = loader.get_component(domain)
+        _CURRENT_SETUP.append(domain)
+
+        try:
+            if hasattr(component, 'async_setup'):
+                result = yield from component.async_setup(hass, config)
+            else:
+                result = yield from hass.loop.run_in_executor(
+                    None, component.setup, hass, config)
+
+            if result is False:
+                _LOGGER.error('component %s failed to initialize', domain)
+                return False
+            elif result is not True:
+                _LOGGER.error('component %s did not return boolean if setup '
+                              'was successful. Disabling component.', domain)
+                loader.set_component(domain, None)
+                return False
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error during setup of component %s', domain)
             return False
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception('Error during setup of component %s', domain)
-        return False
+        finally:
+            _CURRENT_SETUP.remove(domain)
+
+        hass.config.components.append(component.DOMAIN)
+
+        # Assumption: if a component does not depend on groups
+        # it communicates with devices
+        if 'group' not in getattr(component, 'DEPENDENCIES', []) and \
+                hass.pool.worker_count <= 10:
+            hass.pool.add_worker()
+
+        hass.bus.async_fire(
+            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
+        )
+
+        return True
     finally:
-        _CURRENT_SETUP.remove(domain)
-
-    hass.config.components.append(component.DOMAIN)
-
-    # Assumption: if a component does not depend on groups
-    # it communicates with devices
-    if 'group' not in getattr(component, 'DEPENDENCIES', []) and \
-       hass.pool.worker_count <= 10:
-        hass.pool.add_worker()
-
-    hass.bus.async_fire(
-        EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
-    )
-
-    return True
+        if did_lock:
+            hass.setup_lock.release()
 
 
 def prepare_setup_component(hass: core.HomeAssistant, config: dict,
