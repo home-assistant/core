@@ -8,6 +8,7 @@ For more details about the Python API, please refer to the documentation at
 https://home-assistant.io/developers/python_api/
 """
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import enum
 import json
@@ -124,14 +125,18 @@ class HomeAssistant(ha.HomeAssistant):
         self.remote_api = remote_api
 
         self.loop = loop or asyncio.get_event_loop()
+        self.executor = ThreadPoolExecutor(max_workers=5)
+        self.loop.set_default_executor(self.executor)
+        self.loop.set_exception_handler(self._async_exception_handler)
         self.pool = ha.create_worker_pool()
 
         self.bus = EventBus(remote_api, self)
         self.services = ha.ServiceRegistry(self.bus, self.add_job, self.loop)
         self.states = StateMachine(self.bus, self.loop, self.remote_api)
         self.config = ha.Config()
-        self.state = ha.CoreState.not_running
+        self._websession = None
 
+        self.state = ha.CoreState.not_running
         self.config.api = local_api
 
     def start(self):
