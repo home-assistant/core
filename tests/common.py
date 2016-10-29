@@ -108,6 +108,19 @@ def async_test_home_assistant(loop):
 
     hass.state = ha.CoreState.running
 
+    hass.allow_pool = True
+    orig_init = hass.async_init_pool
+
+    @ha.callback
+    def mock_async_init_pool():
+        """Prevent worker pool from being initialized."""
+        if hass.allow_pool:
+            orig_init()
+        else:
+            assert False, 'Thread pool not allowed. Set hass.allow_pool = True'
+
+    hass.async_init_pool = mock_async_init_pool
+
     return hass
 
 

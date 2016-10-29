@@ -169,7 +169,6 @@ class TestEventBus(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.bus = self.hass.bus
-        self.bus.listen('test_event', lambda x: len)
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -178,6 +177,7 @@ class TestEventBus(unittest.TestCase):
 
     def test_add_remove_listener(self):
         """Test remove_listener method."""
+        self.hass.allow_pool = False
         old_count = len(self.bus.listeners)
 
         def listener(_): pass
@@ -195,8 +195,10 @@ class TestEventBus(unittest.TestCase):
 
     def test_unsubscribe_listener(self):
         """Test unsubscribe listener from returned function."""
+        self.hass.allow_pool = False
         calls = []
 
+        @ha.callback
         def listener(event):
             """Mock listener."""
             calls.append(event)
@@ -217,6 +219,7 @@ class TestEventBus(unittest.TestCase):
 
     def test_listen_once_event_with_callback(self):
         """Test listen_once_event method."""
+        self.hass.allow_pool = False
         runs = []
 
         @ha.callback
@@ -234,6 +237,7 @@ class TestEventBus(unittest.TestCase):
 
     def test_listen_once_event_with_coroutine(self):
         """Test listen_once_event method."""
+        self.hass.allow_pool = False
         runs = []
 
         @asyncio.coroutine
@@ -279,6 +283,7 @@ class TestEventBus(unittest.TestCase):
 
     def test_callback_event_listener(self):
         """Test a  event listener listeners."""
+        self.hass.allow_pool = False
         callback_calls = []
 
         @ha.callback
@@ -292,6 +297,7 @@ class TestEventBus(unittest.TestCase):
 
     def test_coroutine_event_listener(self):
         """Test a  event listener listeners."""
+        self.hass.allow_pool = False
         coroutine_calls = []
 
         @asyncio.coroutine
@@ -370,6 +376,7 @@ class TestStateMachine(unittest.TestCase):
         self.states = self.hass.states
         self.states.set("light.Bowl", "on")
         self.states.set("switch.AC", "off")
+        self.hass.allow_pool = False
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -413,8 +420,12 @@ class TestStateMachine(unittest.TestCase):
     def test_remove(self):
         """Test remove method."""
         events = []
-        self.hass.bus.listen(EVENT_STATE_CHANGED,
-                             lambda event: events.append(event))
+
+        @ha.callback
+        def callback(event):
+            events.append(event)
+
+        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
 
         self.assertIn('light.bowl', self.states.entity_ids())
         self.assertTrue(self.states.remove('light.bowl'))
@@ -436,8 +447,11 @@ class TestStateMachine(unittest.TestCase):
         """Test insensitivty."""
         runs = []
 
-        self.hass.bus.listen(EVENT_STATE_CHANGED,
-                             lambda event: runs.append(event))
+        @ha.callback
+        def callback(event):
+            runs.append(event)
+
+        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
 
         self.states.set('light.BOWL', 'off')
         self.hass.block_till_done()
@@ -462,7 +476,12 @@ class TestStateMachine(unittest.TestCase):
     def test_force_update(self):
         """Test force update option."""
         events = []
-        self.hass.bus.listen(EVENT_STATE_CHANGED, lambda ev: events.append(ev))
+
+        @ha.callback
+        def callback(event):
+            events.append(event)
+
+        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
 
         self.states.set('light.bowl', 'on')
         self.hass.block_till_done()
@@ -504,6 +523,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_has_service(self):
         """Test has_service method."""
+        self.hass.allow_pool = False
         self.assertTrue(
             self.services.has_service("tesT_domaiN", "tesT_servicE"))
         self.assertFalse(
@@ -513,6 +533,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_services(self):
         """Test services."""
+        self.hass.allow_pool = False
         expected = {
             'test_domain': {'test_service': {'description': '', 'fields': {}}}
         }
@@ -535,6 +556,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_call_non_existing_with_blocking(self):
         """Test non-existing with blocking."""
+        self.hass.allow_pool = False
         prior = ha.SERVICE_CALL_LIMIT
         try:
             ha.SERVICE_CALL_LIMIT = 0.01
@@ -545,6 +567,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_async_service(self):
         """Test registering and calling an async service."""
+        self.hass.allow_pool = False
         calls = []
 
         @asyncio.coroutine
@@ -561,6 +584,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_callback_service(self):
         """Test registering and calling an async service."""
+        self.hass.allow_pool = False
         calls = []
 
         @ha.callback
