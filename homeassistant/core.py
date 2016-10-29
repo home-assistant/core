@@ -161,7 +161,7 @@ class HomeAssistant(object):
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
         except KeyboardInterrupt:
-            self.loop.call_soon(self._async_stop_homeassistant_handler)
+            self.loop.call_soon(self._async_stop_handler)
             self.loop.run_forever()
         finally:
             self.loop.close()
@@ -179,29 +179,21 @@ class HomeAssistant(object):
 
         # Register the restart/stop event
         self.services.async_register(
-            DOMAIN, SERVICE_HOMEASSISTANT_STOP,
-            self._async_stop_homeassistant_handler
-        )
+            DOMAIN, SERVICE_HOMEASSISTANT_STOP, self._async_stop_handler)
         self.services.async_register(
-            DOMAIN, SERVICE_HOMEASSISTANT_RESTART,
-            self._async_restart_homeassistant_handler
-        )
+            DOMAIN, SERVICE_HOMEASSISTANT_RESTART, self._async_restart_handler)
 
         # Setup signal handling
         if sys.platform != 'win32':
             try:
                 self.loop.add_signal_handler(
-                    signal.SIGTERM,
-                    self._async_stop_homeassistant_handler
-                )
+                    signal.SIGTERM, self._async_stop_handler)
             except ValueError:
                 _LOGGER.warning('Could not bind to SIGTERM.')
 
             try:
                 self.loop.add_signal_handler(
-                    signal.SIGHUP,
-                    self._async_restart_homeassistant_handler
-                )
+                    signal.SIGHUP, self._async_restart_handler)
             except ValueError:
                 _LOGGER.warning('Could not bind to SIGHUP.')
 
@@ -290,10 +282,7 @@ class HomeAssistant(object):
                 # sleep in the loop executor, this forces execution back into
                 # the event loop to avoid the block thread from starving the
                 # async loop
-                run_coroutine_threadsafe(
-                    sleep_wait(),
-                    self.loop
-                ).result()
+                run_coroutine_threadsafe(sleep_wait(), self.loop).result()
 
             complete.set()
 
@@ -339,13 +328,13 @@ class HomeAssistant(object):
             )
 
     @callback
-    def _async_stop_homeassistant_handler(self, *args):
+    def _async_stop_handler(self, *args):
         """Stop Home Assistant."""
         self.exit_code = 0
         self.async_add_job(self.async_stop)
 
     @callback
-    def _async_restart_homeassistant_handler(self, *args):
+    def _async_restart_handler(self, *args):
         """Restart Home Assistant."""
         self.exit_code = RESTART_EXIT_CODE
         self.async_add_job(self.async_stop)
