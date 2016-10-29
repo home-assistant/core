@@ -153,3 +153,6 @@ class TestServiceHelpers(unittest.TestCase):
 
         self.assertEqual(['light.ceiling', 'light.kitchen'],
                          service.extract_entity_ids(self.hass, call))
+
+        self.assertEqual(['group.test'], service.extract_entity_ids(
+            self.hass, call, expand_group=False))
