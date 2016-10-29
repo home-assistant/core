@@ -130,19 +130,19 @@ class MiFloraSensor(Entity):
         This uses a rolling median over 3 values to filter out outliers.
         """
         try:
-            LOGGER.debug("Polling data for %s", self.name)
+            _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)
         except IOError as ioerr:
-            LOGGER.info("Polling error %s", ioerr)
+            _LOGGER.info("Polling error %s", ioerr)
             data = None
             return
 
         if data is not None:
-            LOGGER.debug("%s = %s", self.name, data)
+            _LOGGER.debug("%s = %s", self.name, data)
             self.data.append(data)
         else:
-            LOGGER.info("Did not receive any data from Mi Flora sensor %s",
-                        self.name)
+            _LOGGER.info("Did not receive any data from Mi Flora sensor %s",
+                         self.name)
             # Remove old data from median list or set sensor value to None
             # if no data is available anymore
             if len(self.data) > 0:
@@ -151,13 +151,13 @@ class MiFloraSensor(Entity):
                 self._state = None
             return
 
-        LOGGER.debug("Data collected: %s", self.data)
+        _LOGGER.debug("Data collected: %s", self.data)
         if len(self.data) > self.median_count:
             self.data = self.data[1:]
 
         if len(self.data) == self.median_count:
             median = sorted(self.data)[int((self.median_count - 1) / 2)]
-            LOGGER.debug("Median is: %s", median)
+            _LOGGER.debug("Median is: %s", median)
             self._state = median
         else:
-            LOGGER.debug("Not yet enough data for median calculation")
+            _LOGGER.debug("Not yet enough data for median calculation")
