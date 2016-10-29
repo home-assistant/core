@@ -225,7 +225,8 @@ class MockModule(object):
 
     # pylint: disable=invalid-name
     def __init__(self, domain=None, dependencies=None, setup=None,
-                 requirements=None, config_schema=None, platform_schema=None):
+                 requirements=None, config_schema=None, platform_schema=None,
+                 async_setup=None):
         """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
@@ -238,8 +239,15 @@ class MockModule(object):
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
 
+        if async_setup is not None:
+            self.async_setup = async_setup
+
     def setup(self, hass, config):
-        """Setup the component."""
+        """Setup the component.
+
+        We always define this mock because MagicMock setups will be seen by the
+        executor as a coroutine, raising an exception.
+        """
         if self._setup is not None:
             return self._setup(hass, config)
         return True
