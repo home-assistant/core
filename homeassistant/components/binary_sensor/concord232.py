@@ -66,9 +66,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for zone in client.zones:
         _LOGGER.info("Loading Zone found: %s", zone['name'])
         if zone['number'] not in exclude:
-            sensors.append(Concord232ZoneSensor(
-                hass, client, zone, zone_types.get(zone['number'],
-                                                   get_opening_type(zone)))
+            sensors.append(
+                Concord232ZoneSensor(
+                    hass, client, zone, zone_types.get(zone['number'],
+                                                       get_opening_type(zone)))
             )
 
         add_devices(sensors)
