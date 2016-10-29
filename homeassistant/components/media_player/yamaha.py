@@ -26,6 +26,7 @@ SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 CONF_SOURCE_NAMES = 'source_names'
 CONF_SOURCE_IGNORE = 'source_ignore'
+CONF_ZONE_IGNORE = 'zone_ignore'
 
 DEFAULT_NAME = 'Yamaha Receiver'
 
@@ -34,10 +35,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_SOURCE_IGNORE, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_ZONE_IGNORE, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
 })
 
 
+# pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yamaha platform."""
     import rxv
@@ -46,6 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     source_ignore = config.get(CONF_SOURCE_IGNORE)
     source_names = config.get(CONF_SOURCE_NAMES)
+    zone_ignore = config.get(CONF_ZONE_IGNORE)
 
     if discovery_info is not None:
         name = discovery_info[0]
@@ -66,9 +71,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ctrl_url = "http://{}:80/YamahaRemoteControl/ctrl".format(host)
         receivers = rxv.RXV(ctrl_url, name).zone_controllers()
 
-    add_devices(
-        YamahaDevice(name, receiver, source_ignore, source_names)
-        for receiver in receivers)
+    for receiver in receivers:
+        if receiver.zone not in zone_ignore:
+            add_devices([
+                YamahaDevice(name, receiver, source_ignore, source_names)])
 
 
 class YamahaDevice(MediaPlayerDevice):
