@@ -163,7 +163,7 @@ class LogitechMediaServer(object):
 
             return response
 
-        except (OSError, ConnectionError, EOFError) as error:
+        except (OSError, EOFError) as error:
             _LOGGER.error("Could not communicate with %s:%d: %s",
                           self.host,
                           self.port,
