@@ -4,10 +4,12 @@ Component to keep track of user controlled booleans for within automation.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_boolean/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_TOGGLE, STATE_ON)
@@ -55,7 +57,8 @@ def toggle(hass, entity_id):
     hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up input boolean."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -74,9 +77,10 @@ def setup(hass, config):
     if not entities:
         return False
 
-    def handler_service(service):
+    @callback
+    def async_handler_service(service):
         """Handle a calls to the input boolean services."""
-        target_inputs = component.extract_from_service(service)
+        target_inputs = component.async_extract_from_service(service)
 
         for input_b in target_inputs:
             if service.service == SERVICE_TURN_ON:
@@ -86,15 +90,14 @@ def setup(hass, config):
             else:
                 input_b.toggle()
 
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF, handler_service,
-                           schema=SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, handler_service,
-                           schema=SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_TOGGLE, handler_service,
-                           schema=SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_OFF, async_handler_service, schema=SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_ON, async_handler_service, schema=SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TOGGLE, async_handler_service, schema=SERVICE_SCHEMA)
 
-    component.add_entities(entities)
-
+    yield from component.async_add_entities(entities)
     return True
 
 
@@ -131,9 +134,9 @@ class InputBoolean(ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the entity on."""
         self._state = True
-        self.update_ha_state()
+        self.hass.loop.create_task(self.async_update_ha_state())
 
     def turn_off(self, **kwargs):
         """Turn the entity off."""
         self._state = False
-        self.update_ha_state()
+        self.hass.loop.create_task(self.async_update_ha_state())
