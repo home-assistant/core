@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_BASE, ATTR_ATTRIBUTION)
+    CONF_API_KEY, CONF_NAME, CONF_BASE, CONF_QUOTE, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -21,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://apilayer.net/api/live'
 
 CONF_ATTRIBUTION = "Data provided by currencylayer.com"
-CONF_QUOTE = 'quote'
 
 DEFAULT_BASE = 'USD'
 DEFAULT_NAME = 'CurrencyLayer Sensor'
