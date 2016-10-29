@@ -113,9 +113,10 @@ def async_load_platform(hass, component, platform, discovered=None,
     This method is a coroutine.
     """
     did_lock = False
-    if hasattr(hass, 'setup_lock') and hass.setup_lock.locked():
+    setup_lock = hass.data.get('setup_lock')
+    if setup_lock and setup_lock.locked():
         did_lock = True
-        yield from hass.setup_lock.acquire()
+        yield from setup_lock.acquire()
 
     try:
         # No need to fire event if we could not setup component
@@ -123,7 +124,7 @@ def async_load_platform(hass, component, platform, discovered=None,
             hass, component, hass_config)
     finally:
         if did_lock:
-            hass.setup_lock.release()
+            setup_lock.release()
 
     if not res:
         return

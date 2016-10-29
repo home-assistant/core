@@ -138,7 +138,7 @@ class TestHelpersDiscovery:
 
         # We wait for the setup_lock to finish
         run_coroutine_threadsafe(
-            self.hass.setup_lock.acquire(), self.hass.loop).result()
+            self.hass.data['setup_lock'].acquire(), self.hass.loop).result()
 
         self.hass.block_till_done()
 
