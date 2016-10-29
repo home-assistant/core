@@ -13,7 +13,8 @@ from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    get_test_home_assistant, MockPlatform, MockModule, fire_time_changed)
+    get_test_home_assistant, MockPlatform, MockModule, fire_time_changed,
+    mock_coro)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -226,7 +227,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
     @patch('homeassistant.helpers.entity_component.EntityComponent'
            '._async_setup_platform')
-    @patch('homeassistant.bootstrap.setup_component', return_value=True)
+    @patch('homeassistant.bootstrap.async_setup_component',
+           return_value=mock_coro(True)())
     def test_setup_does_discovery(self, mock_setup_component, mock_setup):
         """Test setup for discovery."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)

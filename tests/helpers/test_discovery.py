@@ -1,12 +1,12 @@
 """Test discovery helpers."""
-import asyncio
 from unittest.mock import patch
 
 from homeassistant import loader, bootstrap
 from homeassistant.helpers import discovery
 from homeassistant.util.async import run_coroutine_threadsafe
 
-from tests.common import get_test_home_assistant, MockModule, MockPlatform
+from tests.common import (
+    get_test_home_assistant, MockModule, MockPlatform, mock_coro)
 
 
 class TestHelpersDiscovery:
@@ -57,17 +57,11 @@ class TestHelpersDiscovery:
         assert ['test service', 'another service'] == [info[0] for info
                                                        in calls_multi]
 
-    @patch('homeassistant.bootstrap.async_setup_component')
+    @patch('homeassistant.bootstrap.async_setup_component',
+           return_value=mock_coro(True)())
     def test_platform(self, mock_setup_component):
         """Test discover platform method."""
         calls = []
-
-        @asyncio.coroutine
-        def mock_setup():
-            """Coro that returns True."""
-            return True
-
-        mock_setup_component.return_value = mock_setup()
 
         def platform_callback(platform, info):
             """Platform callback method."""
