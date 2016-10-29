@@ -1,9 +1,11 @@
 """Helper methods to help with platform discovery."""
+import asyncio
 
 from homeassistant import bootstrap, core
 from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async import (
+    run_callback_threadsafe, fire_coroutine_threadsafe)
 
 EVENT_LOAD_PLATFORM = 'load_platform.{}'
 ATTR_PLATFORM = 'platform'
@@ -87,20 +89,51 @@ def load_platform(hass, component, platform, discovered=None,
 
     Use `listen_platform` to register a callback for these events.
     """
-    def discover_platform():
-        """Discover platform job."""
+    fire_coroutine_threadsafe(
+        async_load_platform(hass, component, platform,
+                            discovered, hass_config), hass.loop)
+
+
+@asyncio.coroutine
+def async_load_platform(hass, component, platform, discovered=None,
+                        hass_config=None):
+    """Load a component and platform dynamically.
+
+    Target components will be loaded and an EVENT_PLATFORM_DISCOVERED will be
+    fired to load the platform. The event will contain:
+        { ATTR_SERVICE = LOAD_PLATFORM + '.' + <<component>>
+          ATTR_PLATFORM = <<platform>>
+          ATTR_DISCOVERED = <<discovery info>> }
+
+    Use `listen_platform` to register a callback for these events.
+
+    Warning: Do not yield from this inside a setup method to avoid a dead lock.
+    Use `hass.loop.create_task(async_load_platform(..))` instead.
+
+    This method is a coroutine.
+    """
+    did_lock = False
+    if hasattr(hass, 'setup_lock') and hass.setup_lock.locked():
+        did_lock = True
+        yield from hass.setup_lock.acquire()
+
+    try:
         # No need to fire event if we could not setup component
-        if not bootstrap.setup_component(hass, component, hass_config):
-            return
+        res = yield from bootstrap.async_setup_component(
+            hass, component, hass_config)
+    finally:
+        if did_lock:
+            hass.setup_lock.release()
 
-        data = {
-            ATTR_SERVICE: EVENT_LOAD_PLATFORM.format(component),
-            ATTR_PLATFORM: platform,
-        }
+    if not res:
+        return
 
-        if discovered is not None:
-            data[ATTR_DISCOVERED] = discovered
+    data = {
+        ATTR_SERVICE: EVENT_LOAD_PLATFORM.format(component),
+        ATTR_PLATFORM: platform,
+    }
 
-        hass.bus.fire(EVENT_PLATFORM_DISCOVERED, data)
+    if discovered is not None:
+        data[ATTR_DISCOVERED] = discovered
 
-    hass.add_job(discover_platform)
+    hass.bus.async_fire(EVENT_PLATFORM_DISCOVERED, data)
