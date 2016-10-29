@@ -1,13 +1,14 @@
 """
-Support for Zoneminder Sensors.
+Support for ZoneMinder Sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.zoneminder/
 """
 import logging
 
-import homeassistant.components.zoneminder as zoneminder
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
+import homeassistant.components.zoneminder as zoneminder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ DEPENDENCIES = ['zoneminder']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Zoneminder platform."""
+    """Set up the ZoneMinder sensor platform."""
     sensors = []
 
     monitors = zoneminder.get_state('api/monitors.json')
@@ -31,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ZMSensorMonitors(Entity):
-    """Get the status of each monitor."""
+    """Get the status of each ZoneMinder monitor."""
 
     def __init__(self, monitor_id, monitor_name):
         """Initiate monitor sensor."""
@@ -42,7 +43,7 @@ class ZMSensorMonitors(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "%s Status" % self._monitor_name
+        return '{} Status'.format(self._monitor_name)
 
     @property
     def state(self):
@@ -55,7 +56,7 @@ class ZMSensorMonitors(Entity):
             'api/monitors/%i.json' % self._monitor_id
         )
         if monitor['monitor']['Monitor']['Function'] is None:
-            self._state = "None"
+            self._state = STATE_UNKNOWN
         else:
             self._state = monitor['monitor']['Monitor']['Function']
 
@@ -72,7 +73,7 @@ class ZMSensorEvents(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "%s Events" % self._monitor_name
+        return '{} Events'.format(self._monitor_name)
 
     @property
     def unit_of_measurement(self):
