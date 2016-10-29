@@ -1,5 +1,6 @@
 """Provides helper methods to handle the time in HA."""
 import datetime as dt
+import math
 import re
 
 # pylint: disable=unused-import
@@ -167,48 +168,39 @@ def parse_time(time_str):
         return None
 
 
-# Found in this gist: https://gist.github.com/zhangsen/1199964
 def get_age(date: dt.datetime) -> str:
     # pylint: disable=too-many-return-statements
+    """Take a datetime and return its "age" as a string."""
+    delta = now() - date if now() > date else date - now()
+    return _human_time(delta)
+
+
+# Found on this post: http://stackoverflow.com/a/34654259/1038813
+def _human_time(delta -> timedelta):
     """
-    Take a datetime and return its "age" as a string.
+    Take a value of units and return its "age" as a string.
 
     The age can be in second, minute, hour, day, month or year. Only the
     biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
     be returned.
-    Make sure date is not in the future, or else it won't work.
     """
-    def formatn(number: int, unit: str) -> str:
-        """Add "unit" if it's plural."""
-        if number == 1:
-            return "1 %s" % unit
-        elif number > 1:
-            return "%d %ss" % (number, unit)
+    secs = float(delta.total_seconds())
+    units = [('year',   60*60*24*365),
+             ('month',  60*60*24*30),
+             ('day',    60*60*24),
+             ('hour',   60*60),
+             ('minute', 60),
+             ('second', 1)]
 
-    def q_n_r(first: int, second: int) -> Tuple[int, int]:
-        """Return quotient and remaining."""
-        return first // second, first % second
+    for unit, mul in units:
+        if secs / mul >= 1 or mul == 1:
+            if mul > 1:
+                n = int(math.floor(secs / mul))
+                secs -= n * mul
+            else:
+                n = secs if secs != int(secs) else int(secs)
 
-    delta = now() - date
-    day = delta.days
-    second = delta.seconds
+            if n > 0:
+                return '%s %s%s' % (n, unit, '' if n == 1 else 's')
 
-    year, day = q_n_r(day, 365)
-    if year > 0:
-        return formatn(year, 'year')
-
-    month, day = q_n_r(day, 30)
-    if month > 0:
-        return formatn(month, 'month')
-    if day > 0:
-        return formatn(day, 'day')
-
-    hour, second = q_n_r(second, 3600)
-    if hour > 0:
-        return formatn(hour, 'hour')
-
-    minute, second = q_n_r(second, 60)
-    if minute > 0:
-        return formatn(minute, 'minute')
-
-    return formatn(second, 'second') if second > 0 else "0 seconds"
+    return '0 seconds'
