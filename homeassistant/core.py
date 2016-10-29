@@ -143,61 +143,25 @@ class HomeAssistant(object):
         self.config = Config()  # type: Config
         self.state = CoreState.not_running
         self.exit_code = None
-        self.websession = aiohttp.ClientSession(loop=self.loop)
+        self._websession = None
 
     @property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
 
+    @property
+    def websession(self):
+        """Return an aiohttp session to make web requests."""
+        if self._websession is None:
+            self._websession = aiohttp.ClientSession(loop=self.loop)
+
+        return self._websession
+
     def start(self) -> None:
         """Start home assistant."""
-        _LOGGER.info(
-            "Starting Home Assistant (%d threads)", self.pool.worker_count)
-        self.state = CoreState.starting
-
         # Register the async start
         self.loop.create_task(self.async_start())
-
-        @callback
-        def stop_homeassistant(*args):
-            """Stop Home Assistant."""
-            self.exit_code = 0
-            self.async_add_job(self.async_stop)
-
-        @callback
-        def restart_homeassistant(*args):
-            """Restart Home Assistant."""
-            self.exit_code = RESTART_EXIT_CODE
-            self.async_add_job(self.async_stop)
-
-        # Register the restart/stop event
-        self.loop.call_soon(
-            self.services.async_register,
-            DOMAIN, SERVICE_HOMEASSISTANT_STOP, stop_homeassistant
-        )
-        self.loop.call_soon(
-            self.services.async_register,
-            DOMAIN, SERVICE_HOMEASSISTANT_RESTART, restart_homeassistant
-        )
-
-        # Setup signal handling
-        if sys.platform != 'win32':
-            try:
-                self.loop.add_signal_handler(
-                    signal.SIGTERM,
-                    stop_homeassistant
-                )
-            except ValueError:
-                _LOGGER.warning('Could not bind to SIGTERM.')
-
-            try:
-                self.loop.add_signal_handler(
-                    signal.SIGHUP,
-                    restart_homeassistant
-                )
-            except ValueError:
-                _LOGGER.warning('Could not bind to SIGHUP.')
 
         # Run forever and catch keyboard interrupt
         try:
@@ -205,7 +169,7 @@ class HomeAssistant(object):
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
         except KeyboardInterrupt:
-            self.loop.call_soon(stop_homeassistant)
+            self.loop.call_soon(self._async_stop_handler)
             self.loop.run_forever()
         finally:
             self.loop.close()
@@ -216,6 +180,31 @@ class HomeAssistant(object):
 
         This method is a coroutine.
         """
+        _LOGGER.info(
+            "Starting Home Assistant (%d threads)", self.pool.worker_count)
+
+        self.state = CoreState.starting
+
+        # Register the restart/stop event
+        self.services.async_register(
+            DOMAIN, SERVICE_HOMEASSISTANT_STOP, self._async_stop_handler)
+        self.services.async_register(
+            DOMAIN, SERVICE_HOMEASSISTANT_RESTART, self._async_restart_handler)
+
+        # Setup signal handling
+        if sys.platform != 'win32':
+            try:
+                self.loop.add_signal_handler(
+                    signal.SIGTERM, self._async_stop_handler)
+            except ValueError:
+                _LOGGER.warning('Could not bind to SIGTERM.')
+
+            try:
+                self.loop.add_signal_handler(
+                    signal.SIGHUP, self._async_restart_handler)
+            except ValueError:
+                _LOGGER.warning('Could not bind to SIGHUP.')
+
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
         _async_create_timer(self)
@@ -301,10 +290,7 @@ class HomeAssistant(object):
                 # sleep in the loop executor, this forces execution back into
                 # the event loop to avoid the block thread from starving the
                 # async loop
-                run_coroutine_threadsafe(
-                    sleep_wait(),
-                    self.loop
-                ).result()
+                run_coroutine_threadsafe(sleep_wait(), self.loop).result()
 
             complete.set()
 
@@ -326,10 +312,13 @@ class HomeAssistant(object):
         yield from self.loop.run_in_executor(None, self.pool.block_till_done)
         yield from self.loop.run_in_executor(None, self.pool.stop)
         self.executor.shutdown()
+        if self._websession is not None:
+            yield from self._websession.close()
         self.state = CoreState.not_running
         self.loop.stop()
 
     # pylint: disable=no-self-use
+    @callback
     def _async_exception_handler(self, loop, context):
         """Handle all exception inside the core loop."""
         message = context.get('message')
@@ -347,6 +336,18 @@ class HomeAssistant(object):
                 "Exception inside async loop: ",
                 exc_info=exc_info
             )
+
+    @callback
+    def _async_stop_handler(self, *args):
+        """Stop Home Assistant."""
+        self.exit_code = 0
+        self.async_add_job(self.async_stop)
+
+    @callback
+    def _async_restart_handler(self, *args):
+        """Restart Home Assistant."""
+        self.exit_code = RESTART_EXIT_CODE
+        self.async_add_job(self.async_stop)
 
 
 class EventOrigin(enum.Enum):
@@ -877,10 +878,7 @@ class ServiceRegistry(object):
         self._bus = bus
         self._loop = loop
         self._cur_id = 0
-        run_callback_threadsafe(
-            loop,
-            bus.async_listen, EVENT_CALL_SERVICE, self._event_to_service_call,
-        )
+        self._async_unsub_call_event = None
 
     @property
     def services(self):
@@ -946,6 +944,10 @@ class ServiceRegistry(object):
             self._services[domain][service] = service_obj
         else:
             self._services[domain] = {service: service_obj}
+
+        if self._async_unsub_call_event is None:
+            self._async_unsub_call_event = self._bus.async_listen(
+                EVENT_CALL_SERVICE, self._event_to_service_call)
 
         self._bus.async_fire(
             EVENT_SERVICE_REGISTERED,

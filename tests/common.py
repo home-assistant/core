@@ -92,26 +92,21 @@ def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
     loop._thread_ident = threading.get_ident()
 
-    def get_hass():
-        """Temp while we migrate core HASS over to be async constructors."""
-        hass = ha.HomeAssistant(loop)
+    hass = ha.HomeAssistant(loop)
 
-        hass.config.location_name = 'test home'
-        hass.config.config_dir = get_test_config_dir()
-        hass.config.latitude = 32.87336
-        hass.config.longitude = -117.22743
-        hass.config.elevation = 0
-        hass.config.time_zone = date_util.get_time_zone('US/Pacific')
-        hass.config.units = METRIC_SYSTEM
-        hass.config.skip_pip = True
+    hass.config.location_name = 'test home'
+    hass.config.config_dir = get_test_config_dir()
+    hass.config.latitude = 32.87336
+    hass.config.longitude = -117.22743
+    hass.config.elevation = 0
+    hass.config.time_zone = date_util.get_time_zone('US/Pacific')
+    hass.config.units = METRIC_SYSTEM
+    hass.config.skip_pip = True
 
-        if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
-            loader.prepare(hass)
+    if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
+        yield from loop.run_in_executor(None, loader.prepare, hass)
 
-        hass.state = ha.CoreState.running
-        return hass
-
-    hass = yield from loop.run_in_executor(None, get_hass)
+    hass.state = ha.CoreState.running
 
     return hass
 
