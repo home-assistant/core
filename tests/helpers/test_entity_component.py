@@ -7,6 +7,7 @@ from unittest.mock import patch, Mock
 
 import homeassistant.core as ha
 import homeassistant.loader as loader
+from homeassistant.components import group
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers import discovery
@@ -204,6 +205,20 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert ['test_domain.test_2'] == \
                [ent.entity_id for ent in component.extract_from_service(call)]
+
+    def test_extract_from_service_no_group_expand(self):
+        """Test not expanding a group."""
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
+        test_group = group.Group.create_group(
+            self.hass, 'test_group', ['light.Ceiling', 'light.Kitchen'])
+        component.add_entities([test_group])
+
+        call = ha.ServiceCall('test', 'service', {
+            'entity_id': ['group.test_group']
+        })
+
+        extracted = component.extract_from_service(call, expand_group=False)
+        self.assertEqual([test_group], extracted)
 
     def test_setup_loads_platforms(self):
         """Test the loading of the platforms."""

@@ -44,6 +44,18 @@ group:
     description: "Reload group configuration."
     fields:
 
+  set_visibility:
+    description: Hide or show a group
+
+    fields:
+      entity_id:
+        description: Name(s) of entities to set value
+        example: 'group.travel'
+
+      visible:
+        description: True if group should be shown or False if it should be hidden.
+        example: True
+
 persistent_notification:
   create:
     description: Show a notification in the frontend

@@ -352,3 +352,23 @@ class TestComponentsGroup(unittest.TestCase):
         assert self.hass.states.entity_ids() == ['group.light']
         grp.stop()
         assert self.hass.states.entity_ids() == []
+
+    def test_changing_group_visibility(self):
+        """Test that a group can be hidden and shown."""
+        setup_component(self.hass, 'group', {
+            'group': {
+                'test_group': 'hello.world,sensor.happy'
+            }
+        })
+
+        group_entity_id = group.ENTITY_ID_FORMAT.format('test_group')
+
+        # Hide the group
+        group.set_visibility(self.hass, group_entity_id, False)
+        group_state = self.hass.states.get(group_entity_id)
+        self.assertTrue(group_state.attributes.get(ATTR_HIDDEN))
+
+        # Show it again
+        group.set_visibility(self.hass, group_entity_id, True)
+        group_state = self.hass.states.get(group_entity_id)
+        self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
