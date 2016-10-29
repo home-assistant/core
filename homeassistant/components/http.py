@@ -328,8 +328,8 @@ class HomeAssistantWSGI(object):
         @asyncio.coroutine
         def serve_file(request):
             """Redirect to location."""
-            yield from _GZIP_FILE_SENDER.send(request, filepath)
-            return
+            res = yield from _GZIP_FILE_SENDER.send(request, filepath)
+            return res
 
         # aiohttp supports regex matching for variables. Using that as temp
         # to work around cache busting MD5.
