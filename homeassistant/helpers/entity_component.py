@@ -155,15 +155,15 @@ class EntityComponent(object):
             self.logger.exception(
                 'Error while setting up platform %s', platform_type)
 
-    def add_entity(self, entity, platform=None, force_update=False):
+    def add_entity(self, entity, platform=None, update_before_add=False):
         """Add entity to component."""
         return run_coroutine_threadsafe(
-            self.async_add_entity(entity, platform, force_update),
+            self.async_add_entity(entity, platform, update_before_add),
             self.hass.loop
         ).result()
 
     @asyncio.coroutine
-    def async_add_entity(self, entity, platform=None, force_update=False):
+    def async_add_entity(self, entity, platform=None, update_before_add=False):
         """Add entity to component.
 
         This method must be run in the event loop.
@@ -174,7 +174,7 @@ class EntityComponent(object):
         entity.hass = self.hass
 
         # update/init entity data
-        if force_update:
+        if update_before_add:
             if hasattr(entity, 'async_update'):
                 yield from entity.async_update()
             else:
@@ -282,20 +282,20 @@ class EntityPlatform(object):
         self.platform_entities = []
         self._async_unsub_polling = None
 
-    def add_entities(self, new_entities, force_update=False):
+    def add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
         run_coroutine_threadsafe(
-            self.async_add_entities(new_entities, force_update),
+            self.async_add_entities(new_entities, update_before_add),
             self.component.hass.loop
         ).result()
 
     @asyncio.coroutine
-    def async_add_entities(self, new_entities, force_update=False):
+    def async_add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform async.
 
         This method must be run in the event loop.
         """
-        tasks = [self._async_process_entity(entity, force_update)
+        tasks = [self._async_process_entity(entity, update_before_add)
                  for entity in new_entities]
 
         yield from asyncio.gather(*tasks, loop=self.component.hass.loop)
@@ -311,10 +311,10 @@ class EntityPlatform(object):
             second=range(0, 60, self.scan_interval))
 
     @asyncio.coroutine
-    def _async_process_entity(self, new_entity, force_update):
+    def _async_process_entity(self, new_entity, update_before_add):
         """Add entities to StateMachine."""
         ret = yield from self.component.async_add_entity(
-            new_entity, self, force_update=force_update
+            new_entity, self, update_before_add=update_before_add
         )
         if ret:
             self.platform_entities.append(new_entity)
