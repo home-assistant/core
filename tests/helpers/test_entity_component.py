@@ -126,6 +126,32 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert 2 == len(self.hass.states.entity_ids())
 
+    def test_update_state_adds_entities_with_update_befor_add_true(self):
+        """Test if call update befor add to state machine."""
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
+
+        ent = EntityTest()
+        ent.update = Mock(spec_set=True)
+
+        component.add_entities([ent], True)
+        self.hass.block_till_done()
+
+        assert 1 == len(self.hass.states.entity_ids())
+        assert ent.update.called
+
+    def test_update_state_adds_entities_with_update_befor_add_false(self):
+        """Test if not call update befor add to state machine."""
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
+
+        ent = EntityTest()
+        ent.update = Mock(spec_set=True)
+
+        component.add_entities([ent], False)
+        self.hass.block_till_done()
+
+        assert 1 == len(self.hass.states.entity_ids())
+        assert not ent.update.called
+
     def test_not_adding_duplicate_entities(self):
         """Test for not adding duplicate entities."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)

@@ -63,7 +63,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error('No sensors added')
         return False
 
-    hass.loop.create_task(async_add_devices(sensors))
+    hass.loop.create_task(async_add_devices(sensors, True))
     return True
 
 
@@ -81,8 +81,6 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._sensor_class = sensor_class
         self._template = value_template
         self._state = None
-
-        self._async_render()
 
         @callback
         def template_bsensor_state_listener(entity, old_state, new_state):
@@ -115,10 +113,6 @@ class BinarySensorTemplate(BinarySensorDevice):
     @asyncio.coroutine
     def async_update(self):
         """Update the state from the template."""
-        self._async_render()
-
-    def _async_render(self):
-        """Render the state from the template."""
         try:
             self._state = self._template.async_render().lower() == 'true'
         except TemplateError as ex:
