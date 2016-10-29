@@ -5,9 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.swisscom/
 """
 import logging
-import requests
 import threading
 from datetime import timedelta
+import requests
 
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -16,19 +16,18 @@ from homeassistant.util import Throttle
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
-REQUIREMENTS = ['requests>=2,<3']
-
 _LOGGER = logging.getLogger(__name__)
 
-# pylint: disable=unused-argument
+
 def get_scanner(hass, config):
+    """Return the Swisscom device scanner."""
     scanner = SwisscomDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
 class SwisscomDeviceScanner(object):
-    """This class queries a router running Swisscom Internet Box firmware."""
+    """This class queries a router running Swisscom Internet-Box firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -79,24 +78,37 @@ class SwisscomDeviceScanner(object):
             return True
 
     def get_access_token(self):
+        """Get the Sah access token from the username and password."""
         try:
-            r = requests.post('http://' + self.host + '/ws', headers={
+            request = requests.post('http://' + self.host + '/ws', headers={
                 'Authorization': 'X-Sah-Login',
                 'Content-Type': 'application/x-sah-ws-4-call+json'
-            }, data='{"service":"sah.Device.Information","method":"createContext","parameters":{"applicationName":"webui","username":"'+self.username+'","password":"'+self.password+'"}}')
-            return r.json()['data']['contextID']
-        except:
+            }, data="""{"service":"sah.Device.Information",
+                        "method":"createContext",
+                        "parameters": {
+                          "applicationName":"webui",
+                          "username":""""+self.username+""""
+                          ,"password":""""+self.password+""""
+                        }
+                       }""", timeout=2)
+            return request.json()['data']['contextID']
+        except requests.exceptions.RequestException:
             return
 
     def get_swisscom_data(self):
         """Retrieve data from Swisscom and return parsed result."""
-        r = requests.post('http://' + self.host + '/ws', headers={
+        request = requests.post('http://' + self.host + '/ws', headers={
             'Authorization': 'X-Sah ' + self.get_access_token(),
             'Content-Type': 'application/x-sah-ws-4-call+json'
-        }, data='{"service":"Devices","method":"get","parameters":{"expression":"lan and not self"}}')
+            },
+                                data="""{"service":"Devices",
+                                    "method":"get",
+                                    "parameters":
+                                    {"expression":"lan and not self"}}""",
+                                timeout=10)
 
         devices = {}
-        for device in r.json()['status']:
+        for device in request.json()['status']:
             try:
                 devices[device['IPAddress']] = {
                     'ip': device['IPAddress'],
@@ -104,8 +116,7 @@ class SwisscomDeviceScanner(object):
                     'host': device['Name'],
                     'status': device['Active']
                     }
-            except:
+            except requests.exceptions.RequestException:
                 pass
         devices.pop('', None)
         return devices
-
