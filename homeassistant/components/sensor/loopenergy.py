@@ -10,7 +10,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL
+from homeassistant.const import (
+    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
@@ -45,7 +46,8 @@ GAS_SCHEMA = vol.Schema({
     vol.Required(CONF_GAS_SECRET): cv.string,
     vol.Optional(CONF_GAS_TYPE, default=CONF_UNIT_SYSTEM_METRIC):
         GAS_TYPE_SCHEMA,
-    vol.Optional(CONF_GAS_CALORIFIC, default=DEFAULT_CALORIFIC): vol.Coerce(float)
+    vol.Optional(CONF_GAS_CALORIFIC, default=DEFAULT_CALORIFIC):
+        vol.Coerce(float)
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
