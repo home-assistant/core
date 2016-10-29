@@ -11,10 +11,9 @@ import homeassistant.util.dt as dt_util
 from tests.common import get_test_home_assistant, assert_setup_component
 
 
+# pylint: disable=invalid-name
 class TestAutomation(unittest.TestCase):
     """Test the event automation."""
-
-    # pylint: disable=invalid-name
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -23,12 +22,12 @@ class TestAutomation(unittest.TestCase):
         self.calls = []
 
         def record_call(service):
-            """Record call."""
+            """Helper to record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -381,20 +380,20 @@ class TestAutomation(unittest.TestCase):
 
     @patch('homeassistant.config.load_yaml_config_file', autospec=True,
            return_value={
-                automation.DOMAIN: {
-                    'alias': 'bye',
-                    'trigger': {
-                        'platform': 'event',
-                        'event_type': 'test_event2',
-                    },
-                    'action': {
-                        'service': 'test.automation',
-                        'data_template': {
-                            'event': '{{ trigger.event.event_type }}'
-                        }
-                    }
-                }
-            })
+               automation.DOMAIN: {
+                   'alias': 'bye',
+                   'trigger': {
+                       'platform': 'event',
+                       'event_type': 'test_event2',
+                   },
+                   'action': {
+                       'service': 'test.automation',
+                       'data_template': {
+                           'event': '{{ trigger.event.event_type }}'
+                       }
+                   }
+               }
+           })
     def test_reload_config_service(self, mock_load_yaml):
         """Test the reload config service."""
         assert setup_component(self.hass, automation.DOMAIN, {

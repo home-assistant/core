@@ -26,6 +26,7 @@ class AvTransportMock():
         pass
 
     def GetMediaInfo(self, _):
+        """Get the media details."""
         return {'CurrentURI': '',
                 'CurrentURIMetaData': ''}
 
@@ -95,18 +96,21 @@ class SoCoMock():
 class TestSonosMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         def monkey_available(self):
+            """Make a monkey available."""
             return True
 
         # Monkey patches
         self.real_available = sonos.SonosDevice.available
         sonos.SonosDevice.available = monkey_available
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         # Monkey patches
         sonos.SonosDevice.available = self.real_available

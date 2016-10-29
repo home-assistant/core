@@ -7,10 +7,11 @@ from tests.common import (
     mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
 
 
+# pylint: disable=invalid-name
 class TestAutomationMQTT(unittest.TestCase):
     """Test the event automation."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
@@ -18,11 +19,12 @@ class TestAutomationMQTT(unittest.TestCase):
         self.calls = []
 
         def record_call(service):
+            """Helper to record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
