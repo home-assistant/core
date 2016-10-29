@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.samsungtv/
 """
 import logging
-import socket
 
 import voluptuous as vol
 
@@ -101,8 +100,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             self._state = STATE_ON
             self._remote = None
             return False
-        except (self._remote_class.ConnectionClosed, socket.timeout,
-                TimeoutError, OSError):
+        except (self._remote_class.ConnectionClosed, OSError):
             self._state = STATE_OFF
             self._remote = None
             return False
