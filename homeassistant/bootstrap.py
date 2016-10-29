@@ -27,7 +27,6 @@ from homeassistant.helpers import (
     event_decorators, service, config_per_platform, extract_domain_configs)
 
 _LOGGER = logging.getLogger(__name__)
-_CURRENT_SETUP = []
 
 ATTR_COMPONENT = 'component'
 
@@ -102,30 +101,37 @@ def _async_setup_component(hass: core.HomeAssistant,
     """
     # pylint: disable=too-many-return-statements,too-many-branches
     # pylint: disable=too-many-statements
-    if not hasattr(hass, 'setup_lock'):
-        hass.setup_lock = asyncio.Lock(loop=hass.loop)
-
     if domain in hass.config.components:
         return True
 
-    did_lock = False
-    if not hass.setup_lock.locked():
-        yield from hass.setup_lock.acquire()
-        did_lock = True
+    setup_lock = hass.data.get('setup_lock')
+    if setup_lock is None:
+        setup_lock = hass.data['setup_lock'] = asyncio.Lock(loop=hass.loop)
+
+    setup_progress = hass.data.get('setup_progress')
+    if setup_progress is None:
+        setup_progress = hass.data['setup_progress'] = []
+
+    if domain in setup_progress:
+        _LOGGER.error('Attempt made to setup %s during setup of %s',
+                      domain, domain)
+        return False
 
     try:
-        if domain in _CURRENT_SETUP:
-            _LOGGER.error('Attempt made to setup %s during setup of %s',
-                          domain, domain)
-            return False
+        # Used to indicate to discovery that a setup is ongoing and allow it
+        # to wait till it is done.
+        did_lock = False
+        if not setup_lock.locked():
+            yield from setup_lock.acquire()
+            did_lock = True
 
+        setup_progress.append(domain)
         config = yield from async_prepare_setup_component(hass, config, domain)
 
         if config is None:
             return False
 
         component = loader.get_component(domain)
-        _CURRENT_SETUP.append(domain)
 
         try:
             if hasattr(component, 'async_setup'):
@@ -133,20 +139,18 @@ def _async_setup_component(hass: core.HomeAssistant,
             else:
                 result = yield from hass.loop.run_in_executor(
                     None, component.setup, hass, config)
-
-            if result is False:
-                _LOGGER.error('component %s failed to initialize', domain)
-                return False
-            elif result is not True:
-                _LOGGER.error('component %s did not return boolean if setup '
-                              'was successful. Disabling component.', domain)
-                loader.set_component(domain, None)
-                return False
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error during setup of component %s', domain)
             return False
-        finally:
-            _CURRENT_SETUP.remove(domain)
+
+        if result is False:
+            _LOGGER.error('component %s failed to initialize', domain)
+            return False
+        elif result is not True:
+            _LOGGER.error('component %s did not return boolean if setup '
+                          'was successful. Disabling component.', domain)
+            loader.set_component(domain, None)
+            return False
 
         hass.config.components.append(component.DOMAIN)
 
@@ -162,8 +166,9 @@ def _async_setup_component(hass: core.HomeAssistant,
 
         return True
     finally:
+        setup_progress.remove(domain)
         if did_lock:
-            hass.setup_lock.release()
+            setup_lock.release()
 
 
 def prepare_setup_component(hass: core.HomeAssistant, config: dict,
