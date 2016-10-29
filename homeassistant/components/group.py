@@ -33,6 +33,13 @@ CONF_VIEW = 'view'
 ATTR_AUTO = 'auto'
 ATTR_ORDER = 'order'
 ATTR_VIEW = 'view'
+ATTR_VISIBLE = 'visible'
+
+SERVICE_SET_VISIBILITY = 'set_visibility'
+SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_VISIBLE): cv.boolean
+})
 
 SERVICE_RELOAD = 'reload'
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
@@ -87,6 +94,12 @@ def is_on(hass, entity_id):
 def reload(hass):
     """Reload the automation from config."""
     hass.services.call(DOMAIN, SERVICE_RELOAD)
+
+
+def set_visibility(hass, entity_id=None, visible=True):
+    """Hide or shows a group."""
+    data = {ATTR_ENTITY_ID: entity_id, ATTR_VISIBLE: visible}
+    hass.services.call(DOMAIN, SERVICE_SET_VISIBILITY, data)
 
 
 def expand_entity_ids(hass, entity_ids):
@@ -164,6 +177,18 @@ def async_setup(hass, config):
             return
         hass.loop.create_task(_async_process_config(hass, conf, component))
 
+    @callback
+    def visibility_service_handler(service):
+        """Change visibility of a group."""
+        visible = service.data.get(ATTR_VISIBLE)
+        for group in component.async_extract_from_service(
+                service, expand_group=False):
+            group.async_set_visible(visible)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
+        descriptions[DOMAIN][SERVICE_SET_VISIBILITY],
+        schema=SET_VISIBILITY_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler,
         descriptions[DOMAIN][SERVICE_RELOAD], schema=RELOAD_SERVICE_SCHEMA)
@@ -212,6 +237,7 @@ class Group(Entity):
         self.group_off = None
         self._assumed_state = False
         self._async_unsub_state_changed = None
+        self._visible = True
 
     @staticmethod
     # pylint: disable=too-many-arguments
@@ -268,10 +294,20 @@ class Group(Entity):
         """Return the icon of the group."""
         return self._icon
 
+    @callback
+    def async_set_visible(self, visible):
+        """Change visibility of the group."""
+        if self._visible != visible:
+            self._visible = visible
+            self.hass.loop.create_task(self.async_update_ha_state())
+
     @property
     def hidden(self):
         """If group should be hidden or not."""
-        return not self._user_defined or self._view
+        # Visibility from set_visibility service overrides
+        if self._visible:
+            return not self._user_defined or self._view
+        return True
 
     @property
     def state_attributes(self):
