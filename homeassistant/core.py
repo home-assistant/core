@@ -143,12 +143,20 @@ class HomeAssistant(object):
         self.config = Config()  # type: Config
         self.state = CoreState.not_running
         self.exit_code = None
-        self.websession = aiohttp.ClientSession(loop=self.loop)
+        self._websession = None
 
     @property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
+
+    @property
+    def websession(self):
+        """Return an aiohttp session to make web requests."""
+        if self._websession is None:
+            self._websession = aiohttp.ClientSession(loop=self.loop)
+
+        return self._websession
 
     def start(self) -> None:
         """Start home assistant."""
@@ -304,6 +312,8 @@ class HomeAssistant(object):
         yield from self.loop.run_in_executor(None, self.pool.block_till_done)
         yield from self.loop.run_in_executor(None, self.pool.stop)
         self.executor.shutdown()
+        if self._websession is not None:
+            yield from self._websession.close()
         self.state = CoreState.not_running
         self.loop.stop()
 

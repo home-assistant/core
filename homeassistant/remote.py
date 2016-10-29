@@ -19,7 +19,6 @@ import urllib.parse
 
 from typing import Optional
 
-import aiohttp
 import requests
 
 import homeassistant.bootstrap as bootstrap
@@ -135,7 +134,7 @@ class HomeAssistant(ha.HomeAssistant):
         self.services = ha.ServiceRegistry(self.bus, self.add_job, self.loop)
         self.states = StateMachine(self.bus, self.loop, self.remote_api)
         self.config = ha.Config()
-        self.websession = aiohttp.ClientSession(loop=self.loop)
+        self._websession = None
 
         self.state = ha.CoreState.not_running
         self.config.api = local_api
