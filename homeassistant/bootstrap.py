@@ -100,11 +100,11 @@ def _async_setup_component(hass: core.HomeAssistant,
 
     This method is a coroutine.
     """
+    # pylint: disable=too-many-return-statements,too-many-branches
+    # pylint: disable=too-many-statements
     if not hasattr(hass, 'setup_lock'):
         hass.setup_lock = asyncio.Lock(loop=hass.loop)
 
-    # pylint: disable=too-many-return-statements,too-many-branches
-    # pylint: disable=too-many-statements
     if domain in hass.config.components:
         return True
 
