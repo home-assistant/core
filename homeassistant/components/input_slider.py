@@ -96,7 +96,7 @@ def async_setup(hass, config):
         return False
 
     @callback
-    def select_value_service(call):
+    def async_select_value_service(call):
         """Handle a calls to the input slider services."""
         target_inputs = component.async_extract_from_service(call)
 
@@ -104,7 +104,7 @@ def async_setup(hass, config):
             input_slider.select_value(call.data[ATTR_VALUE])
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SELECT_VALUE, select_value_service,
+        DOMAIN, SERVICE_SELECT_VALUE, async_select_value_service,
         schema=SERVICE_SELECT_VALUE_SCHEMA)
 
     yield from component.async_add_entities(entities)

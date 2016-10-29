@@ -106,7 +106,7 @@ def async_setup(hass, config):
         return False
 
     @callback
-    def select_option_service(call):
+    def async_select_option_service(call):
         """Handle a calls to the input select option service."""
         target_inputs = component.async_extract_from_service(call)
 
@@ -114,11 +114,11 @@ def async_setup(hass, config):
             input_select.select_option(call.data[ATTR_OPTION])
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SELECT_OPTION, select_option_service,
+        DOMAIN, SERVICE_SELECT_OPTION, async_select_option_service,
         schema=SERVICE_SELECT_OPTION_SCHEMA)
 
     @callback
-    def select_next_service(call):
+    def async_select_next_service(call):
         """Handle a calls to the input select next service."""
         target_inputs = component.async_extract_from_service(call)
 
@@ -126,11 +126,11 @@ def async_setup(hass, config):
             input_select.offset_index(1)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SELECT_NEXT, select_next_service,
+        DOMAIN, SERVICE_SELECT_NEXT, async_select_next_service,
         schema=SERVICE_SELECT_NEXT_SCHEMA)
 
     @callback
-    def select_previous_service(call):
+    def async_select_previous_service(call):
         """Handle a calls to the input select previous service."""
         target_inputs = component.async_extract_from_service(call)
 
@@ -138,7 +138,7 @@ def async_setup(hass, config):
             input_select.offset_index(-1)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SELECT_PREVIOUS, select_previous_service,
+        DOMAIN, SERVICE_SELECT_PREVIOUS, async_select_previous_service,
         schema=SERVICE_SELECT_PREVIOUS_SCHEMA)
 
     yield from component.async_add_entities(entities)

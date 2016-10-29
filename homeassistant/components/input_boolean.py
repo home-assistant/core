@@ -78,7 +78,7 @@ def async_setup(hass, config):
         return False
 
     @callback
-    def handler_service(service):
+    def async_handler_service(service):
         """Handle a calls to the input boolean services."""
         target_inputs = component.async_extract_from_service(service)
 
@@ -91,11 +91,11 @@ def async_setup(hass, config):
                 input_b.toggle()
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, handler_service, schema=SERVICE_SCHEMA)
+        DOMAIN, SERVICE_TURN_OFF, async_handler_service, schema=SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, handler_service, schema=SERVICE_SCHEMA)
+        DOMAIN, SERVICE_TURN_ON, async_handler_service, schema=SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, handler_service, schema=SERVICE_SCHEMA)
+        DOMAIN, SERVICE_TOGGLE, async_handler_service, schema=SERVICE_SCHEMA)
 
     yield from component.async_add_entities(entities)
     return True
