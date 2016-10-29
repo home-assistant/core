@@ -879,10 +879,7 @@ class ServiceRegistry(object):
         self._bus = bus
         self._loop = loop
         self._cur_id = 0
-        run_callback_threadsafe(
-            loop,
-            bus.async_listen, EVENT_CALL_SERVICE, self._event_to_service_call,
-        )
+        self._async_unsub_call_event = None
 
     @property
     def services(self):
@@ -948,6 +945,10 @@ class ServiceRegistry(object):
             self._services[domain][service] = service_obj
         else:
             self._services[domain] = {service: service_obj}
+
+        if self._async_unsub_call_event is None:
+            self._async_unsub_call_event = self._bus.async_listen(
+                EVENT_CALL_SERVICE, self._event_to_service_call)
 
         self._bus.async_fire(
             EVENT_SERVICE_REGISTERED,
