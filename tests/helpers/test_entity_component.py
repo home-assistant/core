@@ -130,7 +130,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
         ent = EntityTest()
-        ent.update = Mock()
+        ent.update = Mock(spec=False)
 
         component.add_entities([ent], True)
         self.hass.block_till_done()
@@ -143,7 +143,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
         ent = EntityTest()
-        ent.update = Mock()
+        ent.update = Mock(spec=False)
 
         component.add_entities([ent], False)
         self.hass.block_till_done()
