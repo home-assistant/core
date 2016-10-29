@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     source_ignore = config.get(CONF_SOURCE_IGNORE)
     source_names = config.get(CONF_SOURCE_NAMES)
-    zone_ignore = config.get(CONF_ZONE_IGNORE) or []
+    zone_ignore = config.get(CONF_ZONE_IGNORE)
 
     if discovery_info is not None:
         name = discovery_info[0]
