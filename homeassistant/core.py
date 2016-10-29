@@ -141,6 +141,8 @@ class HomeAssistant(object):
         self.services = ServiceRegistry(self.bus, self.add_job, self.loop)
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config()  # type: Config
+        # This is a dictionary that any component can store any data on.
+        self.data = {}
         self.state = CoreState.not_running
         self.exit_code = None
         self._websession = None
