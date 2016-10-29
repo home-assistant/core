@@ -52,6 +52,9 @@ class YeelightLight(Light):
         self._ipaddr = device['ipaddr']
         self.is_valid = True
         self._bulb = None
+        self._state = None
+        self._bright = None
+        self._rgb = None
         try:
             self._bulb = pyyeelight.YeelightBulb(self._ipaddr)
         except socket.error:
@@ -72,29 +75,17 @@ class YeelightLight(Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._bulb.is_on()
+        return self._state == self._bulb.POWER_ON
 
     @property
     def brightness(self):
         """Return the brightness of this light between 1..255."""
-        bright_percent = self._bulb.get_property(
-            self._bulb.PROPERTY_NAME_BRIGHTNESS)
-        bright = int(bright_percent) * 255 / 100
-        # Handle 0
-        if int(bright) == 0:
-            return 1
-        else:
-            return int(bright)
+        return self._bright
 
     @property
     def rgb_color(self):
         """Return the color property."""
-        raw_rgb = int(
-            self._bulb.get_property(self._bulb.PROPERTY_NAME_RGB_COLOR))
-        red = int(raw_rgb / 65536)
-        green = int((raw_rgb - (red * 65536)) / 256)
-        blue = raw_rgb - (red * 65536) - (green * 256)
-        return [red, green, blue]
+        return self._rgb
 
     @property
     def supported_features(self):
@@ -109,10 +100,12 @@ class YeelightLight(Light):
         if ATTR_RGB_COLOR in kwargs:
             rgb = kwargs[ATTR_RGB_COLOR]
             self._bulb.set_rgb_color(rgb[0], rgb[1], rgb[2])
+            self._rgb = [rgb[0], rgb[1], rgb[2]]
 
         if ATTR_BRIGHTNESS in kwargs:
             bright = int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
             self._bulb.set_brightness(bright)
+            self._bright = kwargs[ATTR_BRIGHTNESS]
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
@@ -121,3 +114,24 @@ class YeelightLight(Light):
     def update(self):
         """Synchronize state with bulb."""
         self._bulb.refresh_property()
+
+        # Update power state
+        self._state = self._bulb.get_property(self._bulb.PROPERTY_NAME_POWER)
+
+        # Update Brightness value
+        bright_percent = self._bulb.get_property(
+            self._bulb.PROPERTY_NAME_BRIGHTNESS)
+        bright = int(bright_percent) * 255 / 100
+        # Handle 0
+        if int(bright) == 0:
+            self._bright = 1
+        else:
+            self._bright = int(bright)
+
+        # Update RGB Value
+        raw_rgb = int(
+            self._bulb.get_property(self._bulb.PROPERTY_NAME_RGB_COLOR))
+        red = int(raw_rgb / 65536)
+        green = int((raw_rgb - (red * 65536)) / 256)
+        blue = raw_rgb - (red * 65536) - (green * 256)
+        self._rgb = [red, green, blue]
