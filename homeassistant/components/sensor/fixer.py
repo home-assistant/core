@@ -10,7 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION, CONF_BASE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -24,7 +24,6 @@ ATTR_EXCHANGE_RATE = 'Exchange rate'
 ATTR_TARGET = 'Target currency'
 
 CONF_ATTRIBUTION = "Data provided by the European Central Bank (ECB)"
-CONF_BASE = 'base'
 CONF_TARGET = 'target'
 
 DEFAULT_BASE = 'USD'
