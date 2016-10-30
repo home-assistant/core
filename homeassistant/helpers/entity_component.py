@@ -23,8 +23,6 @@ DEFAULT_SCAN_INTERVAL = 15
 class EntityComponent(object):
     """Helper class that will help a component manage its entities."""
 
-    # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-many-arguments
     def __init__(self, logger, domain, hass,
                  scan_interval=DEFAULT_SCAN_INTERVAL, group_name=None):
         """Initialize an entity component."""
@@ -274,7 +272,6 @@ class EntityComponent(object):
 class EntityPlatform(object):
     """Keep track of entities for a single platform and stay in loop."""
 
-    # pylint: disable=too-few-public-methods
     def __init__(self, component, scan_interval, entity_namespace):
         """Initalize the entity platform."""
         self.component = component

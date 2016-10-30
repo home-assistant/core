@@ -398,10 +398,8 @@ def setup(hass, config):
 class MediaPlayerDevice(Entity):
     """ABC for media player devices."""
 
-    # pylint: disable=too-many-public-methods,no-self-use
-
+    # pylint: disable=no-self-use
     # Implement these for your media player
-
     @property
     def state(self):
         """State of the player."""

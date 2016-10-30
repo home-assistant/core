@@ -78,7 +78,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-# pylint: disable=too-few-public-methods
 class BitcoinSensor(Entity):
     """Representation of a Bitcoin sensor."""
 
@@ -119,7 +118,6 @@ class BitcoinSensor(Entity):
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()

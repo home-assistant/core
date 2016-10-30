@@ -199,7 +199,6 @@ def request_configuration(host, hass, add_devices, filename,
 class HueLight(Light):
     """Representation of a Hue light."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, light_id, info, bridge, update_lights,
                  bridge_type, allow_unreachable):
         """Initialize the light."""

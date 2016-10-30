@@ -36,7 +36,7 @@ def setup(hass, config):
     return True
 
 
-# pylint: disable=no-member, no-self-use, too-many-return-statements
+# pylint: disable=no-member, no-self-use
 class WeatherEntity(Entity):
     """ABC for a weather data."""
 

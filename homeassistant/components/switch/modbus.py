@@ -43,7 +43,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ModbusCoilSwitch(ToggleEntity):
     """Representation of a Modbus switch."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, name, slave, coil):
         """Initialize the switch."""
         self._name = name

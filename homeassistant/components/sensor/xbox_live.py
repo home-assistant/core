@@ -45,7 +45,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
 
-# pylint: disable=too-many-instance-attributes
 class XboxSensor(Entity):
     """A class for the Xbox account."""
 

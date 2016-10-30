@@ -30,7 +30,6 @@ def get_service(hass, config):
     return SimplePushNotificationService(config.get(CONF_DEVICE_KEY))
 
 
-# pylint: disable=too-few-public-methods
 class SimplePushNotificationService(BaseNotificationService):
     """Implementation of the notification service for SimplePush."""
 

@@ -1,5 +1,5 @@
 """The tests for the Group components."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 from collections import OrderedDict
 import unittest
 from unittest.mock import patch
@@ -16,11 +16,13 @@ from tests.common import get_test_home_assistant
 class TestComponentsGroup(unittest.TestCase):
     """Test Group component."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

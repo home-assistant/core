@@ -77,7 +77,6 @@ SERVICE_TO_STATE = {
 }
 
 
-# pylint: disable=too-few-public-methods, attribute-defined-outside-init
 class AsyncTrackStates(object):
     """
     Record the time when the with-block is entered.
@@ -93,6 +92,7 @@ class AsyncTrackStates(object):
         self.hass = hass
         self.states = []
 
+    # pylint: disable=attribute-defined-outside-init
     def __enter__(self):
         """Record time from which to track changes."""
         self.now = dt_util.utcnow()

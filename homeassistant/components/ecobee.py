@@ -86,7 +86,6 @@ def setup_ecobee(hass, network, config):
     discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
 
 
-# pylint: disable=too-few-public-methods
 class EcobeeData(object):
     """Get the latest data and update the states."""
 

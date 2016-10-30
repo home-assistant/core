@@ -31,7 +31,6 @@ ALERT_MESSAGE = 'This is a test alert message'
 
 def mocked_requests_get(*args, **kwargs):
     """Mock requests.get invocations."""
-    # pylint: disable=too-few-public-methods
     class MockResponse:
         """Class to represent a mocked response."""
 

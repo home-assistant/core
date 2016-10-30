@@ -114,10 +114,9 @@ def setup_scanner(hass, config, see):
                             'for topic %s.', topic)
             return None
 
+    # pylint: disable=too-many-return-statements
     def validate_payload(topic, payload, data_type):
         """Validate the OwnTracks payload."""
-        # pylint: disable=too-many-return-statements
-
         try:
             data = json.loads(payload)
         except ValueError:

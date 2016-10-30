@@ -46,7 +46,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([CommandSensor(hass, data, name, unit, value_template)])
 
 
-# pylint: disable=too-many-arguments
 class CommandSensor(Entity):
     """Representation of a sensor that is using shell commands."""
 
@@ -89,7 +88,6 @@ class CommandSensor(Entity):
             self._state = value
 
 
-# pylint: disable=too-few-public-methods
 class CommandSensorData(object):
     """The class for handling the data retrieval."""
 

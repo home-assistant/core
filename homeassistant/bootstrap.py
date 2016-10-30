@@ -99,8 +99,7 @@ def _async_setup_component(hass: core.HomeAssistant,
 
     This method is a coroutine.
     """
-    # pylint: disable=too-many-return-statements,too-many-branches
-    # pylint: disable=too-many-statements
+    # pylint: disable=too-many-return-statements
     if domain in hass.config.components:
         return True
 
@@ -312,7 +311,6 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
     return platform
 
 
-# pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config: Dict[str, Any],
                      hass: Optional[core.HomeAssistant]=None,
                      config_dir: Optional[str]=None,
@@ -352,7 +350,6 @@ def from_config_dict(config: Dict[str, Any],
 
 
 @asyncio.coroutine
-# pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def async_from_config_dict(config: Dict[str, Any],
                            hass: core.HomeAssistant,
                            config_dir: Optional[str]=None,

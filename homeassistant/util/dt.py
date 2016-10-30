@@ -169,7 +169,6 @@ def parse_time(time_str):
 
 # Found in this gist: https://gist.github.com/zhangsen/1199964
 def get_age(date: dt.datetime) -> str:
-    # pylint: disable=too-many-return-statements
     """
     Take a datetime and return its "age" as a string.
 

@@ -100,7 +100,7 @@ def _setup_us(username, password, config, add_devices):
 class RoundThermostat(ClimateDevice):
     """Representation of a Honeywell Round Connected thermostat."""
 
-    # pylint: disable=too-many-instance-attributes, abstract-method
+    # pylint: disable=abstract-method
     def __init__(self, device, zone_id, master, away_temp):
         """Initialize the thermostat."""
         self.device = device

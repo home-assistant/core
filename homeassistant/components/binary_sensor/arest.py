@@ -54,7 +54,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensor_class, pin)])
 
 
-# pylint: disable=too-many-instance-attributes, too-many-arguments
 class ArestBinarySensor(BinarySensorDevice):
     """Implement an aREST binary sensor for a pin."""
 
@@ -93,7 +92,6 @@ class ArestBinarySensor(BinarySensorDevice):
         self.arest.update()
 
 
-# pylint: disable=too-few-public-methods
 class ArestData(object):
     """Class for handling the data retrieval for pins."""
 

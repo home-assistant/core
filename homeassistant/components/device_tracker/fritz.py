@@ -38,7 +38,6 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-# pylint: disable=too-many-instance-attributes
 class FritzBoxScanner(object):
     """This class queries a FRITZ!Box router."""
 

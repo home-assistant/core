@@ -1,5 +1,5 @@
 """The tests for the demo light component."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 import unittest
 
 from homeassistant.bootstrap import setup_component
@@ -13,14 +13,16 @@ ENTITY_LIGHT = 'light.bed_light'
 class TestDemoClimate(unittest.TestCase):
     """Test the demo climate hvac."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.assertTrue(setup_component(self.hass, light.DOMAIN, {'light': {
             'platform': 'demo',
         }}))
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

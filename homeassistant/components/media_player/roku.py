@@ -66,7 +66,6 @@ class RokuDevice(MediaPlayerDevice):
     """Representation of a Roku device on the network."""
 
     # pylint: disable=abstract-method
-    # pylint: disable=too-many-public-methods
     def __init__(self, host):
         """Initialize the Roku device."""
         from roku import Roku

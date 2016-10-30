@@ -1,5 +1,5 @@
 """The tests for the Entity component helper."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 from collections import OrderedDict
 import logging
 import unittest

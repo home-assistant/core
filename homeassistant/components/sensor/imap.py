@@ -47,7 +47,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ImapSensor(Entity):
     """Representation of an IMAP sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, name, user, password, server, port):
         """Initialize the sensor."""
         self._name = name or user

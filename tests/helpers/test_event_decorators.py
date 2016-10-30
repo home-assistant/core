@@ -1,6 +1,5 @@
 """Test event decorator helpers."""
-# pylint: disable=protected-access,too-many-public-methods
-# pylint: disable=too-few-public-methods
+# pylint: disable=protected-access
 import unittest
 from datetime import datetime, timedelta
 
@@ -20,7 +19,8 @@ from tests.common import get_test_home_assistant
 class TestEventDecoratorHelpers(unittest.TestCase):
     """Test the Home Assistant event helpers."""
 
-    def setUp(self):     # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.states.set("light.Bowl", "on")
@@ -28,7 +28,8 @@ class TestEventDecoratorHelpers(unittest.TestCase):
 
         event_decorators.HASS = self.hass
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
         event_decorators.HASS = None

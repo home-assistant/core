@@ -26,9 +26,10 @@ def _url(data=None):
     return "{}{}locative?{}".format(HTTP_BASE_URL, const.URL_API, data)
 
 
-def setUpModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def setUpModule():
     """Initalize a Home Assistant server."""
-    global hass    # pylint: disable=invalid-name
+    global hass
 
     hass = get_test_home_assistant()
     bootstrap.setup_component(hass, http.DOMAIN, {

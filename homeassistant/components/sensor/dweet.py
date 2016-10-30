@@ -60,7 +60,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([DweetSensor(hass, dweet, name, value_template, unit)])
 
 
-# pylint: disable=too-many-arguments
 class DweetSensor(Entity):
     """Representation of a Dweet sensor."""
 
@@ -100,7 +99,6 @@ class DweetSensor(Entity):
         self.dweet.update()
 
 
-# pylint: disable=too-few-public-methods
 class DweetData(object):
     """The class for handling the data retrieval."""
 

@@ -70,7 +70,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name, data, hass.config.units.temperature_unit)])
 
 
-# pylint: disable=too-few-public-methods
 class OpenWeatherMapWeather(WeatherEntity):
     """Implementation of an OpenWeatherMap sensor."""
 
@@ -131,7 +130,6 @@ class OpenWeatherMapWeather(WeatherEntity):
         """Return the attribution."""
         return ATTRIBUTION
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data from OWM and updates the states."""
         self._owm.update()

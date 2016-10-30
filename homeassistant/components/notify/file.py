@@ -33,7 +33,6 @@ def get_service(hass, config):
     return FileNotificationService(hass, filename, timestamp)
 
 
-# pylint: disable=too-few-public-methods
 class FileNotificationService(BaseNotificationService):
     """Implement the notification service for the File service."""
 

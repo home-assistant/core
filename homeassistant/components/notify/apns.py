@@ -130,8 +130,6 @@ class ApnsDevice(object):
 class ApnsNotificationService(BaseNotificationService):
     """Implement the notification service for the APNS service."""
 
-    # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, hass, app_name, topic, sandbox, cert_file):
         """Initialize APNS application."""
         self.hass = hass

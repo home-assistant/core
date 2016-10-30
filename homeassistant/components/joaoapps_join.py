@@ -27,7 +27,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=too-many-locals
 def register_device(hass, device_id, api_key, name):
     """Method to register services for each join device listed."""
     from pyjoin import (ring_device, set_wallpaper, send_sms,

@@ -48,7 +48,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([YahooFinanceSensor(name, data, symbol)])
 
 
-# pylint: disable=too-few-public-methods
 class YahooFinanceSensor(Entity):
     """Representation of a Yahoo Finance sensor."""
 

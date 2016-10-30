@@ -60,7 +60,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([pandora])
 
 
-# pylint: disable=too-many-instance-attributes
 class PandoraMediaPlayer(MediaPlayerDevice):
     """A media player that uses the Pianobar interface to Pandora."""
 

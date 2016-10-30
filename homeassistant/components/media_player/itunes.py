@@ -154,7 +154,6 @@ class Itunes(object):
 
 
 # pylint: disable=unused-argument, abstract-method
-# pylint: disable=too-many-instance-attributes
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the iTunes platform."""
     add_devices([
@@ -172,7 +171,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ItunesDevice(MediaPlayerDevice):
     """Representation of an iTunes API instance."""
 
-    # pylint: disable=too-many-public-methods, too-many-arguments
     def __init__(self, name, host, port, use_ssl, add_devices):
         """Initialize the iTunes device."""
         self._name = name
@@ -353,7 +351,6 @@ class ItunesDevice(MediaPlayerDevice):
 class AirPlayDevice(MediaPlayerDevice):
     """Representation an AirPlay device via an iTunes API instance."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self, device_id, client):
         """Initialize the AirPlay device."""
         self._id = device_id

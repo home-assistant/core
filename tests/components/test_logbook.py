@@ -1,5 +1,5 @@
 """The tests for the logbook component."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 from datetime import timedelta
 import unittest
 from unittest.mock import patch

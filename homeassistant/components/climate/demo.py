@@ -21,11 +21,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
-# pylint: disable=too-many-arguments, too-many-public-methods
 class DemoClimate(ClimateDevice):
     """Representation of a demo climate device."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, name, target_temperature, unit_of_measurement,
                  away, current_temperature, current_fan_mode,
                  target_humidity, current_humidity, current_swing_mode,
