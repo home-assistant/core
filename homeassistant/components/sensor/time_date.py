@@ -46,7 +46,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for variable in config[CONF_DISPLAY_OPTIONS]:
         devices.append(TimeDateSensor(variable))
 
-    hass.loop.create_task(async_add_devices(devices))
+    hass.loop.create_task(async_add_devices(devices, True))
     return True
 
 
@@ -59,7 +59,6 @@ class TimeDateSensor(Entity):
         self._name = OPTION_TYPES[option_type]
         self.type = option_type
         self._state = None
-        self.async_update()
 
     @property
     def name(self):
