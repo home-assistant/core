@@ -67,6 +67,7 @@ SONOS_SET_TIMER_SCHEMA = SONOS_SCHEMA.extend({
 # List of devices that have been registered
 DEVICES = []
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Sonos platform."""
     import soco
