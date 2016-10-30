@@ -64,17 +64,17 @@ DEVICESTATUSCODES = {'200': 'online', '201': 'offline', '203': 'pending',
                      '204': 'unregistered'}
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ACCOUNTNAME): vol.All(cv.ensure_list, [cv.slug]),
-    vol.Optional(ATTR_DEVICENAME): cv.slug,
+    vol.Optional(ATTR_ACCOUNTNAME): vol.All(cv.ensure_list, [cv.slugify]),
+    vol.Optional(ATTR_DEVICENAME): cv.slugify,
     vol.Optional(ATTR_INTERVAL): cv.positive_int,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(ATTR_ACCOUNTNAME): cv.slug,
+    vol.Optional(ATTR_ACCOUNTNAME): cv.slugify,
     vol.Optional(CONF_GMTT, default={}):
-        vol.Schema({cv.slug: cv.entity_id}),
+        vol.Schema({cv.slugify: cv.entity_id}),
 })
 
 
