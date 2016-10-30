@@ -1,5 +1,5 @@
 """The tests for the Alexa component."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 import json
 import time
 import datetime
@@ -36,7 +36,8 @@ NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 STATIC_TIME = datetime.datetime.utcfromtimestamp(1476129102)
 
 
-def setUpModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def setUpModule():
     """Initialize a Home Assistant server for testing this module."""
     global hass
 
@@ -117,7 +118,8 @@ def setUpModule():   # pylint: disable=invalid-name
     time.sleep(0.05)
 
 
-def tearDownModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def tearDownModule():
     """Stop the Home Assistant server."""
     hass.stop()
 

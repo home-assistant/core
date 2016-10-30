@@ -41,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=too-many-locals
 def get_next_departure(sched, start_station_id, end_station_id):
     """Get the next departure for the given schedule."""
     origin_station = sched.stops_by_id(start_station_id)[0]
@@ -176,7 +175,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([GTFSDepartureSensor(gtfs, name, origin, destination)])
 
 
-# pylint: disable=too-many-instance-attributes,too-few-public-methods
 class GTFSDepartureSensor(Entity):
     """Implementation of an GTFS departures sensor."""
 

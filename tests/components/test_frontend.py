@@ -1,5 +1,5 @@
 """The tests for Home Assistant frontend."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 import re
 import time
 import unittest
@@ -25,7 +25,8 @@ def _url(path=""):
     return HTTP_BASE_URL + path
 
 
-def setUpModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def setUpModule():
     """Initialize a Home Assistant server."""
     global hass
 
@@ -45,7 +46,8 @@ def setUpModule():   # pylint: disable=invalid-name
     time.sleep(0.05)
 
 
-def tearDownModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def tearDownModule():
     """Stop everything that was started."""
     hass.stop()
     frontend.PANELS = {}

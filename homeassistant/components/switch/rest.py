@@ -65,13 +65,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hass, name, resource, body_on, body_off, is_on_template, timeout)])
 
 
-# pylint: disable=too-many-arguments
 class RestSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using REST."""
 
-    # pylint: disable=too-many-instance-attributes
-    def __init__(self, hass, name, resource, body_on, body_off, is_on_template,
-                 timeout):
+    def __init__(self, hass, name, resource, body_on, body_off,
+                 is_on_template, timeout):
         """Initialize the REST switch."""
         self._state = None
         self._hass = hass

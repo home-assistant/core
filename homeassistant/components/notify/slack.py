@@ -45,7 +45,6 @@ def get_service(hass, config):
         return None
 
 
-# pylint: disable=too-few-public-methods
 class SlackNotificationService(BaseNotificationService):
     """Implement the notification service for Slack."""
 

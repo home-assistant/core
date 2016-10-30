@@ -56,14 +56,14 @@ class EnOceanDongle:
         """Send a command from the EnOcean dongle."""
         self.__communicator.send(command)
 
-    def _combine_hex(self, data):  # pylint: disable=no-self-use
+    # pylint: disable=no-self-use
+    def _combine_hex(self, data):
         """Combine list of integer values to one big integer."""
         output = 0x00
         for i, j in enumerate(reversed(data)):
             output |= (j << i * 8)
         return output
 
-    # pylint: disable=too-many-branches
     def callback(self, temp):
         """Callback function for EnOcean Device.
 
@@ -112,7 +112,6 @@ class EnOceanDongle:
                         device.value_changed(value)
 
 
-# pylint: disable=too-few-public-methods
 class EnOceanDevice():
     """Parent class for all devices associated with the EnOcean component."""
 

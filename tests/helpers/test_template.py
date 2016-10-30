@@ -1,5 +1,4 @@
 """Test Home Assistant template helper methods."""
-# pylint: disable=too-many-public-methods
 import unittest
 from unittest.mock import patch
 
@@ -22,14 +21,16 @@ from tests.common import get_test_home_assistant
 class TestHelpersTemplate(unittest.TestCase):
     """Test the Template."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup the tests."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = UnitSystem('custom', TEMP_CELSIUS,
                                             LENGTH_METERS, VOLUME_LITERS,
                                             MASS_GRAMS)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down stuff we started."""
         self.hass.stop()
 

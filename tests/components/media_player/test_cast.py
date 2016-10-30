@@ -1,5 +1,5 @@
 """The tests for the Cast Media player platform."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 import unittest
 from unittest.mock import patch
 

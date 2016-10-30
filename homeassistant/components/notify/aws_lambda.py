@@ -62,7 +62,6 @@ def get_service(hass, config):
     return AWSLambda(lambda_client, context)
 
 
-# pylint: disable=too-few-public-methods
 class AWSLambda(BaseNotificationService):
     """Implement the notification service for the AWS Lambda service."""
 

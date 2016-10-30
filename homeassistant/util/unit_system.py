@@ -64,7 +64,6 @@ def is_valid_unit(unit: str, unit_type: str) -> bool:
 class UnitSystem(object):
     """A container for units of measure."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self: object, name: str, temperature: str, length: str,
                  volume: str, mass: str) -> None:
         """Initialize the unit system object."""

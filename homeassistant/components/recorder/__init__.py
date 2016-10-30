@@ -153,7 +153,6 @@ def log_error(e: Exception, retry_wait: Optional[float]=0,
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, hass: HomeAssistant, purge_days: int, uri: str) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self)

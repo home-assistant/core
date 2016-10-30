@@ -40,7 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the SNMP sensor."""
     from pysnmp.hlapi import (getCmd, CommunityData, SnmpEngine,
@@ -104,7 +103,6 @@ class SnmpSensor(Entity):
 class SnmpData(object):
     """Get the latest data and update the states."""
 
-    # pylint: disable=too-few-public-methods
     def __init__(self, host, port, community, baseoid):
         """Initialize the data object."""
         self._host = host

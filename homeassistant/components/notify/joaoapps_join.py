@@ -39,7 +39,6 @@ def get_service(hass, config):
     return JoinNotificationService(device_id, api_key)
 
 
-# pylint: disable=too-few-public-methods
 class JoinNotificationService(BaseNotificationService):
     """Implement the notification service for Join."""
 

@@ -1,5 +1,4 @@
 """Template helper methods for rendering strings with HA data."""
-# pylint: disable=too-few-public-methods
 import json
 import logging
 import re

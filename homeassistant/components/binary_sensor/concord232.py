@@ -42,7 +42,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Concord232 binary sensor platform."""
     from concord232 import client as concord232_client

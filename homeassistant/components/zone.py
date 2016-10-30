@@ -117,7 +117,6 @@ def async_setup(hass, config):
 class Zone(Entity):
     """Representation of a Zone."""
 
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, hass, name, latitude, longitude, radius, icon, passive):
         """Initialize the zone."""
         self.hass = hass

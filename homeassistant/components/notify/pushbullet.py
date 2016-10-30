@@ -41,7 +41,6 @@ def get_service(hass, config):
     return PushBulletNotificationService(pushbullet)
 
 
-# pylint: disable=too-few-public-methods, too-many-branches
 class PushBulletNotificationService(BaseNotificationService):
     """Implement the notification service for Pushbullet."""
 

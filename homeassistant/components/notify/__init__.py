@@ -64,7 +64,6 @@ def send_message(hass, message, title=None, data=None):
     hass.services.call(DOMAIN, SERVICE_NOTIFY, info)
 
 
-# pylint: disable=too-many-locals
 def setup(hass, config):
     """Setup the notify services."""
     success = False
@@ -134,7 +133,6 @@ def setup(hass, config):
     return success
 
 
-# pylint: disable=too-few-public-methods
 class BaseNotificationService(object):
     """An abstract class for notification services."""
 

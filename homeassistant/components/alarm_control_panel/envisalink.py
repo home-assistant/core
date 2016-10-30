@@ -43,7 +43,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     """Representation of an Envisalink-based alarm panel."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, partition_number, alarm_name, code, panic_type, info,
                  controller):
         """Initialize the alarm panel."""

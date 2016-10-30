@@ -260,7 +260,6 @@ def async_process_ha_core_config(hass, config):
 
     This method is a coroutine.
     """
-    # pylint: disable=too-many-branches
     config = CORE_CONFIG_SCHEMA(config)
     hac = hass.config
 

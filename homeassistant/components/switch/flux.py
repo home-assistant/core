@@ -102,11 +102,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.services.register(DOMAIN, name + '_update', update)
 
 
-# pylint: disable=too-many-instance-attributes
 class FluxSwitch(SwitchDevice):
     """Representation of a Flux switch."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, name, hass, state, lights, start_time, stop_time,
                  start_colortemp, sunset_colortemp, stop_colortemp,
                  brightness, mode):
@@ -150,7 +148,6 @@ class FluxSwitch(SwitchDevice):
         self._state = False
         self.update_ha_state()
 
-    # pylint: disable=too-many-locals
     def flux_update(self, now=None):
         """Update all the lights using flux."""
         if now is None:

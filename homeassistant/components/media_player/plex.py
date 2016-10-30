@@ -83,7 +83,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     setup_plexserver(host, token, hass, add_devices_callback)
 
 
-# pylint: disable=too-many-branches
 def setup_plexserver(host, token, hass, add_devices_callback):
     """Setup a plexserver based on host parameter."""
     import plexapi.server
@@ -192,7 +191,7 @@ def request_configuration(host, hass, add_devices_callback):
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    # pylint: disable=too-many-public-methods, attribute-defined-outside-init
+    # pylint: disable=attribute-defined-outside-init
     def __init__(self, device, plex_sessions, update_devices, update_sessions):
         """Initialize the Plex device."""
         from plexapi.utils import NA

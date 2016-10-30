@@ -37,7 +37,6 @@ def get_service(hass, config):
     return NmaNotificationService(config[CONF_API_KEY])
 
 
-# pylint: disable=too-few-public-methods
 class NmaNotificationService(BaseNotificationService):
     """Implement the notification service for NMA."""
 

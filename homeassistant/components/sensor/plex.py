@@ -55,7 +55,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, name, plex_url, plex_user, plex_password, plex_server):
         """Initialize the sensor."""
         from plexapi.utils import NA

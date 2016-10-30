@@ -49,7 +49,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=too-many-locals
 def setup(hass, config):
     """Setup the InfluxDB component."""
     from influxdb import InfluxDBClient, exceptions

@@ -60,7 +60,6 @@ def get_service(hass, config):
         config.get(CONF_EVENT), config.get(CONF_TRACKER))
 
 
-# pylint: disable=too-few-public-methods
 class InstapushNotificationService(BaseNotificationService):
     """Implementation of the notification service for Instapush."""
 

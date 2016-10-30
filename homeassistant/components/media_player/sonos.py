@@ -64,7 +64,6 @@ SONOS_SET_TIMER_SCHEMA = SONOS_SCHEMA.extend({
 DEVICES = []
 
 
-# pylint: disable=unused-argument, too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Sonos platform."""
     import soco
@@ -224,12 +223,10 @@ def only_if_coordinator(func):
     return wrapper
 
 
-# pylint: disable=too-many-instance-attributes, too-many-public-methods
 # pylint: disable=abstract-method
 class SonosDevice(MediaPlayerDevice):
     """Representation of a Sonos device."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, player):
         """Initialize the Sonos device."""
         from soco.snapshot import Snapshot

@@ -42,7 +42,6 @@ def get_service(hass, config):
     return GroupNotifyPlatform(hass, config.get(CONF_SERVICES))
 
 
-# pylint: disable=too-few-public-methods
 class GroupNotifyPlatform(BaseNotificationService):
     """Implement the notification service for the group notify playform."""
 

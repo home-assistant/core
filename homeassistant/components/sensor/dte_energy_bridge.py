@@ -35,7 +35,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([DteEnergyBridgeSensor(ip_address, name)])
 
 
-# pylint: disable=too-many-instance-attributes
 class DteEnergyBridgeSensor(Entity):
     """Implementation of a DTE Energy Bridge sensor."""
 

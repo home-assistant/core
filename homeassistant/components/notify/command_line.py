@@ -29,7 +29,6 @@ def get_service(hass, config):
     return CommandLineNotificationService(command)
 
 
-# pylint: disable=too-few-public-methods
 class CommandLineNotificationService(BaseNotificationService):
     """Implement the notification service for the Command Line service."""
 

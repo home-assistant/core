@@ -67,7 +67,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RPiGPIOCover(CoverDevice):
     """Representation of a Raspberry GPIO cover."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, name, relay_pin, state_pin, state_pull_mode,
                  relay_time):
         """Initialize the cover."""

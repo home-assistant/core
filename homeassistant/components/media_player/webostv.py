@@ -142,11 +142,9 @@ def request_configuration(host, name, customize, hass, add_devices):
 
 
 # pylint: disable=abstract-method
-# pylint: disable=too-many-instance-attributes
 class LgWebOSDevice(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self, host, name, customize):
         """Initialize the webos device."""
         from pylgtv import WebOsClient
