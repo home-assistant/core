@@ -43,7 +43,6 @@ def get_service(hass, config):
     return LgWebOSNotificationService(client)
 
 
-# pylint: disable=too-few-public-methods
 class LgWebOSNotificationService(BaseNotificationService):
     """Implement the notification service for LG WebOS TV."""
 

@@ -132,10 +132,8 @@ def validate_attributes(config):
 class UniversalMediaPlayer(MediaPlayerDevice):
     """Representation of an universal media player."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self, hass, name, children, commands, attributes):
         """Initialize the Universal media device."""
-        # pylint: disable=too-many-arguments
         self.hass = hass
         self._name = name
         self._children = children

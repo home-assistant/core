@@ -47,7 +47,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices)
 
 
-# pylint: disable=too-few-public-methods
 class TimeDateSensor(Entity):
     """Implementation of a Time and Date sensor."""
 

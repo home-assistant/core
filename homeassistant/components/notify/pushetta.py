@@ -37,7 +37,6 @@ def get_service(hass, config):
         return pushetta_service
 
 
-# pylint: disable=too-few-public-methods
 class PushettaNotificationService(BaseNotificationService):
     """Implement the notification service for Pushetta."""
 

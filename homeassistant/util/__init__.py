@@ -193,7 +193,8 @@ class OrderedSet(MutableSet):
             yield curr[0]
             curr = curr[1]
 
-    def pop(self, last=True):  # pylint: disable=arguments-differ
+    # pylint: disable=arguments-differ
+    def pop(self, last=True):
         """Pop element of the end of the set.
 
         Set last=False to pop from the beginning.
@@ -240,7 +241,6 @@ class Throttle(object):
     Adds a datetime attribute `last_call` to the method.
     """
 
-    # pylint: disable=too-few-public-methods
     def __init__(self, min_time, limit_no_throttle=None):
         """Initialize the throttle."""
         self.min_time = min_time
@@ -307,7 +307,6 @@ class Throttle(object):
 class ThreadPool(object):
     """A priority queue-based thread pool."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, job_handler, worker_count=0):
         """Initialize the pool.
 
@@ -416,7 +415,6 @@ class ThreadPool(object):
 class PriorityQueueItem(object):
     """Holds a priority and a value. Used within PriorityQueue."""
 
-    # pylint: disable=too-few-public-methods
     def __init__(self, priority, item):
         """Initialize the queue."""
         self.priority = priority

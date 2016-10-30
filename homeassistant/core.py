@@ -128,8 +128,6 @@ class JobPriority(util.OrderedEnum):
 class HomeAssistant(object):
     """Root object of the Home Assistant home automation."""
 
-    # pylint: disable=too-many-instance-attributes
-
     def __init__(self, loop=None):
         """Initialize new Home Assistant object."""
         self.loop = loop or asyncio.get_event_loop()
@@ -364,7 +362,6 @@ class EventOrigin(enum.Enum):
 
 
 class Event(object):
-    # pylint: disable=too-few-public-methods
     """Represents an event within the Bus."""
 
     __slots__ = ['event_type', 'data', 'origin', 'time_fired']
@@ -581,7 +578,6 @@ class State(object):
     __slots__ = ['entity_id', 'state', 'attributes',
                  'last_changed', 'last_updated']
 
-    # pylint: disable=too-many-arguments
     def __init__(self, entity_id, state, attributes=None, last_changed=None,
                  last_updated=None):
         """Initialize a new state."""
@@ -824,7 +820,6 @@ class StateMachine(object):
         self._bus.async_fire(EVENT_STATE_CHANGED, event_data)
 
 
-# pylint: disable=too-few-public-methods
 class Service(object):
     """Represents a callable service."""
 
@@ -848,7 +843,6 @@ class Service(object):
         }
 
 
-# pylint: disable=too-few-public-methods
 class ServiceCall(object):
     """Represents a call to a service."""
 
@@ -906,7 +900,6 @@ class ServiceRegistry(object):
         """
         return service.lower() in self._services.get(domain.lower(), [])
 
-    # pylint: disable=too-many-arguments
     def register(self, domain, service, service_func, description=None,
                  schema=None):
         """
@@ -1091,7 +1084,6 @@ class ServiceRegistry(object):
 class Config(object):
     """Configuration settings for Home Assistant."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         """Initialize a new config object."""
         self.latitude = None  # type: Optional[float]

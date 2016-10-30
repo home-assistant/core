@@ -43,7 +43,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class YeelightLight(Light):
     """Representation of a Yeelight light."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, device):
         """Initialize the light."""
         import pyyeelight

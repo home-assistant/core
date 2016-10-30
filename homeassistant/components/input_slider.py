@@ -114,7 +114,6 @@ def async_setup(hass, config):
 class InputSlider(Entity):
     """Represent an slider."""
 
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, object_id, name, state, minimum, maximum, step, icon,
                  unit):
         """Initialize a select input."""

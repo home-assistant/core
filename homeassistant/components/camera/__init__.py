@@ -28,7 +28,6 @@ ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 
 
 @asyncio.coroutine
-# pylint: disable=too-many-branches
 def async_setup(hass, config):
     """Setup the camera component."""
     component = EntityComponent(

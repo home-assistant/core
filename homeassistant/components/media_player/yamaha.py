@@ -41,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yamaha platform."""
     import rxv
@@ -80,8 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class YamahaDevice(MediaPlayerDevice):
     """Representation of a Yamaha device."""
 
-    # pylint: disable=too-many-public-methods, abstract-method
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=abstract-method
     def __init__(self, name, receiver, source_ignore, source_names):
         """Initialize the Yamaha Receiver."""
         self._receiver = receiver

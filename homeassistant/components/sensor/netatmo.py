@@ -89,7 +89,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-# pylint: disable=too-few-public-methods
 class NetAtmoSensor(Entity):
     """Implementation of a Netatmo sensor."""
 
@@ -134,9 +133,6 @@ class NetAtmoSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    # pylint: disable=too-many-branches
-    # Fix for pylint too many statements error
-    # pylint: disable=too-many-statements
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
         self.netatmo_data.update()

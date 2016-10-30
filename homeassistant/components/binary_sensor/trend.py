@@ -72,7 +72,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SensorTrend(BinarySensorDevice):
     """Representation of a trend Sensor."""
 
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, hass, device_id, friendly_name,
                  target_entity, attribute, sensor_class, invert):
         """Initialize the sensor."""

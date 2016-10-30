@@ -141,7 +141,6 @@ class HpIloSensor(Entity):
             self._state = ilo_data
 
 
-# pylint: disable=too-few-public-methods
 class HpIloData(object):
     """Gets the latest data from HP ILO."""
 

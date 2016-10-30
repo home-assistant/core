@@ -33,7 +33,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
-# pylint: disable=too-many-arguments
 class DemoWeather(WeatherEntity):
     """Representation of a weather condition."""
 

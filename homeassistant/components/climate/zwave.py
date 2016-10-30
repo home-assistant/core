@@ -73,7 +73,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     """Represents a ZWave Climate device."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, value, temp_unit):
         """Initialize the zwave climate device."""
         from openzwave.network import ZWaveNetwork
@@ -121,7 +120,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             self.update_ha_state()
             _LOGGER.debug("Value changed on network %s", value)
 
-    # pylint: disable=too-many-branches
     def update_properties(self):
         """Callback on data change for the registered node/value pair."""
         # Operation Mode

@@ -50,7 +50,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([StatisticsSensor(hass, entity_id, name, sampling_size)])
 
 
-# pylint: disable=too-many-instance-attributes
 class StatisticsSensor(Entity):
     """Representation of a Statistics sensor."""
 

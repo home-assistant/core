@@ -105,7 +105,6 @@ def setup(hass, yaml_config):
     return True
 
 
-# pylint: disable=too-few-public-methods
 class Config(object):
     """Holds configuration variables for the emulated hue bridge."""
 

@@ -58,7 +58,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([MinMaxSensor(hass, entity_ids, name, sensor_type)])
 
 
-# pylint: disable=too-many-instance-attributes
 class MinMaxSensor(Entity):
     """Representation of a min/max sensor."""
 

@@ -223,7 +223,7 @@ def mock_mqtt_component(hass):
 class MockModule(object):
     """Representation of a fake module."""
 
-    # pylint: disable=invalid-name,too-few-public-methods,too-many-arguments
+    # pylint: disable=invalid-name
     def __init__(self, domain=None, dependencies=None, setup=None,
                  requirements=None, config_schema=None, platform_schema=None):
         """Initialize the mock module."""
@@ -248,7 +248,7 @@ class MockModule(object):
 class MockPlatform(object):
     """Provide a fake platform."""
 
-    # pylint: disable=invalid-name,too-few-public-methods
+    # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
                  platform_schema=None):
         """Initialize the platform."""

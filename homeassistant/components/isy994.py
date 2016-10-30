@@ -93,15 +93,16 @@ def _categorize_nodes(hidden_identifier: str, sensor_identifier: str) -> None:
     NODES = []
     GROUPS = []
 
+    # pylint: disable=no-member
     for (path, node) in ISY.nodes:
         hidden = hidden_identifier in path or hidden_identifier in node.name
         if hidden:
             node.name += hidden_identifier
         if sensor_identifier in path or sensor_identifier in node.name:
             SENSOR_NODES.append(node)
-        elif isinstance(node, PYISY.Nodes.Node):  # pylint: disable=no-member
+        elif isinstance(node, PYISY.Nodes.Node):
             NODES.append(node)
-        elif isinstance(node, PYISY.Nodes.Group):  # pylint: disable=no-member
+        elif isinstance(node, PYISY.Nodes.Group):
             GROUPS.append(node)
 
 
@@ -131,7 +132,6 @@ def _categorize_programs() -> None:
                         PROGRAMS[component].append(program)
 
 
-# pylint: disable=too-many-locals
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ISY 994 platform."""
     isy_config = config.get(DOMAIN)

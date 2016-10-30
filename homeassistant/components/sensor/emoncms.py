@@ -61,7 +61,6 @@ def get_id(sensorid, feedtag, feedname, feedid, feeduserid):
         sensorid, feedtag, feedname, feedid, feeduserid)
 
 
-# pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Emoncms sensor."""
     apikey = config.get(CONF_API_KEY)
@@ -106,11 +105,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors)
 
 
-# pylint: disable=too-many-instance-attributes
 class EmonCmsSensor(Entity):
     """Implementation of an Emoncms sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, data, name, value_template,
                  unit_of_measurement, sensorid, elem):
         """Initialize the sensor."""
@@ -188,7 +185,6 @@ class EmonCmsSensor(Entity):
             self._state = round(float(elem["value"]), DECIMALS)
 
 
-# pylint: disable=too-few-public-methods
 class EmonCmsData(object):
     """The class for handling the data retrieval."""
 

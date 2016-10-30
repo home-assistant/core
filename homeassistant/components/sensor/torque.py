@@ -69,7 +69,6 @@ class TorqueReceiveDataView(HomeAssistantView):
     url = API_PATH
     name = 'api:torque'
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, email, vehicle, sensors, add_devices):
         """Initialize a Torque view."""
         super().__init__(hass)

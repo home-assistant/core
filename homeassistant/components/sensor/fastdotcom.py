@@ -49,7 +49,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.services.register(DOMAIN, 'update_fastdotcom', update)
 
 
-# pylint: disable=too-few-public-methods
 class SpeedtestSensor(Entity):
     """Implementation of a FAst.com sensor."""
 

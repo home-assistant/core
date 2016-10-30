@@ -39,7 +39,6 @@ def get_service(hass, config):
         config.get('tls'))
 
 
-# pylint: disable=too-few-public-methods
 class XmppNotificationService(BaseNotificationService):
     """Implement the notification service for Jabber (XMPP)."""
 

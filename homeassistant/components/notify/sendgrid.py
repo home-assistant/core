@@ -34,7 +34,6 @@ def get_service(hass, config):
     return SendgridNotificationService(api_key, sender, recipient)
 
 
-# pylint: disable=too-few-public-methods
 class SendgridNotificationService(BaseNotificationService):
     """Implementation the notification service for email via Sendgrid."""
 

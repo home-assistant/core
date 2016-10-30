@@ -51,9 +51,9 @@ class LocativeView(HomeAssistantView):
         return res
 
     @asyncio.coroutine
+    # pylint: disable=too-many-return-statements
     def _handle(self, data):
         """Handle locative request."""
-        # pylint: disable=too-many-return-statements
         if 'latitude' not in data or 'longitude' not in data:
             return ('Latitude and longitude not specified.',
                     HTTP_UNPROCESSABLE_ENTITY)
