@@ -81,7 +81,8 @@ class MinMaxSensor(Entity):
         self.states = {}
 
         @callback
-        def min_max_sensor_state_listener(entity, old_state, new_state):
+        # pylint: disable=invalid-name
+        def async_min_max_sensor_state_listener(entity, old_state, new_state):
             """Called when the sensor changes state."""
             if new_state.state is None or new_state.state in STATE_UNKNOWN:
                 return
@@ -103,7 +104,7 @@ class MinMaxSensor(Entity):
             hass.loop.create_task(self.async_update_ha_state(True))
 
         async_track_state_change(
-            hass, entity_ids, min_max_sensor_state_listener)
+            hass, entity_ids, async_min_max_sensor_state_listener)
 
     @property
     def name(self):
