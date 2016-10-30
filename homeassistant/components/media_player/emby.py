@@ -16,8 +16,8 @@ from homeassistant.components.media_player import (
     SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_PREVIOUS_TRACK, MediaPlayerDevice,
     PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_HOST, CONF_API_KEY, CONF_PORT, DEVICE_DEFAULT_NAME, STATE_IDLE,
-    STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+    CONF_HOST, CONF_API_KEY, CONF_PORT, CONF_SSL, DEVICE_DEFAULT_NAME,
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 from homeassistant.helpers.event import (track_utc_time_change)
 from homeassistant.util import Throttle
 
@@ -34,7 +34,8 @@ SUPPORT_EMBY = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_STOP | SUPPORT_SEEK
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_HOST, default='localhost'): cv.string,
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
@@ -48,9 +49,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     _key = config.get(CONF_API_KEY)
     _port = config.get(CONF_PORT)
 
-    _url = '{}:{}'.format(_host, _port)
+    if config.get(CONF_SSL):
+        _protocol = "https"
+    else:
+        _protocol = "http"
 
-    _LOGGER.info('Setting up Emby server at: %s', _url)
+    _url = '{}://{}:{}'.format(_protocol, _host, _port)
+
+    _LOGGER.debug('Setting up Emby server at: %s', _url)
 
     embyserver = EmbyRemote(_key, _url)
 
@@ -68,16 +74,18 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         new_emby_clients = []
         for device in devices:
-            if device['DeviceId'] != embyserver.unique_id:
-                if device['DeviceId'] not in emby_clients:
-                    _LOGGER.info('New Emby DeviceID: %s. Adding to Clients.',
-                                 device['DeviceId'])
-                    new_client = EmbyClient(embyserver, device, emby_sessions,
-                                            update_devices, update_sessions)
-                    emby_clients[device['DeviceId']] = new_client
-                    new_emby_clients.append(new_client)
-                else:
-                    emby_clients[device['DeviceId']].set_device(device)
+            if device['DeviceId'] == embyserver.unique_id:
+                break
+
+            if device['DeviceId'] not in emby_clients:
+                _LOGGER.debug('New Emby DeviceID: %s. Adding to Clients.',
+                              device['DeviceId'])
+                new_client = EmbyClient(embyserver, device, emby_sessions,
+                                        update_devices, update_sessions)
+                emby_clients[device['DeviceId']] = new_client
+                new_emby_clients.append(new_client)
+            else:
+                emby_clients[device['DeviceId']].set_device(device)
 
         if new_emby_clients:
             add_devices_callback(new_emby_clients)
