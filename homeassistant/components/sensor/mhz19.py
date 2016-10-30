@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mhz19/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
@@ -14,10 +15,10 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 REQUIREMENTS = ['pmsensor==0.3']
 
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERIAL_DEVICE = "serial_device"
+CONF_SERIAL_DEVICE = 'serial_device'
+
 DEFAULT_NAME = 'CO2 Sensor'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

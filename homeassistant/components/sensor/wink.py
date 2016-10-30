@@ -6,8 +6,8 @@ at https://home-assistant.io/components/sensor.wink/
 """
 import logging
 
-from homeassistant.const import (STATE_CLOSED,
-                                 STATE_OPEN, TEMP_CELSIUS)
+from homeassistant.const import (
+    STATE_CLOSED, STATE_OPEN, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.wink import WinkDevice
 from homeassistant.loader import get_component
@@ -18,7 +18,7 @@ SENSOR_TYPES = ['temperature', 'humidity', 'balance', 'proximity']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink platform."""
+    """Set up the Wink platform."""
     import pywink
 
     for sensor in pywink.get_sensors():
@@ -32,8 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if piggy_bank.capability() in SENSOR_TYPES:
                 add_devices([WinkSensorDevice(piggy_bank)])
         except AttributeError:
-            logging.getLogger(__name__).error(
-                "Device is not a sensor.")
+            logging.getLogger(__name__).error("Device is not a sensor")
 
 
 class WinkSensorDevice(WinkDevice, Entity):
@@ -44,7 +43,7 @@ class WinkSensorDevice(WinkDevice, Entity):
         super().__init__(wink)
         wink = get_component('wink')
         self.capability = self.wink.capability()
-        if self.wink.UNIT == "°":
+        if self.wink.UNIT == '°':
             self._unit_of_measurement = TEMP_CELSIUS
         else:
             self._unit_of_measurement = self.wink.UNIT
@@ -52,13 +51,13 @@ class WinkSensorDevice(WinkDevice, Entity):
     @property
     def state(self):
         """Return the state."""
-        if self.capability == "humidity":
+        if self.capability == 'humidity':
             return round(self.wink.humidity_percentage())
-        elif self.capability == "temperature":
+        elif self.capability == 'temperature':
             return round(self.wink.temperature_float(), 1)
-        elif self.capability == "balance":
+        elif self.capability == 'balance':
             return round(self.wink.balance() / 100, 2)
-        elif self.capability == "proximity":
+        elif self.capability == 'proximity':
             return self.wink.proximity_float()
         else:
             return STATE_OPEN if self.is_open else STATE_CLOSED
@@ -71,7 +70,7 @@ class WinkSensorDevice(WinkDevice, Entity):
         Always return true for Wink porkfolio due to
         bug in API.
         """
-        if self.capability == "balance":
+        if self.capability == 'balance':
             return True
         return self.wink.available
 
