@@ -399,7 +399,7 @@ class MQTT(object):
         """Message received callback."""
         try:
             payload = msg.payload.decode('utf-8')
-        except AttributeError:
+        except (AttributeError, UnicodeDecodeError):
             _LOGGER.error("Illegal utf-8 unicode payload from "
                           "MQTT topic: %s, Payload: %s", msg.topic,
                           msg.payload)
