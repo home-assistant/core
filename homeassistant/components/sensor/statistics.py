@@ -79,12 +79,12 @@ class StatisticsSensor(Entity):
         self.min = self.max = self.total = self.count = 0
 
         @callback
-        def stats_sensor_state_listener(entity, old_state, new_state):
+        # pylint: disable=invalid-name
+        def async_stats_sensor_state_listener(entity, old_state, new_state):
             """Called when the sensor changes state."""
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
 
-            print("### ", new_state.state)
             try:
                 self.states.append(float(new_state.state))
                 self.count = self.count + 1
@@ -93,7 +93,8 @@ class StatisticsSensor(Entity):
 
             hass.loop.create_task(self.async_update_ha_state(True))
 
-        async_track_state_change(hass, entity_id, stats_sensor_state_listener)
+        async_track_state_change(
+            hass, entity_id, async_stats_sensor_state_listener)
 
     @property
     def name(self):
