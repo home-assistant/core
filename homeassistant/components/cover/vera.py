@@ -15,9 +15,9 @@ DEPENDENCIES = ['vera']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Vera covers."""
-    add_devices_callback(
+    add_devices(
         VeraCover(device, VERA_CONTROLLER) for
         device in VERA_DEVICES['cover'])
 
