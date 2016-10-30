@@ -247,7 +247,6 @@ class HistoryPeriodView(HomeAssistantView):
         return self.json(result.values())
 
 
-# pylint: disable=too-few-public-methods
 class Filters(object):
     """Container for the configured include and exclude filters."""
 

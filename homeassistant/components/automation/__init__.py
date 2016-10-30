@@ -219,7 +219,6 @@ class AutomationEntity(ToggleEntity):
     """Entity to show status of entity."""
 
     # pylint: disable=abstract-method
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, name, async_attach_triggers, cond_func, async_action,
                  hidden):
         """Initialize an automation entity."""

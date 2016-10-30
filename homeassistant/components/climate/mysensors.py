@@ -37,7 +37,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             map_sv_types, devices, add_devices, MySensorsHVAC))
 
 
-# pylint: disable=too-many-arguments, too-many-public-methods
 class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     """Representation of a MySensorsHVAC hvac."""
 

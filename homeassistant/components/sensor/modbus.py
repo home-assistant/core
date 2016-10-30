@@ -58,7 +58,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ModbusRegisterSensor(Entity):
     """Modbus resgister sensor."""
 
-    # pylint: disable=too-many-instance-attributes, too-many-arguments
     def __init__(self, name, slave, register, unit_of_measurement, count,
                  scale, offset, precision):
         """Initialize the modbus register sensor."""

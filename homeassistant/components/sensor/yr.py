@@ -75,7 +75,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-# pylint: disable=too-many-instance-attributes
 class YrSensor(Entity):
     """Representation of an Yr.no sensor."""
 
@@ -164,7 +163,6 @@ class YrSensor(Entity):
                 break
 
 
-# pylint: disable=too-few-public-methods
 class YrData(object):
     """Get the latest data and updates the states."""
 

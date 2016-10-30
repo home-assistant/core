@@ -1,5 +1,5 @@
 """The tests for the Sun component."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 import unittest
 from unittest.mock import patch
 from datetime import timedelta, datetime
@@ -15,11 +15,13 @@ from tests.common import get_test_home_assistant
 class TestSun(unittest.TestCase):
     """Test the sun module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

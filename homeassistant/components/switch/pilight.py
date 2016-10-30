@@ -37,7 +37,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class PilightSwitch(SwitchDevice):
     """Representation of a pilight switch."""
 
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, hass, name, code_on, code_off,
                  code_on_receive, code_off_receive):
         """Initialize the switch."""

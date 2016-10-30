@@ -77,8 +77,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=unused-argument, too-many-function-args, too-many-locals
-# pylint: disable=too-many-return-statements
+# pylint: disable=unused-argument
 def setup(hass, base_config):
     """Common setup for Envisalink devices."""
     from pyenvisalink import EnvisalinkAlarmPanel

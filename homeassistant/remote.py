@@ -40,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 class APIStatus(enum.Enum):
     """Represent API status."""
 
-    # pylint: disable=no-init,invalid-name,too-few-public-methods
+    # pylint: disable=no-init, invalid-name
     OK = "ok"
     INVALID_PASSWORD = "invalid_password"
     CANNOT_CONNECT = "cannot_connect"
@@ -54,7 +54,6 @@ class APIStatus(enum.Enum):
 class API(object):
     """Object to pass around Home Assistant API location and credentials."""
 
-    # pylint: disable=too-few-public-methods
     def __init__(self, host: str, api_password: Optional[str]=None,
                  port: Optional[int]=None, use_ssl: bool=False) -> None:
         """Initalize the API."""
@@ -114,7 +113,7 @@ class API(object):
 class HomeAssistant(ha.HomeAssistant):
     """Home Assistant that forwards work."""
 
-    # pylint: disable=super-init-not-called,too-many-instance-attributes
+    # pylint: disable=super-init-not-called
     def __init__(self, remote_api, local_api=None, loop=None):
         """Initalize the forward instance."""
         if not remote_api.validate_api():
@@ -150,7 +149,8 @@ class HomeAssistant(ha.HomeAssistant):
                     'Unable to setup local API to receive events')
 
         self.state = ha.CoreState.starting
-        ha._async_create_timer(self)  # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        ha._async_create_timer(self)
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
                       origin=ha.EventOrigin.remote)
@@ -186,7 +186,6 @@ class HomeAssistant(ha.HomeAssistant):
 class EventBus(ha.EventBus):
     """EventBus implementation that forwards fire_event to remote API."""
 
-    # pylint: disable=too-few-public-methods
     def __init__(self, api, hass):
         """Initalize the eventbus."""
         super().__init__(hass)
@@ -300,7 +299,7 @@ class StateMachine(ha.StateMachine):
 class JSONEncoder(json.JSONEncoder):
     """JSONEncoder that supports Home Assistant objects."""
 
-    # pylint: disable=too-few-public-methods,method-hidden
+    # pylint: disable=method-hidden
     def default(self, obj):
         """Convert Home Assistant objects.
 

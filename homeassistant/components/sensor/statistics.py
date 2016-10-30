@@ -55,7 +55,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     return True
 
 
-# pylint: disable=too-many-instance-attributes
 class StatisticsSensor(Entity):
     """Representation of a Statistics sensor."""
 

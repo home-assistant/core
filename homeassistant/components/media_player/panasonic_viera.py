@@ -72,7 +72,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self, name, remote):
         """Initialize the samsung device."""
         # Save a reference to the imported class

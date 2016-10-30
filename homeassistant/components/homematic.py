@@ -183,7 +183,7 @@ def set_value(hass, entity_id, value):
     hass.services.call(DOMAIN, SERVICE_SET_VALUE, data)
 
 
-# pylint: disable=unused-argument,too-many-locals
+# pylint: disable=unused-argument
 def setup(hass, config):
     """Setup the Homematic component."""
     global HOMEMATIC, HOMEMATIC_LINK_DELAY
@@ -271,7 +271,6 @@ def setup(hass, config):
     return True
 
 
-# pylint: disable=too-many-branches
 def _system_callback_handler(hass, config, src, *args):
     """Callback handler."""
     if src == 'newDevices':
@@ -323,7 +322,6 @@ def _get_devices(device_type, keys):
     """Get the Homematic devices."""
     device_arr = []
 
-    # pylint: disable=too-many-nested-blocks
     for key in keys:
         device = HOMEMATIC.devices[key]
         class_name = device.__class__.__name__
@@ -585,7 +583,6 @@ class HMVariable(Entity):
 class HMDevice(Entity):
     """The Homematic device base object."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, config):
         """Initialize a generic Homematic device."""
         self._name = config.get(ATTR_NAME)

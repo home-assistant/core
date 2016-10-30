@@ -72,8 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error('Not connected to %s:%s', host, port)
 
 
-# pylint: disable=abstract-method, too-many-public-methods,
-# pylint: disable=too-many-instance-attributes, too-many-arguments
+# pylint: disable=abstract-method
 class RussoundRNETDevice(MediaPlayerDevice):
     """Representation of a Russound RNET device."""
 

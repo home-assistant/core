@@ -58,7 +58,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([ExchangeRateSensor(data, name, target)])
 
 
-# pylint: disable=too-few-public-methods
 class ExchangeRateSensor(Entity):
     """Representation of a Exchange sensor."""
 

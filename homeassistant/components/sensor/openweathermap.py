@@ -84,7 +84,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-# pylint: disable=too-few-public-methods
 class OpenWeatherMapSensor(Entity):
     """Implementation of an OpenWeatherMap sensor."""
 
@@ -121,7 +120,6 @@ class OpenWeatherMapSensor(Entity):
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data from OWM and updates the states."""
         self.owa_client.update()

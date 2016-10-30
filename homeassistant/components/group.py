@@ -218,7 +218,6 @@ def _async_process_config(hass, config, component):
 class Group(Entity):
     """Track a group of entity ids."""
 
-    # pylint: disable=too-many-instance-attributes, too-many-arguments
     def __init__(self, hass, name, order=None, user_defined=True, icon=None,
                  view=False):
         """Initialize a group.
@@ -240,7 +239,6 @@ class Group(Entity):
         self._visible = True
 
     @staticmethod
-    # pylint: disable=too-many-arguments
     def create_group(hass, name, entity_ids=None, user_defined=True,
                      icon=None, view=False, object_id=None):
         """Initialize a group."""
@@ -251,7 +249,6 @@ class Group(Entity):
 
     @staticmethod
     @asyncio.coroutine
-    # pylint: disable=too-many-arguments
     def async_create_group(hass, name, entity_ids=None, user_defined=True,
                            icon=None, view=False, object_id=None):
         """Initialize a group.
@@ -420,7 +417,6 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
-        # pylint: disable=too-many-branches
         # To store current states of group entities. Might not be needed.
         states = None
         gr_state = self._state

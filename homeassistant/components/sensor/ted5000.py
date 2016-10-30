@@ -89,7 +89,6 @@ class Ted5000Sensor(Entity):
         self._gateway.update()
 
 
-# pylint: disable=too-few-public-methods
 class Ted5000Gateway(object):
     """The class for handling the data retrieval."""
 

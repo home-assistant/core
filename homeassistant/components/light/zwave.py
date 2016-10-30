@@ -105,7 +105,6 @@ def brightness_state(value):
 class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
     """Representation of a Z-Wave dimmer."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, value):
         """Initialize the light."""
         from openzwave.network import ZWaveNetwork
@@ -263,7 +262,6 @@ class ZwaveColorLight(ZwaveDimmer):
         # Check for the missing color values
         self._get_color_values()
 
-    # pylint: disable=too-many-branches
     def update_properties(self):
         """Update internal properties based on zwave values."""
         super().update_properties()

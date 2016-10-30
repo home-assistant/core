@@ -148,7 +148,6 @@ def async_setup(hass, config):
 class InputSelect(Entity):
     """Representation of a select input."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, object_id, name, state, options, icon):
         """Initialize a select input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)

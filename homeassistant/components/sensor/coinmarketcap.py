@@ -59,7 +59,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([CoinMarketCapSensor(CoinMarketCapData(currency))])
 
 
-# pylint: disable=too-few-public-methods
 class CoinMarketCapSensor(Entity):
     """Representation of a CoinMarketCap sensor."""
 
@@ -104,7 +103,6 @@ class CoinMarketCapSensor(Entity):
             ATTR_TOTAL_SUPPLY: self._ticker.get('total_supply'),
         }
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()

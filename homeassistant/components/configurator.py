@@ -34,7 +34,6 @@ STATE_CONFIGURE = 'configure'
 STATE_CONFIGURED = 'configured'
 
 
-# pylint: disable=too-many-arguments
 def request_config(
         hass, name, callback, description=None, description_image=None,
         submit_caption=None, fields=None, link_name=None, link_url=None,
@@ -102,7 +101,6 @@ class Configurator(object):
         hass.services.register(
             DOMAIN, SERVICE_CONFIGURE, self.handle_service_call)
 
-    # pylint: disable=too-many-arguments
     def request_config(
             self, name, callback,
             description, description_image, submit_caption,

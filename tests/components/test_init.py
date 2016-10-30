@@ -1,5 +1,5 @@
 """The testd for Core components."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 import asyncio
 import unittest
 from unittest.mock import patch, Mock
@@ -21,7 +21,8 @@ from tests.common import (
 class TestComponentsCore(unittest.TestCase):
     """Test homeassistant.components module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.assertTrue(run_coroutine_threadsafe(
@@ -31,7 +32,8 @@ class TestComponentsCore(unittest.TestCase):
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

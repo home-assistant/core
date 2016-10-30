@@ -62,7 +62,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class VasttrafikDepartureSensor(Entity):
     """Implementation of a Vasttrafik Departure Sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, planner, name, departure, heading, delay):
         """Initialize the sensor."""
         self._planner = planner

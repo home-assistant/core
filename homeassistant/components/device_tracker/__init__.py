@@ -4,8 +4,6 @@ Provide functionality to keep track of devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/device_tracker/
 """
-# pylint: disable=too-many-instance-attributes, too-many-arguments
-# pylint: disable=too-many-locals
 import asyncio
 from datetime import timedelta
 import logging
@@ -88,7 +86,6 @@ def is_on(hass: HomeAssistantType, entity_id: str=None):
     return hass.states.is_state(entity, STATE_HOME)
 
 
-# pylint: disable=too-many-arguments
 def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
         host_name: str=None, location_name: str=None,
         gps: GPSType=None, gps_accuracy=None,

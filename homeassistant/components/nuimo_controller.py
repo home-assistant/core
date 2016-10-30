@@ -51,7 +51,7 @@ def setup(hass, config):
     return True
 
 
-class NuimoLogger(object):  # pylint: disable=too-few-public-methods
+class NuimoLogger(object):
     """Handle Nuimo Controller event callbacks."""
 
     def __init__(self, hass, name):
@@ -94,7 +94,8 @@ class NuimoThread(threading.Thread):
             self._nuimo.disconnect()
             self._nuimo = None
 
-    def stop(self, event):  # pylint: disable=unused-argument
+    # pylint: disable=unused-argument
+    def stop(self, event):
         """Terminate Thread by unsetting flag."""
         _LOGGER.debug('Stopping thread for Nuimo %s', self._mac)
         self._hass_is_running = False
@@ -169,14 +170,17 @@ HOMEASSIST_LOGO = (
 class DiscoveryLogger(object):
     """Handle Nuimo Discovery callbacks."""
 
-    def discovery_started(self):  # pylint: disable=no-self-use
+    # pylint: disable=no-self-use
+    def discovery_started(self):
         """Discovery startet."""
         _LOGGER.info("started discovery")
 
-    def discovery_finished(self):  # pylint: disable=no-self-use
+    # pylint: disable=no-self-use
+    def discovery_finished(self):
         """Discovery finished."""
         _LOGGER.info("finished discovery")
 
-    def controller_added(self, nuimo):  # pylint: disable=no-self-use
+    # pylint: disable=no-self-use
+    def controller_added(self, nuimo):
         """Controller found."""
         _LOGGER.info("added Nuimo: %s", nuimo)

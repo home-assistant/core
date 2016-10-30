@@ -1,6 +1,5 @@
 """Test to verify that Home Assistant core works."""
-# pylint: disable=protected-access,too-many-public-methods
-# pylint: disable=too-few-public-methods
+# pylint: disable=protected-access
 import asyncio
 import unittest
 from unittest.mock import patch, MagicMock
@@ -89,11 +88,13 @@ def test_async_run_job_delegates_non_async():
 class TestHomeAssistant(unittest.TestCase):
     """Test the Home Assistant core classes."""
 
-    def setUp(self):     # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant(0)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -163,13 +164,15 @@ class TestEvent(unittest.TestCase):
 class TestEventBus(unittest.TestCase):
     """Test EventBus methods."""
 
-    def setUp(self):     # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.bus = self.hass.bus
         self.bus.listen('test_event', lambda x: len)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down stuff we started."""
         self.hass.stop()
 
@@ -360,14 +363,16 @@ class TestState(unittest.TestCase):
 class TestStateMachine(unittest.TestCase):
     """Test State machine methods."""
 
-    def setUp(self):    # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant(0)
         self.states = self.hass.states
         self.states.set("light.Bowl", "on")
         self.states.set("switch.AC", "off")
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down stuff we started."""
         self.hass.stop()
 
@@ -485,13 +490,15 @@ class TestServiceCall(unittest.TestCase):
 class TestServiceRegistry(unittest.TestCase):
     """Test ServicerRegistry methods."""
 
-    def setUp(self):     # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.services = self.hass.services
         self.services.register("Test_Domain", "TEST_SERVICE", lambda x: None)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down stuff we started."""
         self.hass.stop()
 
@@ -572,7 +579,8 @@ class TestServiceRegistry(unittest.TestCase):
 class TestConfig(unittest.TestCase):
     """Test configuration methods."""
 
-    def setUp(self):     # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.config = ha.Config()
         self.assertIsNone(self.config.config_dir)

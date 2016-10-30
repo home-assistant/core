@@ -286,7 +286,6 @@ class AlexaFlashBriefingView(HomeAssistantView):
         self.flash_briefings = copy.deepcopy(flash_briefings)
         template.attach(hass, self.flash_briefings)
 
-    # pylint: disable=too-many-branches
     @callback
     def get(self, request, briefing_id):
         """Handle Alexa Flash Briefing request."""

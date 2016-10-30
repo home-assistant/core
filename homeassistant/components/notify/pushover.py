@@ -40,7 +40,6 @@ def get_service(hass, config):
         return None
 
 
-# pylint: disable=too-few-public-methods
 class PushoverNotificationService(BaseNotificationService):
     """Implement the notification service for Pushover."""
 

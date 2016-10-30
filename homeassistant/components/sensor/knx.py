@@ -84,7 +84,7 @@ def update_and_define_min_max(config, minimum_default,
     return minimum_value, maximum_value
 
 
-class KNXSensorBaseClass():  # pylint: disable=too-few-public-methods
+class KNXSensorBaseClass():
     """Sensor Base Class for all KNX Sensors."""
 
     _unit_of_measurement = None
@@ -107,7 +107,6 @@ class KNXSensorFloatClass(KNXGroupAddress, KNXSensorBaseClass):
     Defined in KNX 3.7.2 - 3.10
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, config, unit_of_measurement, minimum_sensor_value,
                  maximum_sensor_value):
         """Initialize a KNX Float Sensor."""

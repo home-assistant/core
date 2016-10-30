@@ -55,7 +55,6 @@ def get_service(hass, config):
     return iOSNotificationService()
 
 
-# pylint: disable=too-few-public-methods, too-many-arguments, invalid-name
 class iOSNotificationService(BaseNotificationService):
     """Implement the notification service for iOS."""
 

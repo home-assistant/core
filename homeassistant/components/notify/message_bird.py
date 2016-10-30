@@ -40,7 +40,6 @@ def get_service(hass, config):
     return MessageBirdNotificationService(config.get(CONF_SENDER), client)
 
 
-# pylint: disable=too-few-public-methods
 class MessageBirdNotificationService(BaseNotificationService):
     """Implement the notification service for MessageBird."""
 

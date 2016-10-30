@@ -58,7 +58,6 @@ def extract_image_from_mjpeg(stream):
             return jpg
 
 
-# pylint: disable=too-many-instance-attributes
 class MjpegCamera(Camera):
     """An implementation of an IP camera that is reachable over a URL."""
 

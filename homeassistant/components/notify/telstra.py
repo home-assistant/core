@@ -41,7 +41,6 @@ def get_service(hass, config):
         consumer_key, consumer_secret, phone_number)
 
 
-# pylint: disable=too-few-public-methods, too-many-arguments
 class TelstraNotificationService(BaseNotificationService):
     """Implementation of a notification service for the Telstra SMS API."""
 

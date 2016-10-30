@@ -1,5 +1,5 @@
 """The tests for the Script component."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 import unittest
 
 from homeassistant.bootstrap import setup_component
@@ -14,12 +14,14 @@ ENTITY_ID = 'script.test'
 class TestScriptComponent(unittest.TestCase):
     """Test the Script component."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

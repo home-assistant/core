@@ -76,7 +76,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FluxLight(Light):
     """Representation of a Flux light."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, device):
         """Initialize the light."""
         import flux_led

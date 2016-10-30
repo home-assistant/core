@@ -98,11 +98,9 @@ def get_service(hass, config):
         remoteip, duration, position, transparency, color, interrupt, timeout)
 
 
-# pylint: disable=too-many-instance-attributes
 class NFAndroidTVNotificationService(BaseNotificationService):
     """Notification service for Notifications for Android TV."""
 
-    # pylint: disable=too-many-arguments,too-few-public-methods
     def __init__(self, remoteip, duration, position, transparency, color,
                  interrupt, timeout):
         """Initialize the service."""
@@ -117,7 +115,6 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             os.path.dirname(__file__), '..', 'frontend', 'www_static', 'icons',
             'favicon-192x192.png')
 
-    # pylint: disable=too-many-branches
     def send_message(self, message="", **kwargs):
         """Send a message to a Android TV device."""
         _LOGGER.debug("Sending notification to: %s", self._target)
