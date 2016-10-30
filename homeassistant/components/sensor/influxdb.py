@@ -156,7 +156,6 @@ class InfluxSensor(Entity):
         self._state = value
 
 
-# pylint: disable=too-few-public-methods
 class InfluxSensorData(object):
     """Class for handling the data retrieval."""
 

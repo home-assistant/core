@@ -123,7 +123,6 @@ def set_aux_heat(hass, aux_heat, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_AUX_HEAT, data)
 
 
-# pylint: disable=too-many-arguments
 def set_temperature(hass, temperature=None, entity_id=None,
                     target_temp_high=None, target_temp_low=None,
                     operation_mode=None):
@@ -181,7 +180,6 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_SWING_MODE, data)
 
 
-# pylint: disable=too-many-branches
 def setup(hass, config):
     """Setup climate devices."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
@@ -364,7 +362,7 @@ def setup(hass, config):
 class ClimateDevice(Entity):
     """Representation of a climate device."""
 
-    # pylint: disable=too-many-public-methods,no-self-use
+    # pylint: disable=no-self-use
     @property
     def state(self):
         """Return the current state."""

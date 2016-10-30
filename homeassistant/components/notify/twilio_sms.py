@@ -40,7 +40,6 @@ def get_service(hass, config):
                                         config[CONF_FROM_NUMBER])
 
 
-# pylint: disable=too-few-public-methods
 class TwilioSMSNotificationService(BaseNotificationService):
     """Implement the notification service for the Twilio SMS service."""
 

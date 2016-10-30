@@ -25,7 +25,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-# pylint: disable=too-few-public-methods, too-many-instance-attributes
 class SleepNumberSensor(sleepiq.SleepIQSensor):
     """Implementation of a SleepIQ sensor."""
 

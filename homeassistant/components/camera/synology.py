@@ -23,7 +23,6 @@ from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
-#  pylint: disable=too-many-locals
 DEFAULT_NAME = 'Synology Camera'
 DEFAULT_STREAM_ID = '0'
 TIMEOUT = 5
@@ -179,11 +178,9 @@ def get_session_id(hass, username, password, login_url, valid_cert):
     return auth_resp['data']['sid']
 
 
-# pylint: disable=too-many-instance-attributes
 class SynologyCamera(Camera):
     """An implementation of a Synology NAS based IP camera."""
 
-# pylint: disable=too-many-arguments
     def __init__(self, config, camera_id, camera_name,
                  snapshot_path, streaming_path, camera_path, auth_path):
         """Initialize a Synology Surveillance Station camera."""

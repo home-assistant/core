@@ -90,9 +90,7 @@ AsusWrtResult = namedtuple('AsusWrtResult', 'neighbors leases arp')
 class AsusWrtDeviceScanner(object):
     """This class queries a router running ASUSWRT firmware."""
 
-    # pylint: disable=too-many-instance-attributes, too-many-branches
     # Eighth attribute needed for mode (AP mode vs router mode)
-
     def __init__(self, config):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]

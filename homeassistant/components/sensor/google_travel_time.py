@@ -82,7 +82,6 @@ def convert_time_to_utc(timestr):
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Google travel time platform."""
-    # pylint: disable=too-many-locals
     def run_setup(event):
         """Delay the setup until Home Assistant is fully initialized.
 
@@ -120,11 +119,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
-# pylint: disable=too-many-instance-attributes
 class GoogleTravelTimeSensor(Entity):
     """Representation of a Google travel time sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, name, api_key, origin, destination, options):
         """Initialize the sensor."""
         self._hass = hass

@@ -65,7 +65,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([SwissPublicTransportSensor(data, journey, name)])
 
 
-# pylint: disable=too-few-public-methods
 class SwissPublicTransportSensor(Entity):
     """Implementation of an Swiss public transport sensor."""
 
@@ -106,7 +105,6 @@ class SwissPublicTransportSensor(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data from opendata.ch and update the states."""
         self.data.update()
@@ -117,7 +115,6 @@ class SwissPublicTransportSensor(Entity):
             pass
 
 
-# pylint: disable=too-few-public-methods
 class PublicTransportData(object):
     """The Class for handling the data retrieval."""
 

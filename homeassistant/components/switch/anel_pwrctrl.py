@@ -110,7 +110,6 @@ class PwrCtrlSwitch(SwitchDevice):
         self._port.off()
 
 
-# pylint: disable=too-few-public-methods
 class PwrCtrlDevice(object):
     """Device representation for per device throttling."""
 

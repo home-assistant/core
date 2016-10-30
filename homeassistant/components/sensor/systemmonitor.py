@@ -94,7 +94,6 @@ class SystemMonitorSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest system information."""
         import psutil

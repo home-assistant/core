@@ -117,7 +117,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     setup_bravia(config, pin, hass, add_devices)
 
 
-# pylint: disable=too-many-branches
 def setup_bravia(config, pin, hass, add_devices):
     """Setup a Sony Bravia TV based on host parameter."""
     host = config.get(CONF_HOST)
@@ -181,8 +180,7 @@ def request_configuration(config, hass, add_devices):
     )
 
 
-# pylint: disable=abstract-method, too-many-public-methods,
-# pylint: disable=too-many-instance-attributes, too-many-arguments
+# pylint: disable=abstract-method
 class BraviaTVDevice(MediaPlayerDevice):
     """Representation of a Sony Bravia TV."""
 

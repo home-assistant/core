@@ -12,7 +12,7 @@ from tests.common import get_test_config_dir, patch_yaml_files
 
 class TestYaml(unittest.TestCase):
     """Test util.yaml loader."""
-    # pylint: disable=no-self-use,invalid-name
+    # pylint: disable=no-self-use, invalid-name
 
     def test_simple_list(self):
         """Test simple list."""
@@ -254,7 +254,7 @@ def load_yaml(fname, string):
         return load_yaml_config_file(fname)
 
 
-class FakeKeyring():  # pylint: disable=too-few-public-methods
+class FakeKeyring():
     """Fake a keyring class."""
 
     def __init__(self, secrets_dict):
@@ -270,7 +270,7 @@ class FakeKeyring():  # pylint: disable=too-few-public-methods
 
 class TestSecrets(unittest.TestCase):
     """Test the secrets parameter in the yaml utility."""
-    # pylint: disable=protected-access,invalid-name
+    # pylint: disable=protected-access, invalid-name
 
     def setUp(self):  # pylint: disable=invalid-name
         """Create & load secrets file."""
@@ -295,7 +295,8 @@ class TestSecrets(unittest.TestCase):
                                '  password: !secret comp1_pw\n'
                                '')
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Clean up secrets."""
         yaml.clear_secret_cache()
         FILES.clear()

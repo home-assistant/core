@@ -29,7 +29,6 @@ PLATFORM_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the RFXtrx platform."""
-    # pylint: disable=too-many-locals
     from RFXtrx import SensorEvent
     sensors = []
     for packet_id, entity_info in config[CONF_DEVICES].items():

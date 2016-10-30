@@ -97,7 +97,6 @@ def request_class():
 class HideSensitiveFilter(logging.Filter):
     """Filter API password calls."""
 
-    # pylint: disable=too-few-public-methods
     def __init__(self, hass):
         """Initialize sensitive data filter."""
         super().__init__()
@@ -246,9 +245,6 @@ class HAStaticRoute(StaticRoute):
 
 class HomeAssistantWSGI(object):
     """WSGI server for Home Assistant."""
-
-    # pylint: disable=too-many-instance-attributes, too-many-locals
-    # pylint: disable=too-many-arguments
 
     def __init__(self, hass, development, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
@@ -405,7 +401,8 @@ class HomeAssistantView(object):
 
         self.hass = hass
 
-    def json(self, result, status_code=200):  # pylint: disable=no-self-use
+    # pylint: disable=no-self-use
+    def json(self, result, status_code=200):
         """Return a JSON response."""
         msg = json.dumps(
             result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
@@ -417,7 +414,8 @@ class HomeAssistantView(object):
         return self.json({'message': error}, status_code)
 
     @asyncio.coroutine
-    def file(self, request, fil):  # pylint: disable=no-self-use
+    # pylint: disable=no-self-use
+    def file(self, request, fil):
         """Return a file."""
         assert isinstance(fil, str), 'only string paths allowed'
         response = yield from _GZIP_FILE_SENDER.send(request, Path(fil))

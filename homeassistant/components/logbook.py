@@ -154,7 +154,6 @@ class LogbookView(HomeAssistantView):
 class Entry(object):
     """A human readable version of the log."""
 
-    # pylint: disable=too-many-arguments, too-few-public-methods
     def __init__(self, when=None, name=None, message=None, domain=None,
                  entity_id=None):
         """Initialize the entry."""
@@ -182,7 +181,6 @@ def humanify(events):
      - if 2+ sensor updates in GROUP_BY_MINUTES, show last
      - if home assistant stop and start happen in same minute call it restarted
     """
-    # pylint: disable=too-many-branches
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
             events,
@@ -288,7 +286,6 @@ def humanify(events):
 
 def _exclude_events(events, config):
     """Get lists of excluded entities and platforms."""
-    # pylint: disable=too-many-branches
     excluded_entities = []
     excluded_domains = []
     included_entities = []
@@ -355,10 +352,10 @@ def _exclude_events(events, config):
     return filtered_events
 
 
+# pylint: disable=too-many-return-statements
 def _entry_message_from_state(domain, state):
     """Convert a state to a message for the logbook."""
     # We pass domain in so we don't have to split entity_id again
-    # pylint: disable=too-many-return-statements
     if domain == 'device_tracker':
         if state.state == STATE_NOT_HOME:
             return 'is away'

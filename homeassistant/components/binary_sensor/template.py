@@ -70,7 +70,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class BinarySensorTemplate(BinarySensorDevice):
     """A virtual binary sensor that triggers from another sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, device, friendly_name, sensor_class,
                  value_template, entity_ids):
         """Initialize the Template binary sensor."""
