@@ -87,8 +87,9 @@ import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.remote import PLATFORM_SCHEMA
+from homeassistant.util import slugify
 
-REQUIREMENTS = ['pyharmony>=1.0.7']
+REQUIREMENTS = ['pyharmony>=1.0.8']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE = 'device'
@@ -107,26 +108,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
 
-    harmony_conf_file = hass.config.path('harmony_conf_' + config.get(CONF_NAME) + '.txt')
-    pyharmony.ha_get_config_file(config.get(CONF_USERNAME),
-                                 config.get(CONF_PASSWORD),
-                                 config.get(CONF_HOST),
-                                 config.get(CONF_PORT),
-                                 harmony_conf_file)
+    print ('LOADING', config.get(CONF_NAME))
 
-    add_devices([HarmonyRemote(config.get(CONF_NAME),
+    harmony_conf_file = hass.config.path('harmony_' + slugify(config.get(CONF_NAME)) + '.conf')
+
+    b = add_devices([HarmonyRemote(config.get(CONF_NAME),
                                config.get(CONF_USERNAME),
                                config.get(CONF_PASSWORD),
                                config.get(CONF_HOST),
                                config.get(CONF_PORT),
-                               config.get(ATTR_ACTIVITY))])
-    return True
+                               config.get(ATTR_ACTIVITY),
+                                   harmony_conf_file)])
+
+    if b == None:
+        return True
 
 
 class HarmonyRemote(remote.RemoteDevice):
     """Remote representation used expose services to control a Harmony device"""
 
-    def __init__(self, name, username, password, host, port, activity):
+    def __init__(self, name, username, password, host, port, activity, configPath):
         self._name = name
         self._email = username
         self._password = password
@@ -135,7 +136,9 @@ class HarmonyRemote(remote.RemoteDevice):
         self._state = None
         self._current_activity = None
         self._default_activity = activity
-
+        self._token = pyharmony.ha_get_token(username, password)
+        self._config = pyharmony.ha_get_config(self.token, host, port)
+        pyharmony.ha_get_config_file(self._config, configPath)
 
     @property
     def name(self):
@@ -148,6 +151,15 @@ class HarmonyRemote(remote.RemoteDevice):
         """Return the state of the Harmony device."""
         return self._state
 
+    @property
+    def token(self):
+        """Return the state of the Harmony device."""
+        return self._token
+
+    @property
+    def config(self):
+        """Return the state of the Harmony device."""
+        return self._config
 
     @property
     def state_attributes(self):
@@ -162,10 +174,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
     def update(self):
         """Return current activity"""
-        state = pyharmony.ha_get_current_activity(self._email,
-                                    self._password,
-                                    self._ip,
-                                    self._port)
+        state = pyharmony.ha_get_current_activity(self._token, self._config, self._ip, self._port)
         self._current_activity = state
         if state  != 'PowerOff':
             self._state = STATE_ON
@@ -179,34 +188,21 @@ class HarmonyRemote(remote.RemoteDevice):
             activity = self._default_activity
         else:
             activity = kwargs[ATTR_ACTIVITY]
-        pyharmony.ha_start_activity(self._email,
-                                    self._password,
-                                    self._ip,
-                                    self._port,
-                                    activity)
+
+        pyharmony.ha_start_activity(self._token, self._ip, self._port, self._config, activity)
+        self._state = STATE_ON
 
 
     def turn_off(self):
         """Start the PowerOff activity"""
-        pyharmony.ha_power_off(self._email,
-                                    self._password,
-                                    self._ip,
-                                    self._port)
+        pyharmony.ha_power_off(self._token, self._ip, self._port)
 
 
     def send_command(self, **kwargs):
         """Send a command to one device"""
-        pyharmony.ha_send_command(self._email,
-                                    self._password,
-                                    self._ip,
-                                    self._port,
-                                  kwargs[ATTR_DEVICE],
-                                  kwargs[ATTR_COMMAND])
+        pyharmony.ha_send_command(self._token, self._ip, self._port, kwargs[ATTR_DEVICE],kwargs[ATTR_COMMAND])
 
 
     def sync(self):
         """Sync the Harmony device with the web service"""
-        pyharmony.ha_sync(self._harmony_device._email,
-                               self._harmony_device._password,
-                               self._harmony_device._ip,
-                               self._harmony_device._port)
+        pyharmony.ha_sync(self._token, self._ip, self._port)
