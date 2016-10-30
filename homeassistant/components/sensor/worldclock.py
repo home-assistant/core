@@ -4,6 +4,7 @@ Support for showing the time in a different time zone.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.worldclock/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -28,12 +29,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the World clock sensor."""
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set up the World clock sensor."""
     name = config.get(CONF_NAME)
     time_zone = dt_util.get_time_zone(config.get(CONF_TIME_ZONE))
 
-    add_devices([WorldClockSensor(time_zone, name)])
+    hass.loop.create_task(async_add_devices(
+        [WorldClockSensor(time_zone, name)], True))
+    return True
 
 
 class WorldClockSensor(Entity):
@@ -44,7 +48,6 @@ class WorldClockSensor(Entity):
         self._name = name
         self._time_zone = time_zone
         self._state = None
-        self.update()
 
     @property
     def name(self):
@@ -61,7 +64,8 @@ class WorldClockSensor(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the time and updates the states."""
         self._state = dt_util.now(time_zone=self._time_zone).strftime(
             TIME_STR_FORMAT)
