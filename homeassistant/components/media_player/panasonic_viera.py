@@ -73,7 +73,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
     def __init__(self, name, remote):
-        """Initialize the samsung device."""
+        """Initialize the Panasonic device."""
         # Save a reference to the imported class
         self._name = name
         self._muted = False
