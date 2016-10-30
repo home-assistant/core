@@ -283,7 +283,11 @@ class TestMediaPlayerWeb(unittest.TestCase):
             def get(self, url):
                 return MockResponse()
 
-        self.hass.websession = MockWebsession()
+            @asyncio.coroutine
+            def close(self):
+                pass
+
+        self.hass._websession = MockWebsession()
 
         self.hass.block_till_done()
         assert setup_component(
