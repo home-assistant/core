@@ -4,10 +4,12 @@ Component to offer a way to select an option from a list.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_select/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -29,6 +31,18 @@ SERVICE_SELECT_OPTION = 'select_option'
 SERVICE_SELECT_OPTION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_OPTION): cv.string,
+})
+
+SERVICE_SELECT_NEXT = 'select_next'
+
+SERVICE_SELECT_NEXT_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+SERVICE_SELECT_PREVIOUS = 'select_previous'
+
+SERVICE_SELECT_PREVIOUS_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
 
@@ -53,14 +67,29 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {
 
 
 def select_option(hass, entity_id, option):
-    """Set input_select to False."""
+    """Set value of input_select."""
     hass.services.call(DOMAIN, SERVICE_SELECT_OPTION, {
         ATTR_ENTITY_ID: entity_id,
         ATTR_OPTION: option,
     })
 
 
-def setup(hass, config):
+def select_next(hass, entity_id):
+    """Set next value of input_select."""
+    hass.services.call(DOMAIN, SERVICE_SELECT_NEXT, {
+        ATTR_ENTITY_ID: entity_id,
+    })
+
+
+def select_previous(hass, entity_id):
+    """Set previous value of input_select."""
+    hass.services.call(DOMAIN, SERVICE_SELECT_PREVIOUS, {
+        ATTR_ENTITY_ID: entity_id,
+    })
+
+
+@asyncio.coroutine
+def async_setup(hass, config):
     """Setup input select."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -76,19 +105,43 @@ def setup(hass, config):
     if not entities:
         return False
 
-    def select_option_service(call):
-        """Handle a calls to the input select services."""
-        target_inputs = component.extract_from_service(call)
+    @callback
+    def async_select_option_service(call):
+        """Handle a calls to the input select option service."""
+        target_inputs = component.async_extract_from_service(call)
 
         for input_select in target_inputs:
             input_select.select_option(call.data[ATTR_OPTION])
 
-    hass.services.register(DOMAIN, SERVICE_SELECT_OPTION,
-                           select_option_service,
-                           schema=SERVICE_SELECT_OPTION_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_SELECT_OPTION, async_select_option_service,
+        schema=SERVICE_SELECT_OPTION_SCHEMA)
 
-    component.add_entities(entities)
+    @callback
+    def async_select_next_service(call):
+        """Handle a calls to the input select next service."""
+        target_inputs = component.async_extract_from_service(call)
 
+        for input_select in target_inputs:
+            input_select.offset_index(1)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SELECT_NEXT, async_select_next_service,
+        schema=SERVICE_SELECT_NEXT_SCHEMA)
+
+    @callback
+    def async_select_previous_service(call):
+        """Handle a calls to the input select previous service."""
+        target_inputs = component.async_extract_from_service(call)
+
+        for input_select in target_inputs:
+            input_select.offset_index(-1)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SELECT_PREVIOUS, async_select_previous_service,
+        schema=SERVICE_SELECT_PREVIOUS_SCHEMA)
+
+    yield from component.async_add_entities(entities)
     return True
 
 
@@ -138,4 +191,11 @@ class InputSelect(Entity):
                             option, ', '.join(self._options))
             return
         self._current_option = option
-        self.update_ha_state()
+        self.hass.loop.create_task(self.async_update_ha_state())
+
+    def offset_index(self, offset):
+        """Offset current index."""
+        current_index = self._options.index(self._current_option)
+        new_index = (current_index + offset) % len(self._options)
+        self._current_option = self._options[new_index]
+        self.hass.loop.create_task(self.async_update_ha_state())

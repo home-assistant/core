@@ -6,7 +6,7 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
@@ -52,7 +52,7 @@ class TestMQTT(unittest.TestCase):
         with mock.patch('homeassistant.components.mqtt.MQTT',
                         side_effect=socket.error()):
             self.hass.config.components = []
-            assert not _setup_component(self.hass, mqtt.DOMAIN, {
+            assert not setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'test-broker',
                 }
@@ -62,7 +62,7 @@ class TestMQTT(unittest.TestCase):
         """Test for setup failure if connection to broker is missing."""
         with mock.patch('paho.mqtt.client.Client'):
             self.hass.config.components = []
-            assert _setup_component(self.hass, mqtt.DOMAIN, {
+            assert setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'test-broker',
                     mqtt.CONF_PROTOCOL: 3.1,
@@ -222,7 +222,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         with mock.patch('paho.mqtt.client.Client'):
             self.hass.config.components = []
-            assert _setup_component(self.hass, mqtt.DOMAIN, {
+            assert setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
                 }
@@ -316,3 +316,27 @@ class TestMQTTCallbacks(unittest.TestCase):
     def test_invalid_mqtt_topics(self):
         self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'bad+topic')
         self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')
+
+    def test_receiving_non_utf8_message_gets_logged(self):
+        """Test receiving a non utf8 encoded message."""
+        calls = []
+
+        def record(event):
+            """Helper to record calls."""
+            calls.append(event)
+
+        payload = 0x9a
+        topic = 'test_topic'
+        self.hass.bus.listen_once(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, record)
+        MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
+        message = MQTTMessage(topic, 1, payload)
+        with self.assertLogs(level='ERROR') as test_handle:
+            mqtt.MQTT_CLIENT._mqtt_on_message(
+                None,
+                {'hass': self.hass},
+                message)
+            self.hass.block_till_done()
+            self.assertIn(
+                "ERROR:homeassistant.components.mqtt:Illegal utf-8 unicode "
+                "payload from MQTT topic: %s, Payload: " % topic,
+                test_handle.output[0])

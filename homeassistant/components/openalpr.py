@@ -26,7 +26,7 @@ DOMAIN = 'openalpr'
 DEPENDENCIES = ['ffmpeg']
 REQUIREMENTS = [
     'https://github.com/pvizeli/cloudapi/releases/download/1.0.2/'
-    'python-1.0.2.zip#cloud_api==1.0.2',
+    'python-1.0.2.zip#openalpr_api==1.0.2',
     'ha-alpr==0.3']
 
 _LOGGER = logging.getLogger(__name__)
@@ -153,7 +153,7 @@ def setup(hass, config):
         # Create Alpr device / render engine
         if render == RENDER_FFMPEG:
             use_render_fffmpeg = True
-            if not run_test(input_source):
+            if not run_test(hass, input_source):
                 _LOGGER.error("'%s' is not valid ffmpeg input", input_source)
                 continue
 

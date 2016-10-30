@@ -71,8 +71,13 @@ class TestMfiSensorSetup(unittest.TestCase):
         config = dict(self.GOOD_CONFIG)
         del config[self.THING]['port']
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
-        mock_client.assert_called_once_with(
-            'foo', 'user', 'pass', port=6443, use_tls=True, verify=True)
+        self.assertEqual(mock_client.call_count, 1)
+        self.assertEqual(
+            mock_client.call_args,
+            mock.call(
+                'foo', 'user', 'pass', port=6443, use_tls=True, verify=True
+            )
+        )
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_with_port(self, mock_client):
@@ -80,8 +85,13 @@ class TestMfiSensorSetup(unittest.TestCase):
         config = dict(self.GOOD_CONFIG)
         config[self.THING]['port'] = 6123
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
-        mock_client.assert_called_once_with(
-            'foo', 'user', 'pass', port=6123, use_tls=True, verify=True)
+        self.assertEqual(mock_client.call_count, 1)
+        self.assertEqual(
+            mock_client.call_args,
+            mock.call(
+                'foo', 'user', 'pass', port=6123, use_tls=True, verify=True
+            )
+        )
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_with_tls_disabled(self, mock_client):
@@ -91,8 +101,13 @@ class TestMfiSensorSetup(unittest.TestCase):
         config[self.THING]['ssl'] = False
         config[self.THING]['verify_ssl'] = False
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
-        mock_client.assert_called_once_with(
-            'foo', 'user', 'pass', port=6080, use_tls=False, verify=False)
+        self.assertEqual(mock_client.call_count, 1)
+        self.assertEqual(
+            mock_client.call_args,
+            mock.call(
+                'foo', 'user', 'pass', port=6080, use_tls=False, verify=False
+            )
+        )
 
     @mock.patch('mficlient.client.MFiClient')
     @mock.patch('homeassistant.components.sensor.mfi.MfiSensor')
@@ -180,4 +195,5 @@ class TestMfiSensor(unittest.TestCase):
     def test_update(self):
         """Test the update."""
         self.sensor.update()
-        self.port.refresh.assert_called_once_with()
+        self.assertEqual(self.port.refresh.call_count, 1)
+        self.assertEqual(self.port.refresh.call_args, mock.call())

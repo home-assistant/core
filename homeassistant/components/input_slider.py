@@ -4,10 +4,12 @@ Component to offer a way to select a value from a slider.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_slider/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -71,7 +73,8 @@ def select_value(hass, entity_id, value):
     })
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up input slider."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -92,19 +95,19 @@ def setup(hass, config):
     if not entities:
         return False
 
-    def select_value_service(call):
+    @callback
+    def async_select_value_service(call):
         """Handle a calls to the input slider services."""
-        target_inputs = component.extract_from_service(call)
+        target_inputs = component.async_extract_from_service(call)
 
         for input_slider in target_inputs:
             input_slider.select_value(call.data[ATTR_VALUE])
 
-    hass.services.register(DOMAIN, SERVICE_SELECT_VALUE,
-                           select_value_service,
-                           schema=SERVICE_SELECT_VALUE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_SELECT_VALUE, async_select_value_service,
+        schema=SERVICE_SELECT_VALUE_SCHEMA)
 
-    component.add_entities(entities)
-
+    yield from component.async_add_entities(entities)
     return True
 
 
@@ -166,4 +169,4 @@ class InputSlider(Entity):
                             num_value, self._minimum, self._maximum)
             return
         self._current_value = num_value
-        self.update_ha_state()
+        self.hass.loop.create_task(self.async_update_ha_state())

@@ -12,7 +12,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND)
+    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND,
+    STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -79,9 +80,11 @@ class CommandSensor(Entity):
         self.data.update()
         value = self.data.value
 
-        if self._value_template is not None:
+        if value is None:
+            value = STATE_UNKNOWN
+        elif self._value_template is not None:
             self._state = self._value_template.render_with_possible_json_value(
-                value, 'N/A')
+                value, STATE_UNKNOWN)
         else:
             self._state = value
 

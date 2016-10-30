@@ -139,7 +139,7 @@ class TestServiceHelpers(unittest.TestCase):
         self.hass.states.set('light.Ceiling', STATE_OFF)
         self.hass.states.set('light.Kitchen', STATE_OFF)
 
-        loader.get_component('group').Group(
+        loader.get_component('group').Group.create_group(
             self.hass, 'test', ['light.Ceiling', 'light.Kitchen'])
 
         call = ha.ServiceCall('light', 'turn_on',
@@ -153,3 +153,6 @@ class TestServiceHelpers(unittest.TestCase):
 
         self.assertEqual(['light.ceiling', 'light.kitchen'],
                          service.extract_entity_ids(self.hass, call))
+
+        self.assertEqual(['group.test'], service.extract_entity_ids(
+            self.hass, call, expand_group=False))

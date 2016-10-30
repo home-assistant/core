@@ -11,7 +11,7 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import prepare_setup_platform
+from homeassistant.bootstrap import async_prepare_setup_platform
 from homeassistant import config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
@@ -24,7 +24,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import get_platform
 from homeassistant.util.dt import utcnow
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_coroutine_threadsafe
 
 DOMAIN = 'automation'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -143,68 +142,75 @@ def reload(hass):
     hass.services.call(DOMAIN, SERVICE_RELOAD)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Setup the automation."""
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_ALL_AUTOMATIONS)
 
-    success = run_coroutine_threadsafe(
-        _async_process_config(hass, config, component), hass.loop).result()
+    success = yield from _async_process_config(hass, config, component)
 
     if not success:
         return False
 
-    descriptions = conf_util.load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.loop.run_in_executor(
+        None, conf_util.load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml')
+    )
 
     @asyncio.coroutine
     def trigger_service_handler(service_call):
         """Handle automation triggers."""
-        for entity in component.extract_from_service(service_call):
-            hass.loop.create_task(entity.async_trigger(
+        tasks = []
+        for entity in component.async_extract_from_service(service_call):
+            tasks.append(entity.async_trigger(
                 service_call.data.get(ATTR_VARIABLES), True))
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
     @asyncio.coroutine
     def turn_onoff_service_handler(service_call):
         """Handle automation turn on/off service calls."""
+        tasks = []
         method = 'async_{}'.format(service_call.service)
-        for entity in component.extract_from_service(service_call):
-            hass.loop.create_task(getattr(entity, method)())
+        for entity in component.async_extract_from_service(service_call):
+            tasks.append(getattr(entity, method)())
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
     @asyncio.coroutine
     def toggle_service_handler(service_call):
         """Handle automation toggle service calls."""
-        for entity in component.extract_from_service(service_call):
+        tasks = []
+        for entity in component.async_extract_from_service(service_call):
             if entity.is_on:
-                hass.loop.create_task(entity.async_turn_off())
+                tasks.append(entity.async_turn_off())
             else:
-                hass.loop.create_task(entity.async_turn_on())
+                tasks.append(entity.async_turn_on())
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
     @asyncio.coroutine
     def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
-        conf = yield from hass.loop.run_in_executor(
-            None, component.prepare_reload)
+        conf = yield from component.async_prepare_reload()
         if conf is None:
             return
-        hass.loop.create_task(_async_process_config(hass, conf, component))
+        yield from _async_process_config(hass, conf, component)
 
-    hass.services.register(DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
-                           descriptions.get(SERVICE_TRIGGER),
-                           schema=TRIGGER_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
+        descriptions.get(SERVICE_TRIGGER), schema=TRIGGER_SERVICE_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_RELOAD, reload_service_handler,
-                           descriptions.get(SERVICE_RELOAD),
-                           schema=RELOAD_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_RELOAD, reload_service_handler,
+        descriptions.get(SERVICE_RELOAD), schema=RELOAD_SERVICE_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_TOGGLE, toggle_service_handler,
-                           descriptions.get(SERVICE_TOGGLE),
-                           schema=SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TOGGLE, toggle_service_handler,
+        descriptions.get(SERVICE_TOGGLE), schema=SERVICE_SCHEMA)
 
     for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
-        hass.services.register(DOMAIN, service, turn_onoff_service_handler,
-                               descriptions.get(service),
-                               schema=SERVICE_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, service, turn_onoff_service_handler,
+            descriptions.get(service), schema=SERVICE_SCHEMA)
 
     return True
 
@@ -271,7 +277,9 @@ class AutomationEntity(ToggleEntity):
         self._async_detach_triggers()
         self._async_detach_triggers = None
         self._enabled = False
-        self.hass.loop.create_task(self.async_update_ha_state())
+        # It's important that the update is finished before this method
+        # ends because async_remove depends on it.
+        yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_trigger(self, variables, skip_condition=False):
@@ -280,15 +288,15 @@ class AutomationEntity(ToggleEntity):
         This method is a coroutine.
         """
         if skip_condition or self._cond_func(variables):
-            yield from self._async_action(variables)
+            yield from self._async_action(self.entity_id, variables)
             self._last_triggered = utcnow()
             self.hass.loop.create_task(self.async_update_ha_state())
 
-    def remove(self):
+    @asyncio.coroutine
+    def async_remove(self):
         """Remove automation from HASS."""
-        run_coroutine_threadsafe(self.async_turn_off(),
-                                 self.hass.loop).result()
-        super().remove()
+        yield from self.async_turn_off()
+        yield from super().async_remove()
 
     @asyncio.coroutine
     def async_enable(self):
@@ -341,12 +349,11 @@ def _async_process_config(hass, config, component):
             entity = AutomationEntity(name, async_attach_triggers, cond_func,
                                       action, hidden)
             if config_block[CONF_INITIAL_STATE]:
-                tasks.append(hass.loop.create_task(entity.async_enable()))
+                tasks.append(entity.async_enable())
             entities.append(entity)
 
     yield from asyncio.gather(*tasks, loop=hass.loop)
-    yield from hass.loop.run_in_executor(
-        None, component.add_entities, entities)
+    hass.loop.create_task(component.async_add_entities(entities))
 
     return len(entities) > 0
 
@@ -356,10 +363,11 @@ def _async_get_action(hass, config, name):
     script_obj = script.Script(hass, config, name)
 
     @asyncio.coroutine
-    def action(variables=None):
+    def action(entity_id, variables):
         """Action to be executed."""
         _LOGGER.info('Executing %s', name)
-        logbook.async_log_entry(hass, name, 'has been triggered', DOMAIN)
+        logbook.async_log_entry(
+            hass, name, 'has been triggered', DOMAIN, entity_id)
         hass.loop.create_task(script_obj.async_run(variables))
 
     return action
@@ -393,9 +401,8 @@ def _async_process_trigger(hass, config, trigger_configs, name, action):
     removes = []
 
     for conf in trigger_configs:
-        platform = yield from hass.loop.run_in_executor(
-            None, prepare_setup_platform, hass, config, DOMAIN,
-            conf.get(CONF_PLATFORM))
+        platform = yield from async_prepare_setup_platform(
+            hass, config, DOMAIN, conf.get(CONF_PLATFORM))
 
         if platform is None:
             return None

@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the RESTful sensor."""
+    """Set up the HaveIBeenPwnedSensor sensor."""
     emails = config.get(CONF_EMAIL)
     data = HaveIBeenPwnedData(emails)
 
@@ -43,15 +43,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(devices)
 
-    # To make sure we get initial data for the sensors
-    # ignoring the normal throttle of 15 minutes but using
-    # an update throttle of 5 seconds
+    # To make sure we get initial data for the sensors ignoring the normal
+    # throttle of 15 minutes but using an update throttle of 5 seconds
     for sensor in devices:
         sensor.update_nothrottle()
 
 
 class HaveIBeenPwnedSensor(Entity):
-    """Implementation of HaveIBeenPwnedSensor."""
+    """Implementation of a HaveIBeenPwnedSensor."""
 
     def __init__(self, data, hass, email):
         """Initialize the HaveIBeenPwnedSensor sensor."""
@@ -77,7 +76,7 @@ class HaveIBeenPwnedSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the atrributes of the sensor."""
         val = {}
         if self._email not in self._data.data:
@@ -97,12 +96,11 @@ class HaveIBeenPwnedSensor(Entity):
         """Update sensor without throttle."""
         self._data.update_no_throttle()
 
-        # Schedule a forced update 5 seconds in the future if the
-        # update above returned no data for this sensors email.
-        # this is mainly to make sure that we don't
-        # get http error "too many requests" and to have initial
-        # data after hass startup once we have the data it will
-        # update as normal using update
+        # Schedule a forced update 5 seconds in the future if the update above
+        # returned no data for this sensors email. This is mainly to make sure
+        # that we don't get HTTP Error "too many requests" and to have initial
+        # data after hass startup once we have the data it will update as
+        # normal using update
         if self._email not in self._data.data:
             track_point_in_time(self._hass,
                                 self.update_nothrottle,

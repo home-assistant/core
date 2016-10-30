@@ -12,9 +12,10 @@ from urllib.error import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['coinmarketcap==2.0.1']
 
@@ -30,6 +31,7 @@ ATTR_PRICE = 'price_usd'
 ATTR_SYMBOL = 'symbol'
 ATTR_TOTAL_SUPPLY = 'total_supply'
 
+CONF_ATTRIBUTION = "Data provided by CoinMarketCap"
 CONF_CURRENCY = 'currency'
 
 DEFAULT_CURRENCY = 'bitcoin'
@@ -44,13 +46,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the CoinMarketCap sensor."""
+    """Set up the CoinMarketCap sensor."""
     currency = config.get(CONF_CURRENCY)
 
     try:
         CoinMarketCapData(currency).update()
     except HTTPError:
-        _LOGGER.warning('Currency "%s" is not available. Using "bitcoin"',
+        _LOGGER.warning("Currency '%s' is not available. Using 'bitcoin'",
                         currency)
         currency = DEFAULT_CURRENCY
 
@@ -89,10 +91,11 @@ class CoinMarketCapSensor(Entity):
         return ICON
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_24H_VOLUME_USD: self._ticker.get('24h_volume_usd'),
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_AVAILABLE_SUPPLY: self._ticker.get('available_supply'),
             ATTR_MARKET_CAP: self._ticker.get('market_cap_usd'),
             ATTR_PERCENT_CHANGE_24H: self._ticker.get('percent_change_24h'),

@@ -7,8 +7,9 @@ from homeassistant.bootstrap import setup_component
 import homeassistant.components as core_components
 from homeassistant.components import conversation
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.util.async import run_coroutine_threadsafe
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, assert_setup_component
 
 
 class TestConversation(unittest.TestCase):
@@ -19,9 +20,13 @@ class TestConversation(unittest.TestCase):
         self.ent_id = 'light.kitchen_lights'
         self.hass = get_test_home_assistant(3)
         self.hass.states.set(self.ent_id, 'on')
-        self.assertTrue(core_components.setup(self.hass, {}))
-        self.assertTrue(setup_component(self.hass, conversation.DOMAIN, {
-            conversation.DOMAIN: {}}))
+        self.assertTrue(run_coroutine_threadsafe(
+            core_components.async_setup(self.hass, {}), self.hass.loop
+        ).result())
+        with assert_setup_component(0):
+            self.assertTrue(setup_component(self.hass, conversation.DOMAIN, {
+                conversation.DOMAIN: {}
+            }))
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""

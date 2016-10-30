@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_USERNAME, CONF_ICON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['slacker==0.9.25']
+REQUIREMENTS = ['slacker==0.9.29']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +68,10 @@ class SlackNotificationService(BaseNotificationService):
         """Send a message to a user."""
         import slacker
 
-        targets = kwargs.get(ATTR_TARGET, [self._default_channel])
+        if kwargs.get(ATTR_TARGET) is None:
+            targets = [self._default_channel]
+        else:
+            targets = kwargs.get(ATTR_TARGET)
 
         data = kwargs.get('data')
         attachments = data.get('attachments') if data else None

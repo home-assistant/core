@@ -18,19 +18,19 @@ from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOSTS
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+REQUIREMENTS = ['python-nmap==0.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_EXCLUDE = 'exclude'
 # Interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL = 'home_interval'
-CONF_EXCLUDE = 'exclude'
 
-REQUIREMENTS = ['python-nmap==0.6.1']
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOSTS): cv.string,
+    vol.Required(CONF_HOSTS): cv.ensure_list,
     vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
     vol.Optional(CONF_EXCLUDE, default=[]):
         vol.All(cv.ensure_list, vol.Length(min=1))
@@ -73,7 +73,7 @@ class NmapDeviceScanner(object):
         self.home_interval = timedelta(minutes=minutes)
 
         self.success_init = self._update_info()
-        _LOGGER.info('nmap scanner initialized')
+        _LOGGER.info("nmap scanner initialized")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -97,7 +97,7 @@ class NmapDeviceScanner(object):
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.info('Scanning')
+        _LOGGER.info("Scanning...")
 
         from nmap import PortScanner, PortScannerError
         scanner = PortScanner()
@@ -120,7 +120,8 @@ class NmapDeviceScanner(object):
             options += ' --exclude {}'.format(','.join(exclude_hosts))
 
         try:
-            result = scanner.scan(hosts=self.hosts, arguments=options)
+            result = scanner.scan(hosts=' '.join(self.hosts),
+                                  arguments=options)
         except PortScannerError:
             return False
 
@@ -137,5 +138,5 @@ class NmapDeviceScanner(object):
 
         self.last_results = last_results
 
-        _LOGGER.info('nmap scan successful')
+        _LOGGER.info("nmap scan successful")
         return True

@@ -157,7 +157,7 @@ class TelldusLiveData(object):
             response = self._client.request(what, params)
             _LOGGER.debug("got response %s", response)
             return response
-        except (ConnectionError, TimeoutError, OSError) as error:
+        except OSError as error:
             _LOGGER.error("failed to make request to Tellduslive servers: %s",
                           error)
             return None

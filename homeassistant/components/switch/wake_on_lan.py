@@ -30,13 +30,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Add wake on lan switch."""
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up a wake on lan switch."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     mac_address = config.get(CONF_MAC_ADDRESS)
 
-    add_devices_callback([WOLSwitch(hass, name, host, mac_address)])
+    add_devices([WOLSwitch(hass, name, host, mac_address)])
 
 
 class WOLSwitch(SwitchDevice):
@@ -79,13 +79,12 @@ class WOLSwitch(SwitchDevice):
 
     def update(self):
         """Check if device is on and update the state."""
-        if platform.system().lower() == "windows":
-            ping_cmd = "ping -n 1 -w {} {}"\
-                .format(DEFAULT_PING_TIMEOUT * 1000, self._host)
+        if platform.system().lower() == 'windows':
+            ping_cmd = 'ping -n 1 -w {} {}'.format(
+                DEFAULT_PING_TIMEOUT * 1000, self._host)
         else:
-            ping_cmd = "ping -c 1 -W {} {}"\
-                .format(DEFAULT_PING_TIMEOUT, self._host)
+            ping_cmd = 'ping -c 1 -W {} {}'.format(
+                DEFAULT_PING_TIMEOUT, self._host)
 
         status = sp.getstatusoutput(ping_cmd)[0]
-
         self._state = not bool(status)

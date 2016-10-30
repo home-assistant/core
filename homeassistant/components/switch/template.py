@@ -16,8 +16,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
     ATTR_ENTITY_ID, CONF_SWITCHES)
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 import homeassistant.helpers.config_validation as cv
 
@@ -40,8 +40,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+@asyncio.coroutine
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Template switch."""
     switches = []
 
@@ -52,6 +53,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         off_action = device_config[OFF_ACTION]
         entity_ids = (device_config.get(ATTR_ENTITY_ID) or
                       state_template.extract_entities())
+
+        state_template.hass = hass
 
         switches.append(
             SwitchTemplate(
@@ -66,7 +69,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not switches:
         _LOGGER.error("No switches added")
         return False
-    add_devices(switches)
+
+    hass.loop.create_task(async_add_devices(switches, True))
     return True
 
 
@@ -78,23 +82,21 @@ class SwitchTemplate(SwitchDevice):
                  on_action, off_action, entity_ids):
         """Initialize the Template switch."""
         self.hass = hass
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id,
-                                            hass=hass)
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id,
+                                                  hass=hass)
         self._name = friendly_name
         self._template = state_template
-        state_template.hass = hass
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
         self._state = False
-
-        self.update()
 
         @callback
         def template_switch_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
             hass.loop.create_task(self.async_update_ha_state(True))
 
-        track_state_change(hass, entity_ids, template_switch_state_listener)
+        async_track_state_change(
+            hass, entity_ids, template_switch_state_listener)
 
     @property
     def name(self):

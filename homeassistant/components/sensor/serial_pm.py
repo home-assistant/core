@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.serial_pm/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
@@ -14,26 +15,27 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 REQUIREMENTS = ['pmsensor==0.3']
 
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERIAL_DEVICE = "serial_device"
-CONF_BRAND = "brand"
+CONF_SERIAL_DEVICE = 'serial_device'
+CONF_BRAND = 'brand'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=""): cv.string,
-    vol.Required(CONF_SERIAL_DEVICE): cv.string,
     vol.Required(CONF_BRAND): cv.string,
+    vol.Required(CONF_SERIAL_DEVICE): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the available PM sensors."""
+    """Set up the available PM sensors."""
     from pmsensor import serial_pm as pm
 
     try:
-        coll = pm.PMDataCollector(config.get(CONF_SERIAL_DEVICE),
-                                  pm.SUPPORTED_SENSORS[config.get(CONF_BRAND)])
+        coll = pm.PMDataCollector(
+            config.get(CONF_SERIAL_DEVICE),
+            pm.SUPPORTED_SENSORS[config.get(CONF_BRAND)]
+        )
     except KeyError:
         _LOGGER.error("Brand %s not supported\n supported brands: %s",
                       config.get(CONF_BRAND), pm.SUPPORTED_SENSORS.keys())
@@ -46,10 +48,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
 
     for pmname in coll.supported_values():
-        if config.get("name") != "":
-            name = "{} PM{}".format(config.get("name"), pmname)
+        if config.get(CONF_NAME) is None:
+            name = '{} PM{}'.format(config.get(CONF_NAME), pmname)
         else:
-            name = "PM{}".format(pmname)
+            name = 'PM{}'.format(pmname)
         dev.append(ParticulateMatterSensor(coll, name, pmname))
 
     add_devices(dev)
