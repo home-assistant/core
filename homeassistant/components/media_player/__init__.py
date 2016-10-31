@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.const import (
     STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
@@ -682,10 +683,11 @@ class MediaPlayerDevice(Entity):
 
         return state_attr
 
-    @asyncio.coroutine
-    def async_preload_media_image_url(self, url):
+    def preload_media_image_url(self, url):
         """Preload and cache a media image for future use."""
-        yield from _async_fetch_image(self.hass, url)
+        run_coroutine_threadsafe(
+            _async_fetch_image(self.hass, url), self.hass.loop
+        ).result()
 
 
 @asyncio.coroutine
@@ -701,6 +703,7 @@ def _async_fetch_image(hass, url):
     if url in cache_images:
         return cache_images[url]
 
+    content, content_type = (None, None)
     try:
         with async_timeout.timeout(10, loop=hass.loop):
             response = yield from hass.websession.get(url)
@@ -711,16 +714,17 @@ def _async_fetch_image(hass, url):
     except asyncio.TimeoutError:
         pass
 
-    cache_images[url] = (content, content_type)
-    cache_urls.append(url)
+    if content:
+        cache_images[url] = (content, content_type)
+        cache_urls.append(url)
 
-    while len(cache_urls) > cache_maxsize:
-        # remove oldest item from cache
-        oldest_url = cache_urls[0]
-        if oldest_url in cache_images:
-            del cache_images[oldest_url]
+        while len(cache_urls) > cache_maxsize:
+            # remove oldest item from cache
+            oldest_url = cache_urls[0]
+            if oldest_url in cache_images:
+                del cache_images[oldest_url]
 
-        cache_urls = cache_urls[1:]
+            cache_urls = cache_urls[1:]
 
     return content, content_type
 

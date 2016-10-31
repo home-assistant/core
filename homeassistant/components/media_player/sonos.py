@@ -4,7 +4,6 @@ Support to interface with Sonos players (via SoCo).
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.sonos/
 """
-import asyncio
 import datetime
 import logging
 from os import path
@@ -21,7 +20,6 @@ from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_coroutine_threadsafe
 
 REQUIREMENTS = ['https://github.com/SoCo/SoCo/archive/'
                 'cf8c2701165562eccbf1ecc879bf7060ceb0993e.zip#'
@@ -246,10 +244,8 @@ class _AsyncProcessSonosEventQueue():
     def put(self, item, block=True, timeout=None):
         """Queue up event for processing."""
         # Instead of putting events on a queue, dispatch them to the event
-        # processing coroutine.
-        run_coroutine_threadsafe(
-            self._sonos_device.async_process_sonos_event(item),
-            self._sonos_device.hass.loop).result()
+        # processing method.
+        self._sonos_device.process_sonos_event(item)
 
 
 # pylint: disable=abstract-method
@@ -324,114 +320,47 @@ class SonosDevice(MediaPlayerDevice):
         """Return true if player is a coordinator."""
         return self._coordinator is None
 
-    @asyncio.coroutine
-    def _async_get_speaker_info(self):
-        return self.hass.loop.run_in_executor(
-            None,
-            self._player.get_speaker_info,
-            True
-        )
+    def _is_available(self):
+        try:
+            sock = socket.create_connection(
+                address=(self._player.ip_address, 1443),
+                timeout=3)
+            sock.close()
+            return True
+        except socket.error:
+            return False
 
-    @asyncio.coroutine
-    def _async_get_player_volume(self):
-        def _volume():
-            return self._player.volume
-
-        return self.hass.loop.run_in_executor(
-            None,
-            _volume
-        )
-
-    @asyncio.coroutine
-    def _async_get_player_volume_muted(self):
-        def _muted():
-            return self._player.mute
-
-        return self.hass.loop.run_in_executor(
-            None,
-            _muted
-        )
-
-    @asyncio.coroutine
     # pylint: disable=invalid-name
-    def _async_get_current_transport_info(self):
-        return self.hass.loop.run_in_executor(
-            None,
-            self._player.get_current_transport_info
-        )
-
-    @asyncio.coroutine
-    def _async_get_current_track_info(self):
-        return self.hass.loop.run_in_executor(
-            None,
-            self._player.get_current_track_info
-        )
-
-    @asyncio.coroutine
-    def _async_get_media_info(self):
-        return self.hass.loop.run_in_executor(
-            None,
-            self._player.avTransport.GetMediaInfo,
-            [('InstanceID', 0)]
-        )
-
-    @asyncio.coroutine
-    def _async_is_available(self):
-        def _available():
-            try:
-                sock = socket.create_connection(
-                    address=(self._player.ip_address, 1443),
-                    timeout=3)
-                sock.close()
-                return True
-            except socket.error:
-                return False
-
-        return self.hass.loop.run_in_executor(
-            None,
-            _available
-        )
-
-    @asyncio.coroutine
-    # pylint: disable=invalid-name
-    def _async_subscribe_to_player_events(self):
-        def _subscribe():
-            if self._queue is None:
-                self._queue = _AsyncProcessSonosEventQueue(self)
-                self._player.avTransport.subscribe(
-                    auto_renew=True,
-                    event_queue=self._queue)
-                self._player.renderingControl.subscribe(
-                    auto_renew=True,
-                    event_queue=self._queue)
-
-        return self.hass.loop.run_in_executor(
-            None,
-            _subscribe
-        )
+    def _subscribe_to_player_events(self):
+        if self._queue is None:
+            self._queue = _AsyncProcessSonosEventQueue(self)
+            self._player.avTransport.subscribe(
+                auto_renew=True,
+                event_queue=self._queue)
+            self._player.renderingControl.subscribe(
+                auto_renew=True,
+                event_queue=self._queue)
 
     # pylint: disable=too-many-branches, too-many-statements
-    def async_update(self):
+    def update(self):
         """Retrieve latest state."""
         if self._speaker_info is None:
-            self._speaker_info = yield from self._async_get_speaker_info()
+            self._speaker_info = self._player.get_speaker_info(True)
             self._name = self._speaker_info['zone_name'].replace(
                 ' (R)', '').replace(' (L)', '')
 
         if self._last_avtransport_event:
             is_available = True
         else:
-            is_available = yield from self._async_is_available()
+            is_available = self._is_available()
 
         if is_available:
 
             if self._queue is None or self._player_volume is None:
-                self._player_volume = \
-                    yield from self._async_get_player_volume()
+                self._player_volume = self._player.volume
 
             if self._queue is None or self._player_volume_muted is None:
-                self._player_volume_muted = \
-                    yield from self._async_get_player_volume_muted()
+                self._player_volume_muted = self._player.mute
 
             track_info = None
             if self._last_avtransport_event:
@@ -455,13 +384,11 @@ class SonosDevice(MediaPlayerDevice):
                         'duration': variables.get('current_track_duration')
                     }
             else:
-                transport_info = \
-                    yield from self._async_get_current_transport_info()
-
+                transport_info = self._player.get_current_transport_info()
                 self._status = transport_info.get('current_transport_state')
 
             if not track_info:
-                track_info = yield from self._async_get_current_track_info()
+                track_info = self._player.get_current_track_info()
 
             if track_info['uri'].startswith('x-rincon:'):
                 # this speaker is a slave, find the coordinator
@@ -474,7 +401,9 @@ class SonosDevice(MediaPlayerDevice):
                 self._coordinator = None
 
             if not self._coordinator:
-                media_info = yield from self._async_get_media_info()
+                media_info = self._player.avTransport.GetMediaInfo(
+                    [('InstanceID', 0)]
+                )
 
                 current_media_uri = media_info['CurrentURI']
                 media_artist = track_info.get('artist')
@@ -589,10 +518,10 @@ class SonosDevice(MediaPlayerDevice):
                 # pylint: disable=protected-access
                 for device in [x for x in DEVICES if x._coordinator == self]:
                     if device.entity_id:
-                        yield from device.async_update_ha_state(False)
+                        device.update_ha_state(False)
 
                 if self._queue is None and self.entity_id:
-                    yield from self._async_subscribe_to_player_events()
+                    self._subscribe_to_player_events()
         else:
             self._player_volume = None
             self._player_volume_muted = None
@@ -621,8 +550,7 @@ class SonosDevice(MediaPlayerDevice):
             uri=urllib.parse.quote(uri)
         )
 
-    @asyncio.coroutine
-    def async_process_sonos_event(self, event):
+    def process_sonos_event(self, event):
         """Process a service event coming from the speaker."""
         next_track_image_url = None
         if event.service == self._player.avTransport:
@@ -664,12 +592,10 @@ class SonosDevice(MediaPlayerDevice):
                 self._player_volume_muted = \
                     event.variables['mute'].get('Master') == '1'
 
-        yield from self.async_update_ha_state(True)
+        self.update_ha_state(True)
 
         if next_track_image_url:
-            yield from self.async_preload_media_image_url(
-                next_track_image_url
-            )
+            self.preload_media_image_url(next_track_image_url)
 
     @property
     def volume_level(self):
