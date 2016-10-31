@@ -1,5 +1,5 @@
 """
-Media Player component to integrate TVs exposing the Joint Space API
+Media Player component to integrate TVs exposing the Joint Space API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.philips_js/
@@ -166,16 +166,16 @@ class PhilipsJS(MediaPlayerDevice):
                 self._connfail -= 1
                 return
             audiodata = json.loads(requests.get(
-                    DEVICE_BASE_URL.format(self._host, 'audio/volume')).text)
+                DEVICE_BASE_URL.format(self._host, 'audio/volume')).text)
             self._min_volume = int(audiodata['min'])
             self._max_volume = int(audiodata['max'])
             self._volume = audiodata['current']
             self._muted = audiodata['muted']
             srcid = json.loads(requests.get(
-                    DEVICE_BASE_URL.format(self._host,
+                DEVICE_BASE_URL.format(self._host,
                                            'sources/current')).text)['id']
             srcdict = json.loads(requests.get(
-                    DEVICE_BASE_URL.format(self._host, 'sources')).text)
+                DEVICE_BASE_URL.format(self._host, 'sources')).text)
             self._source = srcdict[srcid]['name']
             if not self._source_list:
                 for srcid in sorted(srcdict):
@@ -188,7 +188,7 @@ class PhilipsJS(MediaPlayerDevice):
             self._source = None
 
     def send_key(self, key):
-        """Send key command to TV"""
+        """Send key command to TV."""
         try:
             if self._connfail:
                 self._connfail -= 1
