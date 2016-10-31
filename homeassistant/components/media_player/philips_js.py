@@ -173,7 +173,7 @@ class PhilipsJS(MediaPlayerDevice):
             self._muted = audiodata['muted']
             srcid = json.loads(requests.get(
                 DEVICE_BASE_URL.format(self._host,
-                                           'sources/current')).text)['id']
+                                       'sources/current')).text)['id']
             srcdict = json.loads(requests.get(
                 DEVICE_BASE_URL.format(self._host, 'sources')).text)
             self._source = srcdict[srcid]['name']
