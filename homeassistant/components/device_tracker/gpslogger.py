@@ -49,7 +49,7 @@ class LocationSet(HomeAssistantView):
         longitude = data['longitude']
         device = data['device']
 
-        _LOGGER.error('Received message from GPSLogger: %s (%s, %s)', device,
+        _LOGGER.debug('Received message from GPSLogger: %s (%s, %s)', device,
                       latitude, longitude)
 
         kwargs = {
