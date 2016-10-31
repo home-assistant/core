@@ -10,7 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -24,36 +24,44 @@ ATTR_OPEN = 'open'
 ATTR_PREV_CLOSE = 'prev_close'
 
 CONF_ATTRIBUTION = "Stock market information provided by Yahoo! Inc."
-CONF_SYMBOL = 'symbol'
+CONF_SYMBOLS = 'symbols'
 
 DEFAULT_NAME = 'Yahoo Stock'
 DEFAULT_SYMBOL = 'YHOO'
 
 ICON = 'mdi:currency-usd'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SYMBOL, default=DEFAULT_SYMBOL): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SYMBOLS, default=[DEFAULT_SYMBOL]):
+        vol.All(cv.ensure_list, [cv.string]),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Yahoo Finance sensor."""
-    name = config.get(CONF_NAME)
-    symbol = config.get(CONF_SYMBOL)
+    from yahoo_finance import Share
 
-    data = YahooFinanceData(name, symbol)
-    add_devices([YahooFinanceSensor(name, data, symbol)])
+    symbols = config.get(CONF_SYMBOLS)
+
+    dev = []
+    for symbol in symbols:
+        if Share(symbol).get_price() is None:
+            _LOGGER.warning("Symbol %s unknown", symbol)
+            break
+        data = YahooFinanceData(symbol)
+        dev.append(YahooFinanceSensor(data, symbol))
+
+    add_devices(dev)
 
 
 class YahooFinanceSensor(Entity):
     """Representation of a Yahoo Finance sensor."""
 
-    def __init__(self, name, data, symbol):
+    def __init__(self, data, symbol):
         """Initialize the sensor."""
-        self._name = name
+        self._name = symbol
         self.data = data
         self._symbol = symbol
         self._state = None
@@ -101,17 +109,16 @@ class YahooFinanceSensor(Entity):
 class YahooFinanceData(object):
     """Get data from Yahoo Finance."""
 
-    def __init__(self, name, symbol):
+    def __init__(self, symbol):
         """Initialize the data object."""
         from yahoo_finance import Share
 
-        self._name = name
         self._symbol = symbol
         self.state = None
         self.price_change = None
         self.price_open = None
         self.prev_close = None
-        self.stock = Share(symbol)
+        self.stock = Share(self._symbol)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
