@@ -68,6 +68,6 @@ class LocationSet(HomeAssistantView):
     # pylint: disable=no-self-use
     def post(self, request):
         """Location message received as POST."""
-        _LOGGER.error('Received unidentified POST message from GPSLogger')
+        _LOGGER.debug('Received unidentified POST message from GPSLogger')
         return ('Received unidentified message: POST',
                 HTTP_UNPROCESSABLE_ENTITY)
