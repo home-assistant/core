@@ -7,7 +7,7 @@ https://home-assistant.io/components/device_tracker.gmaps/
 import logging
 import voluptuous as vol
 
-from homeassistant.const import (CONF_TOKEN, CONF_ACCURACY,
+from homeassistant.const import (CONF_TOKEN,
                                  CONF_SCAN_INTERVAL, CONF_ID, CONF_URL,
                                  EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers.event import track_utc_time_change
@@ -24,6 +24,7 @@ CONF_SSID = 'cookie_ssid'
 CONF_HSID = 'cookie_hsid'
 CONF_FREQ = 'data_freq'
 CONF_AT = 'data_at'
+CONF_ACCURACY = 'accuracy'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ID): vol.Coerce(str),
