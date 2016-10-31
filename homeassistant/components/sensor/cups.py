@@ -53,22 +53,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the CUPS sensor."""
-    from cups import Connection
-
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     printers = config.get(CONF_PRINTERS)
 
     try:
-        conn = Connection(host=host, port=port)
+        data = CupsData(host, port)
+        data.update()
     except RuntimeError:
         _LOGGER.error("Unable to connect to CUPS server: %s:%s", host, port)
         return False
 
     dev = []
     for printer in printers:
-        if printer in conn.getPrinters():
-            dev.append(CupsSensor(CupsData(host, port, printer), printer))
+        if printer in data.printers:
+            dev.append(CupsSensor(data, printer))
         else:
             _LOGGER.error("Printer is not present: %s", printer)
             continue
@@ -83,7 +82,7 @@ class CupsSensor(Entity):
         """Initialize the CUPS sensor."""
         self.data = data
         self._name = printer
-        self._details = None
+        self._printer = None
         self.update()
 
     @property
@@ -94,12 +93,12 @@ class CupsSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.data.details is not None:
+        if self._printer is not None:
             try:
                 return next(v for k, v in PRINTER_STATES.items()
-                            if self.data.details['printer-state'] == k)
+                            if self._printer['printer-state'] == k)
             except StopIteration:
-                return self.data.details['printer-state']
+                return self._printer['printer-state']
 
     @property
     def icon(self):
@@ -109,37 +108,36 @@ class CupsSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        if self.data.details is not None:
+        if self._printer is not None:
             return {
-                ATTR_DEVICE_URI: self.data.details['device-uri'],
-                ATTR_PRINTER_INFO: self.data.details['printer-info'],
-                ATTR_PRINTER_IS_SHARED: self.data.details['printer-is-shared'],
-                ATTR_PRINTER_LOCATION: self.data.details['printer-location'],
-                ATTR_PRINTER_MODEL:
-                    self.data.details['printer-make-and-model'],
+                ATTR_DEVICE_URI: self._printer['device-uri'],
+                ATTR_PRINTER_INFO: self._printer['printer-info'],
+                ATTR_PRINTER_IS_SHARED: self._printer['printer-is-shared'],
+                ATTR_PRINTER_LOCATION: self._printer['printer-location'],
+                ATTR_PRINTER_MODEL: self._printer['printer-make-and-model'],
                 ATTR_PRINTER_STATE_MESSAGE:
-                    self.data.details['printer-state-message'],
+                    self._printer['printer-state-message'],
                 ATTR_PRINTER_STATE_REASON:
-                    self.data.details['printer-state-reasons'],
-                ATTR_PRINTER_TYPE: self.data.details['printer-type'],
+                    self._printer['printer-state-reasons'],
+                ATTR_PRINTER_TYPE: self._printer['printer-type'],
                 ATTR_PRINTER_URI_SUPPORTED:
-                    self.data.details['printer-uri-supported'],
+                    self._printer['printer-uri-supported'],
             }
 
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()
+        self._printer = self.data.printers.get(self._name)
 
 
 class CupsData(object):
     """Get the latest data from CUPS and update the state."""
 
-    def __init__(self, host, port, printer):
+    def __init__(self, host, port):
         """Initialize the data object."""
         self._host = host
         self._port = port
-        self._printer = printer
-        self.details = None
+        self.printers = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -147,5 +145,4 @@ class CupsData(object):
         from cups import Connection
 
         conn = Connection(host=self._host, port=self._port)
-        printers = conn.getPrinters()
-        self.details = printers.get(self._printer)
+        self.printers = conn.getPrinters()
