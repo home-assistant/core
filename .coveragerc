@@ -303,7 +303,6 @@ omit =
     homeassistant/components/switch/netio.py
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/pulseaudio_loopback.py
-    homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
