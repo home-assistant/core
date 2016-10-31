@@ -7,7 +7,7 @@ https://home-assistant.io/components/device_tracker.gmaps/
 import logging
 import voluptuous as vol
 
-from homeassistant.const import (CONF_TOKEN, CONF_ACCURACY,
+from homeassistant.const import (CONF_TOKEN,
                                  CONF_SCAN_INTERVAL, CONF_ID, CONF_URL,
                                  EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers.event import track_utc_time_change
@@ -19,6 +19,12 @@ REQUIREMENTS = ['requests>=2,<3']
 
 CONF_INTERVAL = 'interval'
 KEEPALIVE_INTERVAL = 1
+CONF_SID = 'cookie_sid'
+CONF_SSID = 'cookie_ssid'
+CONF_HSID = 'cookie_hsid'
+CONF_FREQ = 'data_freq'
+CONF_AT = 'data_at'
+CONF_ACCURACY = 'accuracy'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ID): vol.Coerce(str),
@@ -26,34 +32,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ACCURACY, default=100): vol.Coerce(int),
     vol.Optional(CONF_INTERVAL, default=1): vol.All(vol.Coerce(int),
                                                     vol.Range(min=1)),
-    vol.Optional(CONF_SCAN_INTERVAL, default=1): vol.Coerce(int)
-    })
+    vol.Optional(CONF_SCAN_INTERVAL, default=100): vol.Coerce(int)
+})
 
 
 def setup_scanner(hass, config, see):
     """Define constants."""
     import requests
-    import json
     import re
 
-
-
-    cookies = {
-        'SID': 'bunch',
-        'HSID': 'of',
-        'SSID': 'cookies',
-        'APISID': 'go',
-        'NID': 'here',
-        'OGPC': 'omg',
-        'OTZ': 'too',
-        'CONSISTENCY': 'much',
-    }
-    
-    data = {
-      'f.req': 'data',
-      'at': 'help',
-    }
-    
     headers = {
         'Host': 'aboutme.google.com',
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -69,12 +56,29 @@ def setup_scanner(hass, config, see):
     max_accuracy = config[CONF_ACCURACY]
     id = config[CONF_ID]
     url = config[CONF_URL]
+    cookie_sid = config[CONF_SID]
+    cookie_hsid = config[CONF_HSID]
+    cookie_ssid = config[CONF_SSID]
+    data_freq = config[CONF_FREQ]
+    data_at = config[CONF_AT]
+    url = config[CONF_URL]
     regex_float = '-?\d+\.\d+'
+
+    cookies = {
+        'SID':  cookie_sid,
+        'HSID': cookie_hsid,
+        'SSID': cookie_ssid,
+    }
+
+    data = {
+        'f.req': data_freq,
+        'at': data_at,
+    }
 
     def get_position(now):
         """Get device position."""
         api_request = requests.post(url, headers=headers, cookies=cookies,
-                                  data=data)
+                                    data=data)
         if api_request.ok:
             location = re.findall(regex_float, api_request.text)
 
