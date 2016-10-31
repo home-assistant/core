@@ -291,8 +291,7 @@ class Device(Entity):
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
                  track: bool, dev_id: str, mac: str, name: str=None,
                  picture: str=None, gravatar: str=None,
-                 icon: str=None,
-                 hide_if_away: bool=False) -> None:
+                 icon: str=None, hide_if_away: bool=False) -> None:
         """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
