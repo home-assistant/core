@@ -102,29 +102,6 @@ class CoreState(enum.Enum):
         return self.value
 
 
-class JobPriority(util.OrderedEnum):
-    """Provides job priorities for event bus jobs."""
-
-    EVENT_CALLBACK = 0
-    EVENT_SERVICE = 1
-    EVENT_STATE = 2
-    EVENT_TIME = 3
-    EVENT_DEFAULT = 4
-
-    @staticmethod
-    def from_event_type(event_type):
-        """Return a priority based on event type."""
-        if event_type == EVENT_TIME_CHANGED:
-            return JobPriority.EVENT_TIME
-        elif event_type == EVENT_STATE_CHANGED:
-            return JobPriority.EVENT_STATE
-        elif event_type == EVENT_CALL_SERVICE:
-            return JobPriority.EVENT_SERVICE
-        elif event_type == EVENT_SERVICE_EXECUTED:
-            return JobPriority.EVENT_CALLBACK
-        return JobPriority.EVENT_DEFAULT
-
-
 class HomeAssistant(object):
     """Root object of the Home Assistant home automation."""
 
@@ -134,9 +111,10 @@ class HomeAssistant(object):
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(self._async_exception_handler)
-        self.pool = create_worker_pool()
+        self.pool = None
         self.bus = EventBus(self)
-        self.services = ServiceRegistry(self.bus, self.add_job, self.loop)
+        self.services = ServiceRegistry(self.bus, self.async_add_job,
+                                        self.loop)
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config()  # type: Config
         # This is a dictionary that any component can store any data on.
@@ -180,8 +158,7 @@ class HomeAssistant(object):
 
         This method is a coroutine.
         """
-        _LOGGER.info(
-            "Starting Home Assistant (%d threads)", self.pool.worker_count)
+        _LOGGER.info("Starting Home Assistant")
 
         self.state = CoreState.starting
 
@@ -208,24 +185,24 @@ class HomeAssistant(object):
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
         _async_create_timer(self)
-        _async_monitor_worker_pool(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        yield from self.loop.run_in_executor(None, self.pool.block_till_done)
+        if self.pool is not None:
+            yield from self.loop.run_in_executor(
+                None, self.pool.block_till_done)
         self.state = CoreState.running
 
-    def add_job(self,
-                target: Callable[..., None],
-                *args: Any,
-                priority: JobPriority=JobPriority.EVENT_DEFAULT) -> None:
+    def add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add job to the worker pool.
 
         target: target to call.
         args: parameters for method to call.
         """
-        self.pool.add_job(priority, (target,) + args)
+        if self.pool is None:
+            run_callback_threadsafe(self.pool, self.async_init_pool).result()
+        self.pool.add_job((target,) + args)
 
     @callback
-    def async_add_job(self, target: Callable[..., None], *args: Any):
+    def async_add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add a job from within the eventloop.
 
         This method must be run in the event loop.
@@ -238,10 +215,12 @@ class HomeAssistant(object):
         elif asyncio.iscoroutinefunction(target):
             self.loop.create_task(target(*args))
         else:
-            self.add_job(target, *args)
+            if self.pool is None:
+                self.async_init_pool()
+            self.pool.add_job((target,) + args)
 
     @callback
-    def async_run_job(self, target: Callable[..., None], *args: Any):
+    def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
         """Run a job from within the event loop.
 
         This method must be run in the event loop.
@@ -254,7 +233,7 @@ class HomeAssistant(object):
         else:
             self.async_add_job(target, *args)
 
-    def _loop_empty(self):
+    def _loop_empty(self) -> bool:
         """Python 3.4.2 empty loop compatibility function."""
         # pylint: disable=protected-access
         if sys.version_info < (3, 4, 3):
@@ -264,7 +243,7 @@ class HomeAssistant(object):
             return self.loop._current_handle is None and \
                    len(self.loop._ready) == 0
 
-    def block_till_done(self):
+    def block_till_done(self) -> None:
         """Block till all pending work is done."""
         complete = threading.Event()
 
@@ -278,7 +257,8 @@ class HomeAssistant(object):
             count = 0
             while True:
                 # Wait for the work queue to empty
-                self.pool.block_till_done()
+                if self.pool is not None:
+                    self.pool.block_till_done()
 
                 # Verify the loop is empty
                 if self._loop_empty():
@@ -309,8 +289,10 @@ class HomeAssistant(object):
         """
         self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        yield from self.loop.run_in_executor(None, self.pool.block_till_done)
-        yield from self.loop.run_in_executor(None, self.pool.stop)
+        if self.pool is not None:
+            yield from self.loop.run_in_executor(
+                None, self.pool.block_till_done)
+            yield from self.loop.run_in_executor(None, self.pool.stop)
         self.executor.shutdown()
         if self._websession is not None:
             yield from self._websession.close()
@@ -336,6 +318,12 @@ class HomeAssistant(object):
                 "Exception inside async loop: ",
                 exc_info=exc_info
             )
+
+    @callback
+    def async_init_pool(self):
+        """Initialize the worker pool."""
+        self.pool = create_worker_pool()
+        _async_monitor_worker_pool(self)
 
     @callback
     def _async_stop_handler(self, *args):
@@ -867,10 +855,10 @@ class ServiceCall(object):
 class ServiceRegistry(object):
     """Offers services over the eventbus."""
 
-    def __init__(self, bus, add_job, loop):
+    def __init__(self, bus, async_add_job, loop):
         """Initialize a service registry."""
         self._services = {}
-        self._add_job = add_job
+        self._async_add_job = async_add_job
         self._bus = bus
         self._loop = loop
         self._cur_id = 0
@@ -1073,7 +1061,7 @@ class ServiceRegistry(object):
                 service_handler.func(service_call)
                 fire_service_executed()
 
-            self._add_job(execute_service, priority=JobPriority.EVENT_SERVICE)
+            self._async_add_job(execute_service)
 
     def _generate_unique_id(self):
         """Generate a unique service call id."""

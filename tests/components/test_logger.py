@@ -16,7 +16,7 @@ class TestUpdater(unittest.TestCase):
 
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(2)
+        self.hass = get_test_home_assistant()
         self.log_config = {'logger':
                            {'default': 'warning', 'logs': {'test': 'info'}}}
 

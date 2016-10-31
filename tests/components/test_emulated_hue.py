@@ -1,8 +1,6 @@
 """The tests for the emulated Hue component."""
 import time
 import json
-import threading
-import asyncio
 
 import unittest
 import requests
@@ -372,58 +370,3 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             url, data=json.dumps(data), timeout=5, headers=req_headers)
 
         return result
-
-
-class MQTTBroker(object):
-    """Encapsulates an embedded MQTT broker."""
-
-    def __init__(self, host, port):
-        """Initialize a new instance."""
-        from hbmqtt.broker import Broker
-
-        self._loop = asyncio.new_event_loop()
-
-        hbmqtt_config = {
-            'listeners': {
-                'default': {
-                    'max-connections': 50000,
-                    'type': 'tcp',
-                    'bind': '{}:{}'.format(host, port)
-                }
-            },
-            'auth': {
-                'plugins': ['auth.anonymous'],
-                'allow-anonymous': True
-            }
-        }
-
-        self._broker = Broker(config=hbmqtt_config, loop=self._loop)
-
-        self._thread = threading.Thread(target=self._run_loop)
-        self._started_ev = threading.Event()
-
-    def start(self):
-        """Start the broker."""
-        self._thread.start()
-        self._started_ev.wait()
-
-    def stop(self):
-        """Stop the broker."""
-        self._loop.call_soon_threadsafe(asyncio.async, self._broker.shutdown())
-        self._loop.call_soon_threadsafe(self._loop.stop)
-        self._thread.join()
-
-    def _run_loop(self):
-        """Run the loop."""
-        asyncio.set_event_loop(self._loop)
-        self._loop.run_until_complete(self._broker_coroutine())
-
-        self._started_ev.set()
-
-        self._loop.run_forever()
-        self._loop.close()
-
-    @asyncio.coroutine
-    def _broker_coroutine(self):
-        """The Broker coroutine."""
-        yield from self._broker.start()
