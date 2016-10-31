@@ -86,7 +86,7 @@ class TestDemoClimate(unittest.TestCase):
         self.assertEqual(24.0, state.attributes.get('target_temp_high'))
         climate.set_temperature(self.hass, target_temp_high=25,
                                 target_temp_low=20, entity_id=ENTITY_ECOBEE)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
         self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(20.0, state.attributes.get('target_temp_low'))
@@ -102,7 +102,7 @@ class TestDemoClimate(unittest.TestCase):
         climate.set_temperature(self.hass, temperature=None,
                                 entity_id=ENTITY_ECOBEE, target_temp_low=None,
                                 target_temp_high=None)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
         self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(21.0, state.attributes.get('target_temp_low'))
