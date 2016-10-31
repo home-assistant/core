@@ -127,7 +127,7 @@ class MqttJson(Light):
         self._flash_times = flash_times
 
         self._templates = {}
-        for key, tpl in list(templates.items()):
+        for key, tpl in templates.items():
             tpl.hass = hass
             self._templates[key] = tpl.render_with_possible_json_value
 
