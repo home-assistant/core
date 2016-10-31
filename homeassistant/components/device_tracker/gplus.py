@@ -42,16 +42,16 @@ def setup_scanner(hass, config, see):
     import re
 
     headers = {
-        'Host': 'aboutme.google.com',
+        'Host': 'plus.google.com',
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
-        'X-Same-Domain': '1',
         'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
-        'Referer': 'https://aboutme.google.com/',
-        'DNT': '1',
+        'Referer': 'https://plus.google.com/',
+        'X-Same-Domain': '1',
         'Connection': 'keep-alive',
     }
+
 
     max_accuracy = config[CONF_ACCURACY]
     id = config[CONF_ID]
@@ -81,7 +81,7 @@ def setup_scanner(hass, config, see):
                                     data=data)
         if api_request.ok:
             location = re.findall(regex_float, api_request.text)
-
+            #_LOGGER.info(api_request.text)
             latitude = location[0]
             longitude = location[1]
 
