@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ACCURACY, default=100): vol.Coerce(int),
     vol.Optional(CONF_INTERVAL, default=1): vol.All(vol.Coerce(int),
                                                     vol.Range(min=1)),
-    vol.Optional(CONF_SCAN_INTERVAL, default=1): vol.Coerce(int)
+    vol.Optional(CONF_SCAN_INTERVAL, default=100): vol.Coerce(int)
 })
 
 
