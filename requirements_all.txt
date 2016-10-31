@@ -217,6 +217,12 @@ https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e22462
 # homeassistant.components.scene.hunterdouglas_powerview
 https://github.com/sander76/powerviewApi/archive/246e782d60d5c0addcc98d7899a0186f9d5640b0.zip#powerviewApi==0.3.15
 
+# homeassistant.components.lutron
+https://github.com/thecynic/pylutron/archive/v0.1.0.zip#pylutron==0.1.0
+
+# homeassistant.components.media_player.emotiva
+https://github.com/thecynic/pymotiva/archive/v0.1.0.zip#pymotiva==0.1.0
+
 # homeassistant.components.mysensors
 https://github.com/theolind/pymysensors/archive/0b705119389be58332f17753c53167f551254b6c.zip#pymysensors==0.8
 
