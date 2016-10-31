@@ -14,7 +14,7 @@ class TestSplunk(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(2)
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""

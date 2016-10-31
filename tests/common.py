@@ -31,18 +31,12 @@ def get_test_config_dir(*add_path):
     return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
 
 
-def get_test_home_assistant(num_threads=None):
+def get_test_home_assistant():
     """Return a Home Assistant object pointing at test config dir."""
     loop = asyncio.new_event_loop()
 
-    if num_threads:
-        orig_num_threads = ha.MIN_WORKER_THREAD
-        ha.MIN_WORKER_THREAD = num_threads
-
     hass = loop.run_until_complete(async_test_home_assistant(loop))
-
-    if num_threads:
-        ha.MIN_WORKER_THREAD = orig_num_threads
+    hass.allow_pool = True
 
     # FIXME should not be a daemon. Means hass.stop() not called in teardown
     stop_event = threading.Event()
@@ -60,17 +54,10 @@ def get_test_home_assistant(num_threads=None):
     orig_start = hass.start
     orig_stop = hass.stop
 
-    @asyncio.coroutine
-    def fake_stop():
-        """Fake stop."""
-        yield None
-
-    @patch.object(ha, '_async_create_timer')
-    @patch.object(ha, '_async_monitor_worker_pool')
     @patch.object(hass.loop, 'add_signal_handler')
+    @patch.object(ha, '_async_create_timer')
     @patch.object(hass.loop, 'run_forever')
     @patch.object(hass.loop, 'close')
-    @patch.object(hass, 'async_stop', return_value=fake_stop())
     def start_hass(*mocks):
         """Helper to start hass."""
         orig_start()
@@ -107,6 +94,20 @@ def async_test_home_assistant(loop):
         yield from loop.run_in_executor(None, loader.prepare, hass)
 
     hass.state = ha.CoreState.running
+
+    hass.allow_pool = False
+    orig_init = hass.async_init_pool
+
+    @ha.callback
+    def mock_async_init_pool():
+        """Prevent worker pool from being initialized."""
+        if hass.allow_pool:
+            with patch('homeassistant.core._async_monitor_worker_pool'):
+                orig_init()
+        else:
+            assert False, 'Thread pool not allowed. Set hass.allow_pool = True'
+
+    hass.async_init_pool = mock_async_init_pool
 
     return hass
 
@@ -225,7 +226,8 @@ class MockModule(object):
 
     # pylint: disable=invalid-name
     def __init__(self, domain=None, dependencies=None, setup=None,
-                 requirements=None, config_schema=None, platform_schema=None):
+                 requirements=None, config_schema=None, platform_schema=None,
+                 async_setup=None):
         """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
@@ -238,8 +240,15 @@ class MockModule(object):
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
 
+        if async_setup is not None:
+            self.async_setup = async_setup
+
     def setup(self, hass, config):
-        """Setup the component."""
+        """Setup the component.
+
+        We always define this mock because MagicMock setups will be seen by the
+        executor as a coroutine, raising an exception.
+        """
         if self._setup is not None:
             return self._setup(hass, config)
         return True

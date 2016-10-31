@@ -19,7 +19,7 @@ class TestConversation(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.ent_id = 'light.kitchen_lights'
-        self.hass = get_test_home_assistant(3)
+        self.hass = get_test_home_assistant()
         self.hass.states.set(self.ent_id, 'on')
         self.assertTrue(run_coroutine_threadsafe(
             core_components.async_setup(self.hass, {}), self.hass.loop

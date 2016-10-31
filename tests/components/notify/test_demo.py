@@ -111,7 +111,7 @@ class TestNotifyDemo(unittest.TestCase):
         }
 
         script.call_from_config(self.hass, conf)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(len(self.events) == 1)
         assert {
             'message': 'Test 123 4',
