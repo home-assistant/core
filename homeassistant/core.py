@@ -197,6 +197,8 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
+        if self.pool is None:
+            run_callback_threadsafe(self.pool, self.async_init_pool).result()
         self.pool.add_job((target,) + args)
 
     @callback
@@ -215,7 +217,7 @@ class HomeAssistant(object):
         else:
             if self.pool is None:
                 self.async_init_pool()
-            self.add_job(target, *args)
+            self.pool.add_job((target,) + args)
 
     @callback
     def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
