@@ -7,7 +7,7 @@ https://home-assistant.io/components/light.isy994/
 import logging
 from typing import Callable
 
-from homeassistant.components.light import Light, SUPPORT_BRIGHTNESS
+from homeassistant.components.light import Light, SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS
 import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType
@@ -68,6 +68,10 @@ class ISYLightDevice(isy.ISYDevice, Light):
         if not self._node.on(val=brightness):
             _LOGGER.debug('Unable to turn on light.')
 
+    @property
+    def state_attributes(self):
+        return {ATTR_BRIGHTNESS: self.value}
+        
     @property
     def supported_features(self):
         """Flag supported features."""
