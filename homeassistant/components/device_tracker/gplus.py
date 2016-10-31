@@ -41,7 +41,6 @@ def setup_scanner(hass, config, see):
     import requests
     import re
 
-
     headers = {
         'Host': 'aboutme.google.com',
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0',
