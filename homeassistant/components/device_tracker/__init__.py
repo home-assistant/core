@@ -55,6 +55,8 @@ DEFAULT_SCAN_INTERVAL = 12
 CONF_AWAY_HIDE = 'hide_if_away'
 DEFAULT_AWAY_HIDE = False
 
+EVENT_NEW_DEVICE = 'device_tracker_new_device'
+
 SERVICE_SEE = 'see'
 
 ATTR_MAC = 'mac'
@@ -236,8 +238,11 @@ class DeviceTracker(object):
 
             device.seen(host_name, location_name, gps, gps_accuracy, battery,
                         attributes)
+
             if device.track:
                 device.update_ha_state()
+
+            self.hass.bus.async_fire(EVENT_NEW_DEVICE, device)
 
             # During init, we ignore the group
             if self.group is not None:
