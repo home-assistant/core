@@ -307,7 +307,7 @@ class ZigBeeDigitalIn(Entity):
         subscribe(hass, handle_frame)
 
         # Get initial state
-        hass.add_job(self.update_ha_state, True)
+        self.hass.add_job(self.async_update_ha_state(True))
 
     @property
     def name(self):
@@ -433,7 +433,11 @@ class ZigBeeAnalogIn(Entity):
         subscribe(hass, handle_frame)
 
         # Get initial state
+<<<<<<< HEAD
         hass.add_job(self.update_ha_state, True)
+=======
+        self.hass.loop.create_task(self.async_update_ha_state(True))
+>>>>>>> Remove ThreadPool with async executor
 
     @property
     def name(self):
