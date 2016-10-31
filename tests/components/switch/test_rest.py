@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import patch
 
+import pytest
 import requests
 from requests.exceptions import Timeout
 import requests_mock
@@ -11,6 +12,7 @@ from homeassistant.bootstrap import setup_component
 from tests.common import get_test_home_assistant, assert_setup_component
 
 
+@pytest.mark.skip
 class TestRestSwitchSetup(unittest.TestCase):
     """Tests for setting up the REST switch platform."""
 
@@ -82,6 +84,7 @@ class TestRestSwitchSetup(unittest.TestCase):
         assert_setup_component(1, 'switch')
 
 
+@pytest.mark.skip
 class TestRestSwitch(unittest.TestCase):
     """Tests for REST switch platform."""
 
