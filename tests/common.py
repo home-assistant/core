@@ -36,6 +36,7 @@ def get_test_home_assistant():
     loop = asyncio.new_event_loop()
 
     hass = loop.run_until_complete(async_test_home_assistant(loop))
+    hass.allow_pool = True
 
     # FIXME should not be a daemon. Means hass.stop() not called in teardown
     stop_event = threading.Event()
@@ -94,7 +95,7 @@ def async_test_home_assistant(loop):
 
     hass.state = ha.CoreState.running
 
-    hass.allow_pool = True
+    hass.allow_pool = False
     orig_init = hass.async_init_pool
 
     @ha.callback
