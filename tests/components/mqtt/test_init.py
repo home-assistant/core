@@ -21,7 +21,7 @@ class TestMQTT(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(1)
+        self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         self.calls = []
 
@@ -217,7 +217,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(1)
+        self.hass = get_test_home_assistant()
         # mock_mqtt_component(self.hass)
 
         with mock.patch('paho.mqtt.client.Client'):

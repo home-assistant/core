@@ -91,7 +91,7 @@ class TestHomeAssistant(unittest.TestCase):
     # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(0)
+        self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -372,7 +372,7 @@ class TestStateMachine(unittest.TestCase):
     # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(0)
+        self.hass = get_test_home_assistant()
         self.states = self.hass.states
         self.states.set("light.Bowl", "on")
         self.states.set("switch.AC", "off")

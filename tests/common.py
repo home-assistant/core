@@ -31,18 +31,11 @@ def get_test_config_dir(*add_path):
     return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
 
 
-def get_test_home_assistant(num_threads=None):
+def get_test_home_assistant():
     """Return a Home Assistant object pointing at test config dir."""
     loop = asyncio.new_event_loop()
 
-    if num_threads:
-        orig_num_threads = ha.MIN_WORKER_THREAD
-        ha.MIN_WORKER_THREAD = num_threads
-
     hass = loop.run_until_complete(async_test_home_assistant(loop))
-
-    if num_threads:
-        ha.MIN_WORKER_THREAD = orig_num_threads
 
     # FIXME should not be a daemon. Means hass.stop() not called in teardown
     stop_event = threading.Event()

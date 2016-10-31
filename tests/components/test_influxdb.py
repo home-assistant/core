@@ -17,7 +17,7 @@ class TestInfluxDB(unittest.TestCase):
 
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(2)
+        self.hass = get_test_home_assistant()
         self.handler_method = None
         self.hass.bus.listen = mock.Mock()
 
