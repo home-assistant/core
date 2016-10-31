@@ -2,7 +2,6 @@
 from collections.abc import MutableSet
 from itertools import chain
 import threading
-import queue
 from datetime import datetime
 import re
 import enum
