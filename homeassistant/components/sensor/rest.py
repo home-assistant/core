@@ -126,7 +126,7 @@ class RestData(object):
         self.data = None
 
     def update(self):
-        """Get the latest data from REST service with GET method."""
+        """Get the latest data from REST service with provided method."""
         try:
             with requests.Session() as sess:
                 response = sess.send(
