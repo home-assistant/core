@@ -90,7 +90,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     # pylint: disable=too-many-locals
     def run_setup(event):
         """Wait until HASS is fully initialized before creating.
-        
+
         Delay the setup until Home Assistant is fully initialized.
         This allows any entities to be created already
         """
