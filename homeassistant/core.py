@@ -309,12 +309,6 @@ class HomeAssistant(object):
             )
 
     @callback
-    def async_init_pool(self):
-        """Initialize the worker pool."""
-        self.pool = create_worker_pool()
-        _async_monitor_worker_pool(self)
-
-    @callback
     def _async_stop_handler(self, *args):
         """Stop Home Assistant."""
         self.exit_code = 0

@@ -16,6 +16,7 @@ import logging
 import time
 import threading
 import urllib.parse
+import weakref
 
 from typing import Optional
 
@@ -127,7 +128,7 @@ class HomeAssistant(ha.HomeAssistant):
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(self._async_exception_handler)
-        self._pending_tasks = set()
+        self._pending_tasks = weakref.WeakSet()
 
         self.bus = EventBus(remote_api, self)
         self.services = ha.ServiceRegistry(self.bus, self.add_job, self.loop)
