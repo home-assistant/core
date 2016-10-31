@@ -1,5 +1,6 @@
 """
 Support for Synology NAS Sensors.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.synologydsm/
 """
@@ -88,10 +89,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Synology NAS Sensor."""
     # pylint: disable=too-many-locals
     def run_setup(event):
-        """Delay the setup until Home Assistant is fully initialized.
+        """Wait until HASS is fully initialized before creating.
+        
+        Delay the setup until Home Assistant is fully initialized.
         This allows any entities to be created already
         """
-
         # Setup API
         api = SynoApi(config.get(CONF_HOST), config.get(CONF_PORT),
                       config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
@@ -133,10 +135,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class SynoApi():
-    """ Class to interface with API """
+    """Class to interface with API."""
 
     # pylint: disable=too-many-arguments, bare-except
     def __init__(self, host, port, username, password, temp_unit):
+        """Constructor of the API wrapper class."""
         from SynologyDSM import SynologyDSM
         self.temp_unit = temp_unit
 
@@ -149,18 +152,18 @@ class SynoApi():
             _LOGGER.error("Error setting up Synology DSM")
 
     def utilisation(self):
-        """Returns utilisation information from API"""
+        """Return utilisation information from API."""
         if self._api is not None:
             return self._api.utilisation
 
     def storage(self):
-        """Returns storage information from API"""
+        """Return storage information from API."""
         if self._api is not None:
             return self._api.storage
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Update function for updating api information"""
+        """Update function for updating api information."""
         self._api.update()
 
 
