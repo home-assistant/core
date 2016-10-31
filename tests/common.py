@@ -60,17 +60,10 @@ def get_test_home_assistant(num_threads=None):
     orig_start = hass.start
     orig_stop = hass.stop
 
-    @asyncio.coroutine
-    def fake_stop():
-        """Fake stop."""
-        yield None
-
-    @patch.object(ha, '_async_create_timer')
-    @patch.object(ha, '_async_monitor_worker_pool')
     @patch.object(hass.loop, 'add_signal_handler')
+    @patch.object(ha, '_async_create_timer')
     @patch.object(hass.loop, 'run_forever')
     @patch.object(hass.loop, 'close')
-    @patch.object(hass, 'async_stop', return_value=fake_stop())
     def start_hass(*mocks):
         """Helper to start hass."""
         orig_start()
@@ -115,7 +108,8 @@ def async_test_home_assistant(loop):
     def mock_async_init_pool():
         """Prevent worker pool from being initialized."""
         if hass.allow_pool:
-            orig_init()
+            with patch('homeassistant.core._async_monitor_worker_pool'):
+                orig_init()
         else:
             assert False, 'Thread pool not allowed. Set hass.allow_pool = True'
 
