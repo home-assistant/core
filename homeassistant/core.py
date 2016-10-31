@@ -102,29 +102,6 @@ class CoreState(enum.Enum):
         return self.value
 
 
-class JobPriority(util.OrderedEnum):
-    """Provides job priorities for event bus jobs."""
-
-    EVENT_CALLBACK = 0
-    EVENT_SERVICE = 1
-    EVENT_STATE = 2
-    EVENT_TIME = 3
-    EVENT_DEFAULT = 4
-
-    @staticmethod
-    def from_event_type(event_type):
-        """Return a priority based on event type."""
-        if event_type == EVENT_TIME_CHANGED:
-            return JobPriority.EVENT_TIME
-        elif event_type == EVENT_STATE_CHANGED:
-            return JobPriority.EVENT_STATE
-        elif event_type == EVENT_CALL_SERVICE:
-            return JobPriority.EVENT_SERVICE
-        elif event_type == EVENT_SERVICE_EXECUTED:
-            return JobPriority.EVENT_CALLBACK
-        return JobPriority.EVENT_DEFAULT
-
-
 class HomeAssistant(object):
     """Root object of the Home Assistant home automation."""
 
@@ -214,19 +191,16 @@ class HomeAssistant(object):
                 None, self.pool.block_till_done)
         self.state = CoreState.running
 
-    def add_job(self,
-                target: Callable[..., None],
-                *args: Any,
-                priority: JobPriority=JobPriority.EVENT_DEFAULT) -> None:
+    def add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add job to the worker pool.
 
         target: target to call.
         args: parameters for method to call.
         """
-        self.pool.add_job(priority, (target,) + args)
+        self.pool.add_job((target,) + args)
 
     @callback
-    def async_add_job(self, target: Callable[..., None], *args: Any):
+    def async_add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add a job from within the eventloop.
 
         This method must be run in the event loop.
@@ -244,7 +218,7 @@ class HomeAssistant(object):
             self.add_job(target, *args)
 
     @callback
-    def async_run_job(self, target: Callable[..., None], *args: Any):
+    def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
         """Run a job from within the event loop.
 
         This method must be run in the event loop.
@@ -257,7 +231,7 @@ class HomeAssistant(object):
         else:
             self.async_add_job(target, *args)
 
-    def _loop_empty(self):
+    def _loop_empty(self) -> bool:
         """Python 3.4.2 empty loop compatibility function."""
         # pylint: disable=protected-access
         if sys.version_info < (3, 4, 3):
@@ -267,7 +241,7 @@ class HomeAssistant(object):
             return self.loop._current_handle is None and \
                    len(self.loop._ready) == 0
 
-    def block_till_done(self):
+    def block_till_done(self) -> None:
         """Block till all pending work is done."""
         complete = threading.Event()
 

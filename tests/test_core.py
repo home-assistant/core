@@ -653,8 +653,9 @@ class TestWorkerPool(unittest.TestCase):
         def register_call(_):
             calls.append(1)
 
-        pool.add_job(ha.JobPriority.EVENT_DEFAULT, (malicious_job, None))
-        pool.add_job(ha.JobPriority.EVENT_DEFAULT, (register_call, None))
+        pool.add_job((malicious_job, None))
+        pool.block_till_done()
+        pool.add_job((register_call, None))
         pool.block_till_done()
         self.assertEqual(1, len(calls))
 
