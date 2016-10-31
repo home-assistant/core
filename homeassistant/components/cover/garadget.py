@@ -39,12 +39,16 @@ STATES_MAP = {
 
 
 # Validation of the user's configuration
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE): cv.string,
+COVER_SCHEMA = vol.Schema({
+    vol.Optional(CONF_DEVICE): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_NAME): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,15 +57,17 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Demo covers."""
     covers = []
-    covers_conf = config.get(CONF_COVERS)
+    devices = config.get(CONF_COVERS, {})
 
-    for cover in covers_conf:
+    _LOGGER.debug(devices)
+
+    for device_id, device_config in devices.items():
         args = {
-            "name": cover.get(CONF_NAME),
-            "device_id": cover.get(CONF_DEVICE),
-            "username": cover.get(CONF_USERNAME),
-            "password": cover.get(CONF_PASSWORD),
-            "access_token": cover.get(CONF_ACCESS_TOKEN)
+            "name": device_config.get(CONF_NAME),
+            "device_id": device_config.get(CONF_DEVICE, device_id),
+            "username": device_config.get(CONF_USERNAME),
+            "password": device_config.get(CONF_PASSWORD),
+            "access_token": device_config.get(CONF_ACCESS_TOKEN)
         }
 
         covers.append(GaradgetCover(hass, args))
@@ -148,9 +154,6 @@ class GaradgetCover(CoverDevice):
 
         if self.sensor is not None:
             data[ATTR_SENSOR_STRENGTH] = self.sensor
-
-        if self._available is not None:
-            data[ATTR_AVAILABLE] = self._available
 
         if self.access_token is not None:
             data[CONF_ACCESS_TOKEN] = self.access_token
