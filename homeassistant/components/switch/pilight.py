@@ -70,14 +70,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class PilightSwitch(SwitchDevice):
     """Representation of a Pilight switch."""
 
-<<<<<<< 274e9799b3c29ac3d1eed799bce54301de0b950b
-    def __init__(self, hass, name, code_on, code_off,
-                 code_on_receive, code_off_receive):
-=======
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, hass, name, code_on, code_off, code_on_receive,
                  code_off_receive):
->>>>>>> Migrate to voluptuous
         """Initialize the switch."""
         self._hass = hass
         self._name = name
