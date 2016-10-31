@@ -56,7 +56,7 @@ def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
     ha.HomeAssistant.async_add_job(hass, job)
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
-    assert len(hass.add_job.mock_calls) == 1
+    assert len(hass.pool.add_job.mock_calls) == 1
 
 
 def test_async_run_job_calls_callback():
