@@ -27,16 +27,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INTERVAL, default=1): vol.All(vol.Coerce(int),
                                                     vol.Range(min=1)),
     vol.Optional(CONF_SCAN_INTERVAL, default=1): vol.Coerce(int)
-    })
+})
 
 
 def setup_scanner(hass, config, see):
     """Define constants."""
     import requests
-    import json
     import re
-
-
 
     cookies = {
         'SID': 'bunch',
@@ -48,12 +45,12 @@ def setup_scanner(hass, config, see):
         'OTZ': 'too',
         'CONSISTENCY': 'much',
     }
-    
+
     data = {
-      'f.req': 'data',
-      'at': 'help',
+        'f.req': 'data',
+        'at': 'help',
     }
-    
+
     headers = {
         'Host': 'aboutme.google.com',
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0',
@@ -74,7 +71,7 @@ def setup_scanner(hass, config, see):
     def get_position(now):
         """Get device position."""
         api_request = requests.post(url, headers=headers, cookies=cookies,
-                                  data=data)
+                                    data=data)
         if api_request.ok:
             location = re.findall(regex_float, api_request.text)
 
