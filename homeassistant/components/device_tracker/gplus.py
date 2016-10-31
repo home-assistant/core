@@ -19,6 +19,11 @@ REQUIREMENTS = ['requests>=2,<3']
 
 CONF_INTERVAL = 'interval'
 KEEPALIVE_INTERVAL = 1
+CONF_SID = 'cookie_sid'
+CONF_SSID = 'cookie_ssid'
+CONF_HSID = 'cookie_hsid'
+CONF_FREQ = 'data_freq'
+CONF_AT = 'data_at'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ID): vol.Coerce(str),
@@ -35,21 +40,6 @@ def setup_scanner(hass, config, see):
     import requests
     import re
 
-    cookies = {
-        'SID': 'bunch',
-        'HSID': 'of',
-        'SSID': 'cookies',
-        'APISID': 'go',
-        'NID': 'here',
-        'OGPC': 'omg',
-        'OTZ': 'too',
-        'CONSISTENCY': 'much',
-    }
-
-    data = {
-        'f.req': 'data',
-        'at': 'help',
-    }
 
     headers = {
         'Host': 'aboutme.google.com',
@@ -66,7 +56,24 @@ def setup_scanner(hass, config, see):
     max_accuracy = config[CONF_ACCURACY]
     id = config[CONF_ID]
     url = config[CONF_URL]
+    cookie_sid = config[CONF_SID]
+    cookie_hsid = config[CONF_HSID]
+    cookie_ssid = config[CONF_SSID]
+    data_freq = config[CONF_FREQ]
+    data_at = config[CONF_AT]
+    url = config[CONF_URL]
     regex_float = '-?\d+\.\d+'
+
+    cookies = {
+        'SID':  cookie_sid,
+        'HSID': cookie_hsid,
+        'SSID': cookie_ssid,
+    }
+
+    data = {
+        'f.req': data_freq,
+        'at': data_at,
+    }
 
     def get_position(now):
         """Get device position."""
