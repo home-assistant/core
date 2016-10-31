@@ -16,7 +16,7 @@ class TestSensorRfxtrx(unittest.TestCase):
 
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(0)
+        self.hass = get_test_home_assistant()
         self.hass.config.components = ['rfxtrx']
 
     def tearDown(self):
