@@ -146,7 +146,7 @@ hikvision==0.4
 # http://github.com/adafruit/Adafruit_Python_DHT/archive/310c59b0293354d07d94375f1365f7b9b9110c7d.zip#Adafruit_DHT==1.3.0
 
 # homeassistant.components.light.flux_led
-https://github.com/Danielhiversen/flux_led/archive/0.7.zip#flux_led==0.8
+https://github.com/Danielhiversen/flux_led/archive/0.8.zip#flux_led==0.8
 
 # homeassistant.components.switch.tplink
 https://github.com/GadgetReactor/pyHS100/archive/1f771b7d8090a91c6a58931532e42730b021cbde.zip#pyHS100==0.2.0
