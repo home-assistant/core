@@ -91,12 +91,13 @@ def setup_scanner(hass, config, see):
             words=line.split(',')
             latitude=words[12]
             longitude=words[13]
-            accuracy=words[15]            #_LOGGER.info(api_request.text)
+            accuracy=words[15]
+            #_LOGGER.info(api_request.text)
 
             see(
                 dev_id=id,
                 gps=(latitude, longitude),
-                gps_accuracy=accuracy,
+                gps_accuracy=int(accuracy),
             )
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, get_position)
