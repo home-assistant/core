@@ -215,7 +215,14 @@ class HomeAssistant(object):
             @asyncio.coroutine
             def _run_executor():
                 """Helper function, while executor is not a real coroutine."""
-                yield from self.loop.run_in_executor(None, target, *args)
+                try:
+                    yield from self.loop.run_in_executor(None, target, *args)
+                except Exception as err:
+                    context = {
+                        'message': "Exception in {}".format(target.__name__),
+                        'exception': err,
+                    }
+                    self._async_exception_handler(hass.loop, context)
 
             task = self.loop.create_task(_run_executor())
 
