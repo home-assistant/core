@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import functools
 import json as _json
 from unittest import mock
+from urllib.parse import urlparse
 
 
 class AiohttpClientMocker:
@@ -15,7 +16,7 @@ class AiohttpClientMocker:
         self.mock_calls = []
 
     def request(self, method, url, *,
-                auth=None,
+                auth=None,  # pylint: disable=unused-variable
                 status=200,
                 text=None,
                 content=None,
@@ -57,7 +58,8 @@ class AiohttpClientMocker:
         return len(self.mock_calls)
 
     @asyncio.coroutine
-    def match_request(self, method, url, *, auth=None, **kwargs):
+    def match_request(self, method, url, *, auth=None, timeout=None): \
+            # pylint: disable=unused-variable
         """Match a request against pre-registered requests."""
         for response in self._mocks:
             if response.match_request(method, url):
@@ -74,13 +76,24 @@ class AiohttpClientMockResponse:
     def __init__(self, method, url, status, response):
         """Initialize a fake response."""
         self.method = method
-        self.url = url
+        self._url = url
+        try:
+            self._url_parts = urlparse(url.lower())
+        except AttributeError:
+            self._url_parts = None
         self.status = status
         self.response = response
 
     def match_request(self, method, url):
         """Test if response answers request."""
-        return method == self.method and url.startswith(self.url)
+        if method.lower() != self.method.lower():
+            return False
+
+        # Reuse Mock request's match function
+        # pylint: disable=protected-access, attribute-defined-outside-init
+        from requests_mock.adapter import _Matcher
+        self._complete_qs = False
+        return _Matcher._match_url(self, urlparse(url.lower()))
 
     @asyncio.coroutine
     def read(self):

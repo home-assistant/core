@@ -5,10 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.yr/
 """
 import asyncio
+from datetime import timedelta
 import logging
+from xml.parsers.expat import ExpatError
 
+import async_timeout
 from aiohttp.web import HTTPException
-
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -17,8 +19,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_ELEVATION, CONF_MONITORED_CONDITIONS,
     ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, async_track_time_change)
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 
@@ -56,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Yr.no sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -72,9 +73,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         dev.append(YrSensor(sensor_type))
 
-    add_devices(dev)
-
-    YrData(hass, coordinates, dev)
+    weather = YrData(hass, coordinates, dev)
+    tasks = [async_add_devices(dev), weather.async_update()]
+    yield from asyncio.gather(*tasks, loop=hass.loop)
 
 
 class YrSensor(Entity):
@@ -131,46 +132,51 @@ class YrData(object):
         """Initialize the data object."""
         self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/?' \
             'lat={lat};lon={lon};msl={msl}'.format(**coordinates)
-
         self._nextrun = None
         self.devices = devices
         self.data = {}
         self.hass = hass
-        async_track_time_change(self.hass, self.async_update, second=0,
-                                minute=0, hour=3)
-
-        hass.loop.create_task(self.async_update())
 
     @asyncio.coroutine
     def async_update(self):
         """Get the latest data from yr.no."""
-        resp = yield from self.hass.websession.get(self._url, timeout=30)
-        try:
-            if resp.status != 200:
-                return
-            _text = (yield from resp.text())
-        except asyncio.TimeoutError:
-            return
-        except HTTPException:
-            resp.close()
-            return
-        finally:
-            self.hass.loop.create_task(resp.release())
-            # ? yield from resp.release()
+        def try_again(err: str):
+            """Schedule again later."""
+            _LOGGER.warning('Retrying in 15 minutes: %s', err)
+            nxt = dt_util.utcnow() + timedelta(minutes=15)
+            async_track_point_in_utc_time(self.hass, self.async_update, nxt)
 
-        import xmltodict
-        self.data = xmltodict.parse(_text)['weatherdata']
-        model = self.data['meta']['model']
-        if '@nextrun' not in model:
-            model = model[0]
-        self._nextrun = dt_util.parse_datetime(model['@nextrun'])
+        try:
+            with async_timeout.timeout(10, loop=self.hass.loop):
+                resp = yield from self.hass.websession.get(
+                    self._url, timeout=30)
+            if resp.status != 200:
+                return try_again('{} returned {}'
+                                 .format(self._url, resp.status))
+            text = yield from resp.text()
+            self.hass.loop.create_task(resp.release())
+        except asyncio.TimeoutError as err:
+            return try_again(err)
+        except HTTPException as err:
+            resp.close()
+            return try_again(err)
+
+        try:
+            import xmltodict
+            self.data = xmltodict.parse(text)['weatherdata']
+            model = self.data['meta']['model']
+            if '@nextrun' not in model:
+                model = model[0]
+            next_run = dt_util.parse_datetime(model['@nextrun'])
+        except (ExpatError, IndexError) as err:
+            return try_again(err)
 
         # Schedule next execution
-        async_track_point_in_utc_time(
-            self.hass, self.async_update, self._nextrun)
+        async_track_point_in_utc_time(self.hass, self.async_update, next_run)
 
         now = dt_util.utcnow()
 
+        tasks = []
         # Update all devices
         for dev in self.devices:
             # Find sensor
@@ -207,4 +213,6 @@ class YrData(object):
             # pylint: disable=protected-access
             if new_state != dev._state:
                 dev._state = new_state
-                yield from dev.async_update_ha_state()
+                tasks.append(dev.async_update_ha_state())
+
+        yield from asyncio.gather(*tasks, loop=self.hass.loop)
