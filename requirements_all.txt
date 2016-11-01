@@ -24,9 +24,6 @@ PyMata==2.13
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
 
-# homeassistant.components.media_player.sonos
-SoCo==0.12
-
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.2
 
@@ -153,6 +150,9 @@ https://github.com/GadgetReactor/pyHS100/archive/1f771b7d8090a91c6a58931532e4273
 
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.5.zip#pyW215==0.3.5
+
+# homeassistant.components.media_player.sonos
+https://github.com/SoCo/SoCo/archive/cf8c2701165562eccbf1ecc879bf7060ceb0993e.zip#SoCo==0.12
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
