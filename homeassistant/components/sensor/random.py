@@ -70,4 +70,4 @@ class RandomSensor(Entity):
     def async_update(self):
         """Get a new number and updates the states."""
         from random import randrange
-        self._state = randrange(self._minimum, self._maximum)
+        self._state = randrange(self._minimum, self._maximum + 1)
