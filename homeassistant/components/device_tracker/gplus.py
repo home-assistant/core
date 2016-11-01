@@ -34,18 +34,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HSID): vol.Coerce(str),
     vol.Required(CONF_FREQ): vol.Coerce(str),
     vol.Required(CONF_AT): vol.Coerce(str),
-#    vol.Optional(CONF_ACCURACY, default=100): vol.Coerce(int),
+    #    vol.Optional(CONF_ACCURACY, default=100): vol.Coerce(int),
     vol.Optional(CONF_INTERVAL, default=1): vol.All(vol.Coerce(int),
                                                     vol.Range(min=1)),
     vol.Optional(CONF_SCAN_INTERVAL, default=10): vol.All(vol.Coerce(int),
-                                                    vol.Range(min=1,max=59)),
+                                                          vol.Range(min=1, max=59)),
 })
 
 
 def setup_scanner(hass, config, see):
     """Define constants."""
     import requests
-    import re
 
     headers = {
         'Host': 'plus.google.com',
@@ -85,13 +84,14 @@ def setup_scanner(hass, config, see):
         api_request = requests.post(url, headers=headers, cookies=cookies,
                                     data=data)
         if api_request.ok:
-            ans=api_request.text
-            matched_lines = [line for line in ans.split('\n') if "www.google.com/maps/" in line]
-            line=matched_lines[0]
-            words=line.split(',')
-            latitude=words[12]
-            longitude=words[13]
-            accuracy=words[15]
+            ans = api_request.text
+            matched_lines = [line for line in ans.split(
+                '\n') if "www.google.com/maps/" in line]
+            line = matched_lines[0]
+            words = line.split(',')
+            latitude = words[12]
+            longitude = words[13]
+            accuracy = words[15]
             #_LOGGER.info(api_request.text)
 
             see(
