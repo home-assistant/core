@@ -2,7 +2,7 @@
 Provides functionality to interact with boiler/geyser controller units.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/boiler_controller/
+https://home-assistant.io/components/boiler/
 """
 import logging
 import os
@@ -333,9 +333,9 @@ class BoilerDevice(Entity):
         """Return the optional state attributes."""
         data = {
             ATTR_CURRENT_WATER_TEMPERATURE:
-            self._convert_for_display(self.current_temperature),
+            self._convert_for_display(self.current_water_temperature),
             ATTR_TARGET_WATER_TEMPERATURE:
-            self._convert_for_display(self.target_temperature),
+            self._convert_for_display(self.target_water_temperature),
             ATTR_PANEL_DIFF_TEMP:
             self._convert_for_display(self.panel_differential_temperature)
         }

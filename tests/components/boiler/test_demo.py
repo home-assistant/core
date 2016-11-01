@@ -23,9 +23,7 @@ class TestDemoBoiler(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
         self.assertTrue(setup_component(self.hass, boiler.DOMAIN, {
-            'boiler': {
-                'platform': 'demo',
-            }}))
+            'boiler': {'platform': 'demo',}}))
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down everything that was started."""

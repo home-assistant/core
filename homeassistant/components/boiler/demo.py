@@ -1,5 +1,5 @@
 """
-Demo platform that offers a fake boiler controller.
+Demo platform that offers fake boiler controllers.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
