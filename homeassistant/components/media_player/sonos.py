@@ -235,7 +235,7 @@ def _parse_timespan(timespan):
 
 
 # pylint: disable=too-few-public-methods
-class _AsyncProcessSonosEventQueue():
+class _ProcessSonosEventQueue():
     """Queue like object for dispatching sonos events."""
 
     def __init__(self, sonos_device):
@@ -333,7 +333,7 @@ class SonosDevice(MediaPlayerDevice):
     # pylint: disable=invalid-name
     def _subscribe_to_player_events(self):
         if self._queue is None:
-            self._queue = _AsyncProcessSonosEventQueue(self)
+            self._queue = _ProcessSonosEventQueue(self)
             self._player.avTransport.subscribe(
                 auto_renew=True,
                 event_queue=self._queue)
