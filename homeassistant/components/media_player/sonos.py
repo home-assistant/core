@@ -8,6 +8,7 @@ import datetime
 import logging
 from os import path
 import socket
+import time
 import urllib
 import voluptuous as vol
 
@@ -264,6 +265,7 @@ class SonosDevice(MediaPlayerDevice):
         self._coordinator = None
         self._media_content_id = None
         self._media_duration = None
+        self._media_position = None
         self._media_image_url = None
         self._media_artist = None
         self._media_album_name = None
@@ -425,7 +427,7 @@ class SonosDevice(MediaPlayerDevice):
                     media_image_url = None
 
                 elif is_radio_stream:
-                    is_radio_stream = True
+                    media_position = None
                     media_image_url = self._format_media_image_url(
                         current_media_uri
                     )
@@ -489,6 +491,14 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = True
                     support_pause = True
 
+                    position_info = self._player.avTransport.GetPositionInfo(
+                        [('InstanceID', 0),
+                         ('Channel', 'Master')]
+                    )
+                    media_position = _parse_timespan(
+                        position_info.get("RelTime")
+                    )
+
                     playlist_position = track_info.get('playlist_position')
                     if playlist_position in ('', 'NOT_IMPLEMENTED', None):
                         playlist_position = None
@@ -514,6 +524,7 @@ class SonosDevice(MediaPlayerDevice):
                 self._media_duration = _parse_timespan(
                     track_info.get('duration')
                 )
+                self._media_position = (media_position, time.clock())
                 self._media_image_url = media_image_url
                 self._media_artist = media_artist
                 self._media_album_name = media_album_name
@@ -641,6 +652,19 @@ class SonosDevice(MediaPlayerDevice):
             return self._coordinator.media_duration
         else:
             return self._media_duration
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        if self._coordinator:
+            return self._coordinator.media_position
+        else:
+            if self._media_position:
+                pos, clk = self._media_position
+                if pos:
+                    return pos + time.clock() - clk
+
+            return None
 
     @property
     def media_image_url(self):
