@@ -1,6 +1,7 @@
 """The tests for the Demo Media player platform."""
 import unittest
 from unittest.mock import patch
+import asyncio
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.const import HTTP_HEADER_HA_AUTH
@@ -8,7 +9,6 @@ import homeassistant.components.media_player as mp
 import homeassistant.components.http as http
 
 import requests
-import requests_mock
 import time
 
 from tests.common import get_test_home_assistant, get_test_instance_port
@@ -260,12 +260,35 @@ class TestMediaPlayerWeb(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @requests_mock.Mocker(real_http=True)
-    def test_media_image_proxy(self, m):
+    def test_media_image_proxy(self):
         """Test the media server image proxy server ."""
         fake_picture_data = 'test.test'
-        m.get('https://graph.facebook.com/v2.5/107771475912710/'
-              'picture?type=large', text=fake_picture_data)
+
+        class MockResponse():
+            def __init__(self):
+                self.status = 200
+                self.headers = {'Content-Type': 'sometype'}
+
+            @asyncio.coroutine
+            def read(self):
+                return fake_picture_data.encode('ascii')
+
+            @asyncio.coroutine
+            def release(self):
+                pass
+
+        class MockWebsession():
+
+            @asyncio.coroutine
+            def get(self, url):
+                return MockResponse()
+
+            @asyncio.coroutine
+            def close(self):
+                pass
+
+        self.hass._websession = MockWebsession()
+
         self.hass.block_till_done()
         assert setup_component(
             self.hass, mp.DOMAIN,

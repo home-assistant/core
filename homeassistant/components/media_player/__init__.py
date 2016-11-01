@@ -8,9 +8,9 @@ import asyncio
 import hashlib
 import logging
 import os
-import requests
 
 from aiohttp import web
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.const import (
     STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
@@ -36,6 +37,16 @@ SCAN_INTERVAL = 10
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ENTITY_IMAGE_URL = '/api/media_player_proxy/{0}?token={1}&cache={2}'
+ATTR_CACHE_IMAGES = 'images'
+ATTR_CACHE_URLS = 'urls'
+ATTR_CACHE_MAXSIZE = 'maxsize'
+ENTITY_IMAGE_CACHE = {
+    ATTR_CACHE_IMAGES: {},
+    ATTR_CACHE_URLS: [],
+    ATTR_CACHE_MAXSIZE: 16
+}
+
+CONTENT_TYPE_HEADER = 'Content-Type'
 
 SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
@@ -672,6 +683,51 @@ class MediaPlayerDevice(Entity):
 
         return state_attr
 
+    def preload_media_image_url(self, url):
+        """Preload and cache a media image for future use."""
+        run_coroutine_threadsafe(
+            _async_fetch_image(self.hass, url), self.hass.loop
+        ).result()
+
+
+@asyncio.coroutine
+def _async_fetch_image(hass, url):
+    """Helper method to fetch image.
+
+    Images are cached in memory (the images are typically 10-100kB in size).
+    """
+    cache_images = ENTITY_IMAGE_CACHE[ATTR_CACHE_IMAGES]
+    cache_urls = ENTITY_IMAGE_CACHE[ATTR_CACHE_URLS]
+    cache_maxsize = ENTITY_IMAGE_CACHE[ATTR_CACHE_MAXSIZE]
+
+    if url in cache_images:
+        return cache_images[url]
+
+    content, content_type = (None, None)
+    try:
+        with async_timeout.timeout(10, loop=hass.loop):
+            response = yield from hass.websession.get(url)
+            if response.status == 200:
+                content = yield from response.read()
+                content_type = response.headers.get(CONTENT_TYPE_HEADER)
+            hass.loop.create_task(response.release())
+    except asyncio.TimeoutError:
+        pass
+
+    if content:
+        cache_images[url] = (content, content_type)
+        cache_urls.append(url)
+
+        while len(cache_urls) > cache_maxsize:
+            # remove oldest item from cache
+            oldest_url = cache_urls[0]
+            if oldest_url in cache_images:
+                del cache_images[oldest_url]
+
+            cache_urls = cache_urls[1:]
+
+    return content, content_type
+
 
 class MediaPlayerImageView(HomeAssistantView):
     """Media player view to serve an image."""
@@ -698,21 +754,10 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=401)
 
-        image_url = player.media_image_url
+        data, content_type = yield from _async_fetch_image(
+            self.hass, player.media_image_url)
 
-        if image_url is None:
-            return web.Response(status=404)
-
-        def fetch_image():
-            """Helper method to fetch image."""
-            try:
-                return requests.get(image_url).content
-            except requests.RequestException:
-                return None
-
-        response = yield from self.hass.loop.run_in_executor(None, fetch_image)
-
-        if response is None:
+        if data is None:
             return web.Response(status=500)
 
-        return web.Response(body=response)
+        return web.Response(body=data, content_type=content_type)
