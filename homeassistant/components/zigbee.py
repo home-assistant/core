@@ -307,7 +307,7 @@ class ZigBeeDigitalIn(Entity):
         subscribe(hass, handle_frame)
 
         # Get initial state
-        self.hass.add_job(self.async_update_ha_state(True))
+        hass.add_job(self.async_update_ha_state, True)
 
     @property
     def name(self):
@@ -433,7 +433,7 @@ class ZigBeeAnalogIn(Entity):
         subscribe(hass, handle_frame)
 
         # Get initial state
-        self.add_job(self.async_update_ha_state(True))
+        hass.add_job(self.async_update_ha_state, True)
 
     @property
     def name(self):
