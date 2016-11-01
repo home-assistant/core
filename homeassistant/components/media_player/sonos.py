@@ -356,12 +356,6 @@ class SonosDevice(MediaPlayerDevice):
 
         if is_available:
 
-            if self._queue is None or self._player_volume is None:
-                self._player_volume = self._player.volume
-
-            if self._queue is None or self._player_volume_muted is None:
-                self._player_volume_muted = self._player.mute
-
             track_info = None
             if self._last_avtransport_event:
                 variables = self._last_avtransport_event.variables
@@ -384,6 +378,8 @@ class SonosDevice(MediaPlayerDevice):
                         'duration': variables.get('current_track_duration')
                     }
             else:
+                self._player_volume = self._player.volume
+                self._player_volume_muted = self._player.mute
                 transport_info = self._player.get_current_transport_info()
                 self._status = transport_info.get('current_transport_state')
 
