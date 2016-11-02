@@ -33,7 +33,10 @@ def get_test_config_dir(*add_path):
 
 def get_test_home_assistant():
     """Return a Home Assistant object pointing at test config dir."""
-    loop = asyncio.new_event_loop()
+    if sys.platform == "win32":
+        loop = asyncio.ProactorEventLoop()
+    else:
+        loop = asyncio.get_event_loop()
 
     hass = loop.run_until_complete(async_test_home_assistant(loop))
     hass.allow_pool = True
