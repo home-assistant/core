@@ -330,6 +330,8 @@ class Icloud(object):
         """Update the device_tracker entity."""
         from pyicloud.exceptions import PyiCloudNoDevicesException
 
+        # An entity will not be created by see() when track=false in
+        # 'known_devices.yaml', but we need to see() it at least once
         entity = self.hass.states.get(ENTITY_ID_FORMAT.format(devicename))
         if entity is None and devicename in self.seen_devices:
             return
