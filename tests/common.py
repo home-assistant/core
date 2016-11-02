@@ -37,7 +37,7 @@ def get_test_home_assistant():
     if sys.platform == "win32":
         loop = asyncio.ProactorEventLoop()
     else:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
 
     hass = loop.run_until_complete(async_test_home_assistant(loop))
     hass.allow_pool = True
