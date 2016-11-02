@@ -1,7 +1,7 @@
 """Test Home Assistant yaml loader."""
 import io
-import unittest
 import os
+import unittest
 from unittest.mock import patch
 
 from homeassistant.exceptions import HomeAssistantError
@@ -12,6 +12,7 @@ from tests.common import get_test_config_dir, patch_yaml_files
 
 class TestYaml(unittest.TestCase):
     """Test util.yaml loader."""
+
     # pylint: disable=no-self-use, invalid-name
 
     def test_simple_list(self):
@@ -196,10 +197,12 @@ class TestYaml(unittest.TestCase):
         """Test include dir merge named yaml."""
         mock_walk.return_value = [['/tmp', [], ['first.yaml', 'second.yaml']]]
 
-        with patch_yaml_files({
-                '/tmp/first.yaml': 'key1: one',
-                '/tmp/second.yaml': 'key2: two\nkey3: three'
-        }):
+        files = {
+            '/tmp/first.yaml': 'key1: one',
+            '/tmp/second.yaml': 'key2: two\nkey3: three',
+        }
+
+        with patch_yaml_files(files):
             conf = "key: !include_dir_merge_named /tmp"
             with io.StringIO(conf) as file:
                 doc = yaml.yaml.safe_load(file)
@@ -243,6 +246,10 @@ class TestYaml(unittest.TestCase):
         mock_open.side_effect = UnicodeDecodeError('', b'', 1, 0, '')
         self.assertRaises(HomeAssistantError, yaml.load_yaml, 'test')
 
+    def test_dump(self):
+        """The that the dump method returns empty None values."""
+        assert yaml.dump({'a': None, 'b': 'b'}) == 'a:\nb: b\n'
+
 
 FILES = {}
 
@@ -270,9 +277,10 @@ class FakeKeyring():
 
 class TestSecrets(unittest.TestCase):
     """Test the secrets parameter in the yaml utility."""
-    # pylint: disable=protected-access, invalid-name
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=protected-access,invalid-name
+
+    def setUp(self):
         """Create & load secrets file."""
         config_dir = get_test_config_dir()
         yaml.clear_secret_cache()
@@ -295,7 +303,6 @@ class TestSecrets(unittest.TestCase):
                                '  password: !secret comp1_pw\n'
                                '')
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Clean up secrets."""
         yaml.clear_secret_cache()

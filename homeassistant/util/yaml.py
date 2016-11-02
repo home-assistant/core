@@ -48,6 +48,12 @@ def load_yaml(fname: str) -> Union[List, Dict]:
         raise HomeAssistantError(exc)
 
 
+def dump(_dict: dict) -> str:
+    """Dump yaml to a string and remove null."""
+    return yaml.safe_dump(_dict, default_flow_style=False) \
+        .replace(': null\n', ':\n')
+
+
 def clear_secret_cache() -> None:
     """Clear the secret cache.
 
