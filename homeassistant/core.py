@@ -107,7 +107,11 @@ class HomeAssistant(object):
 
     def __init__(self, loop=None):
         """Initialize new Home Assistant object."""
-        self.loop = loop or asyncio.get_event_loop()
+        if sys.platform == "win32":
+            self.loop = loop or asyncio.ProactorEventLoop()
+        else:
+            self.loop = loop or asyncio.get_event_loop()
+
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(self._async_exception_handler)
