@@ -10,7 +10,7 @@ from datetime import timedelta
 import requests
 
 from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST
 from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago.
@@ -31,9 +31,8 @@ class SwisscomDeviceScanner(object):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        self.host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
+        # If the host is not configured, uses the default IP address.
+        self.host = config.get(CONF_HOST, '192.168.1.1')
 
         self.lock = threading.Lock()
 
@@ -77,28 +76,9 @@ class SwisscomDeviceScanner(object):
             self.last_results = active_clients
             return True
 
-    def get_access_token(self):
-        """Get the Sah access token from the username and password."""
-        try:
-            request = requests.post('http://' + self.host + '/ws', headers={
-                'Authorization': 'X-Sah-Login',
-                'Content-Type': 'application/x-sah-ws-4-call+json'
-            }, data="""{"service":"sah.Device.Information",
-                        "method":"createContext",
-                        "parameters": {
-                          "applicationName":"webui",
-                          "username":""""+self.username+""""
-                          ,"password":""""+self.password+""""
-                        }
-                       }""", timeout=2)
-            return request.json()['data']['contextID']
-        except requests.exceptions.RequestException:
-            return
-
     def get_swisscom_data(self):
         """Retrieve data from Swisscom and return parsed result."""
         request = requests.post('http://' + self.host + '/ws', headers={
-            'Authorization': 'X-Sah ' + self.get_access_token(),
             'Content-Type': 'application/x-sah-ws-4-call+json'
             },
                                 data="""{"service":"Devices",
@@ -110,13 +90,12 @@ class SwisscomDeviceScanner(object):
         devices = {}
         for device in request.json()['status']:
             try:
-                devices[device['IPAddress']] = {
+                devices[device['Key']] = {
                     'ip': device['IPAddress'],
                     'mac': device['PhysAddress'],
                     'host': device['Name'],
                     'status': device['Active']
                     }
-            except requests.exceptions.RequestException:
+            except (KeyError, requests.exceptions.RequestException):
                 pass
-        devices.pop('', None)
         return devices
