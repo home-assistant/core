@@ -18,22 +18,19 @@ DEPENDENCIES = ['litejet']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FOR = 'for'
 CONF_NUMBER = 'number'
 
 ATTR_NUMBER = 'number'
 
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'litejet',
-    vol.Required(CONF_NUMBER): vol.Coerce(int),
-    vol.Required(CONF_FOR, default=timedelta(0)): cv.time_period,
+    vol.Required(CONF_NUMBER): vol.Coerce(int)
 })
 
 
 def async_trigger(hass, config, action):
     """Listen for events based on configuration."""
     number = config.get(CONF_NUMBER)
-    for_time = config.get(CONF_FOR)
 
     @callback
     def call_action():
@@ -41,8 +38,7 @@ def async_trigger(hass, config, action):
         hass.async_run_job(action, {
             'trigger': {
                 'platform': 'litejet',
-                'number': number,
-                'for': for_time
+                'number': number
             },
         })
 

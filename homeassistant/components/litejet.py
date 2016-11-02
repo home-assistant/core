@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'litejet'
 
-REQUIREMENTS = ['pylitejet>=0.1']
+REQUIREMENTS = ['pylitejet==0.1']
 
 CONF_EXCLUDE_NAMES = 'exclude_names'
 CONF_INCLUDE_SWITCHES = 'include_switches'

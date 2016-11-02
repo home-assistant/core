@@ -34,7 +34,6 @@ class LiteJetScene(Scene):
         """Initialize the scene."""
         self._lj = lj
         self._index = i
-        self._on = False
         self._name = name
 
     @property
@@ -57,4 +56,3 @@ class LiteJetScene(Scene):
     def activate(self, **kwargs):
         """Activate the scene."""
         self._lj.activate_scene(self._index)
-        self._on = True

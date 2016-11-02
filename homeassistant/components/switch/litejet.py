@@ -36,7 +36,6 @@ class LiteJetSwitch(SwitchDevice):
         self._lj = lj
         self._index = i
         self._state = False
-        self._new_state = None
         self._name = name
 
         lj.on_switch_pressed(i, self._on_switch_pressed)
@@ -45,14 +44,14 @@ class LiteJetSwitch(SwitchDevice):
         self.update()
 
     def _on_switch_pressed(self):
-        _LOGGER.info("Updating pressed for %s", self._name)
-        self._new_state = True
-        self._hass.loop.create_task(self.async_update_ha_state(True))
+        _LOGGER.debug("Updating pressed for %s", self._name)
+        self._state = True
+        self._hass.loop.create_task(self.async_update_ha_state())
 
     def _on_switch_released(self):
-        _LOGGER.info("Updating released for %s", self._name)
-        self._new_state = False
-        self._hass.loop.create_task(self.async_update_ha_state(True))
+        _LOGGER.debug("Updating released for %s", self._name)
+        self._state = False
+        self._hass.loop.create_task(self.async_update_ha_state())
 
     @property
     def name(self):
@@ -83,8 +82,3 @@ class LiteJetSwitch(SwitchDevice):
     def turn_off(self, **kwargs):
         """Release the switch."""
         self._lj.release_switch(self._index)
-
-    def update(self):
-        """Update the state."""
-        if self._new_state is not None:
-            self._state = self._new_state
