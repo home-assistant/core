@@ -76,11 +76,15 @@ class LocativeView(HomeAssistantView):
         device = data['device'].replace('-', '')
         location_name = data['id'].lower()
         direction = data['trigger']
+        
+        kwargs = {
+           'dev_id': device,
+           'location_name': location_name,
+           'gps': (data['latitude'], data['longitude'])
+        }
 
         if direction == 'enter':
-            yield from self.hass.loop.run_in_executor(
-                None, partial(self.see, dev_id=device,
-                              location_name=location_name))
+            self.see(**kwargs)
             return 'Setting location to {}'.format(location_name)
 
         elif direction == 'exit':
@@ -88,9 +92,8 @@ class LocativeView(HomeAssistantView):
                 '{}.{}'.format(DOMAIN, device))
 
             if current_state is None or current_state.state == location_name:
-                yield from self.hass.loop.run_in_executor(
-                    None, partial(self.see, dev_id=device,
-                                  location_name=STATE_NOT_HOME))
+                kwargs['location_home'] = STATE_NOT_HOME
+                self.see(**kwargs)
                 return 'Setting location to not home'
             else:
                 # Ignore the message if it is telling us to exit a zone that we
@@ -104,6 +107,7 @@ class LocativeView(HomeAssistantView):
             # In the app, a test message can be sent. Just return something to
             # the user to let them know that it works.
             return 'Received test message.'
+
 
         else:
             _LOGGER.error('Received unidentified message from Locative: %s',
