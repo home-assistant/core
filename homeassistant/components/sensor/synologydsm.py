@@ -201,6 +201,11 @@ class SynoNasSensor(Entity):
         else:
             return self.var_units
 
+    def update(self):
+        """Get the latest data and updates the states."""
+        if self._api is not None:
+            self._api.update()
+
 
 class SynoNasUtilSensor(SynoNasSensor):
     """Representation a Synology Utilisation Sensor."""
@@ -208,8 +213,6 @@ class SynoNasUtilSensor(SynoNasSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        self._api.update()
-
         network_sensors = ['network_up', 'network_down']
         memory_sensors = ['memory_size', 'memory_cached',
                           'memory_available_swap', 'memory_available_real',
@@ -232,8 +235,6 @@ class SynoNasStorageSensor(SynoNasSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        self._api.update()
-
         temp_sensors = ['volume_disk_temp_avg', 'volume_disk_temp_max',
                         'disk_temp']
 
