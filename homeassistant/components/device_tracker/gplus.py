@@ -24,6 +24,7 @@ CONF_SSID = 'cookie_ssid'
 CONF_HSID = 'cookie_hsid'
 CONF_FREQ = 'data_freq'
 CONF_AT = 'data_at'
+CONF_HOST = 'header_host'
 #CONF_ACCURACY = 'accuracy'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -34,6 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HSID): vol.Coerce(str),
     vol.Required(CONF_FREQ): vol.Coerce(str),
     vol.Required(CONF_AT): vol.Coerce(str),
+    vol.Optional(CONF_HOST, default='plus.google.com'): vol.Coerce(str),
     #    vol.Optional(CONF_ACCURACY, default=100): vol.Coerce(int),
     vol.Optional(CONF_INTERVAL, default=1): vol.All(vol.Coerce(int),
                                                     vol.Range(min=1)),
@@ -46,17 +48,6 @@ def setup_scanner(hass, config, see):
     """Define constants."""
     import requests
 
-    headers = {
-        'Host': 'plus.google.com',
-        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
-        'Referer': 'https://plus.google.com/',
-        'X-Same-Domain': '1',
-        'Connection': 'keep-alive',
-    }
-
 
 #    max_accuracy = config[CONF_ACCURACY]
     id = config[CONF_ID]
@@ -67,6 +58,19 @@ def setup_scanner(hass, config, see):
     data_freq = config[CONF_FREQ]
     data_at = config[CONF_AT]
     url = config[CONF_URL]
+    host = config[CONF_HOST]
+
+    headers = {
+        'Host': host,
+        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+        'Referer': 'https://'+host+'/',
+        'X-Same-Domain': '1',
+        'Connection': 'keep-alive',
+    }
+
 
     cookies = {
         'SID':  cookie_sid,
