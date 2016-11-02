@@ -5,10 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.locative/
 """
 import asyncio
-from functools import partial
 import logging
 
-from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME
+from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE,
+                                 STATE_NOT_HOME,
+                                 HTTP_UNPROCESSABLE_ENTITY)
 from homeassistant.components.http import HomeAssistantView
 # pylint: disable=unused-import
 from homeassistant.components.device_tracker import (  # NOQA
@@ -80,7 +81,7 @@ class LocativeView(HomeAssistantView):
         kwargs = {
            'dev_id': device,
            'location_name': location_name,
-           'gps': (data['latitude'], data['longitude'])
+           'gps': (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
         }
 
         if direction == 'enter':
