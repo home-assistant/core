@@ -8,7 +8,10 @@ import logging
 
 from homeassistant.util import convert
 from homeassistant.components.climate import ClimateDevice
-from homeassistant.const import TEMP_FAHRENHEIT, ATTR_TEMPERATURE
+from homeassistant.const import (
+    TEMP_FAHRENHEIT,
+    TEMP_CELSIUS,
+    ATTR_TEMPERATURE)
 
 from homeassistant.components.vera import (
     VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
@@ -95,7 +98,13 @@ class VeraThermostat(VeraDevice, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
+        vera_temp_units = (
+            self.vera_device.vera_controller.temperature_units)
+
+        if vera_temp_units == 'F':
+            return TEMP_FAHRENHEIT
+
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
