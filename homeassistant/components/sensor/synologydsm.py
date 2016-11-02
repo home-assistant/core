@@ -202,7 +202,7 @@ class SynoNasSensor(Entity):
             return self.var_units
 
     def update(self):
-        """Get the latest data and updates the states."""
+        """Get the latest data for the states."""
         if self._api is not None:
             self._api.update()
 
