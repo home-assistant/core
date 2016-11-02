@@ -150,15 +150,17 @@ class YrData(object):
             with async_timeout.timeout(10, loop=self.hass.loop):
                 resp = yield from self.hass.websession.get(self._url)
             if resp.status != 200:
-                return try_again('{} returned {}'
-                                 .format(self._url, resp.status))
+                try_again('{} returned {}'.format(self._url, resp.status))
+                return
             text = yield from resp.text()
             self.hass.loop.create_task(resp.release())
         except asyncio.TimeoutError as err:
-            return try_again(err)
+            try_again(err)
+            return
         except HTTPException as err:
             resp.close()
-            return try_again(err)
+            try_again(err)
+            return
 
         try:
             import xmltodict
@@ -168,7 +170,8 @@ class YrData(object):
                 model = model[0]
             next_run = dt_util.parse_datetime(model['@nextrun'])
         except (ExpatError, IndexError) as err:
-            return try_again(err)
+            try_again(err)
+            return
 
         # Schedule next execution
         async_track_point_in_utc_time(self.hass, self.async_update, next_run)
