@@ -7,9 +7,7 @@ https://home-assistant.io/components/device_tracker.volvooncall/
 """
 import logging
 from datetime import timedelta
-from urllib.parse import urljoin
 import voluptuous as vol
-import requests
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
@@ -27,10 +25,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_URL = 'https://vocapi.wirelesscar.net/customerapi/rest/v3.0/'
-HEADERS = {"X-Device-Id": "Device",
-           "X-OS-Type": "Android",
-           "X-Originator-Type": "App"}
+REQUIREMENTS = ['volvooncall==0.1.1']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -40,62 +35,62 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_scanner(hass, config, see):
     """Validate the configuration and return a scanner."""
-    session = requests.Session()
-    session.headers.update(HEADERS)
-    session.auth = (config.get(CONF_USERNAME),
-                    config.get(CONF_PASSWORD))
+    from volvooncall import Connection
+    connection = Connection(
+        config.get(CONF_USERNAME),
+        config.get(CONF_PASSWORD))
 
     interval = max(MIN_TIME_BETWEEN_SCANS.seconds,
                    config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
 
-    def query(ref, rel=SERVICE_URL):
-        """Perform a query to the online service."""
-        url = urljoin(rel, ref)
-        _LOGGER.debug("Request for %s", url)
-        res = session.get(url, timeout=15)
-        res.raise_for_status()
-        _LOGGER.debug("Received %s", res.json())
-        return res.json()
+    def _see_vehicle(vehicle):
+        position = vehicle["position"]
+        dev_id = "volvo_" + slugify(vehicle["registrationNumber"])
+        host_name = "%s (%s/%s)" % (
+            vehicle["registrationNumber"],
+            vehicle["vehicleType"],
+            vehicle["modelYear"])
+
+        def any_opened(door):
+            """True if any door/window is opened."""
+            return any([door[key] for key in door if "Open" in key])
+
+        see(dev_id=dev_id,
+            host_name=host_name,
+            gps=(position["latitude"],
+                 position["longitude"]),
+            attributes=dict(
+                unlocked=not vehicle["carLocked"],
+                tank_volume=vehicle["fuelTankVolume"],
+                average_fuel_consumption=round(
+                    vehicle["averageFuelConsumption"] / 10, 1),  # l/100km
+                washer_fluid_low=vehicle["washerFluidLevel"] != "Normal",
+                brake_fluid_low=vehicle["brakeFluid"] != "Normal",
+                service_warning=vehicle["serviceWarningStatus"] != "Normal",
+                bulb_failures=len(vehicle["bulbFailures"]) > 0,
+                doors_open=any_opened(vehicle["doors"]),
+                windows_open=any_opened(vehicle["windows"]),
+                heater_on=vehicle["heater"]["status"] != "off",
+                fuel=vehicle["fuelAmount"],
+                odometer=round(vehicle["odometer"] / 1000),  # km
+                range=vehicle["distanceToEmpty"]))
 
     def update(now):
         """Update status from the online service."""
+        _LOGGER.info("Updating")
         try:
-            _LOGGER.debug("Updating")
-            status = query("status", vehicle_url)
-            position = query("position", vehicle_url)
-            see(dev_id=dev_id,
-                host_name=host_name,
-                gps=(position["position"]["latitude"],
-                     position["position"]["longitude"]),
-                attributes=dict(
-                    tank_volume=attributes["fuelTankVolume"],
-                    washer_fluid=status["washerFluidLevel"],
-                    brake_fluid=status["brakeFluid"],
-                    service_warning=status["serviceWarningStatus"],
-                    fuel=status["fuelAmount"],
-                    odometer=status["odometer"],
-                    range=status["distanceToEmpty"]))
-        except requests.exceptions.RequestException as error:
-            _LOGGER.error("Could not query server: %s", error)
+            res, vehicles = connection.update()
+            if not res:
+                _LOGGER.error("Could not query server")
+                return False
+
+            for vehicle in vehicles:
+                _see_vehicle(vehicle)
+
+            return True
         finally:
             track_point_in_utc_time(hass, update,
                                     now + timedelta(seconds=interval))
 
-    try:
-        _LOGGER.info('Logging in to service')
-        user = query("customeraccounts")
-        rel = query(user["accountVehicleRelations"][0])
-        vehicle_url = rel["vehicle"] + '/'
-        attributes = query("attributes", vehicle_url)
-
-        dev_id = "volvo_" + slugify(attributes["registrationNumber"])
-        host_name = "%s %s/%s" % (attributes["registrationNumber"],
-                                  attributes["vehicleType"],
-                                  attributes["modelYear"])
-        update(utcnow())
-        return True
-    except requests.exceptions.RequestException as error:
-        _LOGGER.error("Could not log in to service. "
-                      "Please check configuration: "
-                      "%s", error)
-        return False
+    _LOGGER.info('Logging in to service')
+    return update(utcnow())
