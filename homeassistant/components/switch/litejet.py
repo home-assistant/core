@@ -17,12 +17,12 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the LiteJet switch platform."""
-    litejet_ = litejet.CONNECTION
+    litejet_ = hass.data['litejet_system']
 
     devices = []
     for i in litejet_.button_switches():
         name = litejet_.get_switch_name(i)
-        if not litejet.is_ignored(name):
+        if not litejet.is_ignored(hass, name):
             devices.append(LiteJetSwitch(hass, litejet_, i, name))
     add_devices(devices)
 

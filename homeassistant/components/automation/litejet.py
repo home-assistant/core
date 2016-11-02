@@ -12,15 +12,12 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.const import CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
-import homeassistant.components.litejet as litejet
 
 DEPENDENCIES = ['litejet']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NUMBER = 'number'
-
-ATTR_NUMBER = 'number'
 
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'litejet',
@@ -37,9 +34,9 @@ def async_trigger(hass, config, action):
         """Call action with right context."""
         hass.async_run_job(action, {
             'trigger': {
-                'platform': 'litejet',
-                'number': number
+                CONF_PLATFORM: 'litejet',
+                CONF_NUMBER: number
             },
         })
 
-    litejet.CONNECTION.on_switch_released(number, call_action)
+    hass.data['litejet_system'].on_switch_released(number, call_action)

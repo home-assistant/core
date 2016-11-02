@@ -19,12 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup lights for the LiteJet platform."""
-    litejet_ = litejet.CONNECTION
+    litejet_ = hass.data['litejet_system']
 
     devices = []
     for i in litejet_.loads():
         name = litejet_.get_load_name(i)
-        if not litejet.is_ignored(name):
+        if not litejet.is_ignored(hass, name):
             devices.append(LiteJetLight(hass, litejet_, i, name))
     add_devices(devices)
 

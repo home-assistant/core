@@ -27,20 +27,15 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-CONNECTION = None
-CONFIG = None
-
 
 def setup(hass, config):
     """Initialize the LiteJet component."""
     from pylitejet import LiteJet
 
-    global CONNECTION, CONFIG
-
     url = config[DOMAIN].get(CONF_URL)
 
-    CONNECTION = LiteJet(url)
-    CONFIG = config[DOMAIN]
+    hass.data['litejet_system'] = LiteJet(url)
+    hass.data['litejet_config'] = config[DOMAIN]
 
     discovery.load_platform(hass, 'light', DOMAIN, {}, config)
     if config[DOMAIN].get(CONF_INCLUDE_SWITCHES):
@@ -50,9 +45,9 @@ def setup(hass, config):
     return True
 
 
-def is_ignored(name):
+def is_ignored(hass, name):
     """Determine if a load, switch, or scene should be ignored."""
-    for prefix in CONFIG.get(CONF_EXCLUDE_NAMES, []):
+    for prefix in hass.data['litejet_config'].get(CONF_EXCLUDE_NAMES, []):
         if name.startswith(prefix):
             return True
     return False
