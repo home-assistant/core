@@ -4,7 +4,6 @@ Trigger an automation when a LiteJet switch is released.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/automation.litejet/
 """
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -21,7 +20,7 @@ CONF_NUMBER = 'number'
 
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'litejet',
-    vol.Required(CONF_NUMBER): vol.Coerce(int)
+    vol.Required(CONF_NUMBER): cv.positive_int
 })
 
 
