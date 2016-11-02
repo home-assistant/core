@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
-    add_devices([SmartPlugSwitch(SmartPlug(host), name)])
+    add_devices([SmartPlugSwitch(SmartPlug(host), name)], True)
 
 
 class SmartPlugSwitch(SwitchDevice):
