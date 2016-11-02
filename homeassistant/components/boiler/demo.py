@@ -20,6 +20,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                    False, False, False, "idle", False)
     ])
 
+    return True
+
 
 # pylint: disable=too-many-arguments, too-many-public-methods
 class DemoBoiler(BoilerDevice):

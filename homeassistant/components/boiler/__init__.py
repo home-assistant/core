@@ -18,7 +18,8 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
-    TEMP_CELSIUS)
+    # TEMP_CELSIUS
+    )
 
 DOMAIN = "boiler"
 
@@ -106,9 +107,9 @@ def set_away_mode(hass, away_mode, entity_id=None):
     """Turn all or specified boiler controller devices away mode on."""
     data = {
         ATTR_AWAY_MODE: away_mode
-        # Add duration to work out new idle temp
-        # e.g. off to work, out to dinner or overnight
     }
+    # Add duration to work out new idle temp
+    # e.g. off to work, out to dinner or overnight
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
@@ -312,6 +313,8 @@ def setup(hass, config):
         DOMAIN, SERVICE_SET_OPERATION_MODE, operation_set_service,
         descriptions.get(SERVICE_SET_OPERATION_MODE),
         schema=SET_OPERATION_MODE_SCHEMA)
+
+    return True
 
 
 class BoilerDevice(Entity):
