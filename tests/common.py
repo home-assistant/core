@@ -1,6 +1,7 @@
 """Test the helper method for writing tests."""
 import asyncio
 import os
+import sys
 from datetime import timedelta
 from unittest import mock
 from unittest.mock import patch
@@ -33,7 +34,10 @@ def get_test_config_dir(*add_path):
 
 def get_test_home_assistant():
     """Return a Home Assistant object pointing at test config dir."""
-    loop = asyncio.new_event_loop()
+    if sys.platform == "win32":
+        loop = asyncio.ProactorEventLoop()
+    else:
+        loop = asyncio.new_event_loop()
 
     hass = loop.run_until_complete(async_test_home_assistant(loop))
     hass.allow_pool = True
