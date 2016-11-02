@@ -558,9 +558,13 @@ def log_exception(ex, domain, config, hass):
         hass.loop, async_log_exception, ex, domain, config, hass).result()
 
 
+@core.callback
 def _async_persistent_notification(hass: core.HomeAssistant, component: str,
                                    link: Optional[bool]=False):
-    """Print a persistent notification."""
+    """Print a persistent notification.
+
+    This method must be run in the event loop.
+    """
     _PERSISTENT_ERRORS[component] = _PERSISTENT_ERRORS.get(component) or link
     _lst = [HA_COMPONENT_URL.format(name.replace('_', '-'), name)
             if link else name for name, link in _PERSISTENT_ERRORS.items()]
