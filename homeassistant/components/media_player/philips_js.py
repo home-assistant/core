@@ -29,10 +29,7 @@ SUPPORT_PHILIPS_JS = SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
 DEFAULT_DEVICE = 'default'
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_NAME = 'Philips TV'
-DEVICE_BASE_URL = 'http://{0}:1925/1/{1}'
-DEVICE_NAME_URL = 'http://{0}:1925/1/system/name'
-DEVICE_INPUT_URL = 'http://{0}:1925/1/input/key'
-DEVICE_SRC_SET_URL = 'http://{0}:1925/1/sources/current'
+BASE_URL = 'http://{0}:1925/1/{1}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -49,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([PhilipsJS(host, name)])
 
 
-# pylint: disable=too-many-instance-attributes,abstract-method
+# pylint: disable=abstract-method
 class PhilipsJS(MediaPlayerDevice):
     """Representation of a Philips TV exposing the JointSpace API."""
 
@@ -87,17 +84,7 @@ class PhilipsJS(MediaPlayerDevice):
     @property
     def state(self):
         """Get the device state. An exception means OFF state."""
-        try:
-            if self._connfail:
-                self._connfail -= 1
-                self._source = None
-                return STATE_OFF
-            requests.get(DEVICE_NAME_URL.format(self._host), timeout=5)
-            self._state = STATE_ON
-            return self._state
-        except requests.exceptions.RequestException:
-            self._connfail = 5
-            return STATE_OFF
+        return self._state
 
     @property
     def source(self):
@@ -114,8 +101,9 @@ class PhilipsJS(MediaPlayerDevice):
         if source in self._source_mapping:
             data = dict(id=self._source_mapping[source])
             try:
-                resp = requests.post(DEVICE_SRC_SET_URL.format(self._host),
-                                     data=json.dumps(data), timeout=5)
+                resp = requests.post(
+                    BASE_URL.format(self._host, 'sources/current'),
+                    data=json.dumps(data), timeout=5)
                 if resp.status_code == 200:
                     self._source = source
             except requests.exceptions.RequestException:
@@ -166,16 +154,15 @@ class PhilipsJS(MediaPlayerDevice):
                 self._connfail -= 1
                 return
             audiodata = json.loads(requests.get(
-                DEVICE_BASE_URL.format(self._host, 'audio/volume')).text)
+                BASE_URL.format(self._host, 'audio/volume')).text)
             self._min_volume = int(audiodata['min'])
             self._max_volume = int(audiodata['max'])
             self._volume = audiodata['current']
             self._muted = audiodata['muted']
             srcid = json.loads(requests.get(
-                DEVICE_BASE_URL.format(self._host,
-                                       'sources/current')).text)['id']
+                BASE_URL.format(self._host, 'sources/current')).text)['id']
             srcdict = json.loads(requests.get(
-                DEVICE_BASE_URL.format(self._host, 'sources')).text)
+                BASE_URL.format(self._host, 'sources')).text)
             self._source = srcdict[srcid]['name']
             if not self._source_list:
                 for srcid in sorted(srcdict):
@@ -195,7 +182,7 @@ class PhilipsJS(MediaPlayerDevice):
                 _LOGGER.debug('Conn-Fail:  %i', self._connfail)
                 return False
             data = dict(key=key)
-            requests.post(DEVICE_INPUT_URL.format(self._host),
+            requests.post(BASE_URL.format(self._host, 'input/key'),
                           data=json.dumps(data), timeout=5)
             return True
         except requests.exceptions.RequestException:
