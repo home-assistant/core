@@ -16,7 +16,7 @@ class AiohttpClientMocker:
         self.mock_calls = []
 
     def request(self, method, url, *,
-                auth=None,  # pylint: disable=unused-variable
+                auth=None,
                 status=200,
                 text=None,
                 content=None,
@@ -58,7 +58,7 @@ class AiohttpClientMocker:
         return len(self.mock_calls)
 
     @asyncio.coroutine
-    def match_request(self, method, url, *, auth=None, timeout=None): \
+    def match_request(self, method, url, *, auth=None): \
             # pylint: disable=unused-variable
         """Match a request against pre-registered requests."""
         for response in self._mocks:
@@ -77,10 +77,8 @@ class AiohttpClientMockResponse:
         """Initialize a fake response."""
         self.method = method
         self._url = url
-        try:
-            self._url_parts = urlparse(url.lower())
-        except AttributeError:
-            self._url_parts = None
+        self._url_parts = urlparse(url.lower()) \
+            if isinstance(url, str) else None
         self.status = status
         self.response = response
 

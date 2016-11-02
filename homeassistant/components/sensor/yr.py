@@ -72,10 +72,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         dev.append(YrSensor(sensor_type))
+    yield from async_add_devices(dev)
 
     weather = YrData(hass, coordinates, dev)
-    tasks = [async_add_devices(dev), weather.async_update()]
-    yield from asyncio.gather(*tasks, loop=hass.loop)
+    yield from weather.async_update()
 
 
 class YrSensor(Entity):
@@ -148,8 +148,7 @@ class YrData(object):
 
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                resp = yield from self.hass.websession.get(
-                    self._url, timeout=30)
+                resp = yield from self.hass.websession.get(self._url)
             if resp.status != 200:
                 return try_again('{} returned {}'
                                  .format(self._url, resp.status))
