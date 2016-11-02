@@ -1,4 +1,5 @@
 """.
+
 Get location from Google Maps Geolocation API.
 
 For more details about this platform, please refer to the documentation at
