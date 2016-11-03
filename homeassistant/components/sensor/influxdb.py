@@ -173,8 +173,8 @@ class InfluxSensorData(object):
 
         points = list(self.influx.query(self.query).get_points())
         if len(points) == 0:
-            _LOGGER.info('Query returned no points, sensor state set'
-                         ' to UNKNOWN : %s', self.query)
+            _LOGGER.warning('Query returned no points, sensor state set'
+                            ' to UNKNOWN : %s', self.query)
             self.value = None
         else:
             if len(points) > 1:
