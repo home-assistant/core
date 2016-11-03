@@ -166,7 +166,7 @@ def setup(hass, config):
 class GzipFileSender(FileSender):
     """FileSender class capable of sending gzip version if available."""
 
-    # pylint: disable=invalid-name, too-few-public-methods
+    # pylint: disable=invalid-name
 
     development = False
 
