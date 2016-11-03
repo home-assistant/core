@@ -130,24 +130,19 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         })
 
         bootstrap.setup_component(cls.hass, script.DOMAIN, {
-            'script': {
-                'flash_kitchen': {
-                    'sequence': [
-                        {
-                            'service': 'light.turn_off',
-                            'data': {
-                                'entity_id': 'light.kitchen_lights'
-                            }
-                        },
-                        {
-                            'service': 'light.turn_on',
-                            'data': {
-                                'entity_id': 'light.kitchen_lights'
-                            }
-                        }
-                    ]
+          'script': {
+            'set_kitchen_light': {
+              'sequence': [
+                {
+                  'service_template': "light.turn_{{ requested_state }}",
+                  'data_template': {
+                    'entity_id': 'light.kitchen_lights',
+                    'brightness': "{{ requested_level }}"
+                  }
                 }
+              ]
             }
+          }
         })
 
         start_hass_instance(cls.hass)
@@ -161,7 +156,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             attributes=attrs)
 
         # Expose the script
-        script_entity = cls.hass.states.get('script.flash_kitchen')
+        script_entity = cls.hass.states.get('script.set_kitchen_light')
         attrs = dict(script_entity.attributes)
         attrs[emulated_hue.ATTR_EMULATED_HUE] = True
         cls.hass.states.set(
@@ -186,7 +181,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         # Make sure the lights we added to the config are there
         self.assertTrue('light.ceiling_lights' in result_json)
         self.assertTrue('light.bed_light' in result_json)
-        self.assertTrue('script.flash_kitchen' in result_json)
+        self.assertTrue('script.set_kitchen_light' in result_json)
         self.assertTrue('light.kitchen_lights' not in result_json)
 
     def test_get_light_state(self):
@@ -262,38 +257,33 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(kitchen_result.status_code, 404)
 
     def test_put_light_state_script(self):
-        """Test the seeting of light states."""
-        # Turn the bedroom light on first
+        """Test the seeting of script variables."""
+        # Turn the kitchen light off first
         self.hass.services.call(
-            light.DOMAIN, const.SERVICE_TURN_ON,
-            {const.ATTR_ENTITY_ID: 'script.flash_kitchen',
-             light.ATTR_BRIGHTNESS: 153},
+            light.DOMAIN, const.SERVICE_TURN_OFF,
+            {const.ATTR_ENTITY_ID: 'light.kitchen_lights'},
             blocking=True)
 
-        # Go through the API to turn it off
-        url = BRIDGE_URL_BASE.format(
-            '/api/username/lights/{}/state'.format('script.flash_kitchen'))
+        # Emulated hue converts 0-100% to 0-255.
+        level = 23
+        brightness = round(level * 255 / 100)
 
-        req_headers = {'Content-Type': 'application/json'}
-
-        # Send Off state and brightness
-        data = {
-            HUE_API_STATE_ON: False,
-            HUE_API_STATE_BRI: 52
-        }
-
-        script_result = requests.put(
-            url,
-            data=json.dumps(data),
-            timeout=5,
-            headers=req_headers
-        )
+        script_result = self.perform_put_light_state(
+            'script.set_kitchen_light', True, brightness)
 
         script_result_json = script_result.json()
-        print(script_result_json)
 
         self.assertEqual(script_result.status_code, 200)
         self.assertEqual(len(script_result_json), 2)
+
+        # Sleep for short time so script has time to complete
+        time.sleep(.01)
+
+        kitchen_light = self.hass.states.get('light.kitchen_lights')
+        self.assertEqual(kitchen_light.state, 'on')
+        self.assertEqual(
+            kitchen_light.attributes[light.ATTR_BRIGHTNESS],
+            level)
 
     def test_put_with_form_urlencoded_content_type(self):
         """Test the form with urlencoded content."""
