@@ -1,5 +1,4 @@
 """The tests the for Locative device tracker platform."""
-import time
 import unittest
 from unittest.mock import patch
 
@@ -46,7 +45,6 @@ def setUpModule():
     })
 
     hass.start()
-    time.sleep(0.05)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
