@@ -240,6 +240,7 @@ omit =
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/cpuspeed.py
+    homeassistant/components/sensor/cups.py
     homeassistant/components/sensor/currencylayer.py
     homeassistant/components/sensor/darksky.py
     homeassistant/components/sensor/deutsche_bahn.py

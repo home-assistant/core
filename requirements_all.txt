@@ -351,6 +351,9 @@ pychromecast==0.7.6
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
 
+# homeassistant.components.sensor.cups
+# pycups==1.9.73
+
 # homeassistant.components.envisalink
 # homeassistant.components.zwave
 pydispatcher==2.0.5
