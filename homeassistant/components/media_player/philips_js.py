@@ -6,9 +6,7 @@ https://home-assistant.io/components/media_player.philips_js/
 """
 import logging
 from datetime import timedelta
-import json
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -18,6 +16,8 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNKNOWN, CONF_HOST, CONF_NAME)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['ha-philipsjs==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,19 +40,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Philips TV platform."""
+    import haphilipsjs
+
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
 
-    add_devices([PhilipsJS(host, name)])
+    tvapi = haphilipsjs.PhilipsTV(host)
+
+    add_devices([PhilipsTV(tvapi, name)])
 
 
 # pylint: disable=abstract-method
-class PhilipsJS(MediaPlayerDevice):
+class PhilipsTV(MediaPlayerDevice):
     """Representation of a Philips TV exposing the JointSpace API."""
 
-    def __init__(self, host, name):
+    def __init__(self, tv, name):
         """Initialize the Philips TV."""
-        self._host = host
+        self._tv = tv
         self._name = name
         self._state = STATE_UNKNOWN
         self._min_volume = None
@@ -99,25 +103,15 @@ class PhilipsJS(MediaPlayerDevice):
     def select_source(self, source):
         """Set the input source."""
         if source in self._source_mapping:
-            data = dict(id=self._source_mapping[source])
-            try:
-                resp = requests.post(
-                    BASE_URL.format(self._host, 'sources/current'),
-                    data=json.dumps(data), timeout=5)
-                if resp.status_code == 200:
-                    self._source = source
-            except requests.exceptions.RequestException:
-                _LOGGER.error('Could not set source to %s', source)
-        else:
-            _LOGGER.warning('invalid source: %s', source)
+            self._tv.setSource(self._source_mapping.get(source))
+            self._source = source
+            if not self._tv.on:
+                self._state = STATE_OFF
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        if self._volume is not None:
-            return self._volume
-        else:
-            return None
+        return self._volume
 
     @property
     def is_volume_muted(self):
@@ -126,19 +120,27 @@ class PhilipsJS(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off the device."""
-        self.send_key('Standby')
+        self._tv.sendKey('Standby')
+        if not self._tv.on:
+            self._state = STATE_OFF
 
     def volume_up(self):
         """Send volume up command."""
-        self.send_key('VolumeUp')
+        self._tv.sendKey('VolumeUp')
+        if not self._tv.on:
+            self._state = STATE_OFF
 
     def volume_down(self):
         """Send volume down command."""
-        self.send_key('VolumeDown')
+        self._tv.sendKey('VolumeDown')
+        if not self._tv.on:
+            self._state = STATE_OFF
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self.send_key('Mute')
+        self._tv.sendKey('Mute')
+        if not self._tv.on:
+            self._state = STATE_OFF
 
     @property
     def media_title(self):
@@ -147,47 +149,22 @@ class PhilipsJS(MediaPlayerDevice):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest date and update device state."""
-        try:
-            if self._connfail:
-                _LOGGER.debug('Conn-Fail:  %i', self._connfail)
-                self._connfail -= 1
-                return
-            audiodata = json.loads(requests.get(
-                BASE_URL.format(self._host, 'audio/volume')).text)
-            self._min_volume = int(audiodata['min'])
-            self._max_volume = int(audiodata['max'])
-            self._volume = audiodata['current']
-            self._muted = audiodata['muted']
-            srcid = json.loads(requests.get(
-                BASE_URL.format(self._host, 'sources/current')).text)['id']
-            srcdict = json.loads(requests.get(
-                BASE_URL.format(self._host, 'sources')).text)
-            self._source = srcdict[srcid]['name']
-            if not self._source_list:
-                for srcid in sorted(srcdict):
-                    self._source_list.append(srcdict[srcid]['name'])
-                    self._source_mapping[srcdict[srcid]['name']] = srcid
+        """Get the latest data and update device state."""
+        self._tv.update()
+        self._min_volume = self._tv.min_volume
+        self._max_volume = self._tv.max_volume
+        self._volume = self._tv.volume
+        self._muted = self._tv.muted
+        if self._tv.source_id:
+            src = self._tv.sources.get(self._tv.source_id, None)
+            if src:
+                self._source = src.get('name', None)
+        if self._tv.sources and not self._source_list:
+            for srcid in sorted(self._tv.sources):
+                srcname = self._tv.sources.get(srcid, dict()).get('name', None)
+                self._source_list.append(srcname)
+                self._source_mapping[srcname] = srcid
+        if self._tv.on:
             self._state = STATE_ON
-        except requests.exceptions.RequestException:
-            self._connfail = 5
+        else:
             self._state = STATE_OFF
-            self._source = None
-
-    def send_key(self, key):
-        """Send key command to TV."""
-        try:
-            if self._connfail:
-                self._connfail -= 1
-                _LOGGER.debug('Conn-Fail:  %i', self._connfail)
-                return False
-            data = dict(key=key)
-            requests.post(BASE_URL.format(self._host, 'input/key'),
-                          data=json.dumps(data), timeout=5)
-            return True
-        except requests.exceptions.RequestException:
-            _LOGGER.error('Could not send key %s', key)
-            self._connfail = 5
-            self._state = STATE_OFF
-            self._source = None
-            return False
