@@ -219,7 +219,8 @@ class BraviaTVDevice(MediaPlayerDevice):
     def update(self):
         """Update TV info."""
         if not self._braviarc.is_connected():
-            self._braviarc.connect(self._pin, CLIENTID_PREFIX, NICKNAME)
+            if self._braviarc.get_power_status() != 'off':
+                self._braviarc.connect(self._pin, CLIENTID_PREFIX, NICKNAME)
             if not self._braviarc.is_connected():
                 return
 
