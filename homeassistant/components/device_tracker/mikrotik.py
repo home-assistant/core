@@ -77,7 +77,7 @@ class MikrotikDeviceScanner(object):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [self.last_results[clientkey]['mac'] for clientkey,
-client in self.last_results.items()]
+                client in self.last_results.items()]
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
