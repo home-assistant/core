@@ -84,7 +84,7 @@ class LocativeView(HomeAssistantView):
             yield from self.hass.loop.run_in_executor(
                 None, partial(self.see, dev_id=device,
                               location_name=location_name,
-                              gps=(data[ATTR_LATITUDE], data[ATTR_LONGITUDE])))
+                              gps=gps_location))
             return 'Setting location to {}'.format(location_name)
 
         elif direction == 'exit':
