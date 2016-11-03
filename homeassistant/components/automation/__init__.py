@@ -349,7 +349,7 @@ def _async_process_config(hass, config, component):
             entities.append(entity)
 
     yield from asyncio.gather(*tasks, loop=hass.loop)
-    hass.loop.create_task(component.async_add_entities(entities))
+    yield from component.async_add_entities(entities)
 
     return len(entities) > 0
 
