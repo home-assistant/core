@@ -50,7 +50,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([PhilipsTV(tvapi, name)])
 
 
-# pylint: disable=abstract-method
 class PhilipsTV(MediaPlayerDevice):
     """Representation of a Philips TV exposing the JointSpace API."""
 

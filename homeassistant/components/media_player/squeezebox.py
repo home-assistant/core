@@ -174,7 +174,6 @@ class LogitechMediaServer(object):
 class SqueezeBoxDevice(MediaPlayerDevice):
     """Representation of a SqueezeBox device."""
 
-    # pylint: disable=abstract-method
     def __init__(self, lms, player_id):
         """Initialize the SqeezeBox device."""
         super(SqueezeBoxDevice, self).__init__()

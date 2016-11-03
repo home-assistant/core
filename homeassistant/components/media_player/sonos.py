@@ -248,7 +248,6 @@ class _ProcessSonosEventQueue():
         self._sonos_device.process_sonos_event(item)
 
 
-# pylint: disable=abstract-method
 class SonosDevice(MediaPlayerDevice):
     """Representation of a Sonos device."""
 

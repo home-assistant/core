@@ -141,7 +141,6 @@ def request_configuration(host, name, customize, hass, add_devices):
     )
 
 
-# pylint: disable=abstract-method
 class LgWebOSDevice(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
