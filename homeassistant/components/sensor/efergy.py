@@ -25,17 +25,19 @@ CONF_CURRENCY = 'currency'
 CONF_PERIOD = 'period'
 
 CONF_INSTANT = 'instant_readings'
+CONF_AMOUNT = 'amount'
 CONF_BUDGET = 'budget'
 CONF_COST = 'cost'
 
 SENSOR_TYPES = {
     CONF_INSTANT: ['Energy Usage', 'kW'],
+    CONF_AMOUNT: ['Energy Consumed', 'kW'],
     CONF_BUDGET: ['Energy Budget', None],
     CONF_COST: ['Energy Cost', None],
 }
 
 TYPES_SCHEMA = vol.In(
-    [CONF_INSTANT, CONF_BUDGET, CONF_COST])
+    [CONF_INSTANT, CONF_AMOUNT, CONF_BUDGET, CONF_COST])
 
 SENSORS_SCHEMA = vol.Schema({
     vol.Required(CONF_SENSOR_TYPE): TYPES_SCHEMA,
@@ -63,9 +65,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
+# pylint: disable=too-many-instance-attributes
 class EfergySensor(Entity):
     """Implementation of an Efergy sensor."""
 
+    # pylint: disable=too-many-arguments
     def __init__(self, sensor_type, app_token, utc_offset, period, currency):
         """Initialize the sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -102,6 +106,12 @@ class EfergySensor(Entity):
                 url_string = _RESOURCE + 'getInstant?token=' + self.app_token
                 response = get(url_string)
                 self._state = response.json()['reading'] / 1000
+            elif self.type == 'amount':
+                url_string = _RESOURCE + 'getEnergy?token=' + self.app_token \
+                    + '&offset=' + self.utc_offset + '&period=' \
+                    + self.period
+                response = get(url_string)
+                self._state = response.json()['sum']
             elif self.type == 'budget':
                 url_string = _RESOURCE + 'getBudget?token=' + self.app_token
                 response = get(url_string)
