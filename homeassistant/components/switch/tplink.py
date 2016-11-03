@@ -8,6 +8,8 @@ import logging
 
 import voluptuous as vol
 
+import time
+
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -21,6 +23,7 @@ DEFAULT_NAME = 'TPLink Switch HS100'
 
 ATTR_CURRENT_CONSUMPTION = 'Current consumption'
 ATTR_TOTAL_CONSUMPTION = 'Total consumption'
+ATTR_DAILY_CONSUMPTION = 'Daily consumption'
 ATTR_VOLTAGE = 'Voltage'
 ATTR_CURRENT = 'Current'
 
@@ -38,7 +41,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
 
     add_devices([SmartPlugSwitch(SmartPlug(host), name)], True)
-
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
@@ -78,16 +80,25 @@ class SmartPlugSwitch(SwitchDevice):
 
     def update(self):
         """Update the TP-Link switch's state."""
-        self._state = self.smartplug.state
 
-        if self._emeter_present:
-            emeter_readings = self.smartplug.get_emeter_realtime()
+        try:
+          self._state = self.smartplug.state
 
-            self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
-                = "%.1f W" % emeter_readings["power"]
-            self._emeter_params[ATTR_TOTAL_CONSUMPTION] \
-                = "%.2f kW" % emeter_readings["total"]
-            self._emeter_params[ATTR_VOLTAGE] \
-                = "%.2f V" % emeter_readings["voltage"]
-            self._emeter_params[ATTR_CURRENT] \
-                = "%.1f A" % emeter_readings["current"]
+          if self._emeter_present:
+              emeter_readings = self.smartplug.get_emeter_realtime()
+
+              self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
+                  = "%.1f W" % emeter_readings["power"]
+              self._emeter_params[ATTR_TOTAL_CONSUMPTION] \
+                  = "%.2f kW" % emeter_readings["total"]
+              self._emeter_params[ATTR_VOLTAGE] \
+                  = "%.2f V" % emeter_readings["voltage"]
+              self._emeter_params[ATTR_CURRENT] \
+                  = "%.1f A" % emeter_readings["current"]
+
+              emeter_statics = self.smartplug.get_emeter_daily()
+              self._emeter_params[ATTR_DAILY_CONSUMPTION] \
+                  = "%.2f kW" % emeter_statics[int(time.strftime("%e"))]
+
+        except (RequestException, ValueError, KeyError):
+          _LOGGER.warning('Could not update status for %s', self.name)
