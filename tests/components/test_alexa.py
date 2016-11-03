@@ -1,7 +1,6 @@
 """The tests for the Alexa component."""
 # pylint: disable=protected-access
 import json
-import time
 import datetime
 import unittest
 
@@ -115,7 +114,6 @@ def setUpModule():
     })
 
     hass.start()
-    time.sleep(0.05)
 
 
 # pylint: disable=invalid-name

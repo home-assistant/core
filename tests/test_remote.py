@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 import asyncio
 import threading
-import time
 import unittest
 from unittest.mock import patch
 
@@ -51,7 +50,6 @@ def setUpModule():
     bootstrap.setup_component(hass, 'api')
 
     hass.start()
-    time.sleep(0.05)
 
     master_api = remote.API('127.0.0.1', API_PASSWORD, MASTER_PORT)
 
