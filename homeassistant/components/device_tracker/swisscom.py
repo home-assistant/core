@@ -7,9 +7,12 @@ https://home-assistant.io/components/device_tracker.swisscom/
 import logging
 import threading
 from datetime import timedelta
-import requests
 
-from homeassistant.components.device_tracker import DOMAIN
+import requests
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST
 from homeassistant.util import Throttle
 
@@ -17,6 +20,12 @@ from homeassistant.util import Throttle
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_IP = '192.168.1.1'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string
+})
 
 
 def get_scanner(hass, config):
@@ -31,8 +40,7 @@ class SwisscomDeviceScanner(object):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        # If the host is not configured, uses the default IP address.
-        self.host = config.get(CONF_HOST, '192.168.1.1')
+        self.host = config[CONF_HOST]
 
         self.lock = threading.Lock()
 
