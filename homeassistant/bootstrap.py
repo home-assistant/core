@@ -353,7 +353,7 @@ def from_config_dict(config: Dict[str, Any],
 
     # run task
     future = asyncio.Future(loop=hass.loop)
-    asyncio.Task(_async_init_from_config_dict(future), loop=hass.loop)
+    hass.loop.create_task(_async_init_from_config_dict(future), loop=hass.loop)
     hass.loop.run_until_complete(future)
 
     return future.result()
@@ -453,7 +453,7 @@ def from_config_file(config_path: str,
 
     # run task
     future = asyncio.Future(loop=hass.loop)
-    asyncio.Task(_async_init_from_config_file(future), loop=hass.loop)
+    hass.loop.create_task(_async_init_from_config_file(future), loop=hass.loop)
     hass.loop.run_until_complete(future)
 
     return future.result()
