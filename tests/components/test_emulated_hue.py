@@ -1,4 +1,5 @@
 """The tests for the emulated Hue component."""
+import time
 import json
 
 import unittest
