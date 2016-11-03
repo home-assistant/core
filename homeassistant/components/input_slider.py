@@ -100,7 +100,7 @@ def async_setup(hass, config):
         """Handle a calls to the input slider services."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_slider.select_value(call.data[ATTR_VALUE])
+        tasks = [input_slider.async_select_value(call.data[ATTR_VALUE])
                  for input_slider in target_inputs]
         yield from asyncio.gather(*tasks, loop=hass.loop)
 
