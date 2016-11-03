@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
-CONF_PORT
+                                CONF_PORT
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -141,7 +141,7 @@ class MikrotikDeviceScanner(object):
                 hostname = result.arp[arpkey]['mac-address']
             for leasekey, lease in result.leases.items():
                 if result.leases[leasekey]['mac-address'] == \
-                result.arp[arpkey]['mac-address']:
+                        result.arp[arpkey]['mac-address']:
                     if result.leases[leasekey].get('host-name', None):
                         hostname = result.leases[leasekey]['host-name']
                     else:
