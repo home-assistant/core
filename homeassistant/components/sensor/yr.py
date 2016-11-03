@@ -57,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+@asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Yr.no sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
