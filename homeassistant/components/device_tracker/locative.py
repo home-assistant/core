@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.locative/
 """
 import asyncio
+from functools import partial
 import logging
 
 from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE,
@@ -77,15 +78,13 @@ class LocativeView(HomeAssistantView):
         device = data['device'].replace('-', '')
         location_name = data['id'].lower()
         direction = data['trigger']
-        
-        kwargs = {
-           'dev_id': device,
-           'location_name': location_name,
-           'gps': (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
-        }
+        gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 
         if direction == 'enter':
-            self.see(**kwargs)
+            yield from self.hass.loop.run_in_executor(
+                None, partial(self.see, dev_id=device,
+                              location_name=location_name,
+                              gps=(data[ATTR_LATITUDE], data[ATTR_LONGITUDE])))
             return 'Setting location to {}'.format(location_name)
 
         elif direction == 'exit':
@@ -93,8 +92,11 @@ class LocativeView(HomeAssistantView):
                 '{}.{}'.format(DOMAIN, device))
 
             if current_state is None or current_state.state == location_name:
-                kwargs['location_home'] = STATE_NOT_HOME
-                self.see(**kwargs)
+                location_name = STATE_NOT_HOME
+                yield from self.hass.loop.run_in_executor(
+                    None, partial(self.see, dev_id=device,
+                                  location_name=location_name,
+                                  gps=gps_location))
                 return 'Setting location to not home'
             else:
                 # Ignore the message if it is telling us to exit a zone that we
@@ -108,7 +110,6 @@ class LocativeView(HomeAssistantView):
             # In the app, a test message can be sent. Just return something to
             # the user to let them know that it works.
             return 'Received test message.'
-
 
         else:
             _LOGGER.error('Received unidentified message from Locative: %s',
