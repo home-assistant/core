@@ -8,8 +8,8 @@ import os
 from aiohttp import web
 
 from homeassistant.core import callback
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.components import api
+from homeassistant.const import EVENT_HOMEASSISTANT_START, HTTP_NOT_FOUND
+from homeassistant.components import api, group
 from homeassistant.components.http import HomeAssistantView
 from .version import FINGERPRINTS
 
@@ -184,7 +184,7 @@ class IndexView(HomeAssistantView):
     url = '/'
     name = "frontend:index"
     requires_auth = False
-    extra_urls = ['/states', '/states/<entity:entity_id>']
+    extra_urls = ['/states', '/states/{entity_id}']
 
     def __init__(self, hass, extra_urls):
         """Initialize the frontend view."""
@@ -202,6 +202,13 @@ class IndexView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request, entity_id=None):
         """Serve the index view."""
+        if entity_id is not None:
+            state = self.hass.states.get(entity_id)
+
+            if (not state or state.domain != 'group' or
+                    not state.attributes.get(group.ATTR_VIEW)):
+                return self.json_message('Entity not found', HTTP_NOT_FOUND)
+
         if self.hass.http.development:
             core_url = '/static/home-assistant-polymer/build/core.js'
             ui_url = '/static/home-assistant-polymer/src/home-assistant.html'
