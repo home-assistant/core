@@ -368,9 +368,11 @@ class TestComponentsGroup(unittest.TestCase):
         # Hide the group
         group.set_visibility(self.hass, group_entity_id, False)
         group_state = self.hass.states.get(group_entity_id)
+        self.hass.block_till_done()
         self.assertTrue(group_state.attributes.get(ATTR_HIDDEN))
 
         # Show it again
         group.set_visibility(self.hass, group_entity_id, True)
         group_state = self.hass.states.get(group_entity_id)
+        self.hass.block_till_done()
         self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
