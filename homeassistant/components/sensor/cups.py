@@ -130,6 +130,7 @@ class CupsSensor(Entity):
         self._printer = self.data.printers.get(self._name)
 
 
+# pylint: disable=import-error
 class CupsData(object):
     """Get the latest data from CUPS and update the state."""
 

@@ -346,7 +346,7 @@ pychromecast==0.7.6
 pycmus==0.1.0
 
 # homeassistant.components.sensor.cups
-pycups==1.9.73
+# pycups==1.9.73
 
 # homeassistant.components.envisalink
 # homeassistant.components.zwave
