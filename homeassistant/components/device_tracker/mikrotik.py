@@ -5,17 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.mikrotik/
 """
 import logging
-import re
-import socket
 import threading
-import json
 from collections import namedtuple
 from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
+CONF_PORT
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -42,6 +40,7 @@ _LEASES_CMD = '/ip/dhcp-server/lease/print'
 
 _ARP_CMD = '/ip/arp/print'
 
+
 def get_scanner(hass, config):
     """Validate the configuration and return an Mikrotik scanner."""
     scanner = MikrotikDeviceScanner(config[DOMAIN])
@@ -52,8 +51,7 @@ MikrotikResult = namedtuple('MikrotikResult', 'leases arp')
 
 
 class MikrotikDeviceScanner(object):
-    """This class queries a router running Mikrotik RouterOS"""
-
+    """This class queries a router running Mikrotik RouterOS."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -78,7 +76,8 @@ class MikrotikDeviceScanner(object):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return [self.last_results[clientkey]['mac'] for clientkey, client in self.last_results.items()]
+        return [self.last_results[clientkey]['mac'] for clientkey,
+         client in self.last_results.items()]
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
@@ -93,8 +92,7 @@ class MikrotikDeviceScanner(object):
     def _update_info(self):
         """Ensure the information from the Mikrotik router is up to date.
 
-        Return boolean if scanning successful.
-        """
+        Return boolean if scanning successful."""
         if not self.success_init:
             return False
 
@@ -114,7 +112,7 @@ class MikrotikDeviceScanner(object):
         host = TikapyClient(self.host, self.port)
         try:
             host.login(self.username, self.password)
-        except :
+        except:
             _LOGGER.error('Connection refused. Check if is API allowed.')
             return None
 
@@ -124,7 +122,7 @@ class MikrotikDeviceScanner(object):
             arp_result = host.talk([_ARP_CMD])
 
             return MikrotikResult(leases_result, arp_result)
-        except :
+        except:
             _LOGGER.error('Unexpected response from router:')
             return None
 
@@ -140,14 +138,16 @@ class MikrotikDeviceScanner(object):
 
             if result.arp[arpkey].get('mac-address', None):
                 hostname = result.arp[arpkey]['mac-address']
-                for leasekey, lease in result.leases.items():
-                    if result.leases[leasekey]['mac-address'] == result.arp[arpkey]['mac-address']:
+            for leasekey, lease in result.leases.items():
+                if result.leases[leasekey]['mac-address'] == \
+                result.arp[arpkey]['mac-address']:
+                    if result.leases[leasekey].get('host-name', None):
                         hostname = result.leases[leasekey]['host-name']
-                arps[result.arp[arpkey]['address']] = {
-                    'ip': result.arp[arpkey]['address'],
-                    'mac': result.arp[arpkey]['mac-address'].upper(),
-                    'host': hostname,
-                    }
-
-
+                    else:
+                        hostname = ''
+            arps[result.arp[arpkey]['address']] = {
+                'ip': result.arp[arpkey]['address'],
+                'mac': result.arp[arpkey]['mac-address'].upper(),
+                'host': hostname,
+                }
         return arps
