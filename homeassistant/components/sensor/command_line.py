@@ -54,7 +54,7 @@ class CommandSensor(Entity):
         self._hass = hass
         self.data = data
         self._name = name
-        self._state = False
+        self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
         self.update()
