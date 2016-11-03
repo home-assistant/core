@@ -78,6 +78,9 @@ distro==1.0.0
 # homeassistant.components.notify.xmpp
 dnspython3==1.15.0
 
+# homeassistant.components.sensor.dovado
+dovado==0.1.15
+
 # homeassistant.components.dweet
 # homeassistant.components.sensor.dweet
 dweepy==0.2.0
