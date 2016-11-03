@@ -3,7 +3,6 @@
 import asyncio
 from contextlib import closing
 import json
-import time
 import unittest
 from unittest.mock import Mock, patch
 
@@ -50,7 +49,6 @@ def setUpModule():
     bootstrap.setup_component(hass, 'api')
 
     hass.start()
-    time.sleep(0.05)
 
 
 # pylint: disable=invalid-name
