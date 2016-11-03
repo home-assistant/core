@@ -9,7 +9,6 @@ import homeassistant.components.media_player as mp
 import homeassistant.components.http as http
 
 import requests
-import time
 
 from tests.common import get_test_home_assistant, get_test_instance_port
 
@@ -254,7 +253,6 @@ class TestMediaPlayerWeb(unittest.TestCase):
         })
 
         self.hass.start()
-        time.sleep(0.05)
 
     def tearDown(self):
         """Stop everything that was started."""

@@ -1,7 +1,6 @@
 """The tests for Home Assistant frontend."""
 # pylint: disable=protected-access
 import re
-import time
 import unittest
 
 import requests
@@ -32,9 +31,6 @@ def setUpModule():
 
     hass = get_test_home_assistant()
 
-    hass.bus.listen('test_event', lambda _: _)
-    hass.states.set('test.test', 'a_state')
-
     assert bootstrap.setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
@@ -43,7 +39,6 @@ def setUpModule():
     assert bootstrap.setup_component(hass, 'frontend')
 
     hass.start()
-    time.sleep(0.05)
 
 
 # pylint: disable=invalid-name
