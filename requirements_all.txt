@@ -427,6 +427,9 @@ python-nmap==0.6.1
 # homeassistant.components.notify.pushover
 python-pushover==0.2
 
+# homeassistant.components.sensor.synologydsm
+python-synology==0.1.0
+
 # homeassistant.components.notify.telegram
 python-telegram-bot==5.2.0
 
