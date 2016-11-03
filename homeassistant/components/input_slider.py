@@ -9,7 +9,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -162,7 +161,7 @@ class InputSlider(Entity):
         }
 
     @asyncio.coroutine
-    def asyncio_select_value(self, value):
+    def async_select_value(self, value):
         """Select new value."""
         num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
