@@ -58,8 +58,6 @@ def get_test_home_assistant():
     orig_start = hass.start
     orig_stop = hass.stop
 
-    @patch.object(hass.loop, 'add_signal_handler')
-    @patch.object(ha, '_async_create_timer')
     @patch.object(hass.loop, 'run_forever')
     @patch.object(hass.loop, 'close')
     def start_hass(*mocks):
@@ -100,6 +98,19 @@ def async_test_home_assistant(loop):
     hass.state = ha.CoreState.running
 
     hass.allow_pool = False
+
+    # Mock async_start
+    orig_start = hass.async_start
+
+    @asyncio.coroutine
+    def mock_async_start():
+        with patch.object(loop, 'add_signal_handler'), \
+             patch('homeassistant.core._async_create_timer'):
+            yield from orig_start()
+
+    hass.async_start = mock_async_start
+
+    # Mock async_init_pool
     orig_init = hass.async_init_pool
 
     @ha.callback
