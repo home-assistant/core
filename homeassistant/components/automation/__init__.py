@@ -265,7 +265,7 @@ class AutomationEntity(ToggleEntity):
             return
 
         yield from self.async_enable()
-        self.hass.loop.create_task(self.async_update_ha_state())
+        yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs) -> None:
@@ -276,8 +276,6 @@ class AutomationEntity(ToggleEntity):
         self._async_detach_triggers()
         self._async_detach_triggers = None
         self._enabled = False
-        # It's important that the update is finished before this method
-        # ends because async_remove depends on it.
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
@@ -289,7 +287,7 @@ class AutomationEntity(ToggleEntity):
         if skip_condition or self._cond_func(variables):
             yield from self._async_action(self.entity_id, variables)
             self._last_triggered = utcnow()
-            self.hass.loop.create_task(self.async_update_ha_state())
+            yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_remove(self):
@@ -367,7 +365,7 @@ def _async_get_action(hass, config, name):
         _LOGGER.info('Executing %s', name)
         logbook.async_log_entry(
             hass, name, 'has been triggered', DOMAIN, entity_id)
-        hass.loop.create_task(script_obj.async_run(variables))
+        yield from script_obj.async_run(variables)
 
     return action
 
