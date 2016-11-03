@@ -1,5 +1,4 @@
 """The tests for the emulated Hue component."""
-import time
 import json
 
 import unittest
@@ -43,7 +42,6 @@ def setup_hass_instance(emulated_hue_config):
 def start_hass_instance(hass):
     """Start the Home Assistant instance to test."""
     hass.start()
-    time.sleep(0.05)
 
 
 class TestEmulatedHue(unittest.TestCase):
