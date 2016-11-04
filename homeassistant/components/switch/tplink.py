@@ -81,7 +81,6 @@ class SmartPlugSwitch(SwitchDevice):
 
     def update(self):
         """Update the TP-Link switch's state."""
-
         try:
             self._state = self.smartplug.state
 
