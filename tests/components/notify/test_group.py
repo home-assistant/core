@@ -1,6 +1,7 @@
 """The tests for the notify.group platform."""
 import unittest
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import group
@@ -34,6 +35,7 @@ class TestNotifyGroup(unittest.TestCase):
 
         assert self.service is not None
 
+        @callback
         def record_event(event):
             """Record event to send notification."""
             self.events.append(event)

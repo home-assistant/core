@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 import unittest
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import script
 
@@ -54,6 +55,7 @@ class TestScriptComponent(unittest.TestCase):
         event = 'test_event'
         events = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             events.append(event)
@@ -93,6 +95,7 @@ class TestScriptComponent(unittest.TestCase):
         event = 'test_event'
         events = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             events.append(event)
