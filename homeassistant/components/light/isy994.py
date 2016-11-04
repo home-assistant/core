@@ -71,7 +71,7 @@ class ISYLightDevice(isy.ISYDevice, Light):
     @property
     def state_attributes(self):
         return {ATTR_BRIGHTNESS: self.value}
-        
+
     @property
     def supported_features(self):
         """Flag supported features."""
