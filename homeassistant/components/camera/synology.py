@@ -72,7 +72,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             query_req = yield from hass.websession.get(
                 syno_api_url,
                 params=query_payload,
-                verify_ssl=config.get(CONF_VERIFY_SSL)
+                verify=config.get(CONF_VERIFY_SSL)
             )
     except asyncio.TimeoutError:
         _LOGGER.error("Timeout on %s", syno_api_url)
