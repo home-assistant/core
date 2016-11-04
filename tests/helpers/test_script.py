@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest import mock
 import unittest
 
+from homeassistant.core import callback
 # Otherwise can't test just this file (import order issue)
 import homeassistant.components  # noqa
 import homeassistant.util.dt as dt_util
@@ -33,6 +34,7 @@ class TestScriptHelper(unittest.TestCase):
         event = 'test_event'
         calls = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             calls.append(event)
@@ -58,6 +60,7 @@ class TestScriptHelper(unittest.TestCase):
         """Test the calling of a service."""
         calls = []
 
+        @callback
         def record_call(service):
             """Add recorded event to set."""
             calls.append(service)
@@ -80,6 +83,7 @@ class TestScriptHelper(unittest.TestCase):
         """Test the calling of a service."""
         calls = []
 
+        @callback
         def record_call(service):
             """Add recorded event to set."""
             calls.append(service)
@@ -114,6 +118,7 @@ class TestScriptHelper(unittest.TestCase):
         event = 'test_event'
         events = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             events.append(event)
@@ -146,6 +151,7 @@ class TestScriptHelper(unittest.TestCase):
         event = 'test_evnt'
         events = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             events.append(event)
@@ -178,6 +184,7 @@ class TestScriptHelper(unittest.TestCase):
         event = 'test_event'
         events = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             events.append(event)
@@ -211,6 +218,7 @@ class TestScriptHelper(unittest.TestCase):
         """Test if we can pass variables to script."""
         calls = []
 
+        @callback
         def record_call(service):
             """Add recorded event to set."""
             calls.append(service)
@@ -257,6 +265,7 @@ class TestScriptHelper(unittest.TestCase):
         event = 'test_event'
         events = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             events.append(event)
@@ -290,6 +299,7 @@ class TestScriptHelper(unittest.TestCase):
         event = 'test_event'
         events = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             events.append(event)
@@ -318,6 +328,7 @@ class TestScriptHelper(unittest.TestCase):
         event = 'test_event'
         events = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             events.append(event)
