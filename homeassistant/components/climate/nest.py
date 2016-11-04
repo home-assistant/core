@@ -8,7 +8,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.loader import get_component
 from homeassistant.components.nest import DATA_NEST
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,

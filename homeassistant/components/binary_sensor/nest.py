@@ -39,8 +39,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     all_sensors = []
     for structure, device in nest.devices():
-        sensors = [NestBinarySensor(structure, device, variable)
-                   for variable in config[CONF_MONITORED_CONDITIONS]]
+        all_sensors.extend(
+            [NestBinarySensor(structure, device, variable)
+             for variable in config[CONF_MONITORED_CONDITIONS]])
 
     add_devices(all_sensors, True)
 
