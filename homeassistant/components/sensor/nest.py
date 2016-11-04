@@ -8,7 +8,7 @@ from itertools import chain
 
 import voluptuous as vol
 
-import homeassistant.components.nest as DATA_NEST
+from homeassistant.components.nest import DATA_NEST, DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_PLATFORM, CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS
@@ -41,7 +41,7 @@ _VALID_SENSOR_TYPES = SENSOR_TYPES + SENSOR_TEMP_TYPES + PROTECT_VARS + \
                       list(WEATHER_VARS.keys())
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): nest.DOMAIN,
+    vol.Required(CONF_PLATFORM): DOMAIN,
     vol.Optional(CONF_SCAN_INTERVAL):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Required(CONF_MONITORED_CONDITIONS): [vol.In(_VALID_SENSOR_TYPES)],
