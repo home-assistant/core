@@ -30,9 +30,11 @@ SENSOR_TYPES = {
 
 CONF_HOME = 'home'
 CONF_CAMERAS = 'cameras'
+CONF_LIMIT = 'limit'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOME): cv.string,
+    vol.Optional(CONF_LIMIT): cv.positive_int,
     vol.Optional(CONF_CAMERAS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES.keys()):
@@ -45,6 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup access to Netatmo binary sensor."""
     netatmo = get_component('netatmo')
     home = config.get(CONF_HOME, None)
+    limit = config.get(CONF_LIMIT, 15)
 
     import lnetatmo
     try:
@@ -62,18 +65,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                camera_name not in config[CONF_CAMERAS]:
                 continue
         for variable in sensors:
-            add_devices([WelcomeBinarySensor(data, camera_name, home,
+            add_devices([WelcomeBinarySensor(data, camera_name, home, limit,
                                              variable)])
 
 
 class WelcomeBinarySensor(BinarySensorDevice):
     """Represent a single binary sensor in a Netatmo Welcome device."""
 
-    def __init__(self, data, camera_name, home, sensor):
+    def __init__(self, data, camera_name, home, limit, sensor):
         """Setup for access to the Netatmo camera events."""
         self._data = data
         self._camera_name = camera_name
         self._home = home
+        self._limit=limit
         if home:
             self._name = home + ' / ' + camera_name
         else:
@@ -114,14 +118,17 @@ class WelcomeBinarySensor(BinarySensorDevice):
         if self._sensor_name == "Someone known":
             self._state =\
                     self._data.welcomedata.someoneKnownSeen(self._home,
-                                                            self._camera_name)
+                                                            self._camera_name,
+                                                            self._limit*60)
         elif self._sensor_name == "Someone unknown":
             self._state =\
                 self._data.welcomedata.someoneUnknownSeen(self._home,
-                                                          self._camera_name)
+                                                          self._camera_name,
+                                                          self._limit*60)
         elif self._sensor_name == "Motion":
             self._state =\
                 self._data.welcomedata.motionDetected(self._home,
-                                                      self._camera_name)
+                                                      self._camera_name,
+                                                      self._limit*60)
         else:
             return None
