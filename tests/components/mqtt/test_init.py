@@ -6,6 +6,7 @@ import socket
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
@@ -29,6 +30,7 @@ class TestMQTT(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
+    @callback
     def record_calls(self, *args):
         """Helper for recording calls."""
         self.calls.append(args)
@@ -236,6 +238,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         """Test if receiving triggers an event."""
         calls = []
 
+        @callback
         def record(event):
             """Helper to record calls."""
             calls.append(event)
@@ -321,6 +324,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         """Test receiving a non utf8 encoded message."""
         calls = []
 
+        @callback
         def record(event):
             """Helper to record calls."""
             calls.append(event)
