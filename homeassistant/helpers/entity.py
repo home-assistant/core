@@ -217,6 +217,8 @@ class Entity(object):
 
         if state is None:
             state = STATE_UNKNOWN
+        else:
+            state = str(state)
 
         attr = self.state_attributes or {}
 
