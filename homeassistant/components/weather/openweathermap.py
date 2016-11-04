@@ -118,12 +118,14 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self.data.get_wind()['speed']
+        wind_speed = self.data.get_wind().get('speed')
+        return wind_speed if wind_speed is not None else STATE_UNKNOWN
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return self.data.get_wind()['deg']
+        wind_bearing = self.data.get_wind().get('deg')
+        return wind_bearing if wind_bearing is not None else STATE_UNKNOWN
 
     @property
     def attribution(self):
