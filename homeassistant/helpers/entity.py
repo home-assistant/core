@@ -244,7 +244,8 @@ class Entity(object):
 
         if end - start > 0.2:
             _LOGGER.warning('Updating state for %s took %.3f seconds. '
-                            'Please report to the developers.', self.entity_id,
+                            'Please report platform to the developers at '
+                            'https://goo.gl/Nvioub', self.entity_id,
                             end - start)
 
         # Overwrite properties that have been set in the config file.
