@@ -39,6 +39,7 @@ class TestComponentLogbook(unittest.TestCase):
         """Test if service call create log book entry."""
         calls = []
 
+        @ha.callback
         def event_listener(event):
             calls.append(event)
 
@@ -69,6 +70,7 @@ class TestComponentLogbook(unittest.TestCase):
         """Test if service call create log book entry without message."""
         calls = []
 
+        @ha.callback
         def event_listener(event):
             calls.append(event)
 
