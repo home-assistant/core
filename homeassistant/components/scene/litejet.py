@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.litejet/
 """
 import logging
+
 import homeassistant.components.litejet as litejet
 from homeassistant.components.scene import Scene
 
@@ -16,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup scenes for the LiteJet platform."""
+    """Set up scenes for the LiteJet platform."""
     litejet_ = hass.data['litejet_system']
 
     devices = []
@@ -28,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class LiteJetScene(Scene):
-    """Represents a single LiteJet scene."""
+    """Representation of a single LiteJet scene."""
 
     def __init__(self, lj, i, name):
         """Initialize the scene."""
