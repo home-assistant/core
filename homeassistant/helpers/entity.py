@@ -1,6 +1,7 @@
 """An abstract class for entities."""
 import asyncio
 import logging
+from timeit import default_timer as timer
 
 from typing import Any, Optional, List, Dict
 
@@ -210,7 +211,15 @@ class Entity(object):
                 #     future support?
                 yield from self.hass.loop.run_in_executor(None, self.update)
 
-        state = STATE_UNKNOWN if self.state is None else str(self.state)
+        start = timer()
+
+        state = self.state
+
+        if state is None:
+            state = STATE_UNKNOWN
+        else:
+            state = str(state)
+
         attr = self.state_attributes or {}
 
         device_attr = self.device_state_attributes
@@ -230,6 +239,13 @@ class Entity(object):
         self._attr_setter('entity_picture', str, ATTR_ENTITY_PICTURE, attr)
         self._attr_setter('hidden', bool, ATTR_HIDDEN, attr)
         self._attr_setter('assumed_state', bool, ATTR_ASSUMED_STATE, attr)
+
+        end = timer()
+
+        if end - start > 0.2:
+            _LOGGER.warning('Updating state for %s took %.3f seconds. '
+                            'Please report to the developers.', self.entity_id,
+                            end - start)
 
         # Overwrite properties that have been set in the config file.
         attr.update(_OVERWRITE.get(self.entity_id, {}))
