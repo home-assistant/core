@@ -60,7 +60,6 @@ def config_from_file(filename, config=None):
             return {}
 
 
-# pylint: disable=abstract-method
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Plex platform."""
     config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))

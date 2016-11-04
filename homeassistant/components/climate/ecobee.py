@@ -72,7 +72,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         schema=SET_FAN_MIN_ON_TIME_SCHEMA)
 
 
-# pylint: disable=abstract-method
 class Thermostat(ClimateDevice):
     """A thermostat class for Ecobee."""
 

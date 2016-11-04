@@ -69,7 +69,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                   discovery_info, zwave.NETWORK)
 
 
-# pylint: disable=abstract-method
 class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     """Represents a ZWave Climate device."""
 

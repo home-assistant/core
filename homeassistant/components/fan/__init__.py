@@ -196,7 +196,7 @@ def setup(hass, config: dict) -> None:
 class FanEntity(ToggleEntity):
     """Representation of a fan."""
 
-    # pylint: disable=no-self-use, abstract-method
+    # pylint: disable=no-self-use
 
     def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""
