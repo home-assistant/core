@@ -63,7 +63,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class PandoraMediaPlayer(MediaPlayerDevice):
     """A media player that uses the Pianobar interface to Pandora."""
 
-    # pylint: disable=abstract-method
     def __init__(self, name):
         """Initialize the demo device."""
         MediaPlayerDevice.__init__(self)

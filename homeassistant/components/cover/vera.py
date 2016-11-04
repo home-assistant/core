@@ -22,7 +22,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device in VERA_DEVICES['cover'])
 
 
-# pylint: disable=abstract-method
 class VeraCover(VeraDevice, CoverDevice):
     """Represents a Vera Cover in Home Assistant."""
 

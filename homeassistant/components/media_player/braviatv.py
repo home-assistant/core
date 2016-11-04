@@ -180,7 +180,6 @@ def request_configuration(config, hass, add_devices):
     )
 
 
-# pylint: disable=abstract-method
 class BraviaTVDevice(MediaPlayerDevice):
     """Representation of a Sony Bravia TV."""
 

@@ -52,7 +52,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SnapcastDevice(MediaPlayerDevice):
     """Representation of a Snapcast client device."""
 
-    # pylint: disable=abstract-method
     def __init__(self, client):
         """Initialize the Snapcast device."""
         self._client = client

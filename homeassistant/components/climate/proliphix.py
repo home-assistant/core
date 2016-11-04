@@ -36,7 +36,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([ProliphixThermostat(pdp)])
 
 
-# pylint: disable=abstract-method
 class ProliphixThermostat(ClimateDevice):
     """Representation a Proliphix thermostat."""
 

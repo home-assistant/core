@@ -86,19 +86,19 @@ def setup(hass, yaml_config):
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr, config.listen_port)
 
-    @core.callback
+    @asyncio.coroutine
     def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
         upnp_listener.stop()
-        hass.loop.create_task(server.stop())
+        yield from server.stop()
 
-    @core.callback
+    @asyncio.coroutine
     def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
-        hass.loop.create_task(server.start())
         upnp_listener.start()
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                    stop_emulated_hue_bridge)
+        yield from server.start()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
 

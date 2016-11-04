@@ -85,7 +85,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class YamahaDevice(MediaPlayerDevice):
     """Representation of a Yamaha device."""
 
-    # pylint: disable=abstract-method
     def __init__(self, name, receiver, source_ignore, source_names):
         """Initialize the Yamaha Receiver."""
         self._receiver = receiver
