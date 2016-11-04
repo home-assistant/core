@@ -149,7 +149,6 @@ class GlancesSensor(Entity):
         self.rest.update()
 
 
-# pylint: disable=too-few-public-methods
 class GlancesData(object):
     """The class for handling the data retrieval."""
 
