@@ -253,7 +253,7 @@ class HomeAssistant(object):
         while True:
             # Wait for the pending tasks are down
             if len(self._pending_tasks) > 0:
-                yield from asyncio.gather(*self._pending_tasks, loop=self.loop)
+                yield from asyncio.wait(self._pending_tasks, loop=self.loop)
 
             # Verify the loop is empty
             ret = yield from self.loop.run_in_executor(None, self._loop_empty)
