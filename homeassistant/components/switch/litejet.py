@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.litejet/
 """
 import logging
+
 import homeassistant.components.litejet as litejet
 from homeassistant.components.switch import SwitchDevice
 
@@ -16,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LiteJet switch platform."""
+    """Set up the LiteJet switch platform."""
     litejet_ = hass.data['litejet_system']
 
     devices = []
@@ -28,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class LiteJetSwitch(SwitchDevice):
-    """Represents a single LiteJet switch."""
+    """Representation of a single LiteJet switch."""
 
     def __init__(self, hass, lj, i, name):
         """Initialize a LiteJet switch."""
