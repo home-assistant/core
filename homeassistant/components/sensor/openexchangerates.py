@@ -11,7 +11,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_PAYLOAD)
+from homeassistant.const import (
+    CONF_API_KEY, CONF_NAME, CONF_BASE, CONF_QUOTE, ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -19,8 +20,7 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://openexchangerates.org/api/latest.json'
 
-CONF_BASE = 'base'
-CONF_QUOTE = 'quote'
+CONF_ATTRIBUTION = "Data provided by openexchangerates.org"
 
 DEFAULT_BASE = 'USD'
 DEFAULT_NAME = 'Exchange Rate Sensor'
@@ -36,20 +36,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Open Exchange Rates sensor."""
+    """Set up the Open Exchange Rates sensor."""
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
     base = config.get(CONF_BASE)
     quote = config.get(CONF_QUOTE)
-    payload = config.get(CONF_PAYLOAD)
 
-    rest = OpenexchangeratesData(_RESOURCE, api_key, base, quote, payload)
-    response = requests.get(_RESOURCE, params={'base': base,
-                                               'app_id': api_key},
-                            timeout=10)
+    parameters = {
+        'base': base,
+        'app_id': api_key,
+    }
+
+    rest = OpenexchangeratesData(_RESOURCE, parameters, quote)
+    response = requests.get(_RESOURCE, params=parameters, timeout=10)
+
     if response.status_code != 200:
         _LOGGER.error("Check your OpenExchangeRates API key")
         return False
+
     rest.update()
     add_devices([OpenexchangeratesSensor(rest, name, quote)])
 
@@ -77,7 +81,10 @@ class OpenexchangeratesSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return other attributes of the sensor."""
-        return self.rest.data
+        attr = self.rest.data
+        attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+
+        return attr
 
     def update(self):
         """Update current conditions."""
@@ -86,16 +93,13 @@ class OpenexchangeratesSensor(Entity):
         self._state = round(value[str(self._quote)], 4)
 
 
-# pylint: disable=too-few-public-methods
 class OpenexchangeratesData(object):
     """Get data from Openexchangerates.org."""
 
-    # pylint: disable=too-many-arguments
-    def __init__(self, resource, api_key, base, quote, data):
+    def __init__(self, resource, parameters, quote):
         """Initialize the data object."""
         self._resource = resource
-        self._api_key = api_key
-        self._base = base
+        self._parameters = parameters
         self._quote = quote
         self.data = None
 
@@ -103,12 +107,10 @@ class OpenexchangeratesData(object):
     def update(self):
         """Get the latest data from openexchangerates.org."""
         try:
-            result = requests.get(self._resource, params={'base': self._base,
-                                                          'app_id':
-                                                          self._api_key},
-                                  timeout=10)
+            result = requests.get(
+                self._resource, params=self._parameters, timeout=10)
             self.data = result.json()['rates']
         except requests.exceptions.HTTPError:
-            _LOGGER.error("Check the Openexchangerates API Key")
+            _LOGGER.error("Check the Openexchangerates API key")
             self.data = None
             return False

@@ -122,7 +122,6 @@ def setup(hass, config):
 class ScriptEntity(ToggleEntity):
     """Representation of a script entity."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, hass, object_id, name, sequence):
         """Initialize the script."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)

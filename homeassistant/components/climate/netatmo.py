@@ -54,7 +54,6 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
         return None
 
 
-# pylint: disable=abstract-method
 class NetatmoThermostat(ClimateDevice):
     """Representation a Netatmo thermostat."""
 

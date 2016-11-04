@@ -34,7 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=abstract-method
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Roku platform."""
     hosts = []
@@ -65,8 +64,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RokuDevice(MediaPlayerDevice):
     """Representation of a Roku device on the network."""
 
-    # pylint: disable=abstract-method
-    # pylint: disable=too-many-public-methods
     def __init__(self, host):
         """Initialize the Roku device."""
         from roku import Roku

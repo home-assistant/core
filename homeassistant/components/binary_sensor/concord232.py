@@ -5,19 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.concord232/
 """
 import datetime
-
 import logging
+
+import requests
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, SENSOR_CLASSES)
 from homeassistant.const import (CONF_HOST, CONF_PORT)
-
 import homeassistant.helpers.config_validation as cv
-
-import requests
-
-import voluptuous as vol
-
 
 REQUIREMENTS = ['concord232==0.14']
 
@@ -27,8 +23,11 @@ CONF_EXCLUDE_ZONES = 'exclude_zones'
 CONF_ZONE_TYPES = 'zone_types'
 
 DEFAULT_HOST = 'localhost'
+DEFAULT_NAME = 'Alarm'
 DEFAULT_PORT = '5007'
 DEFAULT_SSL = False
+
+SCAN_INTERVAL = 1
 
 ZONE_TYPES_SCHEMA = vol.Schema({
     cv.positive_int: vol.In(SENSOR_CLASSES),
@@ -42,14 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
 })
 
-SCAN_INTERVAL = 1
 
-DEFAULT_NAME = "Alarm"
-
-
-# pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Concord232 binary sensor platform."""
+    """Set up the Concord232 binary sensor platform."""
     from concord232 import client as concord232_client
 
     host = config.get(CONF_HOST)
@@ -59,24 +53,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
 
     try:
-        _LOGGER.debug('Initializing Client.')
-        client = concord232_client.Client('http://{}:{}'
-                                          .format(host, port))
+        _LOGGER.debug("Initializing Client")
+        client = concord232_client.Client('http://{}:{}'.format(host, port))
         client.zones = client.list_zones()
         client.last_zone_update = datetime.datetime.now()
 
     except requests.exceptions.ConnectionError as ex:
-        _LOGGER.error('Unable to connect to Concord232: %s', str(ex))
+        _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
         return False
 
     for zone in client.zones:
-        _LOGGER.info('Loading Zone found: %s', zone['name'])
+        _LOGGER.info("Loading Zone found: %s", zone['name'])
         if zone['number'] not in exclude:
-            sensors.append(Concord232ZoneSensor(
-                hass,
-                client,
-                zone,
-                zone_types.get(zone['number'], get_opening_type(zone))))
+            sensors.append(
+                Concord232ZoneSensor(
+                    hass, client, zone, zone_types.get(zone['number'],
+                                                       get_opening_type(zone)))
+            )
 
         add_devices(sensors)
 
@@ -84,16 +77,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def get_opening_type(zone):
-    """Helper function to try to guess sensor type frm name."""
-    if "MOTION" in zone["name"]:
-        return "motion"
-    if "KEY" in zone["name"]:
-        return "safety"
-    if "SMOKE" in zone["name"]:
-        return "smoke"
-    if "WATER" in zone["name"]:
-        return "water"
-    return "opening"
+    """Helper function to try to guess sensor type from name."""
+    if 'MOTION' in zone['name']:
+        return 'motion'
+    if 'KEY' in zone['name']:
+        return 'safety'
+    if 'SMOKE' in zone['name']:
+        return 'smoke'
+    if 'WATER' in zone['name']:
+        return 'water'
+    return 'opening'
 
 
 class Concord232ZoneSensor(BinarySensorDevice):

@@ -165,7 +165,6 @@ class WUndergroundSensor(Entity):
             self.rest.update()
 
 
-# pylint: disable=too-few-public-methods
 class WUndergroundData(object):
     """Get data from WUnderground."""
 

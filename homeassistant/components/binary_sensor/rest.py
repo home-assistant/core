@@ -41,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable, too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the REST binary sensor."""
     name = config.get(CONF_NAME)
@@ -76,7 +75,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass, rest, name, sensor_class, value_template)])
 
 
-# pylint: disable=too-many-arguments
 class RestBinarySensor(BinarySensorDevice):
     """Representation of a REST binary sensor."""
 

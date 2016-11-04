@@ -40,7 +40,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LastfmSensor(Entity):
     """A class for the Last.fm account."""
 
-    # pylint: disable=abstract-method, too-many-instance-attributes
     def __init__(self, user, lastfm):
         """Initialize the sensor."""
         self._user = lastfm.get_user(user)

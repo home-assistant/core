@@ -9,14 +9,14 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import (BaseNotificationService,
-                                             PLATFORM_SCHEMA)
+from homeassistant.components.notify import (
+    BaseNotificationService, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_HOST
 
-_LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv'
-                '/archive/v0.1.2.zip'
+REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv/archive/v0.1.2.zip'
                 '#pylgtv==0.1.2']
+
+_LOGGER = logging.getLogger(__name__)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -34,16 +34,15 @@ def get_service(hass, config):
     try:
         client.register()
     except PyLGTVPairException:
-        _LOGGER.error('Pairing failed.')
+        _LOGGER.error("Pairing with TV failed")
         return None
     except OSError:
-        _LOGGER.error('Host unreachable.')
+        _LOGGER.error("TV unreachable")
         return None
 
     return LgWebOSNotificationService(client)
 
 
-# pylint: disable=too-few-public-methods
 class LgWebOSNotificationService(BaseNotificationService):
     """Implement the notification service for LG WebOS TV."""
 
@@ -58,6 +57,6 @@ class LgWebOSNotificationService(BaseNotificationService):
         try:
             self._client.send_message(message)
         except PyLGTVPairException:
-            _LOGGER.error('Pairing failed.')
+            _LOGGER.error("Pairing with TV failed")
         except OSError:
-            _LOGGER.error('Host unreachable.')
+            _LOGGER.error("TV unreachable")

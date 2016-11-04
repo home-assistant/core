@@ -1,7 +1,6 @@
 """The tests for the Home Assistant HTTP component."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 import logging
-import time
 from ipaddress import ip_network
 from unittest.mock import patch
 
@@ -61,10 +60,10 @@ def setUpModule():
         for trusted_network in TRUSTED_NETWORKS]
 
     hass.start()
-    time.sleep(0.05)
 
 
-def tearDownModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def tearDownModule():
     """Stop the Home Assistant server."""
     hass.stop()
 

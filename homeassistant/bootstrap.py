@@ -27,13 +27,12 @@ from homeassistant.helpers import (
     event_decorators, service, config_per_platform, extract_domain_configs)
 
 _LOGGER = logging.getLogger(__name__)
-_CURRENT_SETUP = []
 
 ATTR_COMPONENT = 'component'
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
-_PERSISTENT_PLATFORMS = set()
-_PERSISTENT_VALIDATION = set()
+_PERSISTENT_ERRORS = {}
+HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 
 
 def setup_component(hass: core.HomeAssistant, domain: str,
@@ -64,12 +63,14 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
 
     # OrderedSet is empty if component or dependencies could not be resolved
     if not components:
+        _async_persistent_notification(hass, domain, True)
         return False
 
     for component in components:
         res = yield from _async_setup_component(hass, component, config)
         if not res:
             _LOGGER.error('Component %s failed to setup', component)
+            _async_persistent_notification(hass, component, True)
             return False
 
     return True
@@ -88,6 +89,7 @@ def _handle_requirements(hass: core.HomeAssistant, component,
         if not pkg_util.install_package(req, target=hass.config.path('deps')):
             _LOGGER.error('Not initializing %s because could not install '
                           'dependency %s', name, req)
+            _async_persistent_notification(hass, name)
             return False
 
     return True
@@ -100,58 +102,87 @@ def _async_setup_component(hass: core.HomeAssistant,
 
     This method is a coroutine.
     """
-    # pylint: disable=too-many-return-statements,too-many-branches
-    # pylint: disable=too-many-statements
+    # pylint: disable=too-many-return-statements
     if domain in hass.config.components:
         return True
 
-    if domain in _CURRENT_SETUP:
+    setup_lock = hass.data.get('setup_lock')
+    if setup_lock is None:
+        setup_lock = hass.data['setup_lock'] = asyncio.Lock(loop=hass.loop)
+
+    setup_progress = hass.data.get('setup_progress')
+    if setup_progress is None:
+        setup_progress = hass.data['setup_progress'] = []
+
+    if domain in setup_progress:
         _LOGGER.error('Attempt made to setup %s during setup of %s',
                       domain, domain)
+        _async_persistent_notification(hass, domain, True)
         return False
-
-    config = yield from async_prepare_setup_component(hass, config, domain)
-
-    if config is None:
-        return False
-
-    component = loader.get_component(domain)
-    _CURRENT_SETUP.append(domain)
 
     try:
-        if hasattr(component, 'async_setup'):
-            result = yield from component.async_setup(hass, config)
-        else:
-            result = yield from hass.loop.run_in_executor(
-                None, component.setup, hass, config)
+        # Used to indicate to discovery that a setup is ongoing and allow it
+        # to wait till it is done.
+        did_lock = False
+        if not setup_lock.locked():
+            yield from setup_lock.acquire()
+            did_lock = True
+
+        setup_progress.append(domain)
+        config = yield from async_prepare_setup_component(hass, config, domain)
+
+        if config is None:
+            return False
+
+        component = loader.get_component(domain)
+        if component is None:
+            _async_persistent_notification(hass, domain)
+            return False
+
+        async_comp = hasattr(component, 'async_setup')
+
+        try:
+            if async_comp:
+                result = yield from component.async_setup(hass, config)
+            else:
+                result = yield from hass.loop.run_in_executor(
+                    None, component.setup, hass, config)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error during setup of component %s', domain)
+            _async_persistent_notification(hass, domain, True)
+            return False
 
         if result is False:
             _LOGGER.error('component %s failed to initialize', domain)
+            _async_persistent_notification(hass, domain, True)
             return False
         elif result is not True:
             _LOGGER.error('component %s did not return boolean if setup '
                           'was successful. Disabling component.', domain)
+            _async_persistent_notification(hass, domain, True)
             loader.set_component(domain, None)
             return False
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception('Error during setup of component %s', domain)
-        return False
+
+        hass.config.components.append(component.DOMAIN)
+
+        # Assumption: if a component does not depend on groups
+        # it communicates with devices
+        if (not async_comp and
+                'group' not in getattr(component, 'DEPENDENCIES', [])):
+            if hass.pool is None:
+                hass.async_init_pool()
+            if hass.pool.worker_count <= 10:
+                hass.pool.add_worker()
+
+        hass.bus.async_fire(
+            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
+        )
+
+        return True
     finally:
-        _CURRENT_SETUP.remove(domain)
-
-    hass.config.components.append(component.DOMAIN)
-
-    # Assumption: if a component does not depend on groups
-    # it communicates with devices
-    if 'group' not in getattr(component, 'DEPENDENCIES', []) and \
-       hass.pool.worker_count <= 10:
-        hass.pool.add_worker()
-
-    hass.bus.async_fire(
-        EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
-    )
-
-    return True
+        setup_progress.remove(domain)
+        if did_lock:
+            setup_lock.release()
 
 
 def prepare_setup_component(hass: core.HomeAssistant, config: dict,
@@ -264,13 +295,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
     # Not found
     if platform is None:
         _LOGGER.error('Unable to find platform %s', platform_path)
-
-        _PERSISTENT_PLATFORMS.add(platform_path)
-        message = ('Unable to find the following platforms: ' +
-                   ', '.join(list(_PERSISTENT_PLATFORMS)) +
-                   '(please check your configuration)')
-        persistent_notification.async_create(
-            hass, message, 'Invalid platforms', 'platform_errors')
+        _async_persistent_notification(hass, platform_path)
         return None
 
     # Already loaded
@@ -285,6 +310,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
                 'Unable to prepare setup for platform %s because '
                 'dependency %s could not be initialized', platform_path,
                 component)
+            _async_persistent_notification(hass, platform_path, True)
             return None
 
     res = yield from hass.loop.run_in_executor(
@@ -295,7 +321,6 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
     return platform
 
 
-# pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config: Dict[str, Any],
                      hass: Optional[core.HomeAssistant]=None,
                      config_dir: Optional[str]=None,
@@ -327,15 +352,14 @@ def from_config_dict(config: Dict[str, Any],
             future.set_exception(exc)
 
     # run task
-    future = asyncio.Future()
-    asyncio.Task(_async_init_from_config_dict(future), loop=hass.loop)
+    future = asyncio.Future(loop=hass.loop)
+    hass.loop.create_task(_async_init_from_config_dict(future))
     hass.loop.run_until_complete(future)
 
     return future.result()
 
 
 @asyncio.coroutine
-# pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def async_from_config_dict(config: Dict[str, Any],
                            hass: core.HomeAssistant,
                            config_dir: Optional[str]=None,
@@ -428,8 +452,8 @@ def from_config_file(config_path: str,
             future.set_exception(exc)
 
     # run task
-    future = asyncio.Future()
-    asyncio.Task(_async_init_from_config_file(future), loop=hass.loop)
+    future = asyncio.Future(loop=hass.loop)
+    hass.loop.create_task(_async_init_from_config_file(future))
     hass.loop.run_until_complete(future)
 
     return future.result()
@@ -535,18 +559,30 @@ def log_exception(ex, domain, config, hass):
 
 
 @core.callback
+def _async_persistent_notification(hass: core.HomeAssistant, component: str,
+                                   link: Optional[bool]=False):
+    """Print a persistent notification.
+
+    This method must be run in the event loop.
+    """
+    _PERSISTENT_ERRORS[component] = _PERSISTENT_ERRORS.get(component) or link
+    _lst = [HA_COMPONENT_URL.format(name.replace('_', '-'), name)
+            if link else name for name, link in _PERSISTENT_ERRORS.items()]
+    message = ('The following components and platforms could not be set up:\n'
+               '* ' + '\n* '.join(list(_lst)) + '\nPlease check your config')
+    persistent_notification.async_create(
+        hass, message, 'Invalid config', 'invalid_config')
+
+
+@core.callback
 def async_log_exception(ex, domain, config, hass):
     """Generate log exception for config validation.
 
     This method must be run in the event loop.
     """
     message = 'Invalid config for [{}]: '.format(domain)
-    _PERSISTENT_VALIDATION.add(domain)
-    message = ('The following platforms contain invalid configuration:  ' +
-               ', '.join(list(_PERSISTENT_VALIDATION)) +
-               '  (please check your configuration). ')
-    persistent_notification.async_create(
-        hass, message, 'Invalid config', 'invalid_config')
+    if hass is not None:
+        _async_persistent_notification(hass, domain, True)
 
     if 'extra keys not allowed' in ex.error_message:
         message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\

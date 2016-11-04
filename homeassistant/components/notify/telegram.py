@@ -71,13 +71,12 @@ def load_data(url=None, file=None, username=None, password=None):
         else:
             _LOGGER.warning("Can't load photo no photo found in params!")
 
-    except (OSError, IOError, requests.exceptions.RequestException):
-        _LOGGER.error("Can't load photo into ByteIO")
+    except OSError as error:
+        _LOGGER.error("Can't load photo into ByteIO: %s", error)
 
     return None
 
 
-# pylint: disable=too-few-public-methods
 class TelegramNotificationService(BaseNotificationService):
     """Implement the notification service for Telegram."""
 

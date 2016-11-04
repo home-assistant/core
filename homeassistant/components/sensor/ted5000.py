@@ -3,14 +3,10 @@ Support gahtering ted500 information.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ted5000/
-
-Ted5000 collection from
-https://github.com/weirded/ted5000-collectd-plugin/blob/master/ted5000.py
-
-Ted500 framework from glances plugin.
 """
 import logging
 from datetime import timedelta
+
 import requests
 import voluptuous as vol
 
@@ -20,18 +16,20 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+REQUIREMENTS = ['xmltodict==0.10.2']
+
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['xmltodict==0.10.2']
+DEFAULT_NAME = 'ted'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=80): cv.port,
-    vol.Optional(CONF_NAME, default='ted'): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
-
-_LOGGER = logging.getLogger(__name__)
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 
 # pylint: disable=unused-variable
@@ -39,7 +37,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Ted5000 sensor."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    url = "http://{}:{}/api/LiveData.xml".format(host, port)
+    name = config.get(CONF_NAME)
+    url = 'http://{}:{}/api/LiveData.xml'.format(host, port)
 
     gateway = Ted5000Gateway(url)
 
@@ -48,8 +47,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     for mtu in gateway.data:
-        dev.append(Ted5000Sensor(gateway, config.get('name'), mtu, 'W'))
-        dev.append(Ted5000Sensor(gateway, config.get('name'), mtu, 'V'))
+        dev.append(Ted5000Sensor(gateway, name, mtu, 'W'))
+        dev.append(Ted5000Sensor(gateway, name, mtu, 'V'))
 
     add_devices(dev)
     return True
@@ -62,7 +61,7 @@ class Ted5000Sensor(Entity):
         """Initialize the sensor."""
         units = {'W': 'power', 'V': 'voltage'}
         self._gateway = gateway
-        self._name = '%s mtu%d %s' % (name, mtu, units[unit])
+        self._name = '{} mtu{} {}'.format(name, mtu, units[unit])
         self._mtu = mtu
         self._unit = unit
         self.update()
@@ -90,7 +89,6 @@ class Ted5000Sensor(Entity):
         self._gateway.update()
 
 
-# pylint: disable=too-few-public-methods
 class Ted5000Gateway(object):
     """The class for handling the data retrieval."""
 
@@ -120,5 +118,4 @@ class Ted5000Gateway(object):
                 if power == 0 or voltage == 0:
                     continue
                 else:
-                    self.data[mtu] = {'W': power,
-                                      'V': voltage / 10}
+                    self.data[mtu] = {'W': power, 'V': voltage / 10}

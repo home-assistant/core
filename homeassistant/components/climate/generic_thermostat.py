@@ -62,11 +62,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         target_temp, ac_mode, min_cycle_duration)])
 
 
-# pylint: disable=too-many-instance-attributes, abstract-method
 class GenericThermostat(ClimateDevice):
     """Representation of a GenericThermostat device."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
                  min_temp, max_temp, target_temp, ac_mode, min_cycle_duration):
         """Initialize the thermostat."""

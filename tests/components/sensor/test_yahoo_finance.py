@@ -11,10 +11,13 @@ from tests.common import (
 
 VALID_CONFIG = {
     'platform': 'yahoo_finance',
-    'symbol': 'YHOO'
+    'symbols': [
+        'YHOO',
+    ]
 }
 
 
+# pylint: disable=invalid-name
 class TestYahooFinanceSetup(unittest.TestCase):
     """Test the Yahoo Finance platform."""
 
@@ -29,13 +32,13 @@ class TestYahooFinanceSetup(unittest.TestCase):
 
     @patch('yahoo_finance.Base._request',
            return_value=json.loads(load_fixture('yahoo_finance.json')))
-    def test_default_setup(self, m):  # pylint: disable=invalid-name
+    def test_default_setup(self, mock_request):
         """Test the default setup."""
         with assert_setup_component(1, sensor.DOMAIN):
             assert setup_component(self.hass, sensor.DOMAIN, {
                 'sensor': VALID_CONFIG})
 
-        state = self.hass.states.get('sensor.yahoo_stock')
-        self.assertEqual("41.69", state.attributes.get('open'))
-        self.assertEqual("41.79", state.attributes.get('prev_close'))
-        self.assertEqual("YHOO", state.attributes.get('unit_of_measurement'))
+        state = self.hass.states.get('sensor.yhoo')
+        self.assertEqual('41.69', state.attributes.get('open'))
+        self.assertEqual('41.79', state.attributes.get('prev_close'))
+        self.assertEqual('YHOO', state.attributes.get('unit_of_measurement'))

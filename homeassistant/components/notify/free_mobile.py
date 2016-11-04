@@ -29,7 +29,6 @@ def get_service(hass, config):
                                       config[CONF_ACCESS_TOKEN])
 
 
-# pylint: disable=too-few-public-methods
 class FreeSMSNotificationService(BaseNotificationService):
     """Implement a notification service for the Free Mobile SMS service."""
 

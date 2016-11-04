@@ -5,25 +5,22 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.envisalink/
 """
 import logging
+
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.envisalink import (EVL_CONTROLLER,
-                                                 EnvisalinkDevice,
-                                                 PARTITION_SCHEMA,
-                                                 CONF_CODE,
-                                                 CONF_PANIC,
-                                                 CONF_PARTITIONNAME,
-                                                 SIGNAL_PARTITION_UPDATE,
-                                                 SIGNAL_KEYPAD_UPDATE)
+from homeassistant.components.envisalink import (
+    EVL_CONTROLLER, EnvisalinkDevice, PARTITION_SCHEMA, CONF_CODE, CONF_PANIC,
+    CONF_PARTITIONNAME, SIGNAL_PARTITION_UPDATE, SIGNAL_KEYPAD_UPDATE)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
 
-DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['envisalink']
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for Envisalink alarm panels."""
     _configured_partitions = discovery_info['partitions']
     _code = discovery_info[CONF_CODE]
@@ -38,30 +35,29 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             _panic_type,
             EVL_CONTROLLER.alarm_state['partition'][part_num],
             EVL_CONTROLLER)
-        add_devices_callback([_device])
+        add_devices([_device])
 
     return True
 
 
 class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
-    """Represents the Envisalink-based alarm panel."""
+    """Representation of an Envisalink-based alarm panel."""
 
-    # pylint: disable=too-many-arguments
-    def __init__(self, partition_number, alarm_name,
-                 code, panic_type, info, controller):
+    def __init__(self, partition_number, alarm_name, code, panic_type, info,
+                 controller):
         """Initialize the alarm panel."""
         from pydispatch import dispatcher
         self._partition_number = partition_number
         self._code = code
         self._panic_type = panic_type
-        _LOGGER.debug('Setting up alarm: ' + alarm_name)
+        _LOGGER.debug("Setting up alarm: %s", alarm_name)
         EnvisalinkDevice.__init__(self, alarm_name, info, controller)
-        dispatcher.connect(self._update_callback,
-                           signal=SIGNAL_PARTITION_UPDATE,
-                           sender=dispatcher.Any)
-        dispatcher.connect(self._update_callback,
-                           signal=SIGNAL_KEYPAD_UPDATE,
-                           sender=dispatcher.Any)
+        dispatcher.connect(
+            self._update_callback, signal=SIGNAL_PARTITION_UPDATE,
+            sender=dispatcher.Any)
+        dispatcher.connect(
+            self._update_callback, signal=SIGNAL_KEYPAD_UPDATE,
+            sender=dispatcher.Any)
 
     def _update_callback(self, partition):
         """Update HA state, if needed."""
@@ -90,20 +86,20 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if self._code:
-            EVL_CONTROLLER.disarm_partition(str(code),
-                                            self._partition_number)
+            EVL_CONTROLLER.disarm_partition(
+                str(code), self._partition_number)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         if self._code:
-            EVL_CONTROLLER.arm_stay_partition(str(code),
-                                              self._partition_number)
+            EVL_CONTROLLER.arm_stay_partition(
+                str(code), self._partition_number)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         if self._code:
-            EVL_CONTROLLER.arm_away_partition(str(code),
-                                              self._partition_number)
+            EVL_CONTROLLER.arm_away_partition(
+                str(code), self._partition_number)
 
     def alarm_trigger(self, code=None):
         """Alarm trigger command. Will be used to trigger a panic alarm."""

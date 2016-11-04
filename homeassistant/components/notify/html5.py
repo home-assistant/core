@@ -255,7 +255,6 @@ class HTML5PushCallbackView(HomeAssistantView):
 
     # The following is based on code from Auth0
     # https://auth0.com/docs/quickstart/backend/python
-    # pylint: disable=too-many-return-statements
     def check_authorization_header(self, request):
         """Check the authorization header."""
         import jwt
@@ -320,11 +319,9 @@ class HTML5PushCallbackView(HomeAssistantView):
                           'event': event_payload[ATTR_TYPE]})
 
 
-# pylint: disable=too-few-public-methods
 class HTML5NotificationService(BaseNotificationService):
     """Implement the notification service for HTML5."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, gcm_key, registrations):
         """Initialize the service."""
         self._gcm_key = gcm_key
@@ -338,7 +335,6 @@ class HTML5NotificationService(BaseNotificationService):
             targets[registration] = registration
         return targets
 
-    # pylint: disable=too-many-locals
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         import jwt

@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 from aiohttp import web
 
-from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
+from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import (
     async_run_test, get_binary, CONF_INPUT, CONF_EXTRA_ARGUMENTS)
 import homeassistant.helpers.config_validation as cv
@@ -87,7 +87,7 @@ class FFmpegCamera(Camera):
                 response.write(data)
         finally:
             self.hass.loop.create_task(stream.close())
-            self.hass.loop.create_task(response.write_eof())
+            yield from response.write_eof()
 
     @property
     def name(self):

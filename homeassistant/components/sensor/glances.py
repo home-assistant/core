@@ -104,7 +104,7 @@ class GlancesSensor(Entity):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
-    # pylint: disable=too-many-branches, too-many-return-statements
+    # pylint: disable=too-many-return-statements
     @property
     def state(self):
         """Return the state of the resources."""
@@ -149,7 +149,6 @@ class GlancesSensor(Entity):
         self.rest.update()
 
 
-# pylint: disable=too-few-public-methods
 class GlancesData(object):
     """The class for handling the data retrieval."""
 

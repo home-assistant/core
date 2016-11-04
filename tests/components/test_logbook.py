@@ -1,5 +1,5 @@
 """The tests for the logbook component."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 from datetime import timedelta
 import unittest
 from unittest.mock import patch
@@ -39,6 +39,7 @@ class TestComponentLogbook(unittest.TestCase):
         """Test if service call create log book entry."""
         calls = []
 
+        @ha.callback
         def event_listener(event):
             calls.append(event)
 
@@ -69,6 +70,7 @@ class TestComponentLogbook(unittest.TestCase):
         """Test if service call create log book entry without message."""
         calls = []
 
+        @ha.callback
         def event_listener(event):
             calls.append(event)
 

@@ -46,7 +46,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     hass.loop.create_task(async_add_devices([GenericCamera(hass, config)]))
 
 
-# pylint: disable=too-many-instance-attributes
 class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
@@ -115,7 +114,7 @@ class GenericCamera(Camera):
                         auth=self._auth
                     )
                     self._last_image = yield from respone.read()
-                    self.hass.loop.create_task(respone.release())
+                    yield from respone.release()
             except asyncio.TimeoutError:
                 _LOGGER.error('Timeout getting camera image')
                 return self._last_image

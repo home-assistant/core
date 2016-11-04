@@ -45,7 +45,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DenonDevice(MediaPlayerDevice):
     """Representation of a Denon device."""
 
-    # pylint: disable=too-many-public-methods, abstract-method
     def __init__(self, name, host):
         """Initialize the Denon device."""
         self._name = name

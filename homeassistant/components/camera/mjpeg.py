@@ -58,7 +58,6 @@ def extract_image_from_mjpeg(stream):
             return jpg
 
 
-# pylint: disable=too-many-instance-attributes
 class MjpegCamera(Camera):
     """An implementation of an IP camera that is reachable over a URL."""
 
@@ -72,10 +71,11 @@ class MjpegCamera(Camera):
         self._mjpeg_url = device_info[CONF_MJPEG_URL]
 
         self._auth = None
-        if self._authentication == HTTP_BASIC_AUTHENTICATION:
-            self._auth = aiohttp.BasicAuth(
-                self._username, password=self._password
-            )
+        if self._username and self._password:
+            if self._authentication == HTTP_BASIC_AUTHENTICATION:
+                self._auth = aiohttp.BasicAuth(
+                    self._username, password=self._password
+                )
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -124,7 +124,7 @@ class MjpegCamera(Camera):
                 response.write(data)
         finally:
             self.hass.loop.create_task(stream.release())
-            self.hass.loop.create_task(response.write_eof())
+            yield from response.write_eof()
 
     @property
     def name(self):

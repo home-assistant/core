@@ -26,7 +26,7 @@ DOMAIN = 'openalpr'
 DEPENDENCIES = ['ffmpeg']
 REQUIREMENTS = [
     'https://github.com/pvizeli/cloudapi/releases/download/1.0.2/'
-    'python-1.0.2.zip#cloud_api==1.0.2',
+    'python-1.0.2.zip#openalpr_api==1.0.2',
     'ha-alpr==0.3']
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,7 +117,6 @@ def restart(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_RESTART, data)
 
 
-# pylint: disable=too-many-locals
 def setup(hass, config):
     """Setup the OpenAlpr component."""
     engine = config[DOMAIN].get(CONF_ENGINE)
@@ -291,7 +290,6 @@ class OpenalprDevice(Entity):
 class OpenalprDeviceFFmpeg(OpenalprDevice):
     """Represent a openalpr device object for processing stream/images."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, name, interval, api, input_source,
                  extra_arguments=None):
         """Init image processing."""
@@ -362,7 +360,6 @@ class OpenalprDeviceFFmpeg(OpenalprDevice):
 class OpenalprDeviceImage(OpenalprDevice):
     """Represent a openalpr device object for processing stream/images."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, name, interval, api, input_source,
                  username=None, password=None):
         """Init image processing."""
@@ -403,7 +400,6 @@ class OpenalprDeviceImage(OpenalprDevice):
         self._next = time() + self._interval
 
 
-# pylint: disable=too-few-public-methods
 class OpenalprApi(object):
     """OpenAlpr api class."""
 
@@ -417,7 +413,6 @@ class OpenalprApi(object):
         raise NotImplementedError()
 
 
-# pylint: disable=too-few-public-methods
 class OpenalprApiCloud(OpenalprApi):
     """Use the cloud openalpr api to parse licences plate."""
 

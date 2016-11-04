@@ -1,5 +1,5 @@
 """Test the entity helper."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 import asyncio
 from unittest.mock import MagicMock
 

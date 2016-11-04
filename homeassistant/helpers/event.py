@@ -203,7 +203,6 @@ def async_track_sunset(hass, action, offset=None):
 track_sunset = threaded_listener_factory(async_track_sunset)
 
 
-# pylint: disable=too-many-arguments
 def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
                                 hour=None, minute=None, second=None,
                                 local=False):
@@ -248,7 +247,6 @@ def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
 track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
 
 
-# pylint: disable=too-many-arguments
 def async_track_time_change(hass, action, year=None, month=None, day=None,
                             hour=None, minute=None, second=None):
     """Add a listener that will fire if UTC time matches a pattern."""

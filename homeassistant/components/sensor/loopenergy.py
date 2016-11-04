@@ -10,6 +10,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
@@ -29,19 +31,23 @@ CONF_GAS_CALORIFIC = 'gas_calorific'
 
 CONF_GAS_TYPE = 'gas_type'
 
+DEFAULT_CALORIFIC = 39.11
+DEFAULT_UNIT = 'kW'
+
 ELEC_SCHEMA = vol.Schema({
     vol.Required(CONF_ELEC_SERIAL): cv.string,
     vol.Required(CONF_ELEC_SECRET): cv.string,
 })
 
-GAS_TYPE_SCHEMA = vol.In(['imperial', 'metric'])
+GAS_TYPE_SCHEMA = vol.In([CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL])
 
 GAS_SCHEMA = vol.Schema({
     vol.Required(CONF_GAS_SERIAL): cv.string,
     vol.Required(CONF_GAS_SECRET): cv.string,
-    vol.Optional(CONF_GAS_TYPE, default='metric'):
+    vol.Optional(CONF_GAS_TYPE, default=CONF_UNIT_SYSTEM_METRIC):
         GAS_TYPE_SCHEMA,
-    vol.Optional(CONF_GAS_CALORIFIC, default=39.11): vol.Coerce(float)
+    vol.Optional(CONF_GAS_CALORIFIC, default=DEFAULT_CALORIFIC):
+        vol.Coerce(float)
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -84,15 +90,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors)
 
 
-# pylint: disable=too-many-instance-attributes
 class LoopEnergyDevice(Entity):
     """Implementation of an Loop Energy base sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, controller):
         """Initialize the sensor."""
         self._state = None
-        self._unit_of_measurement = 'kW'
+        self._unit_of_measurement = DEFAULT_UNIT
         self._controller = controller
         self._name = None
 
@@ -120,11 +124,9 @@ class LoopEnergyDevice(Entity):
         self.update_ha_state(True)
 
 
-# pylint: disable=too-many-instance-attributes
 class LoopEnergyElec(LoopEnergyDevice):
     """Implementation of an Loop Energy Electricity sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, controller):
         """Initialize the sensor."""
         super(LoopEnergyElec, self).__init__(controller)
@@ -136,11 +138,9 @@ class LoopEnergyElec(LoopEnergyDevice):
         self._state = round(self._controller.electricity_useage, 2)
 
 
-# pylint: disable=too-many-instance-attributes
 class LoopEnergyGas(LoopEnergyDevice):
     """Implementation of an Loop Energy Gas sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, controller):
         """Initialize the sensor."""
         super(LoopEnergyGas, self).__init__(controller)

@@ -13,9 +13,9 @@ from homeassistant.components.notify import (
     ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
 
-_LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['messagebird==1.2.0']
 
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -40,7 +40,6 @@ def get_service(hass, config):
     return MessageBirdNotificationService(config.get(CONF_SENDER), client)
 
 
-# pylint: disable=too-few-public-methods
 class MessageBirdNotificationService(BaseNotificationService):
     """Implement the notification service for MessageBird."""
 

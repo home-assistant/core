@@ -344,7 +344,6 @@ class RfxtrxDevice(Entity):
     """Represents a Rfxtrx device.
 
     Contains the common logic for Rfxtrx lights and switches.
-
     """
 
     def __init__(self, name, event, datas, signal_repetitions):
@@ -397,7 +396,6 @@ class RfxtrxDevice(Entity):
         self.update_ha_state()
 
     def _send_command(self, command, brightness=0):
-        # pylint: disable=too-many-return-statements,too-many-branches
         if not self._event:
             return
 

@@ -114,10 +114,9 @@ def setup_scanner(hass, config, see):
                             'for topic %s.', topic)
             return None
 
+    # pylint: disable=too-many-return-statements
     def validate_payload(topic, payload, data_type):
         """Validate the OwnTracks payload."""
-        # pylint: disable=too-many-return-statements
-
         try:
             data = json.loads(payload)
         except ValueError:
@@ -143,9 +142,9 @@ def setup_scanner(hass, config, see):
             return data
         if max_gps_accuracy is not None and \
                 convert(data.get('acc'), float, 0.0) > max_gps_accuracy:
-            _LOGGER.warning('Ignoring %s update because expected GPS '
-                            'accuracy %s is not met: %s',
-                            data_type, max_gps_accuracy, payload)
+            _LOGGER.info('Ignoring %s update because expected GPS '
+                         'accuracy %s is not met: %s',
+                         data_type, max_gps_accuracy, payload)
             return None
         if convert(data.get('acc'), float, 1.0) == 0.0:
             _LOGGER.warning('Ignoring %s update because GPS accuracy'
@@ -248,7 +247,7 @@ def setup_scanner(hass, config, see):
                         if (max_gps_accuracy is not None and
                                 data['acc'] > max_gps_accuracy):
                             valid_gps = False
-                            _LOGGER.warning(
+                            _LOGGER.info(
                                 'Ignoring GPS in region exit because expected '
                                 'GPS accuracy %s is not met: %s',
                                 max_gps_accuracy, payload)

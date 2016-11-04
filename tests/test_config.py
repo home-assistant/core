@@ -1,5 +1,5 @@
 """Test config utils."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 import os
 import unittest
 import unittest.mock as mock
@@ -35,11 +35,13 @@ def create_file(path):
 class TestConfig(unittest.TestCase):
     """Test the configutils."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Initialize a test Home Assistant instance."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Clean up."""
         dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE
 

@@ -36,7 +36,6 @@ def call_from_config(hass: HomeAssistant, config: ConfigType,
 class Script():
     """Representation of a script."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, hass: HomeAssistant, sequence, name: str=None,
                  change_listener=None) -> None:
         """Initialize the script."""

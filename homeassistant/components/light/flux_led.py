@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/0.7.zip'
+REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/0.8.zip'
                 '#flux_led==0.8']
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +76,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FluxLight(Light):
     """Representation of a Flux light."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, device):
         """Initialize the light."""
         import flux_led

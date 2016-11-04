@@ -60,11 +60,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(covers)
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
 class CommandCover(CoverDevice):
     """Representation a command line cover."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, name, command_open, command_close, command_stop,
                  command_state, value_template):
         """Initialize the cover."""

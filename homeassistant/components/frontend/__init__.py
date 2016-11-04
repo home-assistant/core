@@ -8,8 +8,8 @@ import os
 from aiohttp import web
 
 from homeassistant.core import callback
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.components import api
+from homeassistant.const import EVENT_HOMEASSISTANT_START, HTTP_NOT_FOUND
+from homeassistant.components import api, group
 from homeassistant.components.http import HomeAssistantView
 from .version import FINGERPRINTS
 
@@ -27,7 +27,6 @@ MANIFEST_JSON = {
     "icons": [],
     "lang": "en-US",
     "name": "Home Assistant",
-    "orientation": "any",
     "short_name": "Assistant",
     "start_url": "/",
     "theme_color": "#03A9F4"
@@ -41,7 +40,6 @@ _LOGGER = logging.getLogger(__name__)
 def register_built_in_panel(hass, component_name, sidebar_title=None,
                             sidebar_icon=None, url_path=None, config=None):
     """Register a built-in panel."""
-    # pylint: disable=too-many-arguments
     path = 'panels/ha-panel-{}.html'.format(component_name)
 
     if hass.http.development:
@@ -70,7 +68,6 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
 
     Warning: this API will probably change. Use at own risk.
     """
-    # pylint: disable=too-many-arguments
     if url_path is None:
         url_path = component_name
 
@@ -187,7 +184,7 @@ class IndexView(HomeAssistantView):
     url = '/'
     name = "frontend:index"
     requires_auth = False
-    extra_urls = ['/states', '/states/<entity:entity_id>']
+    extra_urls = ['/states', '/states/{entity_id}']
 
     def __init__(self, hass, extra_urls):
         """Initialize the frontend view."""
@@ -205,6 +202,13 @@ class IndexView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request, entity_id=None):
         """Serve the index view."""
+        if entity_id is not None:
+            state = self.hass.states.get(entity_id)
+
+            if (not state or state.domain != 'group' or
+                    not state.attributes.get(group.ATTR_VIEW)):
+                return self.json_message('Entity not found', HTTP_NOT_FOUND)
+
         if self.hass.http.development:
             core_url = '/static/home-assistant-polymer/build/core.js'
             ui_url = '/static/home-assistant-polymer/src/home-assistant.html'

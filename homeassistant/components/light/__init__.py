@@ -124,7 +124,6 @@ def is_on(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-# pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, color_temp=None, white_value=None,
             profile=None, flash=None, effect=None, color_name=None):
@@ -172,7 +171,6 @@ def toggle(hass, entity_id=None, transition=None):
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
-# pylint: disable=too-many-branches, too-many-locals, too-many-statements
 def setup(hass, config):
     """Expose light control via statemachine and services."""
     component = EntityComponent(
@@ -267,7 +265,7 @@ def setup(hass, config):
 class Light(ToggleEntity):
     """Representation of a light."""
 
-    # pylint: disable=no-self-use, abstract-method
+    # pylint: disable=no-self-use
 
     @property
     def brightness(self):

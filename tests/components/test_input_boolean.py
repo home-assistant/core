@@ -1,5 +1,5 @@
 """The tests for the input_boolean component."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 import unittest
 import logging
 
@@ -17,11 +17,13 @@ _LOGGER = logging.getLogger(__name__)
 class TestInputBoolean(unittest.TestCase):
     """Test the input boolean module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

@@ -46,7 +46,6 @@ def track_sunset(offset=None):
     return track_sunset_decorator
 
 
-# pylint: disable=too-many-arguments
 def track_time_change(year=None, month=None, day=None, hour=None, minute=None,
                       second=None):
     """Decorator factory to track time changes."""
@@ -60,7 +59,6 @@ def track_time_change(year=None, month=None, day=None, hour=None, minute=None,
     return track_time_change_decorator
 
 
-# pylint: disable=too-many-arguments
 def track_utc_time_change(year=None, month=None, day=None, hour=None,
                           minute=None, second=None):
     """Decorator factory to track time changes."""

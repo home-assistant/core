@@ -23,8 +23,6 @@ DEFAULT_SCAN_INTERVAL = 15
 class EntityComponent(object):
     """Helper class that will help a component manage its entities."""
 
-    # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-many-arguments
     def __init__(self, logger, domain, hass,
                  scan_interval=DEFAULT_SCAN_INTERVAL, group_name=None):
         """Initialize an entity component."""
@@ -86,17 +84,18 @@ class EntityComponent(object):
         discovery.async_listen_platform(
             self.hass, self.domain, component_platform_discovered)
 
-    def extract_from_service(self, service):
+    def extract_from_service(self, service, expand_group=True):
         """Extract all known entities from a service call.
 
         Will return all entities if no entities specified in call.
         Will return an empty list if entities specified but unknown.
         """
         return run_callback_threadsafe(
-            self.hass.loop, self.async_extract_from_service, service
+            self.hass.loop, self.async_extract_from_service, service,
+            expand_group
         ).result()
 
-    def async_extract_from_service(self, service):
+    def async_extract_from_service(self, service, expand_group=True):
         """Extract all known entities from a service call.
 
         Will return all entities if no entities specified in call.
@@ -108,7 +107,7 @@ class EntityComponent(object):
             return list(self.entities.values())
 
         return [self.entities[entity_id] for entity_id
-                in extract_entity_ids(self.hass, service)
+                in extract_entity_ids(self.hass, service, expand_group)
                 if entity_id in self.entities]
 
     @asyncio.coroutine
@@ -155,14 +154,15 @@ class EntityComponent(object):
             self.logger.exception(
                 'Error while setting up platform %s', platform_type)
 
-    def add_entity(self, entity, platform=None):
+    def add_entity(self, entity, platform=None, update_before_add=False):
         """Add entity to component."""
         return run_coroutine_threadsafe(
-            self.async_add_entity(entity, platform), self.hass.loop
+            self.async_add_entity(entity, platform, update_before_add),
+            self.hass.loop
         ).result()
 
     @asyncio.coroutine
-    def async_add_entity(self, entity, platform=None):
+    def async_add_entity(self, entity, platform=None, update_before_add=False):
         """Add entity to component.
 
         This method must be run in the event loop.
@@ -171,6 +171,13 @@ class EntityComponent(object):
             return False
 
         entity.hass = self.hass
+
+        # update/init entity data
+        if update_before_add:
+            if hasattr(entity, 'async_update'):
+                yield from entity.async_update()
+            else:
+                yield from self.hass.loop.run_in_executor(None, entity.update)
 
         if getattr(entity, 'entity_id', None) is None:
             object_id = entity.name or DEVICE_DEFAULT_NAME
@@ -265,7 +272,6 @@ class EntityComponent(object):
 class EntityPlatform(object):
     """Keep track of entities for a single platform and stay in loop."""
 
-    # pylint: disable=too-few-public-methods
     def __init__(self, component, scan_interval, entity_namespace):
         """Initalize the entity platform."""
         self.component = component
@@ -274,19 +280,25 @@ class EntityPlatform(object):
         self.platform_entities = []
         self._async_unsub_polling = None
 
-    def add_entities(self, new_entities):
+    def add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
         run_coroutine_threadsafe(
-            self.async_add_entities(new_entities), self.component.hass.loop
+            self.async_add_entities(list(new_entities), update_before_add),
+            self.component.hass.loop
         ).result()
 
     @asyncio.coroutine
-    def async_add_entities(self, new_entities):
+    def async_add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform async.
 
         This method must be run in the event loop.
         """
-        tasks = [self._async_process_entity(entity) for entity in new_entities]
+        tasks = [self._async_process_entity(entity, update_before_add)
+                 for entity in new_entities]
+
+        # handle empty list from component/platform
+        if not tasks:
+            return
 
         yield from asyncio.gather(*tasks, loop=self.component.hass.loop)
         yield from self.component.async_update_group()
@@ -301,9 +313,11 @@ class EntityPlatform(object):
             second=range(0, 60, self.scan_interval))
 
     @asyncio.coroutine
-    def _async_process_entity(self, new_entity):
+    def _async_process_entity(self, new_entity, update_before_add):
         """Add entities to StateMachine."""
-        ret = yield from self.component.async_add_entity(new_entity, self)
+        ret = yield from self.component.async_add_entity(
+            new_entity, self, update_before_add=update_before_add
+        )
         if ret:
             self.platform_entities.append(new_entity)
 
