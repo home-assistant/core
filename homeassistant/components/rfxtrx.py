@@ -244,12 +244,10 @@ def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for dev_id, device in RFX_DEVICES.items():
         try:
-            if (
-                    device.is_pt2262 and
+            if (device.is_pt2262 and
                     device.masked_id == get_pt2262_deviceid(
                         device_id,
-                        device.data_bits)
-                ):
+                        device.data_bits)):
                 _LOGGER.info("rfxtrx: found matching device %s for %s",
                              device_id,
                              get_pt2262_deviceid(device_id, device.data_bits))
