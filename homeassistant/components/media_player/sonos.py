@@ -234,7 +234,6 @@ def _parse_timespan(timespan):
             reversed(timespan.split(':'))))
 
 
-# pylint: disable=too-few-public-methods
 class _ProcessSonosEventQueue():
     """Queue like object for dispatching sonos events."""
 
