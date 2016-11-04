@@ -307,15 +307,35 @@ class ToggleEntity(Entity):
 
     def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
+        run_coroutine_threadsafe(self.async_turn_on(**kwargs),
+                                 self.hass.loop).result()
+
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
         raise NotImplementedError()
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
+        run_coroutine_threadsafe(self.async_turn_off(**kwargs),
+                                 self.hass.loop).result()
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
         raise NotImplementedError()
 
-    def toggle(self, **kwargs) -> None:
-        """Toggle the entity off."""
+    def toggle(self) -> None:
+        """Toggle the entity."""
         if self.is_on:
-            self.turn_off(**kwargs)
+            self.turn_off()
         else:
-            self.turn_on(**kwargs)
+            self.turn_on()
+
+    @asyncio.coroutine
+    def async_toggle(self):
+        """Toggle the entity."""
+        if self.is_on:
+            yield from self.async_turn_off()
+        else:
+            yield from self.async_turn_on()

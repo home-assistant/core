@@ -114,7 +114,7 @@ class GenericCamera(Camera):
                         auth=self._auth
                     )
                     self._last_image = yield from respone.read()
-                    self.hass.loop.create_task(respone.release())
+                    yield from respone.release()
             except asyncio.TimeoutError:
                 _LOGGER.error('Timeout getting camera image')
                 return self._last_image

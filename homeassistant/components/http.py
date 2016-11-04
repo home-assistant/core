@@ -22,7 +22,7 @@ from aiohttp.web_exceptions import (
     HTTPUnauthorized, HTTPMovedPermanently, HTTPNotModified)
 from aiohttp.web_urldispatcher import StaticRoute
 
-from homeassistant.core import callback, is_callback
+from homeassistant.core import is_callback
 import homeassistant.remote as rem
 from homeassistant import util
 from homeassistant.const import (
@@ -141,16 +141,16 @@ def setup(hass, config):
         trusted_networks=trusted_networks
     )
 
-    @callback
+    @asyncio.coroutine
     def stop_server(event):
         """Callback to stop the server."""
-        hass.loop.create_task(server.stop())
+        yield from server.stop()
 
-    @callback
+    @asyncio.coroutine
     def start_server(event):
         """Callback to start the server."""
-        hass.loop.create_task(server.start())
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
+        yield from server.start()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_server)
 

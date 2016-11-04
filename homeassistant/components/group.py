@@ -175,15 +175,16 @@ def async_setup(hass, config):
         conf = yield from component.async_prepare_reload()
         if conf is None:
             return
-        hass.loop.create_task(_async_process_config(hass, conf, component))
+        yield from _async_process_config(hass, conf, component)
 
-    @callback
+    @asyncio.coroutine
     def visibility_service_handler(service):
         """Change visibility of a group."""
         visible = service.data.get(ATTR_VISIBLE)
-        for group in component.async_extract_from_service(
-                service, expand_group=False):
-            group.async_set_visible(visible)
+        tasks = [group.async_set_visible(visible) for group
+                 in component.async_extract_from_service(service,
+                                                         expand_group=False)]
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
@@ -291,12 +292,12 @@ class Group(Entity):
         """Return the icon of the group."""
         return self._icon
 
-    @callback
+    @asyncio.coroutine
     def async_set_visible(self, visible):
         """Change visibility of the group."""
         if self._visible != visible:
             self._visible = visible
-            self.hass.loop.create_task(self.async_update_ha_state())
+            yield from self.async_update_ha_state()
 
     @property
     def hidden(self):

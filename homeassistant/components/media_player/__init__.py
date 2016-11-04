@@ -710,7 +710,7 @@ def _async_fetch_image(hass, url):
             if response.status == 200:
                 content = yield from response.read()
                 content_type = response.headers.get(CONTENT_TYPE_HEADER)
-            hass.loop.create_task(response.release())
+            yield from response.release()
     except asyncio.TimeoutError:
         pass
 
