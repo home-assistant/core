@@ -42,6 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([SmartPlugSwitch(SmartPlug(host), name)], True)
 
+
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
