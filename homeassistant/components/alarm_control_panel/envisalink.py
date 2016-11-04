@@ -131,8 +131,3 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
         if keypress:
             EVL_CONTROLLER.keypresses_to_partition(self._partition_number,
                                                    keypress)
-
-    def alarm_output_control(self, output=None):
-        """Control an output on the alarm (1-4)."""
-        if output:
-            EVL_CONTROLLER.command_output(self._partition_number, output)
