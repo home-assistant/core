@@ -106,9 +106,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             if not sensor.is_on or sensor.should_fire_event:
                 sensor.update_state(True)
 
-        if sensor.is_on and not sensor.off_delay is None and sensor.delay_listener is None:
+        if (sensor.is_on and sensor.off_delay is not None and
+                sensor.delay_listener is None):
+
             def off_delay_listener(now):
-                """switch device off after a delay."""
+                """Switch device off after a delay."""
                 sensor.delay_listener = None
                 sensor.update_state(False)
 
@@ -193,7 +195,7 @@ class RfxtrxBinarySensor(BinarySensorDevice):
 
     @property
     def sensor_class(self):
-        """Return the sensor class"""
+        """Return the sensor class."""
         return self._sensor_class
 
     @property

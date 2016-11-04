@@ -211,6 +211,7 @@ def get_rfx_object(packetid):
         obj = rfxtrxmod.ControlEvent(pkt)
     return obj
 
+
 def get_pt2262_deviceid(device_id, nb_data_bits):
     """Extract and return the address bits from a Lighting4/PT2262 packet."""
     import binascii
@@ -225,6 +226,7 @@ def get_pt2262_deviceid(device_id, nb_data_bits):
 
     return binascii.hexlify(data)
 
+
 def get_pt2262_cmd(device_id, data_bits):
     """Extract and return the data bits from a Lighting4/PT2262 packet."""
     try:
@@ -236,6 +238,7 @@ def get_pt2262_cmd(device_id, data_bits):
 
     return hex(data[-1] & mask)
 
+
 # pylint: disable=unused-variable
 def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
@@ -243,8 +246,9 @@ def get_pt2262_device(device_id):
         try:
             if (
                     device.is_pt2262 and
-                    device.masked_id == get_pt2262_deviceid(device_id,
-                                                            device.data_bits)
+                    device.masked_id == get_pt2262_deviceid(
+                        device_id,
+                        device.data_bits)
                 ):
                 _LOGGER.info("rfxtrx: found matching device %s for %s",
                              device_id,
@@ -374,7 +378,7 @@ class RfxtrxDevice(Entity):
 
     @property
     def is_pt2262(self):
-        """Return true if the device is PT2262-based"""
+        """Return true if the device is PT2262-based."""
         return False
 
     @property
