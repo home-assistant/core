@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_KEYPRESS, SERVICE_ALARM_OUTPUT_CONTROL)
+    SERVICE_ALARM_KEYPRESS)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
@@ -37,12 +37,6 @@ ALARM_KEYPRESS_SCHEMA = vol.Schema({
     vol.Required(ATTR_KEYPRESS): cv.string
 })
 
-ALARM_OUTPUT_CONTROL_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_OUTPUT):
-        vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-})
-
 SERVICE_TO_METHOD = {
     SERVICE_ALARM_DISARM: {'method': 'alarm_disarm'},
     SERVICE_ALARM_ARM_HOME: {'method': 'alarm_arm_home'},
@@ -51,9 +45,6 @@ SERVICE_TO_METHOD = {
     SERVICE_ALARM_KEYPRESS: {
         'method': 'alarm_keypress',
         'schema': ALARM_KEYPRESS_SCHEMA},
-    SERVICE_ALARM_OUTPUT_CONTROL: {
-        'method': 'alarm_output_control',
-        'schema': ALARM_OUTPUT_CONTROL_SCHEMA}
 }
 
 
@@ -142,16 +133,6 @@ def alarm_keypress(hass, keypress, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_ALARM_KEYPRESS, data)
 
 
-def alarm_output_control(hass, output, entity_id=None):
-    """Toggle an output on the alarm."""
-    data = {}
-    data[ATTR_OUTPUT] = output
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_ALARM_OUTPUT_CONTROL, data)
-
-
 # pylint: disable=no-self-use
 class AlarmControlPanel(Entity):
     """An abstract class for alarm control devices."""
@@ -184,10 +165,6 @@ class AlarmControlPanel(Entity):
 
     def alarm_keypress(self, keypress=None):
         """Send custom key sequence to alarm."""
-        pass
-
-    def alarm_output_control(self, output=None):
-        """Control an output on the alarm."""
         pass
 
     @property

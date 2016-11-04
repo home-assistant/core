@@ -52,14 +52,3 @@ alarm_keypress:
     keypress:
       description: 'String to send to the alarm panel (1-6 characters)'
       example: '*71'
-
-alarm_output_control:
-  description: Control an output on the alarm
-  
-  fields:
-    entity_id: 
-      description: Name of the alarm control panel to trigger
-      example: 'alarm_control_panel.downstairs'
-    output:
-      description: Output number on the alarm to toggle
-      example: 1
