@@ -29,6 +29,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Binary Sensor platform to rfxtrx."""
     import RFXtrx as rfxtrxmod
@@ -42,22 +43,26 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             continue
 
         if not entity[ATTR_DATABITS] is None:
-            _LOGGER.info("Masked device id: %s", (rfxtrx.get_pt2262_deviceid(device_id, 4)))
+            _LOGGER.info("Masked device id: %s",
+                         rfxtrx.get_pt2262_deviceid(device_id, 4))
 
         _LOGGER.info("Add %s rfxtrx.binary_sensor (class %s)",
                      entity[ATTR_NAME], entity[ATTR_SENSOR_CLASS])
 
         device = RfxtrxBinarySensor(event, entity[ATTR_NAME],
-                                    entity[ATTR_SENSOR_CLASS], entity[ATTR_FIREEVENT],
-                                    entity[ATTR_OFF_DELAY], entity[ATTR_DATABITS],
-                                    entity[ATTR_CMD_ON], entity[ATTR_CMD_OFF])
+                                    entity[ATTR_SENSOR_CLASS],
+                                    entity[ATTR_FIREEVENT],
+                                    entity[ATTR_OFF_DELAY],
+                                    entity[ATTR_DATABITS],
+                                    entity[ATTR_CMD_ON],
+                                    entity[ATTR_CMD_OFF])
 
         sensors.append(device)
         rfxtrx.RFX_DEVICES[device_id] = device
 
     add_devices_callback(sensors)
 
-    #pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches
     def binary_sensor_update(event):
         """Callback for control updates from the RFXtrx gateway."""
         if not isinstance(event, rfxtrxmod.ControlEvent):
@@ -115,7 +120,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     if binary_sensor_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(binary_sensor_update)
 
-#pylint: disable=too-many-instance-attributes,too-many-arguments
+
+# pylint: disable=too-many-instance-attributes,too-many-arguments
 class RfxtrxBinarySensor(BinarySensorDevice):
     """An Rfxtrx binary sensor."""
 
@@ -134,11 +140,12 @@ class RfxtrxBinarySensor(BinarySensorDevice):
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
 
-        if not data_bits is None:
-            self._masked_id = rfxtrx.get_pt2262_deviceid(event.device.id_string.lower(), data_bits)
+        if data_bits is not None:
+            self._masked_id = rfxtrx.get_pt2262_deviceid(
+                event.device.id_string.lower(),
+                data_bits)
         else:
             self._masked_id = None
-
 
     def __str__(self):
         """Return the name of the sensor."""
@@ -146,31 +153,32 @@ class RfxtrxBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
+        """Return the device name."""
         return self._name
 
     @property
     def is_pt2262(self):
-        """Return true if the device is PT2262-based"""
-        return not self._data_bits is None
+        """Return true if the device is PT2262-based."""
+        return self._data_bits is not None
 
     @property
     def masked_id(self):
-        """Return the masked device id (isolated address bits)"""
+        """Return the masked device id (isolated address bits)."""
         return self._masked_id
 
     @property
     def data_bits(self):
-        """Return the number of data bits"""
+        """Return the number of data bits."""
         return self._data_bits
 
     @property
     def cmd_on(self):
-        """Return the value of the 'On' command """
+        """Return the value of the 'On' command."""
         return self._cmd_on
 
     @property
     def cmd_off(self):
-        """Return the value of the 'Off' command """
+        """Return the value of the 'Off' command."""
         return self._cmd_off
 
     @property
@@ -190,22 +198,22 @@ class RfxtrxBinarySensor(BinarySensorDevice):
 
     @property
     def off_delay(self):
-        """Return the off_delay attribute value"""
+        """Return the off_delay attribute value."""
         return self._off_delay
 
     @property
     def is_on(self):
-        """Return true if the sensor state is True"""
+        """Return true if the sensor state is True."""
         return self._state
 
     def apply_cmd(self, cmd):
-        """Apply a command for updating the state"""
+        """Apply a command for updating the state."""
         if cmd == self.cmd_on:
             self.update_state(True)
         elif cmd == self.cmd_off:
             self.update_state(False)
 
     def update_state(self, state):
-        """Update the state of the device"""
+        """Update the state of the device."""
         self._state = state
         self.update_ha_state()

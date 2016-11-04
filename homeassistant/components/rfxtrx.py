@@ -98,9 +98,11 @@ def valid_sensor(value):
     """Validate sensor configuration."""
     return _valid_device(value, "sensor")
 
+
 def valid_binary_sensor(value):
     """Validate binary sensor configuration."""
     return _valid_device(value, "binary_sensor")
+
 
 def _valid_light_switch(value):
     return _valid_device(value, "light_switch")
@@ -121,7 +123,8 @@ DEVICE_SCHEMA_BINARYSENSOR = vol.Schema({
     vol.Optional(ATTR_NAME, default=None): cv.string,
     vol.Optional(CONF_SENSOR_CLASS, default=None): cv.string,
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
-    vol.Optional(ATTR_OFF_DELAY, default=None): vol.Any(cv.time_period, cv.positive_timedelta),
+    vol.Optional(ATTR_OFF_DELAY, default=None):
+        vol.Any(cv.time_period, cv.positive_timedelta),
     vol.Optional(ATTR_DATABITS, default=None): cv.positive_int,
     vol.Optional(ATTR_CMD_ON, default=None): cv.byte,
     vol.Optional(ATTR_CMD_OFF, default=None): cv.byte
@@ -209,7 +212,7 @@ def get_rfx_object(packetid):
     return obj
 
 def get_pt2262_deviceid(device_id, nb_data_bits):
-    """Extract and return the address bits from a Lighting4/PT2262 packet"""
+    """Extract and return the address bits from a Lighting4/PT2262 packet."""
     import binascii
     try:
         data = bytearray.fromhex(device_id)
@@ -223,7 +226,7 @@ def get_pt2262_deviceid(device_id, nb_data_bits):
     return binascii.hexlify(data)
 
 def get_pt2262_cmd(device_id, data_bits):
-    """Extract and return the data bits from a Lighting4/PT2262 packet"""
+    """Extract and return the data bits from a Lighting4/PT2262 packet."""
     try:
         data = bytearray.fromhex(device_id)
     except ValueError:
@@ -235,14 +238,13 @@ def get_pt2262_cmd(device_id, data_bits):
 
 # pylint: disable=unused-variable
 def get_pt2262_device(device_id):
-    """Look for the device which id matches the given device_id parameter """
+    """Look for the device which id matches the given device_id parameter."""
     for dev_id, device in RFX_DEVICES.items():
         try:
             if (
                     device.is_pt2262 and
-                    device.masked_id == get_pt2262_deviceid(
-                        device_id, device.data_bits
-                    )
+                    device.masked_id == get_pt2262_deviceid(device_id,
+                                                            device.data_bits)
                 ):
                 _LOGGER.info("rfxtrx: found matching device %s for %s",
                              device_id,
