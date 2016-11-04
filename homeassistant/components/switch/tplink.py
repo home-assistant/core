@@ -6,9 +6,9 @@ https://home-assistant.io/components/switch.tplink/
 """
 import logging
 
-import voluptuous as vol
-
 import time
+
+import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_NAME)
@@ -82,23 +82,23 @@ class SmartPlugSwitch(SwitchDevice):
         """Update the TP-Link switch's state."""
 
         try:
-          self._state = self.smartplug.state
+            self._state = self.smartplug.state
 
-          if self._emeter_present:
-              emeter_readings = self.smartplug.get_emeter_realtime()
+            if self._emeter_present:
+                emeter_readings = self.smartplug.get_emeter_realtime()
 
-              self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
-                  = "%.1f W" % emeter_readings["power"]
-              self._emeter_params[ATTR_TOTAL_CONSUMPTION] \
-                  = "%.2f kW" % emeter_readings["total"]
-              self._emeter_params[ATTR_VOLTAGE] \
-                  = "%.2f V" % emeter_readings["voltage"]
-              self._emeter_params[ATTR_CURRENT] \
-                  = "%.1f A" % emeter_readings["current"]
+                self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
+                    = "%.1f W" % emeter_readings["power"]
+                self._emeter_params[ATTR_TOTAL_CONSUMPTION] \
+                    = "%.2f kW" % emeter_readings["total"]
+                self._emeter_params[ATTR_VOLTAGE] \
+                    = "%.2f V" % emeter_readings["voltage"]
+                self._emeter_params[ATTR_CURRENT] \
+                    = "%.1f A" % emeter_readings["current"]
 
-              emeter_statics = self.smartplug.get_emeter_daily()
-              self._emeter_params[ATTR_DAILY_CONSUMPTION] \
-                  = "%.2f kW" % emeter_statics[int(time.strftime("%e"))]
+                emeter_statics = self.smartplug.get_emeter_daily()
+                self._emeter_params[ATTR_DAILY_CONSUMPTION] \
+                    = "%.2f kW" % emeter_statics[int(time.strftime("%e"))]
 
-        except (RequestException, ValueError, KeyError):
-          _LOGGER.warning('Could not update status for %s', self.name)
+        except OSError:
+            _LOGGER.warning('Could not update status for %s', self.name)
