@@ -31,7 +31,6 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     )
 
 
-# pylint: disable=abstract-method
 class HMCover(homematic.HMDevice, CoverDevice):
     """Represents a Homematic Cover in Home Assistant."""
 

@@ -42,7 +42,7 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     """A demo media players."""
 
     # We only implement the methods that we support
-    # pylint: disable=abstract-method
+
     def __init__(self, name):
         """Initialize the demo device."""
         self._name = name
@@ -110,7 +110,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
     """A Demo media player that only supports YouTube."""
 
     # We only implement the methods that we support
-    # pylint: disable=abstract-method
+
     def __init__(self, name, youtube_id=None, media_title=None):
         """Initialize the demo device."""
         super().__init__(name)
@@ -162,7 +162,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     """A Demo media player that only supports YouTube."""
 
     # We only implement the methods that we support
-    # pylint: disable=abstract-method
+
     tracks = [
         ('Technohead', 'I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)'),
         ('Paul Elstak', 'Luv U More'),
@@ -269,7 +269,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     """A Demo media player that only supports YouTube."""
 
     # We only implement the methods that we support
-    # pylint: disable=abstract-method
+
     def __init__(self):
         """Initialize the demo device."""
         super().__init__('Lounge room')

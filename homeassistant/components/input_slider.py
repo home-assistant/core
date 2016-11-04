@@ -9,7 +9,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -95,13 +94,14 @@ def async_setup(hass, config):
     if not entities:
         return False
 
-    @callback
+    @asyncio.coroutine
     def async_select_value_service(call):
         """Handle a calls to the input slider services."""
         target_inputs = component.async_extract_from_service(call)
 
-        for input_slider in target_inputs:
-            input_slider.select_value(call.data[ATTR_VALUE])
+        tasks = [input_slider.async_select_value(call.data[ATTR_VALUE])
+                 for input_slider in target_inputs]
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_VALUE, async_select_value_service,
@@ -160,7 +160,8 @@ class InputSlider(Entity):
             ATTR_STEP: self._step
         }
 
-    def select_value(self, value):
+    @asyncio.coroutine
+    def async_select_value(self, value):
         """Select new value."""
         num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
@@ -168,4 +169,4 @@ class InputSlider(Entity):
                             num_value, self._minimum, self._maximum)
             return
         self._current_value = num_value
-        self.hass.loop.create_task(self.async_update_ha_state())
+        yield from self.async_update_ha_state()

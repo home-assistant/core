@@ -110,7 +110,7 @@ class EmbyClient(MediaPlayerDevice):
     """Representation of a Emby device."""
 
     # pylint: disable=too-many-arguments, too-many-public-methods,
-    # pylint: disable=abstract-method
+
     def __init__(self, client, device, emby_sessions, update_devices,
                  update_sessions):
         """Initialize the Emby device."""
