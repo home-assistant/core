@@ -40,7 +40,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def prepare(hass: 'HomeAssistant'):
-    """Prepare the loading of components."""
+    """Prepare the loading of components.
+
+    This method needs to run in an executor.
+    """
     global PREPARED  # pylint: disable=global-statement
 
     # Load the built-in components
@@ -81,14 +84,20 @@ def prepare(hass: 'HomeAssistant'):
 
 
 def set_component(comp_name: str, component: ModuleType) -> None:
-    """Set a component in the cache."""
+    """Set a component in the cache.
+
+    Async friendly.
+    """
     _check_prepared()
 
     _COMPONENT_CACHE[comp_name] = component
 
 
 def get_platform(domain: str, platform: str) -> Optional[ModuleType]:
-    """Try to load specified platform."""
+    """Try to load specified platform.
+
+    Async friendly.
+    """
     return get_component(PLATFORM_FORMAT.format(domain, platform))
 
 
@@ -97,6 +106,8 @@ def get_component(comp_name) -> Optional[ModuleType]:
 
     Looks in config dir first, then built-in components.
     Only returns it if also found to be valid.
+
+    Async friendly.
     """
     if comp_name in _COMPONENT_CACHE:
         return _COMPONENT_CACHE[comp_name]
@@ -166,6 +177,8 @@ def load_order_components(components: Sequence[str]) -> OrderedSet:
     - Will ensure that all components that do not directly depend on
       the group component will be loaded before the group component.
     - returns an OrderedSet load order.
+
+    Async friendly.
     """
     _check_prepared()
 
@@ -192,13 +205,18 @@ def load_order_component(comp_name: str) -> OrderedSet:
 
     Raises HomeAssistantError if a circular dependency is detected.
     Returns an empty list if component could not be loaded.
+
+    Async friendly.
     """
     return _load_order_component(comp_name, OrderedSet(), set())
 
 
 def _load_order_component(comp_name: str, load_order: OrderedSet,
                           loading: Set) -> OrderedSet:
-    """Recursive function to get load order of components."""
+    """Recursive function to get load order of components.
+
+    Async friendly.
+    """
     component = get_component(comp_name)
 
     # If None it does not exist, error already thrown by get_component.
@@ -235,7 +253,10 @@ def _load_order_component(comp_name: str, load_order: OrderedSet,
 
 
 def _check_prepared() -> None:
-    """Issue a warning if loader.prepare() has never been called."""
+    """Issue a warning if loader.prepare() has never been called.
+
+    Async friendly.
+    """
     if not PREPARED:
         _LOGGER.warning((
             "You did not call loader.prepare() yet. "

@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_USERNAME, CONF_ICON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['slacker==0.9.28']
+REQUIREMENTS = ['slacker==0.9.29']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,6 @@ def get_service(hass, config):
         return None
 
 
-# pylint: disable=too-few-public-methods
 class SlackNotificationService(BaseNotificationService):
     """Implement the notification service for Slack."""
 

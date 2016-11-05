@@ -1,10 +1,10 @@
 """The tests for the Template automation."""
 import unittest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.automation as automation
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, assert_setup_component
 
 
 class TestAutomationTemplate(unittest.TestCase):
@@ -29,7 +29,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_fires_on_change_bool(self):
         """Test for firing on boolean change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -54,7 +54,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_fires_on_change_str(self):
         """Test for firing on change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -72,7 +72,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_fires_on_change_str_crazy(self):
         """Test for firing on change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -90,7 +90,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_not_fires_on_change_bool(self):
         """Test for not firing on boolean change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -108,7 +108,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_not_fires_on_change_str(self):
         """Test for not firing on string change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -126,7 +126,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_not_fires_on_change_str_crazy(self):
         """Test for not firing on string change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -144,7 +144,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_fires_on_no_change(self):
         """Test for firing on no change."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -165,7 +165,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_fires_on_two_change(self):
         """Test for firing on two changes."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -189,7 +189,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_fires_on_change_with_template(self):
         """Test for firing on change with template."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -207,7 +207,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_not_fires_on_change_with_template(self):
         """Test for not firing on change with template."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -228,7 +228,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_fires_on_change_with_template_advanced(self):
         """Test for firing on change with template advanced."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -262,7 +262,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_fires_on_no_change_with_template_advanced(self):
         """Test for firing on no change with template advanced."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -290,7 +290,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_fires_on_change_with_template_2(self):
         """Test for firing on change with template."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -332,7 +332,7 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_action(self):
         """Test for firing if action."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -365,21 +365,22 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_fires_on_change_with_bad_template(self):
         """Test for firing on change with bad template."""
-        assert not _setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'template',
-                    'value_template': '{{ ',
-                },
-                'action': {
-                    'service': 'test.automation'
+        with assert_setup_component(0):
+            assert not setup_component(self.hass, automation.DOMAIN, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'template',
+                        'value_template': '{{ ',
+                    },
+                    'action': {
+                        'service': 'test.automation'
+                    }
                 }
-            }
-        })
+            })
 
     def test_if_fires_on_change_with_bad_template_2(self):
         """Test for firing on change with bad template."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',

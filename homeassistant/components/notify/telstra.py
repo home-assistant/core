@@ -9,11 +9,12 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import (BaseNotificationService,
-                                             ATTR_TITLE,
-                                             PLATFORM_SCHEMA)
+from homeassistant.components.notify import (
+    BaseNotificationService, ATTR_TITLE, PLATFORM_SCHEMA)
 from homeassistant.const import CONTENT_TYPE_JSON
 import homeassistant.helpers.config_validation as cv
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_CONSUMER_KEY = 'consumer_key'
 CONF_CONSUMER_SECRET = 'consumer_secret'
@@ -25,8 +26,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PHONE_NUMBER): cv.string,
 })
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def get_service(hass, config):
     """Get the Telstra SMS API notification service."""
@@ -34,17 +33,14 @@ def get_service(hass, config):
     consumer_secret = config.get(CONF_CONSUMER_SECRET)
     phone_number = config.get(CONF_PHONE_NUMBER)
 
-    # Attempt an initial authentication to confirm credentials
     if _authenticate(consumer_key, consumer_secret) is False:
         _LOGGER.exception('Error obtaining authorization from Telstra API')
         return None
 
-    return TelstraNotificationService(consumer_key,
-                                      consumer_secret,
-                                      phone_number)
+    return TelstraNotificationService(
+        consumer_key, consumer_secret, phone_number)
 
 
-# pylint: disable=too-few-public-methods, too-many-arguments
 class TelstraNotificationService(BaseNotificationService):
     """Implementation of a notification service for the Telstra SMS API."""
 
@@ -59,10 +55,10 @@ class TelstraNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE)
 
         # Retrieve authorization first
-        token_response = _authenticate(self._consumer_key,
-                                       self._consumer_secret)
+        token_response = _authenticate(
+            self._consumer_key, self._consumer_secret)
         if token_response is False:
-            _LOGGER.exception('Error obtaining authorization from Telstra API')
+            _LOGGER.exception("Error obtaining authorization from Telstra API")
             return
 
         # Send the SMS
@@ -73,17 +69,16 @@ class TelstraNotificationService(BaseNotificationService):
 
         message_data = {
             'to': self._phone_number,
-            'body': text
+            'body': text,
         }
         message_resource = 'https://api.telstra.com/v1/sms/messages'
         message_headers = {
             'Content-Type': CONTENT_TYPE_JSON,
-            'Authorization': 'Bearer ' + token_response['access_token']
+            'Authorization': 'Bearer ' + token_response['access_token'],
         }
-        message_response = requests.post(message_resource,
-                                         headers=message_headers,
-                                         json=message_data,
-                                         timeout=10)
+        message_response = requests.post(
+            message_resource, headers=message_headers, json=message_data,
+            timeout=10)
 
         if message_response.status_code != 202:
             _LOGGER.exception("Failed to send SMS. Status code: %d",
@@ -99,9 +94,8 @@ def _authenticate(consumer_key, consumer_secret):
         'scope': 'SMS'
     }
     token_resource = 'https://api.telstra.com/v1/oauth/token'
-    token_response = requests.get(token_resource,
-                                  params=token_data,
-                                  timeout=10).json()
+    token_response = requests.get(
+        token_resource, params=token_data, timeout=10).json()
 
     if 'error' in token_response:
         return False

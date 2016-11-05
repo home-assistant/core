@@ -4,8 +4,6 @@ Provide functionality to keep track of devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/device_tracker/
 """
-# pylint: disable=too-many-instance-attributes, too-many-arguments
-# pylint: disable=too-many-locals
 import asyncio
 from datetime import timedelta
 import logging
@@ -14,7 +12,6 @@ import threading
 from typing import Any, Sequence, Callable
 
 import voluptuous as vol
-import yaml
 
 from homeassistant.bootstrap import (
     prepare_setup_platform, log_exception)
@@ -29,6 +26,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
+from homeassistant.util.yaml import dump
 
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
@@ -56,6 +54,8 @@ DEFAULT_SCAN_INTERVAL = 12
 
 CONF_AWAY_HIDE = 'hide_if_away'
 DEFAULT_AWAY_HIDE = False
+
+EVENT_NEW_DEVICE = 'device_tracker_new_device'
 
 SERVICE_SEE = 'see'
 
@@ -88,7 +88,6 @@ def is_on(hass: HomeAssistantType, entity_id: str=None):
     return hass.states.is_state(entity, STATE_HOME)
 
 
-# pylint: disable=too-many-arguments
 def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
         host_name: str=None, location_name: str=None,
         gps: GPSType=None, gps_accuracy=None,
@@ -103,8 +102,7 @@ def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
              (ATTR_GPS_ACCURACY, gps_accuracy),
              (ATTR_BATTERY, battery)) if value is not None}
     if attributes:
-        for key, value in attributes:
-            data[key] = value
+        data[ATTR_ATTRIBUTES] = attributes
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
@@ -115,7 +113,7 @@ def setup(hass: HomeAssistantType, config: ConfigType):
     try:
         conf = config.get(DOMAIN, [])
     except vol.Invalid as ex:
-        log_exception(ex, DOMAIN, config)
+        log_exception(ex, DOMAIN, config, hass)
         return False
     else:
         conf = conf[0] if len(conf) > 0 else {}
@@ -240,8 +238,11 @@ class DeviceTracker(object):
 
             device.seen(host_name, location_name, gps, gps_accuracy, battery,
                         attributes)
+
             if device.track:
                 device.update_ha_state()
+
+            self.hass.bus.async_fire(EVENT_NEW_DEVICE, device)
 
             # During init, we ignore the group
             if self.group is not None:
@@ -432,7 +433,7 @@ def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
                 device = dev_schema(device)
                 device['dev_id'] = cv.slugify(dev_id)
             except vol.Invalid as exp:
-                log_exception(exp, dev_id, devices)
+                log_exception(exp, dev_id, devices, hass)
             else:
                 result.append(Device(hass, **device))
         return result
@@ -468,8 +469,6 @@ def setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
 def update_config(path: str, dev_id: str, device: Device):
     """Add device to YAML configuration file."""
     with open(path, 'a') as out:
-        out.write('\n')
-
         device = {device.dev_id: {
             'name': device.name,
             'mac': device.mac,
@@ -477,7 +476,8 @@ def update_config(path: str, dev_id: str, device: Device):
             'track': device.track,
             CONF_AWAY_HIDE: device.away_hide
         }}
-        yaml.dump(device, out, default_flow_style=False)
+        out.write('\n')
+        out.write(dump(device))
 
 
 def get_gravatar_for_email(email: str):

@@ -14,7 +14,6 @@ def get_service(hass, config):
     return DemoNotificationService(hass)
 
 
-# pylint: disable=too-few-public-methods
 class DemoNotificationService(BaseNotificationService):
     """Implement demo notification service."""
 

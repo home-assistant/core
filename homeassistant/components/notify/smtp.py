@@ -63,11 +63,9 @@ def get_service(hass, config):
         return None
 
 
-# pylint: disable=too-few-public-methods, too-many-instance-attributes
 class MailNotificationService(BaseNotificationService):
     """Implement the notification service for E-Mail messages."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, server, port, sender, starttls, username,
                  password, recipient, debug):
         """Initialize the service."""

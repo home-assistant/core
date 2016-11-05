@@ -25,7 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ATTRIBUTION = "Data provided by the WUnderground weather service"
 CONF_PWS_ID = 'pws_id'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
+MIN_TIME_BETWEEN_UPDATES_ALERTS = timedelta(minutes=15)
+MIN_TIME_BETWEEN_UPDATES_OBSERVATION = timedelta(minutes=5)
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
@@ -117,8 +118,11 @@ class WUndergroundSensor(Entity):
             else:
                 return self.rest.data[self._condition]
 
-        if self.rest.alerts and self._condition == 'alerts':
-            return len(self.rest.alerts)
+        if self._condition == 'alerts':
+            if self.rest.alerts:
+                return len(self.rest.alerts)
+            else:
+                return 0
         return STATE_UNKNOWN
 
     @property
@@ -161,7 +165,6 @@ class WUndergroundSensor(Entity):
             self.rest.update()
 
 
-# pylint: disable=too-few-public-methods
 class WUndergroundData(object):
     """Get data from WUnderground."""
 
@@ -184,7 +187,7 @@ class WUndergroundData(object):
 
         return url + '.json'
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(MIN_TIME_BETWEEN_UPDATES_OBSERVATION)
     def update(self):
         """Get the latest data from WUnderground."""
         try:
@@ -199,7 +202,7 @@ class WUndergroundData(object):
             self.data = None
             raise
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(MIN_TIME_BETWEEN_UPDATES_ALERTS)
     def update_alerts(self):
         """Get the latest alerts data from WUnderground."""
         try:

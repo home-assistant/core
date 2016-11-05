@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discover_info=None):
 class CmusDevice(MediaPlayerDevice):
     """Representation of a running cmus."""
 
-    # pylint: disable=no-member, too-many-public-methods, abstract-method
+    # pylint: disable=no-member
     def __init__(self, server, password, port, name):
         """Initialize the CMUS device."""
         from pycmus import remote

@@ -94,7 +94,7 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
         domain, service_name, service_data, blocking)
 
 
-def extract_entity_ids(hass, service_call):
+def extract_entity_ids(hass, service_call, expand_group=True):
     """Helper method to extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
@@ -109,7 +109,17 @@ def extract_entity_ids(hass, service_call):
     # Entity ID attr can be a list or a string
     service_ent_id = service_call.data[ATTR_ENTITY_ID]
 
-    if isinstance(service_ent_id, str):
-        return group.expand_entity_ids(hass, [service_ent_id])
+    if expand_group:
 
-    return [ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)]
+        if isinstance(service_ent_id, str):
+            return group.expand_entity_ids(hass, [service_ent_id])
+
+        return [ent_id for ent_id in
+                group.expand_entity_ids(hass, service_ent_id)]
+
+    else:
+
+        if isinstance(service_ent_id, str):
+            return [service_ent_id]
+
+        return service_ent_id

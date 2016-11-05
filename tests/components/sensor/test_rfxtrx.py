@@ -3,7 +3,7 @@ import unittest
 
 import pytest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.const import TEMP_CELSIUS
 
@@ -16,7 +16,7 @@ class TestSensorRfxtrx(unittest.TestCase):
 
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(0)
+        self.hass = get_test_home_assistant()
         self.hass.config.components = ['rfxtrx']
 
     def tearDown(self):
@@ -29,7 +29,7 @@ class TestSensorRfxtrx(unittest.TestCase):
 
     def test_default_config(self):
         """Test with 0 sensor."""
-        self.assertTrue(_setup_component(self.hass, 'sensor', {
+        self.assertTrue(setup_component(self.hass, 'sensor', {
             'sensor': {'platform': 'rfxtrx',
                        'devices':
                            {}}}))
@@ -37,7 +37,7 @@ class TestSensorRfxtrx(unittest.TestCase):
 
     def test_old_config_sensor(self):
         """Test with 1 sensor."""
-        self.assertTrue(_setup_component(self.hass, 'sensor', {
+        self.assertTrue(setup_component(self.hass, 'sensor', {
             'sensor': {'platform': 'rfxtrx',
                        'devices':
                            {'sensor_0502': {
@@ -53,7 +53,7 @@ class TestSensorRfxtrx(unittest.TestCase):
 
     def test_one_sensor(self):
         """Test with 1 sensor."""
-        self.assertTrue(_setup_component(self.hass, 'sensor', {
+        self.assertTrue(setup_component(self.hass, 'sensor', {
             'sensor': {'platform': 'rfxtrx',
                        'devices':
                            {'0a52080705020095220269': {
@@ -68,7 +68,7 @@ class TestSensorRfxtrx(unittest.TestCase):
 
     def test_one_sensor_no_datatype(self):
         """Test with 1 sensor."""
-        self.assertTrue(_setup_component(self.hass, 'sensor', {
+        self.assertTrue(setup_component(self.hass, 'sensor', {
             'sensor': {'platform': 'rfxtrx',
                        'devices':
                            {'0a52080705020095220269': {
@@ -88,7 +88,7 @@ class TestSensorRfxtrx(unittest.TestCase):
 
     def test_several_sensors(self):
         """Test with 3 sensors."""
-        self.assertTrue(_setup_component(self.hass, 'sensor', {
+        self.assertTrue(setup_component(self.hass, 'sensor', {
                 'sensor': {'platform': 'rfxtrx',
                            'devices':
                                {'0a52080705020095220269': {
@@ -124,7 +124,7 @@ class TestSensorRfxtrx(unittest.TestCase):
 
     def test_discover_sensor(self):
         """Test with discovery of sensor."""
-        self.assertTrue(_setup_component(self.hass, 'sensor', {
+        self.assertTrue(setup_component(self.hass, 'sensor', {
             'sensor': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices': {}}}))
@@ -182,7 +182,7 @@ class TestSensorRfxtrx(unittest.TestCase):
 
     def test_discover_sensor_noautoadd(self):
         """Test with discover of sensor when auto add is False."""
-        self.assertTrue(_setup_component(self.hass, 'sensor', {
+        self.assertTrue(setup_component(self.hass, 'sensor', {
             'sensor': {'platform': 'rfxtrx',
                        'automatic_add': False,
                        'devices': {}}}))
@@ -209,7 +209,7 @@ class TestSensorRfxtrx(unittest.TestCase):
 
     def test_update_of_sensors(self):
         """Test with 3 sensors."""
-        self.assertTrue(_setup_component(self.hass, 'sensor', {
+        self.assertTrue(setup_component(self.hass, 'sensor', {
                 'sensor': {'platform': 'rfxtrx',
                            'devices':
                                {'0a52080705020095220269': {

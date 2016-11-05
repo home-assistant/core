@@ -69,7 +69,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):  # pylint: disable=too-many-locals
+def setup(hass, config):
     """Setup the MySensors component."""
     import mysensors.mysensors as mysensors
 
@@ -79,7 +79,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals
     def setup_gateway(device, persistence_file, baud_rate, tcp_port, in_prefix,
                       out_prefix):
         """Return gateway after setup of the gateway."""
-        # pylint: disable=too-many-arguments
         if device == MQTT_COMPONENT:
             if not setup_component(hass, MQTT_COMPONENT, config):
                 return
@@ -201,8 +200,6 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
 class GatewayWrapper(object):
     """Gateway wrapper class."""
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(self, gateway, optimistic, device):
         """Setup class attributes on instantiation.
 
@@ -255,8 +252,6 @@ class GatewayWrapper(object):
 
 class MySensorsDeviceEntity(object):
     """Represent a MySensors entity."""
-
-    # pylint: disable=too-many-arguments
 
     def __init__(
             self, gateway, node_id, child_id, name, value_type, child_type):

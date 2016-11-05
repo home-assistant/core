@@ -41,7 +41,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=too-many-locals
 def setup(hass, config):
     """The triggers to turn lights on or off based on device presence."""
     logger = logging.getLogger(__name__)

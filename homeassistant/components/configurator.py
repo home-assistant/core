@@ -8,7 +8,8 @@ the user has submitted configuration information.
 """
 import logging
 
-from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME
+from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME, \
+    ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import generate_entity_id
 
 _INSTANCES = {}
@@ -33,10 +34,10 @@ STATE_CONFIGURE = 'configure'
 STATE_CONFIGURED = 'configured'
 
 
-# pylint: disable=too-many-arguments
 def request_config(
         hass, name, callback, description=None, description_image=None,
-        submit_caption=None, fields=None, link_name=None, link_url=None):
+        submit_caption=None, fields=None, link_name=None, link_url=None,
+        entity_picture=None):
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
@@ -46,7 +47,7 @@ def request_config(
     request_id = instance.request_config(
         name, callback,
         description, description_image, submit_caption,
-        fields, link_name, link_url)
+        fields, link_name, link_url, entity_picture)
 
     _REQUESTS[request_id] = instance
 
@@ -100,11 +101,10 @@ class Configurator(object):
         hass.services.register(
             DOMAIN, SERVICE_CONFIGURE, self.handle_service_call)
 
-    # pylint: disable=too-many-arguments
     def request_config(
             self, name, callback,
             description, description_image, submit_caption,
-            fields, link_name, link_url):
+            fields, link_name, link_url, entity_picture):
         """Setup a request for configuration."""
         entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
 
@@ -119,6 +119,7 @@ class Configurator(object):
             ATTR_CONFIGURE_ID: request_id,
             ATTR_FIELDS: fields,
             ATTR_FRIENDLY_NAME: name,
+            ATTR_ENTITY_PICTURE: entity_picture,
         }
 
         data.update({

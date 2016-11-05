@@ -65,8 +65,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DirecTvDevice(MediaPlayerDevice):
     """Representation of a DirecTV reciever on the network."""
 
-    # pylint: disable=abstract-method
-    # pylint: disable=too-many-public-methods
     def __init__(self, name, host, port):
         """Initialize the device."""
         from DirectPy import DIRECTV

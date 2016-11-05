@@ -45,10 +45,16 @@ def get_service(hass, config):
         # Need this to enable requirements checking in the app.
         hass.config.components.append("notify.ios")
 
+    if not ios.devices_with_push():
+        _LOGGER.error(("The notify.ios platform was loaded but no "
+                       "devices exist! Please check the documentation at "
+                       "https://home-assistant.io/components/notify.ios/ "
+                       "for more information"))
+        return None
+
     return iOSNotificationService()
 
 
-# pylint: disable=too-few-public-methods, too-many-arguments, invalid-name
 class iOSNotificationService(BaseNotificationService):
     """Implement the notification service for iOS."""
 

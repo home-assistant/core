@@ -170,8 +170,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class GPMDP(MediaPlayerDevice):
     """Representation of a GPMDP."""
 
-    # pylint: disable=too-many-public-methods, abstract-method
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, name, url, code):
         """Initialize the media player."""
         from websocket import create_connection

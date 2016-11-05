@@ -56,7 +56,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return True
 
 
-# pylint: disable=too-few-public-methods
 class FritzBoxCallSensor(Entity):
     """Implementation of a Fritz!Box call monitor."""
 
@@ -95,7 +94,6 @@ class FritzBoxCallSensor(Entity):
         return self._attributes
 
 
-# pylint: disable=too-few-public-methods
 class FritzBoxCallMonitor(object):
     """Event listener to monitor calls on the Fritz!Box."""
 

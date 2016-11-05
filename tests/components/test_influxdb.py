@@ -8,6 +8,8 @@ from homeassistant.bootstrap import setup_component
 import homeassistant.components.influxdb as influxdb
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 
+from tests.common import get_test_home_assistant
+
 
 @mock.patch('influxdb.InfluxDBClient')
 class TestInfluxDB(unittest.TestCase):
@@ -15,9 +17,13 @@ class TestInfluxDB(unittest.TestCase):
 
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = mock.MagicMock()
-        self.hass.pool.worker_count = 2
+        self.hass = get_test_home_assistant()
         self.handler_method = None
+        self.hass.bus.listen = mock.Mock()
+
+    def tearDown(self):
+        """Clear data."""
+        self.hass.stop()
 
     def test_setup_config_full(self, mock_client):
         """Test the setup with full configuration."""

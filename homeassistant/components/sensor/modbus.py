@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.modbus/
 """
 import logging
+
 import voluptuous as vol
 
 import homeassistant.components.modbus as modbus
@@ -17,12 +18,12 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']
 
-CONF_COUNT = "count"
-CONF_PRECISION = "precision"
-CONF_REGISTER = "register"
-CONF_REGISTERS = "registers"
-CONF_SCALE = "scale"
-CONF_SLAVE = "slave"
+CONF_COUNT = 'count'
+CONF_PRECISION = 'precision'
+CONF_REGISTER = 'register'
+CONF_REGISTERS = 'registers'
+CONF_SCALE = 'scale'
+CONF_SLAVE = 'slave'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_REGISTERS): [{
@@ -39,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Modbus sensors."""
+    """Set up the Modbus sensors."""
     sensors = []
     for register in config.get(CONF_REGISTERS):
         sensors.append(ModbusRegisterSensor(
@@ -57,7 +58,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ModbusRegisterSensor(Entity):
     """Modbus resgister sensor."""
 
-    # pylint: disable=too-many-instance-attributes, too-many-arguments
     def __init__(self, name, slave, register, unit_of_measurement, count,
                  scale, offset, precision):
         """Initialize the modbus register sensor."""
@@ -94,13 +94,10 @@ class ModbusRegisterSensor(Entity):
             self._count)
         val = 0
         if not result:
-            _LOGGER.error(
-                'No response from modbus slave %s register %s',
-                self._slave,
-                self._register)
+            _LOGGER.error("No response from modbus slave %s register %s",
+                          self._slave, self._register)
             return
         for i, res in enumerate(result.registers):
             val += res * (2**(i*16))
         self._value = format(
-            self._scale * val + self._offset,
-            ".{}f".format(self._precision))
+            self._scale * val + self._offset, '.{}f'.format(self._precision))

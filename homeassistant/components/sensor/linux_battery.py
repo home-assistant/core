@@ -63,7 +63,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([LinuxBatterySensor(name, battery_id)])
 
 
-# pylint: disable=too-few-public-methods
 class LinuxBatterySensor(Entity):
     """Representation of a Linux Battery sensor."""
 

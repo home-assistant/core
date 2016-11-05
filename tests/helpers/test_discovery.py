@@ -3,8 +3,10 @@ from unittest.mock import patch
 
 from homeassistant import loader, bootstrap
 from homeassistant.helpers import discovery
+from homeassistant.util.async import run_coroutine_threadsafe
 
-from tests.common import get_test_home_assistant, MockModule, MockPlatform
+from tests.common import (
+    get_test_home_assistant, MockModule, MockPlatform, mock_coro)
 
 
 class TestHelpersDiscovery:
@@ -12,7 +14,7 @@ class TestHelpersDiscovery:
 
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(1)
+        self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -55,7 +57,8 @@ class TestHelpersDiscovery:
         assert ['test service', 'another service'] == [info[0] for info
                                                        in calls_multi]
 
-    @patch('homeassistant.bootstrap.setup_component')
+    @patch('homeassistant.bootstrap.async_setup_component',
+           return_value=mock_coro(True)())
     def test_platform(self, mock_setup_component):
         """Test discover platform method."""
         calls = []
@@ -91,7 +94,17 @@ class TestHelpersDiscovery:
         assert len(calls) == 1
 
     def test_circular_import(self):
-        """Test we don't break doing circular import."""
+        """Test we don't break doing circular import.
+
+        This test will have test_component discover the switch.test_circular
+        component while setting up.
+
+        The supplied config will load test_component and will load
+        switch.test_circular.
+
+        That means that after startup, we will have test_component and switch
+        setup. The test_circular platform has been loaded twice.
+        """
         component_calls = []
         platform_calls = []
 
@@ -122,9 +135,17 @@ class TestHelpersDiscovery:
                 'platform': 'test_circular',
             }],
         })
+
+        # We wait for the setup_lock to finish
+        run_coroutine_threadsafe(
+            self.hass.data['setup_lock'].acquire(), self.hass.loop).result()
+
         self.hass.block_till_done()
 
+        # test_component will only be setup once
+        assert len(component_calls) == 1
+        # The platform will be setup once via the config in `setup_component`
+        # and once via the discovery inside test_component.
+        assert len(platform_calls) == 2
         assert 'test_component' in self.hass.config.components
         assert 'switch' in self.hass.config.components
-        assert len(component_calls) == 1
-        assert len(platform_calls) == 2

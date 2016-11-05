@@ -6,7 +6,6 @@ https://home-assistant.io/components/climate.radiotherm/
 """
 import datetime
 import logging
-from urllib.error import URLError
 
 import voluptuous as vol
 
@@ -52,14 +51,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             tstat = radiotherm.get_thermostat(host)
             tstats.append(RadioThermostat(tstat, hold_temp))
-        except (URLError, OSError):
+        except OSError:
             _LOGGER.exception("Unable to connect to Radio Thermostat: %s",
                               host)
 
     add_devices(tstats)
 
 
-# pylint: disable=abstract-method
 class RadioThermostat(ClimateDevice):
     """Representation of a Radio Thermostat."""
 

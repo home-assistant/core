@@ -70,14 +70,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("No switches added")
         return False
 
-    hass.loop.create_task(async_add_devices(switches))
+    hass.loop.create_task(async_add_devices(switches, True))
     return True
 
 
 class SwitchTemplate(SwitchDevice):
     """Representation of a Template switch."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, device_id, friendly_name, state_template,
                  on_action, off_action, entity_ids):
         """Initialize the Template switch."""
@@ -89,8 +88,6 @@ class SwitchTemplate(SwitchDevice):
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
         self._state = False
-
-        self._async_render()
 
         @callback
         def template_switch_state_listener(entity, old_state, new_state):
@@ -131,10 +128,6 @@ class SwitchTemplate(SwitchDevice):
     @asyncio.coroutine
     def async_update(self):
         """Update the state from the template."""
-        self._async_render()
-
-    def _async_render(self):
-        """Render the state from the template."""
         try:
             state = self._template.async_render().lower()
 

@@ -13,42 +13,46 @@ import requests
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_URL, CONF_VALUE_TEMPLATE,
-    CONF_UNIT_OF_MEASUREMENT, CONF_ID, CONF_SCAN_INTERVAL,
-    STATE_UNKNOWN)
+    CONF_API_KEY, CONF_URL, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT,
+    CONF_ID, CONF_SCAN_INTERVAL, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_FEEDID = 'FeedId'
+ATTR_FEEDNAME = 'FeedName'
+ATTR_LASTUPDATETIME = 'LastUpdated'
+ATTR_LASTUPDATETIMESTR = 'LastUpdatedStr'
+ATTR_SIZE = 'Size'
+ATTR_TAG = 'Tag'
+ATTR_USERID = 'UserId'
+
+CONF_EXCLUDE_FEEDID = 'exclude_feed_id'
+CONF_ONLY_INCLUDE_FEEDID = 'include_only_feed_id'
+CONF_SENSOR_NAMES = 'sensor_names'
+
 DECIMALS = 2
-CONF_EXCLUDE_FEEDID = "exclude_feed_id"
-CONF_ONLY_INCLUDE_FEEDID = "include_only_feed_id"
-CONF_SENSOR_NAMES = "sensor_names"
+DEFAULT_UNIT = 'W'
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
+
+ONLY_INCL_EXCL_NONE = 'only_include_exclude_or_none'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_URL): cv.string,
     vol.Required(CONF_ID): cv.positive_int,
-    vol.Exclusive(CONF_ONLY_INCLUDE_FEEDID, 'only_include_exclude_or_none'):
+    vol.Exclusive(CONF_ONLY_INCLUDE_FEEDID, ONLY_INCL_EXCL_NONE):
         vol.All(cv.ensure_list, [cv.positive_int]),
-    vol.Exclusive(CONF_EXCLUDE_FEEDID, 'only_include_exclude_or_none'):
+    vol.Exclusive(CONF_EXCLUDE_FEEDID, ONLY_INCL_EXCL_NONE):
         vol.All(cv.ensure_list, [cv.positive_int]),
     vol.Optional(CONF_SENSOR_NAMES):
         vol.All({cv.positive_int: vol.All(cv.string, vol.Length(min=1))}),
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="W"): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=DEFAULT_UNIT): cv.string,
 })
-
-ATTR_SIZE = 'Size'
-ATTR_LASTUPDATETIME = 'LastUpdated'
-ATTR_TAG = 'Tag'
-ATTR_FEEDID = 'FeedId'
-ATTR_USERID = 'UserId'
-ATTR_FEEDNAME = 'FeedName'
-ATTR_LASTUPDATETIMESTR = 'LastUpdatedStr'
 
 
 def get_id(sensorid, feedtag, feedname, feedid, feeduserid):
@@ -57,9 +61,8 @@ def get_id(sensorid, feedtag, feedname, feedid, feeduserid):
         sensorid, feedtag, feedname, feedid, feeduserid)
 
 
-# pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Emoncms sensor."""
+    """Set up the Emoncms sensor."""
     apikey = config.get(CONF_API_KEY)
     url = config.get(CONF_URL)
     sensorid = config.get(CONF_ID)
@@ -102,11 +105,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors)
 
 
-# pylint: disable=too-many-instance-attributes
 class EmonCmsSensor(Entity):
-    """Implementation of an EmonCmsSensor sensor."""
+    """Implementation of an Emoncms sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, data, name, value_template,
                  unit_of_measurement, sensorid, elem):
         """Initialize the sensor."""
@@ -115,9 +116,8 @@ class EmonCmsSensor(Entity):
                 sensorid, elem["id"])
         else:
             self._name = name
-        self._identifier = get_id(sensorid, elem["tag"],
-                                  elem["name"], elem["id"],
-                                  elem["userid"])
+        self._identifier = get_id(
+            sensorid, elem["tag"], elem["name"], elem["id"], elem["userid"])
         self._hass = hass
         self._data = data
         self._value_template = value_template
@@ -185,24 +185,24 @@ class EmonCmsSensor(Entity):
             self._state = round(float(elem["value"]), DECIMALS)
 
 
-# pylint: disable=too-few-public-methods
 class EmonCmsData(object):
     """The class for handling the data retrieval."""
 
     def __init__(self, hass, url, apikey, interval):
         """Initialize the data object."""
         self._apikey = apikey
-        self._url = "{}/feed/list.json".format(url)
+        self._url = '{}/feed/list.json'.format(url)
         self._interval = interval
         self._hass = hass
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data."""
+        """Get the latest data from Emoncms."""
         try:
-            req = requests.get(self._url, params={"apikey": self._apikey},
-                               allow_redirects=True, timeout=5)
+            parameters = {"apikey": self._apikey}
+            req = requests.get(
+                self._url, params=parameters, allow_redirects=True, timeout=5)
         except requests.exceptions.RequestException as exception:
             _LOGGER.error(exception)
             return
@@ -210,6 +210,6 @@ class EmonCmsData(object):
             if req.status_code == 200:
                 self.data = req.json()
             else:
-                _LOGGER.error("please verify if the specified config value "
+                _LOGGER.error("Please verify if the specified config value "
                               "'%s' is correct! (HTTP Status_code = %d)",
                               CONF_URL, req.status_code)

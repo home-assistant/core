@@ -15,17 +15,16 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.util import Throttle
 
-
 REQUIREMENTS = ['https://github.com/mweinelt/anel-pwrctrl/archive/'
                 'ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip'
                 '#anel_pwrctrl==0.0.1']
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_PORT_RECV = "port_recv"
 CONF_PORT_SEND = "port_send"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORT_RECV): cv.port,
@@ -48,13 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from anel_pwrctrl import DeviceMaster
 
     try:
-        master = DeviceMaster(username=username,
-                              password=password,
-                              read_port=port_send,
-                              write_port=port_recv)
+        master = DeviceMaster(
+            username=username, password=password, read_port=port_send,
+            write_port=port_recv)
         master.query(ip_addr=host)
     except socket.error as ex:
-        _LOGGER.error('Unable to discover PwrCtrl device: %s', str(ex))
+        _LOGGER.error("Unable to discover PwrCtrl device: %s", str(ex))
         return False
 
     devices = []
@@ -84,7 +82,7 @@ class PwrCtrlSwitch(SwitchDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return "{device}-{switch_idx}".format(
+        return '{device}-{switch_idx}'.format(
             device=self._port.device.host,
             switch_idx=self._port.get_index()
         )
@@ -112,7 +110,6 @@ class PwrCtrlSwitch(SwitchDevice):
         self._port.off()
 
 
-# pylint: disable=too-few-public-methods
 class PwrCtrlDevice(object):
     """Device representation for per device throttling."""
 

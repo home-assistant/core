@@ -1,11 +1,12 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 31
-PATCH_VERSION = '1'
+MINOR_VERSION = 32
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
+REQUIRED_PYTHON_VER_WIN = (3, 5, 2)
 
 PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
@@ -58,6 +59,7 @@ CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
 CONF_AUTHENTICATION = 'authentication'
+CONF_BASE = 'base'
 CONF_BEFORE = 'before'
 CONF_BELOW = 'below'
 CONF_BLACKLIST = 'blacklist'
@@ -113,6 +115,8 @@ CONF_PIN = 'pin'
 CONF_PLATFORM = 'platform'
 CONF_PORT = 'port'
 CONF_PREFIX = 'prefix'
+CONF_PROTOCOL = 'protocol'
+CONF_QUOTE = 'quote'
 CONF_RECIPIENT = 'recipient'
 CONF_RESOURCE = 'resource'
 CONF_RESOURCES = 'resources'
@@ -313,11 +317,6 @@ SERVICE_SET_COVER_POSITION = 'set_cover_position'
 SERVICE_SET_COVER_TILT_POSITION = 'set_cover_tilt_position'
 SERVICE_STOP_COVER = 'stop_cover'
 SERVICE_STOP_COVER_TILT = 'stop_cover_tilt'
-
-SERVICE_MOVE_UP = 'move_up'
-SERVICE_MOVE_DOWN = 'move_down'
-SERVICE_MOVE_POSITION = 'move_position'
-SERVICE_STOP = 'stop'
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123

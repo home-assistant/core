@@ -6,31 +6,30 @@ https://home-assistant.io/components/sensor.bbox/
 """
 import logging
 from datetime import timedelta
+
 import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_MONITORED_VARIABLES,
-                                 ATTR_ATTRIBUTION)
+from homeassistant.const import (
+    CONF_NAME, CONF_MONITORED_VARIABLES, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 REQUIREMENTS = ['pybbox==0.0.5-alpha']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Powered by Bouygues Telecom"
-DEFAULT_NAME = 'Bbox'
-
-# Bandwidth units
 BANDWIDTH_MEGABITS_SECONDS = 'Mb/s'  # type: str
 
-# Sensor types are defined like so:
-# Name, unit, icon
+CONF_ATTRIBUTION = "Powered by Bouygues Telecom"
+
+DEFAULT_NAME = 'Bbox'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+
+# Sensor types are defined like so: Name, unit, icon
 SENSOR_TYPES = {
     'down_max_bandwidth': ['Maximum Download Bandwidth',
                            BANDWIDTH_MEGABITS_SECONDS, 'mdi:download'],
@@ -49,9 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=too-many-arguments
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Bbox sensor."""
+    """Set up the Bbox sensor."""
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data.
     try:
@@ -129,7 +127,6 @@ class BboxSensor(Entity):
                                 2)
 
 
-# pylint: disable=too-few-public-methods
 class BboxData(object):
     """Get data from the Bbox."""
 

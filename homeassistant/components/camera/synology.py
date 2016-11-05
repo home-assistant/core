@@ -4,28 +4,30 @@ Support for Synology Surveillance Station Cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.synology/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
-import requests
+from aiohttp import web
+from aiohttp.web_exceptions import HTTPGatewayTimeout
+import async_timeout
 
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    CONF_URL, CONF_WHITELIST)
+    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL)
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
-#  pylint: disable=too-many-locals
 DEFAULT_NAME = 'Synology Camera'
 DEFAULT_STREAM_ID = '0'
 TIMEOUT = 5
 CONF_CAMERA_NAME = 'camera_name'
 CONF_STREAM_ID = 'stream_id'
-CONF_VALID_CERT = 'valid_cert'
 
 QUERY_CGI = 'query.cgi'
 QUERY_API = 'SYNO.API.Info'
@@ -38,6 +40,7 @@ WEBAPI_PATH = '/webapi/'
 AUTH_PATH = 'auth.cgi'
 CAMERA_PATH = 'camera.cgi'
 STREAMING_PATH = 'SurveillanceStation/videoStreaming.cgi'
+CONTENT_TYPE_HEADER = 'Content-Type'
 
 SYNO_API_URL = '{0}{1}{2}'
 
@@ -47,89 +50,136 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_URL): cv.string,
     vol.Optional(CONF_WHITELIST, default=[]): cv.ensure_list,
-    vol.Optional(CONF_VALID_CERT, default=True): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a Synology IP Camera."""
     # Determine API to use for authentication
-    syno_api_url = SYNO_API_URL.format(config.get(CONF_URL),
-                                       WEBAPI_PATH,
-                                       QUERY_CGI)
-    query_payload = {'api': QUERY_API,
-                     'method': 'Query',
-                     'version': '1',
-                     'query': 'SYNO.'}
-    query_req = requests.get(syno_api_url,
-                             params=query_payload,
-                             verify=config.get(CONF_VALID_CERT),
-                             timeout=TIMEOUT)
-    query_resp = query_req.json()
+    syno_api_url = SYNO_API_URL.format(
+        config.get(CONF_URL), WEBAPI_PATH, QUERY_CGI)
+
+    query_payload = {
+        'api': QUERY_API,
+        'method': 'Query',
+        'version': '1',
+        'query': 'SYNO.'
+    }
+    try:
+        with async_timeout.timeout(TIMEOUT, loop=hass.loop):
+            query_req = yield from hass.websession.get(
+                syno_api_url,
+                params=query_payload,
+                verify_ssl=config.get(CONF_VERIFY_SSL)
+            )
+    except asyncio.TimeoutError:
+        _LOGGER.error("Timeout on %s", syno_api_url)
+        return False
+
+    query_resp = yield from query_req.json()
     auth_path = query_resp['data'][AUTH_API]['path']
     camera_api = query_resp['data'][CAMERA_API]['path']
     camera_path = query_resp['data'][CAMERA_API]['path']
     streaming_path = query_resp['data'][STREAMING_API]['path']
 
+    # cleanup
+    yield from query_req.release()
+
     # Authticate to NAS to get a session id
-    syno_auth_url = SYNO_API_URL.format(config.get(CONF_URL),
-                                        WEBAPI_PATH,
-                                        auth_path)
-    session_id = get_session_id(config.get(CONF_USERNAME),
-                                config.get(CONF_PASSWORD),
-                                syno_auth_url,
-                                config.get(CONF_VALID_CERT))
+    syno_auth_url = SYNO_API_URL.format(
+        config.get(CONF_URL), WEBAPI_PATH, auth_path)
+
+    session_id = yield from get_session_id(
+        hass,
+        config.get(CONF_USERNAME),
+        config.get(CONF_PASSWORD),
+        syno_auth_url,
+        config.get(CONF_VERIFY_SSL)
+    )
 
     # Use SessionID to get cameras in system
-    syno_camera_url = SYNO_API_URL.format(config.get(CONF_URL),
-                                          WEBAPI_PATH,
-                                          camera_api)
-    camera_payload = {'api': CAMERA_API,
-                      'method': 'List',
-                      'version': '1'}
-    camera_req = requests.get(syno_camera_url,
-                              params=camera_payload,
-                              verify=config.get(CONF_VALID_CERT),
-                              timeout=TIMEOUT,
-                              cookies={'id': session_id})
-    camera_resp = camera_req.json()
+    syno_camera_url = SYNO_API_URL.format(
+        config.get(CONF_URL), WEBAPI_PATH, camera_api)
+
+    camera_payload = {
+        'api': CAMERA_API,
+        'method': 'List',
+        'version': '1'
+    }
+    try:
+        with async_timeout.timeout(TIMEOUT, loop=hass.loop):
+            camera_req = yield from hass.websession.get(
+                syno_camera_url,
+                params=camera_payload,
+                verify_ssl=config.get(CONF_VERIFY_SSL),
+                cookies={'id': session_id}
+            )
+    except asyncio.TimeoutError:
+        _LOGGER.error("Timeout on %s", syno_camera_url)
+        return False
+
+    camera_resp = yield from camera_req.json()
     cameras = camera_resp['data']['cameras']
+    yield from camera_req.release()
+
+    # add cameras
+    devices = []
+    tasks = []
     for camera in cameras:
         if not config.get(CONF_WHITELIST):
             camera_id = camera['id']
             snapshot_path = camera['snapshot_path']
 
-            add_devices([SynologyCamera(config,
-                                        camera_id,
-                                        camera['name'],
-                                        snapshot_path,
-                                        streaming_path,
-                                        camera_path,
-                                        auth_path)])
+            device = SynologyCamera(
+                config,
+                camera_id,
+                camera['name'],
+                snapshot_path,
+                streaming_path,
+                camera_path,
+                auth_path
+            )
+            tasks.append(device.async_read_sid())
+            devices.append(device)
+
+    yield from asyncio.gather(*tasks, loop=hass.loop)
+    hass.loop.create_task(async_add_devices(devices))
 
 
-def get_session_id(username, password, login_url, valid_cert):
+@asyncio.coroutine
+def get_session_id(hass, username, password, login_url, valid_cert):
     """Get a session id."""
-    auth_payload = {'api': AUTH_API,
-                    'method': 'Login',
-                    'version': '2',
-                    'account': username,
-                    'passwd': password,
-                    'session': 'SurveillanceStation',
-                    'format': 'sid'}
-    auth_req = requests.get(login_url,
-                            params=auth_payload,
-                            verify=valid_cert,
-                            timeout=TIMEOUT)
-    auth_resp = auth_req.json()
+    auth_payload = {
+        'api': AUTH_API,
+        'method': 'Login',
+        'version': '2',
+        'account': username,
+        'passwd': password,
+        'session': 'SurveillanceStation',
+        'format': 'sid'
+    }
+    try:
+        with async_timeout.timeout(TIMEOUT, loop=hass.loop):
+            auth_req = yield from hass.websession.get(
+                login_url,
+                params=auth_payload,
+                verify_ssl=valid_cert
+            )
+    except asyncio.TimeoutError:
+        _LOGGER.error("Timeout on %s", login_url)
+        return False
+
+    auth_resp = yield from auth_req.json()
+    yield from auth_req.release()
+
     return auth_resp['data']['sid']
 
 
-# pylint: disable=too-many-instance-attributes
 class SynologyCamera(Camera):
     """An implementation of a Synology NAS based IP camera."""
 
-# pylint: disable=too-many-arguments
     def __init__(self, config, camera_id, camera_name,
                  snapshot_path, streaming_path, camera_path, auth_path):
         """Initialize a Synology Surveillance Station camera."""
@@ -142,80 +192,98 @@ class SynologyCamera(Camera):
         self._login_url = config.get(CONF_URL) + '/webapi/' + 'auth.cgi'
         self._camera_name = config.get(CONF_CAMERA_NAME)
         self._stream_id = config.get(CONF_STREAM_ID)
-        self._valid_cert = config.get(CONF_VALID_CERT)
+        self._valid_cert = config.get(CONF_VERIFY_SSL)
         self._camera_id = camera_id
         self._snapshot_path = snapshot_path
         self._streaming_path = streaming_path
         self._camera_path = camera_path
         self._auth_path = auth_path
+        self._session_id = None
 
-        self._session_id = get_session_id(self._username,
-                                          self._password,
-                                          self._login_url,
-                                          self._valid_cert)
-
-    def get_sid(self):
+    @asyncio.coroutine
+    def async_read_sid(self):
         """Get a session id."""
-        auth_payload = {'api': AUTH_API,
-                        'method': 'Login',
-                        'version': '2',
-                        'account': self._username,
-                        'passwd': self._password,
-                        'session': 'SurveillanceStation',
-                        'format': 'sid'}
-        auth_req = requests.get(self._login_url,
-                                params=auth_payload,
-                                verify=self._valid_cert,
-                                timeout=TIMEOUT)
-        auth_resp = auth_req.json()
-        self._session_id = auth_resp['data']['sid']
+        self._session_id = yield from get_session_id(
+            self.hass,
+            self._username,
+            self._password,
+            self._login_url,
+            self._valid_cert
+        )
 
     def camera_image(self):
+        """Return bytes of camera image."""
+        return run_coroutine_threadsafe(
+            self.async_camera_image(), self.hass.loop).result()
+
+    @asyncio.coroutine
+    def async_camera_image(self):
         """Return a still image response from the camera."""
-        image_url = SYNO_API_URL.format(self._synology_url,
-                                        WEBAPI_PATH,
-                                        self._camera_path)
-        image_payload = {'api': CAMERA_API,
-                         'method': 'GetSnapshot',
-                         'version': '1',
-                         'cameraId': self._camera_id}
+        image_url = SYNO_API_URL.format(
+            self._synology_url, WEBAPI_PATH, self._camera_path)
+
+        image_payload = {
+            'api': CAMERA_API,
+            'method': 'GetSnapshot',
+            'version': '1',
+            'cameraId': self._camera_id
+        }
         try:
-            response = requests.get(image_url,
-                                    params=image_payload,
-                                    timeout=TIMEOUT,
-                                    verify=self._valid_cert,
-                                    cookies={'id': self._session_id})
-        except requests.exceptions.RequestException as error:
-            _LOGGER.error('Error getting camera image: %s', error)
+            with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
+                response = yield from self.hass.websession.get(
+                    image_url,
+                    params=image_payload,
+                    verify_ssl=self._valid_cert,
+                    cookies={'id': self._session_id}
+                )
+        except asyncio.TimeoutError:
+            _LOGGER.error("Timeout on %s", image_url)
             return None
 
-        return response.content
+        image = yield from response.read()
+        yield from response.release()
 
-    def camera_stream(self):
+        return image
+
+    @asyncio.coroutine
+    def handle_async_mjpeg_stream(self, request):
         """Return a MJPEG stream image response directly from the camera."""
-        streaming_url = SYNO_API_URL.format(self._synology_url,
-                                            WEBAPI_PATH,
-                                            self._streaming_path)
-        streaming_payload = {'api': STREAMING_API,
-                             'method': 'Stream',
-                             'version': '1',
-                             'cameraId': self._camera_id,
-                             'format': 'mjpeg'}
-        response = requests.get(streaming_url,
-                                payload=streaming_payload,
-                                stream=True,
-                                timeout=TIMEOUT,
-                                cookies={'id': self._session_id})
-        return response
+        streaming_url = SYNO_API_URL.format(
+            self._synology_url, WEBAPI_PATH, self._streaming_path)
 
-    def mjpeg_steam(self, response):
-        """Generate an HTTP MJPEG Stream from the Synology NAS."""
-        stream = self.camera_stream()
-        return response(
-            stream.iter_content(chunk_size=1024),
-            mimetype=stream.headers['CONTENT_TYPE_HEADER'],
-            direct_passthrough=True
-        )
+        streaming_payload = {
+            'api': STREAMING_API,
+            'method': 'Stream',
+            'version': '1',
+            'cameraId': self._camera_id,
+            'format': 'mjpeg'
+        }
+        try:
+            with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
+                stream = yield from self.hass.websession.get(
+                    streaming_url,
+                    payload=streaming_payload,
+                    verify_ssl=self._valid_cert,
+                    cookies={'id': self._session_id}
+                )
+        except asyncio.TimeoutError:
+            raise HTTPGatewayTimeout()
+
+        response = web.StreamResponse()
+        response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
+        response.enable_chunked_encoding()
+
+        yield from response.prepare(request)
+
+        try:
+            while True:
+                data = yield from stream.content.read(102400)
+                if not data:
+                    break
+                response.write(data)
+        finally:
+            self.hass.loop.create_task(stream.release())
+            yield from response.write_eof()
 
     @property
     def name(self):

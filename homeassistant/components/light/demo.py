@@ -34,7 +34,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class DemoLight(Light):
     """Represenation of a demo light."""
 
-    # pylint: disable=too-many-arguments
     def __init__(
             self, name, state, rgb=None, ct=None, brightness=180,
             xy_color=(.5, .5), white=200):

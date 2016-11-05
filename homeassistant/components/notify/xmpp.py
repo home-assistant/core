@@ -39,7 +39,6 @@ def get_service(hass, config):
         config.get('tls'))
 
 
-# pylint: disable=too-few-public-methods
 class XmppNotificationService(BaseNotificationService):
     """Implement the notification service for Jabber (XMPP)."""
 
@@ -53,7 +52,7 @@ class XmppNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data = "{}: {}".format(title, message) if title else message
+        data = '{}: {}'.format(title, message) if title else message
 
         send_message(self._sender + '/home-assistant', self._password,
                      self._recipient, self._tls, data)

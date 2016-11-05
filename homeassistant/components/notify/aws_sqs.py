@@ -53,7 +53,6 @@ def get_service(hass, config):
     return AWSSQS(sqs_client)
 
 
-# pylint: disable=too-few-public-methods
 class AWSSQS(BaseNotificationService):
     """Implement the notification service for the AWS SQS service."""
 
