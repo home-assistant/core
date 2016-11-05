@@ -30,10 +30,10 @@ ATTR_STATE = 'state'
 ATTR_NAME = 'name'
 ATTR_FIREEVENT = 'fire_event'
 ATTR_DATA_TYPE = 'data_type'
+ATTR_DATA_BITS = 'data_bits'
 ATTR_DUMMY = 'dummy'
 ATTR_OFF_DELAY = 'off_delay'
 ATTR_SENSOR_CLASS = 'sensor_class'
-ATTR_DATABITS = 'data_bits'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_DEVICES = 'devices'
 EVENT_BUTTON_PRESSED = 'button_pressed'
@@ -125,7 +125,7 @@ DEVICE_SCHEMA_BINARYSENSOR = vol.Schema({
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
     vol.Optional(ATTR_OFF_DELAY, default=None):
         vol.Any(cv.time_period, cv.positive_timedelta),
-    vol.Optional(ATTR_DATABITS, default=None): cv.positive_int,
+    vol.Optional(ATTR_DATA_BITS, default=None): cv.positive_int,
     vol.Optional(CONF_COMMAND_ON, default=None): cv.byte,
     vol.Optional(CONF_COMMAND_OFF, default=None): cv.byte
 })

@@ -16,7 +16,7 @@ from homeassistant.helpers import event as evt
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.rfxtrx import (
     ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_OFF_DELAY, ATTR_FIREEVENT,
-    ATTR_DATABITS, CONF_DEVICES
+    ATTR_DATA_BITS, CONF_DEVICES
 )
 from homeassistant.const import (
     CONF_SENSOR_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if device_id in rfxtrx.RFX_DEVICES:
             continue
 
-        if not entity[ATTR_DATABITS] is None:
+        if not entity[ATTR_DATA_BITS] is None:
             _LOGGER.info("Masked device id: %s",
                          rfxtrx.get_pt2262_deviceid(device_id, 4))
 
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                                     entity[CONF_SENSOR_CLASS],
                                     entity[ATTR_FIREEVENT],
                                     entity[ATTR_OFF_DELAY],
-                                    entity[ATTR_DATABITS],
+                                    entity[ATTR_DATA_BITS],
                                     entity[CONF_COMMAND_ON],
                                     entity[CONF_COMMAND_OFF])
 
