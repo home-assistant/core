@@ -3,6 +3,7 @@ from datetime import datetime
 import unittest
 from unittest.mock import patch
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import sun
 import homeassistant.components.automation as automation
@@ -22,6 +23,7 @@ class TestAutomationSun(unittest.TestCase):
 
         self.calls = []
 
+        @callback
         def record_call(service):
             self.calls.append(service)
 

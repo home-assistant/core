@@ -1,6 +1,7 @@
 """The tests for the location automation."""
 import unittest
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import automation, zone
 
@@ -25,6 +26,7 @@ class TestAutomationZone(unittest.TestCase):
 
         self.calls = []
 
+        @callback
         def record_call(service):
             self.calls.append(service)
 
