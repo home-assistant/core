@@ -10,9 +10,12 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    ATTR_ENTITY_ID, TEMP_CELSIUS,
+    CONF_SENSOR_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF
+)
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (ATTR_ENTITY_ID, TEMP_CELSIUS)
 
 REQUIREMENTS = ['pyRFXtrx==0.13.0']
 
@@ -31,11 +34,8 @@ ATTR_DUMMY = 'dummy'
 ATTR_OFF_DELAY = 'off_delay'
 ATTR_SENSOR_CLASS = 'sensor_class'
 ATTR_DATABITS = 'data_bits'
-ATTR_CMD_OFF = 'cmd_off'
-ATTR_CMD_ON = 'cmd_on'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_DEVICES = 'devices'
-CONF_SENSOR_CLASS = 'sensor_class'
 EVENT_BUTTON_PRESSED = 'button_pressed'
 
 DATA_TYPES = OrderedDict([
@@ -126,8 +126,8 @@ DEVICE_SCHEMA_BINARYSENSOR = vol.Schema({
     vol.Optional(ATTR_OFF_DELAY, default=None):
         vol.Any(cv.time_period, cv.positive_timedelta),
     vol.Optional(ATTR_DATABITS, default=None): cv.positive_int,
-    vol.Optional(ATTR_CMD_ON, default=None): cv.byte,
-    vol.Optional(ATTR_CMD_OFF, default=None): cv.byte
+    vol.Optional(CONF_COMMAND_ON, default=None): cv.byte,
+    vol.Optional(CONF_COMMAND_OFF, default=None): cv.byte
 })
 
 DEFAULT_SCHEMA = vol.Schema({
