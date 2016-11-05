@@ -67,7 +67,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     )])
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttCover(CoverDevice):
     """Representation of a cover that can be controlled using MQTT."""
 

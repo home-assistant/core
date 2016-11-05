@@ -44,7 +44,6 @@ def setup(hass, config):
     return len(feeds) > 0
 
 
-# pylint: disable=too-few-public-methods
 class FeedManager(object):
     """Abstraction over feedparser module."""
 

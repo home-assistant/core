@@ -9,9 +9,19 @@ import homeassistant.core as ha
 import homeassistant.components.statsd as statsd
 from homeassistant.const import (STATE_ON, STATE_OFF, EVENT_STATE_CHANGED)
 
+from tests.common import get_test_home_assistant
+
 
 class TestStatsd(unittest.TestCase):
     """Test the StatsD component."""
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
 
     def test_invalid_config(self):
         """Test configuration with defaults."""
@@ -37,18 +47,17 @@ class TestStatsd(unittest.TestCase):
                 'prefix': 'foo',
             }
         }
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        self.assertTrue(setup_component(hass, statsd.DOMAIN, config))
+        self.hass.bus.listen = mock.MagicMock()
+        self.assertTrue(setup_component(self.hass, statsd.DOMAIN, config))
         self.assertEqual(mock_connection.call_count, 1)
         self.assertEqual(
             mock_connection.call_args,
             mock.call(host='host', port=123, prefix='foo')
         )
 
-        self.assertTrue(hass.bus.listen.called)
+        self.assertTrue(self.hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
-                         hass.bus.listen.call_args_list[0][0][0])
+                         self.hass.bus.listen.call_args_list[0][0][0])
 
     @mock.patch('statsd.StatsClient')
     def test_statsd_setup_defaults(self, mock_connection):
@@ -62,15 +71,14 @@ class TestStatsd(unittest.TestCase):
         config['statsd'][statsd.CONF_PORT] = statsd.DEFAULT_PORT
         config['statsd'][statsd.CONF_PREFIX] = statsd.DEFAULT_PREFIX
 
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        self.assertTrue(setup_component(hass, statsd.DOMAIN, config))
+        self.hass.bus.listen = mock.MagicMock()
+        self.assertTrue(setup_component(self.hass, statsd.DOMAIN, config))
         self.assertEqual(mock_connection.call_count, 1)
         self.assertEqual(
             mock_connection.call_args,
             mock.call(host='host', port=8125, prefix='hass')
         )
-        self.assertTrue(hass.bus.listen.called)
+        self.assertTrue(self.hass.bus.listen.called)
 
     @mock.patch('statsd.StatsClient')
     def test_event_listener_defaults(self, mock_client):
@@ -83,11 +91,10 @@ class TestStatsd(unittest.TestCase):
 
         config['statsd'][statsd.CONF_RATE] = statsd.DEFAULT_RATE
 
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        setup_component(hass, statsd.DOMAIN, config)
-        self.assertTrue(hass.bus.listen.called)
-        handler_method = hass.bus.listen.call_args_list[0][0][1]
+        self.hass.bus.listen = mock.MagicMock()
+        setup_component(self.hass, statsd.DOMAIN, config)
+        self.assertTrue(self.hass.bus.listen.called)
+        handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
         valid = {'1': 1,
                  '1.0': 1.0,
@@ -128,11 +135,10 @@ class TestStatsd(unittest.TestCase):
 
         config['statsd'][statsd.CONF_RATE] = statsd.DEFAULT_RATE
 
-        hass = mock.MagicMock()
-        hass.pool.worker_count = 2
-        setup_component(hass, statsd.DOMAIN, config)
-        self.assertTrue(hass.bus.listen.called)
-        handler_method = hass.bus.listen.call_args_list[0][0][1]
+        self.hass.bus.listen = mock.MagicMock()
+        setup_component(self.hass, statsd.DOMAIN, config)
+        self.assertTrue(self.hass.bus.listen.called)
+        handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
         valid = {'1': 1,
                  '1.0': 1.0,

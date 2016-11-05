@@ -4,6 +4,7 @@ Support for the definition of zones.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zone/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -12,7 +13,7 @@ from homeassistant.const import (
     ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_LATITUDE,
     CONF_LONGITUDE, CONF_ICON)
 from homeassistant.helpers import config_per_platform
-from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.util.location import distance
 import homeassistant.helpers.config_validation as cv
 
@@ -87,16 +88,19 @@ def in_zone(zone, latitude, longitude, radius=0):
     return zone_dist - radius < zone.attributes[ATTR_RADIUS]
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Setup zone."""
     entities = set()
+    tasks = []
     for _, entry in config_per_platform(config, DOMAIN):
         name = entry.get(CONF_NAME)
         zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
                     entry.get(CONF_RADIUS), entry.get(CONF_ICON),
                     entry.get(CONF_PASSIVE))
-        zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, entities)
-        zone.update_ha_state()
+        zone.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name,
+                                                  entities)
+        tasks.append(zone.async_update_ha_state())
         entities.add(zone.entity_id)
 
     if ENTITY_ID_HOME not in entities:
@@ -104,15 +108,15 @@ def setup(hass, config):
                     hass.config.latitude, hass.config.longitude,
                     DEFAULT_RADIUS, ICON_HOME, False)
         zone.entity_id = ENTITY_ID_HOME
-        zone.update_ha_state()
+        tasks.append(zone.async_update_ha_state())
 
+    yield from asyncio.gather(*tasks, loop=hass.loop)
     return True
 
 
 class Zone(Entity):
     """Representation of a Zone."""
 
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, hass, name, latitude, longitude, radius, icon, passive):
         """Initialize the zone."""
         self.hass = hass

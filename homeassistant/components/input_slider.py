@@ -4,6 +4,7 @@ Component to offer a way to select a value from a slider.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_slider/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -71,7 +72,8 @@ def select_value(hass, entity_id, value):
     })
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up input slider."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -92,26 +94,26 @@ def setup(hass, config):
     if not entities:
         return False
 
-    def select_value_service(call):
+    @asyncio.coroutine
+    def async_select_value_service(call):
         """Handle a calls to the input slider services."""
-        target_inputs = component.extract_from_service(call)
+        target_inputs = component.async_extract_from_service(call)
 
-        for input_slider in target_inputs:
-            input_slider.select_value(call.data[ATTR_VALUE])
+        tasks = [input_slider.async_select_value(call.data[ATTR_VALUE])
+                 for input_slider in target_inputs]
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
-    hass.services.register(DOMAIN, SERVICE_SELECT_VALUE,
-                           select_value_service,
-                           schema=SERVICE_SELECT_VALUE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_SELECT_VALUE, async_select_value_service,
+        schema=SERVICE_SELECT_VALUE_SCHEMA)
 
-    component.add_entities(entities)
-
+    yield from component.async_add_entities(entities)
     return True
 
 
 class InputSlider(Entity):
     """Represent an slider."""
 
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, object_id, name, state, minimum, maximum, step, icon,
                  unit):
         """Initialize a select input."""
@@ -158,7 +160,8 @@ class InputSlider(Entity):
             ATTR_STEP: self._step
         }
 
-    def select_value(self, value):
+    @asyncio.coroutine
+    def async_select_value(self, value):
         """Select new value."""
         num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
@@ -166,4 +169,4 @@ class InputSlider(Entity):
                             num_value, self._minimum, self._maximum)
             return
         self._current_value = num_value
-        self.update_ha_state()
+        yield from self.async_update_ha_state()

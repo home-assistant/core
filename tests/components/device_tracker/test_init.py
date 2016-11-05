@@ -1,11 +1,12 @@
 """The tests for the device tracker component."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 import logging
 import unittest
 from unittest.mock import call, patch
 from datetime import datetime, timedelta
 import os
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 from homeassistant.loader import get_component
 import homeassistant.util.dt as dt_util
@@ -30,12 +31,14 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     hass = None  # HomeAssistant
     yaml_devices = None  # type: str
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.yaml_devices = self.hass.config.path(device_tracker.YAML_DEVICES)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         try:
             os.remove(self.yaml_devices)
@@ -56,7 +59,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         self.assertFalse(device_tracker.is_on(self.hass, entity_id))
 
-    def test_reading_broken_yaml_config(self):  # pylint: disable=no-self-use
+    # pylint: disable=no-self-use
+    def test_reading_broken_yaml_config(self):
         """Test when known devices contains invalid data."""
         files = {'empty.yaml': '',
                  'nodict.yaml': '100',
@@ -101,9 +105,9 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(device.away_hide, config.away_hide)
         self.assertEqual(device.consider_home, config.consider_home)
 
+    # pylint: disable=invalid-name
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
-    def test_track_with_duplicate_mac_dev_id(self, mock_warning):  \
-            # pylint: disable=invalid-name
+    def test_track_with_duplicate_mac_dev_id(self, mock_warning):
         """Test adding duplicate MACs or device IDs to DeviceTracker."""
         devices = [
             device_tracker.Device(self.hass, True, True, 'my_device', 'AB:01',
@@ -138,8 +142,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
                                         TEST_PLATFORM))
 
-    def test_adding_unknown_device_to_config(self): \
-            # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def test_adding_unknown_device_to_config(self):
         """Test the adding of unknown devices to configuration file."""
         scanner = get_component('device_tracker.test').SCANNER
         scanner.reset()
@@ -283,7 +287,10 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             'dev_id': 'some_device',
             'host_name': 'example.com',
             'location_name': 'Work',
-            'gps': [.3, .8]
+            'gps': [.3, .8],
+            'attributes': {
+                'test': 'test'
+            }
         }
         device_tracker.see(self.hass, **params)
         self.hass.block_till_done()
@@ -300,8 +307,27 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(mock_see.call_count, 1)
         self.assertEqual(mock_see.call_args, call(**params))
 
-    def test_not_write_duplicate_yaml_keys(self): \
-            # pylint: disable=invalid-name
+    def test_new_device_event_fired(self):
+        """Test that the device tracker will fire an event."""
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
+                                        TEST_PLATFORM))
+        test_events = []
+
+        @callback
+        def listener(event):
+            """Helper method that will verify our event got called."""
+            test_events.append(event)
+
+        self.hass.bus.listen("device_tracker_new_device", listener)
+
+        device_tracker.see(self.hass, 'mac_1', host_name='hello')
+        device_tracker.see(self.hass, 'mac_1', host_name='hello')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(test_events))
+
+    # pylint: disable=invalid-name
+    def test_not_write_duplicate_yaml_keys(self):
         """Test that the device tracker will not generate invalid YAML."""
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
                                         TEST_PLATFORM))
@@ -315,7 +341,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                             timedelta(seconds=0))
         assert len(config) == 2
 
-    def test_not_allow_invalid_dev_id(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def test_not_allow_invalid_dev_id(self):
         """Test that the device tracker will not allow invalid dev ids."""
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
                                         TEST_PLATFORM))

@@ -163,7 +163,7 @@ class LogitechMediaServer(object):
 
             return response
 
-        except (OSError, ConnectionError, EOFError) as error:
+        except (OSError, EOFError) as error:
             _LOGGER.error("Could not communicate with %s:%d: %s",
                           self.host,
                           self.port,
@@ -171,12 +171,9 @@ class LogitechMediaServer(object):
             return None
 
 
-# pylint: disable=too-many-instance-attributes
-# pylint: disable=too-many-public-methods
 class SqueezeBoxDevice(MediaPlayerDevice):
     """Representation of a SqueezeBox device."""
 
-    # pylint: disable=too-many-arguments, abstract-method
     def __init__(self, lms, player_id):
         """Initialize the SqeezeBox device."""
         super(SqueezeBoxDevice, self).__init__()

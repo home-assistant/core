@@ -71,9 +71,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         host = config.get(CONF_HOST)
 
-        if host is None:
-            _LOGGER.error("No host found in configuration")
-            return False
+    if host is None:
+        _LOGGER.error("No TV found in configuration file or with discovery")
+        return False
 
     # Only act if we are not already configuring this host
     if host in _CONFIGURING:
@@ -98,14 +98,14 @@ def setup_tv(host, name, customize, hass, add_devices):
                 client.register()
             except PyLGTVPairException:
                 _LOGGER.warning(
-                    "Connected to LG WebOS TV at %s but not paired", host)
+                    "Connected to LG WebOS TV %s but not paired", host)
                 return
             except OSError:
                 _LOGGER.error("Unable to connect to host %s", host)
                 return
         else:
             # Not registered, request configuration.
-            _LOGGER.warning('LG WebOS TV at %s needs to be paired.', host)
+            _LOGGER.warning("LG WebOS TV %s needs to be paired", host)
             request_configuration(host, name, customize, hass, add_devices)
             return
 
@@ -135,18 +135,15 @@ def request_configuration(host, name, customize, hass, add_devices):
 
     _CONFIGURING[host] = configurator.request_config(
         hass, 'LG WebOS TV', lgtv_configuration_callback,
-        description='Click start and accept the pairing request on your tv.',
+        description='Click start and accept the pairing request on your TV.',
         description_image='/static/images/config_webos.png',
         submit_caption='Start pairing request'
     )
 
 
-# pylint: disable=abstract-method
-# pylint: disable=too-many-instance-attributes
 class LgWebOSDevice(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self, host, name, customize):
         """Initialize the webos device."""
         from pylgtv import WebOsClient

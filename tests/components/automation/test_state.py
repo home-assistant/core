@@ -3,11 +3,12 @@ import unittest
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
 
-from tests.common import fire_time_changed, get_test_home_assistant
+from tests.common import (
+    fire_time_changed, get_test_home_assistant, assert_setup_component)
 
 
 class TestAutomationState(unittest.TestCase):
@@ -34,7 +35,7 @@ class TestAutomationState(unittest.TestCase):
         self.hass.states.set('test.entity', 'hello')
         self.hass.block_till_done()
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'state',
@@ -67,7 +68,7 @@ class TestAutomationState(unittest.TestCase):
 
     def test_if_fires_on_entity_change_with_from_filter(self):
         """Test for firing on entity change with filter."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'state',
@@ -86,7 +87,7 @@ class TestAutomationState(unittest.TestCase):
 
     def test_if_fires_on_entity_change_with_to_filter(self):
         """Test for firing on entity change with no filter."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'state',
@@ -105,7 +106,7 @@ class TestAutomationState(unittest.TestCase):
 
     def test_if_fires_on_entity_change_with_state_filter(self):
         """Test for firing on entity change with state filter."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'state',
@@ -124,7 +125,7 @@ class TestAutomationState(unittest.TestCase):
 
     def test_if_fires_on_entity_change_with_both_filters(self):
         """Test for firing if both filters are a non match."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'state',
@@ -144,7 +145,7 @@ class TestAutomationState(unittest.TestCase):
 
     def test_if_not_fires_if_to_filter_not_match(self):
         """Test for not firing if to filter is not a match."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'state',
@@ -166,7 +167,7 @@ class TestAutomationState(unittest.TestCase):
         """Test for not firing if from filter is not a match."""
         self.hass.states.set('test.entity', 'bye')
 
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'state',
@@ -186,7 +187,7 @@ class TestAutomationState(unittest.TestCase):
 
     def test_if_not_fires_if_entity_not_match(self):
         """Test for not firing if entity is not matching."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'state',
@@ -206,7 +207,7 @@ class TestAutomationState(unittest.TestCase):
         """Test for to action."""
         entity_id = 'domain.test_entity'
         test_state = 'new_state'
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -237,68 +238,72 @@ class TestAutomationState(unittest.TestCase):
 
     def test_if_fails_setup_if_to_boolean_value(self):
         """Test for setup failure for boolean to."""
-        assert not _setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'state',
-                    'entity_id': 'test.entity',
-                    'to': True,
-                },
-                'action': {
-                    'service': 'homeassistant.turn_on',
-                }
-            }})
+        with assert_setup_component(0):
+            assert not setup_component(self.hass, automation.DOMAIN, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'state',
+                        'entity_id': 'test.entity',
+                        'to': True,
+                    },
+                    'action': {
+                        'service': 'homeassistant.turn_on',
+                    }
+                }})
 
     def test_if_fails_setup_if_from_boolean_value(self):
         """Test for setup failure for boolean from."""
-        assert not _setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'state',
-                    'entity_id': 'test.entity',
-                    'from': True,
-                },
-                'action': {
-                    'service': 'homeassistant.turn_on',
-                }
-            }})
+        with assert_setup_component(0):
+            assert not setup_component(self.hass, automation.DOMAIN, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'state',
+                        'entity_id': 'test.entity',
+                        'from': True,
+                    },
+                    'action': {
+                        'service': 'homeassistant.turn_on',
+                    }
+                }})
 
     def test_if_fails_setup_bad_for(self):
         """Test for setup failure for bad for."""
-        assert not _setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'state',
-                    'entity_id': 'test.entity',
-                    'to': 'world',
-                    'for': {
-                        'invalid': 5
+        with assert_setup_component(0):
+            assert not setup_component(self.hass, automation.DOMAIN, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'state',
+                        'entity_id': 'test.entity',
+                        'to': 'world',
+                        'for': {
+                            'invalid': 5
+                        },
                     },
-                },
-                'action': {
-                    'service': 'homeassistant.turn_on',
-                }
-            }})
+                    'action': {
+                        'service': 'homeassistant.turn_on',
+                    }
+                }})
 
     def test_if_fails_setup_for_without_to(self):
         """Test for setup failures for missing to."""
-        assert not _setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'state',
-                    'entity_id': 'test.entity',
-                    'for': {
-                        'seconds': 5
+        with assert_setup_component(0):
+            assert not setup_component(self.hass, automation.DOMAIN, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'state',
+                        'entity_id': 'test.entity',
+                        'for': {
+                            'seconds': 5
+                        },
                     },
-                },
-                'action': {
-                    'service': 'homeassistant.turn_on',
-                }
-            }})
+                    'action': {
+                        'service': 'homeassistant.turn_on',
+                    }
+                }})
 
     def test_if_not_fires_on_entity_change_with_for(self):
         """Test for not firing on entity change with for."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'state',
@@ -324,7 +329,7 @@ class TestAutomationState(unittest.TestCase):
 
     def test_if_fires_on_entity_change_with_for(self):
         """Test for firing on entity change with for."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'state',
@@ -353,7 +358,7 @@ class TestAutomationState(unittest.TestCase):
         with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
             mock_utcnow.return_value = point1
             self.hass.states.set('test.entity', 'on')
-            assert _setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'event',
@@ -384,32 +389,34 @@ class TestAutomationState(unittest.TestCase):
 
     def test_if_fails_setup_for_without_time(self):
         """Test for setup failure if no time is provided."""
-        assert not _setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'event',
-                    'event_type': 'bla'
-                },
-                'condition': {
-                    'platform': 'state',
-                    'entity_id': 'test.entity',
-                    'state': 'on',
-                    'for': {},
-                },
-                'action': {'service': 'test.automation'},
-            }})
+        with assert_setup_component(0):
+            assert not setup_component(self.hass, automation.DOMAIN, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'bla'
+                    },
+                    'condition': {
+                        'platform': 'state',
+                        'entity_id': 'test.entity',
+                        'state': 'on',
+                        'for': {},
+                    },
+                    'action': {'service': 'test.automation'},
+                }})
 
     def test_if_fails_setup_for_without_entity(self):
         """Test for setup failure if no entity is provided."""
-        assert not _setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {'event_type': 'bla'},
-                'condition': {
-                    'platform': 'state',
-                    'state': 'on',
-                    'for': {
-                        'seconds': 5
+        with assert_setup_component(0):
+            assert not setup_component(self.hass, automation.DOMAIN, {
+                automation.DOMAIN: {
+                    'trigger': {'event_type': 'bla'},
+                    'condition': {
+                        'platform': 'state',
+                        'state': 'on',
+                        'for': {
+                            'seconds': 5
+                        },
                     },
-                },
-                'action': {'service': 'test.automation'},
-            }})
+                    'action': {'service': 'test.automation'},
+                }})

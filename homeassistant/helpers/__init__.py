@@ -19,6 +19,7 @@ def config_per_platform(config: ConfigType,
     """Generator to break a component config into different platforms.
 
     For example, will find 'switch', 'switch 2', 'switch 3', .. etc
+    Async friendly.
     """
     for config_key in extract_domain_configs(config, domain):
         platform_config = config[config_key]
@@ -38,6 +39,9 @@ def config_per_platform(config: ConfigType,
 
 
 def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
-    """Extract keys from config for given domain name."""
+    """Extract keys from config for given domain name.
+
+    Async friendly.
+    """
     pattern = re.compile(r'^{}(| .+)$'.format(domain))
     return [key for key in config.keys() if pattern.match(key)]

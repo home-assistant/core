@@ -9,12 +9,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_RESOURCES, STATE_OFF, STATE_ON)
+from homeassistant.const import (
+    CONF_RESOURCES, STATE_OFF, STATE_ON, CONF_TYPE)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['psutil==4.3.1']
+REQUIREMENTS = ['psutil==4.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_RESOURCES, default=['disk_use']):
         vol.All(cv.ensure_list, [vol.Schema({
-            vol.Required('type'): vol.In(SENSOR_TYPES),
+            vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
             vol.Optional('arg'): cv.string,
         })])
 })
@@ -51,12 +52,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the System sensors."""
+    """Set up the system monitor sensors."""
     dev = []
     for resource in config[CONF_RESOURCES]:
         if 'arg' not in resource:
             resource['arg'] = ''
-        dev.append(SystemMonitorSensor(resource['type'], resource['arg']))
+        dev.append(SystemMonitorSensor(resource[CONF_TYPE], resource['arg']))
 
     add_devices(dev)
 
@@ -66,7 +67,7 @@ class SystemMonitorSensor(Entity):
 
     def __init__(self, sensor_type, argument=''):
         """Initialize the sensor."""
-        self._name = SENSOR_TYPES[sensor_type][0] + ' ' + argument
+        self._name = '{} {}'.format(SENSOR_TYPES[sensor_type][0], argument)
         self.argument = argument
         self.type = sensor_type
         self._state = None
@@ -93,7 +94,6 @@ class SystemMonitorSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest system information."""
         import psutil

@@ -72,7 +72,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.services.register(DOMAIN, 'update_speedtest', update)
 
 
-# pylint: disable=too-few-public-methods
 class SpeedtestSensor(Entity):
     """Implementation of a speedtest.net sensor."""
 

@@ -85,7 +85,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MqttJson(Light):
     """Representation of a MQTT JSON light."""
 
-    # pylint: disable=too-many-arguments,too-many-instance-attributes
     def __init__(self, hass, name, topic, qos, retain,
                  optimistic, brightness, rgb, flash_times):
         """Initialize MQTT JSON light."""

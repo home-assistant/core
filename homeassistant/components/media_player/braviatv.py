@@ -117,7 +117,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     setup_bravia(config, pin, hass, add_devices)
 
 
-# pylint: disable=too-many-branches
 def setup_bravia(config, pin, hass, add_devices):
     """Setup a Sony Bravia TV based on host parameter."""
     host = config.get(CONF_HOST)
@@ -181,8 +180,6 @@ def request_configuration(config, hass, add_devices):
     )
 
 
-# pylint: disable=abstract-method, too-many-public-methods,
-# pylint: disable=too-many-instance-attributes, too-many-arguments
 class BraviaTVDevice(MediaPlayerDevice):
     """Representation of a Sony Bravia TV."""
 
@@ -221,7 +218,8 @@ class BraviaTVDevice(MediaPlayerDevice):
     def update(self):
         """Update TV info."""
         if not self._braviarc.is_connected():
-            self._braviarc.connect(self._pin, CLIENTID_PREFIX, NICKNAME)
+            if self._braviarc.get_power_status() != 'off':
+                self._braviarc.connect(self._pin, CLIENTID_PREFIX, NICKNAME)
             if not self._braviarc.is_connected():
                 return
 

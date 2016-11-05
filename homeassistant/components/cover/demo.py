@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DemoCover(CoverDevice):
     """Representation of a demo cover."""
 
-    # pylint: disable=no-self-use, too-many-instance-attributes
+    # pylint: disable=no-self-use
     def __init__(self, hass, name, position=None, tilt_position=None):
         """Initialize the cover."""
         self.hass = hass

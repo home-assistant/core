@@ -56,7 +56,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class HeatmiserV3Thermostat(ClimateDevice):
     """Representation of a HeatmiserV3 thermostat."""
 
-    # pylint: disable=too-many-instance-attributes, abstract-method
     def __init__(self, heatmiser, device, name, serport):
         """Initialize the thermostat."""
         self.heatmiser = heatmiser

@@ -19,17 +19,18 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Mold Indicator'
+ATTR_CRITICAL_TEMP = 'Est. Crit. Temp'
+ATTR_DEWPOINT = 'Dewpoint'
+
+CONF_CALIBRATION_FACTOR = 'calibration_factor'
+CONF_INDOOR_HUMIDITY = 'indoor_humidity_sensor'
 CONF_INDOOR_TEMP = 'indoor_temp_sensor'
 CONF_OUTDOOR_TEMP = 'outdoor_temp_sensor'
-CONF_INDOOR_HUMIDITY = 'indoor_humidity_sensor'
-CONF_CALIBRATION_FACTOR = 'calibration_factor'
+
+DEFAULT_NAME = 'Mold Indicator'
 
 MAGNUS_K2 = 17.62
 MAGNUS_K3 = 243.12
-
-ATTR_DEWPOINT = 'Dewpoint'
-ATTR_CRITICAL_TEMP = 'Est. Crit. Temp'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_INDOOR_TEMP): cv.entity_id,
@@ -54,11 +55,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         indoor_humidity_sensor, calib_factor)])
 
 
-# pylint: disable=too-many-instance-attributes
 class MoldIndicator(Entity):
     """Represents a MoldIndication sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, name, indoor_temp_sensor, outdoor_temp_sensor,
                  indoor_humidity_sensor, calib_factor):
         """Initialize the sensor."""

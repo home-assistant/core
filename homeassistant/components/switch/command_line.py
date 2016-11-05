@@ -60,11 +60,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(switches)
 
 
-# pylint: disable=too-many-instance-attributes
 class CommandSwitch(SwitchDevice):
     """Representation a switch that can be toggled using shell commands."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, name, command_on, command_off,
                  command_state, value_template):
         """Initialize the switch."""

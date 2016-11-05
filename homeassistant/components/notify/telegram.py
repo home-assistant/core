@@ -19,7 +19,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==5.1.0']
+REQUIREMENTS = ['python-telegram-bot==5.2.0']
 
 ATTR_PHOTO = 'photo'
 ATTR_DOCUMENT = 'document'
@@ -71,13 +71,12 @@ def load_data(url=None, file=None, username=None, password=None):
         else:
             _LOGGER.warning("Can't load photo no photo found in params!")
 
-    except (OSError, IOError, requests.exceptions.RequestException):
-        _LOGGER.error("Can't load photo into ByteIO")
+    except OSError as error:
+        _LOGGER.error("Can't load photo into ByteIO: %s", error)
 
     return None
 
 
-# pylint: disable=too-few-public-methods
 class TelegramNotificationService(BaseNotificationService):
     """Implement the notification service for Telegram."""
 

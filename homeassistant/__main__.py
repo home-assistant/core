@@ -14,6 +14,7 @@ from homeassistant.const import (
     __version__,
     EVENT_HOMEASSISTANT_START,
     REQUIRED_PYTHON_VER,
+    REQUIRED_PYTHON_VER_WIN,
     RESTART_EXIT_CODE,
 )
 from homeassistant.util.async import run_callback_threadsafe
@@ -44,8 +45,7 @@ def monkey_patch_asyncio():
     See https://bugs.python.org/issue26617 for details of the Python
     bug.
     """
-    # pylint: disable=no-self-use, too-few-public-methods, protected-access
-    # pylint: disable=bare-except
+    # pylint: disable=no-self-use, protected-access, bare-except
     import asyncio.tasks
 
     class IgnoreCalls:
@@ -64,7 +64,12 @@ def monkey_patch_asyncio():
 
 def validate_python() -> None:
     """Validate we're running the right Python version."""
-    if sys.version_info[:3] < REQUIRED_PYTHON_VER:
+    if sys.platform == "win32" and \
+       sys.version_info[:3] < REQUIRED_PYTHON_VER_WIN:
+        print("Home Assistant requires at least Python {}.{}.{}".format(
+            *REQUIRED_PYTHON_VER_WIN))
+        sys.exit(1)
+    elif sys.version_info[:3] < REQUIRED_PYTHON_VER:
         print("Home Assistant requires at least Python {}.{}.{}".format(
             *REQUIRED_PYTHON_VER))
         sys.exit(1)

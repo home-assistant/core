@@ -4,18 +4,20 @@ Support for statistics for sensor values.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.statistics/
 """
+import asyncio
 import logging
 import statistics
 from collections import deque
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_ENTITY_ID, STATE_UNKNOWN, ATTR_UNIT_OF_MEASUREMENT)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,16 +43,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Statistics sensor."""
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set up the Statistics sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
 
-    add_devices([StatisticsSensor(hass, entity_id, name, sampling_size)])
+    hass.loop.create_task(async_add_devices(
+        [StatisticsSensor(hass, entity_id, name, sampling_size)], True))
+    return True
 
 
-# pylint: disable=too-many-instance-attributes
 class StatisticsSensor(Entity):
     """Representation of a Statistics sensor."""
 
@@ -72,9 +76,10 @@ class StatisticsSensor(Entity):
             self.states = deque(maxlen=self._sampling_size)
         self.median = self.mean = self.variance = self.stdev = 0
         self.min = self.max = self.total = self.count = 0
-        self.update()
 
-        def stats_sensor_state_listener(entity, old_state, new_state):
+        @callback
+        # pylint: disable=invalid-name
+        def async_stats_sensor_state_listener(entity, old_state, new_state):
             """Called when the sensor changes state."""
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
@@ -85,9 +90,10 @@ class StatisticsSensor(Entity):
             except ValueError:
                 self.count = self.count + 1
 
-            self.update_ha_state(True)
+            hass.loop.create_task(self.async_update_ha_state(True))
 
-        track_state_change(hass, entity_id, stats_sensor_state_listener)
+        async_track_state_change(
+            hass, entity_id, async_stats_sensor_state_listener)
 
     @property
     def name(self):
@@ -131,7 +137,8 @@ class StatisticsSensor(Entity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data and updates the states."""
         if not self.is_binary:
             try:

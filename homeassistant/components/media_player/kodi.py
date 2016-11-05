@@ -63,8 +63,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class KodiDevice(MediaPlayerDevice):
     """Representation of a XBMC/Kodi device."""
 
-    # pylint: disable=too-many-public-methods, abstract-method
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, name, url, auth=None, turn_off_action=None):
         """Initialize the Kodi device."""
         import jsonrpc_requests

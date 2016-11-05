@@ -63,11 +63,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-# pylint: disable=too-many-instance-attributes
 class EfergySensor(Entity):
     """Implementation of an Efergy sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, sensor_type, app_token, utc_offset, period, currency):
         """Initialize the sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]

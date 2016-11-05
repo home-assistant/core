@@ -41,7 +41,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([SimpliSafeAlarm(name, username, password, code)])
 
 
-# pylint: disable=abstract-method
 class SimpliSafeAlarm(alarm.AlarmControlPanel):
     """Representation a SimpliSafe alarm."""
 

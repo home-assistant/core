@@ -4,9 +4,10 @@ import json
 from datetime import datetime, timedelta
 import unittest
 
+from homeassistant.core import callback
 from homeassistant.const import MATCH_ALL
 from homeassistant.components import recorder
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from tests.common import get_test_home_assistant
 
 
@@ -17,7 +18,7 @@ class TestRecorder(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         db_uri = 'sqlite://'  # In memory DB
-        _setup_component(self.hass, recorder.DOMAIN, {
+        setup_component(self.hass, recorder.DOMAIN, {
             recorder.DOMAIN: {recorder.CONF_DB_URL: db_uri}})
         self.hass.start()
         recorder._verify_instance()
@@ -110,6 +111,7 @@ class TestRecorder(unittest.TestCase):
 
         events = []
 
+        @callback
         def event_listener(event):
             """Record events from eventbus."""
             if event.event_type == event_type:

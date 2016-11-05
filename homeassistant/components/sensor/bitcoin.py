@@ -10,7 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DISPLAY_OPTIONS
+from homeassistant.const import (CONF_DISPLAY_OPTIONS, ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -19,6 +19,7 @@ REQUIREMENTS = ['blockchain==1.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ATTRIBUTION = "Data provided by blockchain.info"
 CONF_CURRENCY = 'currency'
 
 DEFAULT_CURRENCY = 'USD'
@@ -59,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Bitcoin sensors."""
+    """Set up the Bitcoin sensors."""
     from blockchain import exchangerates
 
     currency = config.get(CONF_CURRENCY)
@@ -77,7 +78,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-# pylint: disable=too-few-public-methods
 class BitcoinSensor(Entity):
     """Representation of a Bitcoin sensor."""
 
@@ -111,7 +111,13 @@ class BitcoinSensor(Entity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    # pylint: disable=too-many-branches
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+        }
+
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()

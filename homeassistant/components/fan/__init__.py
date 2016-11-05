@@ -86,7 +86,6 @@ def is_on(hass, entity_id: str=None) -> bool:
     return state.attributes[ATTR_SPEED] not in [SPEED_OFF, STATE_UNKNOWN]
 
 
-# pylint: disable=too-many-arguments
 def turn_on(hass, entity_id: str=None, speed: str=None) -> None:
     """Turn all or specified fan on."""
     data = {
@@ -141,7 +140,6 @@ def set_speed(hass, entity_id: str=None, speed: str=None) -> None:
     hass.services.call(DOMAIN, SERVICE_SET_SPEED, data)
 
 
-# pylint: disable=too-many-branches, too-many-locals, too-many-statements
 def setup(hass, config: dict) -> None:
     """Expose fan control via statemachine and services."""
     component = EntityComponent(
@@ -198,7 +196,7 @@ def setup(hass, config: dict) -> None:
 class FanEntity(ToggleEntity):
     """Representation of a fan."""
 
-    # pylint: disable=no-self-use, abstract-method
+    # pylint: disable=no-self-use
 
     def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""

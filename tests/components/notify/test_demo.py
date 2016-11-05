@@ -1,6 +1,7 @@
 """The tests for the notify demo platform."""
 import unittest
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import demo
@@ -23,6 +24,7 @@ class TestNotifyDemo(unittest.TestCase):
         self.events = []
         self.calls = []
 
+        @callback
         def record_event(event):
             """Record event to send notification."""
             self.events.append(event)
@@ -33,6 +35,7 @@ class TestNotifyDemo(unittest.TestCase):
         """"Stop down everything that was started."""
         self.hass.stop()
 
+    @callback
     def record_calls(self, *args):
         """Helper for recording calls."""
         self.calls.append(args)
@@ -111,7 +114,7 @@ class TestNotifyDemo(unittest.TestCase):
         }
 
         script.call_from_config(self.hass, conf)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(len(self.events) == 1)
         assert {
             'message': 'Test 123 4',
