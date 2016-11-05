@@ -112,7 +112,6 @@ class MjpegCamera(Camera):
 
         response = web.StreamResponse()
         response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
-        response.enable_chunked_encoding()
 
         yield from response.prepare(request)
 
