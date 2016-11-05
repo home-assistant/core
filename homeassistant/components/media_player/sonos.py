@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         if player.is_visible:
             device = SonosDevice(hass, player)
-            add_devices([device])
+            add_devices([device], True)
             if not DEVICES:
                 register_services(hass)
             DEVICES.append(device)
@@ -106,7 +106,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     DEVICES = [SonosDevice(hass, p) for p in players]
-    add_devices(DEVICES)
+    add_devices(DEVICES, True)
     register_services(hass)
     _LOGGER.info('Added %s Sonos speakers', len(players))
     return True
@@ -256,6 +256,7 @@ class SonosDevice(MediaPlayerDevice):
 
         self.hass = hass
         self.volume_increment = 5
+        self._unique_id = player.uid
         self._player = player
         self._player_volume = None
         self._player_volume_muted = None
@@ -278,7 +279,8 @@ class SonosDevice(MediaPlayerDevice):
         self._current_track_is_radio_stream = False
         self._queue = None
         self._last_avtransport_event = None
-        self.update()
+        self._is_playing_line_in = None
+        self._is_playing_tv = None
         self.soco_snapshot = Snapshot(self._player)
 
     @property
@@ -286,14 +288,10 @@ class SonosDevice(MediaPlayerDevice):
         """Polling needed."""
         return True
 
-    def update_sonos(self, now):
-        """Update state, called by track_utc_time_change."""
-        self.update_ha_state(True)
-
     @property
     def unique_id(self):
         """Return an unique ID."""
-        return self._player.uid
+        return self._unique_id
 
     @property
     def name(self):
@@ -353,6 +351,9 @@ class SonosDevice(MediaPlayerDevice):
             is_available = self._is_available()
 
         if is_available:
+
+            self._is_playing_tv = self._player.is_playing_tv
+            self._is_playing_line_in = self._player.is_playing_line_in
 
             track_info = None
             if self._last_avtransport_event:
@@ -511,10 +512,10 @@ class SonosDevice(MediaPlayerDevice):
                 # update state of the whole group
                 # pylint: disable=protected-access
                 for device in [x for x in DEVICES if x._coordinator == self]:
-                    if device.entity_id:
-                        device.update_ha_state(False)
+                    if device.entity_id is not self.entity_id:
+                        self.hass.add_job(device.async_update_ha_state)
 
-                if self._queue is None and self.entity_id:
+                if self._queue is None:
                     self._subscribe_to_player_events()
         else:
             self._player_volume = None
@@ -534,6 +535,8 @@ class SonosDevice(MediaPlayerDevice):
             self._support_previous_track = False
             self._support_next_track = False
             self._support_pause = False
+            self._is_playing_tv = False
+            self._is_playing_line_in = False
 
         self._last_avtransport_event = None
 
@@ -713,9 +716,9 @@ class SonosDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Name of the current input source."""
-        if self._player.is_playing_line_in:
+        if self._is_playing_line_in:
             return SUPPORT_SOURCE_LINEIN
-        if self._player.is_playing_tv:
+        if self._is_playing_tv:
             return SUPPORT_SOURCE_TV
 
         return None
