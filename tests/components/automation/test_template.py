@@ -1,6 +1,7 @@
 """The tests for the Template automation."""
 import unittest
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.automation as automation
 
@@ -17,6 +18,7 @@ class TestAutomationTemplate(unittest.TestCase):
         self.hass.states.set('test.entity', 'hello')
         self.calls = []
 
+        @callback
         def record_call(service):
             """helper for recording calls."""
             self.calls.append(service)

@@ -3,6 +3,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
@@ -20,6 +21,7 @@ class TestAutomationTime(unittest.TestCase):
         self.hass.config.components.append('group')
         self.calls = []
 
+        @callback
         def record_call(service):
             self.calls.append(service)
 
