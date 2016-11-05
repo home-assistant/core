@@ -508,7 +508,12 @@ class TestServiceRegistry(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.services = self.hass.services
-        self.services.register("Test_Domain", "TEST_SERVICE", lambda x: None)
+
+        @ha.callback
+        def mock_service(call):
+            pass
+
+        self.services.register("Test_Domain", "TEST_SERVICE", mock_service)
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -535,6 +540,7 @@ class TestServiceRegistry(unittest.TestCase):
         """Test call with blocking."""
         calls = []
 
+        @ha.callback
         def service_handler(call):
             """Service handler."""
             calls.append(call)

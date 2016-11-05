@@ -129,8 +129,12 @@ def mock_service(hass, domain, service):
     """
     calls = []
 
+    @ha.callback
+    def mock_service(call):
+        calls.append(call)
+
     # pylint: disable=unnecessary-lambda
-    hass.services.register(domain, service, lambda call: calls.append(call))
+    hass.services.register(domain, service, mock_service)
 
     return calls
 

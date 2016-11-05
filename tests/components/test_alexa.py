@@ -6,6 +6,7 @@ import unittest
 
 import requests
 
+from homeassistant.core import callback
 from homeassistant import bootstrap, const
 from homeassistant.components import alexa, http
 
@@ -47,7 +48,11 @@ def setUpModule():
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
                        http.CONF_SERVER_PORT: SERVER_PORT}})
 
-    hass.services.register("test", "alexa", lambda call: calls.append(call))
+    @callback
+    def mock_service(call):
+        calls.append(call)
+
+    hass.services.register("test", "alexa", mock_service)
 
     bootstrap.setup_component(hass, alexa.DOMAIN, {
         # Key is here to verify we allow other keys in config too

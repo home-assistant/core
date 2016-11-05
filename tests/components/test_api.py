@@ -288,6 +288,7 @@ class TestAPI(unittest.TestCase):
         """Test if the API allows us to call a service."""
         test_value = []
 
+        @ha.callback
         def listener(service_call):
             """Helper method that will verify that our service got called."""
             test_value.append(1)
@@ -307,6 +308,7 @@ class TestAPI(unittest.TestCase):
         """Test if the API allows us to call a service."""
         test_value = []
 
+        @ha.callback
         def listener(service_call):
             """Helper method that will verify that our service got called.
 

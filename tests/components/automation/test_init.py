@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import patch
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.automation as automation
 from homeassistant.const import ATTR_ENTITY_ID
@@ -22,6 +23,7 @@ class TestAutomation(unittest.TestCase):
         self.hass.config.components.append('group')
         self.calls = []
 
+        @callback
         def record_call(service):
             """Record call."""
             self.calls.append(service)

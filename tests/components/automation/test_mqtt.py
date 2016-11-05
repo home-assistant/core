@@ -1,6 +1,7 @@
 """The tests for the MQTT automation."""
 import unittest
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.automation as automation
 from tests.common import (
@@ -17,6 +18,7 @@ class TestAutomationMQTT(unittest.TestCase):
         mock_mqtt_component(self.hass)
         self.calls = []
 
+        @callback
         def record_call(service):
             self.calls.append(service)
 
