@@ -44,11 +44,8 @@ def setup(hass, config):
         _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
         return False
 
-    for component, discovery_service in (
-            ('sensor', DISCOVER_SENSORS),
-            ('binary_sensor', DISCOVER_BINARY_SENSORS)):
-        discovery.discover(hass, discovery_service, component=component,
-                           hass_config=config)
+    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
 
     return True
 
