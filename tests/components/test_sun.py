@@ -16,7 +16,6 @@ from tests.common import get_test_home_assistant
 class TestSun(unittest.TestCase):
     """Test the sun module."""
 
-
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()

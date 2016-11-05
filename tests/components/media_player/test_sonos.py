@@ -22,13 +22,17 @@ class socoDiscoverMock():
 
 class AvTransportMock():
     """Mock class for the avTransport property on soco.SoCo object."""
+
     def __init__(self):
+        """Initialize ethe Transport mock."""
         pass
 
     def GetMediaInfo(self, _):
         """Get the media details."""
-        return {'CurrentURI': '',
-                'CurrentURIMetaData': ''}
+        return {
+            'CurrentURI': '',
+            'CurrentURIMetaData': ''
+        }
 
 
 class SoCoMock():
