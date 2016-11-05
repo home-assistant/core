@@ -35,12 +35,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return a DD-WRT scanner."""
-    scanner = DdWrtDeviceScanner(config[DOMAIN])
+    try:
+        return DdWrtDeviceScanner(config[DOMAIN])
+    except ConnectionError:
+        return None
 
-    return scanner if scanner.success_init else None
 
-
-# pylint: disable=too-many-instance-attributes
 class DdWrtDeviceScanner(object):
     """This class queries a wireless router running DD-WRT firmware."""
 
@@ -53,13 +53,13 @@ class DdWrtDeviceScanner(object):
         self.lock = threading.Lock()
 
         self.last_results = {}
-
         self.mac2name = {}
 
         # Test the router is accessible
         url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
         data = self.get_ddwrt_data(url)
-        self.success_init = data is not None
+        if not data:
+            raise ConnectionError('Cannot connect to DD-Wrt router')
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -83,14 +83,15 @@ class DdWrtDeviceScanner(object):
                 if not dhcp_leases:
                     return None
 
-                # Remove leading and trailing single quotes.
-                cleaned_str = dhcp_leases.strip().strip('"')
-                elements = cleaned_str.split('","')
-                num_clients = int(len(elements)/5)
+                # Remove leading and trailing quotes and spaces
+                cleaned_str = dhcp_leases.replace(
+                    "\"", "").replace("\'", "").replace(" ", "")
+                elements = cleaned_str.split(',')
+                num_clients = int(len(elements) / 5)
                 self.mac2name = {}
                 for idx in range(0, num_clients):
-                    # This is stupid but the data is a single array
-                    # every 5 elements represents one hosts, the MAC
+                    # The data is a single array
+                    # every 5 elements represents one host, the MAC
                     # is the third element and the name is the first.
                     mac_index = (idx * 5) + 2
                     if mac_index < len(elements):
@@ -105,9 +106,6 @@ class DdWrtDeviceScanner(object):
 
         Return boolean if scanning successful.
         """
-        if not self.success_init:
-            return False
-
         with self.lock:
             _LOGGER.info('Checking ARP')
 
@@ -123,11 +121,8 @@ class DdWrtDeviceScanner(object):
             if not active_clients:
                 return False
 
-            # This is really lame, instead of using JSON the DD-WRT UI
-            # uses its own data format for some reason and then
-            # regex's out values so I guess I have to do the same,
-            # LAME!!!
-
+            # The DD-WRT UI uses its own data format and then
+            # regex's out values so this is done here too
             # Remove leading and trailing single quotes.
             clean_str = active_clients.strip().strip("'")
             elements = clean_str.split("','")

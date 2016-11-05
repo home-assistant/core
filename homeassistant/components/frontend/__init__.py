@@ -1,10 +1,15 @@
 """Handle the frontend for Home Assistant."""
+import asyncio
 import hashlib
+import json
 import logging
 import os
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.components import api
+from aiohttp import web
+
+from homeassistant.core import callback
+from homeassistant.const import EVENT_HOMEASSISTANT_START, HTTP_NOT_FOUND
+from homeassistant.components import api, group
 from homeassistant.components.http import HomeAssistantView
 from .version import FINGERPRINTS
 
@@ -22,7 +27,6 @@ MANIFEST_JSON = {
     "icons": [],
     "lang": "en-US",
     "name": "Home Assistant",
-    "orientation": "any",
     "short_name": "Assistant",
     "start_url": "/",
     "theme_color": "#03A9F4"
@@ -36,10 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 def register_built_in_panel(hass, component_name, sidebar_title=None,
                             sidebar_icon=None, url_path=None, config=None):
     """Register a built-in panel."""
-    # pylint: disable=too-many-arguments
     path = 'panels/ha-panel-{}.html'.format(component_name)
 
-    if hass.wsgi.development:
+    if hass.http.development:
         url = ('/static/home-assistant-polymer/panels/'
                '{0}/ha-panel-{0}.html'.format(component_name))
     else:
@@ -65,7 +68,6 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
 
     Warning: this API will probably change. Use at own risk.
     """
-    # pylint: disable=too-many-arguments
     if url_path is None:
         url_path = component_name
 
@@ -98,7 +100,7 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
         url = URL_PANEL_COMPONENT.format(component_name)
 
         if url not in _REGISTERED_COMPONENTS:
-            hass.wsgi.register_static_path(url, path)
+            hass.http.register_static_path(url, path)
             _REGISTERED_COMPONENTS.add(url)
 
         fprinted_url = URL_PANEL_COMPONENT_FP.format(component_name, md5)
@@ -114,20 +116,23 @@ def add_manifest_json_key(key, val):
 
 def setup(hass, config):
     """Setup serving the frontend."""
-    hass.wsgi.register_view(BootstrapView)
-    hass.wsgi.register_view(ManifestJSONView)
+    hass.http.register_view(BootstrapView)
+    hass.http.register_view(ManifestJSONView)
 
-    if hass.wsgi.development:
+    if hass.http.development:
         sw_path = "home-assistant-polymer/build/service_worker.js"
     else:
         sw_path = "service_worker.js"
 
-    hass.wsgi.register_static_path("/service_worker.js",
+    hass.http.register_static_path("/service_worker.js",
                                    os.path.join(STATIC_PATH, sw_path), 0)
-    hass.wsgi.register_static_path("/robots.txt",
+    hass.http.register_static_path("/robots.txt",
                                    os.path.join(STATIC_PATH, "robots.txt"))
-    hass.wsgi.register_static_path("/static", STATIC_PATH)
-    hass.wsgi.register_static_path("/local", hass.config.path('www'))
+    hass.http.register_static_path("/static", STATIC_PATH)
+
+    local = hass.config.path('www')
+    if os.path.isdir(local):
+        hass.http.register_static_path("/local", local)
 
     register_built_in_panel(hass, 'map', 'Map', 'mdi:account-location')
 
@@ -140,7 +145,7 @@ def setup(hass, config):
 
         Done when Home Assistant is started so that all panels are known.
         """
-        hass.wsgi.register_view(IndexView(
+        hass.http.register_view(IndexView(
             hass, ['/{}'.format(name) for name in PANELS]))
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, register_frontend_index)
@@ -161,13 +166,14 @@ class BootstrapView(HomeAssistantView):
     url = "/api/bootstrap"
     name = "api:bootstrap"
 
+    @callback
     def get(self, request):
         """Return all data needed to bootstrap Home Assistant."""
         return self.json({
             'config': self.hass.config.as_dict(),
-            'states': self.hass.states.all(),
-            'events': api.events_json(self.hass),
-            'services': api.services_json(self.hass),
+            'states': self.hass.states.async_all(),
+            'events': api.async_events_json(self.hass),
+            'services': api.async_services_json(self.hass),
             'panels': PANELS,
         })
 
@@ -178,7 +184,7 @@ class IndexView(HomeAssistantView):
     url = '/'
     name = "frontend:index"
     requires_auth = False
-    extra_urls = ['/states', '/states/<entity:entity_id>']
+    extra_urls = ['/states', '/states/{entity_id}']
 
     def __init__(self, hass, extra_urls):
         """Initialize the frontend view."""
@@ -193,9 +199,17 @@ class IndexView(HomeAssistantView):
             )
         )
 
+    @asyncio.coroutine
     def get(self, request, entity_id=None):
         """Serve the index view."""
-        if self.hass.wsgi.development:
+        if entity_id is not None:
+            state = self.hass.states.get(entity_id)
+
+            if (not state or state.domain != 'group' or
+                    not state.attributes.get(group.ATTR_VIEW)):
+                return self.json_message('Entity not found', HTTP_NOT_FOUND)
+
+        if self.hass.http.development:
             core_url = '/static/home-assistant-polymer/build/core.js'
             ui_url = '/static/home-assistant-polymer/src/home-assistant.html'
         else:
@@ -215,22 +229,24 @@ class IndexView(HomeAssistantView):
         if self.hass.config.api.api_password:
             # require password if set
             no_auth = 'false'
-            if self.hass.wsgi.is_trusted_ip(
-                    self.hass.wsgi.get_real_ip(request)):
+            if self.hass.http.is_trusted_ip(
+                    self.hass.http.get_real_ip(request)):
                 # bypass for trusted networks
                 no_auth = 'true'
 
         icons_url = '/static/mdi-{}.html'.format(FINGERPRINTS['mdi.html'])
-        template = self.templates.get_template('index.html')
+        template = yield from self.hass.loop.run_in_executor(
+            None, self.templates.get_template, 'index.html')
 
         # pylint is wrong
         # pylint: disable=no-member
+        # This is a jinja2 template, not a HA template so we call 'render'.
         resp = template.render(
             core_url=core_url, ui_url=ui_url, no_auth=no_auth,
             icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
             panel_url=panel_url, panels=PANELS)
 
-        return self.Response(resp, mimetype='text/html')
+        return web.Response(text=resp, content_type='text/html')
 
 
 class ManifestJSONView(HomeAssistantView):
@@ -240,8 +256,8 @@ class ManifestJSONView(HomeAssistantView):
     url = "/manifest.json"
     name = "manifestjson"
 
-    def get(self, request):
+    @asyncio.coroutine
+    def get(self, request):    # pylint: disable=no-self-use
         """Return the manifest.json."""
-        import json
         msg = json.dumps(MANIFEST_JSON, sort_keys=True).encode('UTF-8')
-        return self.Response(msg, mimetype="application/manifest+json")
+        return web.Response(body=msg, content_type="application/manifest+json")

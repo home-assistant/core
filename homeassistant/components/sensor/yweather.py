@@ -97,7 +97,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-# pylint: disable=too-many-instance-attributes
 class YahooWeatherSensor(Entity):
     """Implementation of an Yahoo! weather sensor."""
 
@@ -179,7 +178,6 @@ class YahooWeatherSensor(Entity):
             self._state = self._data.yahoo.Atmosphere["visibility"]
 
 
-# pylint: disable=too-few-public-methods
 class YahooWeatherData(object):
     """Handle yahoo api object and limit updates."""
 

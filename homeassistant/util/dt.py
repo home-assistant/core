@@ -23,7 +23,10 @@ DATETIME_RE = re.compile(
 
 
 def set_default_time_zone(time_zone: dt.tzinfo) -> None:
-    """Set a default time zone to be used when none is specified."""
+    """Set a default time zone to be used when none is specified.
+
+    Async friendly.
+    """
     global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
 
     # NOTE: Remove in the future in favour of typing
@@ -33,7 +36,10 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
 
 
 def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
-    """Get time zone from string. Return None if unable to determine."""
+    """Get time zone from string. Return None if unable to determine.
+
+    Async friendly.
+    """
     try:
         return pytz.timezone(time_zone_str)
     except pytz.exceptions.UnknownTimeZoneError:
@@ -163,7 +169,6 @@ def parse_time(time_str):
 
 # Found in this gist: https://gist.github.com/zhangsen/1199964
 def get_age(date: dt.datetime) -> str:
-    # pylint: disable=too-many-return-statements
     """
     Take a datetime and return its "age" as a string.
 

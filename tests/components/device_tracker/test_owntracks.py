@@ -242,12 +242,10 @@ class BaseMQTT(unittest.TestCase):
         self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
 
 
-# pylint: disable=too-many-public-methods
 class TestDeviceTrackerOwnTracks(BaseMQTT):
     """Test the OwnTrack sensor."""
 
     # pylint: disable=invalid-name
-
     def setup_method(self, _):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()

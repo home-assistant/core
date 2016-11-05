@@ -1,5 +1,5 @@
 """The tests device sun light trigger component."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 import os
 import unittest
 
@@ -19,7 +19,8 @@ KNOWN_DEV_YAML_PATH = os.path.join(get_test_config_dir(),
                                    device_tracker.YAML_DEVICES)
 
 
-def setUpModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def setUpModule():
     """Write a device tracker known devices file to be used."""
     device_tracker.update_config(
         KNOWN_DEV_YAML_PATH, 'device_1', device_tracker.Device(
@@ -32,7 +33,8 @@ def setUpModule():   # pylint: disable=invalid-name
             picture='http://example.com/dev2.jpg'))
 
 
-def tearDownModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def tearDownModule():
     """Remove device tracker known devices file."""
     os.remove(KNOWN_DEV_YAML_PATH)
 

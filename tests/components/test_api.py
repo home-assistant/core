@@ -1,11 +1,12 @@
 """The tests for the Home Assistant API component."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
+import asyncio
 from contextlib import closing
 import json
-import time
 import unittest
 from unittest.mock import Mock, patch
 
+from aiohttp import web
 import requests
 
 from homeassistant import bootstrap, const
@@ -30,7 +31,8 @@ def _url(path=""):
     return HTTP_BASE_URL + path
 
 
-def setUpModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def setUpModule():
     """Initialize a Home Assistant server."""
     global hass
 
@@ -47,10 +49,10 @@ def setUpModule():   # pylint: disable=invalid-name
     bootstrap.setup_component(hass, 'api')
 
     hass.start()
-    time.sleep(0.05)
 
 
-def tearDownModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def tearDownModule():
     """Stop the Home Assistant server."""
     hass.stop()
 
@@ -243,20 +245,18 @@ class TestAPI(unittest.TestCase):
 
     def test_api_get_error_log(self):
         """Test the return of the error log."""
-        test_string = 'Test String°'.encode('UTF-8')
+        test_string = 'Test String°'
 
-        # Can't use read_data with wsgiserver in Python 3.4.2. Due to a
-        # bug in read_data, it can't handle byte types ('Type str doesn't
-        # support the buffer API'), but wsgiserver requires byte types
-        # ('WSGI Applications must yield bytes'). So just mock our own
-        # read method.
-        m_open = Mock(return_value=Mock(
-            read=Mock(side_effect=[test_string]))
-        )
-        with patch('homeassistant.components.http.open', m_open, create=True):
+        @asyncio.coroutine
+        def mock_send():
+            """Mock file send."""
+            return web.Response(text=test_string)
+
+        with patch('homeassistant.components.http.HomeAssistantView.file',
+                   Mock(return_value=mock_send())):
             req = requests.get(_url(const.URL_API_ERROR_LOG),
                                headers=HA_HEADERS)
-            self.assertEqual(test_string, req.text.encode('UTF-8'))
+            self.assertEqual(test_string, req.text)
             self.assertIsNone(req.headers.get('expires'))
 
     def test_api_get_event_listeners(self):

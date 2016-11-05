@@ -104,7 +104,6 @@ class FireTV(object):
 class FireTVDevice(MediaPlayerDevice):
     """Representation of an Amazon Fire TV device on the network."""
 
-    # pylint: disable=abstract-method
     def __init__(self, host, port, device, name):
         """Initialize the FireTV device."""
         self._firetv = FireTV(host, port, device)

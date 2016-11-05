@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.xbox_live/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -12,13 +13,13 @@ from homeassistant.const import (CONF_API_KEY, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
-
-ICON = 'mdi:xbox'
-
 REQUIREMENTS = ['xboxapi==0.1.1']
 
+_LOGGER = logging.getLogger(__name__)
+
 CONF_XUID = 'xuid'
+
+ICON = 'mdi:xbox'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -28,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Xbox platform."""
+    """Set up the Xbox platform."""
     from xboxapi import xbox_api
     api = xbox_api.XboxApi(config.get(CONF_API_KEY))
     devices = []
@@ -44,7 +45,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
 
-# pylint: disable=too-many-instance-attributes
 class XboxSensor(Entity):
     """A class for the Xbox account."""
 
@@ -59,8 +59,7 @@ class XboxSensor(Entity):
         # get profile info
         profile = self._api.get_user_profile(self._xuid)
 
-        if profile.get('success', True) \
-                and profile.get('code', 0) != 28:
+        if profile.get('success', True) and profile.get('code', 0) != 28:
             self.success_init = True
             self._gamertag = profile.get('Gamertag')
             self._picture = profile.get('GameDisplayPicRaw')
@@ -84,8 +83,7 @@ class XboxSensor(Entity):
         for device in self._presence:
             for title in device.get('titles'):
                 attributes[
-                    '{} {}'.format(device.get('type'),
-                                   title.get('placement'))
+                    '{} {}'.format(device.get('type'), title.get('placement'))
                 ] = title.get('name')
 
         return attributes

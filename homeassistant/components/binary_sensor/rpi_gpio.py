@@ -54,7 +54,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(binary_sensors)
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
 class RPiGPIOBinarySensor(BinarySensorDevice):
     """Represent a binary sensor that uses Raspberry Pi GPIO."""
 

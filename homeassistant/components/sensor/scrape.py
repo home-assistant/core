@@ -35,7 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Web scrape sensor."""
     name = config.get(CONF_NAME)
@@ -61,11 +60,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
-# pylint: disable=too-many-instance-attributes
 class ScrapeSensor(Entity):
     """Representation of a web scrape sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, rest, name, select, value_template, unit):
         """Initialize a web scrape sensor."""
         self.rest = rest

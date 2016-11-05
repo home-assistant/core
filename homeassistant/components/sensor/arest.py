@@ -44,7 +44,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the aREST sensor."""
     resource = config.get(CONF_RESOURCE)
@@ -108,7 +107,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-# pylint: disable=too-many-instance-attributes, too-many-arguments
 class ArestSensor(Entity):
     """Implementation of an aREST sensor for exposed variables."""
 
@@ -163,7 +161,6 @@ class ArestSensor(Entity):
         return self.arest.available
 
 
-# pylint: disable=too-few-public-methods
 class ArestData(object):
     """The Class for handling the data retrieval for variables."""
 

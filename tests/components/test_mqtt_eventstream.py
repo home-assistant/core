@@ -6,7 +6,7 @@ from unittest.mock import ANY, patch
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.core import State
+from homeassistant.core import State, callback
 from homeassistant.remote import JSONEncoder
 import homeassistant.util.dt as dt_util
 
@@ -130,7 +130,12 @@ class TestMqttEventStream(unittest.TestCase):
         self.hass.block_till_done()
 
         calls = []
-        self.hass.bus.listen_once('test_event', lambda _: calls.append(1))
+
+        @callback
+        def listener(_):
+            calls.append(1)
+
+        self.hass.bus.listen_once('test_event', listener)
         self.hass.block_till_done()
 
         payload = json.dumps(

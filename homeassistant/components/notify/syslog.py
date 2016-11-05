@@ -78,11 +78,9 @@ def get_service(hass, config):
     return SyslogNotificationService(facility, option, priority)
 
 
-# pylint: disable=too-few-public-methods
 class SyslogNotificationService(BaseNotificationService):
     """Implement the syslog notification service."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, facility, option, priority):
         """Initialize the service."""
         self._facility = facility

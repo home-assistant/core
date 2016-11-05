@@ -34,7 +34,7 @@ DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
                    'video7': 'Video 7'}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES):
         {cv.string: cv.string},
@@ -65,11 +65,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(hosts)
 
 
-# pylint: disable=too-many-instance-attributes
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of an Onkyo device."""
 
-    # pylint: disable=too-many-public-methods, abstract-method
     def __init__(self, receiver, sources, name=None):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver

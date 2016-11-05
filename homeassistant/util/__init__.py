@@ -109,7 +109,7 @@ def get_random_string(length=10):
 class OrderedEnum(enum.Enum):
     """Taken from Python 3.4.0 docs."""
 
-    # pylint: disable=no-init, too-few-public-methods
+    # pylint: disable=no-init
     def __ge__(self, other):
         """Return the greater than element."""
         if self.__class__ is other.__class__:
@@ -193,7 +193,8 @@ class OrderedSet(MutableSet):
             yield curr[0]
             curr = curr[1]
 
-    def pop(self, last=True):  # pylint: disable=arguments-differ
+    # pylint: disable=arguments-differ
+    def pop(self, last=True):
         """Pop element of the end of the set.
 
         Set last=False to pop from the beginning.
@@ -240,7 +241,6 @@ class Throttle(object):
     Adds a datetime attribute `last_call` to the method.
     """
 
-    # pylint: disable=too-few-public-methods
     def __init__(self, min_time, limit_no_throttle=None):
         """Initialize the throttle."""
         self.min_time = min_time
@@ -307,7 +307,6 @@ class Throttle(object):
 class ThreadPool(object):
     """A priority queue-based thread pool."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, job_handler, worker_count=0):
         """Initialize the pool.
 
@@ -320,7 +319,7 @@ class ThreadPool(object):
         self._job_handler = job_handler
 
         self.worker_count = 0
-        self._work_queue = queue.PriorityQueue()
+        self._work_queue = queue.Queue()
         self.current_jobs = []
         self._quit_task = object()
 
@@ -350,24 +349,24 @@ class ThreadPool(object):
         if not self.running:
             raise RuntimeError("ThreadPool not running")
 
-        self._work_queue.put(PriorityQueueItem(0, self._quit_task))
+        self._work_queue.put(self._quit_task)
 
         self.worker_count -= 1
 
-    def add_job(self, priority, job):
+    def add_job(self, job):
         """Add a job to the queue."""
         if not self.running:
             raise RuntimeError("ThreadPool not running")
 
-        self._work_queue.put(PriorityQueueItem(priority, job))
+        self._work_queue.put(job)
 
     def add_many_jobs(self, jobs):
         """Add a list of jobs to the queue."""
         if not self.running:
             raise RuntimeError("ThreadPool not running")
 
-        for priority, job in jobs:
-            self._work_queue.put(PriorityQueueItem(priority, job))
+        for job in jobs:
+            self._work_queue.put(job)
 
     def block_till_done(self):
         """Block till current work is done."""
@@ -393,7 +392,7 @@ class ThreadPool(object):
         """Handle jobs for the thread pool."""
         while True:
             # Get new item from work_queue
-            job = self._work_queue.get().item
+            job = self._work_queue.get()
 
             if job is self._quit_task:
                 self._work_queue.task_done()
@@ -411,17 +410,3 @@ class ThreadPool(object):
 
             # Tell work_queue the task is done
             self._work_queue.task_done()
-
-
-class PriorityQueueItem(object):
-    """Holds a priority and a value. Used within PriorityQueue."""
-
-    # pylint: disable=too-few-public-methods
-    def __init__(self, priority, item):
-        """Initialize the queue."""
-        self.priority = priority
-        self.item = item
-
-    def __lt__(self, other):
-        """Return the ordering."""
-        return self.priority < other.priority

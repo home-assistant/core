@@ -17,9 +17,9 @@ import threading
 import time
 
 from types import MappingProxyType
-
 from typing import Optional, Any, Callable, List  # NOQA
 
+import aiohttp
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -102,101 +102,48 @@ class CoreState(enum.Enum):
         return self.value
 
 
-class JobPriority(util.OrderedEnum):
-    """Provides job priorities for event bus jobs."""
-
-    EVENT_CALLBACK = 0
-    EVENT_SERVICE = 1
-    EVENT_STATE = 2
-    EVENT_TIME = 3
-    EVENT_DEFAULT = 4
-
-    @staticmethod
-    def from_event_type(event_type):
-        """Return a priority based on event type."""
-        if event_type == EVENT_TIME_CHANGED:
-            return JobPriority.EVENT_TIME
-        elif event_type == EVENT_STATE_CHANGED:
-            return JobPriority.EVENT_STATE
-        elif event_type == EVENT_CALL_SERVICE:
-            return JobPriority.EVENT_SERVICE
-        elif event_type == EVENT_SERVICE_EXECUTED:
-            return JobPriority.EVENT_CALLBACK
-        return JobPriority.EVENT_DEFAULT
-
-
 class HomeAssistant(object):
     """Root object of the Home Assistant home automation."""
 
-    # pylint: disable=too-many-instance-attributes
-
     def __init__(self, loop=None):
         """Initialize new Home Assistant object."""
-        self.loop = loop or asyncio.get_event_loop()
+        if sys.platform == "win32":
+            self.loop = loop or asyncio.ProactorEventLoop()
+        else:
+            self.loop = loop or asyncio.get_event_loop()
+
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(self._async_exception_handler)
-        self.pool = create_worker_pool()
+        self.pool = None
         self.bus = EventBus(self)
-        self.services = ServiceRegistry(self.bus, self.add_job, self.loop)
+        self.services = ServiceRegistry(self.bus, self.async_add_job,
+                                        self.loop)
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config()  # type: Config
+        # This is a dictionary that any component can store any data on.
+        self.data = {}
         self.state = CoreState.not_running
         self.exit_code = None
+        self._websession = None
 
     @property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
 
+    @property
+    def websession(self):
+        """Return an aiohttp session to make web requests."""
+        if self._websession is None:
+            self._websession = aiohttp.ClientSession(loop=self.loop)
+
+        return self._websession
+
     def start(self) -> None:
         """Start home assistant."""
-        _LOGGER.info(
-            "Starting Home Assistant (%d threads)", self.pool.worker_count)
-        self.state = CoreState.starting
-
         # Register the async start
         self.loop.create_task(self.async_start())
-
-        @callback
-        def stop_homeassistant(*args):
-            """Stop Home Assistant."""
-            self.exit_code = 0
-            self.async_add_job(self.async_stop)
-
-        @callback
-        def restart_homeassistant(*args):
-            """Restart Home Assistant."""
-            self.exit_code = RESTART_EXIT_CODE
-            self.async_add_job(self.async_stop)
-
-        # Register the restart/stop event
-        self.loop.call_soon(
-            self.services.async_register,
-            DOMAIN, SERVICE_HOMEASSISTANT_STOP, stop_homeassistant
-        )
-        self.loop.call_soon(
-            self.services.async_register,
-            DOMAIN, SERVICE_HOMEASSISTANT_RESTART, restart_homeassistant
-        )
-
-        # Setup signal handling
-        if sys.platform != 'win32':
-            try:
-                self.loop.add_signal_handler(
-                    signal.SIGTERM,
-                    stop_homeassistant
-                )
-            except ValueError:
-                _LOGGER.warning('Could not bind to SIGTERM.')
-
-            try:
-                self.loop.add_signal_handler(
-                    signal.SIGHUP,
-                    restart_homeassistant
-                )
-            except ValueError:
-                _LOGGER.warning('Could not bind to SIGHUP.')
 
         # Run forever and catch keyboard interrupt
         try:
@@ -204,7 +151,7 @@ class HomeAssistant(object):
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
         except KeyboardInterrupt:
-            self.loop.call_soon(stop_homeassistant)
+            self.loop.call_soon(self._async_stop_handler)
             self.loop.run_forever()
         finally:
             self.loop.close()
@@ -215,27 +162,51 @@ class HomeAssistant(object):
 
         This method is a coroutine.
         """
+        _LOGGER.info("Starting Home Assistant")
+
+        self.state = CoreState.starting
+
+        # Register the restart/stop event
+        self.services.async_register(
+            DOMAIN, SERVICE_HOMEASSISTANT_STOP, self._async_stop_handler)
+        self.services.async_register(
+            DOMAIN, SERVICE_HOMEASSISTANT_RESTART, self._async_restart_handler)
+
+        # Setup signal handling
+        if sys.platform != 'win32':
+            try:
+                self.loop.add_signal_handler(
+                    signal.SIGTERM, self._async_stop_handler)
+            except ValueError:
+                _LOGGER.warning('Could not bind to SIGTERM.')
+
+            try:
+                self.loop.add_signal_handler(
+                    signal.SIGHUP, self._async_restart_handler)
+            except ValueError:
+                _LOGGER.warning('Could not bind to SIGHUP.')
+
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
         _async_create_timer(self)
-        _async_monitor_worker_pool(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        yield from self.loop.run_in_executor(None, self.pool.block_till_done)
+        if self.pool is not None:
+            yield from self.loop.run_in_executor(
+                None, self.pool.block_till_done)
         self.state = CoreState.running
 
-    def add_job(self,
-                target: Callable[..., None],
-                *args: Any,
-                priority: JobPriority=JobPriority.EVENT_DEFAULT) -> None:
+    def add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add job to the worker pool.
 
         target: target to call.
         args: parameters for method to call.
         """
-        self.pool.add_job(priority, (target,) + args)
+        if self.pool is None:
+            run_callback_threadsafe(self.pool, self.async_init_pool).result()
+        self.pool.add_job((target,) + args)
 
     @callback
-    def async_add_job(self, target: Callable[..., None], *args: Any):
+    def async_add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add a job from within the eventloop.
 
         This method must be run in the event loop.
@@ -248,10 +219,12 @@ class HomeAssistant(object):
         elif asyncio.iscoroutinefunction(target):
             self.loop.create_task(target(*args))
         else:
-            self.add_job(target, *args)
+            if self.pool is None:
+                self.async_init_pool()
+            self.pool.add_job((target,) + args)
 
     @callback
-    def async_run_job(self, target: Callable[..., None], *args: Any):
+    def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
         """Run a job from within the event loop.
 
         This method must be run in the event loop.
@@ -264,7 +237,7 @@ class HomeAssistant(object):
         else:
             self.async_add_job(target, *args)
 
-    def _loop_empty(self):
+    def _loop_empty(self) -> bool:
         """Python 3.4.2 empty loop compatibility function."""
         # pylint: disable=protected-access
         if sys.version_info < (3, 4, 3):
@@ -274,7 +247,7 @@ class HomeAssistant(object):
             return self.loop._current_handle is None and \
                    len(self.loop._ready) == 0
 
-    def block_till_done(self):
+    def block_till_done(self) -> None:
         """Block till all pending work is done."""
         complete = threading.Event()
 
@@ -288,7 +261,8 @@ class HomeAssistant(object):
             count = 0
             while True:
                 # Wait for the work queue to empty
-                self.pool.block_till_done()
+                if self.pool is not None:
+                    self.pool.block_till_done()
 
                 # Verify the loop is empty
                 if self._loop_empty():
@@ -300,10 +274,7 @@ class HomeAssistant(object):
                 # sleep in the loop executor, this forces execution back into
                 # the event loop to avoid the block thread from starving the
                 # async loop
-                run_coroutine_threadsafe(
-                    sleep_wait(),
-                    self.loop
-                ).result()
+                run_coroutine_threadsafe(sleep_wait(), self.loop).result()
 
             complete.set()
 
@@ -322,13 +293,18 @@ class HomeAssistant(object):
         """
         self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        yield from self.loop.run_in_executor(None, self.pool.block_till_done)
-        yield from self.loop.run_in_executor(None, self.pool.stop)
+        if self.pool is not None:
+            yield from self.loop.run_in_executor(
+                None, self.pool.block_till_done)
+            yield from self.loop.run_in_executor(None, self.pool.stop)
         self.executor.shutdown()
+        if self._websession is not None:
+            yield from self._websession.close()
         self.state = CoreState.not_running
         self.loop.stop()
 
     # pylint: disable=no-self-use
+    @callback
     def _async_exception_handler(self, loop, context):
         """Handle all exception inside the core loop."""
         message = context.get('message')
@@ -347,6 +323,24 @@ class HomeAssistant(object):
                 exc_info=exc_info
             )
 
+    @callback
+    def async_init_pool(self):
+        """Initialize the worker pool."""
+        self.pool = create_worker_pool()
+        _async_monitor_worker_pool(self)
+
+    @callback
+    def _async_stop_handler(self, *args):
+        """Stop Home Assistant."""
+        self.exit_code = 0
+        self.async_add_job(self.async_stop)
+
+    @callback
+    def _async_restart_handler(self, *args):
+        """Restart Home Assistant."""
+        self.exit_code = RESTART_EXIT_CODE
+        self.async_add_job(self.async_stop)
+
 
 class EventOrigin(enum.Enum):
     """Represent the origin of an event."""
@@ -360,7 +354,6 @@ class EventOrigin(enum.Enum):
 
 
 class Event(object):
-    # pylint: disable=too-few-public-methods
     """Represents an event within the Bus."""
 
     __slots__ = ['event_type', 'data', 'origin', 'time_fired']
@@ -577,7 +570,6 @@ class State(object):
     __slots__ = ['entity_id', 'state', 'attributes',
                  'last_changed', 'last_updated']
 
-    # pylint: disable=too-many-arguments
     def __init__(self, entity_id, state, attributes=None, last_changed=None,
                  last_updated=None):
         """Initialize a new state."""
@@ -820,7 +812,6 @@ class StateMachine(object):
         self._bus.async_fire(EVENT_STATE_CHANGED, event_data)
 
 
-# pylint: disable=too-few-public-methods
 class Service(object):
     """Represents a callable service."""
 
@@ -844,7 +835,6 @@ class Service(object):
         }
 
 
-# pylint: disable=too-few-public-methods
 class ServiceCall(object):
     """Represents a call to a service."""
 
@@ -869,17 +859,14 @@ class ServiceCall(object):
 class ServiceRegistry(object):
     """Offers services over the eventbus."""
 
-    def __init__(self, bus, add_job, loop):
+    def __init__(self, bus, async_add_job, loop):
         """Initialize a service registry."""
         self._services = {}
-        self._add_job = add_job
+        self._async_add_job = async_add_job
         self._bus = bus
         self._loop = loop
         self._cur_id = 0
-        run_callback_threadsafe(
-            loop,
-            bus.async_listen, EVENT_CALL_SERVICE, self._event_to_service_call,
-        )
+        self._async_unsub_call_event = None
 
     @property
     def services(self):
@@ -905,7 +892,6 @@ class ServiceRegistry(object):
         """
         return service.lower() in self._services.get(domain.lower(), [])
 
-    # pylint: disable=too-many-arguments
     def register(self, domain, service, service_func, description=None,
                  schema=None):
         """
@@ -945,6 +931,10 @@ class ServiceRegistry(object):
             self._services[domain][service] = service_obj
         else:
             self._services[domain] = {service: service_obj}
+
+        if self._async_unsub_call_event is None:
+            self._async_unsub_call_event = self._bus.async_listen(
+                EVENT_CALL_SERVICE, self._event_to_service_call)
 
         self._bus.async_fire(
             EVENT_SERVICE_REGISTERED,
@@ -1075,7 +1065,7 @@ class ServiceRegistry(object):
                 service_handler.func(service_call)
                 fire_service_executed()
 
-            self._add_job(execute_service, priority=JobPriority.EVENT_SERVICE)
+            self._async_add_job(execute_service)
 
     def _generate_unique_id(self):
         """Generate a unique service call id."""
@@ -1086,7 +1076,6 @@ class ServiceRegistry(object):
 class Config(object):
     """Configuration settings for Home Assistant."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         """Initialize a new config object."""
         self.latitude = None  # type: Optional[float]

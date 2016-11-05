@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MpdDevice(MediaPlayerDevice):
     """Representation of a MPD server."""
 
-    # pylint: disable=no-member, too-many-public-methods, abstract-method
+    # pylint: disable=no-member
     def __init__(self, server, port, location, password):
         """Initialize the MPD device."""
         import mpd

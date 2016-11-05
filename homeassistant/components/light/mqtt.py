@@ -101,8 +101,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MqttLight(Light):
     """MQTT light."""
 
-    # pylint: disable=too-many-arguments,too-many-instance-attributes
-    # pylint: disable=too-many-locals,too-many-branches
     def __init__(self, hass, name, topic, templates, qos, retain, payload,
                  optimistic, brightness_scale):
         """Initialize MQTT light."""

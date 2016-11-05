@@ -54,7 +54,7 @@ STATES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ThinkingCleaner platform."""
+    """Set up the ThinkingCleaner platform."""
     from pythinkingcleaner import Discovery
 
     discovery = Discovery()
@@ -76,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ThinkingCleanerSensor(Entity):
-    """ThinkingCleaner Sensor."""
+    """Representation of a ThinkingCleaner Sensor."""
 
     def __init__(self, tc_object, sensor_type, update_devices):
         """Initialize the ThinkingCleaner."""
@@ -90,7 +90,7 @@ class ThinkingCleanerSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._tc_object.name + ' ' + SENSOR_TYPES[self.type][0]
+        return '{} {}'.format(self._tc_object.name, SENSOR_TYPES[self.type][0])
 
     @property
     def icon(self):

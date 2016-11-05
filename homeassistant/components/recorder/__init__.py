@@ -27,7 +27,7 @@ import homeassistant.util.dt as dt_util
 
 DOMAIN = 'recorder'
 
-REQUIREMENTS = ['sqlalchemy==1.1.1']
+REQUIREMENTS = ['sqlalchemy==1.1.2']
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
 DEFAULT_DB_FILE = 'home-assistant_v2.db'
@@ -153,7 +153,6 @@ def log_error(e: Exception, retry_wait: Optional[float]=0,
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, hass: HomeAssistant, purge_days: int, uri: str) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self)

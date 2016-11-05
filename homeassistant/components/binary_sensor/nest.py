@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.sensor.nest import NestSensor
 from homeassistant.const import (CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS)
-import homeassistant.components.nest as nest
+from homeassistant.components.nest import DATA_NEST
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['nest']
@@ -35,9 +35,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Nest binary sensors."""
+    nest = hass.data[DATA_NEST]
+
+    all_sensors = []
     for structure, device in nest.devices():
-        add_devices([NestBinarySensor(structure, device, variable)
-                     for variable in config[CONF_MONITORED_CONDITIONS]])
+        all_sensors.extend(
+            [NestBinarySensor(structure, device, variable)
+             for variable in config[CONF_MONITORED_CONDITIONS]])
+
+    add_devices(all_sensors, True)
 
 
 class NestBinarySensor(NestSensor, BinarySensorDevice):
@@ -46,4 +52,8 @@ class NestBinarySensor(NestSensor, BinarySensorDevice):
     @property
     def is_on(self):
         """True if the binary sensor is on."""
-        return bool(getattr(self.device, self.variable))
+        return self._state
+
+    def update(self):
+        """Retrieve latest state."""
+        self._state = bool(getattr(self.device, self.variable))

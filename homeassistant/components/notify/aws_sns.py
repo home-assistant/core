@@ -54,7 +54,6 @@ def get_service(hass, config):
     return AWSSNS(sns_client)
 
 
-# pylint: disable=too-few-public-methods
 class AWSSNS(BaseNotificationService):
     """Implement the notification service for the AWS SNS service."""
 

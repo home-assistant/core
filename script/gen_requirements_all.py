@@ -17,6 +17,7 @@ COMMENT_REQUIREMENTS = (
     'gattlib',
     'pyuserinput',
     'evdev',
+    'pycups',
 )
 
 IGNORE_PACKAGES = (

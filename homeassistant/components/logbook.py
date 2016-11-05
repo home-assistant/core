@@ -11,6 +11,7 @@ from itertools import groupby
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
@@ -19,7 +20,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
                                  STATE_NOT_HOME, STATE_OFF, STATE_ON,
-                                 ATTR_HIDDEN)
+                                 ATTR_HIDDEN, HTTP_BAD_REQUEST)
 from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
 from homeassistant.util.async import run_callback_threadsafe
 
@@ -88,7 +89,7 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None):
 
 def setup(hass, config):
     """Listen for download events to download files."""
-    @asyncio.coroutine
+    @callback
     def log_message(service):
         """Handle sending notification message service calls."""
         message = service.data[ATTR_MESSAGE]
@@ -100,7 +101,7 @@ def setup(hass, config):
         message = message.async_render()
         async_log_entry(hass, name, message, domain, entity_id)
 
-    hass.wsgi.register_view(LogbookView(hass, config))
+    hass.http.register_view(LogbookView(hass, config))
 
     register_built_in_panel(hass, 'logbook', 'Logbook',
                             'mdi:format-list-bulleted-type')
@@ -115,24 +116,37 @@ class LogbookView(HomeAssistantView):
 
     url = '/api/logbook'
     name = 'api:logbook'
-    extra_urls = ['/api/logbook/<datetime:datetime>']
+    extra_urls = ['/api/logbook/{datetime}']
 
     def __init__(self, hass, config):
         """Initilalize the logbook view."""
         super().__init__(hass)
         self.config = config
 
+    @asyncio.coroutine
     def get(self, request, datetime=None):
         """Retrieve logbook entries."""
-        start_day = dt_util.as_utc(datetime or dt_util.start_of_local_day())
+        if datetime:
+            datetime = dt_util.parse_datetime(datetime)
+
+            if datetime is None:
+                return self.json_message('Invalid datetime', HTTP_BAD_REQUEST)
+        else:
+            datetime = dt_util.start_of_local_day()
+
+        start_day = dt_util.as_utc(datetime)
         end_day = start_day + timedelta(days=1)
 
-        events = recorder.get_model('Events')
-        query = recorder.query('Events').filter(
-            (events.time_fired > start_day) &
-            (events.time_fired < end_day))
-        events = recorder.execute(query)
-        events = _exclude_events(events, self.config)
+        def get_results():
+            """Query DB for results."""
+            events = recorder.get_model('Events')
+            query = recorder.query('Events').filter(
+                (events.time_fired > start_day) &
+                (events.time_fired < end_day))
+            events = recorder.execute(query)
+            return _exclude_events(events, self.config)
+
+        events = yield from self.hass.loop.run_in_executor(None, get_results)
 
         return self.json(humanify(events))
 
@@ -140,7 +154,6 @@ class LogbookView(HomeAssistantView):
 class Entry(object):
     """A human readable version of the log."""
 
-    # pylint: disable=too-many-arguments, too-few-public-methods
     def __init__(self, when=None, name=None, message=None, domain=None,
                  entity_id=None):
         """Initialize the entry."""
@@ -168,7 +181,6 @@ def humanify(events):
      - if 2+ sensor updates in GROUP_BY_MINUTES, show last
      - if home assistant stop and start happen in same minute call it restarted
     """
-    # pylint: disable=too-many-branches
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
             events,
@@ -274,7 +286,6 @@ def humanify(events):
 
 def _exclude_events(events, config):
     """Get lists of excluded entities and platforms."""
-    # pylint: disable=too-many-branches
     excluded_entities = []
     excluded_domains = []
     included_entities = []
@@ -341,10 +352,10 @@ def _exclude_events(events, config):
     return filtered_events
 
 
+# pylint: disable=too-many-return-statements
 def _entry_message_from_state(domain, state):
     """Convert a state to a message for the logbook."""
     # We pass domain in so we don't have to split entity_id again
-    # pylint: disable=too-many-return-statements
     if domain == 'device_tracker':
         if state.state == STATE_NOT_HOME:
             return 'is away'
