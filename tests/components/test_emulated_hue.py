@@ -1,5 +1,4 @@
 """The tests for the emulated Hue component."""
-import time
 import json
 
 import unittest
@@ -258,7 +257,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(kitchen_result.status_code, 404)
 
     def test_put_light_state_script(self):
-        """Test the seeting of script variables."""
+        """Test the setting of script variables."""
         # Turn the kitchen light off first
         self.hass.services.call(
             light.DOMAIN, const.SERVICE_TURN_OFF,
@@ -277,8 +276,8 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(script_result.status_code, 200)
         self.assertEqual(len(script_result_json), 2)
 
-        # Sleep for short time so script has time to complete
-        time.sleep(.01)
+        # Wait until script is complete before continuing
+        self.hass.block_till_done()
 
         kitchen_light = self.hass.states.get('light.kitchen_lights')
         self.assertEqual(kitchen_light.state, 'on')
