@@ -75,7 +75,6 @@ class FFmpegCamera(Camera):
 
         response = web.StreamResponse()
         response.content_type = 'multipart/x-mixed-replace;boundary=ffserver'
-        response.enable_chunked_encoding()
 
         yield from response.prepare(request)
 
