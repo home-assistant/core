@@ -356,7 +356,7 @@ pyenvisalink==1.7
 pyfttt==0.3
 
 # homeassistant.components.remote.harmony
-pyharmony>=1.0.7
+pyharmony>=1.0.9
 
 # homeassistant.components.homematic
 pyhomematic==0.1.16

@@ -1,5 +1,5 @@
 """
-Component to interface with univeral remote control devices.
+Component to interface with universal remote control devices.
 
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/remote/
@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.components import group
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA # noqa
 
 ATTR_DEVICE = 'device'
 ATTR_COMMAND = 'command'
@@ -53,8 +53,7 @@ def is_on(hass, entity_id=None):
 
 def turn_on(hass, activity=None, entity_id=None):
     """Turn all or specified remote on."""
-    data = {}
-    data[ATTR_ACTIVITY] = activity
+    data = {ATTR_ACTIVITY: activity}
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
@@ -67,17 +66,15 @@ def turn_off(hass, entity_id=None):
 
 
 def send_command(hass, device=None, command=None, entity_id=None):
-    """Send a command to a device"""
-    data = {}
-    data[ATTR_DEVICE] = str(device)
-    data[ATTR_COMMAND] = command
+    """Send a command to a device."""
+    data = {ATTR_DEVICE: str(device), ATTR_COMMAND: command}
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
     hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
 
 
 def sync(hass, entity_id=None):
-    """Sync remote device"""
+    """Sync remote device."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_SYNC, data)
 
@@ -138,10 +135,11 @@ class RemoteDevice(ToggleEntity):
         return data
 
     def state(self):
+        """Return device's state."""
         return self.is_on
 
     def turn_on(self, **kwargs):
-        """Turn a device one with the remote"""
+        """Turn a device on with the remote."""
         raise NotImplementedError()
 
     def turn_off(self, **kwargs):
@@ -149,9 +147,9 @@ class RemoteDevice(ToggleEntity):
         raise NotImplementedError()
 
     def sync(self, **kwargs):
-        """Turn a device off with the remote."""
+        """Sync remote device."""
         raise NotImplementedError()
 
     def send_command(self, **kwargs):
-        """Turn a device off with the remote."""
+        """Send a command to a device."""
         raise NotImplementedError()
