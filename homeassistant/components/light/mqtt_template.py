@@ -156,29 +156,39 @@ class MqttTemplate(Light):
 
     @property
     def brightness(self):
+        """Return the brightness of this light between 0..255."""
         return self._brightness
 
     @property
     def rgb_color(self):
+        """Return the RGB color value [int, int, int]."""
         return self._rgb
 
     @property
     def should_poll(self):
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
         return False
 
     @property
     def name(self):
+        """Return the name of the entity."""
         return self._name
 
     @property
     def is_on(self):
+        """Return True if entity is on."""
         return self._state
 
     @property
     def assumed_state(self):
+        """Return True if unable to access real state of the entity."""
         return self._optimistic
 
     def turn_on(self, **kwargs):
+        """Turn the entity on."""
         # state
         values = {'state': True}
         if self._optimistic:
@@ -218,6 +228,7 @@ class MqttTemplate(Light):
             self.update_ha_state()
 
     def turn_off(self, **kwargs):
+        """Turn the entity off."""
         # state
         values = {'state': False}
         if self._optimistic:
