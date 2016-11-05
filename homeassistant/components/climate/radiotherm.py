@@ -69,6 +69,8 @@ class RadioThermostat(ClimateDevice):
         self._current_temperature = None
         self._current_operation = STATE_IDLE
         self._name = None
+        self._fmode = None
+        self._tmode = None
         self.hold_temp = hold_temp
         self.update()
         self._operation_list = [STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_OFF]
@@ -87,8 +89,8 @@ class RadioThermostat(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         return {
-            ATTR_FAN: self.device.fmode['human'],
-            ATTR_MODE: self.device.tmode['human']
+            ATTR_FAN: self._fmode,
+            ATTR_MODE: self._tmode,
         }
 
     @property
@@ -115,10 +117,13 @@ class RadioThermostat(ClimateDevice):
         """Update the data from the thermostat."""
         self._current_temperature = self.device.temp['raw']
         self._name = self.device.name['raw']
-        if self.device.tmode['human'] == 'Cool':
+        self._fmode = self.device.fmode['human']
+        self._tmode = self.device.tmode['human']
+
+        if self._tmode == 'Cool':
             self._target_temperature = self.device.t_cool['raw']
             self._current_operation = STATE_COOL
-        elif self.device.tmode['human'] == 'Heat':
+        elif self._tmode == 'Heat':
             self._target_temperature = self.device.t_heat['raw']
             self._current_operation = STATE_HEAT
         else:
