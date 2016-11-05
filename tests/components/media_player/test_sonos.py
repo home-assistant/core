@@ -92,6 +92,13 @@ class SoCoMock():
         return "RINCON_XXXXXXXXXXXXXXXXX"
 
 
+def fake_add_device(devices, update_befor_add=False):
+    """Fake add device / update."""
+    if update_befor_add:
+        for speaker in devices:
+            speaker.update()
+
+
 class TestSonosMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
@@ -117,7 +124,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch('socket.create_connection', side_effect=socket.error())
     def test_ensure_setup_discovery(self, *args):
         """Test a single device using the autodiscovery provided by HASS."""
-        sonos.setup_platform(self.hass, {}, mock.MagicMock(), '192.0.2.1')
+        sonos.setup_platform(self.hass, {}, fake_add_device, '192.0.2.1')
 
         # Ensure registration took place (#2558)
         self.assertEqual(len(sonos.DEVICES), 1)
@@ -129,7 +136,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
         """Test a single address config'd by the HASS config file."""
         sonos.setup_platform(self.hass,
                              {'hosts': '192.0.2.1'},
-                             mock.MagicMock())
+                             fake_add_device)
 
         # Ensure registration took place (#2558)
         self.assertEqual(len(sonos.DEVICES), 1)
@@ -140,7 +147,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch('socket.create_connection', side_effect=socket.error())
     def test_ensure_setup_sonos_discovery(self, *args):
         """Test a single device using the autodiscovery provided by Sonos."""
-        sonos.setup_platform(self.hass, {}, mock.MagicMock())
+        sonos.setup_platform(self.hass, {}, fake_add_device)
         self.assertEqual(len(sonos.DEVICES), 1)
         self.assertEqual(sonos.DEVICES[0].name, 'Kitchen')
 
@@ -149,7 +156,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch.object(SoCoMock, 'partymode')
     def test_sonos_group_players(self, partymodeMock, *args):
         """Ensuring soco methods called for sonos_group_players service."""
-        sonos.setup_platform(self.hass, {}, mock.MagicMock(), '192.0.2.1')
+        sonos.setup_platform(self.hass, {}, fake_add_device, '192.0.2.1')
         device = sonos.DEVICES[-1]
         partymodeMock.return_value = True
         device.group_players()
@@ -161,7 +168,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch.object(SoCoMock, 'unjoin')
     def test_sonos_unjoin(self, unjoinMock, *args):
         """Ensuring soco methods called for sonos_unjoin service."""
-        sonos.setup_platform(self.hass, {}, mock.MagicMock(), '192.0.2.1')
+        sonos.setup_platform(self.hass, {}, fake_add_device, '192.0.2.1')
         device = sonos.DEVICES[-1]
         unjoinMock.return_value = True
         device.unjoin()
@@ -173,7 +180,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch.object(SoCoMock, 'set_sleep_timer')
     def test_sonos_set_sleep_timer(self, set_sleep_timerMock, *args):
         """Ensuring soco methods called for sonos_set_sleep_timer service."""
-        sonos.setup_platform(self.hass, {}, mock.MagicMock(), '192.0.2.1')
+        sonos.setup_platform(self.hass, {}, fake_add_device, '192.0.2.1')
         device = sonos.DEVICES[-1]
         device.set_sleep_timer(30)
         set_sleep_timerMock.assert_called_once_with(30)
@@ -193,7 +200,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch.object(soco.snapshot.Snapshot, 'snapshot')
     def test_sonos_snapshot(self, snapshotMock, *args):
         """Ensuring soco methods called for sonos_snapshot service."""
-        sonos.setup_platform(self.hass, {}, mock.MagicMock(), '192.0.2.1')
+        sonos.setup_platform(self.hass, {}, fake_add_device, '192.0.2.1')
         device = sonos.DEVICES[-1]
         snapshotMock.return_value = True
         device.snapshot()
@@ -205,7 +212,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch.object(soco.snapshot.Snapshot, 'restore')
     def test_sonos_restore(self, restoreMock, *args):
         """Ensuring soco methods called for sonos_restor service."""
-        sonos.setup_platform(self.hass, {}, mock.MagicMock(), '192.0.2.1')
+        sonos.setup_platform(self.hass, {}, fake_add_device, '192.0.2.1')
         device = sonos.DEVICES[-1]
         restoreMock.return_value = True
         device.restore()
