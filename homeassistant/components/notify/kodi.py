@@ -41,7 +41,6 @@ def get_service(hass, config):
     )
 
 
-# pylint: disable=too-few-public-methods
 class KODINotificationService(BaseNotificationService):
     """Implement the notification service for Kodi."""
 

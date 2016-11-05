@@ -4,12 +4,12 @@ Support for LimitlessLED bulbs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.limitlessled/
 """
-# pylint: disable=abstract-method
+
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT)
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT, CONF_TYPE)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, EFFECT_WHITE, FLASH_LONG,
@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_BRIDGES = 'bridges'
 CONF_GROUPS = 'groups'
 CONF_NUMBER = 'number'
-CONF_TYPE = 'type'
 CONF_VERSION = 'version'
 
 DEFAULT_LED_TYPE = 'rgbw'
@@ -66,7 +65,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def rewrite_legacy(config):
     """Rewrite legacy configuration to new format."""
-    bridges = config.get('bridges', [config])
+    bridges = config.get(CONF_BRIDGES, [config])
     new_bridges = []
     for bridge_conf in bridges:
         groups = []
@@ -84,32 +83,33 @@ def rewrite_legacy(config):
                         'name': bridge_conf.get(name_key)
                     })
         new_bridges.append({
-            'host': bridge_conf.get('host'),
+            'host': bridge_conf.get(CONF_HOST),
             'groups': groups
         })
     return {'bridges': new_bridges}
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the LimitlessLED lights."""
     from limitlessled.bridge import Bridge
 
-    # Two legacy configuration formats are supported to
-    # maintain backwards compatibility.
+    # Two legacy configuration formats are supported to maintain backwards
+    # compatibility.
     config = rewrite_legacy(config)
 
     # Use the expanded configuration format.
     lights = []
-    for bridge_conf in config.get('bridges'):
-        bridge = Bridge(bridge_conf.get('host'),
-                        port=bridge_conf.get('port', DEFAULT_PORT),
-                        version=bridge_conf.get('version', DEFAULT_VERSION))
-        for group_conf in bridge_conf.get('groups'):
-            group = bridge.add_group(group_conf.get('number'),
-                                     group_conf.get('name'),
-                                     group_conf.get('type', DEFAULT_LED_TYPE))
+    for bridge_conf in config.get(CONF_BRIDGES):
+        bridge = Bridge(bridge_conf.get(CONF_HOST),
+                        port=bridge_conf.get(CONF_PORT, DEFAULT_PORT),
+                        version=bridge_conf.get(CONF_VERSION, DEFAULT_VERSION))
+        for group_conf in bridge_conf.get(CONF_GROUPS):
+            group = bridge.add_group(
+                group_conf.get(CONF_NUMBER),
+                group_conf.get(CONF_NAME),
+                group_conf.get(CONF_TYPE, DEFAULT_LED_TYPE))
             lights.append(LimitlessLEDGroup.factory(group))
-    add_devices_callback(lights)
+    add_devices(lights)
 
 
 def state(new_state):
@@ -225,11 +225,11 @@ class LimitlessLEDWhiteGroup(LimitlessLEDGroup):
         if ATTR_COLOR_TEMP in kwargs:
             self._temperature = kwargs[ATTR_COLOR_TEMP]
         # Set up transition.
-        pipeline.transition(transition_time,
-                            brightness=_from_hass_brightness(
-                                self._brightness),
-                            temperature=_from_hass_temperature(
-                                self._temperature))
+        pipeline.transition(
+            transition_time,
+            brightness=_from_hass_brightness(self._brightness),
+            temperature=_from_hass_temperature(self._temperature)
+        )
 
 
 class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
@@ -270,10 +270,11 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
             pipeline.white()
             self._color = WHITE
         # Set up transition.
-        pipeline.transition(transition_time,
-                            brightness=_from_hass_brightness(
-                                self._brightness),
-                            color=_from_hass_color(self._color))
+        pipeline.transition(
+            transition_time,
+            brightness=_from_hass_brightness(self._brightness),
+            color=_from_hass_color(self._color)
+        )
         # Flash.
         if ATTR_FLASH in kwargs:
             duration = 0

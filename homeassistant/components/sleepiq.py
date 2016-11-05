@@ -75,7 +75,6 @@ def setup(hass, config):
     return True
 
 
-# pylint: disable=too-few-public-methods
 class SleepIQData(object):
     """Gets the latest data from SleepIQ."""
 
@@ -95,7 +94,6 @@ class SleepIQData(object):
         self.beds = {bed.bed_id: bed for bed in beds}
 
 
-# pylint: disable=too-few-public-methods, too-many-instance-attributes
 class SleepIQSensor(Entity):
     """Implementation of a SleepIQ sensor."""
 

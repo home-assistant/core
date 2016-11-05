@@ -8,8 +8,7 @@ import logging
 
 from homeassistant.util import convert
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import (
-    STATE_OFF, STATE_ON)
+from homeassistant.const import (STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
     VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
 
@@ -18,9 +17,9 @@ DEPENDENCIES = ['vera']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Vera switches."""
-    add_devices_callback(
+    add_devices(
         VeraSwitch(device, VERA_CONTROLLER) for
         device in VERA_DEVICES['switch'])
 

@@ -30,7 +30,6 @@ def get_service(hass, config):
     return EcobeeNotificationService(index)
 
 
-# pylint: disable=too-few-public-methods
 class EcobeeNotificationService(BaseNotificationService):
     """Implement the notification service for the Ecobee thermostat."""
 

@@ -6,7 +6,8 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.core import callback
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
@@ -21,7 +22,7 @@ class TestMQTT(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(1)
+        self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         self.calls = []
 
@@ -29,6 +30,7 @@ class TestMQTT(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
+    @callback
     def record_calls(self, *args):
         """Helper for recording calls."""
         self.calls.append(args)
@@ -52,7 +54,7 @@ class TestMQTT(unittest.TestCase):
         with mock.patch('homeassistant.components.mqtt.MQTT',
                         side_effect=socket.error()):
             self.hass.config.components = []
-            assert not _setup_component(self.hass, mqtt.DOMAIN, {
+            assert not setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'test-broker',
                 }
@@ -62,7 +64,7 @@ class TestMQTT(unittest.TestCase):
         """Test for setup failure if connection to broker is missing."""
         with mock.patch('paho.mqtt.client.Client'):
             self.hass.config.components = []
-            assert _setup_component(self.hass, mqtt.DOMAIN, {
+            assert setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'test-broker',
                     mqtt.CONF_PROTOCOL: 3.1,
@@ -217,12 +219,12 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(1)
+        self.hass = get_test_home_assistant()
         # mock_mqtt_component(self.hass)
 
         with mock.patch('paho.mqtt.client.Client'):
             self.hass.config.components = []
-            assert _setup_component(self.hass, mqtt.DOMAIN, {
+            assert setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
                 }
@@ -236,6 +238,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         """Test if receiving triggers an event."""
         calls = []
 
+        @callback
         def record(event):
             """Helper to record calls."""
             calls.append(event)
@@ -321,6 +324,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         """Test receiving a non utf8 encoded message."""
         calls = []
 
+        @callback
         def record(event):
             """Helper to record calls."""
             calls.append(event)

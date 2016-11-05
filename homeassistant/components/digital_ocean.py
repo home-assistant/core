@@ -42,7 +42,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=unused-argument,too-few-public-methods
 def setup(hass, config):
     """Set up the Digital Ocean component."""
     conf = config[DOMAIN]

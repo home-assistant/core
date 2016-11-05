@@ -206,7 +206,6 @@ def _setup_server(hass, config):
 
 def setup(hass, config):
     """Start the MQTT protocol service."""
-    # pylint: disable=too-many-locals
     conf = config.get(DOMAIN, {})
 
     client_id = conf.get(CONF_CLIENT_ID)
@@ -292,7 +291,6 @@ def setup(hass, config):
     return True
 
 
-# pylint: disable=too-many-arguments
 class MQTT(object):
     """Home Assistant MQTT client."""
 
@@ -401,7 +399,7 @@ class MQTT(object):
         """Message received callback."""
         try:
             payload = msg.payload.decode('utf-8')
-        except AttributeError:
+        except (AttributeError, UnicodeDecodeError):
             _LOGGER.error("Illegal utf-8 unicode payload from "
                           "MQTT topic: %s, Payload: %s", msg.topic,
                           msg.payload)

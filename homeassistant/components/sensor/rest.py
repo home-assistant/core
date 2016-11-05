@@ -41,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable, too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the RESTful sensor."""
     name = config.get(CONF_NAME)
@@ -74,7 +73,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([RestSensor(hass, rest, name, unit, value_template)])
 
 
-# pylint: disable=too-many-arguments
 class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
@@ -117,7 +115,6 @@ class RestSensor(Entity):
         self._state = value
 
 
-# pylint: disable=too-few-public-methods
 class RestData(object):
     """Class for handling the data retrieval."""
 
@@ -129,7 +126,7 @@ class RestData(object):
         self.data = None
 
     def update(self):
-        """Get the latest data from REST service with GET method."""
+        """Get the latest data from REST service with provided method."""
         try:
             with requests.Session() as sess:
                 response = sess.send(

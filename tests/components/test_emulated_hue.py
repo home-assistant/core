@@ -1,44 +1,24 @@
 """The tests for the emulated Hue component."""
-import time
 import json
-import threading
-import asyncio
 
 import unittest
 import requests
 
 from homeassistant import bootstrap, const, core
 import homeassistant.components as core_components
-from homeassistant.components import emulated_hue, http, light, mqtt
+from homeassistant.components import emulated_hue, http, light
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.emulated_hue import (
     HUE_API_STATE_ON, HUE_API_STATE_BRI)
+from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import get_test_instance_port, get_test_home_assistant
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
-MQTT_BROKER_PORT = get_test_instance_port()
 
 BRIDGE_URL_BASE = "http://127.0.0.1:{}".format(BRIDGE_SERVER_PORT) + "{}"
 JSON_HEADERS = {const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON}
-
-mqtt_broker = None
-
-
-def setUpModule():
-    """Setup things to be run when tests are started."""
-    global mqtt_broker
-
-    mqtt_broker = MQTTBroker('127.0.0.1', MQTT_BROKER_PORT)
-    mqtt_broker.start()
-
-
-def tearDownModule():
-    """Stop everything that was started."""
-    global mqtt_broker
-
-    mqtt_broker.stop()
 
 
 def setup_hass_instance(emulated_hue_config):
@@ -46,7 +26,9 @@ def setup_hass_instance(emulated_hue_config):
     hass = get_test_home_assistant()
 
     # We need to do this to get access to homeassistant/turn_(on,off)
-    core_components.setup(hass, {core.DOMAIN: {}})
+    run_coroutine_threadsafe(
+        core_components.async_setup(hass, {core.DOMAIN: {}}), hass.loop
+    ).result()
 
     bootstrap.setup_component(
         hass, http.DOMAIN,
@@ -60,7 +42,6 @@ def setup_hass_instance(emulated_hue_config):
 def start_hass_instance(hass):
     """Start the Home Assistant instance to test."""
     hass.start()
-    time.sleep(0.05)
 
 
 class TestEmulatedHue(unittest.TestCase):
@@ -140,41 +121,10 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             }
         })
 
-        bootstrap.setup_component(cls.hass, mqtt.DOMAIN, {
-            'mqtt': {
-                'broker': '127.0.0.1',
-                'port': MQTT_BROKER_PORT
-            }
-        })
-
         bootstrap.setup_component(cls.hass, light.DOMAIN, {
             'light': [
                 {
-                    'platform': 'mqtt',
-                    'name': 'Office light',
-                    'state_topic': 'office/rgb1/light/status',
-                    'command_topic': 'office/rgb1/light/switch',
-                    'brightness_state_topic': 'office/rgb1/brightness/status',
-                    'brightness_command_topic': 'office/rgb1/brightness/set',
-                    'optimistic': True
-                },
-                {
-                    'platform': 'mqtt',
-                    'name': 'Bedroom light',
-                    'state_topic': 'bedroom/rgb1/light/status',
-                    'command_topic': 'bedroom/rgb1/light/switch',
-                    'brightness_state_topic': 'bedroom/rgb1/brightness/status',
-                    'brightness_command_topic': 'bedroom/rgb1/brightness/set',
-                    'optimistic': True
-                },
-                {
-                    'platform': 'mqtt',
-                    'name': 'Kitchen light',
-                    'state_topic': 'kitchen/rgb1/light/status',
-                    'command_topic': 'kitchen/rgb1/light/switch',
-                    'brightness_state_topic': 'kitchen/rgb1/brightness/status',
-                    'brightness_command_topic': 'kitchen/rgb1/brightness/set',
-                    'optimistic': True
+                    'platform': 'demo',
                 }
             ]
         })
@@ -182,7 +132,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         start_hass_instance(cls.hass)
 
         # Kitchen light is explicitly excluded from being exposed
-        kitchen_light_entity = cls.hass.states.get('light.kitchen_light')
+        kitchen_light_entity = cls.hass.states.get('light.kitchen_lights')
         attrs = dict(kitchen_light_entity.attributes)
         attrs[emulated_hue.ATTR_EMULATED_HUE] = False
         cls.hass.states.set(
@@ -205,9 +155,9 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         result_json = result.json()
 
         # Make sure the lights we added to the config are there
-        self.assertTrue('light.office_light' in result_json)
-        self.assertTrue('light.bedroom_light' in result_json)
-        self.assertTrue('light.kitchen_light' not in result_json)
+        self.assertTrue('light.ceiling_lights' in result_json)
+        self.assertTrue('light.bed_light' in result_json)
+        self.assertTrue('light.kitchen_lights' not in result_json)
 
     def test_get_light_state(self):
         """Test the getting of light state."""
@@ -215,12 +165,12 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.hass.services.call(
             light.DOMAIN, const.SERVICE_TURN_ON,
             {
-                const.ATTR_ENTITY_ID: 'light.office_light',
+                const.ATTR_ENTITY_ID: 'light.ceiling_lights',
                 light.ATTR_BRIGHTNESS: 127
             },
             blocking=True)
 
-        office_json = self.perform_get_light_state('light.office_light', 200)
+        office_json = self.perform_get_light_state('light.ceiling_lights', 200)
 
         self.assertEqual(office_json['state'][HUE_API_STATE_ON], True)
         self.assertEqual(office_json['state'][HUE_API_STATE_BRI], 127)
@@ -229,17 +179,17 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.hass.services.call(
             light.DOMAIN, const.SERVICE_TURN_OFF,
             {
-                const.ATTR_ENTITY_ID: 'light.bedroom_light'
+                const.ATTR_ENTITY_ID: 'light.bed_light'
             },
             blocking=True)
 
-        bedroom_json = self.perform_get_light_state('light.bedroom_light', 200)
+        bedroom_json = self.perform_get_light_state('light.bed_light', 200)
 
         self.assertEqual(bedroom_json['state'][HUE_API_STATE_ON], False)
         self.assertEqual(bedroom_json['state'][HUE_API_STATE_BRI], 0)
 
         # Make sure kitchen light isn't accessible
-        kitchen_url = '/api/username/lights/{}'.format('light.kitchen_light')
+        kitchen_url = '/api/username/lights/{}'.format('light.kitchen_lights')
         kitchen_result = requests.get(
             BRIDGE_URL_BASE.format(kitchen_url), timeout=5)
 
@@ -247,22 +197,22 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
     def test_put_light_state(self):
         """Test the seeting of light states."""
-        self.perform_put_test_on_office_light()
+        self.perform_put_test_on_ceiling_lights()
 
         # Turn the bedroom light on first
         self.hass.services.call(
             light.DOMAIN, const.SERVICE_TURN_ON,
-            {const.ATTR_ENTITY_ID: 'light.bedroom_light',
+            {const.ATTR_ENTITY_ID: 'light.bed_light',
              light.ATTR_BRIGHTNESS: 153},
             blocking=True)
 
-        bedroom_light = self.hass.states.get('light.bedroom_light')
-        self.assertEqual(bedroom_light.state, STATE_ON)
-        self.assertEqual(bedroom_light.attributes[light.ATTR_BRIGHTNESS], 153)
+        bed_light = self.hass.states.get('light.bed_light')
+        self.assertEqual(bed_light.state, STATE_ON)
+        self.assertEqual(bed_light.attributes[light.ATTR_BRIGHTNESS], 153)
 
         # Go through the API to turn it off
         bedroom_result = self.perform_put_light_state(
-            'light.bedroom_light', False)
+            'light.bed_light', False)
 
         bedroom_result_json = bedroom_result.json()
 
@@ -273,8 +223,8 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(len(bedroom_result_json), 1)
 
         # Check to make sure the state changed
-        bedroom_light = self.hass.states.get('light.bedroom_light')
-        self.assertEqual(bedroom_light.state, STATE_OFF)
+        bed_light = self.hass.states.get('light.bed_light')
+        self.assertEqual(bed_light.state, STATE_OFF)
 
         # Make sure we can't change the kitchen light state
         kitchen_result = self.perform_put_light_state(
@@ -284,15 +234,15 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
     def test_put_with_form_urlencoded_content_type(self):
         """Test the form with urlencoded content."""
         # Needed for Alexa
-        self.perform_put_test_on_office_light(
+        self.perform_put_test_on_ceiling_lights(
             'application/x-www-form-urlencoded')
 
         # Make sure we fail gracefully when we can't parse the data
         data = {'key1': 'value1', 'key2': 'value2'}
         result = requests.put(
             BRIDGE_URL_BASE.format(
-                '/api/username/lights/{}/state'.format("light.office_light")),
-            data=data)
+                '/api/username/lights/{}/state'.format(
+                    "light.ceiling_lights")), data=data)
 
         self.assertEqual(result.status_code, 400)
 
@@ -316,13 +266,14 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         """Test the allowed methods."""
         result = requests.get(
             BRIDGE_URL_BASE.format(
-                '/api/username/lights/{}/state'.format("light.office_light")))
+                '/api/username/lights/{}/state'.format(
+                    "light.ceiling_lights")))
 
         self.assertEqual(result.status_code, 405)
 
         result = requests.put(
             BRIDGE_URL_BASE.format(
-                '/api/username/lights/{}'.format("light.office_light")),
+                '/api/username/lights/{}'.format("light.ceiling_lights")),
             data={'key1': 'value1'})
 
         self.assertEqual(result.status_code, 405)
@@ -338,37 +289,38 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         # Test proper on value parsing
         result = requests.put(
             BRIDGE_URL_BASE.format(
-                '/api/username/lights/{}/state'.format("light.office_light")),
-            data=json.dumps({HUE_API_STATE_ON: 1234}))
+                '/api/username/lights/{}/state'.format(
+                    "light.ceiling_lights")),
+                data=json.dumps({HUE_API_STATE_ON: 1234}))
 
         self.assertEqual(result.status_code, 400)
 
         # Test proper brightness value parsing
         result = requests.put(
             BRIDGE_URL_BASE.format(
-                '/api/username/lights/{}/state'.format("light.office_light")),
-            data=json.dumps({
-                HUE_API_STATE_ON: True,
-                HUE_API_STATE_BRI: 'Hello world!'
-            }))
+                '/api/username/lights/{}/state'.format(
+                    "light.ceiling_lights")), data=json.dumps({
+                        HUE_API_STATE_ON: True,
+                        HUE_API_STATE_BRI: 'Hello world!'
+                    }))
 
         self.assertEqual(result.status_code, 400)
 
-    def perform_put_test_on_office_light(self,
-                                         content_type='application/json'):
+    def perform_put_test_on_ceiling_lights(self,
+                                           content_type='application/json'):
         """Test the setting of a light."""
         # Turn the office light off first
         self.hass.services.call(
             light.DOMAIN, const.SERVICE_TURN_OFF,
-            {const.ATTR_ENTITY_ID: 'light.office_light'},
+            {const.ATTR_ENTITY_ID: 'light.ceiling_lights'},
             blocking=True)
 
-        office_light = self.hass.states.get('light.office_light')
-        self.assertEqual(office_light.state, STATE_OFF)
+        ceiling_lights = self.hass.states.get('light.ceiling_lights')
+        self.assertEqual(ceiling_lights.state, STATE_OFF)
 
         # Go through the API to turn it on
         office_result = self.perform_put_light_state(
-            'light.office_light', True, 56, content_type)
+            'light.ceiling_lights', True, 56, content_type)
 
         office_result_json = office_result.json()
 
@@ -379,9 +331,9 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(len(office_result_json), 2)
 
         # Check to make sure the state changed
-        office_light = self.hass.states.get('light.office_light')
-        self.assertEqual(office_light.state, STATE_ON)
-        self.assertEqual(office_light.attributes[light.ATTR_BRIGHTNESS], 56)
+        ceiling_lights = self.hass.states.get('light.ceiling_lights')
+        self.assertEqual(ceiling_lights.state, STATE_ON)
+        self.assertEqual(ceiling_lights.attributes[light.ATTR_BRIGHTNESS], 56)
 
     def perform_get_light_state(self, entity_id, expected_status):
         """Test the gettting of a light state."""
@@ -414,59 +366,5 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         result = requests.put(
             url, data=json.dumps(data), timeout=5, headers=req_headers)
+
         return result
-
-
-class MQTTBroker(object):
-    """Encapsulates an embedded MQTT broker."""
-
-    def __init__(self, host, port):
-        """Initialize a new instance."""
-        from hbmqtt.broker import Broker
-
-        self._loop = asyncio.new_event_loop()
-
-        hbmqtt_config = {
-            'listeners': {
-                'default': {
-                    'max-connections': 50000,
-                    'type': 'tcp',
-                    'bind': '{}:{}'.format(host, port)
-                }
-            },
-            'auth': {
-                'plugins': ['auth.anonymous'],
-                'allow-anonymous': True
-            }
-        }
-
-        self._broker = Broker(config=hbmqtt_config, loop=self._loop)
-
-        self._thread = threading.Thread(target=self._run_loop)
-        self._started_ev = threading.Event()
-
-    def start(self):
-        """Start the broker."""
-        self._thread.start()
-        self._started_ev.wait()
-
-    def stop(self):
-        """Stop the broker."""
-        self._loop.call_soon_threadsafe(asyncio.async, self._broker.shutdown())
-        self._loop.call_soon_threadsafe(self._loop.stop)
-        self._thread.join()
-
-    def _run_loop(self):
-        """Run the loop."""
-        asyncio.set_event_loop(self._loop)
-        self._loop.run_until_complete(self._broker_coroutine())
-
-        self._started_ev.set()
-
-        self._loop.run_forever()
-        self._loop.close()
-
-    @asyncio.coroutine
-    def _broker_coroutine(self):
-        """The Broker coroutine."""
-        yield from self._broker.start()

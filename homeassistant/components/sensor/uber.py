@@ -64,7 +64,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-# pylint: disable=too-few-public-methods
 class UberSensor(Entity):
     """Implementation of an Uber sensor."""
 
@@ -154,7 +153,6 @@ class UberSensor(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data from the Uber API and update the states."""
         self.data.update()
@@ -171,11 +169,9 @@ class UberSensor(Entity):
                 self._state = 0
 
 
-# pylint: disable=too-few-public-methods
 class UberEstimate(object):
     """The class for handling the time and price estimate."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, session, start_latitude, start_longitude,
                  end_latitude=None, end_longitude=None):
         """Initialize the UberEstimate object."""

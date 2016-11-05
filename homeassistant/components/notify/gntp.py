@@ -55,11 +55,9 @@ def get_service(hass, config):
                                    config.get(CONF_PORT))
 
 
-# pylint: disable=too-few-public-methods
 class GNTPNotificationService(BaseNotificationService):
     """Implement the notification service for GNTP."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, app_name, app_icon, hostname, password, port):
         """Initialize the service."""
         import gntp.notifier

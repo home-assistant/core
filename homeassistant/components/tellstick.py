@@ -2,7 +2,7 @@
 Tellstick Component.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/Tellstick/
+https://home-assistant.io/components/tellstick/
 """
 import logging
 import threading

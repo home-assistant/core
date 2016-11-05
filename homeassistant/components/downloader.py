@@ -38,7 +38,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=too-many-branches
 def setup(hass, config):
     """Listen for download events to download files."""
     download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]

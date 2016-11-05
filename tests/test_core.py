@@ -1,6 +1,5 @@
 """Test to verify that Home Assistant core works."""
-# pylint: disable=protected-access,too-many-public-methods
-# pylint: disable=too-few-public-methods
+# pylint: disable=protected-access
 import asyncio
 import unittest
 from unittest.mock import patch, MagicMock
@@ -57,7 +56,7 @@ def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
     ha.HomeAssistant.async_add_job(hass, job)
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
-    assert len(hass.add_job.mock_calls) == 1
+    assert len(hass.pool.add_job.mock_calls) == 1
 
 
 def test_async_run_job_calls_callback():
@@ -89,11 +88,13 @@ def test_async_run_job_delegates_non_async():
 class TestHomeAssistant(unittest.TestCase):
     """Test the Home Assistant core classes."""
 
-    def setUp(self):     # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(0)
+        self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -163,18 +164,20 @@ class TestEvent(unittest.TestCase):
 class TestEventBus(unittest.TestCase):
     """Test EventBus methods."""
 
-    def setUp(self):     # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.bus = self.hass.bus
-        self.bus.listen('test_event', lambda x: len)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down stuff we started."""
         self.hass.stop()
 
     def test_add_remove_listener(self):
         """Test remove_listener method."""
+        self.hass.allow_pool = False
         old_count = len(self.bus.listeners)
 
         def listener(_): pass
@@ -192,8 +195,10 @@ class TestEventBus(unittest.TestCase):
 
     def test_unsubscribe_listener(self):
         """Test unsubscribe listener from returned function."""
+        self.hass.allow_pool = False
         calls = []
 
+        @ha.callback
         def listener(event):
             """Mock listener."""
             calls.append(event)
@@ -214,6 +219,7 @@ class TestEventBus(unittest.TestCase):
 
     def test_listen_once_event_with_callback(self):
         """Test listen_once_event method."""
+        self.hass.allow_pool = False
         runs = []
 
         @ha.callback
@@ -231,6 +237,7 @@ class TestEventBus(unittest.TestCase):
 
     def test_listen_once_event_with_coroutine(self):
         """Test listen_once_event method."""
+        self.hass.allow_pool = False
         runs = []
 
         @asyncio.coroutine
@@ -276,6 +283,7 @@ class TestEventBus(unittest.TestCase):
 
     def test_callback_event_listener(self):
         """Test a  event listener listeners."""
+        self.hass.allow_pool = False
         callback_calls = []
 
         @ha.callback
@@ -289,6 +297,7 @@ class TestEventBus(unittest.TestCase):
 
     def test_coroutine_event_listener(self):
         """Test a  event listener listeners."""
+        self.hass.allow_pool = False
         coroutine_calls = []
 
         @asyncio.coroutine
@@ -360,14 +369,17 @@ class TestState(unittest.TestCase):
 class TestStateMachine(unittest.TestCase):
     """Test State machine methods."""
 
-    def setUp(self):    # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(0)
+        self.hass = get_test_home_assistant()
         self.states = self.hass.states
         self.states.set("light.Bowl", "on")
         self.states.set("switch.AC", "off")
+        self.hass.allow_pool = False
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down stuff we started."""
         self.hass.stop()
 
@@ -408,8 +420,12 @@ class TestStateMachine(unittest.TestCase):
     def test_remove(self):
         """Test remove method."""
         events = []
-        self.hass.bus.listen(EVENT_STATE_CHANGED,
-                             lambda event: events.append(event))
+
+        @ha.callback
+        def callback(event):
+            events.append(event)
+
+        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
 
         self.assertIn('light.bowl', self.states.entity_ids())
         self.assertTrue(self.states.remove('light.bowl'))
@@ -431,8 +447,11 @@ class TestStateMachine(unittest.TestCase):
         """Test insensitivty."""
         runs = []
 
-        self.hass.bus.listen(EVENT_STATE_CHANGED,
-                             lambda event: runs.append(event))
+        @ha.callback
+        def callback(event):
+            runs.append(event)
+
+        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
 
         self.states.set('light.BOWL', 'off')
         self.hass.block_till_done()
@@ -457,7 +476,12 @@ class TestStateMachine(unittest.TestCase):
     def test_force_update(self):
         """Test force update option."""
         events = []
-        self.hass.bus.listen(EVENT_STATE_CHANGED, lambda ev: events.append(ev))
+
+        @ha.callback
+        def callback(event):
+            events.append(event)
+
+        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
 
         self.states.set('light.bowl', 'on')
         self.hass.block_till_done()
@@ -485,18 +509,21 @@ class TestServiceCall(unittest.TestCase):
 class TestServiceRegistry(unittest.TestCase):
     """Test ServicerRegistry methods."""
 
-    def setUp(self):     # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.services = self.hass.services
         self.services.register("Test_Domain", "TEST_SERVICE", lambda x: None)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down stuff we started."""
         self.hass.stop()
 
     def test_has_service(self):
         """Test has_service method."""
+        self.hass.allow_pool = False
         self.assertTrue(
             self.services.has_service("tesT_domaiN", "tesT_servicE"))
         self.assertFalse(
@@ -506,6 +533,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_services(self):
         """Test services."""
+        self.hass.allow_pool = False
         expected = {
             'test_domain': {'test_service': {'description': '', 'fields': {}}}
         }
@@ -528,6 +556,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_call_non_existing_with_blocking(self):
         """Test non-existing with blocking."""
+        self.hass.allow_pool = False
         prior = ha.SERVICE_CALL_LIMIT
         try:
             ha.SERVICE_CALL_LIMIT = 0.01
@@ -538,6 +567,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_async_service(self):
         """Test registering and calling an async service."""
+        self.hass.allow_pool = False
         calls = []
 
         @asyncio.coroutine
@@ -554,6 +584,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_callback_service(self):
         """Test registering and calling an async service."""
+        self.hass.allow_pool = False
         calls = []
 
         @ha.callback
@@ -572,7 +603,8 @@ class TestServiceRegistry(unittest.TestCase):
 class TestConfig(unittest.TestCase):
     """Test configuration methods."""
 
-    def setUp(self):     # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.config = ha.Config()
         self.assertIsNone(self.config.config_dir)
@@ -621,8 +653,9 @@ class TestWorkerPool(unittest.TestCase):
         def register_call(_):
             calls.append(1)
 
-        pool.add_job(ha.JobPriority.EVENT_DEFAULT, (malicious_job, None))
-        pool.add_job(ha.JobPriority.EVENT_DEFAULT, (register_call, None))
+        pool.add_job((malicious_job, None))
+        pool.block_till_done()
+        pool.add_job((register_call, None))
         pool.block_till_done()
         self.assertEqual(1, len(calls))
 

@@ -35,7 +35,6 @@ def get_service(hass, config):
     return AutomateNotificationService(secret, recipient, device)
 
 
-# pylint: disable=too-few-public-methods
 class AutomateNotificationService(BaseNotificationService):
     """Implement the notification service for LlamaLab Automate."""
 

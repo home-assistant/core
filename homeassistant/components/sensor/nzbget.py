@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument, too-many-locals
+# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the NZBGet sensors."""
     host = config.get(CONF_HOST)
@@ -61,9 +61,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     url = "http://{}:{}/jsonrpc".format(host, port)
 
     try:
-        nzbgetapi = NZBGetAPI(api_url=url,
-                              username=username,
-                              password=password)
+        nzbgetapi = NZBGetAPI(
+            api_url=url, username=username, password=password)
         nzbgetapi.update()
     except (requests.exceptions.ConnectionError,
             requests.exceptions.HTTPError) as conn_err:
@@ -72,9 +71,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     devices = []
     for ng_type in monitored_types:
-        new_sensor = NZBGetSensor(api=nzbgetapi,
-                                  sensor_type=SENSOR_TYPES.get(ng_type),
-                                  client_name=name)
+        new_sensor = NZBGetSensor(
+            api=nzbgetapi, sensor_type=SENSOR_TYPES.get(ng_type),
+            client_name=name)
         devices.append(new_sensor)
 
     add_devices(devices)
@@ -159,11 +158,9 @@ class NZBGetAPI(object):
         if params:
             payload['params'] = params
         try:
-            response = requests.post(self.api_url,
-                                     json=payload,
-                                     auth=self.auth,
-                                     headers=self.headers,
-                                     timeout=5)
+            response = requests.post(
+                self.api_url, json=payload, auth=self.auth,
+                headers=self.headers, timeout=5)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.ConnectionError as conn_exc:

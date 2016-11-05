@@ -4,16 +4,18 @@ Support for displaying the minimal and the maximal value.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.min_max/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, STATE_UNKNOWN, CONF_TYPE, ATTR_UNIT_OF_MEASUREMENT)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ ATTR_TO_PROPERTY = [
 
 CONF_ENTITY_IDS = 'entity_ids'
 
-DEFAULT_NAME = 'Min/Max Sensor'
+DEFAULT_NAME = 'Min/Max/Avg Sensor'
 
 ICON = 'mdi:calculator'
 
@@ -49,16 +51,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the min/max sensor."""
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set up the min/max/mean sensor."""
     entity_ids = config.get(CONF_ENTITY_IDS)
     name = config.get(CONF_NAME)
     sensor_type = config.get(CONF_TYPE)
 
-    add_devices([MinMaxSensor(hass, entity_ids, name, sensor_type)])
+    hass.loop.create_task(async_add_devices(
+        [MinMaxSensor(hass, entity_ids, name, sensor_type)], True))
+    return True
 
 
-# pylint: disable=too-many-instance-attributes
 class MinMaxSensor(Entity):
     """Representation of a min/max sensor."""
 
@@ -74,9 +78,10 @@ class MinMaxSensor(Entity):
         self.min_value = self.max_value = self.mean = STATE_UNKNOWN
         self.count_sensors = len(self._entity_ids)
         self.states = {}
-        self.update()
 
-        def min_max_sensor_state_listener(entity, old_state, new_state):
+        @callback
+        # pylint: disable=invalid-name
+        def async_min_max_sensor_state_listener(entity, old_state, new_state):
             """Called when the sensor changes state."""
             if new_state.state is None or new_state.state in STATE_UNKNOWN:
                 return
@@ -95,9 +100,10 @@ class MinMaxSensor(Entity):
                 _LOGGER.warning("Unable to store state. "
                                 "Only numerical states are supported")
 
-            self.update_ha_state(True)
+            hass.loop.create_task(self.async_update_ha_state(True))
 
-        track_state_change(hass, entity_ids, min_max_sensor_state_listener)
+        async_track_state_change(
+            hass, entity_ids, async_min_max_sensor_state_listener)
 
     @property
     def name(self):
@@ -134,7 +140,8 @@ class MinMaxSensor(Entity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data and updates the states."""
         sensor_values = [self.states[k] for k in self._entity_ids
                          if k in self.states]

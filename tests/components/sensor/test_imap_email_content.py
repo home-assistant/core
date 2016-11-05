@@ -178,7 +178,7 @@ class EmailContentSensor(unittest.TestCase):
         sensor.entity_id = "sensor.emailtest"
         sensor.update()
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         states_received.wait(5)
 
         self.assertEqual("Test Message", states[0].state)

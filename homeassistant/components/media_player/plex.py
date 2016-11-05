@@ -60,7 +60,6 @@ def config_from_file(filename, config=None):
             return {}
 
 
-# pylint: disable=abstract-method
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Plex platform."""
     config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))
@@ -83,7 +82,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     setup_plexserver(host, token, hass, add_devices_callback)
 
 
-# pylint: disable=too-many-branches
 def setup_plexserver(host, token, hass, add_devices_callback):
     """Setup a plexserver based on host parameter."""
     import plexapi.server
@@ -183,7 +181,7 @@ def request_configuration(host, hass, add_devices_callback):
     _CONFIGURING[host] = configurator.request_config(
         hass, 'Plex Media Server', plex_configuration_callback,
         description=('Enter the X-Plex-Token'),
-        description_image='/static/images/config_plex_mediaserver.png',
+        entity_picture='/static/images/logo_plex_mediaserver.png',
         submit_caption='Confirm',
         fields=[{'id': 'token', 'name': 'X-Plex-Token', 'type': ''}]
     )
@@ -192,7 +190,7 @@ def request_configuration(host, hass, add_devices_callback):
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    # pylint: disable=too-many-public-methods, attribute-defined-outside-init
+    # pylint: disable=attribute-defined-outside-init
     def __init__(self, device, plex_sessions, update_devices, update_sessions):
         """Initialize the Plex device."""
         from plexapi.utils import NA

@@ -32,17 +32,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
 
-    if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL) \
-            and value.index == 0:
+    if (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
+            and value.index == 0):
         value.set_change_verified(False)
         add_devices([ZwaveRollershutter(value)])
-    elif node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_BINARY) or \
-            node.has_command_class(zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
-        if value.type != zwave.const.TYPE_BOOL and \
-           value.genre != zwave.const.GENRE_USER:
-            return
-        value.set_change_verified(False)
-        add_devices([ZwaveGarageDoor(value)])
+    elif value.node.specific == zwave.const.GENERIC_TYPE_ENTRY_CONTROL:
+        if (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_BINARY or
+                value.command_class ==
+                zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
+            if (value.type != zwave.const.TYPE_BOOL and
+                    value.genre != zwave.const.GENRE_USER):
+                return
+            value.set_change_verified(False)
+            add_devices([ZwaveGarageDoor(value)])
     else:
         return
 
@@ -122,7 +124,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
                'Open' or value.command_class == \
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Down':
+               'Up':
                 self._lozwmgr.pressButton(value.value_id)
                 break
 
@@ -132,7 +134,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                 class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == \
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Up' or value.command_class == \
+               'Down' or value.command_class == \
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
                'Close':
                 self._lozwmgr.pressButton(value.value_id)

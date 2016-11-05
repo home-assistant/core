@@ -4,20 +4,21 @@ Support for local control of entities by emulating the Phillips Hue bridge.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/emulated_hue/
 """
+import asyncio
 import threading
 import socket
 import logging
-import json
 import os
 import select
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util, core
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    STATE_ON, HTTP_BAD_REQUEST
+    STATE_ON, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_SUPPORTED_FEATURES, SUPPORT_BRIGHTNESS
@@ -25,8 +26,6 @@ from homeassistant.components.light import (
 from homeassistant.components.http import (
     HomeAssistantView, HomeAssistantWSGI
 )
-# pylint: disable=unused-import
-from homeassistant.components.http import REQUIREMENTS   # noqa
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'emulated_hue'
@@ -87,24 +86,25 @@ def setup(hass, yaml_config):
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr, config.listen_port)
 
-    def start_emulated_hue_bridge(event):
-        """Start the emulated hue bridge."""
-        server.start()
-        upnp_listener.start()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
-
+    @asyncio.coroutine
     def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
         upnp_listener.stop()
-        server.stop()
+        yield from server.stop()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
+    @asyncio.coroutine
+    def start_emulated_hue_bridge(event):
+        """Start the emulated hue bridge."""
+        upnp_listener.start()
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                   stop_emulated_hue_bridge)
+        yield from server.start()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
 
     return True
 
 
-# pylint: disable=too-few-public-methods
 class Config(object):
     """Holds configuration variables for the emulated hue bridge."""
 
@@ -158,6 +158,7 @@ class DescriptionXmlView(HomeAssistantView):
         super().__init__(hass)
         self.config = config
 
+    @core.callback
     def get(self, request):
         """Handle a GET request."""
         xml_template = """<?xml version="1.0" encoding="UTF-8" ?>
@@ -185,7 +186,7 @@ class DescriptionXmlView(HomeAssistantView):
         resp_text = xml_template.format(
             self.config.host_ip_addr, self.config.listen_port)
 
-        return self.Response(resp_text, mimetype='text/xml')
+        return web.Response(text=resp_text, content_type='text/xml')
 
 
 class HueUsernameView(HomeAssistantView):
@@ -200,9 +201,13 @@ class HueUsernameView(HomeAssistantView):
         """Initialize the instance of the view."""
         super().__init__(hass)
 
+    @asyncio.coroutine
     def post(self, request):
         """Handle a POST request."""
-        data = request.json
+        try:
+            data = yield from request.json()
+        except ValueError:
+            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
         if 'devicetype' not in data:
             return self.json_message('devicetype not specified',
@@ -214,10 +219,10 @@ class HueUsernameView(HomeAssistantView):
 class HueLightsView(HomeAssistantView):
     """Handle requests for getting and setting info about entities."""
 
-    url = '/api/<username>/lights'
+    url = '/api/{username}/lights'
     name = 'api:username:lights'
-    extra_urls = ['/api/<username>/lights/<entity_id>',
-                  '/api/<username>/lights/<entity_id>/state']
+    extra_urls = ['/api/{username}/lights/{entity_id}',
+                  '/api/{username}/lights/{entity_id}/state']
     requires_auth = False
 
     def __init__(self, hass, config):
@@ -226,58 +231,51 @@ class HueLightsView(HomeAssistantView):
         self.config = config
         self.cached_states = {}
 
+    @core.callback
     def get(self, request, username, entity_id=None):
         """Handle a GET request."""
         if entity_id is None:
-            return self.get_lights_list()
+            return self.async_get_lights_list()
 
-        if not request.base_url.endswith('state'):
-            return self.get_light_state(entity_id)
+        if not request.path.endswith('state'):
+            return self.async_get_light_state(entity_id)
 
-        return self.Response("Method not allowed", status=405)
+        return web.Response(text="Method not allowed", status=405)
 
+    @asyncio.coroutine
     def put(self, request, username, entity_id=None):
         """Handle a PUT request."""
-        if not request.base_url.endswith('state'):
-            return self.Response("Method not allowed", status=405)
+        if not request.path.endswith('state'):
+            return web.Response(text="Method not allowed", status=405)
 
-        content_type = request.environ.get('CONTENT_TYPE', '')
-        if content_type == 'application/x-www-form-urlencoded':
-            # Alexa sends JSON data with a form data content type, for
-            # whatever reason, and Werkzeug parses form data automatically,
-            # so we need to do some gymnastics to get the data we need
-            json_data = None
+        if entity_id and self.hass.states.get(entity_id) is None:
+            return self.json_message('Entity not found', HTTP_NOT_FOUND)
 
-            for key in request.form:
-                try:
-                    json_data = json.loads(key)
-                    break
-                except ValueError:
-                    # Try the next key?
-                    pass
+        try:
+            json_data = yield from request.json()
+        except ValueError:
+            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
-            if json_data is None:
-                return self.Response("Bad request", status=400)
-        else:
-            json_data = request.json
+        result = yield from self.async_put_light_state(json_data, entity_id)
+        return result
 
-        return self.put_light_state(json_data, entity_id)
-
-    def get_lights_list(self):
+    @core.callback
+    def async_get_lights_list(self):
         """Process a request to get the list of available lights."""
         json_response = {}
 
-        for entity in self.hass.states.all():
+        for entity in self.hass.states.async_all():
             if self.is_entity_exposed(entity):
                 json_response[entity.entity_id] = entity_to_json(entity)
 
         return self.json(json_response)
 
-    def get_light_state(self, entity_id):
+    @core.callback
+    def async_get_light_state(self, entity_id):
         """Process a request to get the state of an individual light."""
         entity = self.hass.states.get(entity_id)
         if entity is None or not self.is_entity_exposed(entity):
-            return self.Response("Entity not found", status=404)
+            return web.Response(text="Entity not found", status=404)
 
         cached_state = self.cached_states.get(entity_id, None)
 
@@ -292,23 +290,24 @@ class HueLightsView(HomeAssistantView):
 
         return self.json(json_response)
 
-    def put_light_state(self, request_json, entity_id):
+    @asyncio.coroutine
+    def async_put_light_state(self, request_json, entity_id):
         """Process a request to set the state of an individual light."""
         config = self.config
 
         # Retrieve the entity from the state machine
         entity = self.hass.states.get(entity_id)
         if entity is None:
-            return self.Response("Entity not found", status=404)
+            return web.Response(text="Entity not found", status=404)
 
         if not self.is_entity_exposed(entity):
-            return self.Response("Entity not found", status=404)
+            return web.Response(text="Entity not found", status=404)
 
         # Parse the request into requested "on" status and brightness
         parsed = parse_hue_api_put_light_body(request_json, entity)
 
         if parsed is None:
-            return self.Response("Bad request", status=400)
+            return web.Response(text="Bad request", status=400)
 
         result, brightness = parsed
 
@@ -333,7 +332,8 @@ class HueLightsView(HomeAssistantView):
             self.cached_states[entity_id] = (result, brightness)
 
         # Perform the requested action
-        self.hass.services.call(core.DOMAIN, service, data, blocking=True)
+        yield from self.hass.services.async_call(core.DOMAIN, service, data,
+                                                 blocking=True)
 
         json_response = \
             [create_hue_success_response(entity_id, HUE_API_STATE_ON, result)]
@@ -345,7 +345,10 @@ class HueLightsView(HomeAssistantView):
         return self.json(json_response)
 
     def is_entity_exposed(self, entity):
-        """Determine if an entity should be exposed on the emulated bridge."""
+        """Determine if an entity should be exposed on the emulated bridge.
+
+        Async friendly.
+        """
         config = self.config
 
         if entity.attributes.get('view') is not None:

@@ -49,7 +49,6 @@ def get_scanner(hass, config):
 class SnmpScanner(object):
     """Queries any SNMP capable Access Point for connected devices."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, config):
         """Initialize the scanner."""
         from pysnmp.entity.rfc3413.oneliner import cmdgen

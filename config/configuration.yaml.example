@@ -1,7 +1,7 @@
 homeassistant:
   # Omitted values in this section will be auto detected using freegeoip.io
 
-  # Location required to calculate the time the sun rises and sets.  
+  # Location required to calculate the time the sun rises and sets.
   # Coordinates are also used for location for weather related components.
   # Google Maps can be used to determine more precise GPS coordinates.
   latitude: 32.87336
@@ -43,12 +43,10 @@ device_tracker:
   username: admin
   password: PASSWORD
 
-chromecast:
-
 switch:
   platform: wemo
 
-thermostat:
+climate:
   platform: nest
   # Required: username and password that are used to login to the Nest thermostat.
   username: myemail@mydomain.com
@@ -79,7 +77,6 @@ group:
     entities:
       - group.awesome_people
       - group.climate
-
   kitchen:
     name: Kitchen
     entities:
@@ -92,52 +89,23 @@ group:
       - input_boolean.notify_home
       - camera.demo_camera
 
-example:
-
-simple_alarm:
-  # Which light/light group has to flash when a known device comes home
-  known_light: light.Bowl
-  # Which light/light group has to flash red when light turns on while no one home
-  unknown_light: group.living_room
-
 browser:
-
 keyboard:
 
 # https://home-assistant.io/getting-started/automation/
 automation:
-- alias: 'Rule 1 Light on in the evening'
-  trigger:
-    - platform: sun
+  - alias: Turn on light when sun sets
+    trigger:
+      platform: sun
       event: sunset
       offset: "-01:00:00"
-    - platform: state
+    condition:
+      condition: state
       entity_id: group.all_devices
-      state: home
-  condition:
-    - platform: state
-      entity_id: group.all_devices
-      state: home
-    - platform: time
-      after: "16:00:00"
-      before: "23:00:00"
-  action:
-    service: homeassistant.turn_on
-    entity_id: group.living_room
+      state: 'home'
+    action:
+      service: light.turn_on
 
-- alias: 'Rule 2 - Away Mode'
-  trigger:
-   - platform: state
-     entity_id: group.all_devices
-     state: 'not_home'
-
-  condition: use_trigger_values
-  action:
-     service: light.turn_off
-     entity_id: group.all_lights
-
-# Sensors need to be added into the configuration.yaml as sensor:, sensor 2:, sensor 3:, etc. 
-# Each sensor label should be unique or your sensors might not load correctly.
 # Another way to do is to collect all entries under one "sensor:"
 # sensor:
 #   - platform: mqtt
@@ -154,34 +122,30 @@ sensor:
       arg: '/'
     - type: 'disk_use_percent'
       arg: '/home'
-    - type: 'disk_use'
-      arg: '/home'
 
 sensor 2:
-  platform: forecast
-  api_key: <register on Forecast.io for your PRIVATE API>
-  monitored_conditions:
-    - summary
-    - precip_type
-    - precip_intensity
-    - temperature
+  platform: cpuspeed
 
 script:
-  # Turns on the bedroom lights and then the living room lights 1 minute later
   wakeup:
     alias: Wake Up
     sequence:
-      # alias is optional
+      - event: LOGBOOK_ENTRY
+        event_data:
+          name: Paulus
+          message: is waking up
+          entity_id: device_tracker.paulus
+          domain: light
       - alias: Bedroom lights on
-        execute_service: light.turn_on
-        service_data:
+        service: light.turn_on
+        data:
           entity_id: group.bedroom
+          brightness: 100
       - delay:
-          # supports seconds, milliseconds, minutes, hours, etc.
           minutes: 1
       - alias: Living room lights on
-        execute_service: light.turn_on
-        service_data:
+        service: light.turn_on
+        data:
           entity_id: group.living_room
 
 scene:

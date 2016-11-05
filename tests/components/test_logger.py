@@ -2,10 +2,11 @@
 from collections import namedtuple
 import logging
 import unittest
-from unittest.mock import MagicMock
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import logger
+
+from tests.common import get_test_home_assistant
 
 RECORD = namedtuple('record', ('name', 'levelno'))
 
@@ -15,18 +16,18 @@ class TestUpdater(unittest.TestCase):
 
     def setUp(self):
         """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
         self.log_config = {'logger':
                            {'default': 'warning', 'logs': {'test': 'info'}}}
 
     def tearDown(self):
         """Stop everything that was started."""
         del logging.root.handlers[-1]
+        self.hass.stop()
 
     def test_logger_setup(self):
         """Use logger to create a logging filter."""
-        hass = MagicMock()
-        hass.pool.worker_count = 2
-        setup_component(hass, logger.DOMAIN, self.log_config)
+        setup_component(self.hass, logger.DOMAIN, self.log_config)
 
         self.assertTrue(len(logging.root.handlers) > 0)
         handler = logging.root.handlers[-1]
@@ -39,9 +40,7 @@ class TestUpdater(unittest.TestCase):
 
     def test_logger_test_filters(self):
         """Test resulting filter operation."""
-        hass = MagicMock()
-        hass.pool.worker_count = 2
-        setup_component(hass, logger.DOMAIN, self.log_config)
+        setup_component(self.hass, logger.DOMAIN, self.log_config)
 
         log_filter = logging.root.handlers[-1].filters[0]
 

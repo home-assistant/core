@@ -55,8 +55,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_CODE))])
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
-# pylint: disable=abstract-method
 class MqttAlarm(alarm.AlarmControlPanel):
     """Representation of a MQTT alarm status."""
 
