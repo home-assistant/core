@@ -11,7 +11,7 @@ from IPython import embed
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_STRUCTURE)
+from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_STRUCTURE, CONF_FILENAME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +20,8 @@ REQUIREMENTS = ['python-nest==2.11.0']
 DOMAIN = 'nest'
 
 DATA_NEST = 'nest'
+
+NEST_CONFIG_FILE = 'nest.conf'
 
 
 CONFIG_SCHEMA = vol.Schema({
@@ -39,8 +41,11 @@ def setup(hass, config):
     conf = config[DOMAIN]
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
+    filename = config.get(CONF_FILENAME, NEST_CONFIG_FILE)
 
-    nest = nest.Nest(username, password)
+    access_token_cache_file = hass.config.path(filename)
+
+    nest = nest.Nest(username, password, access_token_cache_file=access_token_cache_file)
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
 
     return True
