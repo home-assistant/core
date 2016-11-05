@@ -54,10 +54,16 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         self._code = str(code) if code else None
         self._username = username
         self._password = password
+        self._state = STATE_UNKNOWN
 
     @property
     def should_poll(self):
         """No polling needed."""
+        return True
+
+    def update(self):
+        """Fetch the latest state"""
+        self._state = self._alarm.state
         return True
 
     @property
@@ -73,11 +79,11 @@ class AlarmDotCom(alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._alarm.state == 'Disarmed':
+        if self._state == 'Disarmed':
             return STATE_ALARM_DISARMED
-        elif self._alarm.state == 'Armed Stay':
+        elif self._state == 'Armed Stay':
             return STATE_ALARM_ARMED_HOME
-        elif self._alarm.state == 'Armed Away':
+        elif self._state == 'Armed Away':
             return STATE_ALARM_ARMED_AWAY
         else:
             return STATE_UNKNOWN
