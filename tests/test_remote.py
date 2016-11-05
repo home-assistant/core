@@ -116,6 +116,7 @@ class TestRemoteMethods(unittest.TestCase):
         """Test Python API fire_event."""
         test_value = []
 
+        @ha.callback
         def listener(event):
             """Helper method that will verify our event got called."""
             test_value.append(1)
@@ -200,6 +201,7 @@ class TestRemoteMethods(unittest.TestCase):
         """Test Python API services.call."""
         test_value = []
 
+        @ha.callback
         def listener(service_call):
             """Helper method that will verify that our service got called."""
             test_value.append(1)
