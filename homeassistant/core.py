@@ -210,7 +210,6 @@ class HomeAssistant(object):
         if asyncio.iscoroutine(target):
             task = self.loop.create_task(target)
         elif is_callback(target):
-            self.loop.call_soon(target, *args)
             task = asyncio.Task.current_task(loop=self.loop)
         elif asyncio.iscoroutinefunction(target):
             task = self.loop.create_task(target(*args))
@@ -220,6 +219,10 @@ class HomeAssistant(object):
         # if a task is sheduled
         if task is not None:
             self._pending_tasks.add(task)
+
+        # call callback after sheduled the task
+        if is_callback(target):
+            self.loop.call_soon(target, *args)
 
     @callback
     def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
