@@ -218,4 +218,5 @@ class YrData(object):
                 dev._state = new_state
                 tasks.append(dev.async_update_ha_state())
 
-        yield from asyncio.gather(*tasks, loop=self.hass.loop)
+        if tasks:
+            yield from asyncio.wait(tasks, loop=self.hass.loop)

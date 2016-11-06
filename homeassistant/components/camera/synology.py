@@ -144,7 +144,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             tasks.append(device.async_read_sid())
             devices.append(device)
 
-    yield from asyncio.gather(*tasks, loop=hass.loop)
+    yield from asyncio.wait(tasks, loop=hass.loop)
     hass.loop.create_task(async_add_devices(devices))
 
 
