@@ -59,8 +59,8 @@ class NestThermostat(ClimateDevice):
             self._operation_list.append(STATE_AUTO)
 
         # feature of device
-        self._has_humidifier = self.device.has_humidifier
-        self._has_dehumidifier = self.device.has_dehumidifier
+        #self._has_humidifier = self.device.has_humidifier
+        #self._has_dehumidifier = self.device.has_dehumidifier
         self._has_fan = self.device.has_fan
 
         # data attributes
@@ -68,20 +68,21 @@ class NestThermostat(ClimateDevice):
         self._location = None
         self._name = None
         self._humidity = None
-        self._target_humidity = None
+        #self._target_humidity = None
         self._target_temperature = None
         self._temperature = None
         self._mode = None
         self._fan = None
         self._away_temperature = None
 
+    # FIXME ends up with double name, ie Hallway(Hallway (E5C0))
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        if self._location is None:
+        if self._location is None or self._location == self._name:
             return self._name
         else:
-            if self._name == '':
+            if self._name == '': 
                 return self._location.capitalize()
             else:
                 return self._location.capitalize() + '(' + self._name + ')'
@@ -91,18 +92,19 @@ class NestThermostat(ClimateDevice):
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
-    @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        if self._has_humidifier or self._has_dehumidifier:
-            # Move these to Thermostat Device and make them global
-            return {
-                "humidity": self._humidity,
-                "target_humidity": self._target_humidity,
-            }
-        else:
-            # No way to control humidity not show setting
-            return {}
+    # FIXME new API doesn't expose humidifier info
+    #@property
+    #def device_state_attributes(self):
+    #    """Return the device specific state attributes."""
+    #    if self._has_humidifier or self._has_dehumidifier:
+    #        # Move these to Thermostat Device and make them global
+    #        return {
+    #            "humidity": self._humidity,
+    #            "target_humidity": self._target_humidity,
+    #        }
+    #    else:
+    #        # No way to control humidity not show setting
+    #        return {}
 
     @property
     def current_temperature(self):
@@ -237,7 +239,7 @@ class NestThermostat(ClimateDevice):
         self._location = self.device.where
         self._name = self.device.name
         self._humidity = self.device.humidity,
-        self._target_humidity = self.device.target_humidity,
+        #self._target_humidity = self.device.target_humidity,
         self._temperature = self.device.temperature
         self._mode = self.device.mode
         self._target_temperature = self.device.target

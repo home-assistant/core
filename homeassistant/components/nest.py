@@ -11,7 +11,7 @@ from IPython import embed
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_STRUCTURE, CONF_FILENAME)
+from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_STRUCTURE, CONF_FILENAME, CONF_ACCESS_TOKEN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_ACCESS_TOKEN): cv.string,
         vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string)
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -41,11 +42,12 @@ def setup(hass, config):
     conf = config[DOMAIN]
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
+    access_token = conf[CONF_ACCESS_TOKEN]
     filename = config.get(CONF_FILENAME, NEST_CONFIG_FILE)
 
     access_token_cache_file = hass.config.path(filename)
 
-    nest = nest.Nest(username, password, access_token_cache_file=access_token_cache_file)
+    nest = nest.Nest(username, password, access_token=access_token, access_token_cache_file=access_token_cache_file)
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
 
     return True
@@ -97,7 +99,7 @@ class NestDevice(object):
         """Generator returning list of camera devices."""
         try:
             for structure in self.nest.structures:
-                if structure.name in self._structure
+                if structure.name in self._structure:
                     for device in structure.cameradevices:
                         yield(structure, device)
                 else:
