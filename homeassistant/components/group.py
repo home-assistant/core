@@ -395,7 +395,7 @@ class Group(Entity):
         This method must be run in the event loop.
         """
         self._async_update_group_state(new_state)
-        self.hass.loop.create_task(self.async_update_ha_state())
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def _tracking_states(self):
