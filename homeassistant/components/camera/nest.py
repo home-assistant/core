@@ -28,7 +28,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a generic IP Camera."""
     add_devices([NestCamera(structure, device)
-                 for structure, device in nest.camera_devices()])
+                 for structure, device in hass.data[nest.DATA_NEST].camera_devices()])
 
 
 class NestCamera(Camera):
@@ -39,16 +39,48 @@ class NestCamera(Camera):
         super().__init__()
         self.structure = structure
         self.device = device
-        print(device.snapshot_url)
-        embed()
+
+        # data attributes
+        self._location = None
+        self._name = None
+        self._is_online = None
+        
+
+    # FIXME ends up with double name, ie Hallway(Hallway (E5C0))
+    # FIXME duplication with climate/nest
+    @property
+    def name(self):
+        """Return the name of the nest, if any."""
+        self.update()
+        if self._location is None or self._location == self._name:
+            return self._name
+        else:
+            if self._name == '': 
+                return self._location.capitalize()
+            else:
+                return self._location.capitalize() + '(' + self._name + ')'
+    @property
+    def is_recording(self):
+        """Return true if the device is recording."""
+        return self._is_online
+
+    def update(self):
+        """Cache value from Python-nest."""
+        self._location = self.device.where
+        self._name = self.device.name
+        self._is_online = self.device.is_online
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def camera_image(self):
         """Return a still image response from the camera."""
         url = self.device.snapshot_url
+        # sadly, can't test against a simulator
+        if url == 'https://developer.nest.com/simulator/api/v1/nest/devices/camera/snapshot':
+            url = 'http://i.imgur.com/2CPHwxn.jpg'
+
         try:
             response = requests.get(url)
-            print(response.content)
+            #embed()
         except requests.exceptions.RequestException as error:
             _LOGGER.error('Error getting camera image: %s', error)
             return None
