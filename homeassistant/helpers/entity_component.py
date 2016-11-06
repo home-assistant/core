@@ -7,7 +7,7 @@ from homeassistant.bootstrap import (
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
-from homeassistant.core import callback
+from homeassistant.core import callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform, discovery
@@ -189,6 +189,14 @@ class EntityComponent(object):
             entity.entity_id = async_generate_entity_id(
                 self.entity_id_format, object_id,
                 self.entities.keys())
+
+        # Make sure it is valid in case an entity set the value themselves
+        if entity.entity_id in self.entities:
+            raise HomeAssistantError(
+                'Entity id already exists: {}'.format(entity.entity_id))
+        elif not valid_entity_id(entity.entity_id):
+            raise HomeAssistantError(
+                'Invalid entity id: {}'.format(entity.entity_id))
 
         self.entities[entity.entity_id] = entity
         yield from entity.async_update_ha_state()
