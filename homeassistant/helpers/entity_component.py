@@ -349,7 +349,7 @@ class EntityPlatform(object):
             self._async_unsub_polling()
             self._async_unsub_polling = None
 
-    @callback
+    @asyncio.coroutine
     def _update_entity_states(self, now):
         """Update the states of all the polling entities.
 
@@ -364,11 +364,18 @@ class EntityPlatform(object):
             tasks = []
             for entity in self.platform_entities:
                 if entity.should_poll:
-                    tasks.append(self.component.hass.async_add_job(
+                    task = self.component.hass.async_add_job(
                         entity.async_update_ha_state(True)
-                    ))
+                    )
+
+                    if hasattr(entity, 'async_update'):
+                        tasks.append(task)
+                    else:
+                        # wait for protect executor
+                        yield from asyncio.wait(
+                            [task], loop=self.component.hass.loop)
 
             if tasks:
-                asyncio.wait(tasks, loop=self.component.hass.loop)
+                yield from asyncio.wait(tasks, loop=self.component.hass.loop)
         finally:
             self._process_updates = False
