@@ -19,7 +19,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['lightify==1.0.3']
+REQUIREMENTS = ['https://github.com/tfriedel/python-lightify/archive/master.zip#lightify==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +92,7 @@ class OsramLightifyLight(Light):
         self._light = light
         self._light_id = light_id
         self.update_lights = update_lights
+        self._brightness = int(self._light.lum() * 2.55)
 
     @property
     def name(self):
@@ -101,6 +102,9 @@ class OsramLightifyLight(Light):
     @property
     def rgb_color(self):
         """Last RGB color value set."""
+        _LOGGER.debug("rgb_color light state for light: %s is: %s %s %s ",
+                      self._light.name(), self._light.red(),
+                      self._light.green(), self._light.blue())
         return self._light.rgb()
 
     @property
@@ -114,7 +118,10 @@ class OsramLightifyLight(Light):
     @property
     def brightness(self):
         """Brightness of this light between 0..255."""
-        return int(self._light.lum() * 2.55)
+        self._light.brightness = (self._light.lum() * 2.55)
+        _LOGGER.debug("brightness for light %s is: %s",
+                      self._light.name(), self._light.brightness)
+        return self._light.brightness
 
     @property
     def is_on(self):
@@ -131,45 +138,68 @@ class OsramLightifyLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        brightness = 100
-        if self.brightness:
-            brightness = int(self.brightness / 2.55)
+        _LOGGER.debug("turn_on Attempting to turn on light: %s ",
+                      self._light.name())
+
+        self._light.set_onoff(1)
+        self._state = self._light.on()
 
         if ATTR_TRANSITION in kwargs:
-            fade = kwargs[ATTR_TRANSITION] * 10
+            transition = kwargs[ATTR_TRANSITION] * 10
+            _LOGGER.debug("turn_on requested transition time for light: %s is: %s ",
+                          self._light.name(), transition)
         else:
-            fade = 0
+            transition = 0
+            _LOGGER.debug("turn_on requested transition time for light: %s is: %s ",
+                          self._light.name(), transition)
 
         if ATTR_RGB_COLOR in kwargs:
             red, green, blue = kwargs[ATTR_RGB_COLOR]
-            self._light.set_rgb(red, green, blue, fade)
-
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = int(kwargs[ATTR_BRIGHTNESS] / 2.55)
+            _LOGGER.debug("turn_on requested ATTR_RGB_COLOR for light: %s is: %s %s %s ",
+                          self._light.name, red, green, blue)
+            self._light.set_rgb(red, green, blue, transition)
 
         if ATTR_COLOR_TEMP in kwargs:
             color_t = kwargs[ATTR_COLOR_TEMP]
-            kelvin = int(((TEMP_MAX - TEMP_MIN) * (color_t - TEMP_MIN_HASS) /
-                          (TEMP_MAX_HASS - TEMP_MIN_HASS)) + TEMP_MIN)
-            self._light.set_temperature(kelvin, fade)
+            kelvin = int(((TEMP_MAX - TEMP_MIN) * (color_t - TEMP_MIN_HASS) / (TEMP_MAX_HASS - TEMP_MIN_HASS)) + TEMP_MIN)
+            _LOGGER.debug("turn_on requested set_temperature for light: %s: %s ",
+                          self._light.name, kelvin)
+            self._light.set_temperature(kelvin, transition)
 
-        effect = kwargs.get(ATTR_EFFECT)
-        if effect == EFFECT_RANDOM:
-            self._light.set_rgb(random.randrange(0, 255),
-                                random.randrange(0, 255),
-                                random.randrange(0, 255),
-                                fade)
+        if ATTR_BRIGHTNESS in kwargs:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
+            _LOGGER.debug("turn_on requested brightness for light: %s is: %s ",
+                          self._light.name, self._brightness)
+            self._brightness = self._light.set_luminance(int(self._brightness / 2.55), transition)
 
-        self._light.set_luminance(brightness, fade)
+        if ATTR_EFFECT in kwargs:
+            effect = kwargs.get(ATTR_EFFECT)
+            if effect == EFFECT_RANDOM:
+                self._light.set_rgb(random.randrange(0, 255),
+                                    random.randrange(0, 255),
+                                    random.randrange(0, 255),
+                                    transition)
+                _LOGGER.debug("turn_on requested random effect for light: %s with transition %s ",
+                              self._light.name, transition)
+
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
+        _LOGGER.debug("turn_off Attempting to turn off light: %s ",
+                      self._light.name)
         if ATTR_TRANSITION in kwargs:
-            fade = kwargs[ATTR_TRANSITION] * 10
+            transition = kwargs[ATTR_TRANSITION] * 10
+            _LOGGER.debug("turn_off requested transition time for light: %s is: %s ",
+                          self._light.name, transition)
+            self._light.set_luminance(0, transition)
         else:
-            fade = 0
-        self._light.set_luminance(0, fade)
+            transition = 0
+            _LOGGER.debug("turn_off requested transition time for light: %s is: %s ",
+                          self._light.name, transition)
+            self._light.set_onoff(0)
+            self._state = self._light.on()
+
         self.update_ha_state()
 
     def update(self):
