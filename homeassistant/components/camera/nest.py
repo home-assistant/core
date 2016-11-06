@@ -45,6 +45,7 @@ class NestCamera(Camera):
         self._location = None
         self._name = None
         self._is_online = None
+        self._is_video_history_enabled = False
         
 
     # FIXME ends up with double name, ie Hallway(Hallway (E5C0))
@@ -70,6 +71,7 @@ class NestCamera(Camera):
         self._location = self.device.where
         self._name = self.device.name
         self._is_online = self.device.is_online
+        self._is_video_history_enabled = self.device.is_video_history_enabled
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def camera_image(self):
