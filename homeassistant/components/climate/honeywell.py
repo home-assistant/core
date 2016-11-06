@@ -223,7 +223,6 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        self._device.refresh()
         return self._device.current_temperature
 
     @property
@@ -274,3 +273,7 @@ class HoneywellUSThermostat(ClimateDevice):
         """Set the system mode (Cool, Heat, etc)."""
         if hasattr(self._device, ATTR_SYSTEM_MODE):
             self._device.system_mode = operation_mode
+
+    def update(self):
+        """Update the state."""
+        self._device.refresh()
