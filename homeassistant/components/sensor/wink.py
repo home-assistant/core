@@ -6,8 +6,7 @@ at https://home-assistant.io/components/sensor.wink/
 """
 import logging
 
-from homeassistant.const import (
-    STATE_CLOSED, STATE_OPEN, TEMP_CELSIUS)
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.wink import WinkDevice
 from homeassistant.loader import get_component
@@ -51,38 +50,35 @@ class WinkSensorDevice(WinkDevice, Entity):
     @property
     def state(self):
         """Return the state."""
+        state = None
         if self.capability == 'humidity':
-            return round(self.wink.humidity_percentage())
+            if self.wink.humidity_percentage() is not None:
+                state = round(self.wink.humidity_percentage())
         elif self.capability == 'temperature':
-            return round(self.wink.temperature_float(), 1)
+            if self.wink.temperature_float() is not None:
+                state = round(self.wink.temperature_float(), 1)
         elif self.capability == 'balance':
-            return round(self.wink.balance() / 100, 2)
+            if self.wink.balance() is not None:
+                state = round(self.wink.balance() / 100, 2)
         elif self.capability == 'proximity':
-            return self.wink.proximity_float()
+            if self.wink.proximity_float() is not None:
+                state = self.wink.proximity_float()
         else:
-            return STATE_OPEN if self.is_open else STATE_CLOSED
+            # A sensor should never get here, anything that does
+            # will require an update to python-wink
+            logging.getLogger(__name__).error("Please report this as an issue")
+            state = None
+        return state
 
     @property
     def available(self):
-        """
-        True if connection == True.
-
-        Always return true for Wink porkfolio due to
-        bug in API.
-        """
-        if self.capability == 'balance':
-            return True
+        """True if connection == True."""
         return self.wink.available
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
-
-    @property
-    def is_open(self):
-        """Return true if door is open."""
-        return self.wink.state()
 
 
 class WinkEggMinder(WinkDevice, Entity):
