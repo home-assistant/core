@@ -111,7 +111,7 @@ class WinkDevice(Entity):
         try:
             self.wink.pubnub_update(json.loads(message))
             self.update_ha_state()
-        except (AttributeError, KeyError):
+        except (AttributeError, KeyError, AttributeError):
             error = "Pubnub returned invalid json for " + self.name
             logging.getLogger(__name__).error(error)
             self.update_ha_state(True)
