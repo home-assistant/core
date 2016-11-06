@@ -19,8 +19,11 @@ SENSOR_TYPES = ['humidity',
                 'operation_mode',
                 'last_ip',
                 'local_ip',
-                'last_connection',
-                'battery_level']
+                'last_connection']
+
+# FIXME detect these being used
+SENSOR_TYPES_DEPRECATED = ['battery_health'] # no longer available on the nest thermostat
+
 
 WEATHER_VARS = {'weather_humidity': 'humidity',
                 'weather_temperature': 'temperature',
@@ -33,7 +36,10 @@ SENSOR_UNITS = {'humidity': '%', 'battery_level': 'V',
 
 PROTECT_VARS = ['co_status',
                 'smoke_status',
-                'battery_level']
+                'battery_health']
+
+# FIXME detect these being used
+PROTECT_VARS_DEPRECATED = ['battery_level']
 
 SENSOR_TEMP_TYPES = ['temperature', 'target']
 
@@ -191,18 +197,7 @@ class NestProtectSensor(NestSensor):
 
     def update(self):
         """Retrieve latest state."""
-        state = getattr(self.device, self.variable)
-        if self.variable == 'battery_level':
-            self._state = getattr(self.device, self.variable)
-        else:
-            if state == 0:
-                self._state = 'Ok'
-            if state == 1 or state == 2:
-                self._state = 'Warning'
-            if state == 3:
-                self._state = 'Emergency'
-
-        self._state = 'Unknown'
+        self._state = getattr(self.device, self.variable).capitalize()
 
     @property
     def name(self):
