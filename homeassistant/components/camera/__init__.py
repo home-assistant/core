@@ -101,7 +101,6 @@ class Camera(Entity):
 
         response.content_type = ('multipart/x-mixed-replace; '
                                  'boundary=--jpegboundary')
-        response.enable_chunked_encoding()
         yield from response.prepare(request)
 
         def write(img_bytes):
