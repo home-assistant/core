@@ -6,7 +6,7 @@ import requests
 
 from homeassistant import bootstrap, const, core
 import homeassistant.components as core_components
-from homeassistant.components import emulated_hue, http, light
+from homeassistant.components import emulated_hue, http, light, script
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.emulated_hue import (
     HUE_API_STATE_ON, HUE_API_STATE_BRI)
@@ -129,6 +129,22 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             ]
         })
 
+        bootstrap.setup_component(cls.hass, script.DOMAIN, {
+          'script': {
+            'set_kitchen_light': {
+              'sequence': [
+                {
+                  'service_template': "light.turn_{{ requested_state }}",
+                  'data_template': {
+                    'entity_id': 'light.kitchen_lights',
+                    'brightness': "{{ requested_level }}"
+                  }
+                }
+              ]
+            }
+          }
+        })
+
         start_hass_instance(cls.hass)
 
         # Kitchen light is explicitly excluded from being exposed
@@ -138,6 +154,14 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         cls.hass.states.set(
             kitchen_light_entity.entity_id, kitchen_light_entity.state,
             attributes=attrs)
+
+        # Expose the script
+        script_entity = cls.hass.states.get('script.set_kitchen_light')
+        attrs = dict(script_entity.attributes)
+        attrs[emulated_hue.ATTR_EMULATED_HUE] = True
+        cls.hass.states.set(
+            script_entity.entity_id, script_entity.state, attributes=attrs
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -157,6 +181,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         # Make sure the lights we added to the config are there
         self.assertTrue('light.ceiling_lights' in result_json)
         self.assertTrue('light.bed_light' in result_json)
+        self.assertTrue('script.set_kitchen_light' in result_json)
         self.assertTrue('light.kitchen_lights' not in result_json)
 
     def test_get_light_state(self):
@@ -230,6 +255,35 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         kitchen_result = self.perform_put_light_state(
             'light.kitchen_light', True)
         self.assertEqual(kitchen_result.status_code, 404)
+
+    def test_put_light_state_script(self):
+        """Test the setting of script variables."""
+        # Turn the kitchen light off first
+        self.hass.services.call(
+            light.DOMAIN, const.SERVICE_TURN_OFF,
+            {const.ATTR_ENTITY_ID: 'light.kitchen_lights'},
+            blocking=True)
+
+        # Emulated hue converts 0-100% to 0-255.
+        level = 23
+        brightness = round(level * 255 / 100)
+
+        script_result = self.perform_put_light_state(
+            'script.set_kitchen_light', True, brightness)
+
+        script_result_json = script_result.json()
+
+        self.assertEqual(script_result.status_code, 200)
+        self.assertEqual(len(script_result_json), 2)
+
+        # Wait until script is complete before continuing
+        self.hass.block_till_done()
+
+        kitchen_light = self.hass.states.get('light.kitchen_lights')
+        self.assertEqual(kitchen_light.state, 'on')
+        self.assertEqual(
+            kitchen_light.attributes[light.ATTR_BRIGHTNESS],
+            level)
 
     def test_put_with_form_urlencoded_content_type(self):
         """Test the form with urlencoded content."""
