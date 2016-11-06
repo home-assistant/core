@@ -250,6 +250,7 @@ class HomeAssistant(object):
     @asyncio.coroutine
     def async_block_till_done(self):
         """Block till all pending work is done."""
+        count = 0
         while True:
             # Wait for the pending tasks are down
             if len(self._pending_tasks) > 0:
@@ -258,6 +259,9 @@ class HomeAssistant(object):
             # Verify the loop is empty
             ret = yield from self.loop.run_in_executor(None, self._loop_empty)
             if ret:
+                count += 1
+
+            if count == 2:
                 break
 
     def stop(self) -> None:
