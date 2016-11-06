@@ -71,14 +71,15 @@ class EntityComponent(object):
         for p_type, p_config in config_per_platform(config, self.domain):
             tasks.append(self._async_setup_platform(p_type, p_config))
 
-        yield from asyncio.gather(*tasks, loop=self.hass.loop)
+        if tasks:
+            yield from asyncio.wait(tasks, loop=self.hass.loop)
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.components.discovery.load_platform()
         @callback
         def component_platform_discovered(platform, info):
             """Callback to load a platform."""
-            self.hass.loop.create_task(
+            self.hass.async_add_job(
                 self._async_setup_platform(platform, {}, info))
 
         discovery.async_listen_platform(
@@ -237,7 +238,8 @@ class EntityComponent(object):
         tasks = [platform.async_reset() for platform
                  in self._platforms.values()]
 
-        yield from asyncio.gather(*tasks, loop=self.hass.loop)
+        if tasks:
+            yield from asyncio.wait(tasks, loop=self.hass.loop)
 
         self._platforms = {
             'core': self._platforms['core']
@@ -301,14 +303,14 @@ class EntityPlatform(object):
 
         This method must be run in the event loop.
         """
+        # handle empty list from component/platform
+        if not new_entities:
+            return
+
         tasks = [self._async_process_entity(entity, update_before_add)
                  for entity in new_entities]
 
-        # handle empty list from component/platform
-        if not tasks:
-            return
-
-        yield from asyncio.gather(*tasks, loop=self.component.hass.loop)
+        yield from asyncio.wait(tasks, loop=self.component.hass.loop)
         yield from self.component.async_update_group()
 
         if self._async_unsub_polling is not None or \
@@ -335,9 +337,12 @@ class EntityPlatform(object):
 
         This method must be run in the event loop.
         """
+        if not self.platform_entities:
+            return
+
         tasks = [entity.async_remove() for entity in self.platform_entities]
 
-        yield from asyncio.gather(*tasks, loop=self.component.hass.loop)
+        yield from asyncio.wait(tasks, loop=self.component.hass.loop)
 
         if self._async_unsub_polling is not None:
             self._async_unsub_polling()
@@ -351,6 +356,6 @@ class EntityPlatform(object):
         """
         for entity in self.platform_entities:
             if entity.should_poll:
-                self.component.hass.loop.create_task(
+                self.component.hass.async_add_job(
                     entity.async_update_ha_state(True)
                 )
