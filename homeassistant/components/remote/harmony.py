@@ -14,7 +14,6 @@ from homeassistant.components.remote import PLATFORM_SCHEMA
 from homeassistant.util import slugify
 import homeassistant.components.remote as remote
 import homeassistant.helpers.config_validation as cv
-import pyharmony
 import voluptuous as vol
 
 
@@ -37,6 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Harmony platform."""
+    import pyharmony
+
     name = config.get(CONF_NAME)
     _LOGGER.info('Loading Harmony component: ' + name)
 
@@ -65,6 +66,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
     def __init__(self, name, username, pw, host, port, activity, path, token):
         """Initialize HarmonyRemote class."""
+        import pyharmony
         self._name = name
         self._email = username
         self._password = pw
@@ -108,6 +110,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
     def update(self):
         """Return current activity."""
+        import pyharmony
         state = pyharmony.ha_get_current_activity(self._token,
                                                   self._config,
                                                   self._ip,
@@ -120,6 +123,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
     def turn_on(self, **kwargs):
         """Start an activity from the Harmony device."""
+        import pyharmony
         if not kwargs[ATTR_ACTIVITY]:
             activity = self._default_activity
         else:
@@ -134,14 +138,17 @@ class HarmonyRemote(remote.RemoteDevice):
 
     def turn_off(self):
         """Start the PowerOff activity."""
+        import pyharmony
         pyharmony.ha_power_off(self._token, self._ip, self._port)
 
     def send_command(self, **kwargs):
         """Send a command to one device."""
+        import pyharmony
         pyharmony.ha_send_command(self._token, self._ip,
                                   self._port, kwargs[ATTR_DEVICE],
                                   kwargs[ATTR_COMMAND])
 
     def sync(self):
         """Sync the Harmony device with the web service."""
+        import pyharmony
         pyharmony.ha_sync(self._token, self._ip, self._port)
