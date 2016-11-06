@@ -113,7 +113,7 @@ fixerio==0.1.1
 freesms==0.1.0
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.12.0
+fuzzywuzzy==0.14.0
 
 # homeassistant.components.device_tracker.bluetooth_le_tracker
 # gattlib==0.20150805
