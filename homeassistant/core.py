@@ -207,7 +207,9 @@ class HomeAssistant(object):
         """
         task = None
 
-        if is_callback(target):
+        if asyncio.iscoroutine(target):
+            task = self.loop.create_task(target)
+        elif is_callback(target):
             self.loop.call_soon(target, *args)
         elif asyncio.iscoroutinefunction(target):
             task = self.loop.create_task(target(*args))
@@ -252,8 +254,9 @@ class HomeAssistant(object):
         """Block till all pending work is done."""
         while True:
             # Wait for the pending tasks are down
-            if len(self._pending_tasks) > 0:
-                yield from asyncio.wait(self._pending_tasks, loop=self.loop)
+            pending = list(self._pending_tasks)
+            if len(pending) > 0:
+                yield from asyncio.wait(pending, loop=self.loop)
 
             # Verify the loop is empty
             ret = yield from self.loop.run_in_executor(None, self._loop_empty)
