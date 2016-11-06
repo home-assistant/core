@@ -19,7 +19,8 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/tfriedel/python-lightify/archive/master.zip#lightify==0.0.4']
+REQUIREMENTS = ['https://github.com/tfriedel/python-lightify/archive/'
+                'master.zip#lightify==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,31 +147,37 @@ class OsramLightifyLight(Light):
 
         if ATTR_TRANSITION in kwargs:
             transition = kwargs[ATTR_TRANSITION] * 10
-            _LOGGER.debug("turn_on requested transition time for light: %s is: %s ",
+            _LOGGER.debug("turn_on requested transition time for light:"
+                          " %s is: %s ",
                           self._light.name(), transition)
         else:
             transition = 0
-            _LOGGER.debug("turn_on requested transition time for light: %s is: %s ",
+            _LOGGER.debug("turn_on requested transition time for light:"
+                          " %s is: %s ",
                           self._light.name(), transition)
 
         if ATTR_RGB_COLOR in kwargs:
             red, green, blue = kwargs[ATTR_RGB_COLOR]
-            _LOGGER.debug("turn_on requested ATTR_RGB_COLOR for light: %s is: %s %s %s ",
+            _LOGGER.debug("turn_on requested ATTR_RGB_COLOR for light:"
+                          " %s is: %s %s %s ",
                           self._light.name, red, green, blue)
             self._light.set_rgb(red, green, blue, transition)
 
         if ATTR_COLOR_TEMP in kwargs:
             color_t = kwargs[ATTR_COLOR_TEMP]
-            kelvin = int(((TEMP_MAX - TEMP_MIN) * (color_t - TEMP_MIN_HASS) / (TEMP_MAX_HASS - TEMP_MIN_HASS)) + TEMP_MIN)
-            _LOGGER.debug("turn_on requested set_temperature for light: %s: %s ",
-                          self._light.name, kelvin)
+            kelvin = int(((TEMP_MAX - TEMP_MIN) * (color_t - TEMP_MIN_HASS) /
+                (TEMP_MAX_HASS - TEMP_MIN_HASS)) + TEMP_MIN)
+            _LOGGER.debug("turn_on requested set_temperature for light:"
+                          " %s: %s ", self._light.name, kelvin)
             self._light.set_temperature(kelvin, transition)
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             _LOGGER.debug("turn_on requested brightness for light: %s is: %s ",
                           self._light.name, self._brightness)
-            self._brightness = self._light.set_luminance(int(self._brightness / 2.55), transition)
+            self._brightness = self._light.set_luminance(
+                int(self._brightness / 2.55),
+                transition)
 
         if ATTR_EFFECT in kwargs:
             effect = kwargs.get(ATTR_EFFECT)
@@ -179,7 +186,8 @@ class OsramLightifyLight(Light):
                                     random.randrange(0, 255),
                                     random.randrange(0, 255),
                                     transition)
-                _LOGGER.debug("turn_on requested random effect for light: %s with transition %s ",
+                _LOGGER.debug("turn_on requested random effect for light:"
+                              " %s with transition %s ",
                               self._light.name, transition)
 
         self.update_ha_state()
@@ -190,12 +198,14 @@ class OsramLightifyLight(Light):
                       self._light.name)
         if ATTR_TRANSITION in kwargs:
             transition = kwargs[ATTR_TRANSITION] * 10
-            _LOGGER.debug("turn_off requested transition time for light: %s is: %s ",
+            _LOGGER.debug("turn_off requested transition time for light:"
+                          " %s is: %s ",
                           self._light.name, transition)
             self._light.set_luminance(0, transition)
         else:
             transition = 0
-            _LOGGER.debug("turn_off requested transition time for light: %s is: %s ",
+            _LOGGER.debug("turn_off requested transition time for light:"
+                          " %s is: %s ",
                           self._light.name, transition)
             self._light.set_onoff(0)
             self._state = self._light.on()
