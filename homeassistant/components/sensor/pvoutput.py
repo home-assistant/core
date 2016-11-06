@@ -30,9 +30,7 @@ ATTR_VOLTAGE = 'voltage'
 
 CONF_SYSTEM_ID = 'system_id'
 
-DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'PVOutput'
-DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -42,18 +40,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the PVOutput sensor."""
+    """Set up the PVOutput sensor."""
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
     system_id = config.get(CONF_SYSTEM_ID)
     method = 'GET'
-    payload = None
-    auth = None
+    payload = verify_ssl = auth = None
     headers = {
         'X-Pvoutput-Apikey': api_key,
         'X-Pvoutput-SystemId': system_id,
     }
-    verify_ssl = DEFAULT_VERIFY_SSL
 
     rest = RestData(method, _ENDPOINT, auth, headers, payload, verify_ssl)
     rest.update()
@@ -100,8 +96,6 @@ class PvoutputSensor(Entity):
         """Return the state attributes of the Pi-Hole."""
         if self.pvcoutput is not None:
             return {
-                ATTR_DATE: self.pvcoutput.date,
-                ATTR_TIME: self.pvcoutput.time,
                 ATTR_POWER_GENERATION: self.pvcoutput.power_generation,
                 ATTR_ENERGY_CONSUMPTION: self.pvcoutput.energy_consumption,
                 ATTR_POWER_CONSUMPTION: self.pvcoutput.power_consumption,
