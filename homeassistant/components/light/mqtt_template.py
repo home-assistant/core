@@ -86,6 +86,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class MqttTemplate(Light):
     """Representation of a MQTT Template light."""
+
     def __init__(self, hass, name, topics, templates, optimistic, qos, retain):
         """Initialize MQTT Template light."""
         self._hass = hass
@@ -139,12 +140,15 @@ class MqttTemplate(Light):
             # read color
             if self._rgb is not None:
                 try:
-                    self._rgb[0] = int(self._templates[CONF_RED_TEMPLATE].
-                                       render_with_possible_json_value(payload))
-                    self._rgb[1] = int(self._templates[CONF_GREEN_TEMPLATE].
-                                       render_with_possible_json_value(payload))
-                    self._rgb[2] = int(self._templates[CONF_BLUE_TEMPLATE].
-                                       render_with_possible_json_value(payload))
+                    self._rgb[0] = int(
+                        self._templates[CONF_RED_TEMPLATE].
+                        render_with_possible_json_value(payload))
+                    self._rgb[1] = int(
+                        self._templates[CONF_GREEN_TEMPLATE].
+                        render_with_possible_json_value(payload))
+                    self._rgb[2] = int(
+                        self._templates[CONF_BLUE_TEMPLATE].
+                        render_with_possible_json_value(payload))
                 except ValueError:
                     _LOGGER.warning('Invalid color value received')
 

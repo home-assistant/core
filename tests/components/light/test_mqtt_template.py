@@ -107,9 +107,12 @@ class TestLightMQTTTemplate(unittest.TestCase):
                     'command_off_template': 'off',
                     'state_template': '{{ value.split(",")[0] }}',
                     'brightness_template': '{{ value.split(",")[1] }}',
-                    'red_template': '{{ value.split(",")[2].split("-")[0] }}',
-                    'green_template': '{{ value.split(",")[2].split("-")[1] }}',
-                    'blue_template': '{{ value.split(",")[2].split("-")[2] }}'
+                    'red_template': '{{ value.split(",")[2].'
+                                    'split("-")[0] }}',
+                    'green_template': '{{ value.split(",")[2].'
+                                      'split("-")[1] }}',
+                    'blue_template': '{{ value.split(",")[2].'
+                                     'split("-")[2] }}'
                 }
             })
 
@@ -319,9 +322,12 @@ class TestLightMQTTTemplate(unittest.TestCase):
                     'command_off_template': 'off',
                     'state_template': '{{ value.split(",")[0] }}',
                     'brightness_template': '{{ value.split(",")[1] }}',
-                    'red_template': '{{ value.split(",")[2].split("-")[0] }}',
-                    'green_template': '{{ value.split(",")[2].split("-")[1] }}',
-                    'blue_template': '{{ value.split(",")[2].split("-")[2] }}'
+                    'red_template': '{{ value.split(",")[2].'
+                                    'split("-")[0] }}',
+                    'green_template': '{{ value.split(",")[2].'
+                                      'split("-")[1] }}',
+                    'blue_template': '{{ value.split(",")[2].'
+                                     'split("-")[2] }}'
                 }
             })
 
