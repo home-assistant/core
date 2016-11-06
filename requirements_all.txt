@@ -73,7 +73,7 @@ concord232==0.14
 directpy==0.1
 
 # homeassistant.components.updater
-distro==1.0.0
+distro==1.0.1
 
 # homeassistant.components.notify.xmpp
 dnspython3==1.15.0
