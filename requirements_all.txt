@@ -342,6 +342,9 @@ pmsensor==0.3
 # homeassistant.components.climate.proliphix
 proliphix==0.4.1
 
+# homeassistant.components.prometheus
+prometheus_client==0.0.18
+
 # homeassistant.components.sensor.systemmonitor
 psutil==5.0.0
 
