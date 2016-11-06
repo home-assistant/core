@@ -207,7 +207,9 @@ class HomeAssistant(object):
         """
         task = None
 
-        if is_callback(target):
+        if asyncio.iscoroutine(target):
+            task = self.loop.create_task(target)
+        elif is_callback(target):
             self.loop.call_soon(target, *args)
         elif asyncio.iscoroutinefunction(target):
             task = self.loop.create_task(target(*args))
