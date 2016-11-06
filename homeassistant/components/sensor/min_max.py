@@ -62,7 +62,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     round_digits = config.get(CONF_ROUND_DIGITS)
 
     yield from async_add_devices(
-        [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits)], True)
+        [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits)],
+        True)
     return True
 
 
@@ -152,6 +153,7 @@ class MinMaxSensor(Entity):
         if len(sensor_values) == self.count_sensors:
             self.min_value = min(sensor_values)
             self.max_value = max(sensor_values)
-            self.mean = round(sum(sensor_values) / self.count_sensors, self._round_digits)
+            self.mean = round(sum(sensor_values) / self.count_sensors,
+                              self._round_digits)
         else:
             self.min_value = self.max_value = self.mean = STATE_UNKNOWN
