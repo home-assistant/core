@@ -110,7 +110,7 @@ def async_setup(hass, config):
         zone.entity_id = ENTITY_ID_HOME
         tasks.append(zone.async_update_ha_state())
 
-    yield from asyncio.gather(*tasks, loop=hass.loop)
+    yield from asyncio.wait(tasks, loop=hass.loop)
     return True
 
 
