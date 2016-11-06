@@ -21,7 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 # 2/minute for 
 # TODO be NestAware subscription aware, (10/min subscribed, 2/min otherwise)
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=6)
+#MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
 # pylint: disable=unused-argument
