@@ -289,6 +289,7 @@ class EntityPlatform(object):
         self.entity_namespace = entity_namespace
         self.platform_entities = []
         self._async_unsub_polling = None
+        self._process_updates = False
 
     def add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
@@ -354,8 +355,20 @@ class EntityPlatform(object):
 
         This method must be run in the event loop.
         """
-        for entity in self.platform_entities:
-            if entity.should_poll:
-                self.component.hass.async_add_job(
-                    entity.async_update_ha_state(True)
-                )
+        # protect core for flooting all executors
+        if self._process_updates:
+            return
+        self._process_updates = True
+
+        try:
+            tasks = []
+            for entity in self.platform_entities:
+                if entity.should_poll:
+                    tasks.append(self.component.hass.async_add_job(
+                        entity.async_update_ha_state(True)
+                    ))
+
+            if tasks:
+                asyncio.wait(tasks, loop=self.component.hass.loop)
+        finally:
+            self._process_updates = False

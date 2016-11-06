@@ -57,7 +57,7 @@ SERVICE_CALL_LIMIT = 10  # seconds
 ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 
 # Size of a executor pool
-EXECUTOR_POOL_SIZE = 10
+EXECUTOR_POOL_SIZE = 15
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -219,6 +219,7 @@ class HomeAssistant(object):
         # if a task is sheduled
         if task is not None:
             self._pending_tasks.add(task)
+            return task
 
     @callback
     def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
