@@ -87,8 +87,5 @@ class NestCamera(Camera):
         except requests.exceptions.RequestException as error:
             _LOGGER.error('Error getting camera image: %s', error)
             return None
-        
-            _LOGGER.error('Error getting camera image: %s', error)
-            return None
 
         return response.content
