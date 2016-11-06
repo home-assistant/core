@@ -56,7 +56,7 @@ def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
     ha.HomeAssistant.async_add_job(hass, job)
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
-    assert len(hass.add_job.mock_calls) == 1
+    assert len(hass.loop.run_in_executor.mock_calls) == 1
 
 
 def test_async_run_job_calls_callback():
@@ -91,7 +91,7 @@ class TestHomeAssistant(unittest.TestCase):
     # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(0)
+        self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -169,7 +169,6 @@ class TestEventBus(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.bus = self.hass.bus
-        self.bus.listen('test_event', lambda x: len)
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -178,6 +177,7 @@ class TestEventBus(unittest.TestCase):
 
     def test_add_remove_listener(self):
         """Test remove_listener method."""
+        self.hass.allow_pool = False
         old_count = len(self.bus.listeners)
 
         def listener(_): pass
@@ -197,6 +197,7 @@ class TestEventBus(unittest.TestCase):
         """Test unsubscribe listener from returned function."""
         calls = []
 
+        @ha.callback
         def listener(event):
             """Mock listener."""
             calls.append(event)
@@ -366,7 +367,7 @@ class TestStateMachine(unittest.TestCase):
     # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(0)
+        self.hass = get_test_home_assistant()
         self.states = self.hass.states
         self.states.set("light.Bowl", "on")
         self.states.set("switch.AC", "off")
@@ -413,8 +414,12 @@ class TestStateMachine(unittest.TestCase):
     def test_remove(self):
         """Test remove method."""
         events = []
-        self.hass.bus.listen(EVENT_STATE_CHANGED,
-                             lambda event: events.append(event))
+
+        @ha.callback
+        def callback(event):
+            events.append(event)
+
+        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
 
         self.assertIn('light.bowl', self.states.entity_ids())
         self.assertTrue(self.states.remove('light.bowl'))
@@ -436,8 +441,11 @@ class TestStateMachine(unittest.TestCase):
         """Test insensitivty."""
         runs = []
 
-        self.hass.bus.listen(EVENT_STATE_CHANGED,
-                             lambda event: runs.append(event))
+        @ha.callback
+        def callback(event):
+            runs.append(event)
+
+        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
 
         self.states.set('light.BOWL', 'off')
         self.hass.block_till_done()
@@ -462,7 +470,12 @@ class TestStateMachine(unittest.TestCase):
     def test_force_update(self):
         """Test force update option."""
         events = []
-        self.hass.bus.listen(EVENT_STATE_CHANGED, lambda ev: events.append(ev))
+
+        @ha.callback
+        def callback(event):
+            events.append(event)
+
+        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
 
         self.states.set('light.bowl', 'on')
         self.hass.block_till_done()
@@ -495,7 +508,12 @@ class TestServiceRegistry(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.services = self.hass.services
-        self.services.register("Test_Domain", "TEST_SERVICE", lambda x: None)
+
+        @ha.callback
+        def mock_service(call):
+            pass
+
+        self.services.register("Test_Domain", "TEST_SERVICE", mock_service)
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -522,6 +540,7 @@ class TestServiceRegistry(unittest.TestCase):
         """Test call with blocking."""
         calls = []
 
+        @ha.callback
         def service_handler(call):
             """Service handler."""
             calls.append(call)
@@ -612,71 +631,6 @@ class TestConfig(unittest.TestCase):
         }
 
         self.assertEqual(expected, self.config.as_dict())
-
-
-class TestWorkerPool(unittest.TestCase):
-    """Test WorkerPool methods."""
-
-    def test_exception_during_job(self):
-        """Test exception during a job."""
-        pool = ha.create_worker_pool(1)
-
-        def malicious_job(_):
-            raise Exception("Test breaking worker pool")
-
-        calls = []
-
-        def register_call(_):
-            calls.append(1)
-
-        pool.add_job(ha.JobPriority.EVENT_DEFAULT, (malicious_job, None))
-        pool.add_job(ha.JobPriority.EVENT_DEFAULT, (register_call, None))
-        pool.block_till_done()
-        self.assertEqual(1, len(calls))
-
-
-class TestWorkerPoolMonitor(object):
-    """Test monitor_worker_pool."""
-
-    @patch('homeassistant.core._LOGGER.warning')
-    def test_worker_pool_monitor(self, mock_warning, event_loop):
-        """Test we log an error and increase threshold."""
-        hass = MagicMock()
-        hass.pool.worker_count = 3
-        schedule_handle = MagicMock()
-        hass.loop.call_later.return_value = schedule_handle
-
-        ha._async_monitor_worker_pool(hass)
-        assert hass.loop.call_later.called
-        assert hass.bus.async_listen_once.called
-        assert not schedule_handle.called
-
-        check_threshold = hass.loop.call_later.mock_calls[0][1][1]
-
-        hass.pool.queue_size = 8
-        check_threshold()
-        assert not mock_warning.called
-
-        hass.pool.queue_size = 9
-        check_threshold()
-        assert mock_warning.called
-
-        mock_warning.reset_mock()
-        assert not mock_warning.called
-
-        check_threshold()
-        assert not mock_warning.called
-
-        hass.pool.queue_size = 17
-        check_threshold()
-        assert not mock_warning.called
-
-        hass.pool.queue_size = 18
-        check_threshold()
-        assert mock_warning.called
-
-        hass.bus.async_listen_once.mock_calls[0][1][1](None)
-        assert schedule_handle.cancel.called
 
 
 class TestAsyncCreateTimer(object):

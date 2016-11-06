@@ -68,7 +68,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of an Onkyo device."""
 
-    # pylint: disable=abstract-method
     def __init__(self, receiver, sources, name=None):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver

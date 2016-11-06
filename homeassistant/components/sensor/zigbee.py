@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.components import zigbee
 from homeassistant.components.zigbee import PLATFORM_SCHEMA
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.core import JobPriority
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,8 +55,7 @@ class ZigBeeTemperatureSensor(Entity):
         self._config = config
         self._temp = None
         # Get initial state
-        hass.pool.add_job(
-            JobPriority.EVENT_STATE, (self.update_ha_state, True))
+        hass.add_job(self.async_update_ha_state, True)
 
     @property
     def name(self):

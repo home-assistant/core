@@ -1,6 +1,7 @@
 """Test the helper method for writing tests."""
 import asyncio
 import os
+import sys
 from datetime import timedelta
 from unittest import mock
 from unittest.mock import patch
@@ -31,18 +32,14 @@ def get_test_config_dir(*add_path):
     return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
 
 
-def get_test_home_assistant(num_threads=None):
+def get_test_home_assistant():
     """Return a Home Assistant object pointing at test config dir."""
-    loop = asyncio.new_event_loop()
-
-    if num_threads:
-        orig_num_threads = ha.MIN_WORKER_THREAD
-        ha.MIN_WORKER_THREAD = num_threads
+    if sys.platform == "win32":
+        loop = asyncio.ProactorEventLoop()
+    else:
+        loop = asyncio.new_event_loop()
 
     hass = loop.run_until_complete(async_test_home_assistant(loop))
-
-    if num_threads:
-        ha.MIN_WORKER_THREAD = orig_num_threads
 
     # FIXME should not be a daemon. Means hass.stop() not called in teardown
     stop_event = threading.Event()
@@ -60,17 +57,8 @@ def get_test_home_assistant(num_threads=None):
     orig_start = hass.start
     orig_stop = hass.stop
 
-    @asyncio.coroutine
-    def fake_stop():
-        """Fake stop."""
-        yield None
-
-    @patch.object(ha, '_async_create_timer')
-    @patch.object(ha, '_async_monitor_worker_pool')
-    @patch.object(hass.loop, 'add_signal_handler')
     @patch.object(hass.loop, 'run_forever')
     @patch.object(hass.loop, 'close')
-    @patch.object(hass, 'async_stop', return_value=fake_stop())
     def start_hass(*mocks):
         """Helper to start hass."""
         orig_start()
@@ -108,6 +96,17 @@ def async_test_home_assistant(loop):
 
     hass.state = ha.CoreState.running
 
+    # Mock async_start
+    orig_start = hass.async_start
+
+    @asyncio.coroutine
+    def mock_async_start():
+        with patch.object(loop, 'add_signal_handler'), \
+             patch('homeassistant.core._async_create_timer'):
+            yield from orig_start()
+
+    hass.async_start = mock_async_start
+
     return hass
 
 
@@ -130,8 +129,12 @@ def mock_service(hass, domain, service):
     """
     calls = []
 
+    @ha.callback
+    def mock_service(call):
+        calls.append(call)
+
     # pylint: disable=unnecessary-lambda
-    hass.services.register(domain, service, lambda call: calls.append(call))
+    hass.services.register(domain, service, mock_service)
 
     return calls
 
@@ -225,7 +228,8 @@ class MockModule(object):
 
     # pylint: disable=invalid-name
     def __init__(self, domain=None, dependencies=None, setup=None,
-                 requirements=None, config_schema=None, platform_schema=None):
+                 requirements=None, config_schema=None, platform_schema=None,
+                 async_setup=None):
         """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
@@ -238,8 +242,15 @@ class MockModule(object):
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
 
+        if async_setup is not None:
+            self.async_setup = async_setup
+
     def setup(self, hass, config):
-        """Setup the component."""
+        """Setup the component.
+
+        We always define this mock because MagicMock setups will be seen by the
+        executor as a coroutine, raising an exception.
+        """
         if self._setup is not None:
             return self._setup(hass, config)
         return True

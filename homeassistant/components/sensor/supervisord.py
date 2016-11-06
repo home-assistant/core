@@ -43,7 +43,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SupervisorProcessSensor(Entity):
     """Representation of a supervisor-monitored process."""
 
-    # pylint: disable=abstract-method
     def __init__(self, info, server):
         """Initialize the sensor."""
         self._info = info

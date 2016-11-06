@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_NAME, CONF_PIN)
-from homeassistant.core import JobPriority
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import config_validation as cv
 
@@ -308,8 +307,7 @@ class ZigBeeDigitalIn(Entity):
         subscribe(hass, handle_frame)
 
         # Get initial state
-        hass.pool.add_job(
-            JobPriority.EVENT_STATE, (self.update_ha_state, True))
+        hass.add_job(self.async_update_ha_state, True)
 
     @property
     def name(self):
@@ -435,8 +433,7 @@ class ZigBeeAnalogIn(Entity):
         subscribe(hass, handle_frame)
 
         # Get initial state
-        hass.pool.add_job(
-            JobPriority.EVENT_STATE, (self.update_ha_state, True))
+        hass.add_job(self.async_update_ha_state, True)
 
     @property
     def name(self):

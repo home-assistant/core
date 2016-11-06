@@ -1,15 +1,12 @@
 """The tests for the emulated Hue component."""
-import time
 import json
-import threading
-import asyncio
 
 import unittest
 import requests
 
 from homeassistant import bootstrap, const, core
 import homeassistant.components as core_components
-from homeassistant.components import emulated_hue, http, light
+from homeassistant.components import emulated_hue, http, light, script
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.emulated_hue import (
     HUE_API_STATE_ON, HUE_API_STATE_BRI)
@@ -45,7 +42,6 @@ def setup_hass_instance(emulated_hue_config):
 def start_hass_instance(hass):
     """Start the Home Assistant instance to test."""
     hass.start()
-    time.sleep(0.05)
 
 
 class TestEmulatedHue(unittest.TestCase):
@@ -133,6 +129,22 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             ]
         })
 
+        bootstrap.setup_component(cls.hass, script.DOMAIN, {
+          'script': {
+            'set_kitchen_light': {
+              'sequence': [
+                {
+                  'service_template': "light.turn_{{ requested_state }}",
+                  'data_template': {
+                    'entity_id': 'light.kitchen_lights',
+                    'brightness': "{{ requested_level }}"
+                  }
+                }
+              ]
+            }
+          }
+        })
+
         start_hass_instance(cls.hass)
 
         # Kitchen light is explicitly excluded from being exposed
@@ -142,6 +154,14 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         cls.hass.states.set(
             kitchen_light_entity.entity_id, kitchen_light_entity.state,
             attributes=attrs)
+
+        # Expose the script
+        script_entity = cls.hass.states.get('script.set_kitchen_light')
+        attrs = dict(script_entity.attributes)
+        attrs[emulated_hue.ATTR_EMULATED_HUE] = True
+        cls.hass.states.set(
+            script_entity.entity_id, script_entity.state, attributes=attrs
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -161,6 +181,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         # Make sure the lights we added to the config are there
         self.assertTrue('light.ceiling_lights' in result_json)
         self.assertTrue('light.bed_light' in result_json)
+        self.assertTrue('script.set_kitchen_light' in result_json)
         self.assertTrue('light.kitchen_lights' not in result_json)
 
     def test_get_light_state(self):
@@ -234,6 +255,35 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         kitchen_result = self.perform_put_light_state(
             'light.kitchen_light', True)
         self.assertEqual(kitchen_result.status_code, 404)
+
+    def test_put_light_state_script(self):
+        """Test the setting of script variables."""
+        # Turn the kitchen light off first
+        self.hass.services.call(
+            light.DOMAIN, const.SERVICE_TURN_OFF,
+            {const.ATTR_ENTITY_ID: 'light.kitchen_lights'},
+            blocking=True)
+
+        # Emulated hue converts 0-100% to 0-255.
+        level = 23
+        brightness = round(level * 255 / 100)
+
+        script_result = self.perform_put_light_state(
+            'script.set_kitchen_light', True, brightness)
+
+        script_result_json = script_result.json()
+
+        self.assertEqual(script_result.status_code, 200)
+        self.assertEqual(len(script_result_json), 2)
+
+        # Wait until script is complete before continuing
+        self.hass.block_till_done()
+
+        kitchen_light = self.hass.states.get('light.kitchen_lights')
+        self.assertEqual(kitchen_light.state, 'on')
+        self.assertEqual(
+            kitchen_light.attributes[light.ATTR_BRIGHTNESS],
+            level)
 
     def test_put_with_form_urlencoded_content_type(self):
         """Test the form with urlencoded content."""
@@ -372,58 +422,3 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             url, data=json.dumps(data), timeout=5, headers=req_headers)
 
         return result
-
-
-class MQTTBroker(object):
-    """Encapsulates an embedded MQTT broker."""
-
-    def __init__(self, host, port):
-        """Initialize a new instance."""
-        from hbmqtt.broker import Broker
-
-        self._loop = asyncio.new_event_loop()
-
-        hbmqtt_config = {
-            'listeners': {
-                'default': {
-                    'max-connections': 50000,
-                    'type': 'tcp',
-                    'bind': '{}:{}'.format(host, port)
-                }
-            },
-            'auth': {
-                'plugins': ['auth.anonymous'],
-                'allow-anonymous': True
-            }
-        }
-
-        self._broker = Broker(config=hbmqtt_config, loop=self._loop)
-
-        self._thread = threading.Thread(target=self._run_loop)
-        self._started_ev = threading.Event()
-
-    def start(self):
-        """Start the broker."""
-        self._thread.start()
-        self._started_ev.wait()
-
-    def stop(self):
-        """Stop the broker."""
-        self._loop.call_soon_threadsafe(asyncio.async, self._broker.shutdown())
-        self._loop.call_soon_threadsafe(self._loop.stop)
-        self._thread.join()
-
-    def _run_loop(self):
-        """Run the loop."""
-        asyncio.set_event_loop(self._loop)
-        self._loop.run_until_complete(self._broker_coroutine())
-
-        self._started_ev.set()
-
-        self._loop.run_forever()
-        self._loop.close()
-
-    @asyncio.coroutine
-    def _broker_coroutine(self):
-        """The Broker coroutine."""
-        yield from self._broker.start()

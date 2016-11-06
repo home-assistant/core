@@ -1,6 +1,7 @@
 """The tests for the Event automation."""
 import unittest
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.automation as automation
 
@@ -16,6 +17,7 @@ class TestAutomationEvent(unittest.TestCase):
         self.hass.config.components.append('group')
         self.calls = []
 
+        @callback
         def record_call(service):
             """Helper for recording the call."""
             self.calls.append(service)

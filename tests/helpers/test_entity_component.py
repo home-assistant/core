@@ -8,7 +8,7 @@ from unittest.mock import patch, Mock
 import homeassistant.core as ha
 import homeassistant.loader as loader
 from homeassistant.components import group
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
@@ -356,3 +356,20 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert sorted(self.hass.states.entity_ids()) == \
             ['test_domain.yummy_beer', 'test_domain.yummy_unnamed_device']
+
+    def test_adding_entities_with_generator_and_thread_callback(self):
+        """Test generator in add_entities that calls thread method.
+
+        We should make sure we resolve the generator to a list before passing
+        it into an async context.
+        """
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
+
+        def create_entity(number):
+            """Create entity helper."""
+            entity = EntityTest()
+            entity.entity_id = generate_entity_id(component.entity_id_format,
+                                                  'Number', hass=self.hass)
+            return entity
+
+        component.add_entities(create_entity(i) for i in range(2))

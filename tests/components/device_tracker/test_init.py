@@ -6,6 +6,7 @@ from unittest.mock import call, patch
 from datetime import datetime, timedelta
 import os
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 from homeassistant.loader import get_component
 import homeassistant.util.dt as dt_util
@@ -305,6 +306,25 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert mock_see.call_count == 1
         self.assertEqual(mock_see.call_count, 1)
         self.assertEqual(mock_see.call_args, call(**params))
+
+    def test_new_device_event_fired(self):
+        """Test that the device tracker will fire an event."""
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
+                                        TEST_PLATFORM))
+        test_events = []
+
+        @callback
+        def listener(event):
+            """Helper method that will verify our event got called."""
+            test_events.append(event)
+
+        self.hass.bus.listen("device_tracker_new_device", listener)
+
+        device_tracker.see(self.hass, 'mac_1', host_name='hello')
+        device_tracker.see(self.hass, 'mac_1', host_name='hello')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(test_events))
 
     # pylint: disable=invalid-name
     def test_not_write_duplicate_yaml_keys(self):

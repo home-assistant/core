@@ -9,7 +9,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -105,37 +104,40 @@ def async_setup(hass, config):
     if not entities:
         return False
 
-    @callback
+    @asyncio.coroutine
     def async_select_option_service(call):
         """Handle a calls to the input select option service."""
         target_inputs = component.async_extract_from_service(call)
 
-        for input_select in target_inputs:
-            input_select.select_option(call.data[ATTR_OPTION])
+        tasks = [input_select.async_select_option(call.data[ATTR_OPTION])
+                 for input_select in target_inputs]
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_OPTION, async_select_option_service,
         schema=SERVICE_SELECT_OPTION_SCHEMA)
 
-    @callback
+    @asyncio.coroutine
     def async_select_next_service(call):
         """Handle a calls to the input select next service."""
         target_inputs = component.async_extract_from_service(call)
 
-        for input_select in target_inputs:
-            input_select.offset_index(1)
+        tasks = [input_select.async_offset_index(1)
+                 for input_select in target_inputs]
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_NEXT, async_select_next_service,
         schema=SERVICE_SELECT_NEXT_SCHEMA)
 
-    @callback
+    @asyncio.coroutine
     def async_select_previous_service(call):
         """Handle a calls to the input select previous service."""
         target_inputs = component.async_extract_from_service(call)
 
-        for input_select in target_inputs:
-            input_select.offset_index(-1)
+        tasks = [input_select.async_offset_index(-1)
+                 for input_select in target_inputs]
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_PREVIOUS, async_select_previous_service,
@@ -183,18 +185,20 @@ class InputSelect(Entity):
             ATTR_OPTIONS: self._options,
         }
 
-    def select_option(self, option):
+    @asyncio.coroutine
+    def async_select_option(self, option):
         """Select new option."""
         if option not in self._options:
             _LOGGER.warning('Invalid option: %s (possible options: %s)',
                             option, ', '.join(self._options))
             return
         self._current_option = option
-        self.hass.loop.create_task(self.async_update_ha_state())
+        yield from self.async_update_ha_state()
 
-    def offset_index(self, offset):
+    @asyncio.coroutine
+    def async_offset_index(self, offset):
         """Offset current index."""
         current_index = self._options.index(self._current_option)
         new_index = (current_index + offset) % len(self._options)
         self._current_option = self._options[new_index]
-        self.hass.loop.create_task(self.async_update_ha_state())
+        yield from self.async_update_ha_state()

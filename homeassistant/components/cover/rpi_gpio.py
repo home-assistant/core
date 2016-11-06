@@ -63,7 +63,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(covers)
 
 
-# pylint: disable=abstract-method
 class RPiGPIOCover(CoverDevice):
     """Representation of a Raspberry GPIO cover."""
 

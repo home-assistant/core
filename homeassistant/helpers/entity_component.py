@@ -283,7 +283,7 @@ class EntityPlatform(object):
     def add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
         run_coroutine_threadsafe(
-            self.async_add_entities(new_entities, update_before_add),
+            self.async_add_entities(list(new_entities), update_before_add),
             self.component.hass.loop
         ).result()
 
@@ -295,6 +295,10 @@ class EntityPlatform(object):
         """
         tasks = [self._async_process_entity(entity, update_before_add)
                  for entity in new_entities]
+
+        # handle empty list from component/platform
+        if not tasks:
+            return
 
         yield from asyncio.gather(*tasks, loop=self.component.hass.loop)
         yield from self.component.async_update_group()
