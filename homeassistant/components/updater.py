@@ -30,7 +30,7 @@ ATTR_RELEASE_NOTES = 'release_notes'
 UPDATER_UUID_FILE = '.uuid'
 CONF_REPORTING = 'reporting'
 
-REQUIREMENTS = ['distro==1.0.0']
+REQUIREMENTS = ['distro==1.0.1']
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {
     vol.Optional(CONF_REPORTING, default=True): cv.boolean
