@@ -22,6 +22,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (STATE_OFF, STATE_PAUSED, STATE_PLAYING,
                                  STATE_IDLE)
 from homeassistant import util
+from homeassistant import exceptions
 
 REQUIREMENTS = ['pexpect==4.0.1']
 _LOGGER = logging.getLogger(__name__)
@@ -138,7 +139,11 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             _LOGGER.info('Killed Pianobar subprocess')
         self._pianobar = None
         self._player_state = STATE_OFF
-        self.update_ha_state()
+        try:
+            self.update_ha_state()
+        except exceptions.HomeAssistantError:
+            # System shutdown occurring.
+            pass
 
     def media_play(self):
         """Send play command."""
@@ -349,6 +354,8 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             while not self._pianobar.expect('.+', timeout=0.1):
                 pass
         except pexpect.exceptions.TIMEOUT:
+            pass
+        except pexpect.exceptions.EOF:
             pass
 
 
