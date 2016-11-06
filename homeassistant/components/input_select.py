@@ -55,14 +55,16 @@ def _cv_input_select(cfg):
     return cfg
 
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {
-    cv.slug: vol.All({
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1),
-                                            [cv.string]),
-        vol.Optional(CONF_INITIAL): cv.string,
-        vol.Optional(CONF_ICON): cv.icon,
-    }, _cv_input_select)}}, required=True, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        cv.slug: vol.All({
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Required(CONF_OPTIONS):
+                vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
+            vol.Optional(CONF_INITIAL): cv.string,
+            vol.Optional(CONF_ICON): cv.icon,
+        }, _cv_input_select)})
+}, required=True, extra=vol.ALLOW_EXTRA)
 
 
 def select_option(hass, entity_id, option):
@@ -111,7 +113,7 @@ def async_setup(hass, config):
 
         tasks = [input_select.async_select_option(call.data[ATTR_OPTION])
                  for input_select in target_inputs]
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_OPTION, async_select_option_service,
@@ -124,7 +126,7 @@ def async_setup(hass, config):
 
         tasks = [input_select.async_offset_index(1)
                  for input_select in target_inputs]
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_NEXT, async_select_next_service,
@@ -137,7 +139,7 @@ def async_setup(hass, config):
 
         tasks = [input_select.async_offset_index(-1)
                  for input_select in target_inputs]
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_PREVIOUS, async_select_previous_service,
