@@ -197,7 +197,7 @@ class HomeAssistant(object):
             self.loop, self.async_add_job, target, *args).result()
 
     @callback
-    def async_add_job(self, target: Callable[..., None], *args: Any) -> None:
+    def async_add_job(self, target: Callable[..., None], *args: Any) -> Any:
         """Add a job from within the eventloop.
 
         This method must be run in the event loop.
