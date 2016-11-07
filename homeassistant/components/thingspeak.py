@@ -49,15 +49,14 @@ def setup(hass, config):
             _channel = entities[entity_id] 
             _channel.update({'api_key': _channel.api_key, 'field1': _state})
         except RequestException:
-            _LOGGER.error("Error while sending value '%s' to Thingspeak channel_id:%s",
-                          _state, _channel.channel_id)
-        
+            _LOGGER.error("Error while sending value %s to Thingspeak "
+                          "channel_id: %s", _state, _channel.channel_id)
     entities = {}
 
     for object_id, conf in config.items():
         if not conf:
             continue
-        #checking for "thingspeak 1:" "THIingspeak 2:", etc
+        # checking for "thingspeak 1:" "THIingspeak 2:"
         if object_id[:len(DOMAIN)].lower() != DOMAIN:
             continue
         # info to create the thingspeak channel 
@@ -69,11 +68,11 @@ def setup(hass, config):
                 channel_id, api_key=api_key, timeout=TIMEOUT)
             channel.get()
         except RequestException:
-            _LOGGER.error("Error while accessing the ThingSpeak channel_id:%s. "
+            _LOGGER.error("Error while accessing the ThingSpeak channel_id:%s"
                           "Please check that the channel exists and your "
                           "API key is correct.", channel_id)
         entities[entity] = channel
         event.track_state_change(hass, entity, thingspeak_listener)
-    
+
     # return False if all channels are errored
     return entities != {}
