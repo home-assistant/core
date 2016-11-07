@@ -34,7 +34,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Thingspeak environment for multiply channels"""
-    
+    import thingspeak
+
     def thingspeak_listener(entity_id, old_state, new_state):
         """Listen for new events and send them to thingspeak."""
         if new_state is None or new_state.state in (
@@ -46,13 +47,11 @@ def setup(hass, config):
             return
         try:
             _channel = entities[entity_id] 
-            _channel.update({'api_key':_channel.api_key, 'field1': _state})
+            _channel.update({'api_key': _channel.api_key, 'field1': _state})
         except RequestException:
             _LOGGER.error("Error while sending value '%s' to Thingspeak channel_id:%s",
-                          _state,_channel.channel_id)
+                          _state, _channel.channel_id)
         
-    import thingspeak
-
     entities = {}
 
     for object_id, conf in config.items():
@@ -65,18 +64,16 @@ def setup(hass, config):
         api_key = conf.get(CONF_API_KEY)
         channel_id = conf.get(CONF_ID)
         entity = conf.get(CONF_WHITELIST)
-
         try:
             channel = thingspeak.Channel(
                 channel_id, api_key=api_key, timeout=TIMEOUT)
             channel.get()
         except RequestException:
-            _LOGGER.error("Error while accessing the ThingSpeak channel_id:{}. "
+            _LOGGER.error("Error while accessing the ThingSpeak channel_id:%s. "
                           "Please check that the channel exists and your "
-                          "API key is correct.".format(channel_id))
+                          "API key is correct.", channel_id)
         entities[entity] = channel
         event.track_state_change(hass, entity, thingspeak_listener)
     
     # return False if all channels are errored
     return entities != {}
-
