@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.yamaha/
 """
 import logging
+from xml.etree.ElementTree import ParseError
 
 import voluptuous as vol
 
@@ -98,13 +99,14 @@ class YamahaDevice(MediaPlayerDevice):
         self._reverse_mapping = None
         self._is_playback_supported = False
         self._play_status = None
+        self._play_status_supported = True
         self.update()
         self._name = name
         self._zone = receiver.zone
 
     def update(self):
         """Get the latest details from the device."""
-        self._play_status = self._receiver.play_status()
+        self._play_status = self._get_receiver_play_status()
         if self._receiver.on:
             if self._play_status is None:
                 self._pwstate = STATE_ON
@@ -126,6 +128,16 @@ class YamahaDevice(MediaPlayerDevice):
             current_source, current_source)
         self._is_playback_supported = self._receiver.is_playback_supported(
             self._current_source)
+
+    def _get_receiver_play_status(self):
+        try:
+            if self._play_status_supported:
+                return self._receiver.play_status()
+        except ParseError:
+            _LOGGER.info('Play status information not supported')
+            self._play_status_supported = False
+
+        return None
 
     def build_source_list(self):
         """Build the source list."""
