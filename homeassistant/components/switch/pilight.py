@@ -37,8 +37,10 @@ SWITCHES_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,
     vol.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_OFF_CODE_RECIEVE): COMMAND_SCHEMA,
-    vol.Optional(CONF_ON_CODE_RECIEVE): COMMAND_SCHEMA,
+    vol.Optional(CONF_OFF_CODE_RECIEVE, default=[]): vol.All(cv.ensure_list,
+                                                             [COMMAND_SCHEMA]),
+    vol.Optional(CONF_ON_CODE_RECIEVE, default=[]): vol.All(cv.ensure_list,
+                                                            [COMMAND_SCHEMA])
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
