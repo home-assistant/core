@@ -2,7 +2,7 @@
 Native Home Assistant iOS app component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/ios/
+https://home-assistant.io/ecosystem/ios/
 """
 import asyncio
 import os
