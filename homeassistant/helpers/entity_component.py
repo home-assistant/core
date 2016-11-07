@@ -366,7 +366,7 @@ class EntityPlatform(object):
 
             for entity in self.platform_entities:
                 if not entity.should_poll:
-                        continue
+                    continue
 
                 update_coro = entity.async_update_ha_state(True)
                 if hasattr(entity, 'async_update'):
