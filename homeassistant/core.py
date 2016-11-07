@@ -259,10 +259,10 @@ class HomeAssistant(object):
         """Block till all pending work is done."""
         while True:
             # Wait for the pending tasks are down
-            if len(self._pending_tasks) > 0:
-                pending = [task for task in self._pending_tasks
-                           if not task.done()]
-                self._pending_tasks.clear()
+            pending = [task for task in self._pending_tasks
+                       if not task.done()]
+            self._pending_tasks.clear()
+            if len(pending) > 0:
                 yield from asyncio.wait(pending, loop=self.loop)
 
             # Verify the loop is empty
