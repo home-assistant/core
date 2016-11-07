@@ -22,6 +22,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=6)
 #MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
+SIMULATOR_SNAPSHOT_URL = 'https://developer.nest.com/simulator/api/v1/nest/devices/camera/snapshot'
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -78,7 +79,7 @@ class NestCamera(Camera):
         """Return a still image response from the camera."""
         url = self.device.snapshot_url
         # sadly, can't test against a simulator
-        if url == 'https://developer.nest.com/simulator/api/v1/nest/devices/camera/snapshot':
+        if url == SIMULATOR_SNAPSHOT_URL:
             url = 'http://i.imgur.com/2CPHwxn.jpg'
 
         try:
