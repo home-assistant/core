@@ -57,7 +57,7 @@ SERVICE_CALL_LIMIT = 10  # seconds
 ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 
 # Size of a executor pool
-EXECUTOR_POOL_SIZE = 10
+EXECUTOR_POOL_SIZE = 15
 
 _LOGGER = logging.getLogger(__name__)
 
