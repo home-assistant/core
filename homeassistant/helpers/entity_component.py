@@ -353,9 +353,11 @@ class EntityPlatform(object):
     def _update_entity_states(self, now):
         """Update the states of all the polling entities.
 
+        To protect from flooding the executor, we will update async entities
+        in parallel and other entities sequential.
+
         This method must be run in the event loop.
         """
-        # protect core from flooting all executors
         if self._process_updates:
             return
         self._process_updates = True
