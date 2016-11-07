@@ -63,7 +63,7 @@ def setup(hass, config):
         except ValueError:
             return
         try:
-            channel.update({'field1': _state})
+            channel.update({'api_key':channel.api_key,'field1': _state})
         except RequestException:
             _LOGGER.error("Error while sending value '%s' to Thingspeak",
                           _state)
