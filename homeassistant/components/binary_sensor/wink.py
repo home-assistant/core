@@ -61,7 +61,7 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
                 json_data = message
             self.wink.pubnub_update(json.loads(json_data))
             self.update_ha_state()
-        except (AttributeError, KeyError):
+        except (AttributeError, KeyError, AttributeError):
             error = "Pubnub returned invalid json for " + self.name
             logging.getLogger(__name__).error(error)
             self.update_ha_state(True)
