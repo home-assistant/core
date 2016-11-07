@@ -219,11 +219,10 @@ class HomeAssistant(object):
         if task is not None:
             self._pending_tasks.append(task)
 
-            # cleanup
-            if len(self._pending_tasks) > 50:
-                self._pending_tasks = \
-                    [sheduled for sheduled in self._pending_tasks
-                     if not sheduled.done()]
+        # cleanup
+        if len(self._pending_tasks) > 50:
+            self._pending_tasks = [sheduled for sheduled in self._pending_tasks
+                                   if not sheduled.done()]
 
     @callback
     def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
