@@ -9,6 +9,7 @@ from collections import defaultdict
 from types import ModuleType
 from typing import Any, Optional, Dict
 
+import async_timeout
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -142,11 +143,12 @@ def _async_setup_component(hass: core.HomeAssistant,
         async_comp = hasattr(component, 'async_setup')
 
         try:
-            if async_comp:
-                result = yield from component.async_setup(hass, config)
-            else:
-                result = yield from hass.loop.run_in_executor(
-                    None, component.setup, hass, config)
+            with async_timeout.timeout(30, loop=hass.loop):
+                if async_comp:
+                    result = yield from component.async_setup(hass, config)
+                else:
+                    result = yield from hass.loop.run_in_executor(
+                        None, component.setup, hass, config)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error during setup of component %s', domain)
             _async_persistent_notification(hass, domain, True)
