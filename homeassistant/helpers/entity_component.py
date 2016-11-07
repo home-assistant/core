@@ -363,6 +363,7 @@ class EntityPlatform(object):
         try:
             tasks = []
             to_update = []
+            
             for entity in self.platform_entities:
                 if not entity.should_poll:
                         continue
