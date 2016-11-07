@@ -66,7 +66,6 @@ class NestThermostat(ClimateDevice):
         self._location = None
         self._name = None
         self._humidity = None
-        #self._target_humidity = None
         self._target_temperature = None
         self._temperature = None
         self._mode = None
@@ -223,7 +222,6 @@ class NestThermostat(ClimateDevice):
         self._location = self.device.where
         self._name = self.device.name
         self._humidity = self.device.humidity,
-        #self._target_humidity = self.device.target_humidity,
         self._temperature = self.device.temperature
         self._mode = self.device.mode
         self._target_temperature = self.device.target
