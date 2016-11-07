@@ -221,7 +221,7 @@ class HomeAssistant(object):
 
             # cleanup
             if len(self._pending_tasks) > 50:
-                self._pending_task = \
+                self._pending_tasks = \
                     [sheduled for sheduled in self._pending_tasks
                      if not sheduled.done()]
 

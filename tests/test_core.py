@@ -125,6 +125,7 @@ class TestHomeAssistant(unittest.TestCase):
         @asyncio.coroutine
         def test_coro():
             """Test Coro."""
+            global have_call
             have_call = True
 
         self.hass.add_job(test_coro())
@@ -140,6 +141,7 @@ class TestHomeAssistant(unittest.TestCase):
         @asyncio.coroutine
         def test_coro():
             """Test Coro."""
+            global call_count
             call_count += 1
 
         for i in range(50):
