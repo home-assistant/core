@@ -94,6 +94,7 @@ class OsramLightifyLight(Light):
         self._light_id = light_id
         self.update_lights = update_lights
         self._brightness = int(self._light.lum() * 2.55)
+        self._state = False
 
     @property
     def name(self):
@@ -166,7 +167,7 @@ class OsramLightifyLight(Light):
         if ATTR_COLOR_TEMP in kwargs:
             color_t = kwargs[ATTR_COLOR_TEMP]
             kelvin = int(((TEMP_MAX - TEMP_MIN) * (color_t - TEMP_MIN_HASS) /
-                (TEMP_MAX_HASS - TEMP_MIN_HASS)) + TEMP_MIN)
+                          (TEMP_MAX_HASS - TEMP_MIN_HASS)) + TEMP_MIN)
             _LOGGER.debug("turn_on requested set_temperature for light:"
                           " %s: %s ", self._light.name, kelvin)
             self._light.set_temperature(kelvin, transition)
