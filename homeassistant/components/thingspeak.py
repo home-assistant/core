@@ -33,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Set up the Thingspeak environment for multiply channels"""
+    """Set up the Thingspeak environment for multiply channels."""
     import thingspeak
 
     def thingspeak_listener(entity_id, old_state, new_state):
