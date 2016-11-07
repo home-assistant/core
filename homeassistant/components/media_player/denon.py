@@ -10,7 +10,7 @@ import telnetlib
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
 from homeassistant.const import (
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Music station'
 
 SUPPORT_DENON = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE | SUPPORT_NEXT_TRACK | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -52,6 +52,7 @@ class DenonDevice(MediaPlayerDevice):
         self._host = host
         self._pwstate = 'PWSTANDBY'
         self._volume = 0
+        self._source_list = {'TV':'SITV','TUNER':'SITUNER','INTERNET_RADIO':'SIIRP','FAVORITES':'SIFVP'}
         self._muted = False
         self._mediasource = ''
 
@@ -111,6 +112,10 @@ class DenonDevice(MediaPlayerDevice):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return list(self._source_list.keys())
 
     @property
     def media_title(self):
@@ -162,3 +167,6 @@ class DenonDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self.telnet_command('PWON')
+    def select_source(self, source):
+        """Select input source."""
+        self.telnet_command(self._source_list.get(source))
