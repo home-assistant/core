@@ -68,6 +68,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             friendly_name=name,
             unit_desc_url=desc_url).zone_controllers()
         _LOGGER.info("Receivers: %s", receivers)
+        # when we are dynamically discovered config is empty
+        zone_ignore = []
     elif host is None:
         receivers = []
         for recv in rxv.find():
