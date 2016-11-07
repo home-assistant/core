@@ -362,18 +362,18 @@ class EntityPlatform(object):
 
         try:
             tasks = []
+            to_update = []
             for entity in self.platform_entities:
-                if entity.should_poll:
-                    task = self.component.hass.async_add_job(
-                        entity.async_update_ha_state(True)
-                    )
+                if not entity.should_poll:
+                        continue
 
-                    if hasattr(entity, 'async_update'):
-                        tasks.append(task)
-                    else:
-                        # wait for protect executor
-                        yield from asyncio.wait(
-                            [task], loop=self.component.hass.loop)
+                if hasattr(entity, 'async_update'):
+                    tasks.append(entity.async_update_ha_state(True))
+                else:
+                    to_update.append(entity)
+
+            for entity in to_update:
+                yield from entity.async_update_ha_state(True)
 
             if tasks:
                 yield from asyncio.wait(tasks, loop=self.component.hass.loop)

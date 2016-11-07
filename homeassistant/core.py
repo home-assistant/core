@@ -197,7 +197,7 @@ class HomeAssistant(object):
             self.loop, self.async_add_job, target, *args).result()
 
     @callback
-    def async_add_job(self, target: Callable[..., None], *args: Any) -> Any:
+    def async_add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add a job from within the eventloop.
 
         This method must be run in the event loop.
@@ -219,7 +219,6 @@ class HomeAssistant(object):
         # if a task is sheduled
         if task is not None:
             self._pending_tasks.add(task)
-            return task
 
     @callback
     def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
