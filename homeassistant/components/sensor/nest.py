@@ -22,7 +22,7 @@ SENSOR_TYPES = ['humidity',
                 'last_connection']
 
 # FIXME detect these being used
-SENSOR_TYPES_DEPRECATED = ['battery_health'] # no longer available on the nest thermostat
+SENSOR_TYPES_DEPRECATED = ['battery_health']  # no longer available on the nest thermostat
 
 
 WEATHER_VARS = {'weather_humidity': 'humidity',

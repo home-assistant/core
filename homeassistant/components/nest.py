@@ -6,12 +6,12 @@ https://home-assistant.io/components/nest/
 """
 import logging
 import socket
-from IPython import embed
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_STRUCTURE, CONF_FILENAME, CONF_ACCESS_TOKEN)
+from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME,
+                                 CONF_STRUCTURE, CONF_FILENAME, CONF_ACCESS_TOKEN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,8 @@ def setup(hass, config):
 
     access_token_cache_file = hass.config.path(filename)
 
-    nest = nest.Nest(username, password, access_token=access_token, access_token_cache_file=access_token_cache_file)
+    nest = nest.Nest(username, password, access_token=access_token,
+                     access_token_cache_file=access_token_cache_file)
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
 
     return True
@@ -93,7 +94,8 @@ class NestDevice(object):
                                  structure.name, self._structure)
         except socket.error:
             _LOGGER.error(
-                "Connection error logging into the nest web service.")
+                "Connection error logging into the nest web service."
+                )
 
     def camera_devices(self):
         """Generator returning list of camera devices."""

@@ -59,8 +59,6 @@ class NestThermostat(ClimateDevice):
             self._operation_list.append(STATE_AUTO)
 
         # feature of device
-        #self._has_humidifier = self.device.has_humidifier
-        #self._has_dehumidifier = self.device.has_dehumidifier
         self._has_fan = self.device.has_fan
 
         # data attributes
@@ -82,7 +80,7 @@ class NestThermostat(ClimateDevice):
         if self._location is None or self._location == self._name:
             return self._name
         else:
-            if self._name == '': 
+            if self._name == '':
                 return self._location.capitalize()
             else:
                 return self._location.capitalize() + '(' + self._name + ')'
@@ -91,20 +89,6 @@ class NestThermostat(ClimateDevice):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_CELSIUS
-
-    # FIXME new API doesn't expose humidifier info
-    #@property
-    #def device_state_attributes(self):
-    #    """Return the device specific state attributes."""
-    #    if self._has_humidifier or self._has_dehumidifier:
-    #        # Move these to Thermostat Device and make them global
-    #        return {
-    #            "humidity": self._humidity,
-    #            "target_humidity": self._target_humidity,
-    #        }
-    #    else:
-    #        # No way to control humidity not show setting
-    #        return {}
 
     @property
     def current_temperature(self):
