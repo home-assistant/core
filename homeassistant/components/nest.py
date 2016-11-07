@@ -106,6 +106,6 @@ class NestDevice(object):
                         yield(structure, device)
                 else:
                     _LOGGER.info("Ignoring structure %s, not in %s",
-                                 structure.name, STRUCTURES_TO_INCLUDE)
+                                 structure.name, self._structure)
         except socket.error:
             _LOGGER.error("Connection error logging into the nest web service.")
