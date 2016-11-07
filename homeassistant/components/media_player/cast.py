@@ -88,7 +88,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CastDevice(MediaPlayerDevice):
     """Representation of a Cast device on the network."""
 
-    # pylint: disable=abstract-method
     def __init__(self, chromecast):
         """Initialize the Cast device."""
         self.cast = chromecast

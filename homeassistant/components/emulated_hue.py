@@ -18,7 +18,7 @@ from homeassistant import util, core
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    STATE_ON, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
+    STATE_ON, STATE_OFF, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_SUPPORTED_FEATURES, SUPPORT_BRIGHTNESS
@@ -86,19 +86,19 @@ def setup(hass, yaml_config):
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr, config.listen_port)
 
-    @core.callback
+    @asyncio.coroutine
     def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
         upnp_listener.stop()
-        hass.loop.create_task(server.stop())
+        yield from server.stop()
 
-    @core.callback
+    @asyncio.coroutine
     def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
-        hass.loop.create_task(server.start())
         upnp_listener.start()
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                    stop_emulated_hue_bridge)
+        yield from server.start()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
 
@@ -317,7 +317,16 @@ class HueLightsView(HomeAssistantView):
         # Construct what we need to send to the service
         data = {ATTR_ENTITY_ID: entity_id}
 
-        if brightness is not None:
+        # If the requested entity is a script add some variables
+        if entity.domain.lower() == "script":
+            data['variables'] = {
+                'requested_state': STATE_ON if result else STATE_OFF
+            }
+
+            if brightness is not None:
+                data['variables']['requested_level'] = brightness
+
+        elif brightness is not None:
             data[ATTR_BRIGHTNESS] = brightness
 
         if entity.domain.lower() in config.off_maps_to_on_domains:
@@ -401,6 +410,13 @@ def parse_hue_api_put_light_body(request_json, entity):
 
             report_brightness = True
             result = (brightness > 0)
+        elif entity.domain.lower() == "script":
+            # Convert 0-255 to 0-100
+            level = int(request_json[HUE_API_STATE_BRI]) / 255 * 100
+
+            brightness = round(level)
+            report_brightness = True
+            result = True
 
     return (result, brightness) if report_brightness else (result, None)
 

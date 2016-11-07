@@ -175,15 +175,16 @@ def async_setup(hass, config):
         conf = yield from component.async_prepare_reload()
         if conf is None:
             return
-        hass.loop.create_task(_async_process_config(hass, conf, component))
+        yield from _async_process_config(hass, conf, component)
 
-    @callback
+    @asyncio.coroutine
     def visibility_service_handler(service):
         """Change visibility of a group."""
         visible = service.data.get(ATTR_VISIBLE)
-        for group in component.async_extract_from_service(
-                service, expand_group=False):
-            group.async_set_visible(visible)
+        tasks = [group.async_set_visible(visible) for group
+                 in component.async_extract_from_service(service,
+                                                         expand_group=False)]
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
@@ -206,13 +207,14 @@ def _async_process_config(hass, config, component):
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
 
-        # This order is important as groups get a number based on creation
-        # order.
+        # Don't create tasks and await them all. The order is important as
+        # groups get a number based on creation order.
         group = yield from Group.async_create_group(
             hass, name, entity_ids, icon=icon, view=view, object_id=object_id)
         groups.append(group)
 
-    yield from component.async_add_entities(groups)
+    if groups:
+        yield from component.async_add_entities(groups)
 
 
 class Group(Entity):
@@ -291,12 +293,12 @@ class Group(Entity):
         """Return the icon of the group."""
         return self._icon
 
-    @callback
+    @asyncio.coroutine
     def async_set_visible(self, visible):
         """Change visibility of the group."""
         if self._visible != visible:
             self._visible = visible
-            self.hass.loop.create_task(self.async_update_ha_state())
+            yield from self.async_update_ha_state()
 
     @property
     def hidden(self):
@@ -393,7 +395,7 @@ class Group(Entity):
         This method must be run in the event loop.
         """
         self._async_update_group_state(new_state)
-        self.hass.loop.create_task(self.async_update_ha_state())
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def _tracking_states(self):

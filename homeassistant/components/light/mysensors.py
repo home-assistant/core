@@ -4,7 +4,7 @@ Support for MySensors lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mysensors/
 """
-# pylint: disable=abstract-method
+
 import logging
 
 from homeassistant.components import mysensors
@@ -31,7 +31,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    for gateway in mysensors.GATEWAYS.values():
+    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
+    if not gateways:
+        return
+
+    for gateway in gateways:
         # Define the S_TYPES and V_TYPES that the platform should handle as
         # states. Map them in a dict of lists.
         pres = gateway.const.Presentation

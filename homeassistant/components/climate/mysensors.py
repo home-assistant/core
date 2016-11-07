@@ -24,7 +24,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors climate."""
     if discovery_info is None:
         return
-    for gateway in mysensors.GATEWAYS.values():
+
+    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
+    if not gateways:
+        return
+
+    for gateway in gateways:
         if float(gateway.protocol_version) < 1.5:
             continue
         pres = gateway.const.Presentation

@@ -43,7 +43,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([MpcHcDevice(name, url)])
 
 
-# pylint: disable=abstract-method
 class MpcHcDevice(MediaPlayerDevice):
     """Representation of a MPC-HC server."""
 

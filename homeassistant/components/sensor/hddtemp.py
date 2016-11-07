@@ -101,7 +101,6 @@ class HddTempSensor(Entity):
             self._state = STATE_UNKNOWN
 
 
-# pylint: disable=too-few-public-methods
 class HddTempData(object):
     """Get the latest data from HDDTemp and update the states."""
 

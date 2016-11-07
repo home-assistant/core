@@ -6,6 +6,7 @@ from unittest.mock import call, patch
 from datetime import datetime, timedelta
 import os
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 from homeassistant.loader import get_component
 import homeassistant.util.dt as dt_util
@@ -312,6 +313,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                         TEST_PLATFORM))
         test_events = []
 
+        @callback
         def listener(event):
             """Helper method that will verify our event got called."""
             test_events.append(event)
