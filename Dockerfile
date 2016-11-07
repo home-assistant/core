@@ -6,7 +6,7 @@ VOLUME /config
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-RUN pip3 install --no-cache-dir colorlog cython
+RUN pip3 install --no-cache-dir colorlog cython==0.24.1
 
 # For the nmap tracker, bluetooth tracker, Z-Wave
 RUN apt-get update && \
