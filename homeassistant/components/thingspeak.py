@@ -33,41 +33,50 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Set up the Thingspeak environment."""
-    import thingspeak
-
-    conf = config[DOMAIN]
-    api_key = conf.get(CONF_API_KEY)
-    channel_id = conf.get(CONF_ID)
-    entity = conf.get(CONF_WHITELIST)
-
-    try:
-        channel = thingspeak.Channel(
-            channel_id, api_key=api_key, timeout=TIMEOUT)
-        channel.get()
-    except RequestException:
-        _LOGGER.error("Error while accessing the ThingSpeak channel. "
-                      "Please check that the channel exists and your "
-                      "API key is correct.")
-        return False
-
+    """Set up the Thingspeak environment for multiply channels"""
+    
     def thingspeak_listener(entity_id, old_state, new_state):
         """Listen for new events and send them to thingspeak."""
         if new_state is None or new_state.state in (
                 STATE_UNKNOWN, '', STATE_UNAVAILABLE):
             return
         try:
-            if new_state.entity_id != entity:
-                return
             _state = state_helper.state_as_number(new_state)
         except ValueError:
             return
         try:
-            channel.update({'api_key': channel.api_key, 'field1': _state})
+            _channel = entities[entity_id] 
+            _channel.update({'api_key':_channel.api_key, 'field1': _state})
         except RequestException:
-            _LOGGER.error("Error while sending value '%s' to Thingspeak",
-                          _state)
+            _LOGGER.error("Error while sending value '%s' to Thingspeak channel_id:%s",
+                          _state,_channel.channel_id)
+        
+    import thingspeak
 
-    event.track_state_change(hass, entity, thingspeak_listener)
+    entities = {}
 
-    return True
+    for object_id, conf in config.items():
+        if not conf:
+            continue
+        #checking for "thingspeak 1:" "THIingspeak 2:", etc
+        if object_id[:len(DOMAIN)].lower() != DOMAIN:
+            continue
+        # info to create the thingspeak channel 
+        api_key = conf.get(CONF_API_KEY)
+        channel_id = conf.get(CONF_ID)
+        entity = conf.get(CONF_WHITELIST)
+
+        try:
+            channel = thingspeak.Channel(
+                channel_id, api_key=api_key, timeout=TIMEOUT)
+            channel.get()
+        except RequestException:
+            _LOGGER.error("Error while accessing the ThingSpeak channel_id:{}. "
+                          "Please check that the channel exists and your "
+                          "API key is correct.".format(channel_id))
+        entities[entity] = channel
+        event.track_state_change(hass, entity, thingspeak_listener)
+    
+    # return False if all channels are errored
+    return entities != {}
+
