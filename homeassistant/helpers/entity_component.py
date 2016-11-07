@@ -355,7 +355,7 @@ class EntityPlatform(object):
 
         This method must be run in the event loop.
         """
-        # protect core for flooting all executors
+        # protect core from flooting all executors
         if self._process_updates:
             return
         self._process_updates = True
@@ -363,18 +363,19 @@ class EntityPlatform(object):
         try:
             tasks = []
             to_update = []
-            
+
             for entity in self.platform_entities:
                 if not entity.should_poll:
                         continue
 
+                update_coro = entity.async_update_ha_state(True)
                 if hasattr(entity, 'async_update'):
-                    tasks.append(entity.async_update_ha_state(True))
+                    tasks.append(update_coro)
                 else:
-                    to_update.append(entity)
+                    to_update.append(update_coro)
 
-            for entity in to_update:
-                yield from entity.async_update_ha_state(True)
+            for update_coro in to_update:
+                yield from update_coro
 
             if tasks:
                 yield from asyncio.wait(tasks, loop=self.component.hass.loop)
