@@ -46,7 +46,7 @@ def setup(hass, config):
         except ValueError:
             return
         try:
-            _channel = entities[entity_id] 
+            _channel = entities[entity_id]
             _channel.update({'api_key': _channel.api_key, 'field1': _state})
         except RequestException:
             _LOGGER.error("Error while sending value %s to Thingspeak "
@@ -59,7 +59,7 @@ def setup(hass, config):
         # checking for "thingspeak 1:" "THIingspeak 2:"
         if object_id[:len(DOMAIN)].lower() != DOMAIN:
             continue
-        # info to create the thingspeak channel 
+        # info to create the thingspeak channel
         api_key = conf.get(CONF_API_KEY)
         channel_id = conf.get(CONF_ID)
         entity = conf.get(CONF_WHITELIST)
