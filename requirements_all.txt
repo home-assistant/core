@@ -315,7 +315,7 @@ pmsensor==0.3
 proliphix==0.4.0
 
 # homeassistant.components.sensor.systemmonitor
-psutil==4.4.2
+psutil==5.0.0
 
 # homeassistant.components.wink
 pubnub==3.8.2
