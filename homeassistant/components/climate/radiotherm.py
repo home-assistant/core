@@ -135,9 +135,9 @@ class RadioThermostat(ClimateDevice):
         if temperature is None:
             return
         if self._current_operation == STATE_COOL:
-            self.device.t_cool = temperature
+            self.device.t_cool = round(temperature * 2.0) / 2.0
         elif self._current_operation == STATE_HEAT:
-            self.device.t_heat = temperature
+            self.device.t_heat = round(temperature * 2.0) / 2.0
         if self.hold_temp:
             self.device.hold = 1
         else:
@@ -159,6 +159,6 @@ class RadioThermostat(ClimateDevice):
         elif operation_mode == STATE_AUTO:
             self.device.tmode = 3
         elif operation_mode == STATE_COOL:
-            self.device.t_cool = self._target_temperature
+            self.device.t_cool = round(self._target_temperature * 2.0) / 2.0
         elif operation_mode == STATE_HEAT:
-            self.device.t_heat = self._target_temperature
+            self.device.t_heat = round(self._target_temperature * 2.0) / 2.0
