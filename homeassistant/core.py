@@ -14,7 +14,6 @@ import re
 import signal
 import sys
 import threading
-import weakref
 
 from types import MappingProxyType
 from typing import Optional, Any, Callable, List  # NOQA
@@ -110,7 +109,7 @@ class HomeAssistant(object):
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(self._async_exception_handler)
-        self._pending_tasks = weakref.WeakSet()
+        self._pending_tasks = []
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self.bus, self.async_add_job,
                                         self.loop)
@@ -218,7 +217,12 @@ class HomeAssistant(object):
 
         # if a task is sheduled
         if task is not None:
-            self._pending_tasks.add(task)
+            self._pending_tasks.append(task)
+
+        # cleanup
+        if len(self._pending_tasks) > 50:
+            self._pending_tasks = [sheduled for sheduled in self._pending_tasks
+                                   if not sheduled.done()]
 
     @callback
     def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
@@ -254,13 +258,15 @@ class HomeAssistant(object):
         """Block till all pending work is done."""
         while True:
             # Wait for the pending tasks are down
-            pending = list(self._pending_tasks)
+            pending = [task for task in self._pending_tasks
+                       if not task.done()]
+            self._pending_tasks.clear()
             if len(pending) > 0:
                 yield from asyncio.wait(pending, loop=self.loop)
 
             # Verify the loop is empty
             ret = yield from self.loop.run_in_executor(None, self._loop_empty)
-            if ret:
+            if ret and not self._pending_tasks:
                 break
 
     def stop(self) -> None:

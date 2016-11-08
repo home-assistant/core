@@ -118,6 +118,43 @@ class TestHomeAssistant(unittest.TestCase):
 
     #     self.assertEqual(1, len(calls))
 
+    def test_async_add_job_pending_taks_add(self):
+        """Add a coro to pending tasks."""
+        call_count = []
+
+        @asyncio.coroutine
+        def test_coro():
+            """Test Coro."""
+            call_count.append('call')
+
+        self.hass.add_job(test_coro())
+
+        assert len(self.hass._pending_tasks) == 1
+        self.hass.block_till_done()
+        assert len(call_count) == 1
+
+    def test_async_add_job_pending_taks_cleanup(self):
+        """Add a coro to pending tasks."""
+        call_count = []
+
+        @asyncio.coroutine
+        def test_coro():
+            """Test Coro."""
+            call_count.append('call')
+
+        for i in range(50):
+            self.hass.add_job(test_coro())
+
+        assert len(self.hass._pending_tasks) == 50
+        self.hass.block_till_done()
+        assert len(call_count) == 50
+
+        self.hass.add_job(test_coro())
+
+        assert len(self.hass._pending_tasks) == 1
+        self.hass.block_till_done()
+        assert len(call_count) == 51
+
 
 class TestEvent(unittest.TestCase):
     """A Test Event class."""
