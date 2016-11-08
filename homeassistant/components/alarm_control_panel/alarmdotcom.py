@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    add_devices([AlarmDotCom(hass, name, code, username, password)])
+    add_devices([AlarmDotCom(hass, name, code, username, password)], True)
 
 
 class AlarmDotCom(alarm.AlarmControlPanel):
