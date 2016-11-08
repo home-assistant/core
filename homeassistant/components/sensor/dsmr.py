@@ -18,7 +18,7 @@ DOMAIN = 'dsmr'
 REQUIREMENTS = ['dsmr_parser']
 
 DEFAULT_DEVICE = '/dev/ttyUSB0'
-DEFAULT_DSMR_VERSION = '2.2'
+DEFAULT_DSMR_VERSION = '4'
 
 CONF_DSMR_VERSION = 'dsmr_version'
 
@@ -54,14 +54,12 @@ class DSMR:
     def __init__(self, hass, config, devices):
         """Setup DSMR serial interface and add device entities."""
         from dsmr_parser.serial import (
-            SERIAL_SETTINGS_V2_2,
             SERIAL_SETTINGS_V4,
             SerialReader
         )
         from dsmr_parser import telegram_specifications
 
         dsmr_versions = {
-            '2.2': (SERIAL_SETTINGS_V2_2, telegram_specifications.V2_2),
             '4': (SERIAL_SETTINGS_V4, telegram_specifications.V4),
         }
 
