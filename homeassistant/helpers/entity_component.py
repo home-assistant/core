@@ -1,8 +1,6 @@
 """Helpers for components that manage entities."""
 import asyncio
 
-import async_timeout
-
 from homeassistant import config as conf_util
 from homeassistant.bootstrap import (
     async_prepare_setup_platform, async_prepare_setup_component)
@@ -140,18 +138,16 @@ class EntityComponent(object):
         entity_platform = self._platforms[key]
 
         try:
-            with async_timeout.timeout(30, loop=self.hass.loop):
-                if getattr(platform, 'async_setup_platform', None):
-                    yield from platform.async_setup_platform(
-                        self.hass, platform_config,
-                        entity_platform.async_add_entities, discovery_info
-                    )
-                else:
-                    yield from self.hass.loop.run_in_executor(
-                        None, platform.setup_platform, self.hass,
-                        platform_config, entity_platform.add_entities,
-                        discovery_info
-                    )
+            if getattr(platform, 'async_setup_platform', None):
+                yield from platform.async_setup_platform(
+                    self.hass, platform_config,
+                    entity_platform.async_add_entities, discovery_info
+                )
+            else:
+                yield from self.hass.loop.run_in_executor(
+                    None, platform.setup_platform, self.hass, platform_config,
+                    entity_platform.add_entities, discovery_info
+                )
 
             self.hass.config.components.append(
                 '{}.{}'.format(self.domain, platform_type))
