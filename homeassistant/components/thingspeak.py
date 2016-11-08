@@ -71,6 +71,7 @@ def setup(hass, config):
             _LOGGER.error("Error while accessing the ThingSpeak channel_id:%s"
                           "Please check that the channel exists and your "
                           "API key is correct.", channel_id)
+            continue
         entities[entity] = channel
         event.track_state_change(hass, entity, thingspeak_listener)
 
