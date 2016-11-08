@@ -22,11 +22,12 @@ DEFAULT_DSMR_VERSION = '2.2'
 
 CONF_DSMR_VERSION = 'dsmr_version'
 
-log = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Setup DSMR sensors."""
     from dsmr_parser.obis_references import (
         CURRENT_ELECTRICITY_USAGE,
         CURRENT_ELECTRICITY_DELIVERY,
@@ -52,7 +53,6 @@ class DSMR:
 
     def __init__(self, hass, config, devices):
         """Setup DSMR serial interface and add device entities."""
-
         from dsmr_parser.serial import (
             SERIAL_SETTINGS_V2_2,
             SERIAL_SETTINGS_V4,
@@ -81,13 +81,10 @@ class DSMR:
     @asyncio.coroutine
     def async_update(self):
         """Wait for DSMR telegram to be received and parsed."""
-
         while True:
-            if hasattr(self.dsmr_parser, 'serial_handle'):
-                print(self.dsmr_parser.serial_handle.in_waiting)
-            log.info('retrieving new telegram')
+            _LOGGER.info('retrieving new telegram')
             self._telegram = next(self.dsmr_parser.read())
-            log.info('got new telegram')
+            _LOGGER.info('got new telegram')
             yield from asyncio.sleep(10)
 
             tasks = []
@@ -99,7 +96,6 @@ class DSMR:
     @property
     def telegram(self):
         """Return latest received telegram."""
-
         return self._telegram
 
 
@@ -107,6 +103,7 @@ class DSMREntity(Entity):
     """Entity reading values from DSMR telegram."""
 
     def __init__(self, name, obis, interface):
+        """"Initialize entity."""
         self._name = name
         self._obis = obis
         self._interface = interface
@@ -135,7 +132,6 @@ class DSMRTariff(DSMREntity):
     @property
     def state(self):
         """Convert 2/1 to high/low."""
-
         tariff = super().state
         print(type(tariff), tariff)
         if tariff == '0002':
