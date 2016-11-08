@@ -80,17 +80,22 @@ class DSMR:
     @asyncio.coroutine
     def async_update(self):
         """Wait for DSMR telegram to be received and parsed."""
-        while True:
-            _LOGGER.info('retrieving new telegram')
-            self._telegram = next(self.dsmr_parser.read())
-            _LOGGER.info('got new telegram')
-            yield from asyncio.sleep(10)
+        _LOGGER.info('retrieving new telegram')
 
-            tasks = []
-            for device in self.devices:
-                tasks.append(device.async_update_ha_state())
+        self._telegram = self.read_telegram()
 
-            yield from asyncio.gather(*tasks, loop=self.hass.loop)
+        _LOGGER.info('got new telegram')
+
+        yield from asyncio.sleep(10, loop=self.hass.loop)
+        tasks = []
+        for device in self.devices:
+            tasks.append(device.async_update_ha_state())
+
+        yield from asyncio.gather(*tasks, loop=self.hass.loop)
+
+    def read_telegram(self):
+        """Read telegram."""
+        return next(self.dsmr_parser.read())
 
     @property
     def telegram(self):
