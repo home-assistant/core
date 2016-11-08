@@ -142,6 +142,7 @@ def _async_setup_component(hass: core.HomeAssistant,
         async_comp = hasattr(component, 'async_setup')
 
         try:
+            _LOGGER.info("Setup component %s", domain)
             if async_comp:
                 result = yield from component.async_setup(hass, config)
             else:
