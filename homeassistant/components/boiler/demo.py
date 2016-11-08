@@ -55,8 +55,7 @@ class DemoBoiler(BoilerDevice):
                                 "heat",   # Heating water
                                 "idle",   # Water on temp
                                 "kill",   # Heat above 60 for Legionella
-                                "off"     # Only applicable to normal units
-                                ]
+                                "off"]    # Only applicable to normal units
 
     @property
     def should_poll(self):
