@@ -119,7 +119,7 @@ class NetioApiView(HomeAssistantView):
         ndev.start_dates = start_dates
 
         for dev in DEVICES[host].entities:
-            self.hass.loop.create_task(dev.async_update_ha_state())
+            self.hass.async_add_job(dev.async_update_ha_state())
 
         return self.json(True)
 

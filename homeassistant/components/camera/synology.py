@@ -147,7 +147,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             devices.append(device)
 
     yield from asyncio.wait(tasks, loop=hass.loop)
-    hass.loop.create_task(async_add_devices(devices))
+    yield from async_add_devices(devices)
 
 
 @asyncio.coroutine
@@ -280,7 +280,7 @@ class SynologyCamera(Camera):
                     break
                 response.write(data)
         finally:
-            self.hass.loop.create_task(stream.release())
+            self.hass.async_add_job(stream.release())
             yield from response.write_eof()
 
     @property
