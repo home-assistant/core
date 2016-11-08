@@ -114,6 +114,7 @@ class DenonDevice(MediaPlayerDevice):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
+    
     @property
     def source_list(self):
         """List of available input sources."""
@@ -169,6 +170,7 @@ class DenonDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self.telnet_command('PWON')
+        
     def select_source(self, source):
         """Select input source."""
         self.telnet_command(self._source_list.get(source))
