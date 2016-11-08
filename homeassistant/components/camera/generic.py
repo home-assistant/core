@@ -118,6 +118,9 @@ class GenericCamera(Camera):
             except asyncio.TimeoutError:
                 _LOGGER.error('Timeout getting camera image')
                 return self._last_image
+            except aiohttp.errors.ClientOSError as error:
+                _LOGGER.error('Error getting camera image: %s', error)
+                return self._last_image
 
         self._last_url = url
         return self._last_image
