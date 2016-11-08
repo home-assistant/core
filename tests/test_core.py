@@ -164,7 +164,7 @@ class TestHomeAssistant(unittest.TestCase):
             call_count.append('call')
 
         for i in range(40):
-            self.hass.add_job(test_executor())
+            self.hass.add_job(test_executor)
 
         assert len(self.hass._pending_tasks) == 40
         self.hass.block_till_done()
@@ -180,7 +180,7 @@ class TestHomeAssistant(unittest.TestCase):
             call_count.append('call')
 
         for i in range(40):
-            self.hass.add_job(test_callback())
+            self.hass.add_job(test_callback)
 
         assert len(self.hass._pending_tasks) == 0
         assert len(call_count) == 40
