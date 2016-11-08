@@ -183,6 +183,7 @@ class TestHomeAssistant(unittest.TestCase):
             self.hass.add_job(test_callback)
 
         assert len(self.hass._pending_tasks) == 0
+        self.hass.block_till_done()
         assert len(call_count) == 40
 
 
