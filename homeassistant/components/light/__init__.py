@@ -69,6 +69,8 @@ ATTR_EFFECT = "effect"
 EFFECT_COLORLOOP = "colorloop"
 EFFECT_RANDOM = "random"
 EFFECT_WHITE = "white"
+EFFECT_CANDLE = "candle"
+EFFECT_RAINBOW = "rainbow"
 
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
