@@ -154,7 +154,7 @@ class YrData(object):
                 try_again('{} returned {}'.format(self._url, resp.status))
                 return
             text = yield from resp.text()
-            self.hass.loop.create_task(resp.release())
+            self.hass.async_add_job(resp.release())
         except asyncio.TimeoutError as err:
             try_again(err)
             return
