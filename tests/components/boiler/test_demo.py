@@ -71,7 +71,7 @@ class TestDemoBoiler(unittest.TestCase):
         boiler.set_temperature(self.hass, 60, ENTITY_HEATPUMP)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_HEATPUMP)
-        self.assertEqual(60.0, state.attributes.get('target_water_temperature'))
+        self.assertEqual(60, state.attributes.get('target_water_temperature'))
 
     def test_set_operation_bad_attr_and_state(self):
         """Test setting operation mode without required attribute, and
@@ -93,16 +93,16 @@ class TestDemoBoiler(unittest.TestCase):
         boiler.set_operation_mode(self.hass, "pump", ENTITY_GEYSERWISE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_GEYSERWISE)
-        self.assertEqual("idle", state.attributes.get('operation_mode'))
-        self.assertEqual("idle", state.state)
+        self.assertEqual("pump", state.attributes.get('operation_mode'))
+        self.assertEqual("pump", state.state)
 
     def test_set_away_mode_bad_attr(self):
         """Test setting the away mode without required attribute."""
         state = self.hass.states.get(ENTITY_GEYSERWISE)
-        self.assertEqual('on', state.attributes.get('away_mode'))
+        self.assertEqual('off', state.attributes.get('away_mode'))
         boiler.set_away_mode(self.hass, None, ENTITY_GEYSERWISE)
         self.hass.block_till_done()
-        self.assertEqual('on', state.attributes.get('away_mode'))
+        self.assertEqual('off', state.attributes.get('away_mode'))
 
     def test_set_away_mode_on(self):
         """Test setting the away mode on/true."""
