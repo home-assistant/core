@@ -40,6 +40,8 @@ SENSOR_TYPES = {
     'heat_index_c': ['Dewpoint (°C)', TEMP_CELSIUS],
     'heat_index_f': ['Dewpoint (°F)', TEMP_FAHRENHEIT],
     'heat_index_string': ['Heat Index Summary', None],
+    'elevation': ['Elevation', 'ft'],
+    'location': ['Location', None],
     'observation_time': ['Observation Time', None],
     'precip_1hr_in': ['Precipation 1hr', 'in'],
     'precip_1hr_metric': ['Precipation 1hr', 'mm'],
@@ -124,6 +126,10 @@ class WUndergroundSensor(Entity):
         if self.rest.data and self._condition in self.rest.data:
             if self._condition == 'relative_humidity':
                 return int(self.rest.data[self._condition][:-1])
+            elif self._condition == 'elevation':
+                return self.rest.data['observation_location']['elevation']
+            elif self._condition == 'location':
+                return self.rest.data['display_location']['full']
             else:
                 return self.rest.data[self._condition]
 
