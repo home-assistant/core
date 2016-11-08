@@ -7,20 +7,28 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dsmr/
 """
 
-import logging
 import asyncio
+import logging
 
-from homeassistant.helpers.entity import Entity
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_DEVICE
+from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'dsmr'
 
 REQUIREMENTS = ['dsmr-parser==0.2']
 
+CONF_DSMR_VERSION = 'dsmr_version'
 DEFAULT_DEVICE = '/dev/ttyUSB0'
 DEFAULT_DSMR_VERSION = '4'
 
-CONF_DSMR_VERSION = 'dsmr_version'
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
+        cv.string, vol.In(['4', '2.2'])),
+})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,8 +72,8 @@ class DSMR:
             '2.2': (SERIAL_SETTINGS_V2_2, telegram_specifications.V2_2),
         }
 
-        device = config.get(CONF_DEVICE, DEFAULT_DEVICE)
-        dsmr_version = config.get(CONF_DSMR_VERSION, DEFAULT_DSMR_VERSION)
+        device = config[CONF_DEVICE]
+        dsmr_version = config[CONF_DSMR_VERSION]
 
         self.dsmr_parser = SerialReader(
             device=device,

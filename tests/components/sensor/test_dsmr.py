@@ -1,10 +1,11 @@
 """Test for DSMR components."""
 
 import asyncio
-from homeassistant.bootstrap import async_setup_component
-from unittest.mock import patch
-from tests.common import assert_setup_component
 from decimal import Decimal
+from unittest.mock import patch
+
+from homeassistant.bootstrap import async_setup_component
+from tests.common import assert_setup_component
 
 
 @asyncio.coroutine
