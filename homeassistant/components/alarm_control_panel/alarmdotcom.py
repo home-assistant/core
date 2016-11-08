@@ -64,7 +64,6 @@ class AlarmDotCom(alarm.AlarmControlPanel):
     def update(self):
         """Fetch the latest state."""
         self._state = self._alarm.state
-        return True
 
     @property
     def name(self):
