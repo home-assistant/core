@@ -266,7 +266,7 @@ class HomeAssistant(object):
 
             # Verify the loop is empty
             ret = yield from self.loop.run_in_executor(None, self._loop_empty)
-            if ret:
+            if ret and not self._pending_tasks:
                 break
 
     def stop(self) -> None:
