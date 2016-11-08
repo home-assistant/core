@@ -15,7 +15,7 @@ from homeassistant.const import CONF_DEVICE
 
 DOMAIN = 'dsmr'
 
-REQUIREMENTS = ['dsmr_parser']
+REQUIREMENTS = ['dsmr-parser==0.2']
 
 DEFAULT_DEVICE = '/dev/ttyUSB0'
 DEFAULT_DSMR_VERSION = '4'
@@ -44,7 +44,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         DSMRTariff('Power Tariff', ELECTRICITY_ACTIVE_TARIFF, dsmr),
     ]
     yield from async_add_devices(devices, True)
-
     yield from dsmr.async_update()
 
 
@@ -55,12 +54,14 @@ class DSMR:
         """Setup DSMR serial interface and add device entities."""
         from dsmr_parser.serial import (
             SERIAL_SETTINGS_V4,
+            SERIAL_SETTINGS_V2_2,
             SerialReader
         )
         from dsmr_parser import telegram_specifications
 
         dsmr_versions = {
             '4': (SERIAL_SETTINGS_V4, telegram_specifications.V4),
+            '2.2': (SERIAL_SETTINGS_V2_2, telegram_specifications.V2_2),
         }
 
         device = config.get(CONF_DEVICE, DEFAULT_DEVICE)
@@ -131,7 +132,6 @@ class DSMRTariff(DSMREntity):
     def state(self):
         """Convert 2/1 to high/low."""
         tariff = super().state
-        print(type(tariff), tariff)
         if tariff == '0002':
             return 'high'
         elif tariff == '0001':
