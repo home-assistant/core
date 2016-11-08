@@ -101,11 +101,9 @@ class CurrencylayerSensor(Entity):
                 value['{}{}'.format(self._base, self._quote)], 4)
 
 
-# pylint: disable=too-few-public-methods
 class CurrencylayerData(object):
     """Get data from Currencylayer.org."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, resource, parameters):
         """Initialize the data object."""
         self._resource = resource

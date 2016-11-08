@@ -58,7 +58,6 @@ def extract_image_from_mjpeg(stream):
             return jpg
 
 
-# pylint: disable=too-many-instance-attributes
 class MjpegCamera(Camera):
     """An implementation of an IP camera that is reachable over a URL."""
 
@@ -113,7 +112,6 @@ class MjpegCamera(Camera):
 
         response = web.StreamResponse()
         response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
-        response.enable_chunked_encoding()
 
         yield from response.prepare(request)
 
@@ -125,7 +123,7 @@ class MjpegCamera(Camera):
                 response.write(data)
         finally:
             self.hass.loop.create_task(stream.release())
-            self.hass.loop.create_task(response.write_eof())
+            yield from response.write_eof()
 
     @property
     def name(self):

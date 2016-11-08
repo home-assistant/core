@@ -77,7 +77,6 @@ def load_data(url=None, file=None, username=None, password=None):
     return None
 
 
-# pylint: disable=too-few-public-methods
 class TelegramNotificationService(BaseNotificationService):
     """Implement the notification service for Telegram."""
 

@@ -90,7 +90,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=too-many-arguments
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Dark Sky sensor."""
     # Validate the configuration
@@ -128,7 +127,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors)
 
 
-# pylint: disable=too-few-public-methods
 class DarkSkySensor(Entity):
     """Implementation of a Dark Sky sensor."""
 
@@ -186,7 +184,6 @@ class DarkSkySensor(Entity):
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
         }
 
-    # pylint: disable=too-many-branches,too-many-statements
     def update(self):
         """Get the latest data from Dark Sky and updates the states."""
         # Call the API for new forecast data. Each sensor will re-trigger this
@@ -259,7 +256,6 @@ def convert_to_camel(data):
 class DarkSkyData(object):
     """Get the latest data from Darksky."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, api_key, latitude, longitude, units, interval):
         """Initialize the data object."""
         self._api_key = api_key

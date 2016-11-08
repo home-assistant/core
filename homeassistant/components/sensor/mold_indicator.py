@@ -55,11 +55,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         indoor_humidity_sensor, calib_factor)])
 
 
-# pylint: disable=too-many-instance-attributes
 class MoldIndicator(Entity):
     """Represents a MoldIndication sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, name, indoor_temp_sensor, outdoor_temp_sensor,
                  indoor_humidity_sensor, calib_factor):
         """Initialize the sensor."""

@@ -213,8 +213,6 @@ def request_oauth_completion(hass):
         submit_caption="I have authorized Fitbit."
     )
 
-# pylint: disable=too-many-locals
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fitbit sensor."""
@@ -348,7 +346,6 @@ class FitbitAuthCallbackView(HomeAssistantView):
         return html_response
 
 
-# pylint: disable=too-few-public-methods
 class FitbitSensor(Entity):
     """Implementation of a Fitbit sensor."""
 
@@ -400,7 +397,6 @@ class FitbitSensor(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    # pylint: disable=too-many-branches
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Fitbit API and update the states."""

@@ -90,11 +90,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors)
 
 
-# pylint: disable=too-many-instance-attributes
 class LoopEnergyDevice(Entity):
     """Implementation of an Loop Energy base sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, controller):
         """Initialize the sensor."""
         self._state = None
@@ -126,11 +124,9 @@ class LoopEnergyDevice(Entity):
         self.update_ha_state(True)
 
 
-# pylint: disable=too-many-instance-attributes
 class LoopEnergyElec(LoopEnergyDevice):
     """Implementation of an Loop Energy Electricity sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, controller):
         """Initialize the sensor."""
         super(LoopEnergyElec, self).__init__(controller)
@@ -142,11 +138,9 @@ class LoopEnergyElec(LoopEnergyDevice):
         self._state = round(self._controller.electricity_useage, 2)
 
 
-# pylint: disable=too-many-instance-attributes
 class LoopEnergyGas(LoopEnergyDevice):
     """Implementation of an Loop Energy Gas sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, controller):
         """Initialize the sensor."""
         super(LoopEnergyGas, self).__init__(controller)

@@ -28,7 +28,6 @@ ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 
 
 @asyncio.coroutine
-# pylint: disable=too-many-branches
 def async_setup(hass, config):
     """Setup the camera component."""
     component = EntityComponent(
@@ -102,7 +101,6 @@ class Camera(Entity):
 
         response.content_type = ('multipart/x-mixed-replace; '
                                  'boundary=--jpegboundary')
-        response.enable_chunked_encoding()
         yield from response.prepare(request)
 
         def write(img_bytes):
@@ -134,7 +132,7 @@ class Camera(Entity):
 
                 yield from asyncio.sleep(.5)
         finally:
-            self.hass.loop.create_task(response.write_eof())
+            yield from response.write_eof()
 
     @property
     def state(self):

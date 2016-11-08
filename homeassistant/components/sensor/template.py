@@ -68,7 +68,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class SensorTemplate(Entity):
     """Representation of a Template Sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, device_id, friendly_name, unit_of_measurement,
                  state_template, entity_ids):
         """Initialize the sensor."""

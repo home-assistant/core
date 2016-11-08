@@ -52,7 +52,6 @@ def get_service(hass, config):
         target_param_name)
 
 
-# pylint: disable=too-few-public-methods, too-many-arguments
 class RestNotificationService(BaseNotificationService):
     """Implementation of a notification service for REST."""
 

@@ -1,5 +1,5 @@
 """
-Support for pilight sensors.
+Support for Pilight sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.pilight/
@@ -9,8 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT,
-    CONF_PAYLOAD)
+    CONF_NAME, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT, CONF_PAYLOAD)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.pilight as pilight
@@ -18,11 +17,13 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_VARIABLE = 'variable'
+
 DEFAULT_NAME = 'Pilight Sensor'
 DEPENDENCIES = ['pilight']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required("variable"): cv.string,
+    vol.Required(CONF_VARIABLE): cv.string,
     vol.Required(CONF_PAYLOAD): vol.Schema(dict),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
@@ -31,19 +32,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup pilight Sensor."""
+    """Set up Pilight Sensor."""
     add_devices([PilightSensor(
         hass=hass,
         name=config.get(CONF_NAME),
-        variable=config.get("variable"),
+        variable=config.get(CONF_VARIABLE),
         payload=config.get(CONF_PAYLOAD),
         unit_of_measurement=config.get(CONF_UNIT_OF_MEASUREMENT)
     )])
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
 class PilightSensor(Entity):
-    """Representation of a sensor that can be updated using pilight."""
+    """Representation of a sensor that can be updated using Pilight."""
 
     def __init__(self, hass, name, variable, payload, unit_of_measurement):
         """Initialize the sensor."""

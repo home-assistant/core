@@ -52,8 +52,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([LgTVDevice(client, config[CONF_NAME])])
 
 
-# pylint: disable=too-many-public-methods, abstract-method
-# pylint: disable=too-many-instance-attributes
 class LgTVDevice(MediaPlayerDevice):
     """Representation of a LG TV."""
 

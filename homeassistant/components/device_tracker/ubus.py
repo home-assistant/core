@@ -37,7 +37,6 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-# pylint: disable=too-many-instance-attributes
 class UbusDeviceScanner(object):
     """
     This class queries a wireless router running OpenWrt firmware.

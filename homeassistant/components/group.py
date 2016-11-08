@@ -175,15 +175,16 @@ def async_setup(hass, config):
         conf = yield from component.async_prepare_reload()
         if conf is None:
             return
-        hass.loop.create_task(_async_process_config(hass, conf, component))
+        yield from _async_process_config(hass, conf, component)
 
-    @callback
+    @asyncio.coroutine
     def visibility_service_handler(service):
         """Change visibility of a group."""
         visible = service.data.get(ATTR_VISIBLE)
-        for group in component.async_extract_from_service(
-                service, expand_group=False):
-            group.async_set_visible(visible)
+        tasks = [group.async_set_visible(visible) for group
+                 in component.async_extract_from_service(service,
+                                                         expand_group=False)]
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
@@ -218,7 +219,6 @@ def _async_process_config(hass, config, component):
 class Group(Entity):
     """Track a group of entity ids."""
 
-    # pylint: disable=too-many-instance-attributes, too-many-arguments
     def __init__(self, hass, name, order=None, user_defined=True, icon=None,
                  view=False):
         """Initialize a group.
@@ -240,7 +240,6 @@ class Group(Entity):
         self._visible = True
 
     @staticmethod
-    # pylint: disable=too-many-arguments
     def create_group(hass, name, entity_ids=None, user_defined=True,
                      icon=None, view=False, object_id=None):
         """Initialize a group."""
@@ -251,7 +250,6 @@ class Group(Entity):
 
     @staticmethod
     @asyncio.coroutine
-    # pylint: disable=too-many-arguments
     def async_create_group(hass, name, entity_ids=None, user_defined=True,
                            icon=None, view=False, object_id=None):
         """Initialize a group.
@@ -294,12 +292,12 @@ class Group(Entity):
         """Return the icon of the group."""
         return self._icon
 
-    @callback
+    @asyncio.coroutine
     def async_set_visible(self, visible):
         """Change visibility of the group."""
         if self._visible != visible:
             self._visible = visible
-            self.hass.loop.create_task(self.async_update_ha_state())
+            yield from self.async_update_ha_state()
 
     @property
     def hidden(self):
@@ -420,7 +418,6 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
-        # pylint: disable=too-many-branches
         # To store current states of group entities. Might not be needed.
         states = None
         gr_state = self._state

@@ -68,13 +68,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-# pylint: disable=abstract-method
 class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self, name, remote):
-        """Initialize the samsung device."""
+        """Initialize the Panasonic device."""
         # Save a reference to the imported class
         self._name = name
         self._muted = False

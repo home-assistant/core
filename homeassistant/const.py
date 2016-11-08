@@ -2,10 +2,11 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
 MINOR_VERSION = 32
-PATCH_VERSION = '0.dev0'
+PATCH_VERSION = '2'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
+REQUIRED_PYTHON_VER_WIN = (3, 5, 2)
 
 PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
@@ -114,6 +115,7 @@ CONF_PIN = 'pin'
 CONF_PLATFORM = 'platform'
 CONF_PORT = 'port'
 CONF_PREFIX = 'prefix'
+CONF_PROTOCOL = 'protocol'
 CONF_QUOTE = 'quote'
 CONF_RECIPIENT = 'recipient'
 CONF_RESOURCE = 'resource'

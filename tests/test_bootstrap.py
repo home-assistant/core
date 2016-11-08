@@ -1,5 +1,5 @@
 """Test the bootstrapping."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 from unittest import mock
 import threading
 import logging
@@ -26,7 +26,6 @@ class TestBootstrap:
     backup_cache = None
 
     # pylint: disable=invalid-name, no-self-use
-
     def setup_method(self, method):
         """Setup the test."""
         self.backup_cache = loader._COMPONENT_CACHE

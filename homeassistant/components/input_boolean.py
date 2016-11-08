@@ -9,7 +9,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_TOGGLE, STATE_ON)
@@ -77,18 +76,20 @@ def async_setup(hass, config):
     if not entities:
         return False
 
-    @callback
+    @asyncio.coroutine
     def async_handler_service(service):
         """Handle a calls to the input boolean services."""
         target_inputs = component.async_extract_from_service(service)
 
-        for input_b in target_inputs:
-            if service.service == SERVICE_TURN_ON:
-                input_b.turn_on()
-            elif service.service == SERVICE_TURN_OFF:
-                input_b.turn_off()
-            else:
-                input_b.toggle()
+        if service.service == SERVICE_TURN_ON:
+            attr = 'async_turn_on'
+        elif service.service == SERVICE_TURN_OFF:
+            attr = 'async_turn_off'
+        else:
+            attr = 'async_toggle'
+
+        tasks = [getattr(input_b, attr)() for input_b in target_inputs]
+        yield from asyncio.gather(*tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handler_service, schema=SERVICE_SCHEMA)
@@ -131,12 +132,14 @@ class InputBoolean(ToggleEntity):
         """Return true if entity is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         self._state = True
-        self.hass.loop.create_task(self.async_update_ha_state())
+        yield from self.async_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         self._state = False
-        self.hass.loop.create_task(self.async_update_ha_state())
+        yield from self.async_update_ha_state()

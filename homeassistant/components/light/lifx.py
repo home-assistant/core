@@ -80,7 +80,6 @@ class LIFX(object):
                 break
         return bulb
 
-    # pylint: disable=too-many-arguments
     def on_device(self, ipaddr, name, power, hue, sat, bri, kel):
         """Initialize the light."""
         bulb = self.find_bulb(ipaddr)
@@ -99,7 +98,6 @@ class LIFX(object):
             bulb.set_color(hue, sat, bri, kel)
             bulb.update_ha_state()
 
-    # pylint: disable=too-many-arguments
     def on_color(self, ipaddr, hue, sat, bri, kel):
         """Initialize the light."""
         bulb = self.find_bulb(ipaddr)
@@ -137,11 +135,9 @@ def convert_rgb_to_hsv(rgb):
             int(brightness * SHORT_MAX)]
 
 
-# pylint: disable=too-many-instance-attributes
 class LIFXLight(Light):
     """Representation of a LIFX light."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, liffy, ipaddr, name, power, hue, saturation, brightness,
                  kelvin):
         """Initialize the light."""

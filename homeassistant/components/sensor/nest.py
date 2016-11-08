@@ -8,7 +8,7 @@ from itertools import chain
 
 import voluptuous as vol
 
-import homeassistant.components.nest as nest
+from homeassistant.components.nest import DATA_NEST, DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_PLATFORM, CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS
@@ -41,7 +41,7 @@ _VALID_SENSOR_TYPES = SENSOR_TYPES + SENSOR_TEMP_TYPES + PROTECT_VARS + \
                       list(WEATHER_VARS.keys())
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): nest.DOMAIN,
+    vol.Required(CONF_PLATFORM): DOMAIN,
     vol.Optional(CONF_SCAN_INTERVAL):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Required(CONF_MONITORED_CONDITIONS): [vol.In(_VALID_SENSOR_TYPES)],
@@ -50,6 +50,9 @@ PLATFORM_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest Sensor."""
+    nest = hass.data[DATA_NEST]
+
+    all_sensors = []
     for structure, device in chain(nest.devices(), nest.protect_devices()):
         sensors = [NestBasicSensor(structure, device, variable)
                    for variable in config[CONF_MONITORED_CONDITIONS]
@@ -64,8 +67,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors += [NestProtectSensor(structure, device, variable)
                     for variable in config[CONF_MONITORED_CONDITIONS]
                     if variable in PROTECT_VARS and is_protect(device)]
+        all_sensors.extend(sensors)
 
-        add_devices(sensors)
+    add_devices(all_sensors, True)
 
 
 def is_thermostat(device):
@@ -87,19 +91,23 @@ class NestSensor(Entity):
         self.device = device
         self.variable = variable
 
+        # device specific
+        self._location = self.device.where
+        self._name = self.device.name
+        self._state = None
+
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        location = self.device.where
-        name = self.device.name
-        if location is None:
-            return "{} {}".format(name, self.variable)
+        if self._location is None:
+            return "{} {}".format(self._name, self.variable)
         else:
-            if name == '':
-                return "{} {}".format(location.capitalize(), self.variable)
+            if self._name == '':
+                return "{} {}".format(self._location.capitalize(),
+                                      self.variable)
             else:
-                return "{}({}){}".format(location.capitalize(),
-                                         name,
+                return "{}({}){}".format(self._location.capitalize(),
+                                         self._name,
                                          self.variable)
 
 
@@ -109,15 +117,19 @@ class NestBasicSensor(NestSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.variable == 'operation_mode':
-            return getattr(self.device, "mode")
-        else:
-            return getattr(self.device, self.variable)
+        return self._state
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return SENSOR_UNITS.get(self.variable, None)
+
+    def update(self):
+        """Retrieve latest state."""
+        if self.variable == 'operation_mode':
+            self._state = getattr(self.device, "mode")
+        else:
+            self._state = getattr(self.device, self.variable)
 
 
 class NestTempSensor(NestSensor):
@@ -131,15 +143,19 @@ class NestTempSensor(NestSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
+        return self._state
+
+    def update(self):
+        """Retrieve latest state."""
         temp = getattr(self.device, self.variable)
         if temp is None:
-            return None
+            self._state = None
 
         if isinstance(temp, tuple):
             low, high = temp
-            return "%s-%s" % (int(low), int(high))
+            self._state = "%s-%s" % (int(low), int(high))
         else:
-            return round(temp, 1)
+            self._state = round(temp, 1)
 
 
 class NestWeatherSensor(NestSensor):
@@ -148,10 +164,16 @@ class NestWeatherSensor(NestSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
+        return self._state
+
+    def update(self):
+        """Retrieve latest state."""
         if self.variable == 'kph' or self.variable == 'direction':
-            return getattr(self.structure.weather.current.wind, self.variable)
+            self._state = getattr(self.structure.weather.current.wind,
+                                  self.variable)
         else:
-            return getattr(self.structure.weather.current, self.variable)
+            self._state = getattr(self.structure.weather.current,
+                                  self.variable)
 
     @property
     def unit_of_measurement(self):
@@ -165,20 +187,24 @@ class NestProtectSensor(NestSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
+        return self._state
+
+    def update(self):
+        """Retrieve latest state."""
         state = getattr(self.device, self.variable)
         if self.variable == 'battery_level':
-            return getattr(self.device, self.variable)
+            self._state = getattr(self.device, self.variable)
         else:
             if state == 0:
-                return 'Ok'
+                self._state = 'Ok'
             if state == 1 or state == 2:
-                return 'Warning'
+                self._state = 'Warning'
             if state == 3:
-                return 'Emergency'
+                self._state = 'Emergency'
 
-        return 'Unknown'
+        self._state = 'Unknown'
 
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        return "{} {}".format(self.device.where.capitalize(), self.variable)
+        return "{} {}".format(self._location.capitalize(), self.variable)

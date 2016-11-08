@@ -87,11 +87,9 @@ def setup(hass, config):
     return True
 
 
-# pylint: disable=too-many-instance-attributes
 class Proximity(Entity):
     """Representation of a Proximity."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, zone_friendly_name, dist_to, dir_of_travel,
                  nearest, ignored_zones, proximity_devices, tolerance,
                  proximity_zone, unit_of_measurement):
@@ -130,7 +128,6 @@ class Proximity(Entity):
             ATTR_NEAREST: self.nearest,
         }
 
-    # pylint: disable=too-many-branches,too-many-statements,too-many-locals
     def check_proximity_state_change(self, entity, old_state, new_state):
         """Function to perform the proximity checking."""
         entity_name = new_state.name

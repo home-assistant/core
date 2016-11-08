@@ -1,7 +1,6 @@
 """The tests for Home Assistant frontend."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 import re
-import time
 import unittest
 
 import requests
@@ -25,14 +24,12 @@ def _url(path=""):
     return HTTP_BASE_URL + path
 
 
-def setUpModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def setUpModule():
     """Initialize a Home Assistant server."""
     global hass
 
     hass = get_test_home_assistant()
-
-    hass.bus.listen('test_event', lambda _: _)
-    hass.states.set('test.test', 'a_state')
 
     assert bootstrap.setup_component(
         hass, http.DOMAIN,
@@ -42,10 +39,10 @@ def setUpModule():   # pylint: disable=invalid-name
     assert bootstrap.setup_component(hass, 'frontend')
 
     hass.start()
-    time.sleep(0.05)
 
 
-def tearDownModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def tearDownModule():
     """Stop everything that was started."""
     hass.stop()
     frontend.PANELS = {}
@@ -61,7 +58,6 @@ class TestFrontend(unittest.TestCase):
     def test_frontend_and_static(self):
         """Test if we can get the frontend."""
         req = requests.get(_url(""))
-
         self.assertEqual(200, req.status_code)
 
         # Test we can retrieve frontend.js
@@ -70,9 +66,7 @@ class TestFrontend(unittest.TestCase):
             req.text)
 
         self.assertIsNotNone(frontendjs)
-
         req = requests.get(_url(frontendjs.groups(0)[0]))
-
         self.assertEqual(200, req.status_code)
 
     def test_404(self):
@@ -82,3 +76,15 @@ class TestFrontend(unittest.TestCase):
     def test_we_cannot_POST_to_root(self):
         """Test that POST is not allow to root."""
         self.assertEqual(405, requests.post(_url("")).status_code)
+
+    def test_states_routes(self):
+        """All served by index."""
+        req = requests.get(_url("/states"))
+        self.assertEqual(200, req.status_code)
+
+        req = requests.get(_url("/states/group.non_existing"))
+        self.assertEqual(404, req.status_code)
+
+        hass.states.set('group.existing', 'on', {'view': True})
+        req = requests.get(_url("/states/group.existing"))
+        self.assertEqual(200, req.status_code)

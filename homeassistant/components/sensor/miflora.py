@@ -87,7 +87,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MiFloraSensor(Entity):
     """Implementing the MiFlora sensor."""
 
-    # pylint: disable=too-many-instance-attributes,too-many-arguments
     def __init__(self, poller, parameter, name, unit, force_update, median):
         """Initialize the sensor."""
         self.poller = poller

@@ -71,7 +71,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([SwissHydrologicalDataSensor(name, data)])
 
 
-# pylint: disable=too-few-public-methods
 class SwissHydrologicalDataSensor(Entity):
     """Implementation of an Swiss hydrological sensor."""
 
@@ -138,7 +137,6 @@ class SwissHydrologicalDataSensor(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data and update the states."""
         self.data.update()
@@ -149,7 +147,6 @@ class SwissHydrologicalDataSensor(Entity):
                 self._state = self.data.measurings['03']['current']
 
 
-# pylint: disable=too-few-public-methods
 class HydrologicalData(object):
     """The Class for handling the data retrieval."""
 

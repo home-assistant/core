@@ -70,7 +70,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name, data, hass.config.units.temperature_unit)])
 
 
-# pylint: disable=too-few-public-methods
 class OpenWeatherMapWeather(WeatherEntity):
     """Implementation of an OpenWeatherMap sensor."""
 
@@ -99,7 +98,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the temperature."""
-        return self.data.get_temperature('celsius')['temp']
+        return self.data.get_temperature('celsius').get('temp')
 
     @property
     def temperature_unit(self):
@@ -109,7 +108,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        return self.data.get_pressure()['press']
+        return self.data.get_pressure().get('press')
 
     @property
     def humidity(self):
@@ -119,19 +118,18 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self.data.get_wind()['speed']
+        return self.data.get_wind().get('speed')
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return self.data.get_wind()['deg']
+        return self.data.get_wind().get('deg')
 
     @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data from OWM and updates the states."""
         self._owm.update()

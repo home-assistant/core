@@ -100,7 +100,6 @@ def _setup_us(username, password, config, add_devices):
 class RoundThermostat(ClimateDevice):
     """Representation of a Honeywell Round Connected thermostat."""
 
-    # pylint: disable=too-many-instance-attributes, abstract-method
     def __init__(self, device, zone_id, master, away_temp):
         """Initialize the thermostat."""
         self.device = device
@@ -197,7 +196,6 @@ class RoundThermostat(ClimateDevice):
             self._is_dhw = False
 
 
-# pylint: disable=abstract-method
 class HoneywellUSThermostat(ClimateDevice):
     """Representation of a Honeywell US Thermostat."""
 
@@ -225,7 +223,6 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        self._device.refresh()
         return self._device.current_temperature
 
     @property
@@ -276,3 +273,7 @@ class HoneywellUSThermostat(ClimateDevice):
         """Set the system mode (Cool, Heat, etc)."""
         if hasattr(self._device, ATTR_SYSTEM_MODE):
             self._device.system_mode = operation_mode
+
+    def update(self):
+        """Update the state."""
+        self._device.refresh()

@@ -63,7 +63,6 @@ def setup(hass, config):
     return True
 
 
-# pylint: disable=too-many-instance-attributes
 class VerisureHub(object):
     """A Verisure hub wrapper class."""
 

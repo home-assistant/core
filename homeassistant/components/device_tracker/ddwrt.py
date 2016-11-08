@@ -41,7 +41,6 @@ def get_scanner(hass, config):
         return None
 
 
-# pylint: disable=too-many-instance-attributes
 class DdWrtDeviceScanner(object):
     """This class queries a wireless router running DD-WRT firmware."""
 

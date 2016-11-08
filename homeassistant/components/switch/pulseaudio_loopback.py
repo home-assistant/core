@@ -141,7 +141,6 @@ class PAServer():
             return -1
 
 
-# pylint: disable=too-many-arguments
 class PALoopbackSwitch(SwitchDevice):
     """Representation the presence or absence of a PA loopback module."""
 

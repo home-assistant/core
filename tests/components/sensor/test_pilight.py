@@ -11,13 +11,14 @@ HASS = None
 
 
 def fire_pilight_message(protocol, data):
-    """Fire the fake pilight message."""
-    message = {pilight.ATTR_PROTOCOL: protocol}
+    """Fire the fake Pilight message."""
+    message = {pilight.CONF_PROTOCOL: protocol}
     message.update(data)
     HASS.bus.fire(pilight.EVENT, message)
 
 
-def setup_function():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def setup_function():
     """Initialize a Home Assistant server."""
     global HASS
 
@@ -25,7 +26,8 @@ def setup_function():   # pylint: disable=invalid-name
     HASS.config.components = ['pilight']
 
 
-def teardown_function():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def teardown_function():
     """Stop the Home Assistant server."""
     HASS.stop()
 
@@ -65,23 +67,23 @@ def test_disregard_wrong_payload():
                 'platform': 'pilight',
                 'name': 'test_2',
                 'variable': 'test',
-                'payload': {'uuid': '1-2-3-4',
-                            'protocol': 'test-protocol_2'}
+                'payload': {
+                    'uuid': '1-2-3-4',
+                    'protocol': 'test-protocol_2'
+                }
             }
         })
 
         # Try set value from data with incorrect payload
         fire_pilight_message(protocol='test-protocol_2',
-                             data={'test': 'data',
-                                   'uuid': '0-0-0-0'})
+                             data={'test': 'data', 'uuid': '0-0-0-0'})
         HASS.block_till_done()
         state = HASS.states.get('sensor.test_2')
         assert state.state == 'unknown'
 
         # Try set value from data with partially matched payload
         fire_pilight_message(protocol='wrong-protocol',
-                             data={'test': 'data',
-                                   'uuid': '1-2-3-4'})
+                             data={'test': 'data', 'uuid': '1-2-3-4'})
         HASS.block_till_done()
         state = HASS.states.get('sensor.test_2')
         assert state.state == 'unknown'
@@ -111,8 +113,7 @@ def test_variable_missing(caplog):
 
         # Create code without sensor variable
         fire_pilight_message(protocol='test-protocol',
-                             data={'uuid': '1-2-3-4',
-                                   'other_variable': 3.141})
+                             data={'uuid': '1-2-3-4', 'other_variable': 3.141})
         HASS.block_till_done()
 
         logs = caplog.text

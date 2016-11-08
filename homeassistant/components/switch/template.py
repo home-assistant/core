@@ -77,7 +77,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class SwitchTemplate(SwitchDevice):
     """Representation of a Template switch."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, device_id, friendly_name, state_template,
                  on_action, off_action, entity_ids):
         """Initialize the Template switch."""

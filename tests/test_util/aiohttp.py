@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import functools
 import json as _json
 from unittest import mock
+from urllib.parse import urlparse, parse_qs
 
 
 class AiohttpClientMocker:
@@ -57,7 +58,8 @@ class AiohttpClientMocker:
         return len(self.mock_calls)
 
     @asyncio.coroutine
-    def match_request(self, method, url, *, auth=None):
+    def match_request(self, method, url, *, auth=None): \
+            # pylint: disable=unused-variable
         """Match a request against pre-registered requests."""
         for response in self._mocks:
             if response.match_request(method, url):
@@ -74,13 +76,41 @@ class AiohttpClientMockResponse:
     def __init__(self, method, url, status, response):
         """Initialize a fake response."""
         self.method = method
-        self.url = url
+        self._url = url
+        self._url_parts = (None if hasattr(url, 'search')
+                           else urlparse(url.lower()))
         self.status = status
         self.response = response
 
     def match_request(self, method, url):
         """Test if response answers request."""
-        return method == self.method and url == self.url
+        if method.lower() != self.method.lower():
+            return False
+
+        # regular expression matching
+        if self._url_parts is None:
+            return self._url.search(url) is not None
+
+        req = urlparse(url.lower())
+
+        if self._url_parts.scheme and req.scheme != self._url_parts.scheme:
+            return False
+        if self._url_parts.netloc and req.netloc != self._url_parts.netloc:
+            return False
+        if (req.path or '/') != (self._url_parts.path or '/'):
+            return False
+
+        # Ensure all query components in matcher are present in the request
+        request_qs = parse_qs(req.query)
+        matcher_qs = parse_qs(self._url_parts.query)
+        for key, vals in matcher_qs.items():
+            for val in vals:
+                try:
+                    request_qs.get(key, []).remove(val)
+                except ValueError:
+                    return False
+
+        return True
 
     @asyncio.coroutine
     def read(self):

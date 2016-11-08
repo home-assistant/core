@@ -48,7 +48,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=too-many-arguments
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Bbox sensor."""
     # Create a data fetcher to support all of the configured sensors. Then make
@@ -128,7 +127,6 @@ class BboxSensor(Entity):
                                 2)
 
 
-# pylint: disable=too-few-public-methods
 class BboxData(object):
     """Get data from the Bbox."""
 

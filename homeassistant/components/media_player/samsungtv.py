@@ -56,11 +56,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([SamsungTVDevice(name, remote_config)])
 
 
-# pylint: disable=abstract-method
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self, name, config):
         """Initialize the Samsung device."""
         from samsungctl import Remote

@@ -78,7 +78,6 @@ class WinkLight(WinkDevice, Light):
         """Flag supported features."""
         return SUPPORT_WINK
 
-    # pylint: disable=too-few-public-methods
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)

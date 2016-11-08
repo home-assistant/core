@@ -93,9 +93,9 @@ def setup(hass, base_config):
     return True
 
 
+# pylint: disable=too-many-return-statements
 def map_vera_device(vera_device, remap):
     """Map vera  classes to HA types."""
-    # pylint: disable=too-many-return-statements
     import pyvera as veraApi
     if isinstance(vera_device, veraApi.VeraDimmer):
         return 'light'

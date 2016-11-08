@@ -54,8 +54,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class PioneerDevice(MediaPlayerDevice):
     """Representation of a Pioneer device."""
 
-    # pylint: disable=too-many-public-methods, abstract-method
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, name, host, port, timeout):
         """Initialize the Pioneer device."""
         self._name = name

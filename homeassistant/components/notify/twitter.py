@@ -37,7 +37,6 @@ def get_service(hass, config):
     )
 
 
-# pylint: disable=too-few-public-methods
 class TwitterNotificationService(BaseNotificationService):
     """Implementation of a notification service for the Twitter service."""
 
