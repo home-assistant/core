@@ -34,7 +34,7 @@ class TestDemoBoiler(unittest.TestCase):
         state = self.hass.states.get(ENTITY_GEYSERWISE)
         # do I also need to set:
         # name, type, diff_temp, unit_of_measure
-        self.assertEqual(55, state.attributes.get('target_water_temp'))
+        self.assertEqual(55, state.attributes.get('target_water_temperature'))
         self.assertEqual('off', state.attributes.get('away_mode'))
         self.assertEqual("off", state.attributes.get('guest_mode'))
         self.assertEqual("off", state.attributes.get('holiday_mode'))
@@ -45,33 +45,33 @@ class TestDemoBoiler(unittest.TestCase):
         """Test the setup with default parameters."""
         state = self.hass.states.get(ENTITY_GEYSERWISE)
         self.assertEqual(30, state.attributes.get('current_water_temp'))
-        self.assertEqual(65, state.attributes.get('target_water_temp'))
+        self.assertEqual(65, state.attributes.get('target_water_temperature'))
 
     def test_set_only_target_temp_bad_attr(self):
         """Test setting the target temperature without required attribute."""
         state = self.hass.states.get(ENTITY_GEYSERWISE)
-        self.assertEqual(65, state.attributes.get('target_water_temp'))
+        self.assertEqual(65, state.attributes.get('target_water_temperature'))
         boiler.set_temperature(self.hass, None, ENTITY_GEYSERWISE)
         self.hass.block_till_done()
-        self.assertEqual(65, state.attributes.get('target_water_temp'))
+        self.assertEqual(65, state.attributes.get('target_water_temperature'))
 
     def test_set_only_target_temp(self):
         """Test the setting of the target temperature."""
         state = self.hass.states.get(ENTITY_GEYSERWISE)
-        self.assertEqual(50, state.attributes.get('target_water_temp'))
+        self.assertEqual(50, state.attributes.get('target_water_temperature'))
         boiler.set_temperature(self.hass, 55, ENTITY_GEYSERWISE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_GEYSERWISE)
-        self.assertEqual(55.0, state.attributes.get('target_water_temp'))
+        self.assertEqual(55.0, state.attributes.get('target_water_temperature'))
 
     def test_set_only_target_temp_with_convert(self):
         """Test the setting of the target temperature."""
         state = self.hass.states.get(ENTITY_HEATPUMP)
-        self.assertEqual(55, state.attributes.get('target_water_temp'))
+        self.assertEqual(55, state.attributes.get('target_water_temperature'))
         boiler.set_temperature(self.hass, 60, ENTITY_HEATPUMP)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_HEATPUMP)
-        self.assertEqual(60.0, state.attributes.get('target_water_temp'))
+        self.assertEqual(60.0, state.attributes.get('target_water_temperature'))
 
     def test_set_operation_bad_attr_and_state(self):
         """Test setting operation mode without required attribute, and
