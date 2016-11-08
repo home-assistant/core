@@ -31,33 +31,42 @@ MIN_TIME_BETWEEN_UPDATES_OBSERVATION = timedelta(minutes=5)
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
     'alerts': ['Alerts', None],
-    'weather': ['Weather Summary', None],
-    'station_id': ['Station ID', None],
+    'dewpoint_c': ['Dewpoint (°C)', TEMP_CELSIUS],
+    'dewpoint_f': ['Dewpoint (°F)', TEMP_FAHRENHEIT],
+    'dewpoint_string': ['Dewpoint Summary', None],
     'feelslike_c': ['Feels Like (°C)', TEMP_CELSIUS],
     'feelslike_f': ['Feels Like (°F)', TEMP_FAHRENHEIT],
     'feelslike_string': ['Feels Like', None],
     'heat_index_c': ['Dewpoint (°C)', TEMP_CELSIUS],
     'heat_index_f': ['Dewpoint (°F)', TEMP_FAHRENHEIT],
     'heat_index_string': ['Heat Index Summary', None],
-    'dewpoint_c': ['Dewpoint (°C)', TEMP_CELSIUS],
-    'dewpoint_f': ['Dewpoint (°F)', TEMP_FAHRENHEIT],
-    'dewpoint_string': ['Dewpoint Summary', None],
-    'wind_kph': ['Wind Speed', 'kpH'],
-    'wind_mph': ['Wind Speed', 'mpH'],
-    'UV': ['UV', None],
-    'pressure_in': ['Pressure', 'in'],
-    'pressure_mb': ['Pressure', 'mbar'],
-    'wind_dir': ['Wind Direction', None],
-    'wind_string': ['Wind Summary', None],
-    'temp_c': ['Temperature (°C)', TEMP_CELSIUS],
-    'temp_f': ['Temperature (°F)', TEMP_FAHRENHEIT],
-    'relative_humidity': ['Relative Humidity', '%'],
-    'visibility_mi': ['Visibility (miles)', 'mi'],
-    'visibility_km': ['Visibility (km)', 'km'],
+    'observation_time': ['Observation Time', None],
+    'precip_1hr_in': ['Precipation 1hr', 'in'],
+    'precip_1hr_metric': ['Precipation 1hr', 'mm'],
+    'precip_1hr_string': ['Precipation 1hr', None],
     'precip_today_in': ['Precipation Today', 'in'],
     'precip_today_metric': ['Precipitation Today', 'mm'],
     'precip_today_string': ['Precipitation today', None],
-    'solarradiation': ['Solar Radiation', None]
+    'pressure_in': ['Pressure', 'in'],
+    'pressure_mb': ['Pressure', 'mb'],
+    'pressure_trend': ['Pressure Trend', None],
+    'relative_humidity': ['Relative Humidity', '%'],
+    'station_id': ['Station ID', None],
+    'solarradiation': ['Solar Radiation', None],
+    'temperature_string': ['Temperature Summary', None],
+    'temp_c': ['Temperature (°C)', TEMP_CELSIUS],
+    'temp_f': ['Temperature (°F)', TEMP_FAHRENHEIT],
+    'UV': ['UV', None],
+    'visibility_km': ['Visibility (km)', 'km'],
+    'visibility_mi': ['Visibility (miles)', 'mi'],
+    'weather': ['Weather Summary', None],
+    'wind_degrees': ['Wind Degrees', None],
+    'wind_dir': ['Wind Direction', None],
+    'wind_gust_kph': ['Wind Gust', 'kpH'],
+    'wind_gust_mph': ['Wind Gust', 'mpH'],
+    'wind_kph': ['Wind Speed', 'kpH'],
+    'wind_mph': ['Wind Speed', 'mpH'],
+    'wind_string': ['Wind Summary', None],
 }
 
 # Alert Attributes
@@ -165,6 +174,7 @@ class WUndergroundSensor(Entity):
             self.rest.update()
 
 
+# pylint: disable=too-few-public-methods
 class WUndergroundData(object):
     """Get data from WUnderground."""
 
