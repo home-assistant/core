@@ -124,9 +124,14 @@ class WUndergroundSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         if self.rest.data:
-            if self._condition == 'elevation':
-                return self.rest.data['observation_location']['elevation'].split(' ')[0]
-            elif self._condition == 'location':
+
+            if self._condition == 'elevation' and \
+               self._condition in self.rest.data['observation_location']:
+                return self.rest.data['observation_location'][self._condition]\
+                        .split()[0]
+
+            if self._condition == 'location' and \
+               'full' in self.rest.data['display_location']:
                 return self.rest.data['display_location']['full']
 
             if self._condition in self.rest.data:
