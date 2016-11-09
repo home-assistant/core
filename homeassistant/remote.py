@@ -128,6 +128,7 @@ class HomeAssistant(ha.HomeAssistant):
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(self._async_exception_handler)
         self._pending_tasks = []
+        self._pending_sheduler = None
 
         self.bus = EventBus(remote_api, self)
         self.services = ha.ServiceRegistry(self.bus, self.add_job, self.loop)
