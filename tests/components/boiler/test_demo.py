@@ -11,8 +11,8 @@ from tests.common import get_test_home_assistant
 
 
 ENTITY_GEYSERWISE = 'boiler.geyserwise'
+ENTITY_GEYSERWISE_MAX = 'boiler.geyserwise_max'
 ENTITY_QWIKSWITCH = 'boiler.qwikswitch'
-ENTITY_HEATPUMP = 'boiler.heatpump'
 
 
 class TestDemoBoiler(unittest.TestCase):
@@ -74,11 +74,11 @@ class TestDemoBoiler(unittest.TestCase):
 
     def test_set_only_target_temp_with_convert(self):
         """Test the setting of the target temperature."""
-        state = self.hass.states.get(ENTITY_HEATPUMP)
+        state = self.hass.states.get(ENTITY_GEYSERWISE_MAX)
         self.assertEqual(55, state.attributes.get('target_water_temperature'))
-        boiler.set_temperature(self.hass, 60, ENTITY_HEATPUMP)
+        boiler.set_temperature(self.hass, 60, ENTITY_GEYSERWISE_MAX)
         self.hass.block_till_done()
-        state = self.hass.states.get(ENTITY_HEATPUMP)
+        state = self.hass.states.get(ENTITY_GEYSERWISE_MAX)
         self.assertEqual(60, state.attributes.get('target_water_temperature'))
 
     def test_set_operation_bad_attr_and_state(self):
