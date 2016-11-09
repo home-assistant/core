@@ -113,15 +113,24 @@ class KNXSensorFloatClass(KNXGroupAddress, KNXSensorBaseClass):
         self._unit_of_measurement = unit_of_measurement
         self._minimum_value = minimum_sensor_value
         self._maximum_value = maximum_sensor_value
+        self._value = None
 
         KNXGroupAddress.__init__(self, hass, config)
 
     @property
     def state(self):
         """Return the Value of the KNX Sensor."""
+        return self._value
+
+    def update(self):
+        """Update KNX sensor."""
+        from knxip.conversion import knx2_to_float
+
+        super().update()
+
+        self._value = None
+
         if self._data:
-            from knxip.conversion import knx2_to_float
             value = knx2_to_float(self._data)
             if self._minimum_value <= value <= self._maximum_value:
-                return value
-        return None
+                self._value = value
