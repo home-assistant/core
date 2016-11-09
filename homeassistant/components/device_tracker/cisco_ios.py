@@ -26,8 +26,8 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT): cv.positive_int,
+        vol.Optional(CONF_PASSWORD, default=''): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
     })
 )
 
@@ -39,7 +39,6 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-# pylint: disable=too-many-instance-attributes
 class CiscoDeviceScanner(object):
     """This class queries a wireless router running Cisco IOS firmware."""
 
@@ -47,8 +46,8 @@ class CiscoDeviceScanner(object):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
-        self.port = config.get(CONF_PORT, None)
-        self.password = config.get(CONF_PASSWORD, '')
+        self.port = config.get(CONF_PORT)
+        self.password = config.get(CONF_PASSWORD)
 
         self.last_results = {}
 
@@ -85,24 +84,24 @@ class CiscoDeviceScanner(object):
             # and the arp table titles e.g.
             # show ip arp
             # Protocol  Address | Age (min) | Hardware Addr | Type | Interface
-            lines_result.remove(lines_result[0])
-            lines_result.remove(lines_result[0])
+            lines_result = lines_result[2:]
 
             for line in lines_result:
                 if len(line.split()) is 6:
+                    parts = line.split()
+                    if len(parts) != 6:
+                        continue
 
                     # ['Internet', '10.10.11.1', '-', '0027.d32d.0123', 'ARPA',
                     # 'GigabitEthernet0']
-                    _protocol, _address, age, hw_addr, _arptype, _interface = \
-                        line.split()
+                    age = parts[2]
+                    hw_addr = parts[3]
 
                     if age != "-":
                         mac = _parse_cisco_mac_address(hw_addr)
                         age = int(age)
                         if age < 1:
-                            _LOGGER.debug('ADDING: age < 1: ' + line)
-                            _LOGGER.debug('\t\t: ' + mac)
-                            last_results.append(mac.upper())
+                            last_results.append(mac)
 
             self.last_results = last_results
             return True
@@ -113,7 +112,6 @@ class CiscoDeviceScanner(object):
         """Open connection to the router and get arp entries."""
         from pexpect import pxssh
         import re
-        _LOGGER.info('Checking ARP')
 
         try:
             cisco_ssh = pxssh.pxssh()
@@ -154,11 +152,11 @@ def _parse_cisco_mac_address(cisco_hardware_addr):
     to:
     00:1D:EC:02:07:AB
 
-    :param cisco_hwaddr: HWAddr String from Cisco ARP table
-    :return: Regular standard MAC address
+    Takes in cisco_hwaddr: HWAddr String from Cisco ARP table
+    Returns a regular standard MAC address
     """
     cisco_hardware_addr = cisco_hardware_addr.replace('.', '')
     blocks = [cisco_hardware_addr[x:x + 2]
               for x in range(0, len(cisco_hardware_addr), 2)]
 
-    return ':'.join(blocks)
+    return ':'.join(blocks).upper()
