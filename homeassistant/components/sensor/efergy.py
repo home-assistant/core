@@ -30,8 +30,8 @@ CONF_BUDGET = 'budget'
 CONF_COST = 'cost'
 
 SENSOR_TYPES = {
-    CONF_INSTANT: ['Energy Usage', 'kW'],
-    CONF_AMOUNT: ['Energy Consumed', 'kW'],
+    CONF_INSTANT: ['Energy Usage', 'kWh'],
+    CONF_AMOUNT: ['Energy Consumed', 'kWh'],
     CONF_BUDGET: ['Energy Budget', None],
     CONF_COST: ['Energy Cost', None],
 }
