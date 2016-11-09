@@ -87,7 +87,7 @@ class SmartPlugSwitch(SwitchDevice):
             current_consumption = STATE_UNKNOWN
 
         try:
-            total_consumption = "%.1f W" % \
+            total_consumption = "%.1f kWh" % \
                                 float(self.smartplug.total_consumption)
         except ValueError:
             total_consumption = STATE_UNKNOWN
