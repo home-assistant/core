@@ -77,7 +77,7 @@ def request_sensors():
     units = NETWORK.request('sensors/list')
     # One unit can contain many sensors.
     if units and 'sensor' in units:
-        return {unit['id']+sensor['name']: dict(unit, data=sensor)
+        return {unit['id']+str(sensor['name']): dict(unit, data=sensor)
                 for unit in units['sensor']
                 for sensor in unit['data']}
     return None
@@ -117,7 +117,7 @@ class TelldusLiveData(object):
 
     def _discover(self, found_devices, component_name):
         """Send discovery event if component not yet discovered."""
-        if not len(found_devices):
+        if not found_devices:
             return
 
         _LOGGER.info("discovered %d new %s devices",
