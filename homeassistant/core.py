@@ -58,6 +58,9 @@ ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 # Size of a executor pool
 EXECUTOR_POOL_SIZE = 15
 
+# Time for cleanup internal pending tasks
+TIME_INTERVAL_TASKS_CLEANUP = 10
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -110,6 +113,7 @@ class HomeAssistant(object):
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(self._async_exception_handler)
         self._pending_tasks = []
+        self._pending_sheduler = None
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self.bus, self.async_add_job,
                                         self.loop)
@@ -182,9 +186,23 @@ class HomeAssistant(object):
 
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
+        self._async_tasks_cleanup()
         _async_create_timer(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
         self.state = CoreState.running
+
+    @callback
+    def _async_tasks_cleanup(self):
+        """Cleanup all pending tasks in a time interval.
+
+        This method must be run in the event loop.
+        """
+        self._pending_tasks = [task for task in self._pending_tasks
+                               if not task.done()]
+
+        # sheduled next cleanup
+        self._pending_sheduler = self.loop.call_later(
+            TIME_INTERVAL_TASKS_CLEANUP, self._async_tasks_cleanup)
 
     def add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add job to the executor pool.
@@ -218,11 +236,6 @@ class HomeAssistant(object):
         # if a task is sheduled
         if task is not None:
             self._pending_tasks.append(task)
-
-        # cleanup
-        if len(self._pending_tasks) > 50:
-            self._pending_tasks = [sheduled for sheduled in self._pending_tasks
-                                   if not sheduled.done()]
 
     @callback
     def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
@@ -281,6 +294,8 @@ class HomeAssistant(object):
         """
         self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        if self._pending_sheduler is not None:
+            self._pending_sheduler.cancel()
         yield from self.async_block_till_done()
         self.executor.shutdown()
         if self._websession is not None:

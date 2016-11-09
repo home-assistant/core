@@ -9,6 +9,8 @@ import pytz
 
 import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
+from homeassistant.util.async import (
+    run_callback_threadsafe, run_coroutine_threadsafe)
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
@@ -118,7 +120,7 @@ class TestHomeAssistant(unittest.TestCase):
 
     #     self.assertEqual(1, len(calls))
 
-    def test_async_add_job_pending_tasks_add(self):
+    def test_pending_sheduler(self):
         """Add a coro to pending tasks."""
         call_count = []
 
@@ -127,14 +129,24 @@ class TestHomeAssistant(unittest.TestCase):
             """Test Coro."""
             call_count.append('call')
 
-        self.hass.add_job(test_coro())
+        for i in range(50):
+            self.hass.add_job(test_coro())
 
-        assert len(self.hass._pending_tasks) == 1
-        self.hass.block_till_done()
-        assert len(call_count) == 1
+        run_coroutine_threadsafe(
+            asyncio.wait(self.hass._pending_tasks, loop=self.hass.loop),
+            loop=self.hass.loop
+        ).result()
 
-    def test_async_add_job_pending_tasks_cleanup(self):
-        """Add a coro to pending tasks and test cleanup."""
+        with patch.object(self.hass.loop, 'call_later') as mock_later:
+            run_callback_threadsafe(
+                self.hass.loop, self.hass._async_tasks_cleanup).result()
+            assert mock_later.called
+
+        assert len(self.hass._pending_tasks) == 0
+        assert len(call_count) == 50
+
+    def test_async_add_job_pending_tasks_coro(self):
+        """Add a coro to pending tasks."""
         call_count = []
 
         @asyncio.coroutine
@@ -148,12 +160,6 @@ class TestHomeAssistant(unittest.TestCase):
         assert len(self.hass._pending_tasks) == 50
         self.hass.block_till_done()
         assert len(call_count) == 50
-
-        self.hass.add_job(test_coro())
-
-        assert len(self.hass._pending_tasks) == 1
-        self.hass.block_till_done()
-        assert len(call_count) == 51
 
     def test_async_add_job_pending_tasks_executor(self):
         """Run a executor in pending tasks."""
