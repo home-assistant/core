@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         if not entity[ATTR_DATA_BITS] is None:
             _LOGGER.info("Masked device id: %s",
-                         rfxtrx.get_pt2262_deviceid(device_id, 
+                         rfxtrx.get_pt2262_deviceid(device_id,
                                                     entity[ATTR_DATA_BITS]))
 
         _LOGGER.info("Add %s rfxtrx.binary_sensor (class %s)",
