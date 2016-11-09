@@ -100,4 +100,4 @@ class WelcomeData(object):
     def update(self):
         """Call the Netatmo API to update the data."""
         import lnetatmo
-        self.welcomedata = lnetatmo.WelcomeData(self.auth)
+        self.welcomedata = lnetatmo.WelcomeData(self.auth, size = 100)
