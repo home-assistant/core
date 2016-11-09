@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_SELECT_SOURCE,
-    SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,SUPPORT_TURN_OFF,
+    SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
 from homeassistant.const import (
@@ -114,7 +114,7 @@ class DenonDevice(MediaPlayerDevice):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
-    
+
     @property
     def source_list(self):
         """List of available input sources."""
@@ -170,7 +170,7 @@ class DenonDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self.telnet_command('PWON')
-        
+
     def select_source(self, source):
         """Select input source."""
         self.telnet_command(self._source_list.get(source))
