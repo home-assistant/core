@@ -118,7 +118,7 @@ class TestHomeAssistant(unittest.TestCase):
 
     #     self.assertEqual(1, len(calls))
 
-    def test_async_add_job_pending_taks_add(self):
+    def test_async_add_job_pending_tasks_add(self):
         """Add a coro to pending tasks."""
         call_count = []
 
@@ -133,8 +133,8 @@ class TestHomeAssistant(unittest.TestCase):
         self.hass.block_till_done()
         assert len(call_count) == 1
 
-    def test_async_add_job_pending_taks_cleanup(self):
-        """Add a coro to pending tasks."""
+    def test_async_add_job_pending_tasks_cleanup(self):
+        """Add a coro to pending tasks and test cleanup."""
         call_count = []
 
         @asyncio.coroutine
@@ -154,6 +154,37 @@ class TestHomeAssistant(unittest.TestCase):
         assert len(self.hass._pending_tasks) == 1
         self.hass.block_till_done()
         assert len(call_count) == 51
+
+    def test_async_add_job_pending_tasks_executor(self):
+        """Run a executor in pending tasks."""
+        call_count = []
+
+        def test_executor():
+            """Test executor."""
+            call_count.append('call')
+
+        for i in range(40):
+            self.hass.add_job(test_executor)
+
+        assert len(self.hass._pending_tasks) == 40
+        self.hass.block_till_done()
+        assert len(call_count) == 40
+
+    def test_async_add_job_pending_tasks_callback(self):
+        """Run a callback in pending tasks."""
+        call_count = []
+
+        @ha.callback
+        def test_callback():
+            """Test callback."""
+            call_count.append('call')
+
+        for i in range(40):
+            self.hass.add_job(test_callback)
+
+        assert len(self.hass._pending_tasks) == 0
+        self.hass.block_till_done()
+        assert len(call_count) == 40
 
 
 class TestEvent(unittest.TestCase):
