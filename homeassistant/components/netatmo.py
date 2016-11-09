@@ -87,6 +87,15 @@ class WelcomeData(object):
                 self.camera_names.append(camera['name'])
         return self.camera_names
 
+    def get_module_names(self, camera_name):
+        self.module_names = []
+        self.update()
+        cam_id = self.welcomedata.cameraByName(camera = camera_name, home = self.home)
+        for module in self.welcomedata.modules.values():
+            if cam_id == module['cam_id']:
+                self.module_names.append(module['name'])
+        return self.module_names
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the Netatmo API to update the data."""
