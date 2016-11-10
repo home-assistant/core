@@ -46,8 +46,6 @@ CONTENT_TYPE_HEADER = 'Content-Type'
 
 SYNO_API_URL = '{0}{1}{2}'
 
-DATA_WEBSESSION = 'synology_websession'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
@@ -62,25 +60,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a Synology IP Camera."""
     if config.get(CONF_VERIFY_SSL):
-        # init websession
-        if not hass.data.get(DATA_WEBSESSION):
-            conn = aiohttp.TCPConnector(verify_ssl=False)
-            hass.data[DATA_WEBSESSION] = aiohttp.ClientSession(
-                connector=conn,
-                loop=hass.loop
-            )
+        connector = aiohttp.TCPConnector(verify_ssl=False)
 
-            @callback
-            def _async_close_synlogy_websession(event):
-                """Close websession on shutdown."""
-                hass.data[DATA_WEBSESSION].close()
+        @callback
+        def _async_close_connector(event):
+            """Close websession on shutdown."""
+            connector.close()
 
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, _async_close_synlogy_websession)
-
-        websession = hass.data.get(DATA_WEBSESSION)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_close_connector)
     else:
-        websession = hass.websession
+        connector = None
 
     # Determine API to use for authentication
     syno_api_url = SYNO_API_URL.format(
@@ -94,9 +84,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     }
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
-            query_req = yield from websession.get(
+            query_req = yield from asyncio.get(
                 syno_api_url,
                 params=query_payload,
+                loop=hass.loop,
+                connector=connector
             )
     except (asyncio.TimeoutError, aiohttp.errors.ClientError):
         _LOGGER.exception("Error on %s", syno_api_url)
@@ -116,13 +108,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_URL), WEBAPI_PATH, auth_path)
 
     session_id = yield from get_session_id(
-        websession,
         hass,
+        connector,
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD),
-        syno_auth_url,
-        config.get(CONF_VERIFY_SSL)
+        syno_auth_url
     )
+
+    # init websession
+    websession = asyncio.ClientSession(
+        loop=hass.loop, connector=connector, cookies={'id': session_id})
+
+    @asyncio.coroutine
+    def _async_close_websession(event):
+        yield from websession.close()
+
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _async_close_websession)
 
     # Use SessionID to get cameras in system
     syno_camera_url = SYNO_API_URL.format(
@@ -138,7 +140,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             camera_req = yield from websession.get(
                 syno_camera_url,
                 params=camera_payload,
-                cookies={'id': session_id}
             )
     except (asyncio.TimeoutError, aiohttp.errors.ClientError):
         _LOGGER.exception("Error on %s", syno_camera_url)
@@ -175,8 +176,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 @asyncio.coroutine
-def get_session_id(websession, hass, username, password, login_url,
-                   valid_cert):
+def get_session_id(hass, connector, username, password, login_url):
     """Get a session id."""
     auth_payload = {
         'api': AUTH_API,
@@ -189,9 +189,11 @@ def get_session_id(websession, hass, username, password, login_url,
     }
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
-            auth_req = yield from websession.get(
+            auth_req = yield from asyncio.get(
                 login_url,
                 params=auth_payload,
+                loop=hass.loop,
+                connector=connector
             )
     except (asyncio.TimeoutError, aiohttp.errors.ClientError):
         _LOGGER.exception("Error on %s", login_url)
@@ -206,39 +208,22 @@ def get_session_id(websession, hass, username, password, login_url,
 class SynologyCamera(Camera):
     """An implementation of a Synology NAS based IP camera."""
 
-    def __init__(self, hass, websession, config, camera_id, camera_name,
-                 snapshot_path, streaming_path, camera_path, auth_path):
+    def __init__(self, hass, websession, config, camera_id,
+                 camera_name, snapshot_path, streaming_path, camera_path,
+                 auth_path):
         """Initialize a Synology Surveillance Station camera."""
         super().__init__()
         self.hass = hass
         self._websession = websession
         self._name = camera_name
-        self._username = config.get(CONF_USERNAME)
-        self._password = config.get(CONF_PASSWORD)
         self._synology_url = config.get(CONF_URL)
-        self._api_url = config.get(CONF_URL) + 'webapi/'
-        self._login_url = config.get(CONF_URL) + '/webapi/' + 'auth.cgi'
         self._camera_name = config.get(CONF_CAMERA_NAME)
         self._stream_id = config.get(CONF_STREAM_ID)
-        self._valid_cert = config.get(CONF_VERIFY_SSL)
         self._camera_id = camera_id
         self._snapshot_path = snapshot_path
         self._streaming_path = streaming_path
         self._camera_path = camera_path
         self._auth_path = auth_path
-        self._session_id = None
-
-    @asyncio.coroutine
-    def async_read_sid(self):
-        """Get a session id."""
-        self._session_id = yield from get_session_id(
-            self._websession,
-            self.hass,
-            self._username,
-            self._password,
-            self._login_url,
-            self._valid_cert
-        )
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -261,8 +246,7 @@ class SynologyCamera(Camera):
             with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
                 response = yield from self._websession.get(
                     image_url,
-                    params=image_payload,
-                    cookies={'id': self._session_id}
+                    params=image_payload
                 )
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
             _LOGGER.exception("Error on %s", image_url)
@@ -290,8 +274,7 @@ class SynologyCamera(Camera):
             with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
                 stream = yield from self._websession.get(
                     streaming_url,
-                    payload=streaming_payload,
-                    cookies={'id': self._session_id}
+                    payload=streaming_payload
                 )
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
             _LOGGER.exception("Error on %s", streaming_url)
