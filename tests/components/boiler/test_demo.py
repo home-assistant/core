@@ -68,7 +68,7 @@ class TestDemoBoiler(unittest.TestCase):
         # Default should be 55 as per demo platform
         self.assertEqual(55, state.attributes.get('target_water_temperature'))
         # Try setting a new target temp
-        boiler.set_temperature(self.hass, 65, ENTITY_GEYSERWISE)
+        boiler.set_temperature(self.hass, ENTITY_GEYSERWISE, 65)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_GEYSERWISE)
         # New temp should now be 65
@@ -78,7 +78,7 @@ class TestDemoBoiler(unittest.TestCase):
         """Test the setting of the target temperature."""
         state = self.hass.states.get(ENTITY_GEYSERWISE_MAX)
         self.assertEqual(65, state.attributes.get('target_water_temperature'))
-        boiler.set_temperature(self.hass, 60, ENTITY_GEYSERWISE_MAX)
+        boiler.set_temperature(self.hass, ENTITY_GEYSERWISE_MAX, 60)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_GEYSERWISE_MAX)
         self.assertEqual(60, state.attributes.get('target_water_temperature'))

@@ -142,7 +142,8 @@ class DemoBoiler(BoilerDevice):
         # Ideally this should be a self learning formula,
         # based on crowd sourced data and taking many variables into account
         # But let start with based on user preference ;-)
-        self._target_water_temperature = kwargs.get(ATTR_TARGET_WATER_TEMPERATURE)
+        self._target_water_temperature = kwargs.get(
+            ATTR_TARGET_WATER_TEMPERATURE)
         if kwargs.get(ATTR_PANEL_DIFF_TEMP) is not None:
             self._panel_differential_temp = kwargs.get(ATTR_PANEL_DIFF_TEMP)
         self.update_ha_state()
