@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT): cv.string,
-    vol.Optional(ATTR_ACTIVITY, default='Not_Set'): cv.string,
+    vol.Required(ATTR_ACTIVITY, default='Not_Set'): cv.string,
 })
 
 
@@ -39,17 +39,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pyharmony
 
     name = config.get(CONF_NAME)
-    _LOGGER.info('Loading Harmony component: ' + name)
+    user = config.get(CONF_USERNAME)
+    pw = config.get(CONF_PASSWORD)
+    _LOGGER.info('Loading Harmony platform: ' + name)
 
     harmony_conf_file = hass.config.path('harmony_' + slugify(name) + '.conf')
 
     try:
-        token = pyharmony.ha_get_token(config.get(CONF_USERNAME),
-                                       config.get(CONF_PASSWORD))
+        _LOGGER.debug('calling pyharmony.ha_get_token with username: '+
+                      user + ' and password: ' + pw)
+        token = pyharmony.ha_get_token(user,pw)
     except ValueError as err:
-        print(err.args[0], 'for remote:', config.get(CONF_NAME))
+
+        _LOGGER.critical(err.args[0] + ' for remote: ' + name)
         return False
 
+    _LOGGER.debug('received token: ' + token)
     add_devices([HarmonyRemote(config.get(CONF_NAME),
                                config.get(CONF_USERNAME),
                                config.get(CONF_PASSWORD),
@@ -67,6 +72,7 @@ class HarmonyRemote(remote.RemoteDevice):
     def __init__(self, name, username, pw, host, port, activity, path, token):
         """Initialize HarmonyRemote class."""
         import pyharmony
+        _LOGGER.debug('HarmonyRemote device init started for: ' + name)
         self._name = name
         self._email = username
         self._password = pw
@@ -76,7 +82,9 @@ class HarmonyRemote(remote.RemoteDevice):
         self._current_activity = None
         self._default_activity = activity
         self._token = token
+        _LOGGER.debug('retrieving configuration from hub using token: ' + token)
         self._config = pyharmony.ha_get_config(self.token, host, port)
+        _LOGGER.debug('writing hub configuration to file: ' + path)
         pyharmony.ha_get_config_file(self._config, path)
 
     @property
@@ -111,10 +119,12 @@ class HarmonyRemote(remote.RemoteDevice):
     def update(self):
         """Return current activity."""
         import pyharmony
+        _LOGGER.debug('polling hub at for current activity')
         state = pyharmony.ha_get_current_activity(self._token,
                                                   self._config,
                                                   self._ip,
                                                   self._port)
+        _LOGGER.debug('current activity reported as: ' + state)
         self._current_activity = state
         if state != 'PowerOff':
             self._state = STATE_ON
@@ -124,17 +134,20 @@ class HarmonyRemote(remote.RemoteDevice):
     def turn_on(self, **kwargs):
         """Start an activity from the Harmony device."""
         import pyharmony
-        if not kwargs[ATTR_ACTIVITY]:
-            activity = self._default_activity
-        else:
+        if kwargs[ATTR_ACTIVITY]:
             activity = kwargs[ATTR_ACTIVITY]
+        else:
+            activity = self._default_activity
 
-        pyharmony.ha_start_activity(self._token,
-                                    self._ip,
-                                    self._port,
-                                    self._config,
-                                    activity)
-        self._state = STATE_ON
+        if activity != 'Not_Set':
+            pyharmony.ha_start_activity(self._token,
+                                        self._ip,
+                                        self._port,
+                                        self._config,
+                                        activity)
+            self._state = STATE_ON
+        else:
+            _LOGGER.error('No activity specified with turn_on service')
 
     def turn_off(self):
         """Start the PowerOff activity."""
