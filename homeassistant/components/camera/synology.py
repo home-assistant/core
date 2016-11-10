@@ -118,7 +118,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         syno_auth_url
     )
 
-    yield from websession_init.close()
+    websession_init.detach()
 
     # init websession
     websession = aiohttp.ClientSession(
@@ -126,6 +126,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     @asyncio.coroutine
     def _async_close_websession(event):
+        """Close webssesion on shutdown."""
         yield from websession.close()
 
     hass.bus.async_listen_once(
@@ -144,7 +145,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
             camera_req = yield from websession.get(
                 syno_camera_url,
-                params=camera_payload,
+                params=camera_payload
             )
     except (asyncio.TimeoutError, aiohttp.errors.ClientError):
         _LOGGER.exception("Error on %s", syno_camera_url)
