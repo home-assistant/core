@@ -72,6 +72,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     else:
         connector = None
 
+    websession_init = aiohttp.ClientSession(
+        loop=hass.loop,
+        connector=connector
+    )
+
     # Determine API to use for authentication
     syno_api_url = SYNO_API_URL.format(
         config.get(CONF_URL), WEBAPI_PATH, QUERY_CGI)
@@ -84,11 +89,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     }
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
-            query_req = yield from asyncio.get(
+            query_req = yield from websession_init.get(
                 syno_api_url,
-                params=query_payload,
-                loop=hass.loop,
-                connector=connector
+                params=query_payload
             )
     except (asyncio.TimeoutError, aiohttp.errors.ClientError):
         _LOGGER.exception("Error on %s", syno_api_url)
@@ -108,12 +111,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_URL), WEBAPI_PATH, auth_path)
 
     session_id = yield from get_session_id(
-        hass,
-        connector,
+        websession_init,
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD),
         syno_auth_url
     )
+
+    yield from websession_init.close()
 
     # init websession
     websession = asyncio.ClientSession(
@@ -176,7 +180,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 @asyncio.coroutine
-def get_session_id(hass, connector, username, password, login_url):
+def get_session_id(websession, username, password, login_url):
     """Get a session id."""
     auth_payload = {
         'api': AUTH_API,
@@ -189,11 +193,9 @@ def get_session_id(hass, connector, username, password, login_url):
     }
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
-            auth_req = yield from asyncio.get(
+            auth_req = yield from websession.get(
                 login_url,
-                params=auth_payload,
-                loop=hass.loop,
-                connector=connector
+                params=auth_payload
             )
     except (asyncio.TimeoutError, aiohttp.errors.ClientError):
         _LOGGER.exception("Error on %s", login_url)
