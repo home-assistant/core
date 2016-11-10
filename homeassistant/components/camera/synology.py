@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a Synology IP Camera."""
-    if config.get(CONF_VERIFY_SSL):
+    if not config.get(CONF_VERIFY_SSL):
         connector = aiohttp.TCPConnector(verify_ssl=False)
 
         @callback
