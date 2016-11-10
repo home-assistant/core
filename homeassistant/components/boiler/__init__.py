@@ -60,7 +60,7 @@ STATE_ERROR = "error"
 
 ATTR_CURRENT_WATER_TEMPERATURE = "current_water_temperature"
 ATTR_CURRENT_PANEL_TEMPERATURE = "current_panel_temperature"
-ATTR_TARGET_WATER_TEMPERATURE = "target_water_temp"
+ATTR_TARGET_WATER_TEMPERATURE = "target_water_temperature"
 ATTR_PANEL_DIFF_TEMP = "panel_differential_temp"
 ATTR_AWAY_MODE = "away_mode"
 ATTR_GUEST_MODE = "guest_mode"
@@ -146,7 +146,7 @@ def set_holiday_mode(hass, holiday_mode, holiday_duration, entity_id=None):
 
 # pylint: disable=too-many-arguments
 def set_temperature(hass, entity_id=None,
-                    target_water_temp=None,
+                    target_water_temperature=None,
                     panel_diff_temp=None):
     """
     Set new target temperatures.
@@ -155,7 +155,7 @@ def set_temperature(hass, entity_id=None,
     """
     kwargs = {
         key: value for key, value in [
-            (ATTR_TARGET_WATER_TEMPERATURE, target_water_temp),
+            (ATTR_TARGET_WATER_TEMPERATURE, target_water_temperature),
             (ATTR_PANEL_DIFF_TEMP, panel_diff_temp),
             (ATTR_ENTITY_ID, entity_id),
         ] if value is not None
