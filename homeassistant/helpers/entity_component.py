@@ -138,6 +138,7 @@ class EntityComponent(object):
         entity_platform = self._platforms[key]
 
         try:
+            self.logger.info("Setting up %s.%s", self.domain, platform_type)
             if getattr(platform, 'async_setup_platform', None):
                 yield from platform.async_setup_platform(
                     self.hass, platform_config,
