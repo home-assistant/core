@@ -62,10 +62,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if not config.get(CONF_VERIFY_SSL):
         connector = aiohttp.TCPConnector(verify_ssl=False)
 
-        @callback
+        @asyncio.coroutine
         def _async_close_connector(event):
             """Close websession on shutdown."""
-            connector.close()
+            yield from connector.close()
 
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, _async_close_connector)
