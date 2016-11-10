@@ -24,6 +24,9 @@ PyMata==2.13
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
 
+# homeassistant.components.media_player.sonos
+SoCo==0.12
+
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.2
 
@@ -487,9 +490,6 @@ sleepyq==0.6
 
 # homeassistant.components.media_player.snapcast
 snapcast==1.2.2
-
-# homeassistant.components.media_player.sonos
-SoCo==0.12
 
 # homeassistant.components.climate.honeywell
 somecomfort==0.3.2
