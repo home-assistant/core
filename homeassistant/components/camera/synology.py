@@ -14,7 +14,6 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPGatewayTimeout
 import async_timeout
 
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
     CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP)
