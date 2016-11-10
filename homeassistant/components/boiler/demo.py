@@ -29,13 +29,13 @@ class DemoBoiler(BoilerDevice):
 
     # pylint: disable=too-many-instance-attributes
     def __init__(self, name, boiler_type,
-                 target_temperature, panel_differential_temp,
+                 target_water_temperature, panel_differential_temp,
                  unit_of_measurement, away, guest, holiday, current_operation,
                  boost):
         """Initialize the boiler controller."""
         self._name = name
         self._boiler_type = boiler_type
-        self._target_temperature = target_temperature
+        self._target_water_temperature = target_water_temperature
         self._panel_differential_temp = panel_differential_temp
         self._unit_of_measurement = unit_of_measurement
         self._away = away
@@ -45,7 +45,7 @@ class DemoBoiler(BoilerDevice):
         self._holiday_duration = 0  # Will never be initialised with non-zero
         self._current_operation = current_operation
         self._boost = boost
-        self._current_temperature = None
+        self._current_water_temperature = None
         self._current_element_status = None
         self._current_pump_mode = None
         self._fault_code = None  # Cannot be initialised with a fault code
@@ -78,14 +78,14 @@ class DemoBoiler(BoilerDevice):
         return self._unit_of_measurement
 
     @property
-    def current_temperature(self):
+    def current_water_temperature(self):
         """Return the current temperature."""
-        return self._current_temperature
+        return self._current_water_temperature
 
     @property
-    def target_temperature(self):
+    def target_water_temperature(self):
         """Return the temperature to keep."""
-        return self._target_temperature
+        return self._target_water_temperature
 
     @property
     def panel_differential_temperature(self):

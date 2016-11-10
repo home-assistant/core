@@ -76,7 +76,7 @@ class TestDemoBoiler(unittest.TestCase):
     def test_set_only_target_temp_with_convert(self):
         """Test the setting of the target temperature."""
         state = self.hass.states.get(ENTITY_GEYSERWISE_MAX)
-        self.assertEqual(55, state.attributes.get('target_water_temperature'))
+        self.assertEqual(65, state.attributes.get('target_water_temperature'))
         boiler.set_temperature(self.hass, 60, ENTITY_GEYSERWISE_MAX)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_GEYSERWISE_MAX)
