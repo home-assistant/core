@@ -267,7 +267,7 @@ class SynologyCamera(Camera):
             with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
                 stream = yield from self._websession.get(
                     streaming_url,
-                    payload=streaming_payload
+                    params=streaming_payload
                 )
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
             _LOGGER.exception("Error on %s", streaming_url)
