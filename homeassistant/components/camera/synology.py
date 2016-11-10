@@ -111,6 +111,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_URL), WEBAPI_PATH, auth_path)
 
     session_id = yield from get_session_id(
+        hass,
         websession_init,
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD),
@@ -120,7 +121,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     yield from websession_init.close()
 
     # init websession
-    websession = asyncio.ClientSession(
+    websession = aiohttp.ClientSession(
         loop=hass.loop, connector=connector, cookies={'id': session_id})
 
     @asyncio.coroutine
@@ -155,7 +156,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # add cameras
     devices = []
-    tasks = []
     for camera in cameras:
         if not config.get(CONF_WHITELIST):
             camera_id = camera['id']
@@ -172,15 +172,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 camera_path,
                 auth_path
             )
-            tasks.append(device.async_read_sid())
             devices.append(device)
 
-    yield from asyncio.wait(tasks, loop=hass.loop)
     yield from async_add_devices(devices)
 
 
 @asyncio.coroutine
-def get_session_id(websession, username, password, login_url):
+def get_session_id(hass, websession, username, password, login_url):
     """Get a session id."""
     auth_payload = {
         'api': AUTH_API,
