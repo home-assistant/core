@@ -7,18 +7,22 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dsmr/
 """
 
-import asyncio
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_DEVICE
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 DOMAIN = 'dsmr'
 
 REQUIREMENTS = ['dsmr-parser==0.2']
+
+# Smart meter sends telegram every 10 seconds
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 CONF_DSMR_VERSION = 'dsmr_version'
 DEFAULT_DEVICE = '/dev/ttyUSB0'
@@ -36,23 +40,28 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup DSMR sensors."""
-    from dsmr_parser.obis_references import (
-        CURRENT_ELECTRICITY_USAGE,
-        CURRENT_ELECTRICITY_DELIVERY,
-        ELECTRICITY_ACTIVE_TARIFF
-    )
+    from dsmr_parser import obis_references as obis
 
     devices = []
 
     dsmr = DSMR(hass, config, devices)
 
     devices += [
-        DSMREntity('Power Usage', CURRENT_ELECTRICITY_USAGE, dsmr),
-        DSMREntity('Power Production', CURRENT_ELECTRICITY_DELIVERY, dsmr),
-        DSMRTariff('Power Tariff', ELECTRICITY_ACTIVE_TARIFF, dsmr),
+        DSMREntity('Power Consumption', obis.CURRENT_ELECTRICITY_USAGE, dsmr),
+        DSMREntity('Power Production', obis.CURRENT_ELECTRICITY_DELIVERY, dsmr),
+        DSMRTariff('Power Tariff', obis.ELECTRICITY_ACTIVE_TARIFF, dsmr),
+        DSMREntity('Power Consumption (normal)', obis.ELECTRICITY_USED_TARIFF_1, dsmr),
+        DSMREntity('Power Consumption (low)', obis.ELECTRICITY_USED_TARIFF_2, dsmr),
+        DSMREntity('Power Production (normal)', obis.ELECTRICITY_DELIVERED_TARIFF_1, dsmr),
+        DSMREntity('Power Production (low)', obis.ELECTRICITY_DELIVERED_TARIFF_1, dsmr),
     ]
-    yield from async_add_devices(devices, True)
-    yield from dsmr.async_update()
+    dsmr_version = config[CONF_DSMR_VERSION]
+    if dsmr_version == '4':
+        devices.append(DSMREntity('Gas Consumption', obis.HOURLY_GAS_METER_READING, dsmr))
+    else:
+        devices.append(DSMREntity('Gas Consumption', obis.GAS_METER_READING, dsmr))
+
+    add_devices(devices)
 
 
 class DSMR:
@@ -88,19 +97,16 @@ class DSMR:
     @asyncio.coroutine
     def async_update(self):
         """Wait for DSMR telegram to be received and parsed."""
-        _LOGGER.info('retrieving new telegram')
 
-        self._telegram = self.read_telegram()
+        _LOGGER.info('retrieving DSMR telegram')
+        try:
+            self._telegram = self.read_telegram()
+        except dsmr_parser.exceptions.ParseError:
+            _LOGGER.error('parse error, correct dsmr_version specified?')
+        except:
+            _LOGGER.exception('unexpected errur during telegram retrieval')
 
-        _LOGGER.info('got new telegram')
-
-        yield from asyncio.sleep(10, loop=self.hass.loop)
-        tasks = []
-        for device in self.devices:
-            tasks.append(device.async_update_ha_state())
-
-        yield from asyncio.gather(*tasks, loop=self.hass.loop)
-
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def read_telegram(self):
         """Read telegram."""
         return next(self.dsmr_parser.read())
@@ -143,10 +149,14 @@ class DSMRTariff(DSMREntity):
 
     @property
     def state(self):
-        """Convert 2/1 to high/low."""
+        """Convert 2/1 to normal/low."""
+
+        # DSMR V2.2: Note: Tariff code 1 is used for low tariff
+        # and tariff code 2 is used for normal tariff.
+
         tariff = super().state
         if tariff == '0002':
-            return 'high'
+            return 'normal'
         elif tariff == '0001':
             return 'low'
         else:
