@@ -10,7 +10,7 @@ import logging
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['Adafruit_BBIO.GPIO==1.0.0']
+REQUIREMENTS = ['Adafruit_BBIO==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
