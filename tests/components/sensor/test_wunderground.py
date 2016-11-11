@@ -11,7 +11,7 @@ VALID_CONFIG_PWS = {
     'api_key': 'foo',
     'pws_id': 'bar',
     'monitored_conditions': [
-        'weather', 'feelslike_c', 'alerts'
+        'weather', 'feelslike_c', 'alerts', 'elevation', 'location'
     ]
 }
 
@@ -19,7 +19,7 @@ VALID_CONFIG = {
     'platform': 'wunderground',
     'api_key': 'foo',
     'monitored_conditions': [
-        'weather', 'feelslike_c', 'alerts'
+        'weather', 'feelslike_c', 'alerts', 'elevation', 'location'
     ]
 }
 
@@ -61,7 +61,16 @@ def mocked_requests_get(*args, **kwargs):
                 },
                 "feelslike_c": FEELS_LIKE,
                 "weather": WEATHER,
-                "icon_url": ICON_URL
+                "icon_url": ICON_URL,
+                "display_location": {
+                    "city": "Holly Springs",
+                    "country": "US",
+                    "full": "Holly Springs, NC"
+                },
+                "observation_location": {
+                    "elevation": "413 ft",
+                    "full": "Twin Lake, Holly Springs, North Carolina"
+                },
             }, "alerts": [
                 {
                     "type": 'FLO',
@@ -149,6 +158,10 @@ class TestWundergroundSetup(unittest.TestCase):
                 self.assertEqual(ALERT_MESSAGE,
                                  device.device_state_attributes['Message'])
                 self.assertIsNone(device.entity_picture)
+            elif device.name == 'PWS_location':
+                self.assertEqual('Holly Springs, NC', device.state)
+            elif device.name == 'PWS_elevation':
+                self.assertEqual('413', device.state)
             else:
                 self.assertIsNone(device.entity_picture)
                 self.assertEqual(FEELS_LIKE, device.state)
