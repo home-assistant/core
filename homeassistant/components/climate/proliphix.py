@@ -15,11 +15,13 @@ import homeassistant.helpers.config_validation as cv
 REQUIREMENTS = ['proliphix==0.4.0']
 
 ATTR_FAN = 'fan'
+CONF_PRECISION = 'precision'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PRECISION): vol.Coerce(int),
 })
 
 
@@ -28,23 +30,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     host = config.get(CONF_HOST)
+    precision = config.get(CONF_PRECISION)
 
     import proliphix
 
     pdp = proliphix.PDP(host, username, password)
 
-    add_devices([ProliphixThermostat(pdp)])
+    add_devices([ProliphixThermostat(pdp, precision)])
 
 
 class ProliphixThermostat(ClimateDevice):
     """Representation a Proliphix thermostat."""
 
-    def __init__(self, pdp):
+    def __init__(self, pdp, precision=None):
         """Initialize the thermostat."""
         self._pdp = pdp
         # initial data
         self._pdp.update()
         self._name = self._pdp.name
+        self._precision = precision
 
     @property
     def should_poll(self):
