@@ -27,10 +27,10 @@ DEPENDENCIES = ['pilight']
 COMMAND_SCHEMA = pilight.RF_CODE_SCHEMA.extend({
     vol.Optional('on'): cv.positive_int,
     vol.Optional('off'): cv.positive_int,
-    vol.Optional(CONF_UNIT): cv.string,
+    vol.Optional(CONF_UNIT): cv.positive_int,
     vol.Optional(CONF_ID): cv.positive_int,
     vol.Optional(CONF_STATE): cv.string,
-    vol.Optional(CONF_SYSTEMCODE): cv.string,
+    vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
 })
 
 SWITCHES_SCHEMA = vol.Schema({
