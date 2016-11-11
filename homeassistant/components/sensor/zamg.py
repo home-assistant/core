@@ -27,7 +27,10 @@
 # ------------------------------------------------------------------------
 
 """
-Sensor for current weather data from Austrian "Zentralanstalt für Meteorologie und Geodynamik".
+Sensor for data from Austrian "Zentralanstalt für Meteorologie und Geodynamik".
+
+This is a sensor for the Austrian weather service "Zentralanstalt für
+Meteorologie und Geodynamik" (aka ZAMG).
 
 The configuration should look like this:
 
