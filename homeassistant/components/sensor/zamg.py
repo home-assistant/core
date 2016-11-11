@@ -27,8 +27,7 @@
 # ------------------------------------------------------------------------
 
 """
-Implement a home-assistant sensor for fetching current weather
-data from the austrian "Zentralanstalt für Meteorologie und Geodynamik"
+Implement a home-assistant sensor for fetching current weather data from the austrian "Zentralanstalt für Meteorologie und Geodynamik".
 
 The configuration should look like this:
 
@@ -134,8 +133,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # ------------------------------------------------------------------------
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    "setup platform"
-
+    """Setup platform."""
     station_id = config.get(CONF_STATION_ID)
     name = config.get(CONF_NAME)
 
@@ -151,8 +149,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ZAMGWeather(WeatherEntity):
     """
     I am a weather wrapper for a specific station and a specific attribute.
-    Multiple instances refer to the same probe, so things will only get
-    fetched once.
+
+    Multiple instances (one for each condition) will refer to the same
+    probe, so things will only get fetched once.
     """
 
     attribution = ATTRIBUTION
@@ -237,10 +236,11 @@ class ZamgData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """
+        Update data set.
+
         Fetch a new data set from the zamg server, parse it and
         update internal state accordingly
         """
-
         response = requests.get(self.API_URL)
         response.encoding = 'UTF8'
         if response.status_code == 200:
@@ -266,8 +266,7 @@ class ZamgData(object):
                                response.status_code)
 
     def get_data(self, variable):
-        "generic accessor for data"
-
+        """Generic accessor for data."""
         return self.data.get(variable, STATE_UNKNOWN)
 
 # ------------------------------------------------------------------------
