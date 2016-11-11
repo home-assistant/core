@@ -91,7 +91,7 @@ class GenericCamera(Camera):
         if url == self._last_url and self._limit_refetch:
             return self._last_image
 
-        # aiohttp don't support DigestAuth jet
+        # aiohttp don't support DigestAuth yet
         if self._authentication == HTTP_DIGEST_AUTHENTICATION:
             def fetch():
                 """Read image from a URL."""
@@ -109,14 +109,16 @@ class GenericCamera(Camera):
         else:
             try:
                 with async_timeout.timeout(10, loop=self.hass.loop):
-                    respone = yield from self.hass.websession.get(
-                        url,
-                        auth=self._auth
-                    )
-                    self._last_image = yield from respone.read()
-                    yield from respone.release()
+                    response = yield from self.hass.websession.get(
+                        url, auth=self._auth)
+                    self._last_image = yield from response.read()
+                    yield from response.release()
             except asyncio.TimeoutError:
                 _LOGGER.error('Timeout getting camera image')
+                return self._last_image
+            except (aiohttp.errors.ClientError,
+                    aiohttp.errors.ClientDisconnectedError) as err:
+                _LOGGER.error('Error getting new camera image: %s', err)
                 return self._last_image
 
         self._last_url = url

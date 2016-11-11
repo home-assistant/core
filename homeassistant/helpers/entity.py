@@ -242,7 +242,7 @@ class Entity(object):
 
         end = timer()
 
-        if end - start > 0.2:
+        if end - start > 0.4:
             _LOGGER.warning('Updating state for %s took %.3f seconds. '
                             'Please report platform to the developers at '
                             'https://goo.gl/Nvioub', self.entity_id,
