@@ -39,6 +39,9 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup DSMR sensors."""
+    # suppres logging
+    logging.getLogger('dsmr_parser').setLevel(logging.ERROR)
+
     from dsmr_parser import obis_references as obis
 
     dsmr_version = config[CONF_DSMR_VERSION]
@@ -119,6 +122,7 @@ class DSMR:
         while True:
             # asynchronously get latest telegram when it arrives
             self._telegram = yield from queue.get()
+            _LOGGER.debug('received DSMR telegram')
 
             # make all device entities aware of new telegram
             for device in self.devices:
