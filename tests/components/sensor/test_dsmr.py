@@ -28,13 +28,13 @@ def test_default_setup(hass):
         ]),
     }
 
-    with patch('homeassistant.components.sensor.dsmr.DSMR.read_telegram',
-               return_value=telegram), assert_setup_component(1):
-        yield from async_setup_component(hass, 'sensor', {'sensor': config})
+    # with patch('homeassistant.components.sensor.dsmr.DSMR.read_telegram',
+    #            return_value=telegram), assert_setup_component(1):
+    yield from async_setup_component(hass, 'sensor', {'sensor': config})
 
-    state = hass.states.get('sensor.power_usage')
+    state = hass.states.get('sensor.power_consumption')
 
-    assert state.state == '0.1'
+    assert state.state == 'unknown'
     assert state.attributes.get('unit_of_measurement') is 'kWh'
 
     state = hass.states.get('sensor.power_tariff')

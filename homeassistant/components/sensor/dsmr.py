@@ -9,24 +9,23 @@ https://home-assistant.io/components/sensor.dsmr/
 
 import logging
 from datetime import timedelta
-
+import asyncio
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_DEVICE
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 DOMAIN = 'dsmr'
 
-REQUIREMENTS = ['dsmr-parser==0.2']
+REQUIREMENTS = ['dsmr-parser==0.3']
 
 # Smart meter sends telegram every 10 seconds
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 CONF_DSMR_VERSION = 'dsmr_version'
 DEFAULT_DEVICE = '/dev/ttyUSB0'
-DEFAULT_DSMR_VERSION = '4'
+DEFAULT_DSMR_VERSION = '2.2'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
@@ -42,78 +41,92 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup DSMR sensors."""
     from dsmr_parser import obis_references as obis
 
+    dsmr_version = config[CONF_DSMR_VERSION]
+
+    # define list of name,obis mappings to generate entities
+    obis_mapping = [
+        ['Power Consumption', obis.CURRENT_ELECTRICITY_USAGE],
+        ['Power Production', obis.CURRENT_ELECTRICITY_DELIVERY],
+        ['Power Tariff', obis.ELECTRICITY_ACTIVE_TARIFF],
+        ['Power Consumption (normal)', obis.ELECTRICITY_USED_TARIFF_1],
+        ['Power Consumption (low)', obis.ELECTRICITY_USED_TARIFF_2],
+        ['Power Production (normal)', obis.ELECTRICITY_DELIVERED_TARIFF_1],
+        ['Power Production (low)', obis.ELECTRICITY_DELIVERED_TARIFF_1],
+    ]
+    # protocol version specific obis
+    if dsmr_version == '4':
+        obis_mapping.append(['Gas Consumption', obis.HOURLY_GAS_METER_READING])
+    else:
+        obis_mapping.append(['Gas Consumption', obis.GAS_METER_READING])
+
+    # make list available early to allow cross referencing dsmr/entities
     devices = []
 
+    # create DSMR interface
     dsmr = DSMR(hass, config, devices)
 
-    devices += [
-        DSMREntity('Power Consumption', obis.CURRENT_ELECTRICITY_USAGE, dsmr),
-        DSMREntity('Power Production', obis.CURRENT_ELECTRICITY_DELIVERY, dsmr),
-        DSMRTariff('Power Tariff', obis.ELECTRICITY_ACTIVE_TARIFF, dsmr),
-        DSMREntity('Power Consumption (normal)', obis.ELECTRICITY_USED_TARIFF_1, dsmr),
-        DSMREntity('Power Consumption (low)', obis.ELECTRICITY_USED_TARIFF_2, dsmr),
-        DSMREntity('Power Production (normal)', obis.ELECTRICITY_DELIVERED_TARIFF_1, dsmr),
-        DSMREntity('Power Production (low)', obis.ELECTRICITY_DELIVERED_TARIFF_1, dsmr),
-    ]
-    dsmr_version = config[CONF_DSMR_VERSION]
-    if dsmr_version == '4':
-        devices.append(DSMREntity('Gas Consumption', obis.HOURLY_GAS_METER_READING, dsmr))
-    else:
-        devices.append(DSMREntity('Gas Consumption', obis.GAS_METER_READING, dsmr))
+    # generate device entities
+    devices += [DSMREntity(name, obis, dsmr) for name, obis in obis_mapping]
 
-    add_devices(devices)
+    # setup devices
+    yield from hass.loop.create_task(async_add_devices(devices))
+
+    # queue for receiving parsed telegrams from async dsmr reader
+    queue = asyncio.Queue()
+
+    # add asynchronous serial reader/parser task
+    hass.loop.create_task(dsmr.dsmr_parser.read(queue))
+
+    # add task to receive telegrams and update entities
+    hass.loop.create_task(dsmr.read_telegrams(queue))
 
 
 class DSMR:
     """DSMR interface."""
 
     def __init__(self, hass, config, devices):
-        """Setup DSMR serial interface and add device entities."""
+        """Setup DSMR serial interface, initialize, add device entity list."""
         from dsmr_parser.serial import (
             SERIAL_SETTINGS_V4,
             SERIAL_SETTINGS_V2_2,
-            SerialReader
+            AsyncSerialReader
         )
         from dsmr_parser import telegram_specifications
 
+        # map dsmr version to settings
         dsmr_versions = {
             '4': (SERIAL_SETTINGS_V4, telegram_specifications.V4),
             '2.2': (SERIAL_SETTINGS_V2_2, telegram_specifications.V2_2),
         }
 
-        device = config[CONF_DEVICE]
+        # initialize asynchronous telegram reader
         dsmr_version = config[CONF_DSMR_VERSION]
-
-        self.dsmr_parser = SerialReader(
-            device=device,
+        self.dsmr_parser = AsyncSerialReader(
+            device=config[CONF_DEVICE],
             serial_settings=dsmr_versions[dsmr_version][0],
             telegram_specification=dsmr_versions[dsmr_version][1],
         )
 
-        self.hass = hass
+        # keep list of device entities to update
         self.devices = devices
+
+        # initialize empty telegram
         self._telegram = {}
 
     @asyncio.coroutine
-    def async_update(self):
-        """Wait for DSMR telegram to be received and parsed."""
+    def read_telegrams(self, queue):
+        """Receive parsed telegram from DSMR reader, update entities."""
+        while True:
+            # asynchronously get latest telegram when it arrives
+            self._telegram = yield from queue.get()
 
-        _LOGGER.info('retrieving DSMR telegram')
-        try:
-            self._telegram = self.read_telegram()
-        except dsmr_parser.exceptions.ParseError:
-            _LOGGER.error('parse error, correct dsmr_version specified?')
-        except:
-            _LOGGER.exception('unexpected errur during telegram retrieval')
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def read_telegram(self):
-        """Read telegram."""
-        return next(self.dsmr_parser.read())
+            # make all device entities aware of new telegram
+            for device in self.devices:
+                yield from device.async_update_ha_state()
 
     @property
     def telegram(self):
-        """Return latest received telegram."""
+        """Return telegram object."""
         return self._telegram
 
 
@@ -122,8 +135,11 @@ class DSMREntity(Entity):
 
     def __init__(self, name, obis, interface):
         """"Initialize entity."""
+        # human readable name
         self._name = name
+        # DSMR spec. value identifier
         self._obis = obis
+        # interface class to get telegram data
         self._interface = interface
 
     @property
@@ -133,7 +149,7 @@ class DSMREntity(Entity):
 
     @property
     def state(self):
-        """Return the state of the sensor."""
+        """Return the state of the sensor, if available."""
         return getattr(self._interface.telegram.get(self._obis, {}),
                        'value', None)
 
@@ -150,7 +166,6 @@ class DSMRTariff(DSMREntity):
     @property
     def state(self):
         """Convert 2/1 to normal/low."""
-
         # DSMR V2.2: Note: Tariff code 1 is used for low tariff
         # and tariff code 2 is used for normal tariff.
 
