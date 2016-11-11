@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Harmony platform."""
     import pyharmony
-    import urllib
+    import urllib.parse
     name = config.get(CONF_NAME)
     user = config.get(CONF_USERNAME)
     pw = config.get(CONF_PASSWORD)
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         _LOGGER.debug('calling pyharmony.ha_get_token with username: '+
                       user + ' and password: ' + pw)
-        token = urllib.quote_plus(pyharmony.ha_get_token(user,pw))
+        token = urllib.parse.quote_plus(pyharmony.ha_get_token(user,pw))
     except ValueError as err:
 
         _LOGGER.critical(err.args[0] + ' for remote: ' + name)
