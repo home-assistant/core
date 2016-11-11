@@ -65,11 +65,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-# pylint: disable=too-many-instance-attributes
 class EfergySensor(Entity):
     """Implementation of an Efergy sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, sensor_type, app_token, utc_offset, period, currency):
         """Initialize the sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -104,23 +102,23 @@ class EfergySensor(Entity):
         try:
             if self.type == 'instant_readings':
                 url_string = _RESOURCE + 'getInstant?token=' + self.app_token
-                response = get(url_string)
+                response = get(url_string, timeout=10)
                 self._state = response.json()['reading'] / 1000
             elif self.type == 'amount':
                 url_string = _RESOURCE + 'getEnergy?token=' + self.app_token \
                     + '&offset=' + self.utc_offset + '&period=' \
                     + self.period
-                response = get(url_string)
+                response = get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'budget':
                 url_string = _RESOURCE + 'getBudget?token=' + self.app_token
-                response = get(url_string)
+                response = get(url_string, timeout=10)
                 self._state = response.json()['status']
             elif self.type == 'cost':
                 url_string = _RESOURCE + 'getCost?token=' + self.app_token \
                     + '&offset=' + self.utc_offset + '&period=' \
                     + self.period
-                response = get(url_string)
+                response = get(url_string, timeout=10)
                 self._state = response.json()['sum']
             else:
                 self._state = 'Unknown'
