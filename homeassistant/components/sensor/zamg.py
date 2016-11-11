@@ -27,7 +27,7 @@
 # ------------------------------------------------------------------------
 
 """
-Implement a home-assistant sensor for fetching current weather data from the austrian "Zentralanstalt für Meteorologie und Geodynamik".
+Sensor for current weather data from Austrian "Zentralanstalt für Meteorologie und Geodynamik".
 
 The configuration should look like this:
 
@@ -158,19 +158,23 @@ class ZAMGWeather(WeatherEntity):
     temperature_unit = TEMP_CELSIUS
 
     def __init__(self, probe, variable, name):
+        """Init condition sensor."""
         self.probe = probe
         self.client_name = name
         self.variable = variable
 
     def update(self):
+        """Delegate update to probe."""
         self.probe.update()
 
     @property
     def name(self):
+        """Build name."""
         return "%s_%s" % (self.client_name, self.variable)
 
     @property
     def state(self):
+        """Return state."""
         return self.probe.get_data(self.variable)
 
     @property
@@ -192,14 +196,17 @@ class ZAMGWeather(WeatherEntity):
 
     @property
     def condition(self):
+        """Return unknown, we only do raw weather data, no condition."""
         return STATE_UNKNOWN
 
     @property
     def humidity(self):
+        """Return humidity."""
         return self.probe.get_data(ATTR_WEATHER_HUMIDITY)
 
     @property
     def temperature(self):
+        """Return temperature."""
         return self.probe.get_data(ATTR_WEATHER_TEMPERATURE)
 
 
@@ -229,6 +236,7 @@ class ZamgData(object):
     }
 
     def __init__(self, logger, station_id):
+        """Initialize the probe."""
         self._logger = logger
         self._station_id = station_id
         self.data = {}
