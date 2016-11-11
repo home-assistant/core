@@ -162,16 +162,23 @@ class TestCommandSwitch(unittest.TestCase):
         """Test with state value."""
         self.hass = get_test_home_assistant()
 
-        # Set state command to false
-        statecmd = False
+        # args: hass, device_name, friendly_name, command_on, command_off,
+        #       command_state, value_template
+        init_args = [
+                self.hass,
+                "test_device_name",
+                "Test friendly name!",
+                "echo 'on command'",
+                "echo 'off command'",
+                False,
+                None
+        ]
 
-        no_state_device = command_line.CommandSwitch(self.hass, "Test", "echo",
-                                                     "echo", statecmd, None)
+        no_state_device = command_line.CommandSwitch(*init_args)
         self.assertTrue(no_state_device.assumed_state)
 
         # Set state command
-        statecmd = 'cat {}'
+        init_args[-2] = 'cat {}'
 
-        state_device = command_line.CommandSwitch(self.hass, "Test", "echo",
-                                                  "echo", statecmd, None)
+        state_device = command_line.CommandSwitch(*init_args)
         self.assertFalse(state_device.assumed_state)
