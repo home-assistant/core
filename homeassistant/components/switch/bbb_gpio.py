@@ -1,5 +1,5 @@
 """
-Allows to configure a switch using RPi GPIO.
+Allows to configure a switch using BBB GPIO.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.bbb_gpio/
@@ -25,7 +25,7 @@ CONF_INVERT_LOGIC = 'invert_logic'
 DEFAULT_INVERT_LOGIC = False
 
 _SWITCHES_SCHEMA = vol.Schema({
-    cv.positive_int: cv.string,
+    cv.string: cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
