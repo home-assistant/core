@@ -1,4 +1,5 @@
 """Template helper methods for rendering strings with HA data."""
+from datetime import datetime
 import json
 import logging
 import re
@@ -386,6 +387,14 @@ def timestamp_utc(value):
         return value
 
 
+def strptime(string, fmt):
+    """Parse a time string to datetime."""
+    try:
+        return datetime.strptime(string, fmt)
+    except (ValueError, AttributeError):
+        return string
+
+
 def fail_when_undefined(value):
     """Filter to force a failure when the value is undefined."""
     if isinstance(value, jinja2.Undefined):
@@ -420,3 +429,4 @@ ENV.globals['now'] = dt_util.now
 ENV.globals['utcnow'] = dt_util.utcnow
 ENV.globals['as_timestamp'] = dt_util.as_timestamp
 ENV.globals['relative_time'] = dt_util.get_age
+ENV.globals['strptime'] = strptime
