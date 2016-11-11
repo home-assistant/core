@@ -98,6 +98,7 @@ class TellstickSensor(Entity):
         self.datatype = datatype
         self.sensor = sensor
         self._unit_of_measurement = sensor_info.unit or None
+        self._value = None
 
         self._name = '{} {}'.format(name, sensor_info.name)
 
@@ -109,9 +110,13 @@ class TellstickSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.sensor.value(self.datatype).value
+        return self._value
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
+
+    def update(self):
+        """Update tellstick sensor."""
+        self._value = self.sensor.value(self.datatype).value
