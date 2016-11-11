@@ -15,6 +15,9 @@ from homeassistant.const import (
     CONF_COMMAND_ON, CONF_COMMAND_STATE)
 import homeassistant.helpers.config_validation as cv
 
+DOMAIN = "switch"
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
 _LOGGER = logging.getLogger(__name__)
 
 SWITCH_SCHEMA = vol.Schema({
@@ -45,11 +48,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         switches.append(
             CommandSwitch(
                 hass,
+                device_name,
                 device_config.get(CONF_FRIENDLY_NAME, device_name),
                 device_config.get(CONF_COMMAND_ON),
                 device_config.get(CONF_COMMAND_OFF),
                 device_config.get(CONF_COMMAND_STATE),
-                value_template,
+                value_template
             )
         )
 
@@ -63,11 +67,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CommandSwitch(SwitchDevice):
     """Representation a switch that can be toggled using shell commands."""
 
-    def __init__(self, hass, name, command_on, command_off,
-                 command_state, value_template):
+    def __init__(self, hass, device_name, friendly_name, command_on,
+                 command_off, command_state, value_template):
         """Initialize the switch."""
         self._hass = hass
-        self._name = name
+        self.entity_id = ENTITY_ID_FORMAT.format(device_name)
+        self._name = friendly_name
         self._state = False
         self._command_on = command_on
         self._command_off = command_off
