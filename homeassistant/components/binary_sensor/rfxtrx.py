@@ -95,6 +95,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                              event.device.subtype)
             else:
                 return
+        elif not isinstance(sensor, RfxtrxBinarySensor):
+            return
         else:
             _LOGGER.info("Binary sensor update "
                          "(Device_id: %s Class: %s Sub: %s)",
