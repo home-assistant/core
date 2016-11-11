@@ -18,7 +18,7 @@ from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON,
                                  STATE_PLAYING, STATE_IDLE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['rxv==0.3.0']
+REQUIREMENTS = ['rxv==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +35,7 @@ CONF_SOURCE_IGNORE = 'source_ignore'
 CONF_ZONE_IGNORE = 'zone_ignore'
 
 DEFAULT_NAME = 'Yamaha Receiver'
+KNOWN = 'yamaha_known_receivers'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -50,6 +51,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yamaha platform."""
     import rxv
+    # keep track of configured receivers so that we don't end up
+    # discovering a receiver dynamically that we have static config
+    # for.
+    if hass.data.get(KNOWN, None) is None:
+        hass.data[KNOWN] = set()
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -62,12 +68,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         model = discovery_info[1]
         ctrl_url = discovery_info[2]
         desc_url = discovery_info[3]
+        if ctrl_url in hass.data[KNOWN]:
+            _LOGGER.info("%s already manually configured", ctrl_url)
+            return
         receivers = rxv.RXV(
             ctrl_url,
             model_name=model,
             friendly_name=name,
             unit_desc_url=desc_url).zone_controllers()
         _LOGGER.info("Receivers: %s", receivers)
+        # when we are dynamically discovered config is empty
+        zone_ignore = []
     elif host is None:
         receivers = []
         for recv in rxv.find():
@@ -78,6 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for receiver in receivers:
         if receiver.zone not in zone_ignore:
+            hass.data[KNOWN].add(receiver.ctrl_url)
             add_devices([
                 YamahaDevice(name, receiver, source_ignore, source_names)])
 
