@@ -1,5 +1,6 @@
 """The tests for the Entity component helper."""
 # pylint: disable=protected-access
+import asyncio
 from collections import OrderedDict
 import logging
 import unittest
