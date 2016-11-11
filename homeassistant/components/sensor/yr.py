@@ -10,7 +10,7 @@ import logging
 from xml.parsers.expat import ExpatError
 
 import async_timeout
-from aiohttp.web import HTTPException
+import aiohttp
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -155,11 +155,8 @@ class YrData(object):
                 return
             text = yield from resp.text()
             self.hass.async_add_job(resp.release())
-        except asyncio.TimeoutError as err:
-            try_again(err)
-            return
-        except HTTPException as err:
-            resp.close()
+        except (asyncio.TimeoutError, aiohttp.errors.ClientError,
+                aiohttp.errors.ClientDisconnectedError) as err:
             try_again(err)
             return
 
