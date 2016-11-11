@@ -145,7 +145,7 @@ class GenericThermostat(ClimateDevice):
     def max_temp(self):
         """Return the maximum temperature."""
         # pylint: disable=no-member
-        if self._min_temp:
+        if self._max_temp:
             return self._max_temp
         else:
             # Get default temp from super class
