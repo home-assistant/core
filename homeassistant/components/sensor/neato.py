@@ -6,9 +6,8 @@ https://home-assistant.io/components/sensor.neato/
 """
 import logging
 
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.components.neato import HUB as hub
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.neato import NEATO_ROBOTS, NEATO_LOGIN
 
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPE_STATUS = 'status'
@@ -68,13 +67,13 @@ ALERTS = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Neato sensor platform."""
-    if not hub.robots_states:
+    if not hass.data['neato_robots']:
         return False
 
     dev = []
-    for robot in hub.robots_states:
+    for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SENSOR_TYPES:
-            dev.append(NeatoConnectedSensor(robot, type_name))
+            dev.append(NeatoConnectedSensor(hass, robot, type_name))
     _LOGGER.debug('Adding sensors %s', dev)
     add_devices(dev)
 
@@ -82,24 +81,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class NeatoConnectedSensor(Entity):
     """Neato Connected Sensor."""
 
-    def __init__(self, robot, sensor_type):
+    def __init__(self, hass, robot, sensor_type):
         """Initialize the Neato Connected sensor."""
         self.type = sensor_type
         self.robot = robot
+        self.neato = hass.data[NEATO_LOGIN]
         self._robot_name = self.robot.name + ' ' + SENSOR_TYPES[self.type][0]
-        self._state = hub.robots_states.get(self.robot)
+        self._state = self.robot.state
         self._battery_state = None
         self._status_state = None
 
     def update(self):
         """Update the properties of sensor."""
         _LOGGER.debug('Update of sensor')
-        hub.update_robots()
-        self._state = hub.robots_states.get(self.robot)
+        self.neato.update_robots()
+        if not self._state:
+            return
+        self._state = self.robot.state
         _LOGGER.debug('self._state=%s', self._state)
         if self.type == SENSOR_TYPE_STATUS:
-            if self._state is None:
-                self._status_state = STATE_UNAVAILABLE
             if self._state['state'] == 1:
                 if self._state['details']['isCharging']:
                     self._status_state = 'Charging'
@@ -120,8 +120,6 @@ class NeatoConnectedSensor(Entity):
             elif self._state['state'] == 4:
                 self._status_state = ERRORS.get(self._state['error'])
         if self.type == SENSOR_TYPE_BATTERY:
-            if self._state is None:
-                self._battery_state = STATE_UNAVAILABLE
             self._battery_state = self._state['details']['charge']
 
     @property
@@ -131,20 +129,20 @@ class NeatoConnectedSensor(Entity):
             return '%'
 
     @property
+    def available(self):
+        """Return True if sensor data is available."""
+        if not self._state:
+            return False
+        else:
+            return True
+
+    @property
     def state(self):
         """Return the sensor state."""
         if self.type == SENSOR_TYPE_STATUS:
-            _LOGGER.debug('Status state %s', self._status_state)
-            if self._status_state is not None:
-                return self._status_state
-            else:
-                return STATE_UNAVAILABLE
+            return self._status_state
         if self.type == SENSOR_TYPE_BATTERY:
-            _LOGGER.debug('Battery state %s', self._battery_state)
-            if self._battery_state is not None:
-                return self._battery_state
-            else:
-                return STATE_UNAVAILABLE
+            return self._battery_state
 
     @property
     def name(self):

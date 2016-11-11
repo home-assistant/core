@@ -21,7 +21,8 @@ REQUIREMENTS = ['https://github.com/jabesq/pybotvac/archive/v0.0.1.zip'
                 '#pybotvac==0.0.1']
 
 DOMAIN = 'neato'
-HUB = None
+NEATO_ROBOTS = 'neato_robots'
+NEATO_LOGIN = 'neato_login'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -35,12 +36,12 @@ def setup(hass, config):
     """Setup the Verisure component."""
     from pybotvac import Account
 
-    global HUB
-    HUB = NeatoHub(config[DOMAIN], Account)
-    if not HUB.login():
+    hass.data[NEATO_LOGIN] = NeatoHub(hass, config[DOMAIN], Account)
+    hub = hass.data[NEATO_LOGIN]
+    if not hub.login():
         _LOGGER.debug('Failed to login to Neato API')
         return False
-    HUB.update_robots()
+    hub.update_robots()
     for component in ('sensor', 'switch'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
@@ -50,15 +51,16 @@ def setup(hass, config):
 class NeatoHub(object):
     """A My Neato hub wrapper class."""
 
-    def __init__(self, domain_config, neato):
-        """Initialize the Verisure hub."""
-        self.robots_states = {}
+    def __init__(self, hass, domain_config, neato):
+        """Initialize the Neato hub."""
         self.config = domain_config
         self._neato = neato
+        self._hass = hass
 
         self.my_neato = neato(
             domain_config[CONF_USERNAME],
             domain_config[CONF_PASSWORD])
+        self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
 
     def login(self):
         """Login to My Neato."""
@@ -74,9 +76,6 @@ class NeatoHub(object):
     @Throttle(timedelta(seconds=1))
     def update_robots(self):
         """Update the robot states."""
-        _LOGGER.debug('Running HUB.update_robots')
-        for robot in self.my_neato.robots:
-            robot.get_robot_state()
-            self.robots_states[robot] = robot.state
-            _LOGGER.debug('Newly fetched robots dict %s', self.robots_states)
-            return True
+        _LOGGER.debug('Running HUB.update_robots %s',
+                      self._hass.data[NEATO_ROBOTS])
+        self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
