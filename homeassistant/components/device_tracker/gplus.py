@@ -1,22 +1,22 @@
 """.
 
-Get location from Google Maps Geolocation API.
+Get location from Google Plus Geolocation API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.gmaps/
+https://home-assistant.io/components/device_tracker.gplus/
 """
 import logging
 import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
-from homeassistant.const import (CONF_TOKEN,
-                                 CONF_SCAN_INTERVAL, CONF_ID, CONF_URL,
+from homeassistant.const import (CONF_SCAN_INTERVAL, CONF_ID, CONF_URL,
                                  EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.components.device_tracker import (PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['requests>=2,<3']
+REQUIREMENTS = []
 
 CONF_INTERVAL = 'interval'
 KEEPALIVE_INTERVAL = 1
@@ -25,33 +25,33 @@ CONF_SSID = 'cookie_ssid'
 CONF_HSID = 'cookie_hsid'
 CONF_FREQ = 'data_freq'
 CONF_AT = 'data_at'
-CONF_HOST = 'header_host'
+CONF_HEADER_HOST = 'header_host'
 #CONF_ACCURACY = 'accuracy'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ID): vol.Coerce(str),
-    vol.Required(CONF_URL): vol.Coerce(str),
-    vol.Required(CONF_SID): vol.Coerce(str),
-    vol.Required(CONF_SSID): vol.Coerce(str),
-    vol.Required(CONF_HSID): vol.Coerce(str),
-    vol.Required(CONF_FREQ): vol.Coerce(str),
-    vol.Required(CONF_AT): vol.Coerce(str),
-    vol.Optional(CONF_HOST, default='plus.google.com'): vol.Coerce(str),
-    #    vol.Optional(CONF_ACCURACY, default=100): vol.Coerce(int),
-    vol.Optional(CONF_INTERVAL, default=1): vol.All(vol.Coerce(int),
+    vol.Required(CONF_ID): cv.string,
+    vol.Required(CONF_URL): cv.string,
+    vol.Required(CONF_SID): cv.string,
+    vol.Required(CONF_SSID): cv.string,
+    vol.Required(CONF_HSID): cv.string,
+    vol.Required(CONF_FREQ): cv.string,
+    vol.Required(CONF_AT): cv.string,
+    vol.Optional(CONF_HEADER_HOST, default='plus.google.com'): cv.string,
+    #    vol.Optional(CONF_ACCURACY, default=100): cv.positive_int,
+    vol.Optional(CONF_INTERVAL, default=1): vol.All(cv.positive_int,
                                                     vol.Range(min=1)),
-    vol.Optional(CONF_SCAN_INTERVAL, default=10): vol.All(vol.Coerce(int),
+    vol.Optional(CONF_SCAN_INTERVAL, default=10): vol.All(cv.positive_int,
                                                           vol.Range(min=1, max=59)),
 })
 
 
 def setup_scanner(hass, config, see):
-    """Define constants."""
+    """Setup Scanner."""
     import requests
 
 
 #    max_accuracy = config[CONF_ACCURACY]
-    id = config[CONF_ID]
+    conf_id = config[CONF_ID]
     url = config[CONF_URL]
     cookie_sid = config[CONF_SID]
     cookie_hsid = config[CONF_HSID]
@@ -59,7 +59,7 @@ def setup_scanner(hass, config, see):
     data_freq = config[CONF_FREQ]
     data_at = config[CONF_AT]
     url = config[CONF_URL]
-    host = config[CONF_HOST]
+    host = config[CONF_HEADER_HOST]
 
     headers = {
         'Host': host,
@@ -86,7 +86,7 @@ def setup_scanner(hass, config, see):
     def get_position(now):
         """Get device position."""
         api_request = requests.post(url, headers=headers, cookies=cookies,
-                                    data=data)
+                                    data=data, timeout=15)
         if api_request.ok:
             ans = api_request.text
             matched_lines = [line for line in ans.split(
@@ -96,13 +96,15 @@ def setup_scanner(hass, config, see):
             latitude = words[12]
             longitude = words[13]
             accuracy = words[15]
-            #_LOGGER.info(api_request.text)
 
             see(
-                dev_id=id,
+                dev_id=conf_id,
                 gps=(latitude, longitude),
                 gps_accuracy=int(accuracy),
             )
+        else:
+            _LOGGER.error("Unable to update device position")
+
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, get_position)
 
