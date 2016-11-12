@@ -14,7 +14,11 @@ DEPENDENCIES = ['mysensors']
 def get_service(hass, config):
     """Get the MySensors notification service."""
     platform_devices = []
-    for gateway in mysensors.GATEWAYS.values():
+    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
+    if not gateways:
+        return
+
+    for gateway in gateways:
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
@@ -24,6 +28,7 @@ def get_service(hass, config):
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
             map_sv_types, devices, MySensorsNotificationDevice))
         platform_devices.append(devices)
+
     return MySensorsNotificationService(platform_devices)
 
 
