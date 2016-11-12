@@ -105,7 +105,7 @@ class NestThermostat(ClimateDevice):
             return STATE_COOL
         elif self._mode == 'heat':
             return STATE_HEAT
-        elif self._mode == 'range':
+        elif self._mode == 'heat-cool':
             return STATE_AUTO
         elif self._mode == 'off':
             return STATE_OFF
