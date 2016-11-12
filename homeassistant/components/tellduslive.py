@@ -77,7 +77,8 @@ def request_sensors():
     units = NETWORK.request('sensors/list')
     # One unit can contain many sensors.
     if units and 'sensor' in units:
-        return {unit['id']+str(sensor['name']): dict(unit, data=sensor)
+        return {(unit['id'], sensor['name'], sensor['scale']):
+                dict(unit, data=sensor)
                 for unit in units['sensor']
                 for sensor in unit['data']}
     return None
