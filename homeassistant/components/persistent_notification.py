@@ -55,8 +55,7 @@ def async_create(hass, message, title=None, notification_id=None):
         ] if value is not None
     }
 
-    hass.loop.create_task(
-        hass.services.async_call(DOMAIN, SERVICE_CREATE, data))
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_CREATE, data))
 
 
 @asyncio.coroutine

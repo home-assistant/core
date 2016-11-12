@@ -10,6 +10,7 @@ import csv
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
@@ -20,6 +21,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
+from homeassistant.util.async import run_callback_threadsafe
 
 
 DOMAIN = "light"
@@ -128,6 +130,18 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, color_temp=None, white_value=None,
             profile=None, flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
+    run_callback_threadsafe(
+        hass.loop, async_turn_on, hass, entity_id, transition, brightness,
+        rgb_color, xy_color, color_temp, white_value,
+        profile, flash, effect, color_name).result()
+
+
+@callback
+def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
+                  rgb_color=None, xy_color=None, color_temp=None,
+                  white_value=None, profile=None, flash=None, effect=None,
+                  color_name=None):
+    """Turn all or specified light on."""
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
@@ -144,10 +158,17 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
         ] if value is not None
     }
 
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+    hass.async_add_job(hass.services.async_call, DOMAIN, SERVICE_TURN_ON, data)
 
 
 def turn_off(hass, entity_id=None, transition=None):
+    """Turn all or specified light off."""
+    run_callback_threadsafe(
+        hass.loop, async_turn_off, hass, entity_id, transition).result()
+
+
+@callback
+def async_turn_off(hass, entity_id=None, transition=None):
     """Turn all or specified light off."""
     data = {
         key: value for key, value in [
@@ -156,7 +177,8 @@ def turn_off(hass, entity_id=None, transition=None):
         ] if value is not None
     }
 
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+    hass.async_add_job(hass.services.async_call, DOMAIN, SERVICE_TURN_OFF,
+                       data)
 
 
 def toggle(hass, entity_id=None, transition=None):

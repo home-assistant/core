@@ -40,7 +40,6 @@ def get_test_home_assistant():
         loop = asyncio.new_event_loop()
 
     hass = loop.run_until_complete(async_test_home_assistant(loop))
-    hass.allow_pool = True
 
     # FIXME should not be a daemon. Means hass.stop() not called in teardown
     stop_event = threading.Event()
@@ -97,32 +96,17 @@ def async_test_home_assistant(loop):
 
     hass.state = ha.CoreState.running
 
-    hass.allow_pool = False
-
     # Mock async_start
     orig_start = hass.async_start
 
     @asyncio.coroutine
     def mock_async_start():
         with patch.object(loop, 'add_signal_handler'), \
-             patch('homeassistant.core._async_create_timer'):
+             patch('homeassistant.core._async_create_timer'), \
+             patch.object(hass, '_async_tasks_cleanup', return_value=None):
             yield from orig_start()
 
     hass.async_start = mock_async_start
-
-    # Mock async_init_pool
-    orig_init = hass.async_init_pool
-
-    @ha.callback
-    def mock_async_init_pool():
-        """Prevent worker pool from being initialized."""
-        if hass.allow_pool:
-            with patch('homeassistant.core._async_monitor_worker_pool'):
-                orig_init()
-        else:
-            assert False, 'Thread pool not allowed. Set hass.allow_pool = True'
-
-    hass.async_init_pool = mock_async_init_pool
 
     return hass
 
@@ -146,8 +130,12 @@ def mock_service(hass, domain, service):
     """
     calls = []
 
+    @ha.callback
+    def mock_service(call):
+        calls.append(call)
+
     # pylint: disable=unnecessary-lambda
-    hass.services.register(domain, service, lambda call: calls.append(call))
+    hass.services.register(domain, service, mock_service)
 
     return calls
 

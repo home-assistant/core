@@ -130,6 +130,7 @@ class TestScriptComponent(unittest.TestCase):
         """Test different ways of passing in variables."""
         calls = []
 
+        @callback
         def record_call(service):
             """Add recorded event to set."""
             calls.append(service)

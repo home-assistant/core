@@ -142,6 +142,7 @@ def _async_setup_component(hass: core.HomeAssistant,
         async_comp = hasattr(component, 'async_setup')
 
         try:
+            _LOGGER.info("Setting up %s", domain)
             if async_comp:
                 result = yield from component.async_setup(hass, config)
             else:
@@ -164,15 +165,6 @@ def _async_setup_component(hass: core.HomeAssistant,
             return False
 
         hass.config.components.append(component.DOMAIN)
-
-        # Assumption: if a component does not depend on groups
-        # it communicates with devices
-        if (not async_comp and
-                'group' not in getattr(component, 'DEPENDENCIES', [])):
-            if hass.pool is None:
-                hass.async_init_pool()
-            if hass.pool.worker_count <= 10:
-                hass.pool.add_worker()
 
         hass.bus.async_fire(
             EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}

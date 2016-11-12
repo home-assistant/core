@@ -1,4 +1,5 @@
 """Test Home Assistant template helper methods."""
+from datetime import datetime
 import unittest
 from unittest.mock import patch
 
@@ -121,6 +122,32 @@ class TestHelpersTemplate(unittest.TestCase):
                 out,
                 template.Template('{{ %s | multiply(10) | round }}' % inp,
                                   self.hass).render())
+
+    def test_strptime(self):
+        """Test the parse timestamp method."""
+        tests = [
+            ('2016-10-19 15:22:05.588122 UTC',
+             '%Y-%m-%d %H:%M:%S.%f %Z', None),
+            ('2016-10-19 15:22:05.588122+0100',
+             '%Y-%m-%d %H:%M:%S.%f%z', None),
+            ('2016-10-19 15:22:05.588122',
+             '%Y-%m-%d %H:%M:%S.%f', None),
+            ('2016-10-19', '%Y-%m-%d', None),
+            ('2016', '%Y', None),
+            ('15:22:05', '%H:%M:%S', None),
+            ('1469119144', '%Y', '1469119144'),
+            ('invalid', '%Y', 'invalid')
+        ]
+
+        for inp, fmt, expected in tests:
+            if expected is None:
+                expected = datetime.strptime(inp, fmt)
+
+            temp = '{{ strptime(\'%s\', \'%s\') }}' % (inp, fmt)
+
+            self.assertEqual(
+                str(expected),
+                template.Template(temp, self.hass).render())
 
     def test_timestamp_custom(self):
         """Test the timestamps to custom filter."""

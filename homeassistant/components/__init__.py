@@ -119,7 +119,7 @@ def async_setup(hass, config):
             tasks.append(hass.services.async_call(
                 domain, service.service, data, blocking))
 
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)

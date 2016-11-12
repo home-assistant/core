@@ -38,6 +38,7 @@ DEVICE_MAPPINGS = {
 
 SET_TEMP_TO_INDEX = {
     'Heat': 1,
+    'Comfort': 1,
     'Cool': 2,
     'Auto': 3,
     'Aux Heat': 4,
@@ -48,9 +49,11 @@ SET_TEMP_TO_INDEX = {
     'Moist Air': 9,
     'Auto Changeover': 10,
     'Heat Econ': 11,
+    'Energy Saving': 11,
     'Cool Econ': 12,
     'Away': 13,
-    'Unknown': 14
+    'Unknown': 14,
+    'Direct Valve Control': 31
 }
 
 

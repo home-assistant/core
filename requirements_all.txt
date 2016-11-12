@@ -24,6 +24,9 @@ PyMata==2.13
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
 
+# homeassistant.components.media_player.sonos
+SoCo==0.12
+
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.2
 
@@ -37,7 +40,7 @@ apcaccess==0.0.4
 apns2==0.1.1
 
 # homeassistant.components.sun
-astral==1.2
+astral==1.3
 
 # homeassistant.components.sensor.linux_battery
 batinfo==0.3
@@ -73,7 +76,7 @@ concord232==0.14
 directpy==0.1
 
 # homeassistant.components.updater
-distro==1.0.0
+distro==1.0.1
 
 # homeassistant.components.notify.xmpp
 dnspython3==1.15.0
@@ -113,7 +116,7 @@ fixerio==0.1.1
 freesms==0.1.0
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.12.0
+fuzzywuzzy==0.14.0
 
 # homeassistant.components.device_tracker.bluetooth_le_tracker
 # gattlib==0.20150805
@@ -155,10 +158,7 @@ https://github.com/Danielhiversen/flux_led/archive/0.8.zip#flux_led==0.8
 https://github.com/GadgetReactor/pyHS100/archive/1f771b7d8090a91c6a58931532e42730b021cbde.zip#pyHS100==0.2.0
 
 # homeassistant.components.switch.dlink
-https://github.com/LinuxChristian/pyW215/archive/v0.3.5.zip#pyW215==0.3.5
-
-# homeassistant.components.media_player.sonos
-https://github.com/SoCo/SoCo/archive/cf8c2701165562eccbf1ecc879bf7060ceb0993e.zip#SoCo==0.12
+https://github.com/LinuxChristian/pyW215/archive/v0.3.6.zip#pyW215==0.3.6
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
@@ -172,7 +172,7 @@ https://github.com/TheRealLink/pythinkingcleaner/archive/v0.0.2.zip#pythinkingcl
 https://github.com/Xorso/pyalarmdotcom/archive/0.1.1.zip#pyalarmdotcom==0.1.1
 
 # homeassistant.components.media_player.braviatv
-https://github.com/aparraga/braviarc/archive/0.3.5.zip#braviarc==0.3.5
+https://github.com/aparraga/braviarc/archive/0.3.6.zip#braviarc==0.3.6
 
 # homeassistant.components.media_player.roku
 https://github.com/bah2830/python-roku/archive/3.1.2.zip#roku==3.1.2
@@ -187,7 +187,7 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 # https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
 
 # homeassistant.components.netatmo
-https://github.com/jabesq/netatmo-api-python/archive/v0.6.0.zip#lnetatmo==0.6.0
+https://github.com/jabesq/netatmo-api-python/archive/v0.7.0.zip#lnetatmo==0.7.0
 
 # homeassistant.components.switch.neato
 https://github.com/jabesq/pybotvac/archive/v0.0.1.zip#pybotvac==0.0.1
@@ -278,7 +278,7 @@ mficlient==0.3.0
 miflora==0.1.9
 
 # homeassistant.components.discovery
-netdisco==0.7.5
+netdisco==0.7.6
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
@@ -294,6 +294,7 @@ panasonic_viera==0.2
 
 # homeassistant.components.device_tracker.aruba
 # homeassistant.components.device_tracker.asuswrt
+# homeassistant.components.device_tracker.cisco_ios
 # homeassistant.components.media_player.pandora
 pexpect==4.0.1
 
@@ -315,7 +316,7 @@ pmsensor==0.3
 proliphix==0.4.0
 
 # homeassistant.components.sensor.systemmonitor
-psutil==4.4.2
+psutil==5.0.0
 
 # homeassistant.components.wink
 pubnub==3.8.2
@@ -407,7 +408,7 @@ pyserial==3.1.1
 pysnmp==4.3.2
 
 # homeassistant.components.digital_ocean
-python-digitalocean==1.10.0
+python-digitalocean==1.10.1
 
 # homeassistant.components.sensor.darksky
 python-forecastio==1.3.5
@@ -443,7 +444,7 @@ python-telegram-bot==5.2.0
 python-twitch==1.3.0
 
 # homeassistant.components.wink
-python-wink==0.9.0
+python-wink==0.10.0
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
@@ -464,7 +465,7 @@ radiotherm==1.2
 # rpi-rf==0.9.5
 
 # homeassistant.components.media_player.yamaha
-rxv==0.3.0
+rxv==0.3.1
 
 # homeassistant.components.media_player.samsungtv
 samsungctl==0.5.1
@@ -498,7 +499,7 @@ speedtest-cli==0.3.4
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.1.2
+sqlalchemy==1.1.3
 
 # homeassistant.components.statsd
 statsd==3.2.1
