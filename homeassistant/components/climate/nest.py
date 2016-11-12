@@ -25,6 +25,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1)),
 })
 
+STATE_ECO = 'eco' # TODO move to climate, or is this nest only?
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest thermostat."""
@@ -47,7 +49,7 @@ class NestThermostat(ClimateDevice):
         self._fan_list = [STATE_ON, STATE_AUTO]
 
         # Not all nest devices support cooling and heating remove unused
-        self._operation_list = [STATE_OFF]
+        self._operation_list = [STATE_OFF, STATE_ECO]
 
         # Add supported nest thermostat features
         if self.device.can_heat:
@@ -107,6 +109,8 @@ class NestThermostat(ClimateDevice):
             return STATE_AUTO
         elif self._mode == 'off':
             return STATE_OFF
+        elif self._mode == STATE_ECO:
+            return STATE_ECO
         else:
             return STATE_UNKNOWN
 
