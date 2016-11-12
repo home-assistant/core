@@ -81,7 +81,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     queue = asyncio.Queue()
 
     # add asynchronous serial reader/parser task
-    hass.loop.create_task(dsmr.dsmr_parser.read(queue))
+    reader = hass.loop.create_task(dsmr.dsmr_parser.read(queue))
+
+    # serial telegram reader is a infinite looping task, it will only resolve
+    # when it has an exception, in that case log this.
+    def handle_error(future):
+        """If result is an exception log it."""
+        _LOGGER.error('error during initialization of DSMR serial reader: %s',
+                      future.exception())
+    reader.add_done_callback(handle_error)
 
     # add task to receive telegrams and update entities
     hass.loop.create_task(dsmr.read_telegrams(queue))
