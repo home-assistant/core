@@ -471,7 +471,7 @@ rxv==0.3.1
 samsungctl==0.5.1
 
 # homeassistant.components.sensor.deutsche_bahn
-schiene==0.17
+schiene==0.18
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
