@@ -35,6 +35,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 _LOGGER = logging.getLogger(__name__)
 
+ICON_POWER = 'mdi:flash'
+ICON_GAS = 'mdi:fire'
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -152,16 +155,44 @@ class DSMREntity(Entity):
         return self._name
 
     @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        if 'Power' in self._name:
+            return ICON_POWER
+        elif 'Gas' in self._name:
+            return ICON_GAS
+
+    @property
     def state(self):
-        """Return the state of the sensor, if available."""
-        return getattr(self._interface.telegram.get(self._obis, {}),
-                       'value', None)
+        """Return the state of sensor, if available, translate if needed."""
+        from dsmr_parser import obis_references as obis
+
+        value = getattr(self._interface.telegram.get(self._obis, {}),
+                        'value', None)
+
+        if self._obis == obis.ELECTRICITY_ACTIVE_TARIFF:
+            return self.translate_tariff(value)
+        else:
+            return value
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return getattr(self._interface.telegram.get(self._obis, {}),
                        'unit', None)
+
+    @staticmethod
+    def translate_tariff(value):
+        """Convert 2/1 to normal/low."""
+        # DSMR V2.2: Note: Tariff code 1 is used for low tariff
+        # and tariff code 2 is used for normal tariff.
+
+        if value == '0002':
+            return 'normal'
+        elif value == '0001':
+            return 'low'
+        else:
+            return None
 
 
 class DSMRTariff(DSMREntity):

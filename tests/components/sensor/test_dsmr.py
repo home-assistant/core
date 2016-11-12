@@ -2,14 +2,13 @@
 
 import asyncio
 from decimal import Decimal
-from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 from tests.common import assert_setup_component
 
 
 @asyncio.coroutine
-def test_default_setup(hass):
+def test_default_setup(hass, monkeypatch):
     """Test the default setup."""
     from dsmr_parser.obis_references import (
         CURRENT_ELECTRICITY_USAGE,
@@ -28,16 +27,30 @@ def test_default_setup(hass):
         ]),
     }
 
-    # with patch('homeassistant.components.sensor.dsmr.DSMR.read_telegram',
-    #            return_value=telegram), assert_setup_component(1):
-    yield from async_setup_component(hass, 'sensor', {'sensor': config})
+    # mock queue for injecting DSMR telegram
+    queue = asyncio.Queue(loop=hass.loop)
+    monkeypatch.setattr('asyncio.Queue', lambda: queue)
 
-    state = hass.states.get('sensor.power_consumption')
+    with assert_setup_component(1):
+        yield from async_setup_component(hass, 'sensor', {'sensor': config})
 
-    assert state.state == 'unknown'
-    assert state.attributes.get('unit_of_measurement') is 'kWh'
+    # make sure entities have been created and return 'unknown' state
+    power_consumption = hass.states.get('sensor.power_consumption')
+    assert power_consumption.state == 'unknown'
+    assert power_consumption.attributes.get('unit_of_measurement') is None
 
-    state = hass.states.get('sensor.power_tariff')
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    yield from queue.put(telegram)
 
-    assert state.state == 'low'
-    assert state.attributes.get('unit_of_measurement') is None
+    # after receiving telegram entities need to have the chance to update
+    yield from asyncio.sleep(0, loop=hass.loop)
+
+    # ensure entities have new state value after incoming telegram
+    power_consumption = hass.states.get('sensor.power_consumption')
+    assert power_consumption.state == '0.1'
+    assert power_consumption.attributes.get('unit_of_measurement') is 'kWh'
+
+    # tariff should be translated in human readable and have no unit
+    power_tariff = hass.states.get('sensor.power_tariff')
+    assert power_tariff.state == 'low'
+    assert power_tariff.attributes.get('unit_of_measurement') is None
