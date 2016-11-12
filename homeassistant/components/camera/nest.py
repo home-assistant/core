@@ -46,10 +46,11 @@ class NestCamera(Camera):
         self._location = None
         self._name = None
         self._is_online = None
+        self._is_streaming = None
         self._is_video_history_enabled = False
 
 
-    # FIXME ends up with double name, ie Hallway(Hallway (E5C0))
+    # FIXME ends up with double name, ie Hallway(Hallway (E5C0))... maybe that's just the simulator?
     # FIXME duplication with climate/nest
     @property
     def name(self):
@@ -65,13 +66,14 @@ class NestCamera(Camera):
     @property
     def is_recording(self):
         """Return true if the device is recording."""
-        return self._is_online
+        return self._is_streaming
 
     def update(self):
         """Cache value from Python-nest."""
         self._location = self.device.where
         self._name = self.device.name
         self._is_online = self.device.is_online
+        self._is_streaming = self.device.is_streaming
         self._is_video_history_enabled = self.device.is_video_history_enabled
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
