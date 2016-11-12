@@ -20,7 +20,7 @@ from homeassistant.components.light import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/tfriedel/python-lightify/archive/'
-                'master.zip#lightify==0.0.4']
+                'd6eadcf311e6e21746182d1480e97b350dda2b3e.zip#lightify==1.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
