@@ -14,7 +14,8 @@ from homeassistant.components.climate import (
     PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE)
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
 
 DEPENDENCIES = ['nest']
 _LOGGER = logging.getLogger(__name__)
@@ -68,6 +69,7 @@ class NestThermostat(ClimateDevice):
         self._humidity = None
         self._target_temperature = None
         self._temperature = None
+        self._temperature_scale = None
         self._mode = None
         self._fan = None
         self._away_temperature = None
@@ -87,7 +89,7 @@ class NestThermostat(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return self._temperature_scale
 
     @property
     def current_temperature(self):
@@ -228,3 +230,7 @@ class NestThermostat(ClimateDevice):
         self._fan = self.device.fan
         self._away = self.structure.away
         self._away_temperature = self.device.away_temperature
+        if self.device.temperature == 'C':
+            self._temperature_scale = TEMP_CELSIUS
+        else:
+            self._temperature_scale = TEMP_FAHRENHEIT
