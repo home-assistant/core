@@ -63,6 +63,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._operating_state = None
         self._current_fan_mode = None
         self._fan_list = None
+        self._fan_state = None
         self._current_swing_mode = None
         self._swing_list = None
         self._unit = temp_unit
@@ -151,6 +152,12 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_OPERATING_STATE)
                       .values()):
             self._operating_state = value.data
+
+        # Fan operating state
+        for value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_FAN_STATE)
+                      .values()):
+            self._fan_state = value.data
 
     @property
     def should_poll(self):
@@ -262,9 +269,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
+        data = {}
         if self._operating_state:
-            return {
-                "operating_state": self._operating_state,
-            }
-        else:
-            return {}
+            data["operating_state"] = self._operating_state,
+        if self._fan_state:
+            data["fan_state"] = self._fan_state
+        return data
