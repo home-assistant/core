@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
 
-REQUIREMENTS = ['pyharmony>=1.0.9']
+REQUIREMENTS = ['pyharmony>=1.0.10']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE = 'device'
@@ -40,17 +40,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import urllib.parse
     name = config.get(CONF_NAME)
     user = config.get(CONF_USERNAME)
-    pw = config.get(CONF_PASSWORD)
+    passw = config.get(CONF_PASSWORD)
     _LOGGER.info('Loading Harmony platform: ' + name)
 
     harmony_conf_file = hass.config.path('harmony_' + slugify(name) + '.conf')
 
     try:
-        _LOGGER.debug('calling pyharmony.ha_get_token with username: '+
-                      user + ' and password: ' + pw)
-        token = urllib.parse.quote_plus(pyharmony.ha_get_token(user,pw))
+        _LOGGER.debug('calling pyharmony.ha_get_token with username: ' +
+                      user + ' and password: ' + passw)
+        token = urllib.parse.quote_plus(pyharmony.ha_get_token(user, passw))
     except ValueError as err:
-
         _LOGGER.critical(err.args[0] + ' for remote: ' + name)
         return False
 
@@ -82,7 +81,7 @@ class HarmonyRemote(remote.RemoteDevice):
         self._current_activity = None
         self._default_activity = activity
         self._token = token
-        _LOGGER.debug('retrieving configuration from hub using token: ' + token)
+        _LOGGER.debug('retrieving hub config using token: ' + token)
         self._config = pyharmony.ha_get_config(self.token, host, port)
         _LOGGER.debug('writing hub configuration to file: ' + path)
         pyharmony.ha_get_config_file(self._config, path)
