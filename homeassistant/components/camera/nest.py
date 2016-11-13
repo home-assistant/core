@@ -8,7 +8,6 @@ https://home-assistant.io/components/camera.nest/
 import logging
 from datetime import timedelta
 import requests
-# import voluptuous as vol
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
 import homeassistant.components.nest as nest
 from homeassistant.util import Throttle
