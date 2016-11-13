@@ -294,8 +294,12 @@ class EntityPlatform(object):
 
     def add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
+        if update_before_add:
+            for entity in new_entities:
+                entity.update()
+
         run_coroutine_threadsafe(
-            self.async_add_entities(list(new_entities), update_before_add),
+            self.async_add_entities(list(new_entities), False),
             self.component.hass.loop
         ).result()
 
