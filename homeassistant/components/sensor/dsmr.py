@@ -32,7 +32,7 @@ import asyncio
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'dsmr'
@@ -43,11 +43,11 @@ REQUIREMENTS = ['dsmr-parser==0.3']
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 CONF_DSMR_VERSION = 'dsmr_version'
-DEFAULT_DEVICE = '/dev/ttyUSB0'
+DEFAULT_PORT = '/dev/ttyUSB0'
 DEFAULT_DSMR_VERSION = '2.2'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
     vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
         cv.string, vol.In(['4', '2.2'])),
 })
@@ -135,7 +135,7 @@ class DSMR:
         # initialize asynchronous telegram reader
         dsmr_version = config[CONF_DSMR_VERSION]
         self.dsmr_parser = AsyncSerialReader(
-            device=config[CONF_DEVICE],
+            device=config[CONF_PORT],
             serial_settings=dsmr_versions[dsmr_version][0],
             telegram_specification=dsmr_versions[dsmr_version][1],
         )
