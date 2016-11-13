@@ -65,11 +65,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CommandSwitch(SwitchDevice):
     """Representation a switch that can be toggled using shell commands."""
 
-    def __init__(self, hass, device_name, friendly_name, command_on,
+    def __init__(self, hass, object_id, friendly_name, command_on,
                  command_off, command_state, value_template):
         """Initialize the switch."""
         self._hass = hass
-        self.entity_id = ENTITY_ID_FORMAT.format(device_name)
+        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = friendly_name
         self._state = False
         self._command_on = command_on
