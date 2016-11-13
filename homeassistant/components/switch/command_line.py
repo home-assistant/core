@@ -4,6 +4,7 @@ Support for custom shell commands to turn a switch on/off.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.command_line/
 """
+import asyncio
 import logging
 import subprocess
 
@@ -31,7 +32,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Find and return switches controlled by shell commands."""
     devices = config.get(CONF_SWITCHES, {})
     switches = []
@@ -57,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("No switches added")
         return False
 
-    add_devices(switches)
+    yield from async_add_devices(switches)
 
 
 class CommandSwitch(SwitchDevice):
@@ -75,11 +77,13 @@ class CommandSwitch(SwitchDevice):
         self._value_template = value_template
 
     @staticmethod
-    def _switch(command):
+    @asyncio.coroutine
+    def _async_switch(command):
         """Execute the actual commands."""
         _LOGGER.info('Running command: %s', command)
 
-        success = (subprocess.call(command, shell=True) == 0)
+        proc = yield from asyncio.create_subprocess_shell(command)
+        success = (yield from proc.wait()) == 0
 
         if not success:
             _LOGGER.error('Command failed: %s', command)
@@ -87,21 +91,23 @@ class CommandSwitch(SwitchDevice):
         return success
 
     @staticmethod
-    def _query_state_value(command):
+    @asyncio.coroutine
+    def _async_query_state_value(command):
         """Execute state command for return value."""
         _LOGGER.info('Running state command: %s', command)
 
-        try:
-            return_value = subprocess.check_output(command, shell=True)
-            return return_value.strip().decode('utf-8')
-        except subprocess.CalledProcessError:
-            _LOGGER.error('Command failed: %s', command)
+        proc = yield from asyncio.create_subprocess_shell(
+            command, stdout=asyncio.subprocess.PIPE)
+        return_value, _ = yield from proc.communicate()
+        return return_value.strip().decode('utf-8')
 
     @staticmethod
-    def _query_state_code(command):
+    @asyncio.coroutine
+    def _async_query_state_code(command):
         """Execute state command for return code."""
         _LOGGER.info('Running state command: %s', command)
-        return subprocess.call(command, shell=True) == 0
+        proc = yield from asyncio.create_subprocess_shell(command)
+        return (yield from proc.wait()) == 0
 
     @property
     def should_poll(self):
@@ -123,34 +129,47 @@ class CommandSwitch(SwitchDevice):
         """Return true if we do optimistic updates."""
         return self._command_state is False
 
-    def _query_state(self):
+    @asyncio.coroutine
+    def _async_query_state(self):
         """Query for state."""
         if not self._command_state:
             _LOGGER.error('No state command specified')
             return
-        if self._value_template:
-            return CommandSwitch._query_state_value(self._command_state)
-        return CommandSwitch._query_state_code(self._command_state)
 
-    def update(self):
+        if self._value_template:
+            ret = yield from CommandSwitch._async_query_state_value(
+                self._command_state)
+            return ret
+
+        ret = yield from CommandSwitch._async_query_state_code(
+            self._command_state)
+        return ret
+
+    @asyncio.coroutine
+    def async_update(self):
         """Update device state."""
-        if self._command_state:
-            payload = str(self._query_state())
-            if self._value_template:
-                payload = self._value_template.render_with_possible_json_value(
-                    payload)
+        if not self._command_state:
+            return
+
+        payload = str(yield from self._async_query_state())
+        if not self._value_template:
             self._state = (payload.lower() == "true")
 
-    def turn_on(self, **kwargs):
+        payload = self._value_template.async_render_with_possible_json_value(
+            payload)
+
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        if (CommandSwitch._switch(self._command_on) and
-                not self._command_state):
+        ret = yield from CommandSwitch._switch(self._command_on)
+        if (ret and not self._command_state):
             self._state = True
             self.update_ha_state()
 
-    def turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        if (CommandSwitch._switch(self._command_off) and
-                not self._command_state):
+        ret = yield from CommandSwitch._switch(self._command_off)
+        if (ret and not self._command_state):
             self._state = False
             self.update_ha_state()
