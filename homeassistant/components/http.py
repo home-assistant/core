@@ -28,7 +28,7 @@ from homeassistant import util
 from homeassistant.const import (
     SERVER_PORT, HTTP_HEADER_HA_AUTH,  # HTTP_HEADER_CACHE_CONTROL,
     CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_START)
+    EVENT_HOMEASSISTANT_START, HTTP_HEADER_X_FORWARDED_FOR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import persistent_notification
 
@@ -42,6 +42,7 @@ CONF_DEVELOPMENT = 'development'
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
 CONF_CORS_ORIGINS = 'cors_allowed_origins'
+CONF_USE_X_FORWARDED_FOR = 'use_x_forwarded_for'
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
 
 DATA_API_PASSWORD = 'api_password'
@@ -82,6 +83,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
         vol.Optional(CONF_SSL_KEY): cv.isfile,
         vol.Optional(CONF_CORS_ORIGINS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
         vol.Optional(CONF_TRUSTED_NETWORKS):
             vol.All(cv.ensure_list, [ip_network])
     }),
@@ -125,6 +127,7 @@ def setup(hass, config):
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf.get(CONF_CORS_ORIGINS, [])
+    use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
     trusted_networks = [
         ip_network(trusted_network)
         for trusted_network in conf.get(CONF_TRUSTED_NETWORKS, [])]
@@ -138,6 +141,7 @@ def setup(hass, config):
         ssl_certificate=ssl_certificate,
         ssl_key=ssl_key,
         cors_origins=cors_origins,
+        use_x_forwarded_for=use_x_forwarded_for,
         trusted_networks=trusted_networks
     )
 
@@ -248,7 +252,7 @@ class HomeAssistantWSGI(object):
 
     def __init__(self, hass, development, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
-                 trusted_networks):
+                 use_x_forwarded_for, trusted_networks):
         """Initialize the WSGI Home Assistant server."""
         import aiohttp_cors
 
@@ -260,6 +264,7 @@ class HomeAssistantWSGI(object):
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
+        self.use_x_forwarded_for = use_x_forwarded_for
         self.trusted_networks = trusted_networks
         self.event_forwarder = None
         self._handler = None
@@ -366,11 +371,15 @@ class HomeAssistantWSGI(object):
         yield from self._handler.finish_connections(60.0)
         yield from self.app.cleanup()
 
-    @staticmethod
-    def get_real_ip(request):
+    def get_real_ip(self, request):
         """Return the clients correct ip address, even in proxied setups."""
-        peername = request.transport.get_extra_info('peername')
-        return peername[0] if peername is not None else None
+        if self.use_x_forwarded_for \
+                and HTTP_HEADER_X_FORWARDED_FOR in request.headers:
+            return request.headers.get(
+                HTTP_HEADER_X_FORWARDED_FOR).split(',')[0]
+        else:
+            peername = request.transport.get_extra_info('peername')
+            return peername[0] if peername is not None else None
 
     def is_trusted_ip(self, remote_addr):
         """Match an ip address against trusted CIDR networks."""
@@ -452,7 +461,7 @@ def request_handler_factory(view, handler):
     @asyncio.coroutine
     def handle(request):
         """Handle incoming request."""
-        remote_addr = HomeAssistantWSGI.get_real_ip(request)
+        remote_addr = view.hass.http.get_real_ip(request)
 
         # Auth code verbose on purpose
         authenticated = False
