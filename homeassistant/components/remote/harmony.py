@@ -71,6 +71,7 @@ class HarmonyRemote(remote.RemoteDevice):
     def __init__(self, name, username, pw, host, port, activity, path, token):
         """Initialize HarmonyRemote class."""
         import pyharmony
+        from pathlib import Path
         _LOGGER.debug('HarmonyRemote device init started for: ' + name)
         self._name = name
         self._email = username
@@ -81,10 +82,12 @@ class HarmonyRemote(remote.RemoteDevice):
         self._current_activity = None
         self._default_activity = activity
         self._token = token
+        self._config_path = path
         _LOGGER.debug('retrieving hub config using token: ' + token)
         self._config = pyharmony.ha_get_config(self.token, host, port)
-        _LOGGER.debug('writing hub configuration to file: ' + path)
-        pyharmony.ha_get_config_file(self._config, path)
+        if not Path(self._config_path).is_file():
+            _LOGGER.debug('writing hub configuration to file: ' + path)
+            pyharmony.ha_get_config_file(self._config, self._config_path)
 
     @property
     def name(self):
@@ -163,4 +166,10 @@ class HarmonyRemote(remote.RemoteDevice):
     def sync(self):
         """Sync the Harmony device with the web service."""
         import pyharmony
+        _LOGGER.debug('syncing hub with Harmony servers')
         pyharmony.ha_sync(self._token, self._ip, self._port)
+        self._config = pyharmony.ha_get_config(self._token,
+                                               self._ip,
+                                               self._port)
+        _LOGGER.debug('writing hub config to file: ' + self._config_path)
+        pyharmony.ha_get_config_file(self._config, self._config_path)
