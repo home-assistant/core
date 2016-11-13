@@ -9,7 +9,8 @@ import subprocess
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA,
+                                             ENTITY_ID_FORMAT)
 from homeassistant.const import (
     CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_VALUE_TEMPLATE, CONF_COMMAND_OFF,
     CONF_COMMAND_ON, CONF_COMMAND_STATE)
@@ -36,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = config.get(CONF_SWITCHES, {})
     switches = []
 
-    for device_name, device_config in devices.items():
+    for object_id, device_config in devices.items():
         value_template = device_config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
@@ -45,11 +46,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         switches.append(
             CommandSwitch(
                 hass,
-                device_config.get(CONF_FRIENDLY_NAME, device_name),
+                object_id,
+                device_config.get(CONF_FRIENDLY_NAME, object_id),
                 device_config.get(CONF_COMMAND_ON),
                 device_config.get(CONF_COMMAND_OFF),
                 device_config.get(CONF_COMMAND_STATE),
-                value_template,
+                value_template
             )
         )
 
@@ -63,11 +65,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CommandSwitch(SwitchDevice):
     """Representation a switch that can be toggled using shell commands."""
 
-    def __init__(self, hass, name, command_on, command_off,
-                 command_state, value_template):
+    def __init__(self, hass, object_id, friendly_name, command_on,
+                 command_off, command_state, value_template):
         """Initialize the switch."""
         self._hass = hass
-        self._name = name
+        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
+        self._name = friendly_name
         self._state = False
         self._command_on = command_on
         self._command_off = command_off
