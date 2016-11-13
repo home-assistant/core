@@ -1,6 +1,7 @@
 """An abstract class for entities."""
 import asyncio
 import logging
+import functools as ft
 from timeit import default_timer as timer
 
 from typing import Any, Optional, List, Dict
@@ -324,23 +325,23 @@ class ToggleEntity(Entity):
 
     def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
-        run_coroutine_threadsafe(self.async_turn_on(**kwargs),
-                                 self.hass.loop).result()
+        raise NotImplementedError()
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        raise NotImplementedError()
+        yield from self.hass.loop.run_in_executor(
+            None, ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        run_coroutine_threadsafe(self.async_turn_off(**kwargs),
-                                 self.hass.loop).result()
+        raise NotImplementedError()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        raise NotImplementedError()
+        yield from self.hass.loop.run_in_executor(
+            None, ft.partial(self.turn_off, **kwargs))
 
     def toggle(self) -> None:
         """Toggle the entity."""
