@@ -76,6 +76,7 @@ def setup(hass, yaml_config):
         ssl_certificate=None,
         ssl_key=None,
         cors_origins=[],
+        use_x_forwarded_for=False,
         trusted_networks=[]
     )
 
