@@ -73,10 +73,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         ['Power Consumption', obis.CURRENT_ELECTRICITY_USAGE],
         ['Power Production', obis.CURRENT_ELECTRICITY_DELIVERY],
         ['Power Tariff', obis.ELECTRICITY_ACTIVE_TARIFF],
-        ['Power Consumption (normal)', obis.ELECTRICITY_USED_TARIFF_1],
-        ['Power Consumption (low)', obis.ELECTRICITY_USED_TARIFF_2],
-        ['Power Production (normal)', obis.ELECTRICITY_DELIVERED_TARIFF_1],
+        ['Power Consumption (low)', obis.ELECTRICITY_USED_TARIFF_1],
+        ['Power Consumption (normal)', obis.ELECTRICITY_USED_TARIFF_2],
         ['Power Production (low)', obis.ELECTRICITY_DELIVERED_TARIFF_1],
+        ['Power Production (normal)', obis.ELECTRICITY_DELIVERED_TARIFF_2],
     ]
     # protocol version specific obis
     if dsmr_version == '4':
