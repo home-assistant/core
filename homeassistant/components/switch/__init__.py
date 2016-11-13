@@ -78,7 +78,7 @@ def async_setup(hass, config):
     yield from component.async_setup(config)
 
     @asyncio.coroutine
-    def asnyc_handle_switch_service(service):
+    def async_handle_switch_service(service):
         """Handle calls to the switch services."""
         target_switches = component.async_extract_from_service(service)
 
