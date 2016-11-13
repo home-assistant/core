@@ -23,7 +23,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=6)
 
 SIMULATOR_SNAPSHOT_URL = 'https://developer.nest.com/simulator/api/v1/nest/devices/camera/snapshot'
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a Nest Cam."""
     camera_devices = hass.data[nest.DATA_NEST].camera_devices()
