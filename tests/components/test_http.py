@@ -22,6 +22,10 @@ HA_HEADERS = {
 # Don't add 127.0.0.1/::1 as trusted, as it may interfere with other test cases
 TRUSTED_NETWORKS = ['192.0.2.0/24', '2001:DB8:ABCD::/48', '100.64.0.1',
                     'FD01:DB8::1']
+TRUSTED_ADDRESSES = ['100.64.0.1', '192.0.2.100', 'FD01:DB8::1',
+                     '2001:DB8:ABCD::1']
+UNTRUSTED_ADDRESSES = ['198.51.100.1', '2001:DB8:FA1::1', '127.0.0.1', '::1']
+
 
 CORS_ORIGINS = [HTTP_BASE_URL, HTTP_BASE]
 
@@ -85,10 +89,19 @@ class TestHttp:
 
         assert req.status_code == 401
 
+    def test_access_denied_with_x_forwarded_for(self, caplog):
+        """Test access denied through the X-Forwarded-For http header."""
+        hass.http.use_x_forwarded_for = True
+        for remote_addr in UNTRUSTED_ADDRESSES:
+            req = requests.get(_url(const.URL_API), headers={
+                const.HTTP_HEADER_X_FORWARDED_FOR: remote_addr})
+
+            assert req.status_code == 401, \
+                "{} shouldn't be trusted".format(remote_addr)
+
     def test_access_denied_with_untrusted_ip(self, caplog):
         """Test access with an untrusted ip address."""
-        for remote_addr in ['198.51.100.1', '2001:DB8:FA1::1', '127.0.0.1',
-                            '::1']:
+        for remote_addr in UNTRUSTED_ADDRESSES:
             with patch('homeassistant.components.http.'
                        'HomeAssistantWSGI.get_real_ip',
                        return_value=remote_addr):
@@ -138,10 +151,19 @@ class TestHttp:
         # assert const.URL_API in logs
         assert API_PASSWORD not in logs
 
-    def test_access_with_trusted_ip(self, caplog):
+    def test_access_granted_with_x_forwarded_for(self, caplog):
+        """Test access denied through the X-Forwarded-For http header."""
+        hass.http.use_x_forwarded_for = True
+        for remote_addr in TRUSTED_ADDRESSES:
+            req = requests.get(_url(const.URL_API), headers={
+                const.HTTP_HEADER_X_FORWARDED_FOR: remote_addr})
+
+            assert req.status_code == 200, \
+                "{} should be trusted".format(remote_addr)
+
+    def test_access_granted_with_trusted_ip(self, caplog):
         """Test access with trusted addresses."""
-        for remote_addr in ['100.64.0.1', '192.0.2.100', 'FD01:DB8::1',
-                            '2001:DB8:ABCD::1']:
+        for remote_addr in TRUSTED_ADDRESSES:
             with patch('homeassistant.components.http.'
                        'HomeAssistantWSGI.get_real_ip',
                        return_value=remote_addr):
