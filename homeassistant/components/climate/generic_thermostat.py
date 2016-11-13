@@ -196,11 +196,13 @@ class GenericThermostat(ClimateDevice):
             is_heating = self._is_device_active
             if is_heating:
                 if self._cur_temp >= self._target_temp + self._histeresis:
-                    _LOGGER.info('Turning off heater %s', self.heater_entity_id)
+                    _LOGGER.info('Turning off heater %s',
+                                 self.heater_entity_id)
                     switch.turn_off(self.hass, self.heater_entity_id)
             else:
                 if self._cur_temp <= self._target_temp - self._histeresis:
-                    _LOGGER.info('Turning on heater %s', self.heater_entity_id)
+                    _LOGGER.info('Turning on heater %s',
+                                 self.heater_entity_id)
                     switch.turn_on(self.hass, self.heater_entity_id)
 
     @property
