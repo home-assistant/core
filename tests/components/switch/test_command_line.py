@@ -165,13 +165,13 @@ class TestCommandSwitch(unittest.TestCase):
         # Set state command to false
         statecmd = False
 
-        no_state_device = command_line.CommandSwitch(self.hass, "Test", "echo",
-                                                     "echo", statecmd, None)
+        no_state_device = command_line.CommandSwitch(
+            self.hass, None, "Test", "echo", "echo", statecmd, None)
         self.assertTrue(no_state_device.assumed_state)
 
         # Set state command
         statecmd = 'cat {}'
 
-        state_device = command_line.CommandSwitch(self.hass, "Test", "echo",
-                                                  "echo", statecmd, None)
+        state_device = command_line.CommandSwitch(
+            self.hass, None, "Test", "echo", "echo", statecmd, None)
         self.assertFalse(state_device.assumed_state)
