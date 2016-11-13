@@ -182,3 +182,21 @@ class TestCommandSwitch(unittest.TestCase):
 
         state_device = command_line.CommandSwitch(*init_args)
         self.assertFalse(state_device.assumed_state)
+
+    def test_entity_id_set_correctly(self):
+        """Test that entity_id is set correctly from object_id"""
+        self.hass = get_test_home_assistant()
+
+        init_args = [
+                self.hass,
+                "test_device_name",
+                "Test friendly name!",
+                "echo 'on command'",
+                "echo 'off command'",
+                False,
+                None
+        ]
+
+        test_switch = command_line.CommandSwitch(*init_args)
+        self.assertEqual(test_switch.entity_id, 'switch.test_device_name')
+        self.assertEqual(test_switch.name, 'Test friendly name!')
