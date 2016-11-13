@@ -101,9 +101,9 @@ class NestThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if self._mode == 'cool':
+        if self._mode == STATE_COOL:
             return STATE_COOL
-        elif self._mode == 'heat':
+        elif self._mode == STATE_HEAT:
             return STATE_HEAT
         elif self._mode == 'heat-cool':
             return STATE_AUTO
@@ -165,13 +165,15 @@ class NestThermostat(ClimateDevice):
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         if operation_mode == STATE_HEAT:
-            self.device.mode = 'heat'
+            self.device.mode = STATE_HEAT
         elif operation_mode == STATE_COOL:
-            self.device.mode = 'cool'
+            self.device.mode = STATE_COOL
         elif operation_mode == STATE_AUTO:
-            self.device.mode = 'range'
+            self.device.mode = 'heat-cool'
         elif operation_mode == STATE_OFF:
-            self.device.mode = 'off'
+            self.device.mode = STATE_OFF
+        elif operation_mode == STATE_ECO:
+            self.device.mode = STATE_ECO
 
     @property
     def operation_list(self):
