@@ -76,13 +76,13 @@ class CommandSwitch(SwitchDevice):
         self._command_state = command_state
         self._value_template = value_template
 
-    @staticmethod
     @asyncio.coroutine
-    def _async_switch(command):
+    def _async_switch(self, command):
         """Execute the actual commands."""
         _LOGGER.info('Running command: %s', command)
 
-        proc = yield from asyncio.create_subprocess_shell(command)
+        proc = yield from asyncio.create_subprocess_shell(
+            command, loop=self.hass.loop)
         success = (yield from proc.wait()) == 0
 
         if not success:
@@ -90,23 +90,22 @@ class CommandSwitch(SwitchDevice):
 
         return success
 
-    @staticmethod
     @asyncio.coroutine
-    def _async_query_state_value(command):
+    def _async_query_state_value(self, command):
         """Execute state command for return value."""
         _LOGGER.info('Running state command: %s', command)
 
         proc = yield from asyncio.create_subprocess_shell(
-            command, stdout=asyncio.subprocess.PIPE)
+            command, loop=self.hass.loop, stdout=asyncio.subprocess.PIPE)
         return_value, _ = yield from proc.communicate()
         return return_value.strip().decode('utf-8')
 
-    @staticmethod
     @asyncio.coroutine
-    def _async_query_state_code(command):
+    def _async_query_state_code(self, command):
         """Execute state command for return code."""
         _LOGGER.info('Running state command: %s', command)
-        proc = yield from asyncio.create_subprocess_shell(command)
+        proc = yield from asyncio.create_subprocess_shell(
+            command, loop=self.hass.loop)
         return (yield from proc.wait()) == 0
 
     @property
@@ -137,11 +136,11 @@ class CommandSwitch(SwitchDevice):
             return
 
         if self._value_template:
-            ret = yield from CommandSwitch._async_query_state_value(
+            ret = yield from self._async_query_state_value(
                 self._command_state)
             return ret
 
-        ret = yield from CommandSwitch._async_query_state_code(
+        ret = yield from self._async_query_state_code(
             self._command_state)
         return ret
 
@@ -161,7 +160,7 @@ class CommandSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        ret = yield from CommandSwitch._async_switch(self._command_on)
+        ret = yield from self._async_switch(self._command_on)
         if ret and not self._command_state:
             self._state = True
             yield from self.async_update_ha_state()
@@ -169,7 +168,7 @@ class CommandSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        ret = yield from CommandSwitch._async_switch(self._command_off)
+        ret = yield from self._async_switch(self._command_off)
         if ret and not self._command_state:
             self._state = False
             yield from self.async_update_ha_state()
