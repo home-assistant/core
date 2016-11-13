@@ -68,7 +68,7 @@ class CommandSwitch(SwitchDevice):
     def __init__(self, hass, name, command_on, command_off,
                  command_state, value_template):
         """Initialize the switch."""
-        self._hass = hass
+        self.hass = hass
         self._name = name
         self._state = False
         self._command_on = command_on
@@ -82,7 +82,10 @@ class CommandSwitch(SwitchDevice):
         _LOGGER.info('Running command: %s', command)
 
         proc = yield from asyncio.create_subprocess_shell(
-            command, loop=self.hass.loop)
+            command, stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL, loop=self.hass.loop
+        )
         success = (yield from proc.wait()) == 0
 
         if not success:
@@ -96,7 +99,8 @@ class CommandSwitch(SwitchDevice):
         _LOGGER.info('Running state command: %s', command)
 
         proc = yield from asyncio.create_subprocess_shell(
-            command, loop=self.hass.loop, stdout=asyncio.subprocess.PIPE)
+            command, loop=self.hass.loop, stdout=asyncio.subprocess.PIPE,
+            stdin=asyncio.subprocess.DEVNULL, sterr=asyncio.subprocess.DEVNULL)
         return_value, _ = yield from proc.communicate()
         return return_value.strip().decode('utf-8')
 
@@ -105,7 +109,10 @@ class CommandSwitch(SwitchDevice):
         """Execute state command for return code."""
         _LOGGER.info('Running state command: %s', command)
         proc = yield from asyncio.create_subprocess_shell(
-            command, loop=self.hass.loop)
+            command, stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL, loop=self.hass.loop
+        )
         return (yield from proc.wait()) == 0
 
     @property
