@@ -151,7 +151,7 @@ class CommandSwitch(SwitchDevice):
         if not self._command_state:
             return
 
-        payload = str(yield from self._async_query_state())
+        payload = yield from self._async_query_state()
         if not self._value_template:
             self._state = (payload.lower() == "true")
 

@@ -330,7 +330,8 @@ class ToggleEntity(Entity):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        self.hass.run_in_executor(None, ft.partial(self.turn_on, **kwargs))
+        yield from self.hass.run_in_executor(
+            None, ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
@@ -339,7 +340,8 @@ class ToggleEntity(Entity):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        self.hass.run_in_executor(None, ft.partial(self.turn_off, **kwargs))
+        yield from self.hass.run_in_executor(
+            None, ft.partial(self.turn_off, **kwargs))
 
     def toggle(self) -> None:
         """Toggle the entity."""

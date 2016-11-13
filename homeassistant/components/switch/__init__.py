@@ -91,10 +91,12 @@ def async_setup(hass, config):
                 yield from switch.async_turn_off()
 
             if switch.should_poll:
-                switch.async_update_ha_state(True)
+                yield from switch.async_update_ha_state(True)
 
-    descriptions = hass.loop.run_in_executor(None, load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml')))
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file(os.path.join(
+            os.path.dirname(__file__), 'services.yaml')))
+
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_switch_service,
         descriptions.get(SERVICE_TURN_OFF), schema=SWITCH_SERVICE_SCHEMA)
