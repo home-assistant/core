@@ -31,6 +31,7 @@ ATTR_VOLTAGE = 'voltage'
 CONF_SYSTEM_ID = 'system_id'
 
 DEFAULT_NAME = 'PVOutput'
+DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -45,7 +46,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     api_key = config.get(CONF_API_KEY)
     system_id = config.get(CONF_SYSTEM_ID)
     method = 'GET'
-    payload = verify_ssl = auth = None
+    payload = auth = None
+    verify_ssl = DEFAULT_VERIFY_SSL
     headers = {
         'X-Pvoutput-Apikey': api_key,
         'X-Pvoutput-SystemId': system_id,
