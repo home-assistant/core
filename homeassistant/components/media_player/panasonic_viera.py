@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.panasonic_viera/
 """
 import logging
-import platform
 
 import voluptuous as vol
 
@@ -14,7 +13,8 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT, CONF_MAC)
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT,
+    CONF_MAC)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['panasonic_viera==0.2',
@@ -29,7 +29,7 @@ DEFAULT_MAC = ""
 SUPPORT_VIERATV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_TURN_OFF | SUPPORT_TURN_ON 
+    SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
-    mac  = config.get(CONF_MAC)
+    mac = config.get(CONF_MAC)
 
     if discovery_info:
         _LOGGER.debug('%s', discovery_info)
@@ -136,7 +136,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         return SUPPORT_VIERATV
 
     def turn_on(self):
-        if self._mac :
+        if self._mac:
             self._wol.send_magic_packet(self._mac)
             self.update()
 
