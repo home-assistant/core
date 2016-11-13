@@ -135,7 +135,9 @@ class FluxLight(Light):
         rgb = kwargs.get(ATTR_RGB_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
-        if rgb:
+        if rgb and brightness:
+            self._bulb.setRgb(*tuple(rgb), brightness=brightness)
+        elif rgb:
             self._bulb.setRgb(*tuple(rgb))
         elif brightness:
             if self._mode == 'rgbw':
