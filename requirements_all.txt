@@ -155,7 +155,7 @@ hikvision==0.4
 https://github.com/Danielhiversen/flux_led/archive/0.8.zip#flux_led==0.8
 
 # homeassistant.components.switch.tplink
-https://github.com/GadgetReactor/pyHS100/archive/1f771b7d8090a91c6a58931532e42730b021cbde.zip#pyHS100==0.2.0
+https://github.com/GadgetReactor/pyHS100/archive/9c39249b9989ebf1745c4a2c9cad1896f54b5c05.zip#pyHS100==0.2.1
 
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.6.zip#pyW215==0.3.6
