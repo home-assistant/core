@@ -27,17 +27,17 @@ DEFAULT_PORT = '19999'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
-    'memory_free': ['RAM Free', 'MiB', 'system.ram', 'free'],
-    'memory_used': ['RAM Used', 'MiB', 'system.ram', 'used'],
-    'memory_cached': ['RAM Cached', 'MiB', 'system.ram', 'cached'],
-    'memory_buffers': ['RAM Buffers', 'MiB', 'system.ram', 'buffers'],
-    'swap_free': ['Swap Free', 'MiB', 'system.swap', 'free'],
-    'swap_used': ['Swap Used', 'MiB', 'system.swap', 'used'],
-    'processes_running': ['Processes Running', 'Count', 'system.processes', 'running'],
-    'processes_blocked': ['Processes Blocked', 'Count', 'system.processes', 'blocked'],
-    'system_load': ['System Load', '15 min', 'system.processes', 'running'],
-    'system_io_in': ['System IO In', 'Count', 'system.io', 'in'],
-    'system_io_out': ['System IO Out', 'Count', 'system.io', 'out'],
+    'memory_free': ['RAM Free', 'MiB', 'system.ram', 'free', 1],
+    'memory_used': ['RAM Used', 'MiB', 'system.ram', 'used', 1],
+    'memory_cached': ['RAM Cached', 'MiB', 'system.ram', 'cached', 1],
+    'memory_buffers': ['RAM Buffers', 'MiB', 'system.ram', 'buffers', 1],
+    'swap_free': ['Swap Free', 'MiB', 'system.swap', 'free', 1],
+    'swap_used': ['Swap Used', 'MiB', 'system.swap', 'used', 1],
+    'processes_running': ['Processes Running', 'Count', 'system.processes', 'running', 0],
+    'processes_blocked': ['Processes Blocked', 'Count', 'system.processes', 'blocked', 0],
+    'system_load': ['System Load', '15 min', 'system.processes', 'running', 2],
+    'system_io_in': ['System IO In', 'Count', 'system.io', 'in', 0],
+    'system_io_out': ['System IO Out', 'Count', 'system.io', 'out', 0],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -74,21 +74,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     	if key in var_conf:
     	    v.setdefault(value[2], []).append(key)
 
-    _LOGGER.error("%s", v)
-
     dev = []
     for chart in v:
     	rest_url = rest_url ='{}{}&{}'.format(data_url, chart, _REALTIME)
     	rest = NetdataData(rest_url)
     	for id in v[chart]:
     	    dev.append(NetdataSensor(rest, name, id))
-
-#    dev = []
-#    for resource in var_conf:
-#    	rest_url ='{}{}&{}'.format(data_url, SENSOR_TYPES[resource][2], _REALTIME)
-#    	_LOGGER.error("%s", rest_url)
-#    	rest = NetdataData(rest_url)
-#    	dev.append(NetdataSensor(rest, name, resource))
 
     add_devices(dev)
 
@@ -123,12 +114,11 @@ class NetdataSensor(Entity):
     def state(self):
         """Return the state of the resources."""
         value = self.rest.data
-        _LOGGER.info(value)
 
         if value is not None:
             id = SENSOR_TYPES[self.type][3]
             if id in value:
-                return "{0:.{1}f}".format(value[id], 2)
+                return "{0:.{1}f}".format(value[id], SENSOR_TYPES[self.type][4])
 
     def update(self):
         """Get the latest data from REST API."""
