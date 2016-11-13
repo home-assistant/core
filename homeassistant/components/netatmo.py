@@ -18,7 +18,7 @@ from homeassistant.util import Throttle
 
 REQUIREMENTS = [
     'https://github.com/jabesq/netatmo-api-python/archive/'
-    'v0.7.0.zip#lnetatmo==0.7.0']
+    'v0.8.0.zip#lnetatmo==0.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ class WelcomeData(object):
     def get_module_names(self, camera_name):
         self.module_names = []
         self.update()
-        cam_id = self.welcomedata.cameraByName(camera = camera_name, home = self.home)
+        cam_id = self.welcomedata.cameraByName(camera = camera_name, home = self.home)['id']
         for module in self.welcomedata.modules.values():
             if cam_id == module['cam_id']:
                 self.module_names.append(module['name'])
