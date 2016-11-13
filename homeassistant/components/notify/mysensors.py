@@ -8,8 +8,6 @@ from homeassistant.components import mysensors
 from homeassistant.components.notify import (ATTR_TARGET,
                                              BaseNotificationService)
 
-DEPENDENCIES = ['mysensors']
-
 
 def get_service(hass, config):
     """Get the MySensors notification service."""
