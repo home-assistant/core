@@ -1,4 +1,8 @@
-"""Test for DSMR components."""
+"""Test for DSMR components.
+
+Tests setup of the DSMR component and ensure incoming telegrams cause Entity
+to be updated with new values.
+"""
 
 import asyncio
 from decimal import Decimal

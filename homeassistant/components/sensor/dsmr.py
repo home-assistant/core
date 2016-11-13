@@ -5,6 +5,25 @@ Also known as: Smartmeter or P1 port.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dsmr/
+
+Technical overview:
+
+DSMR is a standard to which Dutch smartmeters must comply. It specifies that
+the smartmeter must send out a 'telegram' every 10 seconds over a serial port.
+
+The contents of this telegram differ between version but they generally consist
+of lines with 'obis' (Object Identification System, a numerical ID for a value)
+followed with the value and unit.
+
+This module sets up a asynchronous reading loop using the `dsmr_parser` module
+which waits for a complete telegram, parser it and puts it on an async queue as
+a dictionary of `obis`/object mapping. The numeric value and unit of each value
+can be read from the objects attributes. Because the `obis` are know for each
+DSMR version the Entities for this component are create during bootstrap.
+
+Another loop (DSMR class) is setup which reads the telegram queue,
+stores/caches the latest telegram and notifies the Entities that the telegram
+has been updated.
 """
 
 import logging
@@ -13,7 +32,7 @@ import asyncio
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'dsmr'
@@ -68,17 +87,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # make list available early to allow cross referencing dsmr/entities
     devices = []
 
+    # queue for receiving parsed telegrams from async dsmr reader
+    queue = asyncio.Queue()
+
     # create DSMR interface
-    dsmr = DSMR(hass, config, devices)
+    dsmr = DSMR(hass, config, devices, queue)
 
     # generate device entities
     devices += [DSMREntity(name, obis, dsmr) for name, obis in obis_mapping]
 
     # setup devices
-    yield from hass.loop.create_task(async_add_devices(devices))
-
-    # queue for receiving parsed telegrams from async dsmr reader
-    queue = asyncio.Queue()
+    yield from async_add_devices(devices)
 
     # add asynchronous serial reader/parser task
     reader = hass.loop.create_task(dsmr.dsmr_parser.read(queue))
@@ -92,13 +111,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     reader.add_done_callback(handle_error)
 
     # add task to receive telegrams and update entities
-    hass.loop.create_task(dsmr.read_telegrams(queue))
+    hass.async_add_job(dsmr.read_telegrams)
 
 
 class DSMR:
     """DSMR interface."""
 
-    def __init__(self, hass, config, devices):
+    def __init__(self, hass, config, devices, queue):
         """Setup DSMR serial interface, initialize, add device entity list."""
         from dsmr_parser.serial import (
             SERIAL_SETTINGS_V4,
@@ -124,15 +143,28 @@ class DSMR:
         # keep list of device entities to update
         self.devices = devices
 
+        self._queue = queue
+
         # initialize empty telegram
         self._telegram = {}
 
+        # forward stop event to reading loop
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                   self._queue.put_nowait)
+
     @asyncio.coroutine
-    def read_telegrams(self, queue):
+    def read_telegrams(self):
         """Receive parsed telegram from DSMR reader, update entities."""
         while True:
             # asynchronously get latest telegram when it arrives
-            self._telegram = yield from queue.get()
+            event = yield from self._queue.get()
+
+            # stop loop if stop event was received
+            if getattr(event, 'event_type', None) == EVENT_HOMEASSISTANT_STOP:
+                self._queue.task_done()
+                return
+
+            self._telegram = event
             _LOGGER.debug('received DSMR telegram')
 
             # make all device entities aware of new telegram
@@ -157,6 +189,19 @@ class DSMREntity(Entity):
         # interface class to get telegram data
         self._interface = interface
 
+    def get_dsmr_object_attr(self, attribute):
+        """Read attribute from last received telegram for this DSMR object."""
+        # get most recent cached telegram from interface
+        telegram = self._interface.telegram
+
+        # make sure telegram contains an object for this entities obis
+        if self._obis not in telegram:
+            return None
+
+        # get the attibute value if the object has it
+        dsmr_object = telegram[self._obis]
+        return getattr(dsmr_object, attribute, None)
+
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -175,8 +220,7 @@ class DSMREntity(Entity):
         """Return the state of sensor, if available, translate if needed."""
         from dsmr_parser import obis_references as obis
 
-        value = getattr(self._interface.telegram.get(self._obis, {}),
-                        'value', None)
+        value = self.get_dsmr_object_attr('value')
 
         if self._obis == obis.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value)
@@ -186,8 +230,7 @@ class DSMREntity(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return getattr(self._interface.telegram.get(self._obis, {}),
-                       'unit', None)
+        return self.get_dsmr_object_attr('unit')
 
     @staticmethod
     def translate_tariff(value):
@@ -198,24 +241,6 @@ class DSMREntity(Entity):
         if value == '0002':
             return 'normal'
         elif value == '0001':
-            return 'low'
-        else:
-            return None
-
-
-class DSMRTariff(DSMREntity):
-    """Convert integer tariff value to text."""
-
-    @property
-    def state(self):
-        """Convert 2/1 to normal/low."""
-        # DSMR V2.2: Note: Tariff code 1 is used for low tariff
-        # and tariff code 2 is used for normal tariff.
-
-        tariff = super().state
-        if tariff == '0002':
-            return 'normal'
-        elif tariff == '0001':
             return 'low'
         else:
             return None
