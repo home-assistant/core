@@ -161,15 +161,15 @@ class CommandSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        ret = yield from CommandSwitch._switch(self._command_on)
-        if (ret and not self._command_state):
+        ret = yield from CommandSwitch._async_switch(self._command_on)
+        if ret and not self._command_state:
             self._state = True
-            self.update_ha_state()
+            yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        ret = yield from CommandSwitch._switch(self._command_off)
-        if (ret and not self._command_state):
+        ret = yield from CommandSwitch._async_switch(self._command_off)
+        if ret and not self._command_state:
             self._state = False
-            self.update_ha_state()
+            yield from self.async_update_ha_state()
