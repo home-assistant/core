@@ -9,10 +9,10 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import setup_component
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_OPTIMISTIC,
-                                 EVENT_HOMEASSISTANT_START,
+from homeassistant.bootstrap import setup_component
+from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_NAME,
+                                 CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
 from homeassistant.helpers import discovery
 from homeassistant.loader import get_component
@@ -168,6 +168,9 @@ def setup(hass, config):
     for component in ['sensor', 'switch', 'light', 'binary_sensor', 'climate',
                       'cover']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
+
+    discovery.load_platform(
+        hass, 'notify', DOMAIN, {CONF_NAME: DOMAIN}, config)
 
     return True
 

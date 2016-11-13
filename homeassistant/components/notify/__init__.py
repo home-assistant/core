@@ -14,7 +14,7 @@ import homeassistant.bootstrap as bootstrap
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
-from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,27 +66,31 @@ def send_message(hass, message, title=None, data=None):
 
 def setup(hass, config):
     """Setup the notify services."""
-    success = False
-
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     targets = {}
 
-    for platform, p_config in config_per_platform(config, DOMAIN):
+    def setup_notify_platform(platform, p_config=None, discovery_info=None):
+        """Set up a notify platform."""
+        if p_config is None:
+            p_config = {}
+        if discovery_info is not None:
+            p_config = discovery_info
+
         notify_implementation = bootstrap.prepare_setup_platform(
             hass, config, DOMAIN, platform)
 
         if notify_implementation is None:
             _LOGGER.error("Unknown notification service specified")
-            continue
+            return False
 
         notify_service = notify_implementation.get_service(hass, p_config)
 
         if notify_service is None:
             _LOGGER.error("Failed to initialize notification service %s",
                           platform)
-            continue
+            return False
 
         def notify_message(notify_service, call):
             """Handle sending notification message service calls."""
@@ -127,9 +131,21 @@ def setup(hass, config):
         hass.services.register(
             DOMAIN, platform_name_slug, service_call_handler,
             descriptions.get(SERVICE_NOTIFY), schema=NOTIFY_SERVICE_SCHEMA)
-        success = True
 
-    return success
+        return True
+
+    for platform, p_config in config_per_platform(config, DOMAIN):
+        if not setup_notify_platform(platform, p_config):
+            _LOGGER.error("Failed to set up platform %s", platform)
+            continue
+
+    def platform_discovered(platform, info):
+        """Callback to load a platform."""
+        setup_notify_platform(platform, discovery_info=info)
+
+    discovery.listen_platform(hass, DOMAIN, platform_discovered)
+
+    return True
 
 
 class BaseNotificationService(object):

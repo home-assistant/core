@@ -36,40 +36,6 @@ class TestApns(unittest.TestCase):
 
         self.assertTrue(notify.setup(self.hass, config))
 
-    def test_apns_setup_missing_name(self):
-        """Test setup with missing name."""
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'sandbox': 'True',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
-        }
-        self.assertFalse(notify.setup(self.hass, config))
-
-    def test_apns_setup_missing_certificate(self):
-        """Test setup with missing name."""
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'topic': 'testapp.appname',
-                'name': 'test_app'
-            }
-        }
-        self.assertFalse(notify.setup(self.hass, config))
-
-    def test_apns_setup_missing_topic(self):
-        """Test setup with missing topic."""
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'cert_file': 'test_app.pem',
-                'name': 'test_app'
-            }
-        }
-        self.assertFalse(notify.setup(self.hass, config))
-
     def test_register_new_device(self):
         """Test registering a new device with a name."""
         config = {

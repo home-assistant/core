@@ -29,15 +29,6 @@ class TestCommandLine(unittest.TestCase):
                 'command': 'echo $(cat); exit 1',
             }})
 
-    def test_bad_config(self):
-        """Test set up the platform with bad/missing configuration."""
-        self.assertFalse(setup_component(self.hass, notify.DOMAIN, {
-            'notify': {
-                'name': 'test',
-                'platform': 'bad_platform',
-            }
-        }))
-
     def test_command_line_output(self):
         """Test the command line output."""
         with tempfile.TemporaryDirectory() as tempdirname:
