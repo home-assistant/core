@@ -14,6 +14,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPGatewayTimeout
 import async_timeout
 
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
     CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP)
@@ -60,8 +61,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a Synology IP Camera."""
     if not config.get(CONF_VERIFY_SSL):
         connector = aiohttp.TCPConnector(verify_ssl=False)
+
+        @asyncio.coroutine
+        def _async_close_connector(event):
+            """Close websession on shutdown."""
+            yield from connector.close()
+
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_close_connector)
     else:
-        connector = None
+        connector = hass.websession.connector
 
     websession_init = aiohttp.ClientSession(
         loop=hass.loop,
@@ -115,10 +124,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     websession = aiohttp.ClientSession(
         loop=hass.loop, connector=connector, cookies={'id': session_id})
 
-    @asyncio.coroutine
+    @callback
     def _async_close_websession(event):
-        """Close webssesion on shutdown."""
-        yield from websession.close()
+        """Close websession on shutdown."""
+        websession.detach()
 
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, _async_close_websession)
