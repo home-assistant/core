@@ -53,8 +53,8 @@ class DenonDevice(MediaPlayerDevice):
         self._host = host
         self._pwstate = 'PWSTANDBY'
         self._volume = 0
-        self._source_list = {'TV': 'SITV', 'TUNER': 'SITUNER',
-                             'INTERNET_RADIO': 'SIIRP', 'FAVORITES': 'SIFVP'}
+        self._source_list = {'Tv': 'SITV', 'Tuner': 'SITUNER',
+                             'Internet_Radio': 'SIIRP', 'Favorites': 'SIFVP'}
         self._muted = False
         self._mediasource = ''
 
