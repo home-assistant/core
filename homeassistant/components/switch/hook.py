@@ -53,7 +53,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         response = requests.get(
             HOOK_ENDPOINT + 'device',
-            params={"token": data['data']['token']})
+            params={"token": data['data']['token']},
+            timeout=TIMEOUT)
         data = response.json()
     except (requests.exceptions.RequestException, ValueError) as error:
         _LOGGER.error("Failed getting devices: %s", error)
@@ -94,18 +95,26 @@ class HookSmartHome(SwitchDevice):
         """Return true if device is on."""
         return self._state
 
+    def _send(self, url):
+        """Send the url to the Hook API"""
+        try:
+            requests.get(
+                url,
+                params={"token": self._token},
+                timeout=TIMEOUT)
+        except (requests.exceptions.RequestException) as error:
+            _LOGGER.error("Failed setting date: %s", error)
+            return False
+        return True
+
     def turn_on(self, **kwargs):
         """Turn the device on."""
         _LOGGER.debug("Turning on: %s", self._name)
-        requests.get(
-            HOOK_ENDPOINT + 'device/trigger/' + self._id + '/On',
-            params={"token": self._token})
-        self._state = True
+        if self._send(HOOK_ENDPOINT + 'device/trigger/' + self._id + '/On'):
+            self._state = True
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         _LOGGER.debug("Turning on: %s", self._name)
-        requests.get(
-            HOOK_ENDPOINT + 'device/trigger/' + self._id + '/Off',
-            params={"token": self._token})
-        self._state = False
+        if self._send(HOOK_ENDPOINT + 'device/trigger/' + self._id + '/Off'):
+            self._state = False
