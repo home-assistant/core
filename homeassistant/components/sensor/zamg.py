@@ -70,7 +70,7 @@ from homeassistant.components.weather import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_MONITORED_CONDITIONS,
-    CONF_NAME, STATE_UNKNOWN, __version__
+    CONF_NAME, __version__
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -114,7 +114,8 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_STATION_ID): vol.All(cv.string, vol.In(VALID_STATION_IDS)),
+    vol.Required(CONF_STATION_ID):
+        vol.All(cv.string, vol.In(VALID_STATION_IDS)),
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
