@@ -255,6 +255,6 @@ class ZamgData(object):
 
     def get_data(self, variable):
         """Generic accessor for data."""
-        return self.data.get(variable, STATE_UNKNOWN)
+        return self.data.get(variable)
 
 # ------------------------------------------------------------------------
