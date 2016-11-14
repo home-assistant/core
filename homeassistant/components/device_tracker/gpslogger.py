@@ -56,10 +56,24 @@ class GPSLoggerView(HomeAssistantView):
             return ('Device id not specified.',
                     HTTP_UNPROCESSABLE_ENTITY)
 
+<<<<<<< HEAD
         device = data['device'].replace('-', '')
         gps_location = (data['latitude'], data['longitude'])
         accuracy = 200
         battery = -1
+=======
+        latitude = data['latitude']
+        longitude = data['longitude']
+        device = data['device']
+
+        _LOGGER.debug('Received message from GPSLogger: %s (%s, %s)', device,
+                      latitude, longitude)
+
+        kwargs = {
+            'dev_id': data['device'],
+            'gps': (float(data['latitude']), float(data['longitude']))
+        }
+>>>>>>> 088314b67a55075d6642193562d40a5ffac6314c
 
         if 'accuracy' in data:
             accuracy = int(float(data['accuracy']))
