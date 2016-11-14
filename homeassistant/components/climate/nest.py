@@ -49,7 +49,7 @@ class NestThermostat(ClimateDevice):
         self._fan_list = [STATE_ON, STATE_AUTO]
 
         # Not all nest devices support cooling and heating remove unused
-        self._operation_list = [STATE_OFF, STATE_ECO]
+        self._operation_list = [STATE_OFF]
 
         # Add supported nest thermostat features
         if self.device.can_heat:
@@ -60,6 +60,8 @@ class NestThermostat(ClimateDevice):
 
         if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(STATE_AUTO)
+
+        self._operation_list.append(STATE_ECO)
 
         # feature of device
         self._has_fan = self.device.has_fan
