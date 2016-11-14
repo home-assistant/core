@@ -35,7 +35,7 @@ Recognised conditions are:
     precipitation (Precipitation)
     dewpoint (Dew Point)
 
-The following stations are available:
+The following stations are available in the data set:
 
     11010   Linz/Hörsching
     11012   Kremsmünster
@@ -69,7 +69,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_MONITORED_CONDITIONS,
-    CONF_NAME, STATE_UNKNOWN
+    CONF_NAME, STATE_UNKNOWN, __version__
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -82,6 +82,11 @@ ATTRIBUTION = 'Data provided by ZAMG'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)  # Only updates once per hour
 
 CONF_STATION_ID = "station_id"
+
+VALID_STATION_IDS = (
+    '11010', '11012', '11022', '11035', '11036', '11101', '11121', '11126',
+    '11130', '11150', '11155', '11157', '11171', '11190', '11204'
+)
 
 SENSOR_TYPES = {
     ATTR_WEATHER_PRESSURE: ('Pressure', 'hPa', 'LDstat hPa', float),
@@ -104,8 +109,8 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STATION_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_STATION_ID): vol.All(cv.string, vol.In(VALID_STATION_IDS)),
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
@@ -215,6 +220,10 @@ class ZamgData(object):
         for k, v in SENSOR_TYPES.items()
     }
 
+    API_HEADERS = {
+        'User-Agent': 'home-assistant.zamg/' + __version__,
+    }
+
     def __init__(self, logger, station_id):
         """Initialize the probe."""
         self._logger = logger
@@ -229,7 +238,8 @@ class ZamgData(object):
         Fetch a new data set from the zamg server, parse it and
         update internal state accordingly
         """
-        response = requests.get(self.API_URL)
+        response = requests.get(self.API_URL,
+                                headers=self.API_HEADERS, timeout=15)
         response.encoding = 'UTF8'
         if response.status_code == 200:
             content_type = response.headers.get('Content-Type', 'whatever')
