@@ -103,7 +103,7 @@ class HookSmartHome(SwitchDevice):
                 params={"token": self._token},
                 timeout=TIMEOUT)
         except (requests.exceptions.RequestException) as error:
-            _LOGGER.error("Failed setting date: %s", error)
+            _LOGGER.error("Failed setting state: %s", error)
             return False
         return True
 
