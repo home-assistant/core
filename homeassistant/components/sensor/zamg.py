@@ -81,7 +81,9 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'zamg'
 ATTRIBUTION = 'Data provided by ZAMG'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)  # Only updates once per hour
+# Data source only updates once per hour, so throttle to 30min to have
+# reasonably recent data
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 CONF_STATION_ID = "station_id"
 
