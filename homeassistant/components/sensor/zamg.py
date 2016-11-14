@@ -62,17 +62,19 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA, ATTR_WEATHER_HUMIDITY,
+    ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE, ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING, ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_ATTRIBUTION
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_MONITORED_CONDITIONS,
     CONF_NAME, STATE_UNKNOWN, __version__
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,7 +110,7 @@ SENSOR_TYPES = {
     'update_time': ('Update Time', None, 'Zeit', str),
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_STATION_ID): vol.All(cv.string, vol.In(VALID_STATION_IDS)),
     vol.Required(CONF_MONITORED_CONDITIONS):
