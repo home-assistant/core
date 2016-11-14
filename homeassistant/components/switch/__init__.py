@@ -92,9 +92,10 @@ def async_setup(hass, config):
                 yield from switch.async_turn_off()
 
             if switch.should_poll:
-                update_tasks.append(switch.async_update_ha_state(True))
+                update_coro = switch.async_update_ha_state(True)
             else:
-                update_tasks.append(switch.async_update_ha_state())
+                update_coro = switch.async_update_ha_state()
+            update_tasks.append(hass.loop.create_task(update_coro))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
