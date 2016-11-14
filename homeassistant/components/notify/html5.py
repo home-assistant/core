@@ -141,11 +141,23 @@ def _load_config(filename):
         return None
 
 
+class JSONBytesDecoder(json.JSONEncoder):
+    """JSONEncoder to decode bytes objects to unicode."""
+
+    # pylint: disable=method-hidden
+    def default(self, obj):
+        """Decode object if it's a bytes object, else defer to baseclass."""
+        if isinstance(obj, bytes):
+            return obj.decode()
+        return json.JSONEncoder.default(self, obj)
+
+
 def _save_config(filename, config):
     """Save configuration."""
     try:
         with open(filename, 'w') as fdesc:
-            fdesc.write(json.dumps(config))
+            fdesc.write(json.dumps(
+                config, cls=JSONBytesDecoder, indent=4, sort_keys=True))
     except (IOError, TypeError) as error:
         _LOGGER.error('Saving config file failed: %s', error)
         return False
