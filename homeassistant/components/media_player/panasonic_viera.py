@@ -136,6 +136,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         return SUPPORT_VIERATV
 
     def turn_on(self):
+        """Turn ON the media player."""
         if self._mac:
             self._wol.send_magic_packet(self._mac)
             self.update()
