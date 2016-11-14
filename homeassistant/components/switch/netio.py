@@ -156,7 +156,6 @@ class NetioSwitch(SwitchDevice):
         val[self.outlet - 1] = '1' if value else '0'
         self.netio.get('port list %s' % ''.join(val))
         self.netio.states[self.outlet - 1] = value
-        self.update_ha_state()
 
     @property
     def is_on(self):

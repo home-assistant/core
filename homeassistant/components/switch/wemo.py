@@ -150,13 +150,11 @@ class WemoSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._state = WEMO_ON
-        self.update_ha_state()
         self.wemo.on()
 
     def turn_off(self):
         """Turn the switch off."""
         self._state = WEMO_OFF
-        self.update_ha_state()
         self.wemo.off()
 
     def update(self):
