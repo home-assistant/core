@@ -135,7 +135,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 # ------------------------------------------------------------------------
-class ZAMGWeather(WeatherEntity):
+class ZAMGWeather(Entity):
     """
     I am a weather wrapper for a specific station and a specific attribute.
 
@@ -158,7 +158,7 @@ class ZAMGWeather(WeatherEntity):
 
     @property
     def name(self):
-        """Build name."""
+        """Build name of sensor."""
         return "%s_%s" % (self.client_name, self.variable)
 
     @property
@@ -177,26 +177,6 @@ class ZAMGWeather(WeatherEntity):
                                   self.probe.get_data('update_time'))
 
         }
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return SENSOR_TYPES[self.variable][1]
-
-    @property
-    def condition(self):
-        """Return unknown, we only do raw weather data, no condition."""
-        return STATE_UNKNOWN
-
-    @property
-    def humidity(self):
-        """Return humidity."""
-        return self.probe.get_data(ATTR_WEATHER_HUMIDITY)
-
-    @property
-    def temperature(self):
-        """Return temperature."""
-        return self.probe.get_data(ATTR_WEATHER_TEMPERATURE)
 
 
 # ------------------------------------------------------------------------
