@@ -3,7 +3,7 @@
 
 import unittest
 
-# from homeassistant.bootstrap import setup_component
+from homeassistant.bootstrap import setup_component
 # import homeassistant.loader as loader
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
@@ -13,6 +13,7 @@ import homeassistant.components.remote as remote
 from tests.common import mock_service, get_test_home_assistant
 TEST_PLATFORM = {remote.DOMAIN: {CONF_PLATFORM: 'test'}}
 SERVICE_SYNC = 'sync'
+SERVICE_SEND_COMMAND = 'send_command'
 
 
 class TestRemote(unittest.TestCase):
@@ -28,9 +29,8 @@ class TestRemote(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_methods(self):
-        """Test if methods call the services as expected."""
-        # Test is_on
+    def test_is_on(self):
+        """ Test is_on"""
         self.hass.states.set('remote.test', STATE_ON)
         self.assertTrue(remote.is_on(self.hass, 'remote.test'))
 
@@ -43,7 +43,8 @@ class TestRemote(unittest.TestCase):
         self.hass.states.set(remote.ENTITY_ID_ALL_REMOTES, STATE_OFF)
         self.assertFalse(remote.is_on(self.hass))
 
-        # Test turn_on
+    def test_turn_on(self):
+        """ Test turn_on"""
         turn_on_calls = mock_service(
             self.hass, remote.DOMAIN, SERVICE_TURN_ON)
 
@@ -56,7 +57,10 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(1, len(turn_on_calls))
         call = turn_on_calls[-1]
 
-        # Test turn_off
+        self.assertEqual(remote.DOMAIN, call.domain)
+
+    def test_turn_off(self):
+        """ Test turn_off"""
         turn_off_calls = mock_service(
             self.hass, remote.DOMAIN, SERVICE_TURN_OFF)
 
@@ -72,12 +76,51 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
 
-    # def test_services(self):
-    #          """Test the provided services."""
-    #     self.assertTrue(setup_component(self.hass, remote.DOMAIN,
-    #                                     TEST_PLATFORM))
-    #
-    #     dev1, dev2, dev3 = platform.DEVICES
+    def test_sync(self):
+        """ Test sync"""
+        sync_calls = mock_service(
+            self.hass, remote.DOMAIN, SERVICE_SYNC)
+
+        remote.sync(
+            self.hass, entity_id='entity_id_val')
+
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(sync_calls))
+        call = sync_calls[-1]
+
+        self.assertEqual(remote.DOMAIN, call.domain)
+        self.assertEqual(SERVICE_SYNC, call.service)
+        self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
+
+    def test_send_command(self):
+        """ Test send_command"""
+        send_command_calls = mock_service(
+            self.hass, remote.DOMAIN, SERVICE_SEND_COMMAND)
+
+        remote.send_command(
+            self.hass, entity_id='entity_id_val')
+
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(send_command_calls))
+        call = send_command_calls[-1]
+
+        self.assertEqual(remote.DOMAIN, call.domain)
+        self.assertEqual(SERVICE_SEND_COMMAND, call.service)
+        self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
+
+    def test_services(self):
+        """Test the provided services."""
+        self.assertTrue(setup_component(self.hass, remote.DOMAIN,
+                                        TEST_PLATFORM))
+        # platform = loader.get_component('remote.test')
+        # platform.init()
+
+        # self.hass = get_test_home_assistant()
+        # platform = loader.get_component('remote')
+        # platform.init()
+        # dev1, dev2, dev3 = platform.DEVICES
     #
     #     # Test init
     #     self.assertTrue(remote.is_on(self.hass, dev1.entity_id))
