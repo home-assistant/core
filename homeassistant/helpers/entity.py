@@ -275,7 +275,7 @@ class Entity(object):
 
         That is only needed on executor to not block.
         """
-        self.add_job(self.async_update_ha_state(force_refresh))
+        self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     def remove(self) -> None:
         """Remove entitiy from HASS."""
