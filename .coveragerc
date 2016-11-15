@@ -162,6 +162,7 @@ omit =
     homeassistant/components/emoncms_history.py
     homeassistant/components/fan/mqtt.py
     homeassistant/components/feedreader.py
+    homeassistant/components/*/feedreader.py
     homeassistant/components/foursquare.py
     homeassistant/components/hdmi_cec.py
     homeassistant/components/ifttt.py
