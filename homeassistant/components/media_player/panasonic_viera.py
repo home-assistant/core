@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Panasonic Viera TV'
 DEFAULT_PORT = 55000
-DEFAULT_MAC = ""
 
 SUPPORT_VIERATV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -35,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_MAC, default=DEFAULT_MAC): cv.string,
+    vol.Optional(CONF_MAC): cv.string,
 })
 
 
