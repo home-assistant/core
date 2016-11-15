@@ -224,8 +224,8 @@ class ZamgData(object):
         update internal state accordingly
         """
         try:
-        response = requests.get(self.API_URL,
-                                headers=self.API_HEADERS, timeout=15)
+            response = requests.get(self.API_URL,
+                                    headers=self.API_HEADERS, timeout=15)
         except requests.exceptions.RequestException:
             self._logger.exception("While fetching data from server")
             return
@@ -235,25 +235,25 @@ class ZamgData(object):
                                response.status_code)
             return
 
-            content_type = response.headers.get('Content-Type', 'whatever')
+        content_type = response.headers.get('Content-Type', 'whatever')
         if content_type != 'text/csv':
             self._logger.error("Expected text/csv but got %s",
                                content_type)
             return
 
         response.encoding = 'UTF8'
-                content = response.text
-                data = (line for line in content.split('\n'))
-                reader = csv.DictReader(data, delimiter=';', quotechar='"')
-                for row in reader:
-                    if row.get("Station", None) == self._station_id:
-                        self.data = {
-                            self.API_FIELDS.get(k)[0]:
-                                self.API_FIELDS.get(k)[1](v.replace(',', '.'))
-                            for k, v in row.items()
-                            if v and k in self.API_FIELDS
-                        }
-                        break
+        content = response.text
+        data = (line for line in content.split('\n'))
+        reader = csv.DictReader(data, delimiter=';', quotechar='"')
+        for row in reader:
+            if row.get("Station", None) == self._station_id:
+                self.data = {
+                    self.API_FIELDS.get(k)[0]:
+                        self.API_FIELDS.get(k)[1](v.replace(',', '.'))
+                    for k, v in row.items()
+                    if v and k in self.API_FIELDS
+                }
+                break
 
     def get_data(self, variable):
         """Generic accessor for data."""
