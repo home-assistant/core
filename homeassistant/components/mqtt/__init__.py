@@ -17,8 +17,9 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import template, config_validation as cv
 from homeassistant.helpers.event import threaded_listener_factory
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE)
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE,
+                                 CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,16 +34,16 @@ REQUIREMENTS = ['paho-mqtt==1.2']
 
 CONF_EMBEDDED = 'embedded'
 CONF_BROKER = 'broker'
-CONF_PORT = 'port'
 CONF_CLIENT_ID = 'client_id'
 CONF_KEEPALIVE = 'keepalive'
-CONF_USERNAME = 'username'
-CONF_PASSWORD = 'password'
 CONF_CERTIFICATE = 'certificate'
 CONF_CLIENT_KEY = 'client_key'
 CONF_CLIENT_CERT = 'client_cert'
 CONF_TLS_INSECURE = 'tls_insecure'
 CONF_PROTOCOL = 'protocol'
+
+CONF_BIRTH_MESSAGE = 'birth_message'
+CONF_WILL_MESSAGE = 'will_message'
 
 CONF_STATE_TOPIC = 'state_topic'
 CONF_COMMAND_TOPIC = 'command_topic'
@@ -84,14 +85,20 @@ _HBMQTT_CONFIG_SCHEMA = vol.Schema(dict)
 CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
                       'the mqtt broker config'
 
+MQTT_PUBLISH_SCHEMA = vol.Schema({
+    vol.Required(ATTR_TOPIC): valid_publish_topic,
+    vol.Required(ATTR_PAYLOAD, 'payload'): cv.string,
+    vol.Required(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+    vol.Required(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+}, required=True)
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_CLIENT_ID): cv.string,
         vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE):
             vol.All(vol.Coerce(int), vol.Range(min=15)),
         vol.Optional(CONF_BROKER): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CERTIFICATE): cv.isfile,
@@ -103,6 +110,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
         vol.Optional(CONF_EMBEDDED): _HBMQTT_CONFIG_SCHEMA,
+        vol.Optional(CONF_WILL_MESSAGE): MQTT_PUBLISH_SCHEMA,
+        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_PUBLISH_SCHEMA
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -241,11 +250,15 @@ def setup(hass, config):
         certificate = os.path.join(os.path.dirname(__file__),
                                    'addtrustexternalcaroot.crt')
 
+    will_message = conf.get(CONF_WILL_MESSAGE)
+    birth_message = conf.get(CONF_BIRTH_MESSAGE)
+
     global MQTT_CLIENT
     try:
         MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive,
                            username, password, certificate, client_key,
-                           client_cert, tls_insecure, protocol)
+                           client_cert, tls_insecure, protocol, will_message,
+                           birth_message)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker "
@@ -296,13 +309,14 @@ class MQTT(object):
 
     def __init__(self, hass, broker, port, client_id, keepalive, username,
                  password, certificate, client_key, client_cert,
-                 tls_insecure, protocol):
+                 tls_insecure, protocol, will_message, birth_message):
         """Initialize Home Assistant MQTT client."""
         import paho.mqtt.client as mqtt
 
         self.hass = hass
         self.topics = {}
         self.progress = {}
+        self.birth_message = birth_message
 
         if protocol == PROTOCOL_31:
             proto = mqtt.MQTTv31
@@ -329,7 +343,11 @@ class MQTT(object):
         self._mqttc.on_connect = self._mqtt_on_connect
         self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
-
+        if will_message:
+            self._mqttc.will_set(will_message.get(ATTR_TOPIC),
+                                 will_message.get(ATTR_PAYLOAD),
+                                 will_message.get(ATTR_QOS),
+                                 will_message.get(ATTR_RETAIN))
         self._mqttc.connect(broker, port, keepalive)
 
     def publish(self, topic, payload, qos, retain):
@@ -365,7 +383,8 @@ class MQTT(object):
     def _mqtt_on_connect(self, _mqttc, _userdata, _flags, result_code):
         """On connect callback.
 
-        Resubscribe to all topics we were subscribed to.
+        Resubscribe to all topics we were subscribed to and publish birth
+        message.
         """
         if result_code != 0:
             _LOGGER.error('Unable to connect to the MQTT broker: %s', {
@@ -387,6 +406,11 @@ class MQTT(object):
             # qos is None if we were in process of subscribing
             if qos is not None:
                 self.subscribe(topic, qos)
+        if self.birth_message:
+            self.publish(self.birth_message.get(ATTR_TOPIC),
+                         self.birth_message.get(ATTR_PAYLOAD),
+                         self.birth_message.get(ATTR_QOS),
+                         self.birth_message.get(ATTR_RETAIN))
 
     def _mqtt_on_subscribe(self, _mqttc, _userdata, mid, granted_qos):
         """Subscribe successful callback."""
