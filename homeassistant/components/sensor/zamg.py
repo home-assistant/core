@@ -223,12 +223,25 @@ class ZamgData(object):
         Fetch a new data set from the zamg server, parse it and
         update internal state accordingly
         """
+        try:
         response = requests.get(self.API_URL,
                                 headers=self.API_HEADERS, timeout=15)
-        response.encoding = 'UTF8'
-        if response.status_code == 200:
+        except requests.exceptions.RequestException:
+            self._logger.exception("While fetching data from server")
+            return
+
+        if response.status_code != 200:
+            self._logger.error("API call returned with status %s",
+                               response.status_code)
+            return
+
             content_type = response.headers.get('Content-Type', 'whatever')
-            if content_type == 'text/csv':
+        if content_type != 'text/csv':
+            self._logger.error("Expected text/csv but got %s",
+                               content_type)
+            return
+
+        response.encoding = 'UTF8'
                 content = response.text
                 data = (line for line in content.split('\n'))
                 reader = csv.DictReader(data, delimiter=';', quotechar='"')
@@ -241,12 +254,6 @@ class ZamgData(object):
                             if v and k in self.API_FIELDS
                         }
                         break
-            else:
-                self._logger.error("Expected text/csv but got %s",
-                                   content_type)
-        else:
-            self._logger.error("API call returned with status %s",
-                               response.status_code)
 
     def get_data(self, variable):
         """Generic accessor for data."""
