@@ -77,7 +77,9 @@ def setup(hass, yaml_config):
         ssl_key=None,
         cors_origins=[],
         use_x_forwarded_for=False,
-        trusted_networks=[]
+        trusted_networks=[],
+        ip_bans=[],
+        login_threshold=-1
     )
 
     server.register_view(DescriptionXmlView(hass, config))

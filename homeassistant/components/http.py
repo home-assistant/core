@@ -5,32 +5,36 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/http/
 """
 import asyncio
-import hmac
 import json
 import logging
 import mimetypes
-import os
-from pathlib import Path
-import re
 import ssl
+from datetime import time, datetime
 from ipaddress import ip_address, ip_network
+from pathlib import Path
 
+import hmac
+import os
+import re
 import voluptuous as vol
 from aiohttp import web, hdrs
 from aiohttp.file_sender import FileSender
 from aiohttp.web_exceptions import (
-    HTTPUnauthorized, HTTPMovedPermanently, HTTPNotModified)
+    HTTPUnauthorized, HTTPMovedPermanently, HTTPNotModified, HTTPForbidden)
 from aiohttp.web_urldispatcher import StaticRoute
 
-from homeassistant.core import is_callback
+import homeassistant.helpers.config_validation as cv
 import homeassistant.remote as rem
 from homeassistant import util
+from homeassistant.components import persistent_notification
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     SERVER_PORT, HTTP_HEADER_HA_AUTH,  # HTTP_HEADER_CACHE_CONTROL,
     CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS, EVENT_HOMEASSISTANT_STOP,
     EVENT_HOMEASSISTANT_START, HTTP_HEADER_X_FORWARDED_FOR)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components import persistent_notification
+from homeassistant.core import is_callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.yaml import dump
 
 DOMAIN = 'http'
 REQUIREMENTS = ('aiohttp_cors==0.4.0',)
@@ -44,9 +48,15 @@ CONF_SSL_KEY = 'ssl_key'
 CONF_CORS_ORIGINS = 'cors_allowed_origins'
 CONF_USE_X_FORWARDED_FOR = 'use_x_forwarded_for'
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
+CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
 
 DATA_API_PASSWORD = 'api_password'
 NOTIFICATION_ID_LOGIN = 'http-login'
+NOTIFICATION_ID_BAN = 'ip-ban'
+
+IP_BANS = 'ip_bans.yaml'
+ATTR_BANNED_AT = "banned_at"
+
 
 # TLS configuation follows the best-practice guidelines specified here:
 # https://wiki.mozilla.org/Security/Server_Side_TLS
@@ -85,7 +95,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_CORS_ORIGINS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
         vol.Optional(CONF_TRUSTED_NETWORKS):
-            vol.All(cv.ensure_list, [ip_network])
+            vol.All(cv.ensure_list, [ip_network]),
+        vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD): cv.positive_int
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -132,6 +143,9 @@ def setup(hass, config):
         ip_network(trusted_network)
         for trusted_network in conf.get(CONF_TRUSTED_NETWORKS, [])]
 
+    login_threshold = int(conf.get(CONF_LOGIN_ATTEMPTS_THRESHOLD, -1))
+    ip_bans = load_ip_bans_config(hass.config.path(IP_BANS))
+
     server = HomeAssistantWSGI(
         hass,
         development=development,
@@ -142,7 +156,9 @@ def setup(hass, config):
         ssl_key=ssl_key,
         cors_origins=cors_origins,
         use_x_forwarded_for=use_x_forwarded_for,
-        trusted_networks=trusted_networks
+        trusted_networks=trusted_networks,
+        ip_bans=ip_bans,
+        login_threshold=login_threshold
     )
 
     @asyncio.coroutine
@@ -252,7 +268,8 @@ class HomeAssistantWSGI(object):
 
     def __init__(self, hass, development, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
-                 use_x_forwarded_for, trusted_networks):
+                 use_x_forwarded_for, trusted_networks,
+                 ip_bans, login_threshold):
         """Initialize the WSGI Home Assistant server."""
         import aiohttp_cors
 
@@ -269,6 +286,9 @@ class HomeAssistantWSGI(object):
         self.event_forwarder = None
         self._handler = None
         self.server = None
+        self.login_threshold = login_threshold
+        self.ip_bans = ip_bans if ip_bans is not None else []
+        self.failed_login_attempts = {}
 
         if cors_origins:
             self.cors = aiohttp_cors.setup(self.app, defaults={
@@ -386,6 +406,34 @@ class HomeAssistantWSGI(object):
         return any(ip_address(remote_addr) in trusted_network
                    for trusted_network in self.hass.http.trusted_networks)
 
+    def wrong_login_attempt(self, remote_addr):
+        """Registering wrong login attempt."""
+        if not self.is_trusted_ip(remote_addr) and self.login_threshold > 0:
+            if remote_addr in self.failed_login_attempts:
+                self.failed_login_attempts[remote_addr] += 1
+            else:
+                self.failed_login_attempts[remote_addr] = 1
+
+            if self.failed_login_attempts[remote_addr] > self.login_threshold:
+                new_ban = IpBan(remote_addr)
+                self.ip_bans.append(new_ban)
+                update_ip_bans_config(self.hass.config.path(IP_BANS), new_ban)
+                _LOGGER.warning('Banned IP %s for too many login attempts',
+                                remote_addr)
+                persistent_notification.async_create(
+                    self.hass,
+                    'To many login attempts from {}'.format(remote_addr),
+                    'Banning IP address', NOTIFICATION_ID_BAN)
+
+    def is_banned_ip(self, remote_addr):
+        """Check if IP address is in a ban list."""
+        ip_address_ = ip_address(remote_addr)
+        for ip_ban in self.ip_bans:
+            if ip_ban.ip_address == ip_address_:
+                return True
+
+        return False
+
 
 class HomeAssistantView(object):
     """Base view for all views."""
@@ -466,6 +514,9 @@ def request_handler_factory(view, handler):
 
         remote_addr = view.hass.http.get_real_ip(request)
 
+        if view.hass.http.is_banned_ip(remote_addr):
+            raise HTTPForbidden()
+
         # Auth code verbose on purpose
         authenticated = False
 
@@ -485,6 +536,7 @@ def request_handler_factory(view, handler):
             authenticated = True
 
         if view.requires_auth and not authenticated:
+            view.hass.http.wrong_login_attempt(remote_addr)
             _LOGGER.warning('Login attempt or request with an invalid '
                             'password from %s', remote_addr)
             persistent_notification.async_create(
@@ -526,3 +578,47 @@ def request_handler_factory(view, handler):
         return web.Response(body=result, status=status_code)
 
     return handle
+
+
+class IpBan(object):
+    """Represents banned IP address."""
+
+    def __init__(self, ip_ban: str, banned_at: datetime=None) -> None:
+        """Initializing Ip Ban object."""
+        self.ip_address = ip_address(ip_ban)
+        self.banned_at = banned_at
+        if self.banned_at is None:
+            self.banned_at = datetime.utcnow()
+
+
+def load_ip_bans_config(path: str):
+    """Loading list of banned IPs from config file."""
+    ip_list = []
+    ip_schema = vol.Schema({
+        vol.Optional('banned_at'): vol.Any(None, cv.exact_time)
+    })
+
+    try:
+        list_ = load_yaml_config_file(path)
+        for ip_ban in list_:
+            try:
+                ban = ip_schema(list_[ip_ban])
+                ban['ip_ban'] = ip_address(ip_ban)
+                ip_list.append(IpBan(**ban))
+            except vol.Invalid:
+                continue
+
+    except(HomeAssistantError, FileNotFoundError):
+        return []
+
+    return ip_list
+
+
+def update_ip_bans_config(path: str, ip_ban: IpBan):
+    """Update config file with new banned IP address."""
+    with open(path, 'a') as out:
+        ip_ = {str(ip_ban.ip_address): {
+            ATTR_BANNED_AT: ip_ban.banned_at.strftime("%Y-%m-%dT%H:%M:%S")
+        }}
+        out.write('\n')
+        out.write(dump(ip_))
