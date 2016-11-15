@@ -461,6 +461,9 @@ def request_handler_factory(view, handler):
     @asyncio.coroutine
     def handle(request):
         """Handle incoming request."""
+        if not view.hass.is_running:
+            return web.Response(status=503)
+
         remote_addr = view.hass.http.get_real_ip(request)
 
         # Auth code verbose on purpose
