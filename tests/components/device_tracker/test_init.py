@@ -1,5 +1,6 @@
 """The tests for the device tracker component."""
 # pylint: disable=protected-access
+import json
 import logging
 import unittest
 from unittest.mock import call, patch
@@ -15,6 +16,7 @@ from homeassistant.const import (
     STATE_HOME, STATE_NOT_HOME, CONF_PLATFORM)
 import homeassistant.components.device_tracker as device_tracker
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.remote import JSONEncoder
 
 from tests.common import (
     get_test_home_assistant, fire_time_changed, fire_service_discovered,
@@ -324,7 +326,16 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         device_tracker.see(self.hass, 'mac_1', host_name='hello')
 
         self.hass.block_till_done()
-        self.assertEqual(1, len(test_events))
+
+        assert len(test_events) == 1
+
+        # Assert we can serialize the event
+        json.dumps(test_events[0].as_dict(), cls=JSONEncoder)
+
+        assert test_events[0].data == {
+            'entity_id': 'device_tracker.hello',
+            'host_name': 'hello',
+        }
 
     # pylint: disable=invalid-name
     def test_not_write_duplicate_yaml_keys(self):
