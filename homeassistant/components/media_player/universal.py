@@ -183,14 +183,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             service_data = {}
 
         if allow_override and service_name in self._cmds:
-            if service_data:
-                call_config = self._cmds[service_name]
-                call_config[ATTR_DATA].update(service_data)
-            else:
-                call_config = self._cmds[service_name]
-
             call_from_config(
-                self.hass, self._cmds[service_name], blocking=True)
+                self.hass, self._cmds[service_name], variables=service_data, blocking=True)
             return
 
         active_child = self._child_state
