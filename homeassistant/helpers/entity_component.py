@@ -377,7 +377,8 @@ class EntityPlatform(object):
 
                 update_coro = entity.async_update_ha_state(True)
                 if hasattr(entity, 'async_update'):
-                    tasks.append(update_coro)
+                    tasks.append(
+                        self.component.hass.loop.create_task(update_coro))
                 else:
                     to_update.append(update_coro)
 
