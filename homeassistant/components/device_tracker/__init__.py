@@ -36,6 +36,8 @@ from homeassistant.const import (
 DOMAIN = 'device_tracker'
 DEPENDENCIES = ['zone']
 
+REQUIREMENTS = ['netaddr==0.7.18']
+
 GROUP_NAME_ALL_DEVICES = 'all devices'
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
 
@@ -362,6 +364,7 @@ class Device(Entity):
             self.config_picture = picture
 
         self.away_hide = hide_if_away
+        self.vendor = self.get_vendor_for_mac(mac)
 
     @property
     def name(self):
@@ -460,6 +463,24 @@ class Device(Entity):
             self._state = STATE_HOME
             self.last_update_home = True
 
+    @staticmethod
+    def get_vendor_for_mac(mac):
+        """Try to find the vendor string for a given MAC address."""
+        if not mac:
+            return None
+
+        from netaddr import AddrFormatError, NotRegisteredError, EUI
+        try:
+            # lookup Organisationally Unique Identifier
+            # for MAC addressin local stored database
+            oui = EUI(mac).oui
+            # extract vendor string (eg: Raspberry Pi Foundation)
+            # pylint: disable=no-member
+            return oui.registration().org
+        except (AddrFormatError, NotRegisteredError):
+            # invalid MAC or no registration found
+            return None
+
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     """Load devices from YAML configuration file."""
@@ -483,7 +504,8 @@ def async_load_config(path: str, hass: HomeAssistantType,
         vol.Optional('gravatar', default=None): vol.Any(None, cv.string),
         vol.Optional('picture', default=None): vol.Any(None, cv.string),
         vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
-            cv.time_period, cv.positive_timedelta)
+            cv.time_period, cv.positive_timedelta),
+        vol.Optional('vendor', default=None): vol.Any(None, cv.string),
     })
     try:
         result = []
@@ -544,6 +566,7 @@ def update_config(path: str, dev_id: str, device: Device):
         device = {device.dev_id: {
             'name': device.name,
             'mac': device.mac,
+            'vendor': device.vendor,
             'picture': device.config_picture,
             'track': device.track,
             CONF_AWAY_HIDE: device.away_hide
