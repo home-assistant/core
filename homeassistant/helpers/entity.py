@@ -270,6 +270,13 @@ class Entity(object):
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update)
 
+    def shedule_update_ha_state(self, force_refresh=False):
+        """Shedule a update ha state change task.
+
+        That is only needed on executor to not block.
+        """
+        self.add_job(self.async_update_ha_state(force_refresh))
+
     def remove(self) -> None:
         """Remove entitiy from HASS."""
         run_coroutine_threadsafe(
