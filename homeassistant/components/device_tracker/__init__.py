@@ -330,7 +330,7 @@ class Device(Entity):
     last_seen = None  # type: dt_util.dt.datetime
     battery = None  # type: str
     attributes = None  # type: dict
-    vendor = None # type: str
+    vendor = None  # type: str
 
     # Track if the last update of this device was HOME.
     last_update_home = False
