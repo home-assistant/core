@@ -202,20 +202,18 @@ class NestThermostat(ClimateDevice):
     @property
     def min_temp(self):
         """Identify min_temp in Nest API or defaults if not available."""
-        temp = self._eco_temperature[0]
-        if temp is None:
-            return super().min_temp
+        if self._is_locked:
+            return self._locked_temperature[0]
         else:
-            return temp
+            return None
 
     @property
     def max_temp(self):
         """Identify max_temp in Nest API or defaults if not available."""
-        temp = self._eco_temperature[1]
-        if temp is None:
-            return super().max_temp
+        if self._is_locked:
+            return self._locked_temperature[1]
         else:
-            return temp
+            return None
 
     def update(self):
         """Cache value from Python-nest."""
@@ -228,6 +226,8 @@ class NestThermostat(ClimateDevice):
         self._fan = self.device.fan
         self._away = self.structure.away == 'away'
         self._eco_temperature = self.device.eco_temperature
+        self._locked_temperature = self.device.locked_temperature
+        self._is_locked = self.device.is_locked
         if self.device.temperature == 'C':
             self._temperature_scale = TEMP_CELSIUS
         else:
