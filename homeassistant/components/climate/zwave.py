@@ -8,8 +8,7 @@ https://home-assistant.io/components/climate.zwave/
 # pylint: disable=import-error
 import logging
 from homeassistant.components.climate import DOMAIN
-from homeassistant.components.climate import (
-    ClimateDevice, ATTR_OPERATION_MODE)
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
 from homeassistant.const import (
@@ -24,36 +23,11 @@ REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377
 REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
 
-HORSTMANN = 0x0059
-HORSTMANN_HRT4_ZW = 0x3
-HORSTMANN_HRT4_ZW_THERMOSTAT = (HORSTMANN, HORSTMANN_HRT4_ZW)
 
 WORKAROUND_ZXT_120 = 'zxt_120'
-WORKAROUND_HRT4_ZW = 'hrt4_zw'
 
 DEVICE_MAPPINGS = {
-    REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120,
-    HORSTMANN_HRT4_ZW_THERMOSTAT: WORKAROUND_HRT4_ZW
-}
-
-SET_TEMP_TO_INDEX = {
-    'Heat': 1,
-    'Comfort': 1,
-    'Cool': 2,
-    'Auto': 3,
-    'Aux Heat': 4,
-    'Resume': 5,
-    'Fan Only': 6,
-    'Furnace': 7,
-    'Dry Air': 8,
-    'Moist Air': 9,
-    'Auto Changeover': 10,
-    'Heat Econ': 11,
-    'Energy Saving': 11,
-    'Cool Econ': 12,
-    'Away': 13,
-    'Unknown': 14,
-    'Direct Valve Control': 31
+    REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120
 }
 
 
@@ -80,6 +54,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        self._index = value.index
         self._node = value.node
         self._target_temperature = None
         self._current_temperature = None
@@ -88,13 +63,12 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._operating_state = None
         self._current_fan_mode = None
         self._fan_list = None
+        self._fan_state = None
         self._current_swing_mode = None
         self._swing_list = None
         self._unit = temp_unit
-        self._index_operation = None
         _LOGGER.debug("temp_unit is %s", self._unit)
         self._zxt_120 = None
-        self._hrt4_zw = None
         self.update_properties()
         # register listener
         dispatcher.connect(
@@ -109,10 +83,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat"
                                   " workaround")
                     self._zxt_120 = 1
-                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_HRT4_ZW:
-                    _LOGGER.debug("Horstmann HRT4-ZW Zwave Thermostat"
-                                  " workaround")
-                    self._hrt4_zw = 1
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
@@ -128,8 +98,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         for value in self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_MODE).values():
             self._current_operation = value.data
-            self._index_operation = SET_TEMP_TO_INDEX.get(
-                self._current_operation)
             self._operation_list = list(value.data_items)
             _LOGGER.debug("self._operation_list=%s", self._operation_list)
             _LOGGER.debug("self._current_operation=%s",
@@ -139,7 +107,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 class_id=zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL)
                       .values()):
             if value.label == 'Temperature':
-                self._current_temperature = int(value.data)
+                self._current_temperature = round((float(value.data)), 1)
                 self._unit = value.units
         # Fan Mode
         for value in (self._node.get_values(
@@ -164,31 +132,32 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     _LOGGER.debug("self._current_swing_mode=%s",
                                   self._current_swing_mode)
         # Set point
+        temps = []
         for value in (self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT)
                       .values()):
-            if value.data == 0:
-                _LOGGER.debug("Setpoint is 0, setting default to "
-                              "current_temperature=%s",
-                              self._current_temperature)
-                self._target_temperature = int(self._current_temperature)
-                break
-            if self.current_operation is not None and \
-               self.current_operation != 'Off':
-                if self._index_operation != value.index:
-                    continue
-                if self._zxt_120:
+            temps.append((round(float(value.data)), 1))
+            if value.index == self._index:
+                if value.data == 0:
+                    _LOGGER.debug("Setpoint is 0, setting default to "
+                                  "current_temperature=%s",
+                                  self._current_temperature)
+                    self._target_temperature = (
+                        round((float(self._current_temperature)), 1))
                     break
-                self._target_temperature = int(value.data)
-                break
-            _LOGGER.debug("Device can't set setpoint based on operation mode."
-                          " Defaulting to index=1")
-            self._target_temperature = int(value.data)
+                else:
+                    self._target_temperature = round((float(value.data)), 1)
         # Operating state
         for value in (self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_OPERATING_STATE)
                       .values()):
             self._operating_state = value.data
+
+        # Fan operating state
+        for value in (self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_FAN_STATE)
+                      .values()):
+            self._fan_state = value.data
 
     @property
     def should_poll(self):
@@ -251,53 +220,19 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             temperature = kwargs.get(ATTR_TEMPERATURE)
         else:
             return
-        operation_mode = kwargs.get(ATTR_OPERATION_MODE)
-        _LOGGER.debug("set_temperature operation_mode=%s", operation_mode)
 
         for value in (self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT)
                       .values()):
-            if operation_mode is not None:
-                setpoint_mode = SET_TEMP_TO_INDEX.get(operation_mode)
-                if value.index != setpoint_mode:
-                    continue
-                _LOGGER.debug("setpoint_mode=%s", setpoint_mode)
-                value.data = temperature
-                break
-
-            if self.current_operation is not None:
-                if self._hrt4_zw and self.current_operation == 'Off':
-                    # HRT4-ZW can change setpoint when off.
-                    value.data = int(temperature)
-                if self._index_operation != value.index:
-                    continue
-                _LOGGER.debug("self._index_operation=%s and"
-                              " self._current_operation=%s",
-                              self._index_operation,
-                              self._current_operation)
+            if value.index == self._index:
                 if self._zxt_120:
-                    _LOGGER.debug("zxt_120: Setting new setpoint for %s, "
-                                  " operation=%s, temp=%s",
-                                  self._index_operation,
-                                  self._current_operation, temperature)
-                    # ZXT-120 does not support get setpoint
-                    self._target_temperature = temperature
                     # ZXT-120 responds only to whole int
                     value.data = round(temperature, 0)
+                    self._target_temperature = temperature
                     self.update_ha_state()
-                    break
                 else:
-                    _LOGGER.debug("Setting new setpoint for %s, "
-                                  "operation=%s, temp=%s",
-                                  self._index_operation,
-                                  self._current_operation, temperature)
                     value.data = temperature
-                    break
-            else:
-                _LOGGER.debug("Setting new setpoint for no known "
-                              "operation mode. Index=1 and "
-                              "temperature=%s", temperature)
-                value.data = temperature
+                    self.update_ha_state()
                 break
 
     def set_fan_mode(self, fan):
@@ -334,9 +269,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
+        data = {}
         if self._operating_state:
-            return {
-                "operating_state": self._operating_state,
-            }
-        else:
-            return {}
+            data["operating_state"] = self._operating_state,
+        if self._fan_state:
+            data["fan_state"] = self._fan_state
+        return data
