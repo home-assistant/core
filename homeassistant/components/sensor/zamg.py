@@ -164,6 +164,11 @@ class ZAMGWeather(Entity):
         return self.probe.get_data(self.variable)
 
     @property
+    def unit_of_measurement(self):
+        """Unit of measurement."""
+        return SENSOR_TYPES[self.variable][1]
+
+    @property
     def state_attributes(self):
         """Return the state attributes."""
         return {
@@ -172,7 +177,6 @@ class ZAMGWeather(Entity):
             "station": self.probe.get_data('station_name'),
             "updated": "%s %s" % (self.probe.get_data('update_date'),
                                   self.probe.get_data('update_time'))
-
         }
 
 
