@@ -31,7 +31,7 @@ from homeassistant.util.yaml import dump
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
-    DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
+    DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_ID)
 
 DOMAIN = 'device_tracker'
 DEPENDENCIES = ['zone']
@@ -242,7 +242,10 @@ class DeviceTracker(object):
             if device.track:
                 device.update_ha_state()
 
-            self.hass.bus.async_fire(EVENT_NEW_DEVICE, device)
+            self.hass.bus.fire(EVENT_NEW_DEVICE, {
+                ATTR_ENTITY_ID: device.entity_id,
+                ATTR_HOST_NAME: device.host_name,
+            })
 
             # During init, we ignore the group
             if self.group is not None:
