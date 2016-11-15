@@ -330,6 +330,7 @@ class Device(Entity):
     last_seen = None  # type: dt_util.dt.datetime
     battery = None  # type: str
     attributes = None  # type: dict
+    vendor = None # type: str
 
     # Track if the last update of this device was HOME.
     last_update_home = False
@@ -338,7 +339,7 @@ class Device(Entity):
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
                  track: bool, dev_id: str, mac: str, name: str=None,
                  picture: str=None, gravatar: str=None,
-                 hide_if_away: bool=False) -> None:
+                 hide_if_away: bool=False, vendor: str=None) -> None:
         """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
@@ -566,10 +567,10 @@ def update_config(path: str, dev_id: str, device: Device):
         device = {device.dev_id: {
             'name': device.name,
             'mac': device.mac,
-            'vendor': device.vendor,
             'picture': device.config_picture,
             'track': device.track,
-            CONF_AWAY_HIDE: device.away_hide
+            CONF_AWAY_HIDE: device.away_hide,
+            'vendor': device.vendor,
         }}
         out.write('\n')
         out.write(dump(device))
