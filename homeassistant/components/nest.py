@@ -38,7 +38,6 @@ def setup(hass, config):
     """Setup the Nest thermostat component."""
     import nest
 
-
     conf = config[DOMAIN]
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]

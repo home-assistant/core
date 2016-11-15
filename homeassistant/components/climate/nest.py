@@ -26,6 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 STATE_ECO = 'eco' # TODO move to climate, or is this nest only?
+STATE_HEAT_COOL = 'heat-cool'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -76,7 +77,7 @@ class NestThermostat(ClimateDevice):
         self._temperature_scale = None
         self._mode = None
         self._fan = None
-        self._away_temperature = None
+        self._eco_temperature = None
 
     # FIXME ends up with double name, ie Hallway(Hallway (E5C0))
     @property
@@ -103,23 +104,17 @@ class NestThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if self._mode == STATE_COOL:
-            return STATE_COOL
-        elif self._mode == STATE_HEAT:
-            return STATE_HEAT
-        elif self._mode == 'heat-cool':
+        if self._mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
+            return self._mode
+        elif self._mode == STATE_HEAT_COOL:
             return STATE_AUTO
-        elif self._mode == 'off':
-            return STATE_OFF
-        elif self._mode == STATE_ECO:
-            return STATE_ECO
         else:
             return STATE_UNKNOWN
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._mode != 'range' and not self.is_away_mode_on:
+        if self._mode != STATE_HEAT_COOL and not self.is_away_mode_on:
             return self._target_temperature
         else:
             return None
@@ -127,10 +122,10 @@ class NestThermostat(ClimateDevice):
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if self.is_away_mode_on and self._away_temperature[0]:
-            # away_temperature is always a low, high tuple
-            return self._away_temperature[0]
-        if self._mode == 'range':
+        if (self.is_away_mode_on or self._mode == STATE_ECO) and self._eco_temperature[0]:
+            # eco_temperature is always a low, high tuple
+            return self._eco_temperature[0]
+        if self._mode == STATE_HEAT_COOL:
             return self._target_temperature[0]
         else:
             return None
@@ -138,10 +133,10 @@ class NestThermostat(ClimateDevice):
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        if self.is_away_mode_on and self._away_temperature[1]:
-            # away_temperature is always a low, high tuple
-            return self._away_temperature[1]
-        if self._mode == 'range':
+        if (self.is_away_mode_on or self._mode == STATE_ECO) and self._eco_temperature[1]:
+            # eco_temperature is always a low, high tuple
+            return self._eco_temperature[1]
+        if self._mode == STATE_HEAT_COOL:
             return self._target_temperature[1]
         else:
             return None
@@ -156,8 +151,7 @@ class NestThermostat(ClimateDevice):
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         if target_temp_low is not None and target_temp_high is not None:
-
-            if self._mode == 'range':
+            if self._mode == STATE_HEAT_COOL:
                 temp = (target_temp_low, target_temp_high)
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
@@ -170,7 +164,7 @@ class NestThermostat(ClimateDevice):
         if operation_mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
             device_mode = operation_mode
         elif operation_mode == STATE_AUTO:
-            self.device.mode = 'heat-cool'
+            device_mode = STATE_HEAT_COOL
         self.device.mode = device_mode
 
     @property
@@ -208,7 +202,7 @@ class NestThermostat(ClimateDevice):
     @property
     def min_temp(self):
         """Identify min_temp in Nest API or defaults if not available."""
-        temp = self._away_temperature[0]
+        temp = self._eco_temperature[0]
         if temp is None:
             return super().min_temp
         else:
@@ -217,7 +211,7 @@ class NestThermostat(ClimateDevice):
     @property
     def max_temp(self):
         """Identify max_temp in Nest API or defaults if not available."""
-        temp = self._away_temperature[1]
+        temp = self._eco_temperature[1]
         if temp is None:
             return super().max_temp
         else:
@@ -232,8 +226,8 @@ class NestThermostat(ClimateDevice):
         self._mode = self.device.mode
         self._target_temperature = self.device.target
         self._fan = self.device.fan
-        self._away = self.structure.away
-        self._away_temperature = self.device.away_temperature
+        self._away = self.structure.away == 'away'
+        self._eco_temperature = self.device.eco_temperature
         if self.device.temperature == 'C':
             self._temperature_scale = TEMP_CELSIUS
         else:
