@@ -242,7 +242,7 @@ class DeviceTracker(object):
             if device.track:
                 device.update_ha_state()
 
-            self.hass.bus.async_fire(EVENT_NEW_DEVICE, device)
+            self.hass.bus.fire(EVENT_NEW_DEVICE, device)
 
             # During init, we ignore the group
             if self.group is not None:
