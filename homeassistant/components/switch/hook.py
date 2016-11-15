@@ -96,7 +96,7 @@ class HookSmartHome(SwitchDevice):
         return self._state
 
     def _send(self, url):
-        """Send the url to the Hook API"""
+        """Send the url to the Hook API."""
         try:
             requests.get(
                 url,
