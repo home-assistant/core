@@ -25,8 +25,9 @@ class TestNotifyFile(unittest.TestCase):
 
     def test_bad_config(self):
         """Test set up the platform with bad/missing config."""
+        # Platform should not be set up, but component should be set up.
         with assert_setup_component(0):
-            assert not setup_component(self.hass, notify.DOMAIN, {
+            assert setup_component(self.hass, notify.DOMAIN, {
                 'notify': {
                     'name': 'test',
                     'platform': 'file',
@@ -42,8 +43,8 @@ class TestNotifyFile(unittest.TestCase):
 
         m_open = mock_open()
         with patch(
-                'homeassistant.components.notify.file.open',
-                m_open, create=True
+            'homeassistant.components.notify.file.open',
+            m_open, create=True
         ):
             filename = 'mock_file'
             message = 'one, two, testing, testing'

@@ -399,7 +399,7 @@ def assert_setup_component(count, domain=None):
 
     Use as a context manager aroung bootstrap.setup_component
         with assert_setup_component(0) as result_config:
-            setup_component(hass, start_config, domain)
+            setup_component(hass, domain, start_config)
             # using result_config is optional
     """
     config = {}
