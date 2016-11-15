@@ -62,15 +62,14 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.weather import (
-    ATTR_WEATHER_HUMIDITY,
+    ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_PRESSURE, ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING, ATTR_WEATHER_WIND_SPEED,
-    ATTR_WEATHER_ATTRIBUTION
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_MONITORED_CONDITIONS,
-    CONF_NAME, __version__
+    ATTR_FRIENDLY_NAME,
+    CONF_MONITORED_CONDITIONS, CONF_NAME, __version__
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -144,9 +143,6 @@ class ZAMGWeather(Entity):
     probe, so things will only get fetched once.
     """
 
-    attribution = ATTRIBUTION
-    temperature_unit = TEMP_CELSIUS
-
     def __init__(self, probe, variable, name):
         """Init condition sensor."""
         self.probe = probe
@@ -171,8 +167,8 @@ class ZAMGWeather(Entity):
     def state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_WEATHER_ATTRIBUTION: self.attribution,
-            "friendly_name": SENSOR_TYPES[self.variable][0],
+            ATTR_WEATHER_ATTRIBUTION: ATTRIBUTION,
+            ATTR_FRIENDLY_NAME: SENSOR_TYPES[self.variable][0],
             "station": self.probe.get_data('station_name'),
             "updated": "%s %s" % (self.probe.get_data('update_date'),
                                   self.probe.get_data('update_time'))
