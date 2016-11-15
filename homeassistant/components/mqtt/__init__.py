@@ -17,13 +17,13 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import template, config_validation as cv
 from homeassistant.helpers.event import threaded_listener_factory
-from homeassistant.const import (EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE,
-                                 CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE,
+    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "mqtt"
+DOMAIN = 'mqtt'
 
 MQTT_CLIENT = None
 
@@ -40,7 +40,6 @@ CONF_CERTIFICATE = 'certificate'
 CONF_CLIENT_KEY = 'client_key'
 CONF_CLIENT_CERT = 'client_cert'
 CONF_TLS_INSECURE = 'tls_insecure'
-CONF_PROTOCOL = 'protocol'
 
 CONF_BIRTH_MESSAGE = 'birth_message'
 CONF_WILL_MESSAGE = 'will_message'
@@ -87,9 +86,9 @@ CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
 
 MQTT_PUBLISH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): valid_publish_topic,
-    vol.Required(ATTR_PAYLOAD, 'payload'): cv.string,
-    vol.Required(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
-    vol.Required(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    vol.Required(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
+    vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+    vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
 }, required=True)
 
 CONFIG_SCHEMA = vol.Schema({
@@ -139,8 +138,8 @@ MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
 # Service call validation schema
 MQTT_PUBLISH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): valid_publish_topic,
-    vol.Exclusive(ATTR_PAYLOAD, 'payload'): object,
-    vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, 'payload'): cv.string,
+    vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): object,
+    vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
     vol.Required(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
     vol.Required(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
 }, required=True)
@@ -205,7 +204,7 @@ def _setup_server(hass, config):
     server = prepare_setup_platform(hass, config, DOMAIN, 'server')
 
     if server is None:
-        _LOGGER.error('Unable to load embedded server.')
+        _LOGGER.error("Unable to load embedded server")
         return None
 
     success, broker_config = server.start(hass, conf.get(CONF_EMBEDDED))
@@ -230,7 +229,7 @@ def setup(hass, config):
         # Embedded broker doesn't have some ssl variables
         client_key, client_cert, tls_insecure = None, None, None
     elif not broker_config and not broker_in_conf:
-        _LOGGER.error('Unable to start broker and auto-configure MQTT.')
+        _LOGGER.error("Unable to start broker and auto-configure MQTT")
         return False
 
     if broker_in_conf:
@@ -261,8 +260,7 @@ def setup(hass, config):
                            birth_message)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
-                          "Please check your settings and the broker "
-                          "itself.")
+                          "Please check your settings and the broker itself")
         return False
 
     def stop_mqtt(event):
@@ -287,7 +285,7 @@ def setup(hass, config):
         except template.jinja2.TemplateError as exc:
             _LOGGER.error(
                 "Unable to publish to '%s': rendering payload template of "
-                "'%s' failed because %s.",
+                "'%s' failed because %s",
                 msg_topic, payload_template, exc)
             return
         MQTT_CLIENT.publish(msg_topic, payload, qos, retain)
@@ -428,7 +426,7 @@ class MQTT(object):
                           "MQTT topic: %s, Payload: %s", msg.topic,
                           msg.payload)
         else:
-            _LOGGER.debug("received message on %s: %s",
+            _LOGGER.debug("Received message on %s: %s",
                           msg.topic, payload)
             self.hass.bus.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
                 ATTR_TOPIC: msg.topic,
@@ -464,14 +462,14 @@ class MQTT(object):
         while True:
             try:
                 if self._mqttc.reconnect() == 0:
-                    _LOGGER.info('Successfully reconnected to the MQTT server')
+                    _LOGGER.info("Successfully reconnected to the MQTT server")
                     break
             except socket.error:
                 pass
 
             wait_time = min(2**tries, MAX_RECONNECT_WAIT)
             _LOGGER.warning(
-                'Disconnected from MQTT (%s). Trying to reconnect in %ss',
+                "Disconnected from MQTT (%s). Trying to reconnect in %s s",
                 result_code, wait_time)
             # It is ok to sleep here as we are in the MQTT thread.
             time.sleep(wait_time)
