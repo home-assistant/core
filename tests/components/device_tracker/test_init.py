@@ -107,6 +107,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(device.config_picture, config.config_picture)
         self.assertEqual(device.away_hide, config.away_hide)
         self.assertEqual(device.consider_home, config.consider_home)
+        self.assertEqual(device.vendor, config.vendor)
 
     # pylint: disable=invalid-name
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
@@ -180,6 +181,18 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         gravatar_url = ("https://www.gravatar.com/avatar/"
                         "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
         self.assertEqual(device.config_picture, gravatar_url)
+
+    def test_mac_vendor_lookup(self):
+        """Test if vendor string is lookup in local OUI database."""
+
+        vendor_string = 'Raspberry Pi Foundation'
+        mac = 'B8:27:EB:00:00:00'
+
+        dev_id = 'test'
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), True, dev_id,
+            mac, 'Test name')
+        self.assertEqual(device.vendor, vendor_string)
 
     def test_discovery(self):
         """Test discovery."""
