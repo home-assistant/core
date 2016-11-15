@@ -266,6 +266,7 @@ class SonosDevice(MediaPlayerDevice):
         self._media_content_id = None
         self._media_duration = None
         self._media_position = None
+        self._media_position_updated_at = None
         self._media_image_url = None
         self._media_artist = None
         self._media_album_name = None
@@ -406,6 +407,9 @@ class SonosDevice(MediaPlayerDevice):
                 media_album_name = track_info.get('album')
                 media_title = track_info.get('title')
 
+                media_position = None
+                media_position_updated_at = None
+
                 is_radio_stream = \
                     current_media_uri.startswith('x-sonosapi-stream:') or \
                     current_media_uri.startswith('x-rincon-mp3radio:')
@@ -495,9 +499,26 @@ class SonosDevice(MediaPlayerDevice):
                         [('InstanceID', 0),
                          ('Channel', 'Master')]
                     )
-                    media_position = _parse_timespan(
+                    rel_time = _parse_timespan(
                         position_info.get("RelTime")
                     )
+
+                    if rel_time is None or \
+                       self._media_position is None or \
+                       abs(self._media_position + \
+                           time.time() - \
+                           self._media_position_updated_at - \
+                           rel_time) > 1.5:
+
+                        # update media_position
+                        media_position = rel_time
+                        media_position_updated_at = time.time()
+                    else:
+                        # don't update media_position (don't want unneeded
+                        # state transitions)
+                        media_position = self._media_position
+                        media_position_updated_at = \
+                            self._media_position_updated_at
 
                     playlist_position = track_info.get('playlist_position')
                     if playlist_position in ('', 'NOT_IMPLEMENTED', None):
@@ -524,7 +545,8 @@ class SonosDevice(MediaPlayerDevice):
                 self._media_duration = _parse_timespan(
                     track_info.get('duration')
                 )
-                self._media_position = (media_position, time.clock())
+                self._media_position = media_position
+                self._media_position_updated_at = media_position_updated_at
                 self._media_image_url = media_image_url
                 self._media_artist = media_artist
                 self._media_album_name = media_album_name
@@ -552,6 +574,8 @@ class SonosDevice(MediaPlayerDevice):
             self._coordinator = None
             self._media_content_id = None
             self._media_duration = None
+            self._media_position = None
+            self._media_position_updated_at = None
             self._media_image_url = None
             self._media_artist = None
             self._media_album_name = None
@@ -659,12 +683,17 @@ class SonosDevice(MediaPlayerDevice):
         if self._coordinator:
             return self._coordinator.media_position
         else:
-            if self._media_position:
-                pos, clk = self._media_position
-                if pos:
-                    return pos + time.clock() - clk
+            return self._media_position
 
-            return None
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from time.time()."""
+        if self._coordinator:
+            return self._coordinator.media_position_updated_at
+        else:
+            return self._media_position_updated_at
 
     @property
     def media_image_url(self):

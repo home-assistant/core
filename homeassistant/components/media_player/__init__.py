@@ -59,6 +59,7 @@ ATTR_MEDIA_CONTENT_ID = 'media_content_id'
 ATTR_MEDIA_CONTENT_TYPE = 'media_content_type'
 ATTR_MEDIA_DURATION = 'media_duration'
 ATTR_MEDIA_POSITION = 'media_position'
+ATTR_MEDIA_POSITION_UPDATED_AT = 'media_position_updated_at'
 ATTR_MEDIA_TITLE = 'media_title'
 ATTR_MEDIA_ARTIST = 'media_artist'
 ATTR_MEDIA_ALBUM_NAME = 'media_album_name'
@@ -121,6 +122,7 @@ ATTR_TO_PROPERTY = [
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
     ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
@@ -451,6 +453,13 @@ class MediaPlayerDevice(Entity):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
+        return None
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from time.time()."""
         return None
 
     @property
