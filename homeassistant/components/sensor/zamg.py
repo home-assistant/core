@@ -156,7 +156,7 @@ class ZAMGWeather(Entity):
     @property
     def name(self):
         """Build name of sensor."""
-        return "%s_%s" % (self.client_name, self.variable)
+        return '{}_{}'.format(self.client_name, self.variable)
 
     @property
     def state(self):
