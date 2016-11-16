@@ -26,7 +26,7 @@ from homeassistant.const import (CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME)
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['phue==0.8']
+REQUIREMENTS = ['phue==0.9']
 
 # Track previously setup bridges
 _CONFIGURED_BRIDGES = {}
