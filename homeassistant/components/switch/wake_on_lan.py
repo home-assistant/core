@@ -76,13 +76,11 @@ class WOLSwitch(SwitchDevice):
     def turn_on(self):
         """Turn the device on."""
         self._wol.send_magic_packet(self._mac_address)
-        self.update_ha_state()
 
     def turn_off(self):
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
             self._off_script.run()
-            self.update_ha_state()
 
     def update(self):
         """Check if device is on and update the state."""
