@@ -117,7 +117,7 @@ class MqttSwitch(SwitchDevice):
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = True
-            self.shedule_update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -126,4 +126,4 @@ class MqttSwitch(SwitchDevice):
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False
-            self.shedule_update_ha_state()
+            self.schedule_update_ha_state()

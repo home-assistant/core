@@ -149,11 +149,11 @@ class CommandSwitch(SwitchDevice):
         if (CommandSwitch._switch(self._command_on) and
                 not self._command_state):
             self._state = True
-            self.shedule_update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if (CommandSwitch._switch(self._command_off) and
                 not self._command_state):
             self._state = False
-            self.shedule_update_ha_state()
+            self.schedule_update_ha_state()

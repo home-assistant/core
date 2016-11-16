@@ -137,7 +137,7 @@ class MySensorsSwitch(mysensors.MySensorsDeviceEntity, SwitchDevice):
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_ON
-            self.shedule_update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
@@ -146,7 +146,7 @@ class MySensorsSwitch(mysensors.MySensorsDeviceEntity, SwitchDevice):
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_OFF
-            self.shedule_update_ha_state()
+            self.schedule_update_ha_state()
 
 
 class MySensorsIRSwitch(MySensorsSwitch):
@@ -182,7 +182,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
             # optimistically assume that switch has changed state
             self._values[self.value_type] = self._ir_code
             self._values[set_req.V_LIGHT] = STATE_ON
-            self.shedule_update_ha_state()
+            self.schedule_update_ha_state()
             # turn off switch after switch was turned on
             self.turn_off()
 
@@ -198,7 +198,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[set_req.V_LIGHT] = STATE_OFF
-            self.shedule_update_ha_state()
+            self.schedule_update_ha_state()
 
     def update(self):
         """Update the controller with the latest value from a sensor."""
