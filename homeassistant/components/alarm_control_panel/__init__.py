@@ -11,8 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
-    SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_KEYPRESS)
+    SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
@@ -22,30 +21,25 @@ from homeassistant.helpers.entity_component import EntityComponent
 DOMAIN = 'alarm_control_panel'
 SCAN_INTERVAL = 30
 ATTR_CHANGED_BY = 'changed_by'
-ATTR_KEYPRESS = 'keypress'
-ATTR_OUTPUT = 'output'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+SERVICE_TO_METHOD = {
+    SERVICE_ALARM_DISARM: 'alarm_disarm',
+    SERVICE_ALARM_ARM_HOME: 'alarm_arm_home',
+    SERVICE_ALARM_ARM_AWAY: 'alarm_arm_away',
+    SERVICE_ALARM_TRIGGER: 'alarm_trigger'
+}
+
+ATTR_TO_PROPERTY = [
+    ATTR_CODE,
+    ATTR_CODE_FORMAT
+]
+
 ALARM_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_CODE): cv.string
+    vol.Optional(ATTR_CODE): cv.string,
 })
-
-ALARM_KEYPRESS_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_KEYPRESS): cv.string
-})
-
-SERVICE_TO_METHOD = {
-    SERVICE_ALARM_DISARM: {'method': 'alarm_disarm'},
-    SERVICE_ALARM_ARM_HOME: {'method': 'alarm_arm_home'},
-    SERVICE_ALARM_ARM_AWAY: {'method': 'alarm_arm_away'},
-    SERVICE_ALARM_TRIGGER: {'method': 'alarm_trigger'},
-    SERVICE_ALARM_KEYPRESS: {
-        'method': 'alarm_keypress',
-        'schema': ALARM_KEYPRESS_SCHEMA},
-}
 
 
 def setup(hass, config):
@@ -56,26 +50,25 @@ def setup(hass, config):
     component.setup(config)
 
     def alarm_service_handler(service):
-        """Handle calls to the alarm control panel services."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        params = service.data.copy()
-        params.pop(ATTR_ENTITY_ID, None)
+        """Map services to methods on Alarm."""
+        target_alarms = component.extract_from_service(service)
 
-        if method:
-            for alarm_control_panel in component.extract_from_service(service):
-                getattr(alarm_control_panel, method['method'])(**params)
+        code = service.data.get(ATTR_CODE)
 
-                if alarm_control_panel.should_poll:
-                    alarm_control_panel.update_ha_state(True)
+        method = SERVICE_TO_METHOD[service.service]
+
+        for alarm in target_alarms:
+            getattr(alarm, method)(code)
+            if alarm.should_poll:
+                alarm.update_ha_state(True)
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    for service_name in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service_name].get(
-            'schema', ALARM_SERVICE_SCHEMA)
-        hass.services.register(DOMAIN, service_name, alarm_service_handler,
-                               descriptions.get(service_name), schema=schema)
+    for service in SERVICE_TO_METHOD:
+        hass.services.register(DOMAIN, service, alarm_service_handler,
+                               descriptions.get(service),
+                               schema=ALARM_SERVICE_SCHEMA)
     return True
 
 
@@ -123,16 +116,6 @@ def alarm_trigger(hass, code=None, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_ALARM_TRIGGER, data)
 
 
-def alarm_keypress(hass, keypress, entity_id=None):
-    """Send a custom key sequence to the alarm."""
-    data = {}
-    data[ATTR_KEYPRESS] = keypress
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_ALARM_KEYPRESS, data)
-
-
 # pylint: disable=no-self-use
 class AlarmControlPanel(Entity):
     """An abstract class for alarm control devices."""
@@ -162,10 +145,6 @@ class AlarmControlPanel(Entity):
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
         raise NotImplementedError()
-
-    def alarm_keypress(self, keypress=None):
-        """Send custom key sequence to alarm."""
-        pass
 
     @property
     def state_attributes(self):
