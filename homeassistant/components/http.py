@@ -49,6 +49,7 @@ CONF_CORS_ORIGINS = 'cors_allowed_origins'
 CONF_USE_X_FORWARDED_FOR = 'use_x_forwarded_for'
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
 CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
+CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
 
 DATA_API_PASSWORD = 'api_password'
 NOTIFICATION_ID_LOGIN = 'http-login'
@@ -96,7 +97,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
         vol.Optional(CONF_TRUSTED_NETWORKS):
             vol.All(cv.ensure_list, [ip_network]),
-        vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD): cv.positive_int
+        vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD): cv.positive_int,
+        vol.Optional(CONF_IP_BAN_ENABLED): cv.boolean
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -142,7 +144,7 @@ def setup(hass, config):
     trusted_networks = [
         ip_network(trusted_network)
         for trusted_network in conf.get(CONF_TRUSTED_NETWORKS, [])]
-
+    is_ban_enabled = bool(conf.get(CONF_IP_BAN_ENABLED, False))
     login_threshold = int(conf.get(CONF_LOGIN_ATTEMPTS_THRESHOLD, -1))
     ip_bans = load_ip_bans_config(hass.config.path(IP_BANS))
 
@@ -158,7 +160,8 @@ def setup(hass, config):
         use_x_forwarded_for=use_x_forwarded_for,
         trusted_networks=trusted_networks,
         ip_bans=ip_bans,
-        login_threshold=login_threshold
+        login_threshold=login_threshold,
+        is_ban_enabled=is_ban_enabled
     )
 
     @asyncio.coroutine
@@ -269,7 +272,7 @@ class HomeAssistantWSGI(object):
     def __init__(self, hass, development, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
                  use_x_forwarded_for, trusted_networks,
-                 ip_bans, login_threshold):
+                 ip_bans, login_threshold, is_ban_enabled):
         """Initialize the WSGI Home Assistant server."""
         import aiohttp_cors
 
@@ -289,6 +292,7 @@ class HomeAssistantWSGI(object):
         self.login_threshold = login_threshold
         self.ip_bans = ip_bans if ip_bans is not None else []
         self.failed_login_attempts = {}
+        self.is_ban_enabled = is_ban_enabled
 
         if cors_origins:
             self.cors = aiohttp_cors.setup(self.app, defaults={
@@ -408,7 +412,8 @@ class HomeAssistantWSGI(object):
 
     def wrong_login_attempt(self, remote_addr):
         """Registering wrong login attempt."""
-        if not self.is_trusted_ip(remote_addr) and self.login_threshold > 0:
+        if not self.is_trusted_ip(remote_addr) \
+                and self.login_threshold > 0 and self.is_ban_enabled:
             if remote_addr in self.failed_login_attempts:
                 self.failed_login_attempts[remote_addr] += 1
             else:
@@ -420,13 +425,16 @@ class HomeAssistantWSGI(object):
                 update_ip_bans_config(self.hass.config.path(IP_BANS), new_ban)
                 _LOGGER.warning('Banned IP %s for too many login attempts',
                                 remote_addr)
-                persistent_notification.create(
+                persistent_notification.async_create(
                     self.hass,
                     'To many login attempts from {}'.format(remote_addr),
                     'Banning IP address', NOTIFICATION_ID_BAN)
 
     def is_banned_ip(self, remote_addr):
         """Check if IP address is in a ban list."""
+        if not self.is_ban_enabled:
+            return False
+
         ip_address_ = ip_address(remote_addr)
         for ip_ban in self.ip_bans:
             if ip_ban.ip_address == ip_address_:

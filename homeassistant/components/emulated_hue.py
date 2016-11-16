@@ -79,7 +79,8 @@ def setup(hass, yaml_config):
         use_x_forwarded_for=False,
         trusted_networks=[],
         ip_bans=[],
-        login_threshold=-1
+        login_threshold=0,
+        is_ban_enabled=False
     )
 
     server.register_view(DescriptionXmlView(hass, config))
