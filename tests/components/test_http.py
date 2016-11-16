@@ -273,14 +273,13 @@ class TestHttp:
             req = call_server()
             assert req.status_code == 401
             assert len(hass.http.ip_bans) == len(BANNED_IPS)
-            m.assert_not_called()
+            assert m.call_count == 0
 
             req = call_server()
             assert req.status_code == 401
             assert len(hass.http.ip_bans) == len(BANNED_IPS) + 1
             m.assert_called_once_with(hass.config.path(http.IP_BANS), 'a')
 
-            m.reset_mock()
             req = call_server()
             assert req.status_code == 403
-            m.assert_not_called()
+            assert m.call_count == 1
