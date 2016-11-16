@@ -84,7 +84,7 @@ _HBMQTT_CONFIG_SCHEMA = vol.Schema(dict)
 CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
                       'the mqtt broker config'
 
-MQTT_PUBLISH_SCHEMA = vol.Schema({
+MQTT_WILL_BIRTH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): valid_publish_topic,
     vol.Required(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
     vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
@@ -109,8 +109,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
         vol.Optional(CONF_EMBEDDED): _HBMQTT_CONFIG_SCHEMA,
-        vol.Optional(CONF_WILL_MESSAGE): MQTT_PUBLISH_SCHEMA,
-        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_PUBLISH_SCHEMA
+        vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA
     }),
 }, extra=vol.ALLOW_EXTRA)
 
