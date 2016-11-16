@@ -13,7 +13,10 @@ from types import MappingProxyType
 
 from typing import Any, Optional, TypeVar, Callable, Sequence, KeysView, Union
 
+from unicodedata import normalize
+
 from .dt import as_local, utcnow
+
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -35,7 +38,7 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = text.lower().replace(" ", "_")
+    text = normalize('NFKD', text).lower().replace(" ", "_")
 
     return RE_SLUGIFY.sub("", text)
 
