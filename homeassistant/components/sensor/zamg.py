@@ -101,7 +101,7 @@ SENSOR_TYPES = {
     'wind_max_bearing': ('Top Wind Bearing', '°', 'WSR °', int),
     'sun_last_hour': ('Sun Last Hour', '%', 'SO %', int),
     ATTR_WEATHER_TEMPERATURE: ('Temperature', '°C', 'T °C', float),
-    'precipitation': ('Precipitation', 'l/m²', 'N l/m²', int),
+    'precipitation': ('Precipitation', 'l/m²', 'N l/m²', float),
     'dewpoint': ('Dew Point', '°C', 'TP °C', float),
     # The following probably not useful for general consumption,
     # but we need them to fill in internal attributes
