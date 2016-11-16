@@ -44,7 +44,8 @@ class NestCamera(Camera):
         self._is_online = None
         self._is_streaming = None
         self._is_video_history_enabled = False
-        self._time_between_snapshots = None
+        # default to non-NestAware subscribed, but will be fixed during update
+        self._time_between_snapshots = timedelta(seconds=30)
         self._last_image = None
         self._last_image_at = None
 
@@ -88,7 +89,7 @@ class NestCamera(Camera):
             url = self.device.snapshot_url
             # sadly, can't test against a simulator
             if url == SIMULATOR_SNAPSHOT_URL:
-                url = 'http://i.imgur.com/2CPHwxn.jpg'
+                url = 'https://media.giphy.com/media/WCwFvyeb6WJna/giphy.gif'
 
             try:
                 response = requests.get(url)
