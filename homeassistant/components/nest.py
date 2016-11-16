@@ -12,7 +12,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME,
                                  CONF_STRUCTURE, CONF_FILENAME, CONF_ACCESS_TOKEN)
+from homeassistant.loader import get_component
 
+_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['python-nest==2.11.0']
@@ -22,33 +24,73 @@ DOMAIN = 'nest'
 DATA_NEST = 'nest'
 
 NEST_CONFIG_FILE = 'nest.conf'
-
+CONF_CLIENT_ID = 'client_id'
+CONF_CLIENT_SECRET = 'client_secret'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_ACCESS_TOKEN): cv.string,
+        vol.Required(CONF_CLIENT_ID): cv.string,
+        vol.Required(CONF_CLIENT_SECRET): cv.string,
         vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string)
     })
 }, extra=vol.ALLOW_EXTRA)
 
+def request_configuration(nest, hass, config):
+    """Request configuration steps from the user."""
+    configurator = get_component('configurator')
+    if 'nest' in _CONFIGURING:
+        configurator.notify_errors(
+            _CONFIGURING['nest'], "Failed to configure, please try again.")
+        return
+
+    def nest_configuration_callback(data):
+        """The actions to do when our configuration callback is called."""
+        nest.pin = data.get('pin')
+        setup_nest(hass, nest, config)
+
+    _CONFIGURING['nest'] = configurator.request_config(
+        hass, "Nest", nest_configuration_callback,
+        description='To configure Nest, click Request Authorization below, log into your Nest account, and then enter the resulting PIN',
+        link_name='Request Authorization',
+        link_url=nest.authorize_url,
+        submit_caption="Confirm",
+        fields=[{'id': 'pin', 'name': 'Enter the PIN', 'type': ''}]
+    )
+
+def setup_nest(hass, nest, config):
+    """Setup Nest Devices."""
+    if nest.pin:
+        nest.request_token()
+
+    if nest.access_token is None:
+        request_configuration(nest, hass, config)
+        return
+
+    if 'nest' in _CONFIGURING:
+        configurator = get_component('configurator')
+        configurator.request_done(_CONFIGURING.pop('nest'))
+
+    hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
+
+    discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
 
 def setup(hass, config):
     """Setup the Nest thermostat component."""
     import nest
 
     conf = config[DOMAIN]
-    username = conf[CONF_USERNAME]
-    password = conf[CONF_PASSWORD]
-    access_token = conf[CONF_ACCESS_TOKEN]
+    client_id = conf[CONF_CLIENT_ID]
+    client_secret = conf[CONF_CLIENT_SECRET]
     filename = config.get(CONF_FILENAME, NEST_CONFIG_FILE)
 
     access_token_cache_file = hass.config.path(filename)
 
-    nest = nest.Nest(username, password, access_token=access_token,
-                     access_token_cache_file=access_token_cache_file)
-    hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
+    nest = nest.Nest(
+            access_token_cache_file=access_token_cache_file,
+            client_id=client_id, client_secret=client_secret)
+    setup_nest(hass, nest, config)
 
     return True
 
