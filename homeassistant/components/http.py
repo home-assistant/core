@@ -9,7 +9,7 @@ import json
 import logging
 import mimetypes
 import ssl
-from datetime import time, datetime
+from datetime import datetime
 from ipaddress import ip_address, ip_network
 from pathlib import Path
 
@@ -420,7 +420,7 @@ class HomeAssistantWSGI(object):
                 update_ip_bans_config(self.hass.config.path(IP_BANS), new_ban)
                 _LOGGER.warning('Banned IP %s for too many login attempts',
                                 remote_addr)
-                persistent_notification.async_create(
+                persistent_notification.create(
                     self.hass,
                     'To many login attempts from {}'.format(remote_addr),
                     'Banning IP address', NOTIFICATION_ID_BAN)
