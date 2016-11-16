@@ -25,7 +25,6 @@ CONF_SSID = 'cookie_ssid'
 CONF_HSID = 'cookie_hsid'
 CONF_FREQ = 'data_freq'
 CONF_AT = 'data_at'
-CONF_HEADER_HOST = 'header_host'
 #CONF_ACCURACY = 'accuracy'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -36,7 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HSID): cv.string,
     vol.Required(CONF_FREQ): cv.string,
     vol.Required(CONF_AT): cv.string,
-    vol.Optional(CONF_HEADER_HOST, default='plus.google.com'): cv.string,
     #    vol.Optional(CONF_ACCURACY, default=100): cv.positive_int,
     vol.Optional(CONF_INTERVAL, default=1): vol.All(cv.positive_int,
                                                     vol.Range(min=1)),
@@ -59,15 +57,12 @@ def setup_scanner(hass, config, see):
     data_freq = config[CONF_FREQ]
     data_at = config[CONF_AT]
     url = config[CONF_URL]
-    host = config[CONF_HEADER_HOST]
 
     headers = {
-        'Host': host,
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
         'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
-        'Referer': 'https://' + host + '/',
         'X-Same-Domain': '1',
         'Connection': 'keep-alive',
     }
