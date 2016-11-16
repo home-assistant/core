@@ -13,9 +13,10 @@ from types import MappingProxyType
 
 from typing import Any, Optional, TypeVar, Callable, Sequence, KeysView, Union
 
+from unicodedata import normalize
+
 from .dt import as_local, utcnow
 
-from unicodedata import normalize
 
 T = TypeVar('T')
 U = TypeVar('U')
