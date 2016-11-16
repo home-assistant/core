@@ -154,8 +154,17 @@ class TestHomeAssistant(unittest.TestCase):
             """Test Coro."""
             call_count.append('call')
 
+        @asyncio.coroutine
+        def wait_finish_callback():
+            """Wait until all stuff is sheduled."""
+            while len(call_count) < 50:
+                yield from asyncio.sleep(0)
+
         for i in range(50):
             self.hass.add_job(test_coro())
+
+        run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop).result()
 
         assert len(self.hass._pending_tasks) == 50
         self.hass.block_till_done()
@@ -169,8 +178,17 @@ class TestHomeAssistant(unittest.TestCase):
             """Test executor."""
             call_count.append('call')
 
+        @asyncio.coroutine
+        def wait_finish_callback():
+            """Wait until all stuff is sheduled."""
+            while len(call_count) < 40:
+                yield from asyncio.sleep(0)
+
         for i in range(40):
             self.hass.add_job(test_executor)
+
+        run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop).result()
 
         assert len(self.hass._pending_tasks) == 40
         self.hass.block_till_done()
@@ -187,9 +205,9 @@ class TestHomeAssistant(unittest.TestCase):
 
         for i in range(40):
             self.hass.add_job(test_callback)
+        self.hass.block_till_done()
 
         assert len(self.hass._pending_tasks) == 0
-        self.hass.block_till_done()
         assert len(call_count) == 40
 
 
