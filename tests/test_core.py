@@ -156,19 +156,19 @@ class TestHomeAssistant(unittest.TestCase):
 
         @asyncio.coroutine
         def wait_finish_callback():
-            """Wait until all stuff is sheduled."""
-            while len(call_count) < 50:
+            """Wait until all stuff is scheduled."""
+            while len(call_count) < 2:
                 yield from asyncio.sleep(0)
 
-        for i in range(50):
+        for i in range(2):
             self.hass.add_job(test_coro())
 
         run_coroutine_threadsafe(
             wait_finish_callback(), self.hass.loop).result()
 
-        assert len(self.hass._pending_tasks) == 50
+        assert len(self.hass._pending_tasks) == 2
         self.hass.block_till_done()
-        assert len(call_count) == 50
+        assert len(call_count) == 2
 
     def test_async_add_job_pending_tasks_executor(self):
         """Run a executor in pending tasks."""
@@ -180,19 +180,19 @@ class TestHomeAssistant(unittest.TestCase):
 
         @asyncio.coroutine
         def wait_finish_callback():
-            """Wait until all stuff is sheduled."""
-            while len(call_count) < 40:
+            """Wait until all stuff is scheduled."""
+            while len(call_count) < 2:
                 yield from asyncio.sleep(0)
 
-        for i in range(40):
+        for i in range(2):
             self.hass.add_job(test_executor)
 
         run_coroutine_threadsafe(
             wait_finish_callback(), self.hass.loop).result()
 
-        assert len(self.hass._pending_tasks) == 40
+        assert len(self.hass._pending_tasks) == 2
         self.hass.block_till_done()
-        assert len(call_count) == 40
+        assert len(call_count) == 2
 
     def test_async_add_job_pending_tasks_callback(self):
         """Run a callback in pending tasks."""
@@ -203,12 +203,22 @@ class TestHomeAssistant(unittest.TestCase):
             """Test callback."""
             call_count.append('call')
 
-        for i in range(40):
+        @asyncio.coroutine
+        def wait_finish_callback():
+            """Wait until all stuff is scheduled."""
+            while len(call_count) < 2:
+                yield from asyncio.sleep(0)
+
+        for i in range(2):
             self.hass.add_job(test_callback)
+
+        run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop).result()
+
         self.hass.block_till_done()
 
         assert len(self.hass._pending_tasks) == 0
-        assert len(call_count) == 40
+        assert len(call_count) == 2
 
 
 class TestEvent(unittest.TestCase):
