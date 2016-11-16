@@ -104,7 +104,7 @@ class KodiDevice(MediaPlayerDevice):
         if len(self._players) == 0:
             return STATE_IDLE
 
-        if self._properties['speed'] == 0:
+        if self._properties['speed'] == 0 and not self._properties['live']:
             return STATE_PAUSED
         else:
             return STATE_PLAYING
@@ -120,7 +120,7 @@ class KodiDevice(MediaPlayerDevice):
 
             self._properties = self._server.Player.GetProperties(
                 player_id,
-                ['time', 'totaltime', 'speed']
+                ['time', 'totaltime', 'speed', 'live']
             )
 
             self._item = self._server.Player.GetItem(
@@ -163,7 +163,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        if self._properties is not None:
+        if self._properties is not None and not self._properties['live']:
             total_time = self._properties['totaltime']
 
             return (
