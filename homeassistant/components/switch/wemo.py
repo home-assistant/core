@@ -151,13 +151,13 @@ class WemoSwitch(SwitchDevice):
         """Turn the switch on."""
         self._state = WEMO_ON
         self.wemo.on()
-        self.shedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
         self._state = WEMO_OFF
         self.wemo.off()
-        self.shedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     def update(self):
         """Update WeMo state."""
