@@ -92,7 +92,7 @@ class SwitchTemplate(SwitchDevice):
         @callback
         def template_switch_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
-            hass.async_add_job(self.async_update_ha_state, True)
+            hass.async_add_job(self.async_update_ha_state(True))
 
         async_track_state_change(
             hass, entity_ids, template_switch_state_listener)
