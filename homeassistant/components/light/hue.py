@@ -22,7 +22,8 @@ from homeassistant.components.light import (
     FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
     SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME)
+from homeassistant.const import (
+    CONF_FILENAME, CONF_HOST, CONF_USERNAME, DEVICE_DEFAULT_NAME)
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
@@ -48,9 +49,10 @@ SUPPORT_HUE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
                SUPPORT_XY_COLOR)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_ALLOW_UNREACHABLE): cv.boolean,
     vol.Optional(CONF_FILENAME): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
 })
 
 
@@ -62,8 +64,8 @@ def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
         return None
 
     try:
-        with open(path) as inp:
-            return next(json.loads(''.join(inp)).keys().__iter__())
+        with open(path) as config_file:
+            return next(iter(json.load(config_file).items()))
     except (ValueError, AttributeError, StopIteration):
         # ValueError if can't parse as JSON
         # AttributeError if JSON value is not a dict
@@ -78,13 +80,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     allow_unreachable = config.get(CONF_ALLOW_UNREACHABLE,
                                    DEFAULT_ALLOW_UNREACHABLE)
 
+    username = None
+
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
     else:
         host = config.get(CONF_HOST, None)
+        username = config.get(CONF_USERNAME, None)
 
         if host is None:
-            host = _find_host_from_config(hass, filename)
+            # Structured as (host: str, options: dict)
+            host, options = _find_host_from_config(hass, filename)
+
+            if options and 'username' in options:
+                username = options['username']
 
         if host is None:
             _LOGGER.error('No host found in configuration')
@@ -95,16 +104,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             socket.gethostbyname(host) in _CONFIGURED_BRIDGES:
         return
 
-    setup_bridge(host, hass, add_devices, filename, allow_unreachable)
+    setup_bridge(host, username, hass, add_devices, filename,
+                 allow_unreachable)
 
 
-def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
+def setup_bridge(host, username, hass, add_devices, filename,
+                 allow_unreachable):
     """Setup a phue bridge based on host parameter."""
     import phue
 
     try:
         bridge = phue.Bridge(
             host,
+            username=username,
             config_file_path=hass.config.path(filename))
     except ConnectionRefusedError:  # Wrong host was given
         _LOGGER.error("Error connecting to the Hue bridge at %s", host)
@@ -114,7 +126,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
     except phue.PhueRegistrationException:
         _LOGGER.warning("Connected to Hue at %s but not registered.", host)
 
-        request_configuration(host, hass, add_devices, filename,
+        request_configuration(host, username, hass, add_devices, filename,
                               allow_unreachable)
 
         return
@@ -169,7 +181,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
     update_lights()
 
 
-def request_configuration(host, hass, add_devices, filename,
+def request_configuration(host, username, hass, add_devices, filename,
                           allow_unreachable):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
@@ -184,7 +196,8 @@ def request_configuration(host, hass, add_devices, filename,
     # pylint: disable=unused-argument
     def hue_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_bridge(host, hass, add_devices, filename, allow_unreachable)
+        setup_bridge(host, username, hass, add_devices, filename,
+                     allow_unreachable)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, "Philips Hue", hue_configuration_callback,
