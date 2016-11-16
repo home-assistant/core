@@ -78,6 +78,8 @@ class NestThermostat(ClimateDevice):
         self._mode = None
         self._fan = None
         self._eco_temperature = None
+        self._is_locked = None
+        self._locked_temperature = None
 
     # FIXME ends up with double name, ie Hallway(Hallway (E5C0))
     @property
