@@ -208,11 +208,6 @@ class DeviceTracker(object):
                                 dev.mac)
         self.consider_home = consider_home
         self.track_new = track_new
-
-        for device in devices:
-            if device.track:
-                hass.async_add_job(device.async_update_ha_state())
-
         self.group = None  # type: group.Group
 
     def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
@@ -242,10 +237,10 @@ class DeviceTracker(object):
             device = self.devices.get(dev_id)
 
         if device:
-            device.seen(host_name, location_name, gps, gps_accuracy,
-                        battery, attributes)
+            yield from device.async_seen(host_name, location_name, gps,
+                                         gps_accuracy, battery, attributes)
             if device.track:
-                device.update_ha_state()
+                yield from device.async_update_ha_state()
             return
 
         # If no device can be found, create it
@@ -257,9 +252,8 @@ class DeviceTracker(object):
         if mac is not None:
             self.mac_to_dev[mac] = device
 
-        yield from self.hass.loop.run_in_executor(
-            None, device.seen, host_name, location_name, gps, gps_accuracy,
-            battery, attributes)
+        yield from device.async_seen(host_name, location_name, gps,
+                                     gps_accuracy, battery, attributes)
 
         if device.track:
             yield from device.async_update_ha_state()
@@ -271,7 +265,7 @@ class DeviceTracker(object):
 
         # During init, we ignore the group
         if self.group is not None:
-            yield from self.async_group.update_tracked_entity_ids(
+            yield from self.group.async_update_tracked_entity_ids(
                 list(self.group.tracking) + [device.entity_id])
 
         # update known_devices.yaml
@@ -300,7 +294,7 @@ class DeviceTracker(object):
         for device in self.devices.values():
             if (device.track and device.last_update_home) and \
                device.stale(now):
-                self.hass_async_add_job(device.async_update_ha_state(True))
+                self.hass.async_add_job(device.async_update_ha_state(True))
 
 
 class Device(Entity):
@@ -387,9 +381,10 @@ class Device(Entity):
         """If device should be hidden."""
         return self.away_hide and self.state != STATE_HOME
 
-    def seen(self, host_name: str=None, location_name: str=None,
-             gps: GPSType=None, gps_accuracy=0, battery: str=None,
-             attributes: dict=None):
+    @asyncio.coroutine
+    def async_seen(self, host_name: str=None, location_name: str=None,
+                   gps: GPSType=None, gps_accuracy=0, battery: str=None,
+                   attributes: dict=None):
         """Mark the device as seen."""
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
@@ -404,7 +399,8 @@ class Device(Entity):
             except (ValueError, TypeError, IndexError):
                 _LOGGER.warning('Could not parse gps value for %s: %s',
                                 self.dev_id, gps)
-        self.update()
+        yield from self.async_update()
+        return
 
     def stale(self, now: dt_util.dt.datetime=None):
         """Return if device state is stale.
@@ -414,15 +410,16 @@ class Device(Entity):
         return self.last_seen and \
             (now or dt_util.utcnow()) - self.last_seen > self.consider_home
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Update state of entity."""
         if not self.last_seen:
             return
         elif self.location_name:
             self._state = self.location_name
         elif self.gps is not None:
-            zone_state = zone.active_zone(self.hass, self.gps[0], self.gps[1],
-                                          self.gps_accuracy)
+            zone_state = zone.async_active_zone(
+                self.hass, self.gps[0], self.gps[1], self.gps_accuracy)
             if zone_state is None:
                 self._state = STATE_NOT_HOME
             elif zone_state.entity_id == zone.ENTITY_ID_HOME:
@@ -436,6 +433,12 @@ class Device(Entity):
         else:
             self._state = STATE_HOME
             self.last_update_home = True
+
+
+def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
+    """Load devices from YAML configuration file."""
+    return run_coroutine_threadsafe(
+        async_load_config(path, hass, consider_home), hass.loop).result()
 
 
 @asyncio.coroutine
@@ -503,8 +506,6 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
                 seen.add(mac)
             hass.async_add_job(async_see_device(mac=mac, host_name=host_name))
 
-        return tasks
-
     async_track_utc_time_change(
         hass, device_tracker_scan, second=range(0, 60, interval))
 
@@ -526,7 +527,10 @@ def update_config(path: str, dev_id: str, device: Device):
 
 
 def get_gravatar_for_email(email: str):
-    """Return an 80px Gravatar for the given email address."""
+    """Return an 80px Gravatar for the given email address.
+
+    Async friendly.
+    """
     import hashlib
     url = 'https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar'
     return url.format(hashlib.md5(email.encode('utf-8').lower()).hexdigest())
