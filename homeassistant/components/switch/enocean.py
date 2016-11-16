@@ -79,4 +79,4 @@ class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
     def value_changed(self, val):
         """Update the internal state of the switch."""
         self._on_state = val
-        self.update_ha_state()
+        self.shedule_update_ha_state()
