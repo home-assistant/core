@@ -47,8 +47,6 @@ SIGNAL_ZONE_UPDATE = 'zones_updated'
 SIGNAL_PARTITION_UPDATE = 'partition_updated'
 SIGNAL_KEYPAD_UPDATE = 'keypad_updated'
 
-SERVICE_ALARM_KEYPRESS = 'alarm_keypress'
-
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONENAME): cv.string,
     vol.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string})
