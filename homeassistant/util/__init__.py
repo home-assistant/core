@@ -10,13 +10,11 @@ import random
 import string
 from functools import wraps
 from types import MappingProxyType
+from unicodedata import normalize
 
 from typing import Any, Optional, TypeVar, Callable, Sequence, KeysView, Union
 
-from unicodedata import normalize
-
 from .dt import as_local, utcnow
-
 
 T = TypeVar('T')
 U = TypeVar('U')
