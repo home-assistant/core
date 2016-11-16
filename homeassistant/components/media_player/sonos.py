@@ -503,14 +503,27 @@ class SonosDevice(MediaPlayerDevice):
                         position_info.get("RelTime")
                     )
 
-                    if rel_time is None or \
-                       self._media_position is None or \
-                       abs(self._media_position + \
-                           time.time() - \
-                           self._media_position_updated_at - \
-                           rel_time) > 1.5:
+                    # player no longer reports position?
+                    update_media_position = rel_time is None and \
+                        self._media_position is not None
 
-                        # update media_position
+                    # player started reporting position?
+                    update_media_position |= rel_time is not None and \
+                        self._media_position is None
+
+                    # position changed?
+                    if rel_time is not None and \
+                       self._media_position is not None:
+
+                        calculated_position = \
+                            self._media_position + \
+                            time.time() - \
+                            self._media_position_updated_at
+
+                        update_media_position = \
+                            abs(calculated_position - rel_time) > 1.5
+
+                    if update_media_position:
                         media_position = rel_time
                         media_position_updated_at = time.time()
                     else:
