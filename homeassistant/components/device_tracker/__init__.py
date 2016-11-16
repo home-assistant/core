@@ -8,7 +8,6 @@ import asyncio
 from datetime import timedelta
 import logging
 import os
-import threading
 from typing import Any, Sequence, Callable
 
 import voluptuous as vol
@@ -125,8 +124,13 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
-
     tracker = DeviceTracker(hass, consider_home, track_new, devices)
+
+    # update tracked devices
+    update_tasks = [device.async_update_ha_state() for device in devices
+                    if device.track]
+    if update_tasks:
+        yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     @asyncio.coroutine
     def async_setup_platform(p_type, p_config, disc_info=None):
@@ -158,7 +162,9 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
-    yield from asyncio.wait(setup_tasks, loop=hass.loop)
+    if setup_tasks:
+        yield from asyncio.wait(setup_tasks, loop=hass.loop)
+
     yield from tracker.async_setup_group()
 
     @callback
@@ -182,7 +188,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                  ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ATTRIBUTES)}
         yield from tracker.async_see(**args)
 
-    descriptions = hass.loop.run_in_executor(
+    descriptions = yield from hass.loop.run_in_executor(
         None, load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml')
     )
@@ -218,7 +224,9 @@ class DeviceTracker(object):
         """Notify the device tracker that you see a device."""
         fire_coroutine_threadsafe(
             self.async_see(mac, dev_id, host_name, location_name, gps,
-                           battery, attributes), loop=self.hass.loop).result()
+                           battery, attributes),
+            loop=self.hass.loop
+        )
 
     def async_see(self, mac: str=None, dev_id: str=None, host_name: str=None,
                   location_name: str=None, gps: GPSType=None,
@@ -277,7 +285,7 @@ class DeviceTracker(object):
         )
 
     @asyncio.coroutine
-    def async_update_config(self, path: str, dev_id: str, device: Device):
+    def async_update_config(self, path, dev_id, device):
         """Add device to YAML configuration file.
 
         This method is a coroutine.
@@ -287,7 +295,7 @@ class DeviceTracker(object):
 
         try:
             self._is_updating = True
-            self.hass.run_in_executor(
+            self.hass.loop.run_in_executor(
                 None, update_config, self.hass.config.path(YAML_DEVICES),
                 dev_id, device)
         finally:
@@ -412,14 +420,16 @@ class Device(Entity):
         self.battery = battery
         self.attributes = attributes
         self.gps = None
+
         if gps is not None:
             try:
                 self.gps = float(gps[0]), float(gps[1])
             except (ValueError, TypeError, IndexError):
                 _LOGGER.warning('Could not parse gps value for %s: %s',
                                 self.dev_id, gps)
+
+        # pyling: disable=not-an-iterable
         yield from self.async_update()
-        return
 
     def stale(self, now: dt_util.dt.datetime=None):
         """Return if device state is stale.
@@ -528,7 +538,7 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
     async_track_utc_time_change(
         hass, device_tracker_scan, second=range(0, 60, interval))
 
-    hass.async_add_job(device_tracker_scan(None))
+    hass.async_add_job(device_tracker_scan, None)
 
 
 def update_config(path: str, dev_id: str, device: Device):
