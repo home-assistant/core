@@ -1,0 +1,89 @@
+"""
+Support for the World Air Quality Index service.
+
+For more details about this platform, please refer to the documentation at
+https://github.com/home-assistant/home-assistant/
+"""
+import logging
+from datetime import timedelta
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+from homeassistant.loader import get_component
+
+
+REQUIREMENTS = ["pwaqi==1.0"]
+
+_LOGGER = logging.getLogger(__name__)
+
+SENSOR_TYPES = {
+    'aqi':          ['AQI', '0-300+', 'mdi:cloud']
+}
+
+ATTR_LOCATION = 'locations'
+
+# Return cached results if last scan was less then this time ago
+# Cyprus Air Quality data is uploaded to server every 10mn
+# so this time should not be under
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
+
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the requested World Air Quality Index locations."""
+
+    dev = []
+    try:
+        import pwaqi
+        _LOGGER.info('Known locations: %s', config[ATTR_LOCATION])
+
+        # Iterate each module
+        for location_name in config[ATTR_LOCATION]:
+            _LOGGER.info('Adding location %s', location_name)
+            station_ids = pwaqi.findStationCodesByCity(location_name)
+            _LOGGER.info('I got the following stations: %s', station_ids)
+            for station in station_ids:
+              dev.append(WaqiSensor(station))
+    except KeyError as err:
+        _LOGGER.exception('No keys defined for waqi sensor.', err)
+        pass
+
+    add_devices(dev)
+
+
+# pylint: disable=too-few-public-methods
+class WaqiSensor(Entity):
+    """Implementation of a WAQI sensor."""
+
+    def __init__(self, station_id):
+        """Initialize the sensor."""
+        self._station_id = station_id
+        self._state = None
+        self.update()
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        if 'city' in self._data:
+            return "WAQI {}".format(self._data['city']['name'])
+        return "WAQI {}".format(self._station_id)
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return "mdi:cloud"
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return "AQI"
+
+    def update(self):
+        """Get the latest data from World Air Quality Index and updates the states."""
+        import pwaqi
+        self._data = pwaqi.getStationObservation(self._station_id)
+
+        self._state = self._data.get('aqi', 'no data')
