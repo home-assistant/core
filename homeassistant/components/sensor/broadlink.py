@@ -9,6 +9,7 @@ from datetime import timedelta
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_HOST, CONF_MAC,
     CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS)
+    
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -50,19 +51,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Broadlink device sensors."""
 
     broadlink_data = BroadlinkData(
-                        config.get(CONF_UPDATE_INTERVAL),
-                        config.get(CONF_HOST),
-                        config.get(CONF_MAC))
+                                    config.get(CONF_UPDATE_INTERVAL),
+                                    config.get(CONF_HOST),
+                                    config.get(CONF_MAC))
     broadlink_data.update()
 
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BroadlinkSensor(
-                    config.get(CONF_NAME),
-                    broadlink_data,
-                    variable,
-                    SENSOR_TYPES[variable][0],
-                    SENSOR_TYPES[variable][1]))
+                                    config.get(CONF_NAME),
+                                    broadlink_data,
+                                    variable,
+                                    SENSOR_TYPES[variable][0],
+                                    SENSOR_TYPES[variable][1]))
 
     add_devices(dev, True)
 
@@ -118,9 +119,9 @@ class BroadlinkData(object):
 
     def _update(self):
         try:
-            ip_addr=(self._host, 80)
-            mac_addr=binascii.unhexlify(self._mac.encode().replace(b':', b'')
-            self.device = broadlink.device(ip_addr, mac_addr))
+            ip_addr = (self._host, 80)
+            mac_addr=binascii.unhexlify(self._mac.encode().replace(b':', b''))
+            self.device = broadlink.device(ip_addr, mac_addr)
             self.auth = self.device.auth()
             if self.auth:
                 self.data = self.device.check_sensors()
