@@ -53,14 +53,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     broadlink_data.update()
     
     dev = []
-
     for variable in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BroadlinkSensor(
-                                    config.get(CONF_NAME), 
-                                    broadlink_data, 
-                                    variable,
-                                    SENSOR_TYPES[variable][0],
-                                    SENSOR_TYPES[variable][1]))
+                    config.get(CONF_NAME), 
+                    broadlink_data, 
+                    variable,
+                    SENSOR_TYPES[variable][0],
+                    SENSOR_TYPES[variable][1]))
 
     add_devices(dev, True)
 
@@ -94,7 +93,7 @@ class BroadlinkSensor(Entity):
 
     def update(self):
         self.broadlink_data.update()
-        if self.broadlink_data.data != None:
+        if self.broadlink_data.data is not None:
             if self.type == 'temperature':
                 self._state = self.broadlink_data.data['temperature']
             elif self.type == 'air_quality':
@@ -106,6 +105,7 @@ class BroadlinkSensor(Entity):
             elif self.type == 'noise':
                 self._state = self.broadlink_data.data['noise']
 
+
 class BroadlinkData(object):
     def __init__(self, interval, host, mac):
         self.data = None
@@ -115,12 +115,12 @@ class BroadlinkData(object):
 
     def _update(self):
         try:
-            self.device = broadlink.device(host=(self._host, 80),mac=binascii.unhexlify(self._mac.encode().replace(b':', b'')))
+            self.device = broadlink.device(host=(self._host, 80), mac=binascii.unhexlify(self._mac.encode().replace(b':', b'')))
             self.auth = self.device.auth()
-            if self.auth:            
+            if self.auth:
                 self.data = self.device.check_sensors()
             else:
-                self.data = None       
+                self.data = None 
         except ValueError as error:
             _LOGGER.error(error)
 
@@ -137,7 +137,7 @@ class broadlink():
             self.cs = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.cs.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.cs.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            self.cs.bind(('',0))
+            self.cs.bind(('', 0))
             self.lock = threading.Lock()
 
         def auth(self):
@@ -259,7 +259,7 @@ class broadlink():
                 if light == 0:
                     data['light'] = 'dark'
                 elif light == 1:
-                   data['light'] = 'dim'
+                    data['light'] = 'dim'
                 elif light == 2:
                     data['light'] = 'normal'
                 elif light == 3:
