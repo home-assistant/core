@@ -30,18 +30,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                             DEFAULT_SIGNAL_REPETITIONS)
 
     add_devices(TellstickLight(
-        tellstick.TELLCORE_REGISTRY.get_device(switch_id), signal_repetitions)
-                for switch_id in discovery_info[ATTR_DISCOVER_DEVICES])
+        tellstick.TELLCORE_REGISTRY.get_tellcore_device(tellcore_light_id), signal_repetitions)
+                for tellcore_light_id in discovery_info[ATTR_DISCOVER_DEVICES])
 
 
 class TellstickLight(tellstick.TellstickDevice, Light):
     """Representation of a Tellstick light."""
 
-    def __init__(self, tellstick_device, signal_repetitions):
+    def __init__(self, tellcore_device, signal_repetitions):
         """Initialize the light."""
         self._brightness = 255
         tellstick.TellstickDevice.__init__(self,
-                                           tellstick_device,
+                                           tellcore_device,
                                            signal_repetitions)
 
     @property
@@ -65,17 +65,17 @@ class TellstickLight(tellstick.TellstickDevice, Light):
         if last_command_sent == TELLSTICK_DIM:
             if last_data_sent is not None:
                 self._brightness = int(last_data_sent)
-            self._state = self._brightness > 0
+            self._state = (self._brightness > 0)
         else:
-            self._state = last_command_sent == TELLSTICK_TURNON
+            self._state = (last_command_sent == TELLSTICK_TURNON)
 
     def _send_tellstick_command(self, command, data):
         """Handle the turn_on / turn_off commands."""
         from tellcore.constants import (TELLSTICK_TURNOFF, TELLSTICK_DIM)
         if command == TELLSTICK_TURNOFF:
-            self.tellstick_device.turn_off()
+            self._tellcore_device.turn_off()
         elif command == TELLSTICK_DIM:
-            self.tellstick_device.dim(self._brightness)
+            self._tellcore_device.dim(self._brightness)
         else:
             raise NotImplementedError(
                 "Command not implemented: {}".format(command))

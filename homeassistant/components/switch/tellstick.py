@@ -27,8 +27,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ATTR_DISCOVER_CONFIG, tellstick.DEFAULT_SIGNAL_REPETITIONS)
 
     add_devices(TellstickSwitchDevice(
-        tellstick.TELLCORE_REGISTRY.get_device(switch_id), signal_repetitions)
-                for switch_id in discovery_info[ATTR_DISCOVER_DEVICES])
+        tellstick.TELLCORE_REGISTRY.get_tellcore_device(tellcore_switch_id), signal_repetitions)
+                for tellcore_switch_id in discovery_info[ATTR_DISCOVER_DEVICES])
 
 
 class TellstickSwitchDevice(tellstick.TellstickDevice, ToggleEntity):
@@ -42,15 +42,15 @@ class TellstickSwitchDevice(tellstick.TellstickDevice, ToggleEntity):
     def set_tellstick_state(self, last_command_sent, last_data_sent):
         """Update the internal representation of the switch."""
         from tellcore.constants import TELLSTICK_TURNON
-        self._state = last_command_sent == TELLSTICK_TURNON
+        self._state = (last_command_sent == TELLSTICK_TURNON)
 
     def _send_tellstick_command(self, command, data):
         """Handle the turn_on / turn_off commands."""
         from tellcore.constants import TELLSTICK_TURNON, TELLSTICK_TURNOFF
         if command == TELLSTICK_TURNON:
-            self.tellstick_device.turn_on()
+            self._tellcore_device.turn_on()
         elif command == TELLSTICK_TURNOFF:
-            self.tellstick_device.turn_off()
+            self._tellcore_device.turn_off()
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
