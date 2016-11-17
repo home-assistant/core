@@ -115,7 +115,7 @@ class PhilipsTV(MediaPlayerDevice):
             self._source = source
             if not self._tv.on:
                 self._state = STATE_OFF
-            self._watching_tv = bool(self._source == 'Watch TV')
+            self._watching_tv = bool(self._tv.source_id == 'tv')
 
     @property
     def volume_level(self):
@@ -192,11 +192,11 @@ class PhilipsTV(MediaPlayerDevice):
         else:
             self._state = STATE_OFF
 
-        self._watching_tv = bool(self._source == 'Watch TV')
+        self._watching_tv = bool(self._tv.source_id == 'tv')
 
         self._tv.getChannelId()
         self._tv.getChannels()
-        if self._tv.channel_id in self._tv.channels:
+        if self._tv.channels and self._tv.channel_id in self._tv.channels:
             self._channel_name = self._tv.channels[self._tv.channel_id]['name']
         else:
             self._channel_name = None
