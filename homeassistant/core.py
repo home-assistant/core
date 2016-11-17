@@ -30,7 +30,7 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE,
     SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, __version__)
 from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError)
+    HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 import homeassistant.util as util
@@ -309,6 +309,10 @@ class HomeAssistant(object):
         kwargs = {}
         exception = context.get('exception')
         if exception:
+            # Do not report on shutting down exceptions.
+            if isinstance(exception, ShuttingDown):
+                return
+
             kwargs['exc_info'] = (type(exception), exception,
                                   exception.__traceback__)
 
@@ -422,7 +426,7 @@ class EventBus(object):
         """
         if event_type != EVENT_HOMEASSISTANT_STOP and \
                 self._hass.state == CoreState.stopping:
-            raise HomeAssistantError('Home Assistant is shutting down.')
+            raise ShuttingDown('Home Assistant is shutting down.')
 
         # Copy the list of the current listeners because some listeners
         # remove themselves as a listener while being executed which
@@ -1172,7 +1176,7 @@ def _async_create_timer(hass, interval=TIMER_INTERVAL):
                         EVENT_TIME_CHANGED,
                         {ATTR_NOW: now}
                     )
-                except HomeAssistantError:
+                except ShuttingDown:
                     # HA raises error if firing event after it has shut down
                     break
 
