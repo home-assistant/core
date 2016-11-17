@@ -11,7 +11,7 @@ import logging
 import binascii
 import threading
 import voluptuous as vol
-from datetime import datetime, timedelta
+from datetime import timedelta
 from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_MAC, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS)
