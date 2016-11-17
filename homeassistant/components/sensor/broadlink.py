@@ -20,7 +20,6 @@ import logging
 import random
 import socket
 import threading
-import time
 import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,14 +36,14 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-                                         vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
-                                         vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-                                         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-                                         vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
-                                         vol.All(cv.time_period, cv.positive_timedelta)),
-                                         vol.Required(CONF_HOST): cv.string,
-                                         vol.Required(CONF_MAC): cv.string,
-                                         })
+     vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
+     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+     vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
+     vol.All(cv.time_period, cv.positive_timedelta)),
+     vol.Required(CONF_HOST): cv.string,
+     vol.Required(CONF_MAC): cv.string,
+         })
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -70,7 +69,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class BroadlinkSensor(Entity):
     """Representation of a Broadlink device sensor."""
 
-    def __init__(self, name, broadlink_data, sensor_type, sensor_name, unit_of_measurement):
+    def __init__(self, name, broadlink_data, sensor_type, 
+                sensor_name, unit_of_measurement):
         """Initialize the sensor."""
         self._name = "%s %s" % (name, sensor_name)
         self._state = None
@@ -118,7 +118,8 @@ class BroadlinkData(object):
 
     def _update(self):
         try:
-            self.device = broadlink.device(host=(self._host, 80), mac=binascii.unhexlify(self._mac.encode().replace(b':', b'')))
+            self.device = broadlink.device(host=(self._host, 80), 
+                mac=binascii.unhexlify(self._mac.encode().replace(b':', b'')))
             self.auth = self.device.auth()
             if self.auth:
                 self.data = self.device.check_sensors()
@@ -126,6 +127,8 @@ class BroadlinkData(object):
                 self.data = None
         except ValueError as error:
             _LOGGER.error(error)
+
+
 
 """Broadlink connector"""
 class broadlink():
@@ -182,7 +185,7 @@ class broadlink():
                 self.key = payload[0x04:0x14]
                 return True
             else:
-                _LOGGER.error('Broadlink sensor: Connection to broadlink device has failed. Check IP or MAC address')
+                _LOGGER.error('Connection to broadlink device has failed.')
                 return False
 
         def send_packet(self, command, payload, timeout=5.0):
@@ -212,7 +215,7 @@ class broadlink():
                 packet[0x32] = self.id[2]
                 packet[0x33] = self.id[3]
             except (IndexError, TypeError, NameError):
-                _LOGGER.error('Broadlink sensor: Invalid IP or MAC address.')
+                _LOGGER.error('Invalid IP or MAC address.')
                 return bytearray(0x30)
 
             checksum = 0xbeaf
@@ -300,4 +303,3 @@ class broadlink():
                 aes = AES.new(bytes(self.key), AES.MODE_CBC, bytes(self.iv))
                 payload = aes.decrypt(bytes(response[0x38:]))
                 return payload[0x04:]
-
