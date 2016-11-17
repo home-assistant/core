@@ -48,8 +48,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Broadlink device sensors."""
 
     broadlink_data = BroadlinkData(config.get(CONF_UPDATE_INTERVAL),
-                                   config.get(CONF_HOST),
-                                   config.get(CONF_MAC))
+                                    config.get(CONF_HOST),
+                                    config.get(CONF_MAC))
     broadlink_data.update()
     
     dev = []
@@ -96,15 +96,15 @@ class BroadlinkSensor(Entity):
         self.broadlink_data.update()
         if self.broadlink_data.data != None:
             if self.type == 'temperature':
-                   self._state = self.broadlink_data.data['temperature']
+                self._state = self.broadlink_data.data['temperature']
             elif self.type == 'air_quality':
-                   self._state = self.broadlink_data.data['air_quality']
+                self._state = self.broadlink_data.data['air_quality']
             elif self.type == 'humidity':
-                   self._state = self.broadlink_data.data['humidity']
+                self._state = self.broadlink_data.data['humidity']
             elif self.type == 'light':
-                   self._state = self.broadlink_data.data['light']
+                self._state = self.broadlink_data.data['light']
             elif self.type == 'noise':
-                   self._state = self.broadlink_data.data['noise']
+                self._state = self.broadlink_data.data['noise']
 
 class BroadlinkData(object):
     def __init__(self, interval, host, mac):
@@ -122,7 +122,7 @@ class BroadlinkData(object):
             else:
                 self.data = None       
         except ValueError as error:
-            	_LOGGER.error(error)
+            _LOGGER.error(error)
 
 """Broadlink connector"""
 class broadlink():
@@ -214,8 +214,8 @@ class broadlink():
 
             checksum = 0xbeaf
             for i in range(len(payload)):
-              checksum += payload[i]
-              checksum = checksum & 0xffff
+                checksum += payload[i]
+                checksum = checksum & 0xffff
 
             aes = AES.new(bytes(self.key), AES.MODE_CBC, bytes(self.iv))
             payload = aes.encrypt(bytes(payload))
@@ -224,22 +224,22 @@ class broadlink():
             packet[0x35] = checksum >> 8
 
             for i in range(len(payload)):
-              packet.append(payload[i])
+                packet.append(payload[i])
 
             checksum = 0xbeaf
             for i in range(len(packet)):
-              checksum += packet[i]
-              checksum = checksum & 0xffff
+                checksum += packet[i]
+                checksum = checksum & 0xffff
             packet[0x20] = checksum & 0xff
             packet[0x21] = checksum >> 8
 
             with self.lock:
-              self.cs.sendto(packet, self.host)
-              try:        
-                self.cs.settimeout(timeout)
-                response = self.cs.recvfrom(1024)
-              except socket.timeout:
-                _LOGGER.error("Socket timeout...")
+                self.cs.sendto(packet, self.host)
+                try:        
+                    self.cs.settimeout(timeout)
+                    response = self.cs.recvfrom(1024)
+                except socket.timeout:
+                    _LOGGER.error("Socket timeout...")
                 return bytearray(0x30)
 
             return response[0]
