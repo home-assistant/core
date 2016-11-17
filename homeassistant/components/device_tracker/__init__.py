@@ -24,8 +24,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
-from homeassistant.util.async import (
-    run_coroutine_threadsafe, fire_coroutine_threadsafe)
+from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.yaml import dump
 
@@ -207,27 +206,28 @@ class DeviceTracker(object):
         self.hass = hass
         self.devices = {dev.dev_id: dev for dev in devices}
         self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
+        self.consider_home = consider_home
+        self.track_new = track_new
+        self.group = None  # type: group.Group
+        self._is_updating = asyncio.Lock(loop=hass.loop)
+
         for dev in devices:
             if self.devices[dev.dev_id] is not dev:
                 _LOGGER.warning('Duplicate device IDs detected %s', dev.dev_id)
             if dev.mac and self.mac_to_dev[dev.mac] is not dev:
                 _LOGGER.warning('Duplicate device MAC addresses detected %s',
                                 dev.mac)
-        self.consider_home = consider_home
-        self.track_new = track_new
-        self.group = None  # type: group.Group
-        self._is_updating = False
 
     def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
             location_name: str=None, gps: GPSType=None, gps_accuracy=None,
             battery: str=None, attributes: dict=None):
         """Notify the device tracker that you see a device."""
-        fire_coroutine_threadsafe(
+        self.hass.add_job(
             self.async_see(mac, dev_id, host_name, location_name, gps,
-                           battery, attributes),
-            loop=self.hass.loop
+                           battery, attributes)
         )
 
+    @asyncio.coroutine
     def async_see(self, mac: str=None, dev_id: str=None, host_name: str=None,
                   location_name: str=None, gps: GPSType=None,
                   gps_accuracy=None, battery: str=None, attributes: dict=None):
@@ -290,16 +290,10 @@ class DeviceTracker(object):
 
         This method is a coroutine.
         """
-        if self._is_updating:
-            return
-
-        try:
-            self._is_updating = True
+        with (yield from self._is_updating):
             self.hass.loop.run_in_executor(
                 None, update_config, self.hass.config.path(YAML_DEVICES),
                 dev_id, device)
-        finally:
-            self._is_updating = False
 
     @asyncio.coroutine
     def async_setup_group(self):
