@@ -25,8 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 SUPPORT_PHILIPS_JS = SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
-                     SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE | \
-                     SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+                     SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE
+
+SUPPORT_PHILIPS_JS_TV = SUPPORT_PHILIPS_JS | SUPPORT_NEXT_TRACK | \
+                        SUPPORT_PREVIOUS_TRACK
 
 DEFAULT_DEVICE = 'default'
 DEFAULT_HOST = '127.0.0.1'
@@ -70,6 +72,8 @@ class PhilipsTV(MediaPlayerDevice):
         self._source_list = []
         self._connfail = 0
         self._source_mapping = {}
+        self._watching_tv = None
+        self._channel_name = None
 
     @property
     def name(self):
@@ -84,7 +88,10 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
-        return SUPPORT_PHILIPS_JS
+        if self._watching_tv:
+            return SUPPORT_PHILIPS_JS_TV
+        else:
+            return SUPPORT_PHILIPS_JS
 
     @property
     def state(self):
@@ -108,6 +115,7 @@ class PhilipsTV(MediaPlayerDevice):
             self._source = source
             if not self._tv.on:
                 self._state = STATE_OFF
+            self._watching_tv = bool(self._source == 'Watch TV')
 
     @property
     def volume_level(self):
@@ -154,7 +162,7 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self._source == 'Watch TV':
+        if self._watching_tv:
             if self._channel_name:
                 return '{} - {}'.format(self._source, self._channel_name)
             else:
@@ -183,6 +191,8 @@ class PhilipsTV(MediaPlayerDevice):
             self._state = STATE_ON
         else:
             self._state = STATE_OFF
+
+        self._watching_tv = bool(self._source == 'Watch TV')
 
         self._tv.getChannelId()
         self._tv.getChannels()
