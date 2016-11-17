@@ -17,23 +17,23 @@ def test_api_streams(hass):
             }
         })
 
-    state = hass.states.get('sensor.current_viewers')
+    state = hass.states.get('sensor.connected_clients')
     assert state.state == '0'
 
     log.debug('STREAM 1 ATTACHED')
     yield from hass.async_block_till_done()
 
-    state = hass.states.get('sensor.current_viewers')
+    state = hass.states.get('sensor.connected_clients')
     assert state.state == '1'
 
     log.debug('STREAM 1 ATTACHED')
     yield from hass.async_block_till_done()
 
-    state = hass.states.get('sensor.current_viewers')
+    state = hass.states.get('sensor.connected_clients')
     assert state.state == '2'
 
     log.debug('STREAM 1 RESPONSE CLOSED')
     yield from hass.async_block_till_done()
 
-    state = hass.states.get('sensor.current_viewers')
+    state = hass.states.get('sensor.connected_clients')
     assert state.state == '1'
