@@ -311,4 +311,3 @@ class broadlink():
           aes = AES.new(bytes(self.key), AES.MODE_CBC, bytes(self.iv))
           payload = aes.decrypt(bytes(response[0x38:]))
           return payload[0x04:]
-
