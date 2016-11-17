@@ -310,7 +310,7 @@ class HomeAssistant(object):
         exception = context.get('exception')
         if exception:
             # Do not report on shutting down exceptions.
-            if type(exception) is ShuttingDown:
+            if isinstance(exception, ShuttingDown):
                 return
 
             kwargs['exc_info'] = (type(exception), exception,
