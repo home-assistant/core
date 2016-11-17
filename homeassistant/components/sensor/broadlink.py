@@ -257,35 +257,35 @@ class broadlink():
            data['humidity'] = (payload[0x6] * 10 + payload[0x7]) / 10.0
            light = payload[0x8]
            if light == 0:
-            data['light'] = 'dark'
+               data['light'] = 'dark'
            elif light == 1:
-            data['light'] = 'dim'
+               data['light'] = 'dim'
            elif light == 2:
-            data['light'] = 'normal'
+               data['light'] = 'normal'
            elif light == 3:
-            data['light'] = 'bright'
+               data['light'] = 'bright'
            else:
-            data['light'] = 'unknown'
+               data['light'] = 'unknown'
            air_quality = payload[0x0a]
            if air_quality == 0:
-            data['air_quality'] = 'excellent'
+               data['air_quality'] = 'excellent'
            elif air_quality == 1:
-            data['air_quality'] = 'good'
+               data['air_quality'] = 'good'
            elif air_quality == 2:
-            data['air_quality'] = 'normal'
+               data['air_quality'] = 'normal'
            elif air_quality == 3:
-            data['air_quality'] = 'bad'
+               data['air_quality'] = 'bad'
            else:
-            data['air_quality'] = 'unknown'
+               data['air_quality'] = 'unknown'
            noise = payload[0xc]
            if noise == 0:
-            data['noise'] = 'quiet'
+               data['noise'] = 'quiet'
            elif noise == 1:
-            data['noise'] = 'normal'
+               data['noise'] = 'normal'
            elif noise == 2:
-            data['noise'] = 'noisy'
+               data['noise'] = 'noisy'
            else:
-            data['noise'] = 'unknown'
+               data['noise'] = 'unknown'
         return data
 
       def check_data(self):
