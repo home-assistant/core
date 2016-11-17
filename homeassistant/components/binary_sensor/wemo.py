@@ -48,7 +48,7 @@ class WemoBinarySensor(BinarySensorDevice):
         if not hasattr(self, 'hass'):
             self.update()
             return
-        self.update_ha_state(True)
+        self.schedule_update_ha_state(True)
 
     @property
     def should_poll(self):
