@@ -5,22 +5,21 @@ https://home-assistant.io/components/sensor.broadlink/
 """
 
 from Crypto.Cipher import AES
-import binascii
 from datetime import timedelta
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST
-from homeassistant.const import CONF_MAC
-from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.const import CONF_NAME
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (CONF_HOST, CONF_MAC,
+    CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import voluptuous as vol
+import binascii
 import logging
 import random
 import socket
 import threading
-import voluptuous as vol
+
+REQUIREMENTS = []
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,13 +35,13 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-     vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
-     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
         vol.All(cv.time_period, cv.positive_timedelta)),
-     vol.Required(CONF_HOST): cv.string,
-     vol.Required(CONF_MAC): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_MAC): cv.string,
 })
 
 
@@ -50,19 +49,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Broadlink device sensors."""
 
-    broadlink_data = BroadlinkData(config.get(CONF_UPDATE_INTERVAL),
-                                   config.get(CONF_HOST),
-                                   config.get(CONF_MAC))
+    broadlink_data = BroadlinkData(
+                        config.get(CONF_UPDATE_INTERVAL),
+                        config.get(CONF_HOST),
+                        config.get(CONF_MAC))
     broadlink_data.update()
 
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BroadlinkSensor(
-                   config.get(CONF_NAME),
-                   broadlink_data,
-                   variable,
-                   SENSOR_TYPES[variable][0],
-                   SENSOR_TYPES[variable][1]))
+                    config.get(CONF_NAME),
+                    broadlink_data,
+                    variable,
+                    SENSOR_TYPES[variable][0],
+                    SENSOR_TYPES[variable][1]))
 
     add_devices(dev, True)
 
@@ -70,13 +70,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class BroadlinkSensor(Entity):
     """Representation of a Broadlink device sensor."""
 
-    def __init__(self, name, broadlink_data, sensor_type, sensor_name, unit_of_measurement):
+    def __init__(self, name, broadlink_data, sensor_type, sensor_name, unit):
         """Initialize the sensor."""
         self._name = "%s %s" % (name, sensor_name)
         self._state = None
         self.type = sensor_type
         self.broadlink_data = broadlink_data
-        self._unit_of_measurement = unit_of_measurement
+        self._unit_of_measurement = unit
         self.update()
 
     @property
@@ -118,7 +118,9 @@ class BroadlinkData(object):
 
     def _update(self):
         try:
-            self.device = broadlink.device(host=(self._host, 80), mac=binascii.unhexlify(self._mac.encode().replace(b':', b'')))
+            ip_addr=(self._host, 80)
+            mac_addr=binascii.unhexlify(self._mac.encode().replace(b':', b'')
+            self.device = broadlink.device(ip_addr, mac_addr))
             self.auth = self.device.auth()
             if self.auth:
                 self.data = self.device.check_sensors()
