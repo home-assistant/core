@@ -154,12 +154,21 @@ class TestHomeAssistant(unittest.TestCase):
             """Test Coro."""
             call_count.append('call')
 
-        for i in range(50):
+        for i in range(2):
             self.hass.add_job(test_coro())
 
-        assert len(self.hass._pending_tasks) == 50
+        @asyncio.coroutine
+        def wait_finish_callback():
+            """Wait until all stuff is scheduled."""
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+
+        run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop).result()
+
+        assert len(self.hass._pending_tasks) == 2
         self.hass.block_till_done()
-        assert len(call_count) == 50
+        assert len(call_count) == 2
 
     def test_async_add_job_pending_tasks_executor(self):
         """Run a executor in pending tasks."""
@@ -169,12 +178,21 @@ class TestHomeAssistant(unittest.TestCase):
             """Test executor."""
             call_count.append('call')
 
-        for i in range(40):
+        @asyncio.coroutine
+        def wait_finish_callback():
+            """Wait until all stuff is scheduled."""
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+
+        for i in range(2):
             self.hass.add_job(test_executor)
 
-        assert len(self.hass._pending_tasks) == 40
+        run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop).result()
+
+        assert len(self.hass._pending_tasks) == 2
         self.hass.block_till_done()
-        assert len(call_count) == 40
+        assert len(call_count) == 2
 
     def test_async_add_job_pending_tasks_callback(self):
         """Run a callback in pending tasks."""
@@ -185,12 +203,22 @@ class TestHomeAssistant(unittest.TestCase):
             """Test callback."""
             call_count.append('call')
 
-        for i in range(40):
+        @asyncio.coroutine
+        def wait_finish_callback():
+            """Wait until all stuff is scheduled."""
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+
+        for i in range(2):
             self.hass.add_job(test_callback)
 
-        assert len(self.hass._pending_tasks) == 0
+        run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop).result()
+
         self.hass.block_till_done()
-        assert len(call_count) == 40
+
+        assert len(self.hass._pending_tasks) == 0
+        assert len(call_count) == 2
 
 
 class TestEvent(unittest.TestCase):
