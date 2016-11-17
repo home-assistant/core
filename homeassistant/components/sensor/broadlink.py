@@ -240,7 +240,7 @@ class broadlink():
                     response = self.cs.recvfrom(1024)
                 except socket.timeout:
                     _LOGGER.error("Socket timeout...")
-                return bytearray(0x30)
+                    return bytearray(0x30)
 
             return response[0]
 
@@ -297,3 +297,4 @@ class broadlink():
                 aes = AES.new(bytes(self.key), AES.MODE_CBC, bytes(self.iv))
                 payload = aes.decrypt(bytes(response[0x38:]))
                 return payload[0x04:]
+
