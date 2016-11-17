@@ -2,20 +2,6 @@
 Support for the Broadlink RM2 Pro (only temperature) and A1 devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.broadlink/
-
-Example configuration:
-
-platform: broadlink
-update_interval: 300
-host: AAA.BBB.CCC.DDD
-mac: '00:00:00:00:00:00'
-name: "Kitchen"
-monitored_conditions:
-  - temperature
-  - humidity
-  - air_quality
-  - light
-  - noise
 """
 
 import time
@@ -264,43 +250,43 @@ class broadlink():
         response = self.send_packet(0x6a, packet)
         err = response[0x22] | (response[0x23] << 8)
         if err == 0:
-          data = {}
-          aes = AES.new(bytes(self.key), AES.MODE_CBC, bytes(self.iv))
-          payload = aes.decrypt(bytes(response[0x38:]))
-          data['temperature'] = (payload[0x4] * 10 + payload[0x5]) / 10.0
-          data['humidity'] = (payload[0x6] * 10 + payload[0x7]) / 10.0
-          light = payload[0x8]
-          if light == 0:
+           data = {}
+           aes = AES.new(bytes(self.key), AES.MODE_CBC, bytes(self.iv))
+           payload = aes.decrypt(bytes(response[0x38:]))
+           data['temperature'] = (payload[0x4] * 10 + payload[0x5]) / 10.0
+           data['humidity'] = (payload[0x6] * 10 + payload[0x7]) / 10.0
+           light = payload[0x8]
+           if light == 0:
             data['light'] = 'dark'
-          elif light == 1:
+           elif light == 1:
             data['light'] = 'dim'
-          elif light == 2:
+           elif light == 2:
             data['light'] = 'normal'
-          elif light == 3:
+           elif light == 3:
             data['light'] = 'bright'
-          else:
+           else:
             data['light'] = 'unknown'
-          air_quality = payload[0x0a]
-          if air_quality == 0:
+           air_quality = payload[0x0a]
+           if air_quality == 0:
             data['air_quality'] = 'excellent'
-          elif air_quality == 1:
+           elif air_quality == 1:
             data['air_quality'] = 'good'
-          elif air_quality == 2:
+           elif air_quality == 2:
             data['air_quality'] = 'normal'
-          elif air_quality == 3:
+           elif air_quality == 3:
             data['air_quality'] = 'bad'
-          else:
+           else:
             data['air_quality'] = 'unknown'
-          noise = payload[0xc]
-          if noise == 0:
+           noise = payload[0xc]
+           if noise == 0:
             data['noise'] = 'quiet'
-          elif noise == 1:
+           elif noise == 1:
             data['noise'] = 'normal'
-          elif noise == 2:
+           elif noise == 2:
             data['noise'] = 'noisy'
-          else:
+           else:
             data['noise'] = 'unknown'
-          return data
+        return data
 
       def check_data(self):
         packet = bytearray(16)
