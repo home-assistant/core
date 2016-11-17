@@ -158,7 +158,7 @@ class GenericThermostat(ClimateDevice):
 
         self._update_temp(new_state)
         self._control_heating()
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def _update_temp(self, state):
         """Update thermostat with latest state from sensor."""
