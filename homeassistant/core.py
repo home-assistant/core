@@ -210,8 +210,7 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-        run_callback_threadsafe(
-            self.loop, self.async_add_job, target, *args).result()
+        self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     @callback
     def async_add_job(self, target: Callable[..., None], *args: Any) -> None:
