@@ -1,3 +1,4 @@
+"""Entity to track connections to stream API."""
 import asyncio
 import logging
 
@@ -38,6 +39,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class APICount(Entity):
+    """Entity to represent how many people are connected to stream API."""
 
     def __init__(self):
         """Initialize the API count."""
