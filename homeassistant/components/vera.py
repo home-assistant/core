@@ -132,7 +132,8 @@ class VeraDevice(Entity):
         self.update()
 
     def _update_callback(self, _device):
-        self.update_ha_state(True)
+        self.update()
+        self.schedule_update_ha_state()
 
     @property
     def name(self):
