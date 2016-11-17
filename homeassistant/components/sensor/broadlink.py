@@ -4,21 +4,24 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.broadlink/
 """
 
-import time
+from Crypto.Cipher import AES
+import binascii
+from datetime import timedelta
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_MAC
+from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_NAME
+from homeassistant.const import TEMP_CELSIUS
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+import logging
 import random
 import socket
-import logging
-import binascii
 import threading
+import time
 import voluptuous as vol
-from datetime import timedelta
-from homeassistant.util import Throttle
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_MAC, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS)
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
-
-from Crypto.Cipher import AES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,32 +37,32 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
-        vol.All(cv.time_period, cv.positive_timedelta)),
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_MAC): cv.string,
-})
+                                         vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
+                                         vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+                                         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+                                         vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
+                                         vol.All(cv.time_period, cv.positive_timedelta)),
+                                         vol.Required(CONF_HOST): cv.string,
+                                         vol.Required(CONF_MAC): cv.string,
+                                         })
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Broadlink device sensors."""
 
     broadlink_data = BroadlinkData(config.get(CONF_UPDATE_INTERVAL),
-                                    config.get(CONF_HOST),
-                                    config.get(CONF_MAC))
+                                   config.get(CONF_HOST),
+                                   config.get(CONF_MAC))
     broadlink_data.update()
-    
+
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BroadlinkSensor(
-                    config.get(CONF_NAME), 
-                    broadlink_data, 
-                    variable,
-                    SENSOR_TYPES[variable][0],
-                    SENSOR_TYPES[variable][1]))
+                   config.get(CONF_NAME),
+                   broadlink_data,
+                   variable,
+                   SENSOR_TYPES[variable][0],
+                   SENSOR_TYPES[variable][1]))
 
     add_devices(dev, True)
 
@@ -120,7 +123,7 @@ class BroadlinkData(object):
             if self.auth:
                 self.data = self.device.check_sensors()
             else:
-                self.data = None 
+                self.data = None
         except ValueError as error:
             _LOGGER.error(error)
 
@@ -235,7 +238,7 @@ class broadlink():
 
             with self.lock:
                 self.cs.sendto(packet, self.host)
-                try:        
+                try:
                     self.cs.settimeout(timeout)
                     response = self.cs.recvfrom(1024)
                 except socket.timeout:
