@@ -306,21 +306,14 @@ class HomeAssistant(object):
     @callback
     def _async_exception_handler(self, loop, context):
         """Handle all exception inside the core loop."""
-        message = context.get('message')
-        if message:
-            _LOGGER.warning(
-                "Error inside async loop: %s",
-                message
-            )
-
-        # for debug modus
+        kwargs = {}
         exception = context.get('exception')
-        if exception is not None:
-            exc_info = (type(exception), exception, exception.__traceback__)
-            _LOGGER.debug(
-                "Exception inside async loop: ",
-                exc_info=exc_info
-            )
+        if exception:
+            kwargs['exc_info'] = (type(exception), exception,
+                                  exception.__traceback__)
+
+        _LOGGER.error('Error doing job: %s', context['message'],
+                      **kwargs)
 
     @callback
     def _async_stop_handler(self, *args):
