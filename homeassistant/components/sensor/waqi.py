@@ -7,8 +7,6 @@ https://github.com/home-assistant/home-assistant/
 import logging
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-from homeassistant.loader import get_component
 
 
 REQUIREMENTS = ["pwaqi==1.0"]
@@ -41,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             station_ids = pwaqi.findStationCodesByCity(location_name)
             _LOGGER.info('I got the following stations: %s', station_ids)
             for station in station_ids:
-              dev.append(WaqiSensor(station))
+                dev.append(WaqiSensor(station))
     except KeyError as err:
         _LOGGER.exception('No keys defined for waqi sensor.', err)
         pass
@@ -82,7 +80,7 @@ class WaqiSensor(Entity):
         return "AQI"
 
     def update(self):
-        """Get the latest data from World Air Quality Index and updates the states."""
+        """Get the data from World Air Quality Index and updates the states."""
         import pwaqi
         self._data = pwaqi.getStationObservation(self._station_id)
 
