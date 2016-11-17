@@ -13,7 +13,7 @@ from typing import Any, Sequence, Callable
 import voluptuous as vol
 
 from homeassistant.bootstrap import (
-    async_prepare_setup_platform, log_exception)
+    async_prepare_setup_platform, async_log_exception)
 from homeassistant.core import callback
 from homeassistant.components import group, zone
 from homeassistant.components.discovery import SERVICE_NETGEAR
@@ -114,7 +114,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     try:
         conf = config.get(DOMAIN, [])
     except vol.Invalid as ex:
-        log_exception(ex, DOMAIN, config, hass)
+        async_log_exception(ex, DOMAIN, config, hass)
         return False
     else:
         conf = conf[0] if len(conf) > 0 else {}
@@ -496,7 +496,7 @@ def async_load_config(path: str, hass: HomeAssistantType,
                 device = dev_schema(device)
                 device['dev_id'] = cv.slugify(dev_id)
             except vol.Invalid as exp:
-                log_exception(exp, dev_id, devices, hass)
+                async_log_exception(exp, dev_id, devices, hass)
             else:
                 result.append(Device(hass, **device))
         return result
