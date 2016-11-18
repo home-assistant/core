@@ -188,7 +188,8 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
     hass.services.register(DOMAIN, SERVICE_HUE_SCENE, hue_activate_scene,
-                           descriptions.get(SERVICE_HUE_SCENE))
+                           descriptions.get(SERVICE_HUE_SCENE),
+                           schema=SCENE_SCHEMA)
 
     update_lights()
 
