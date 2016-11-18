@@ -384,6 +384,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         tracker.see(mac='mac_1_bad_gps', gps=1)
         tracker.see(mac='mac_2_bad_gps', gps=[1])
         tracker.see(mac='mac_3_bad_gps', gps='gps')
+        self.hass.block_till_done()
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0))
         assert mock_warning.call_count == 3
