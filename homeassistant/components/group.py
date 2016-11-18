@@ -184,7 +184,7 @@ def async_setup(hass, config):
         tasks = [group.async_set_visible(visible) for group
                  in component.async_extract_from_service(service,
                                                          expand_group=False)]
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
@@ -207,13 +207,14 @@ def _async_process_config(hass, config, component):
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
 
-        # This order is important as groups get a number based on creation
-        # order.
+        # Don't create tasks and await them all. The order is important as
+        # groups get a number based on creation order.
         group = yield from Group.async_create_group(
             hass, name, entity_ids, icon=icon, view=view, object_id=object_id)
         groups.append(group)
 
-    yield from component.async_add_entities(groups)
+    if groups:
+        yield from component.async_add_entities(groups)
 
 
 class Group(Entity):
@@ -394,7 +395,7 @@ class Group(Entity):
         This method must be run in the event loop.
         """
         self._async_update_group_state(new_state)
-        self.hass.loop.create_task(self.async_update_ha_state())
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def _tracking_states(self):

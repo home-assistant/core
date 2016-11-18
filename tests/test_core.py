@@ -9,6 +9,8 @@ import pytz
 
 import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
+from homeassistant.util.async import (
+    run_callback_threadsafe, run_coroutine_threadsafe)
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
@@ -117,6 +119,106 @@ class TestHomeAssistant(unittest.TestCase):
     #     self.hass.block_till_done()
 
     #     self.assertEqual(1, len(calls))
+
+    def test_pending_sheduler(self):
+        """Add a coro to pending tasks."""
+        call_count = []
+
+        @asyncio.coroutine
+        def test_coro():
+            """Test Coro."""
+            call_count.append('call')
+
+        for i in range(50):
+            self.hass.add_job(test_coro())
+
+        run_coroutine_threadsafe(
+            asyncio.wait(self.hass._pending_tasks, loop=self.hass.loop),
+            loop=self.hass.loop
+        ).result()
+
+        with patch.object(self.hass.loop, 'call_later') as mock_later:
+            run_callback_threadsafe(
+                self.hass.loop, self.hass._async_tasks_cleanup).result()
+            assert mock_later.called
+
+        assert len(self.hass._pending_tasks) == 0
+        assert len(call_count) == 50
+
+    def test_async_add_job_pending_tasks_coro(self):
+        """Add a coro to pending tasks."""
+        call_count = []
+
+        @asyncio.coroutine
+        def test_coro():
+            """Test Coro."""
+            call_count.append('call')
+
+        for i in range(2):
+            self.hass.add_job(test_coro())
+
+        @asyncio.coroutine
+        def wait_finish_callback():
+            """Wait until all stuff is scheduled."""
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+
+        run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop).result()
+
+        assert len(self.hass._pending_tasks) == 2
+        self.hass.block_till_done()
+        assert len(call_count) == 2
+
+    def test_async_add_job_pending_tasks_executor(self):
+        """Run a executor in pending tasks."""
+        call_count = []
+
+        def test_executor():
+            """Test executor."""
+            call_count.append('call')
+
+        @asyncio.coroutine
+        def wait_finish_callback():
+            """Wait until all stuff is scheduled."""
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+
+        for i in range(2):
+            self.hass.add_job(test_executor)
+
+        run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop).result()
+
+        assert len(self.hass._pending_tasks) == 2
+        self.hass.block_till_done()
+        assert len(call_count) == 2
+
+    def test_async_add_job_pending_tasks_callback(self):
+        """Run a callback in pending tasks."""
+        call_count = []
+
+        @ha.callback
+        def test_callback():
+            """Test callback."""
+            call_count.append('call')
+
+        @asyncio.coroutine
+        def wait_finish_callback():
+            """Wait until all stuff is scheduled."""
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+
+        for i in range(2):
+            self.hass.add_job(test_callback)
+
+        run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop).result()
+
+        self.hass.block_till_done()
+
+        assert len(self.hass._pending_tasks) == 0
+        assert len(call_count) == 2
 
 
 class TestEvent(unittest.TestCase):
@@ -508,7 +610,12 @@ class TestServiceRegistry(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.services = self.hass.services
-        self.services.register("Test_Domain", "TEST_SERVICE", lambda x: None)
+
+        @ha.callback
+        def mock_service(call):
+            pass
+
+        self.services.register("Test_Domain", "TEST_SERVICE", mock_service)
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -535,6 +642,7 @@ class TestServiceRegistry(unittest.TestCase):
         """Test call with blocking."""
         calls = []
 
+        @ha.callback
         def service_handler(call):
             """Service handler."""
             calls.append(call)

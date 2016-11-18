@@ -63,10 +63,10 @@ class WemoSwitch(SwitchDevice):
         _LOGGER.info(
             'Subscription update for  %s',
             _device)
+        self.update()
         if not hasattr(self, 'hass'):
-            self.update()
             return
-        self.update_ha_state(True)
+        self.schedule_update_ha_state()
 
     @property
     def should_poll(self):
@@ -150,14 +150,14 @@ class WemoSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._state = WEMO_ON
-        self.update_ha_state()
         self.wemo.on()
+        self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
         self._state = WEMO_OFF
-        self.update_ha_state()
         self.wemo.off()
+        self.schedule_update_ha_state()
 
     def update(self):
         """Update WeMo state."""

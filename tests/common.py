@@ -102,7 +102,8 @@ def async_test_home_assistant(loop):
     @asyncio.coroutine
     def mock_async_start():
         with patch.object(loop, 'add_signal_handler'), \
-             patch('homeassistant.core._async_create_timer'):
+             patch('homeassistant.core._async_create_timer'), \
+             patch.object(hass, '_async_tasks_cleanup', return_value=None):
             yield from orig_start()
 
     hass.async_start = mock_async_start
@@ -129,8 +130,12 @@ def mock_service(hass, domain, service):
     """
     calls = []
 
+    @ha.callback
+    def mock_service(call):
+        calls.append(call)
+
     # pylint: disable=unnecessary-lambda
-    hass.services.register(domain, service, lambda call: calls.append(call))
+    hass.services.register(domain, service, mock_service)
 
     return calls
 

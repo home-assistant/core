@@ -1,7 +1,7 @@
 """The tests for the  Template switch platform."""
+from homeassistant.core import callback
 import homeassistant.bootstrap as bootstrap
 import homeassistant.components as core
-
 from homeassistant.const import (
     STATE_ON,
     STATE_OFF)
@@ -21,6 +21,7 @@ class TestTemplateSwitch:
         self.hass = get_test_home_assistant()
         self.calls = []
 
+        @callback
         def record_call(service):
             """Track function calls.."""
             self.calls.append(service)
