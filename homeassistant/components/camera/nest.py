@@ -90,14 +90,14 @@ class NestCamera(Camera):
             # otherwise, 2/min
             self._time_between_snapshots = timedelta(seconds=30)
 
-    def _ready_to_update_camera_image(self, now):
+    def _ready_for_snapshot(self, now):
         return self._last_image_at is None or \
                 utcnow() > self._last_image_at + self._time_between_snapshots
 
     def camera_image(self):
         """Return a still image response from the camera."""
         now = utcnow()
-        if self._ready_to_update_camera_image(now):
+        if self._ready_for_snapshot(now):
             url = self.device.snapshot_url
 
             try:
