@@ -52,7 +52,7 @@ class Host:
         self._arp_cmd = ['arp', '-n', self.ip_address]
 
     def _get_mac(self):
-        """Get the MAC address for a given IP."""
+        """get the MAC address from ip_address"""
         arp = subprocess.Popen(self._arp_cmd, stdout=subprocess.PIPE)
         out, _ = arp.communicate()
         match = re.search(
