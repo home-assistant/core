@@ -74,6 +74,7 @@ def get_test_home_assistant():
 
     return hass
 
+
 # pylint: disable=protected-access
 @asyncio.coroutine
 def async_test_home_assistant(loop):
@@ -103,8 +104,8 @@ def async_test_home_assistant(loop):
     def mock_async_start():
         """Start the mocking."""
         with patch.object(loop, 'add_signal_handler'),\
-             patch('homeassistant.core._async_create_timer'), \
-             patch.object(hass, '_async_tasks_cleanup', return_value=None):
+            patch('homeassistant.core._async_create_timer'),\
+                patch.object(hass, '_async_tasks_cleanup', return_value=None):
             yield from orig_start()
 
     hass.async_start = mock_async_start

@@ -1,4 +1,4 @@
-"""the tests for the Command line switch platform."""
+"""The tests for the Command line switch platform."""
 import json
 import os
 import tempfile
@@ -10,6 +10,7 @@ import homeassistant.components.switch as switch
 import homeassistant.components.switch.command_line as command_line
 
 from tests.common import get_test_home_assistant
+
 
 # pylint: disable=invalid-name
 class TestCommandSwitch(unittest.TestCase):

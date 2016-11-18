@@ -64,6 +64,7 @@ class FakeYamaha(rxv.rxv.RXV):
                 'V-AUX': None,
                 'iPod (USB)': 'iPod_USB'}
 
+
 # pylint: disable=no-member, invalid-name
 class TestYamaha(unittest.TestCase):
     """Test the media_player yamaha module."""
