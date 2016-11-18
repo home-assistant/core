@@ -39,12 +39,14 @@ def request_configuration(nest, hass, config):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
     if 'nest' in _CONFIGURING:
+        _LOGGER.debug("configurator failed")
         configurator.notify_errors(
             _CONFIGURING['nest'], "Failed to configure, please try again.")
         return
 
     def nest_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
+        _LOGGER.debug("configurator callback")
         nest.pin = data.get('pin')
         setup_nest(hass, nest, config)
 
@@ -60,25 +62,35 @@ def request_configuration(nest, hass, config):
 def setup_nest(hass, nest, config):
     """Setup Nest Devices."""
     if nest.pin:
+        _LOGGER.debug("pin acquired, requesting access token")
         nest.request_token()
 
     if nest.access_token is None:
+        _LOGGER.debug("no access_token, requesting configuration")
         request_configuration(nest, hass, config)
         return
 
     if 'nest' in _CONFIGURING:
+        _LOGGER.debug("configuration done")
         configurator = get_component('configurator')
         configurator.request_done(_CONFIGURING.pop('nest'))
 
+
+    _LOGGER.debug("proceeding with setup")
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
 
     discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
 
+    return True
+
 def setup(hass, config):
     """Setup the Nest thermostat component."""
     import nest
+
+    if 'nest' in _CONFIGURING:
+        return
 
     conf = config[DOMAIN]
     client_id = conf[CONF_CLIENT_ID]

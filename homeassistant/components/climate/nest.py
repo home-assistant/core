@@ -31,7 +31,12 @@ STATE_HEAT_COOL = 'heat-cool'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest thermostat."""
+    _LOGGER.debug("Setting up nest thermostat")
+    if discovery_info is None:
+        return
+
     temp_unit = hass.config.units.temperature_unit
+
     add_devices(
         [NestThermostat(structure, device, temp_unit)
          for structure, device in hass.data[DATA_NEST].devices()],
