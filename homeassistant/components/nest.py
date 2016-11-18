@@ -15,10 +15,12 @@ from homeassistant.const import (CONF_STRUCTURE, CONF_FILENAME,
                                  CONF_ACCESS_TOKEN)
 from homeassistant.loader import get_component
 
+from IPython import embed
+
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-nest==2.11.0']
+REQUIREMENTS = ['python-nest==3.0.0']
 
 DOMAIN = 'nest'
 
