@@ -63,21 +63,23 @@ class Host:
         return ''
 
     def set_mac(self, mac):
+        """set mac device if valid"""
         if not mac:
             return
         self.mac = mac
         self.dev_id = 'ping_' + util.slugify(self.mac)
 
     def ping(self):
-        """Make ping and return True if success"""
+        """make ping and return True if success"""
         pinger = subprocess.Popen(self._ping_cmd, stdout=subprocess.PIPE)
         try:
             pinger.communicate()
             return pinger.returncode == 0
-        except Exception:
+        except subprocess.CalledProcessError:
             return False
 
     def update(self, see):
+        """update infos"""
         failed = 0
         while failed < self._count:  # check more times if host in unreachable
             if self.ping():
@@ -92,18 +94,20 @@ class Host:
                 mac=self.mac,
             )
         else:
-            _LOGGER.debug("ping KO on ip=%s failed=%d" %
-                          (self.ip_address, failed))
+            _LOGGER.debug("ping KO on ip=%s failed=%d",
+                          self.ip_address, failed)
 
 
 def setup_scanner(hass, config, see):
+    """initialize"""
     hosts = [Host(ip, hass, config) for ip in config[const.CONF_HOSTS]]
     interval = timedelta(seconds=len(hosts) * config[CONF_PING_COUNT] +
                          DEFAULT_SCAN_INTERVAL)
-    _LOGGER.info("started ping tracker with interval=%s on hosts: %s" %
-                 (interval, ",".join([host.ip_address for host in hosts])))
+    _LOGGER.info("started ping tracker with interval=%s on hosts: %s",
+                 interval, ",".join([host.ip_address for host in hosts]))
 
     def update(now):
+        """update called every interval time"""
         for host in hosts:
             host.update(see)
         track_point_in_utc_time(hass, update, now + interval)
