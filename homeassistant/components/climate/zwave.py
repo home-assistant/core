@@ -1,5 +1,5 @@
 """
-Support for ZWave climate devices.
+Support for Z-Wave climate devices.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.zwave/
@@ -17,7 +17,7 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NAME = 'name'
-DEFAULT_NAME = 'ZWave Climate'
+DEFAULT_NAME = 'Z-Wave Climate'
 
 REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377
@@ -33,7 +33,7 @@ DEVICE_MAPPINGS = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ZWave Climate devices."""
+    """Set up the Z-Wave Climate devices."""
     if discovery_info is None or zwave.NETWORK is None:
         _LOGGER.debug("No discovery_info=%s or no NETWORK=%s",
                       discovery_info, zwave.NETWORK)
@@ -48,10 +48,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
-    """Represents a ZWave Climate device."""
+    """Representation of a Z-Wave Climate device."""
 
     def __init__(self, value, temp_unit):
-        """Initialize the zwave climate device."""
+        """Initialize the Z-Wave climate device."""
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
@@ -162,7 +162,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     @property
     def should_poll(self):
-        """No polling on ZWave."""
+        """No polling on Z-Wave."""
         return False
 
     @property
