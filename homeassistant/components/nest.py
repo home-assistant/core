@@ -11,11 +11,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.const import (CONF_STRUCTURE, CONF_FILENAME,
-                                 CONF_ACCESS_TOKEN)
+from homeassistant.const import (CONF_STRUCTURE, CONF_FILENAME)
 from homeassistant.loader import get_component
-
-from IPython import embed
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +53,9 @@ def request_configuration(nest, hass, config):
 
     _CONFIGURING['nest'] = configurator.request_config(
         hass, "Nest", nest_configuration_callback,
-        description='To configure Nest, click Request Authorization below, log into your Nest account, and then enter the resulting PIN',
+        description=('To configure Nest, click Request Authorization below, '
+                     'log into your Nest account, '
+                     'and then enter the resulting PIN'),
         link_name='Request Authorization',
         link_url=nest.authorize_url,
         submit_caption="Confirm",
@@ -108,8 +107,8 @@ def setup(hass, config):
     access_token_cache_file = hass.config.path(filename)
 
     nest = nest.Nest(
-            access_token_cache_file=access_token_cache_file,
-            client_id=client_id, client_secret=client_secret)
+        access_token_cache_file=access_token_cache_file,
+        client_id=client_id, client_secret=client_secret)
     setup_nest(hass, nest, config)
 
     return True

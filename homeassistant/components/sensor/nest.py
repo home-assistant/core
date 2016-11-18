@@ -28,10 +28,10 @@ WEATHER_VARS = {}
 
 # FIXME detect these being used
 DEPRECATED_WEATHER_VARS = {'weather_humidity': 'humidity',
-                'weather_temperature': 'temperature',
-                'weather_condition': 'condition',
-                'wind_speed': 'kph',
-                'wind_direction': 'direction'}
+                           'weather_temperature': 'temperature',
+                           'weather_condition': 'condition',
+                           'wind_speed': 'kph',
+                           'wind_direction': 'direction'}
 
 SENSOR_UNITS = {'humidity': '%', 'battery_level': 'V',
                 'kph': 'kph', 'temperature': '°C'}

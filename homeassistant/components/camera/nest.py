@@ -10,7 +10,6 @@ from datetime import timedelta
 import requests
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
 import homeassistant.components.nest as nest
-from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
 
@@ -38,7 +37,7 @@ class NestCamera(Camera):
 
     def __init__(self, structure, device):
         """Initialize a Nest Camera."""
-        super().__init__()
+        super(NestCamera, self).__init__()
         self.structure = structure
         self.device = device
 
@@ -81,7 +80,6 @@ class NestCamera(Camera):
         """Cache value from Python-nest."""
         self._location = self.device.where
         self._name = self.device.name
-        embed()
         self._is_online = self.device.is_online
         self._is_streaming = self.device.is_streaming
         self._is_video_history_enabled = self.device.is_video_history_enabled
@@ -93,10 +91,14 @@ class NestCamera(Camera):
             # otherwise, 2/min
             self._time_between_snapshots = timedelta(seconds=30)
 
+    def _ready_to_update_camera_image(self, now):
+        return self._last_image_at is None or \
+                utcnow() > self._last_image_at + self._time_between_snapshots
+
     def camera_image(self):
         """Return a still image response from the camera."""
         now = utcnow()
-        if self._last_image_at is None or utcnow() > self._last_image_at + self._time_between_snapshots:
+        if self._ready_to_update_camera_image(now):
             url = self.device.snapshot_url
             # sadly, can't test against a simulator
             if url == SIMULATOR_SNAPSHOT_URL:
