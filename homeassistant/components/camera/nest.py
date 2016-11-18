@@ -18,8 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 
-SIMULATOR_SNAPSHOT_URL = 'https://developer.nest.com/simulator/api/v1/nest/devices/camera/snapshot'
-
 NEST_BRAND = "Nest"
 
 
@@ -101,9 +99,6 @@ class NestCamera(Camera):
         now = utcnow()
         if self._ready_to_update_camera_image(now):
             url = self.device.snapshot_url
-            # sadly, can't test against a simulator
-            if url == SIMULATOR_SNAPSHOT_URL:
-                url = 'https://media.giphy.com/media/WCwFvyeb6WJna/giphy.gif'
 
             try:
                 response = requests.get(url)
