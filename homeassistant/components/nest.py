@@ -79,7 +79,6 @@ def setup_nest(hass, nest, config, pin=None):
         configurator = get_component('configurator')
         configurator.request_done(_CONFIGURING.pop('nest'))
 
-
     _LOGGER.debug("proceeding with setup")
     conf = config[DOMAIN]
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
@@ -168,4 +167,5 @@ class NestDevice(object):
                     _LOGGER.info("Ignoring structure %s, not in %s",
                                  structure.name, self._structure)
         except socket.error:
-            _LOGGER.error("Connection error logging into the nest web service.")
+            _LOGGER.error(
+                    "Connection error logging into the nest web service.")

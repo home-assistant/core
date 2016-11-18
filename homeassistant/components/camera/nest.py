@@ -22,6 +22,7 @@ SIMULATOR_SNAPSHOT_URL = 'https://developer.nest.com/simulator/api/v1/nest/devic
 
 NEST_BRAND = "Nest"
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a Nest Cam."""
     if discovery_info is None:
