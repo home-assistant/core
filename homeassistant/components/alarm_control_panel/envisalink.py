@@ -24,7 +24,7 @@ DEPENDENCIES = ['envisalink']
 
 DEVICES = []
 
-SERVICE_ALARM_KEYPRESS = 'alarm_keypress'
+SERVICE_ALARM_KEYPRESS = 'envisalink_alarm_keypress'
 ATTR_KEYPRESS = 'keypress'
 ALARM_KEYPRESS_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
