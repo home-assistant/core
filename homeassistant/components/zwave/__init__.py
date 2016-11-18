@@ -32,12 +32,16 @@ CONF_POLLING_INTERVAL = 'polling_interval'
 CONF_USB_STICK_PATH = 'usb_path'
 CONF_CONFIG_PATH = 'config_path'
 CONF_IGNORED = 'ignored'
+CONF_REFRESH_VALUE = 'refresh_value'
+CONF_REFRESH_DELAY = 'delay'
 
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
 DEFAULT_POLLING_INTERVAL = 60000
 DEFAULT_DEBUG = True
 DEFAULT_CONF_IGNORED = False
+DEFAULT_CONF_REFRESH_VALUE = False
+DEFAULT_CONF_REFRESH_DELAY = 2
 DOMAIN = 'zwave'
 
 NETWORK = None
@@ -144,6 +148,10 @@ CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_POLLING_INTENSITY):
         vol.All(cv.positive_int),
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
+    vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
+        cv.boolean,
+    vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
+        cv.positive_int
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -254,7 +262,8 @@ def setup(hass, config):
 
     # Load configuration
     use_debug = config[DOMAIN].get(CONF_DEBUG)
-    customize = config[DOMAIN].get(CONF_CUSTOMIZE)
+    hass.data['zwave_customize'] = config[DOMAIN].get(CONF_CUSTOMIZE)
+    customize = hass.data['zwave_customize']
     autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
 
     # Setup options
