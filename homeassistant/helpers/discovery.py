@@ -16,17 +16,29 @@ def listen(hass, service, callback):
 
     Service can be a string or a list/tuple.
     """
+    run_callback_threadsafe(
+        hass.loop, async_listen, hass, service, callback).result()
+
+
+@core.callback
+def async_listen(hass, service, callback):
+    """Setup listener for discovery of specific service.
+
+    Service can be a string or a list/tuple.
+    """
     if isinstance(service, str):
         service = (service,)
     else:
         service = tuple(service)
 
+    @core.callback
     def discovery_event_listener(event):
         """Listen for discovery events."""
         if ATTR_SERVICE in event.data and event.data[ATTR_SERVICE] in service:
-            callback(event.data[ATTR_SERVICE], event.data.get(ATTR_DISCOVERED))
+            hass.async_add_job(callback, event.data[ATTR_SERVICE],
+                               event.data.get(ATTR_DISCOVERED))
 
-    hass.bus.listen(EVENT_PLATFORM_DISCOVERED, discovery_event_listener)
+    hass.bus.async_listen(EVENT_PLATFORM_DISCOVERED, discovery_event_listener)
 
 
 def discover(hass, service, discovered=None, component=None, hass_config=None):
