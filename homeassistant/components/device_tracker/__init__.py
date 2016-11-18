@@ -306,11 +306,11 @@ class DeviceTracker(object):
         self.group = yield from group.Group.async_create_group(
             self.hass, GROUP_NAME_ALL_DEVICES, entity_ids, False)
 
-    @asyncio.coroutine
+    @callback
     def async_update_stale(self, now: dt_util.dt.datetime):
         """Update stale devices.
 
-        This method is a coroutine.
+        This method must be run in the event loop.
         """
         for device in self.devices.values():
             if (device.track and device.last_update_home) and \
@@ -435,7 +435,10 @@ class Device(Entity):
 
     @asyncio.coroutine
     def async_update(self):
-        """Update state of entity."""
+        """Update state of entity.
+
+        This method is a coroutine.
+        """
         if not self.last_seen:
             return
         elif self.location_name:
