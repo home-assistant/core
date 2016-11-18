@@ -140,8 +140,8 @@ MQTT_PUBLISH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): valid_publish_topic,
     vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): object,
     vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
-    vol.Required(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
-    vol.Required(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+    vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
 }, required=True)
 
 

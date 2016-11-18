@@ -280,9 +280,9 @@ class CastDevice(MediaPlayerDevice):
     def new_cast_status(self, status):
         """Called when a new cast status is received."""
         self.cast_status = status
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def new_media_status(self, status):
         """Called when a new media status is received."""
         self.media_status = status
-        self.update_ha_state()
+        self.schedule_update_ha_state()
