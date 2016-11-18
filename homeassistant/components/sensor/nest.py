@@ -57,21 +57,23 @@ PLATFORM_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest Sensor."""
     nest = hass.data[DATA_NEST]
+    # FIXME default this to something
+    conf = config.get(CONF_MONITORED_CONDITIONS, [])
 
     all_sensors = []
     for structure, device in chain(nest.devices(), nest.protect_devices()):
         sensors = [NestBasicSensor(structure, device, variable)
-                   for variable in config[CONF_MONITORED_CONDITIONS]
+                   for variable in conf
                    if variable in SENSOR_TYPES and is_thermostat(device)]
         sensors += [NestTempSensor(structure, device, variable)
-                    for variable in config[CONF_MONITORED_CONDITIONS]
+                    for variable in conf
                     if variable in SENSOR_TEMP_TYPES and is_thermostat(device)]
         sensors += [NestWeatherSensor(structure, device,
                                       WEATHER_VARS[variable])
-                    for variable in config[CONF_MONITORED_CONDITIONS]
+                    for variable in conf
                     if variable in WEATHER_VARS and is_thermostat(device)]
         sensors += [NestProtectSensor(structure, device, variable)
-                    for variable in config[CONF_MONITORED_CONDITIONS]
+                    for variable in conf
                     if variable in PROTECT_VARS and is_protect(device)]
         all_sensors.extend(sensors)
 

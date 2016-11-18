@@ -10,8 +10,9 @@ import socket
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME,
-                                 CONF_STRUCTURE, CONF_FILENAME, CONF_ACCESS_TOKEN)
+from homeassistant.helpers import discovery
+from homeassistant.const import (CONF_STRUCTURE, CONF_FILENAME,
+                                 CONF_ACCESS_TOKEN)
 from homeassistant.loader import get_component
 
 _CONFIGURING = {}
@@ -34,6 +35,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string)
     })
 }, extra=vol.ALLOW_EXTRA)
+
 
 def request_configuration(nest, hass, config):
     """Request configuration steps from the user."""
@@ -59,6 +61,7 @@ def request_configuration(nest, hass, config):
         fields=[{'id': 'pin', 'name': 'Enter the PIN', 'type': ''}]
     )
 
+
 def setup_nest(hass, nest, config):
     """Setup Nest Devices."""
     if nest.pin:
@@ -77,11 +80,14 @@ def setup_nest(hass, nest, config):
 
 
     _LOGGER.debug("proceeding with setup")
+    conf = config[DOMAIN]
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
 
+    _LOGGER.debug("proceeding with discovery")
     discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
+    _LOGGER.debug("setup done")
 
     return True
 

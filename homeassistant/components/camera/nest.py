@@ -23,6 +23,8 @@ SIMULATOR_SNAPSHOT_URL = 'https://developer.nest.com/simulator/api/v1/nest/devic
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a Nest Cam."""
+    if discovery_info is None:
+        return
     camera_devices = hass.data[nest.DATA_NEST].camera_devices()
     cameras = [NestCamera(structure, device)
                for structure, device in camera_devices]
