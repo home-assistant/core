@@ -153,8 +153,7 @@ class NestDevice(object):
                                  structure.name, self._structure)
         except socket.error:
             _LOGGER.error(
-                "Connection error logging into the nest web service."
-                )
+                "Connection error logging into the nest web service.")
 
     def camera_devices(self):
         """Generator returning list of camera devices."""
@@ -168,4 +167,4 @@ class NestDevice(object):
                                  structure.name, self._structure)
         except socket.error:
             _LOGGER.error(
-                    "Connection error logging into the nest web service.")
+                "Connection error logging into the nest web service.")
