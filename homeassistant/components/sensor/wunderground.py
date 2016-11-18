@@ -20,6 +20,7 @@ import homeassistant.helpers.config_validation as cv
 
 _RESOURCE = 'http://api.wunderground.com/api/{}/conditions/q/'
 _ALERTS = 'http://api.wunderground.com/api/{}/alerts/q/'
+_FORECAST = 'http://api.wunderground.com/api/{}/forecast/q/'
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by the WUnderground weather service"
@@ -27,6 +28,7 @@ CONF_PWS_ID = 'pws_id'
 
 MIN_TIME_BETWEEN_UPDATES_ALERTS = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES_OBSERVATION = timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES_FORECAST = timedelta(minutes=15)
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
@@ -37,6 +39,7 @@ SENSOR_TYPES = {
     'feelslike_c': ['Feels Like (°C)', TEMP_CELSIUS],
     'feelslike_f': ['Feels Like (°F)', TEMP_FAHRENHEIT],
     'feelslike_string': ['Feels Like', None],
+    'forecast': ['Forecast', None],
     'heat_index_c': ['Dewpoint (°C)', TEMP_CELSIUS],
     'heat_index_f': ['Dewpoint (°F)', TEMP_FAHRENHEIT],
     'heat_index_string': ['Heat Index Summary', None],
@@ -77,6 +80,13 @@ ALERTS_ATTRS = [
     'description',
     'expires',
     'message',
+]
+
+# Forecast Attributes
+FORECAST_ATTRS = [
+    'icon_url',
+    'title',
+    'fcttext',
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -145,6 +155,11 @@ class WUndergroundSensor(Entity):
                 return len(self.rest.alerts)
             else:
                 return 0
+        elif self._condition == 'forecast':
+            if self.rest.forecast:
+                return len(self.rest.forecast)
+            else:
+                return 0
         return STATE_UNKNOWN
 
     @property
@@ -154,18 +169,45 @@ class WUndergroundSensor(Entity):
 
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
 
-        if not self.rest.alerts or self._condition != 'alerts':
+        if self._condition != 'alerts' and self._condition != 'forecast':
             return attrs
 
-        multiple_alerts = len(self.rest.alerts) > 1
-        for data in self.rest.alerts:
-            for alert in ALERTS_ATTRS:
-                if data[alert]:
-                    if multiple_alerts:
-                        dkey = alert.capitalize() + '_' + data['type']
-                    else:
-                        dkey = alert.capitalize()
-                    attrs[dkey] = data[alert]
+        if self._condition == 'alerts':
+            if not self.rest.alerts:
+                return attrs
+
+            multiple_alerts = len(self.rest.alerts) > 1
+            for data in self.rest.alerts:
+                for alert in ALERTS_ATTRS:
+                    if data[alert]:
+                        if multiple_alerts:
+                            dkey = alert.capitalize() + '_' + data['type']
+                        else:
+                            dkey = alert.capitalize()
+                        attrs[dkey] = data[alert]
+
+        elif self._condition == 'forecast':
+            if not self.rest.forecast:
+                return attrs
+
+            summary = ""
+            for data in self.rest.forecast:
+                # Individual attributes
+                for item in FORECAST_ATTRS:
+                    if data[item]:
+                        dkey = item + '_' + str(data['period'])
+                        attrs[dkey] = data[item]
+
+                # Summary attribute
+                summary += data['title'] + ": " + data['fcttext'] + "\n"
+
+                """
+                index = data['period']
+                index_str = str(index)
+                attrs['forecast_' + index_str] = data['title'] + ": " + data['fcttext']
+                """
+            attrs['summary'] = summary
+
         return attrs
 
     @property
@@ -183,6 +225,8 @@ class WUndergroundSensor(Entity):
         """Update current conditions."""
         if self._condition == 'alerts':
             self.rest.update_alerts()
+        elif self._condition == 'forecast':
+            self.rest.update_forecast()
         else:
             self.rest.update()
 
@@ -199,6 +243,7 @@ class WUndergroundData(object):
         self._longitude = hass.config.longitude
         self.data = None
         self.alerts = None
+        self.forecast = None
 
     def _build_url(self, baseurl=_RESOURCE):
         url = baseurl.format(self._api_key)
@@ -237,4 +282,19 @@ class WUndergroundData(object):
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
             self.alerts = None
+            raise
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES_FORECAST)
+    def update_forecast(self):
+        """Get the lastest forecast from WUnderground."""
+        try:
+            result = requests.get(self._build_url(_FORECAST), timeout=10).json()
+            if "error" in result['response']:
+                raise ValueError(result['response']["error"]
+                                 ["description"])
+            else:
+                self.forecast = result["forecast"]['txt_forecast']['forecastday']
+        except ValueError as err:
+            _LOGGER.error("Check WUnderground API %s", err.args)
+            self.forecast = None
             raise
