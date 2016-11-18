@@ -169,7 +169,6 @@ class NestThermostat(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
-
         if operation_mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
             device_mode = operation_mode
         elif operation_mode == STATE_AUTO:
