@@ -17,15 +17,17 @@ from homeassistant.const import (
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
                 'operation_mode',
-                'last_ip',
-                'local_ip',
                 'last_connection']
 
 # FIXME detect these being used
-SENSOR_TYPES_DEPRECATED = ['battery_health']  # no longer available on the nest thermostat
+SENSOR_TYPES_DEPRECATED = ['battery_health',
+                           'last_ip',
+                           'local_ip']
 
+WEATHER_VARS = {}
 
-WEATHER_VARS = {'weather_humidity': 'humidity',
+# FIXME detect these being used
+DEPRECATED_WEATHER_VARS = {'weather_humidity': 'humidity',
                 'weather_temperature': 'temperature',
                 'weather_condition': 'condition',
                 'wind_speed': 'kph',
@@ -57,8 +59,7 @@ PLATFORM_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest Sensor."""
     nest = hass.data[DATA_NEST]
-    # FIXME default this to something
-    conf = config.get(CONF_MONITORED_CONDITIONS, [])
+    conf = config.get(CONF_MONITORED_CONDITIONS, _VALID_SENSOR_TYPES)
 
     all_sensors = []
     for structure, device in chain(nest.devices(), nest.protect_devices()):
