@@ -41,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def _discover(hass, config, found_tellcore_devices, component_name):
+def _discover(hass, config, component_name, found_tellcore_devices):
     """Setup and send the discovery event."""
     if not len(found_tellcore_devices):
         return
@@ -58,33 +58,29 @@ def _discover(hass, config, found_tellcore_devices, component_name):
 
 def setup(hass, config):
     """Setup the Tellstick component."""
-    # pylint: disable=global-statement, import-error
-    global TELLCORE_REGISTRY
-
-    import tellcore.telldus as telldus
-    import tellcore.constants as tellcore_constants
+    # pylint: import-error
+    from tellcore.constants import TELLSTICK_DIM
     from tellcore.library import DirectCallbackDispatcher
+    from tellcore.telldus import TelldusCore
 
-    core = telldus.TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
+    tellcore_lib = TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
 
-    TELLCORE_REGISTRY = TellstickRegistry(hass, core)
-
-    tellcore_devices = core.devices()
+    # Get all devices, switches and lights alike
+    all_tellcore_devices = tellcore_lib.devices()
 
     # Register devices
-    TELLCORE_REGISTRY.register_tellcore_devices(tellcore_devices)
+    TELLCORE_REGISTRY = TellstickRegistry(hass, tellcore_lib)
+    TELLCORE_REGISTRY.register_tellcore_devices(all_tellcore_devices)
 
     # Discover the switches
-    _discover(hass, config, [tellcore_switch.id for tellcore_switch in
-                             tellcore_devices if not tellcore_switch.methods(
-                                 tellcore_constants.TELLSTICK_DIM)],
-              'switch')
+    _discover(hass, config, 'switch',
+        [tellcore_device.id for tellcore_device in all_tellcore_devices
+            if not tellcore_device.methods(TELLSTICK_DIM)])
 
     # Discover the lights
-    _discover(hass, config, [tellcore_light.id for tellcore_light in
-                             tellcore_devices if tellcore_light.methods(
-                                 tellcore_constants.TELLSTICK_DIM)],
-              'light')
+    _discover(hass, config, 'light',
+        [tellcore_device.id for tellcore_device in all_tellcore_devices
+            if tellcore_device.methods(TELLSTICK_DIM)])
 
     return True
 
@@ -107,11 +103,11 @@ class TellstickRegistry(object):
         self._id_to_tellcore_device_map = {}
         self._setup_tellcore_callback(hass, tellcore_lib)
 
-    def _tellcore_event_callback(self, tellcore_id, tellcore_command, data, cid):
+    def _tellcore_event_callback(self, tellcore_id, tellcore_command, tellcore_data, cid):
         """Handle the actual callback from Tellcore."""
         ha_device = self._id_to_ha_device_map.get(tellcore_id, None)
         if ha_device is not None:
-            ha_device.set_tellstick_state(tellcore_command, data)
+            ha_device.update_from_tellcore(tellcore_command, tellcore_data)
             ha_device.schedule_update_ha_state()
 
     def _setup_tellcore_callback(self, hass, tellcore_lib):
@@ -145,13 +141,14 @@ class TellstickDevice(Entity):
     Contains the common logic for all Tellstick devices.
     """
 
-    def __init__(self, tellcore_device, signal_repetitions):
+    def __init__(self, tellcore_id, signal_repetitions):
         """Initalize the Tellstick device."""
         self._signal_repetitions = signal_repetitions
         self._state = None
-        self._tellcore_device = tellcore_device
-        # Add to id to HA device mapping
-        TELLCORE_REGISTRY.register_ha_device(tellcore_device.id, self)
+        # Look up our corresponding tellcore device
+        self._tellcore_device = TELLCORE_REGISTRY.get_tellcore_device(tellcore_id)
+        # Add ourselves to the mapping
+        TELLCORE_REGISTRY.register_ha_device(tellcore_id, self)
         # Query tellcore for the current state
         self.update()
 
@@ -167,43 +164,69 @@ class TellstickDevice(Entity):
 
     @property
     def name(self):
-        """Return the name of the device if any."""
+        """Return the name of the device as reported by tellcore."""
         return self._tellcore_device.name
 
-    def set_tellstick_state(self, last_command_sent, last_data_sent):
-        """Set the private device state."""
-        raise NotImplementedError(
-            "set_tellstick_state needs to be implemented.")
+    @property
+    def is_on(self):
+        """Return true if the device is on."""
+        return self._state
 
-    def _send_tellstick_command(self, command, data):
-        """Do the actual call to the tellstick device."""
-        raise NotImplementedError(
-            "_send_tellstick_command needs to be implemented.")
+    def _parse_ha_data(self, kwargs):
+        raise NotImplementedError
 
-    def call_tellstick(self, command, data=None):
-        """Send a command to the device."""
+    def _parse_tellcore_data(self, tellcore_data)
+        raise NotImplementedError
+
+    def _update_model(self, new_state, data):
+        raise NotImplementedError
+
+    def _send_tellstick_command(self):
+        """Let tellcore update the physical device to match the current state"""
+        raise NotImplementedError
+
+    def _do_action(self, new_state, data)
         from tellcore.library import TelldusError
+
         with TELLSTICK_LOCK:
+            # Update self with requested new state
+            self._update_model(new_state, data)
+            # ... and then send this new state to the Tellstick
             try:
                 for _ in range(self._signal_repetitions):
-                    self._send_tellstick_command(command, data)
-                # Update the internal state
-                self.set_tellstick_state(command, data)
-                self.update_ha_state()
+                    self._send_tellstick_command()
             except TelldusError:
                 _LOGGER.error(TelldusError)
+        self.update_ha_state()
+
+    def turn_on(self, **kwargs):
+        """Turn the switch on."""
+        self._do_action(True, self._parse_ha_data(kwargs))
+
+    def turn_off(self, **kwargs):
+        """Turn the switch off."""
+        self._do_action(False, None)
+
+    def update_from_tellcore(self, tellcore_command, tellcore_data):
+        from tellcore.constants import TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_DIM
+
+        if not tellcore_command in [TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_DIM]:
+            return
+
+        self._update_model(tellcore_command != TELLSTICK_TURNOFF,
+            self._parse_tellcore_data(tellcore_data))
 
     def update(self):
         """Poll the current state of the device."""
-        import tellcore.constants as tellcore_constants
         from tellcore.library import TelldusError
+        from tellcore.constants import TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_DIM
+
         try:
-            last_command = self._tellcore_device.last_sent_command(
-                tellcore_constants.TELLSTICK_TURNON |
-                tellcore_constants.TELLSTICK_TURNOFF |
-                tellcore_constants.TELLSTICK_DIM
+            last_tellcore_command = self._tellcore_device.last_sent_command(
+                TELLSTICK_TURNON | TELLSTICK_TURNOFF | TELLSTICK_DIM
             )
-            last_value = self._tellcore_device.last_sent_value()
-            self.set_tellstick_state(last_command, last_value)
+            last_tellcore_data = self._tellcore_device.last_sent_value()
+
+            self.update_from_tellcore(last_tellcore_command, last_tellcore_data)
         except TelldusError:
             _LOGGER.error(TelldusError)
