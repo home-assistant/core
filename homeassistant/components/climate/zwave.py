@@ -22,7 +22,8 @@ DEFAULT_NAME = 'ZWave Climate'
 REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377
 REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
-
+ATTR_OPERATING_STATE = 'operating_state'
+ATTR_FAN_STATE = 'fan_state'
 
 WORKAROUND_ZXT_120 = 'zxt_120'
 
@@ -269,9 +270,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        data = {}
+        data = super().device_state_attributes
         if self._operating_state:
-            data["operating_state"] = self._operating_state,
+            data[ATTR_OPERATING_STATE] = self._operating_state,
         if self._fan_state:
-            data["fan_state"] = self._fan_state
+            data[ATTR_FAN_STATE] = self._fan_state
         return data
