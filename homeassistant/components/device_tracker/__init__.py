@@ -422,7 +422,7 @@ class Device(Entity):
                 _LOGGER.warning('Could not parse gps value for %s: %s',
                                 self.dev_id, gps)
 
-        # pyling: disable=not-an-iterable
+        # pylint: disable=not-an-iterable
         yield from self.async_update()
 
     def stale(self, now: dt_util.dt.datetime=None):
