@@ -56,14 +56,15 @@ class NestCamera(Camera):
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        self.update()
-        if self._location is None or self._location == self._name:
-            return self._name
-        else:
-            if self._name == '':
-                return self._location.capitalize()
-            else:
-                return self._location.capitalize() + '(' + self._name + ')'
+        return self._name
+        #if self._location is None or self._location == self._name:
+        #    return self._name
+        #else:
+        #    if self._name == '':
+        #        return self._location.capitalize()
+        #    else:
+        #        return self._location.capitalize() + '(' + self._name + ')'
+
     @property
     def is_recording(self):
         """Return true if the device is recording."""
@@ -73,6 +74,7 @@ class NestCamera(Camera):
         """Cache value from Python-nest."""
         self._location = self.device.where
         self._name = self.device.name
+        embed()
         self._is_online = self.device.is_online
         self._is_streaming = self.device.is_streaming
         self._is_video_history_enabled = self.device.is_video_history_enabled
