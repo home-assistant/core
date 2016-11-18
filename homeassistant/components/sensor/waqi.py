@@ -9,7 +9,7 @@ from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 
 
-REQUIREMENTS = ["pwaqi==1.0"]
+REQUIREMENTS = ["pwaqi==1.2"]
 
 _LOGGER = logging.getLogger(__name__)
 
