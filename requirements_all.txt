@@ -313,7 +313,7 @@ plexapi==2.0.2
 pmsensor==0.3
 
 # homeassistant.components.climate.proliphix
-proliphix==0.4.0
+proliphix==0.4.1
 
 # homeassistant.components.sensor.systemmonitor
 psutil==5.0.0
