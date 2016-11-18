@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.info('I got the following stations: %s', station_ids)
             for station in station_ids:
                 dev.append(WaqiSensor(station))
-    except KeyError as err:
+    except KeyError:
         _LOGGER.exception('No keys defined for waqi sensor.')
 
     add_devices(dev)
