@@ -49,8 +49,8 @@ def request_configuration(nest, hass, config):
     def nest_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
         _LOGGER.debug("configurator callback")
-        nest.pin = data.get('pin')
-        setup_nest(hass, nest, config)
+        pin = data.get('pin')
+        setup_nest(hass, nest, config, pin=pin)
 
     _CONFIGURING['nest'] = configurator.request_config(
         hass, "Nest", nest_configuration_callback,
@@ -62,11 +62,11 @@ def request_configuration(nest, hass, config):
     )
 
 
-def setup_nest(hass, nest, config):
+def setup_nest(hass, nest, config, pin=None):
     """Setup Nest Devices."""
-    if nest.pin:
+    if pin is not None:
         _LOGGER.debug("pin acquired, requesting access token")
-        nest.request_token()
+        nest.request_token(pin)
 
     if nest.access_token is None:
         _LOGGER.debug("no access_token, requesting configuration")
