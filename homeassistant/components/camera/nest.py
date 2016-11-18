@@ -21,6 +21,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 
 SIMULATOR_SNAPSHOT_URL = 'https://developer.nest.com/simulator/api/v1/nest/devices/camera/snapshot'
 
+NEST_BRAND = "Nest"
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a Nest Cam."""
     if discovery_info is None:
@@ -69,6 +71,11 @@ class NestCamera(Camera):
     def is_recording(self):
         """Return true if the device is recording."""
         return self._is_streaming
+
+    @property
+    def brand(self):
+        """Camera Brand."""
+        return NEST_BRAND
 
     def update(self):
         """Cache value from Python-nest."""
