@@ -126,7 +126,8 @@ class WUndergroundSensor(Entity):
         if self.rest.data:
 
             if self._condition == 'elevation' and \
-               self._condition in self.rest.data['observation_location']:
+                            self._condition in \
+                            self.rest.data['observation_location']:
                 return self.rest.data['observation_location'][self._condition]\
                         .split()[0]
 
