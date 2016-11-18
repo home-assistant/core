@@ -224,7 +224,7 @@ class DeviceTracker(object):
         """Notify the device tracker that you see a device."""
         self.hass.add_job(
             self.async_see(mac, dev_id, host_name, location_name, gps,
-                           battery, attributes)
+                           gps_accuracy, battery, attributes)
         )
 
     @asyncio.coroutine
