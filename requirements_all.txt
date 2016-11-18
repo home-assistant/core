@@ -229,9 +229,6 @@ https://github.com/theolind/pymysensors/archive/0b705119389be58332f17753c53167f5
 # homeassistant.components.alarm_control_panel.simplisafe
 https://github.com/w1ll1am23/simplisafe-python/archive/586fede0e85fd69e56e516aaa8e97eb644ca8866.zip#simplisafe-python==0.0.1
 
-# homeassistant.components.notify.html5
-https://github.com/web-push-libs/pywebpush/archive/e743dc92558fc62178d255c0018920d74fa778ed.zip#pywebpush==0.5.0
-
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
@@ -451,6 +448,9 @@ python-wink==0.10.0
 
 # homeassistant.components.vera
 pyvera==0.2.20
+
+# homeassistant.components.notify.html5
+pywebpush==0.6.1
 
 # homeassistant.components.wemo
 pywemo==0.4.7
