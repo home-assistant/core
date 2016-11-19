@@ -29,6 +29,7 @@ def test_real(func):
 
     return guard_func
 
+
 # Guard a few functions that would make network connections
 location.detect_location_info = test_real(location.detect_location_info)
 location.elevation = test_real(location.elevation)

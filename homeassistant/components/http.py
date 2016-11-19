@@ -222,6 +222,7 @@ class GzipFileSender(FileSender):
 
         return resp
 
+
 _GZIP_FILE_SENDER = GzipFileSender()
 
 
