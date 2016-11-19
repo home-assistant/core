@@ -33,6 +33,7 @@ def setup(hass, config):
 
     return True
 
+
 DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = '!!'
 
