@@ -416,7 +416,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         # MAC is not a string (but added)
         tracker.see(mac=567, host_name="Number MAC")
-        print(self.hass)
         # No device id or MAC(not added)
         with self.assertRaises(HomeAssistantError):
             run_coroutine_threadsafe(
