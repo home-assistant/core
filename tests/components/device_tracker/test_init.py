@@ -185,7 +185,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(device.config_picture, gravatar_url)
 
     def test_mac_vendor_lookup(self):
-        """Test if vendor string is lookup in local OUI database."""
+        """Test if vendor string is lookup on macvendors API."""
         mac = 'B8:27:EB:00:00:00'
         vendor_string = 'Raspberry Pi Foundation'
 
