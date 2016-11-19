@@ -28,6 +28,9 @@ omit =
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
 
+    homeassistant/components/google.py
+    homeassistant/components/*/google.py
+
     homeassistant/components/insteon_hub.py
     homeassistant/components/*/insteon_hub.py
 
@@ -132,7 +135,7 @@ omit =
     homeassistant/components/climate/knx.py
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
-    homeassistant/components/cover/garadget.py    
+    homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
     homeassistant/components/cover/rpi_gpio.py
     homeassistant/components/cover/scsgate.py
