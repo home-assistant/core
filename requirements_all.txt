@@ -124,6 +124,9 @@ fuzzywuzzy==0.14.0
 # homeassistant.components.notify.gntp
 gntp==1.0.3
 
+# homeassistant.components.google
+google-api-python-client==1.5.5
+
 # homeassistant.components.sensor.google_travel_time
 googlemaps==2.4.4
 
@@ -279,6 +282,9 @@ netdisco==0.7.6
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
+
+# homeassistant.components.google
+oauth2client==3.0.0
 
 # homeassistant.components.switch.orvibo
 orvibo==1.1.1
