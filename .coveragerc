@@ -101,6 +101,9 @@ omit =
     homeassistant/components/netatmo.py
     homeassistant/components/*/netatmo.py
 
+    homeassistant/components/neato.py
+    homeassistant/components/*/neato.py
+
     homeassistant/components/homematic.py
     homeassistant/components/*/homematic.py
 
@@ -311,7 +314,6 @@ omit =
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/mystrom.py
-    homeassistant/components/switch/neato.py
     homeassistant/components/switch/netio.py
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/pilight.py
