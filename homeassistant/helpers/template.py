@@ -417,6 +417,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         """Test if callback is safe."""
         return isinstance(obj, AllStates) or super().is_safe_callable(obj)
 
+
 ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
