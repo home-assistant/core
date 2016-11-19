@@ -285,7 +285,8 @@ class HomeAssistantWSGI(object):
         self.server_host = server_host
         self.server_port = server_port
         self.use_x_forwarded_for = use_x_forwarded_for
-        self.trusted_networks = trusted_networks
+        self.trusted_networks = trusted_networks \
+            if trusted_networks is not None else []
         self.event_forwarder = None
         self._handler = None
         self.server = None
