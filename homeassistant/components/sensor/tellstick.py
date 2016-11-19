@@ -16,6 +16,8 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['tellcore-py==1.1.2']
 
+_LOGGER = logging.getLogger(__name__)
+
 DatatypeDescription = namedtuple('DatatypeDescription', ['name', 'unit'])
 
 CONF_DATATYPE_MASK = 'datatype_mask'
@@ -65,15 +67,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     }
 
     try:
-        core = telldus.TelldusCore()
+        tellcore_lib = telldus.TelldusCore()
     except OSError:
-        logging.getLogger(__name__).exception('Could not initialize Tellstick')
+        _LOGGER.exception('Could not initialize Tellstick')
         return
 
     sensors = []
     datatype_mask = config.get(CONF_DATATYPE_MASK)
 
-    for tellcore_sensor in core.sensors():
+    for tellcore_sensor in tellcore_lib.sensors():
         try:
             sensor_name = config[tellcore_sensor.id]
         except KeyError:

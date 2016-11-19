@@ -63,7 +63,13 @@ def setup(hass, config):
     from tellcore.library import DirectCallbackDispatcher
     from tellcore.telldus import TelldusCore
 
-    tellcore_lib = TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
+    global TELLCORE_REGISTRY
+
+    try:
+        tellcore_lib = TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
+    except OSError:
+        _LOGGER.exception('Could not initialize Tellstick')
+        return False
 
     # Get all devices, switches and lights alike
     all_tellcore_devices = tellcore_lib.devices()
@@ -91,7 +97,8 @@ class TellstickRegistry(object):
     Keeps a map device ids to the tellcore device object, and
     another to the HA device objects (entities).
 
-    Also responsible for registering / cleanup of callbacks.
+    Also responsible for registering / cleanup of callbacks, and for
+    dispatching the callbacks to the corresponding HA device object.
 
     All device specific logic should be elsewhere (Entities).
     """
@@ -107,6 +114,7 @@ class TellstickRegistry(object):
         """Handle the actual callback from Tellcore."""
         ha_device = self._id_to_ha_device_map.get(tellcore_id, None)
         if ha_device is not None:
+            # Pass it on to the HA device object
             ha_device.update_from_tellcore(tellcore_command, tellcore_data)
             ha_device.schedule_update_ha_state()
 
@@ -118,6 +126,7 @@ class TellstickRegistry(object):
             """Unregister the callback bindings."""
             if callback_id is not None:
                 tellcore_lib.unregister_callback(callback_id)
+                _LOGGER.debug("Tellstick callback unregistered")
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, clean_up_callback)
 
@@ -147,10 +156,10 @@ class TellstickDevice(Entity):
         self._state = None
         # Look up our corresponding tellcore device
         self._tellcore_device = TELLCORE_REGISTRY.get_tellcore_device(tellcore_id)
-        # Add ourselves to the mapping
-        TELLCORE_REGISTRY.register_ha_device(tellcore_id, self)
         # Query tellcore for the current state
         self.update()
+        # Add ourselves to the mapping
+        TELLCORE_REGISTRY.register_ha_device(tellcore_id, self)
 
     @property
     def should_poll(self):
@@ -173,19 +182,23 @@ class TellstickDevice(Entity):
         return self._state
 
     def _parse_ha_data(self, kwargs):
+        """Turn the value from HA into something useful"""
         raise NotImplementedError
 
-    def _parse_tellcore_data(self, tellcore_data)
+    def _parse_tellcore_data(self, tellcore_data):
+        """Turn the value recieved from tellcore into something useful"""
         raise NotImplementedError
 
     def _update_model(self, new_state, data):
+        """Update the device entity state to match the arguments"""
         raise NotImplementedError
 
     def _send_tellstick_command(self):
         """Let tellcore update the physical device to match the current state"""
         raise NotImplementedError
 
-    def _do_action(self, new_state, data)
+    def _do_action(self, new_state, data):
+        """Implements logic for actually turning on or off the device"""
         from tellcore.library import TelldusError
 
         with TELLSTICK_LOCK:
@@ -208,9 +221,11 @@ class TellstickDevice(Entity):
         self._do_action(False, None)
 
     def update_from_tellcore(self, tellcore_command, tellcore_data):
+        """Handle updates from the tellcore callback"""
         from tellcore.constants import TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_DIM
 
         if not tellcore_command in [TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_DIM]:
+            _LOGGER.debug("Unhandled tellstick command: %d" % tellcore_command)
             return
 
         self._update_model(tellcore_command != TELLSTICK_TURNOFF,
