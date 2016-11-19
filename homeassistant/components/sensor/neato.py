@@ -110,9 +110,9 @@ class NeatoConnectedSensor(Entity):
                     self._status_state = 'Stopped'
             elif self._state['state'] == 2:
                 if ALERTS.get(self._state['error']) is None:
-                    self._status_state = (MODE.get(
-                        self._state['cleaning']['mode']) + ' ' +
-                                          ACTION.get(self._state['action']))
+                    self._status_state = (
+                        MODE.get(self._state['cleaning']['mode'])
+                        + ' ' + ACTION.get(self._state['action']))
                 else:
                     self._status_state = ALERTS.get(self._state['error'])
             elif self._state['state'] == 3:
