@@ -54,6 +54,7 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.neato.update_robots()
         if not self._state:
             return
+        self._state = self.robot.state
         _LOGGER.debug('self._state=%s', self._state)
         if self.type == SWITCH_TYPE_CLEAN:
             if (self.robot.state['action'] == 1 and
