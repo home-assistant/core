@@ -184,8 +184,10 @@ class TestApns(unittest.TestCase):
 
         devices_path = hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
-            out.write('1234: {name: test device 1, tracking_device_id: tracking123}\n')  # nopep8
-            out.write('5678: {name: test device 2, tracking_device_id: tracking456}\n')  # nopep8
+            out.write('1234: {name: test device 1, '
+                      'tracking_device_id: tracking123}\n')
+            out.write('5678: {name: test device 2, '
+                      'tracking_device_id: tracking456}\n')
 
         notify.setup(hass, config)
         self.assertTrue(hass.services.call('apns',
@@ -293,8 +295,10 @@ class TestApns(unittest.TestCase):
 
         devices_path = hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
-            out.write('1234: {name: test device 1, tracking_device_id: tracking123}\n')  # nopep8
-            out.write('5678: {name: test device 2, tracking_device_id: tracking456}\n')  # nopep8
+            out.write('1234: {name: test device 1, '
+                      'tracking_device_id: tracking123}\n')
+            out.write('5678: {name: test device 2, '
+                      'tracking_device_id: tracking456}\n')
 
         notify_service = ApnsNotificationService(
             hass,

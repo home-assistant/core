@@ -93,6 +93,7 @@ def _valid_customize(value):
 
     return value
 
+
 CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_NAME: vol.Coerce(str),
     CONF_LATITUDE: cv.latitude,
