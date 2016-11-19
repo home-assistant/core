@@ -66,6 +66,7 @@ def _platform_validator(config):
 
     return getattr(platform, 'TRIGGER_SCHEMA')(config)
 
+
 _TRIGGER_SCHEMA = vol.All(
     cv.ensure_list,
     [
