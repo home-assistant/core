@@ -127,7 +127,6 @@ class OsramLightifyLight(Light):
     @property
     def is_on(self):
         """Update Status to True if device is on."""
-        self.update()
         _LOGGER.debug("is_on light state for light: %s is: %s",
                       self._name, self._state)
         return self._state
