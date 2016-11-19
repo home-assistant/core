@@ -10,6 +10,8 @@ import os
 from datetime import timedelta
 from typing import Any, Callable, Sequence
 
+import aiohttp
+import async_timeout
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -34,8 +36,6 @@ from homeassistant.util.yaml import dump
 
 DOMAIN = 'device_tracker'
 DEPENDENCIES = ['zone']
-
-REQUIREMENTS = ['netaddr==0.7.18']
 
 GROUP_NAME_ALL_DEVICES = 'all devices'
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
@@ -364,7 +364,7 @@ class Device(Entity):
             self.config_picture = picture
 
         self.away_hide = hide_if_away
-        self.vendor = self.get_vendor_for_mac(mac)
+        self.vendor = vendor
 
     @property
     def name(self):
@@ -463,22 +463,44 @@ class Device(Entity):
             self._state = STATE_HOME
             self.last_update_home = True
 
-    @staticmethod
-    def get_vendor_for_mac(mac):
+        # lookup vendor string for mac address using api.macvendors.com
+        if not self.vendor:
+            self.vendor = yield from self.get_vendor_for_mac()
+
+    @asyncio.coroutine
+    def get_vendor_for_mac(self):
         """Try to find the vendor string for a given MAC address."""
-        if not mac:
+        # can't continue without a mac
+        if not self.mac:
             return None
 
-        from netaddr import AddrFormatError, NotRegisteredError, EUI
+        # prevent lookup of invalid macs
+        if not len(self.mac.split(':')) == 6:
+            return 'unknown'
+
+        # we only need the first 3 bytes of the mac for a lookup
+        # this improves somewhat on privacy
+        oui_bytes = self.mac.split(':')[0:3]
+        # bytes like 00 get truncates to 0, API needs full bytes
+        oui = '{:02x}:{:02x}:{:02x}'.format(*[int(b, 16) for b in oui_bytes])
+        url = 'http://api.macvendors.com/' + oui
         try:
-            # lookup Organisationally Unique Identifier
-            # for MAC addressin local stored database
-            oui = EUI(mac).oui
-            # extract vendor string (eg: Raspberry Pi Foundation)
-            # pylint: disable=no-member
-            return oui.registration().org
-        except (AddrFormatError, NotRegisteredError):
-            # invalid MAC or no registration found
+            with async_timeout.timeout(5, loop=self.hass.loop):
+                resp = yield from self.hass.websession.get(url)
+            # mac vendor found, response is the string
+            if resp.status == 200:
+                vendor_string = yield from resp.text()
+                return vendor_string
+            # api 404 == mac vendor not found
+            elif resp.status == 404:
+                # set something other then None to prevent retry
+                return 'unknown'
+            # request failed, set None to try another time
+            else:
+                return None
+        except (asyncio.TimeoutError, aiohttp.errors.ClientError,
+                aiohttp.errors.ClientDisconnectedError):
+            # request failed, set None to try another time
             return None
 
 
