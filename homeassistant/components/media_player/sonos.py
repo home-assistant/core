@@ -740,8 +740,8 @@ class SonosDevice(MediaPlayerDevice):
                 return SUPPORT_SOURCE_LINEIN
             elif self._is_playing_tv:
                 return SUPPORT_SOURCE_TV
-            else:
-                return None
+
+        return None
 
     def turn_off(self):
         """Turn off media player."""
