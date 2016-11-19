@@ -5,33 +5,32 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/device_tracker/
 """
 import asyncio
-from datetime import timedelta
 import logging
 import os
-from typing import Any, Sequence, Callable
+from datetime import timedelta
+from typing import Any, Callable, Sequence
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util as util
+import homeassistant.util.dt as dt_util
 from homeassistant.bootstrap import (
-    async_prepare_setup_platform, async_log_exception)
-from homeassistant.core import callback
+    async_log_exception, async_prepare_setup_platform)
 from homeassistant.components import group, zone
 from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
+    DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util as util
-from homeassistant.util.async import run_coroutine_threadsafe
-import homeassistant.util.dt as dt_util
-from homeassistant.util.yaml import dump
-
 from homeassistant.helpers.event import async_track_utc_time_change
-from homeassistant.const import (
-    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
-    DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_ID)
+from homeassistant.helpers.typing import ConfigType, GPSType, HomeAssistantType
+from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.yaml import dump
 
 DOMAIN = 'device_tracker'
 DEPENDENCIES = ['zone']
