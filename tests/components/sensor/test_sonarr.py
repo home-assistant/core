@@ -20,6 +20,7 @@ VALID_CONFIG = {
     ]
 }
 
+
 def mocked_requests_get(*args, **kwargs):
     """Mock requests.get invocations."""
     class MockResponse:
@@ -142,7 +143,7 @@ def mocked_requests_get(*args, **kwargs):
                 "downloading": "false",
                 "id": 14402
               }
-        ],200)
+        ], 200)
     elif 'api/command' in str(args[0]):
         return MockResponse([
             {
@@ -153,7 +154,7 @@ def mocked_requests_get(*args, **kwargs):
               "state": "pending",
               "id": 24
             }
-        ],200)
+        ], 200)
     elif 'api/wanted/missing' in str(args[0]) or 'totalRecords' in str(args[0]):
         return MockResponse(
         {
@@ -328,7 +329,7 @@ def mocked_requests_get(*args, **kwargs):
               "id": 55
             }
           ]
-        },200)
+        }, 200)
     elif 'api/queue' in str(args[0]):
         return MockResponse([
           {
@@ -452,7 +453,7 @@ def mocked_requests_get(*args, **kwargs):
             "protocol": "usenet",
             "id": 1503378561
           }
-        ],200)
+        ], 200)
     elif 'api/series' in str(args[0]):
         return MockResponse([
           {
@@ -537,7 +538,7 @@ def mocked_requests_get(*args, **kwargs):
             "qualityProfileId": 6,
             "id": 7
           }
-        ],200)
+        ], 200)
     elif 'api/diskspace' in str(args[0]):
         return MockResponse([
           {
@@ -546,24 +547,15 @@ def mocked_requests_get(*args, **kwargs):
             "freeSpace": 282500067328,
             "totalSpace": 499738734592
           }
-        ],200)
+        ], 200)
     else:
         return MockResponse({
-            "response": {
-                "version": "0.1",
-                "termsofService":
-                    "http://www.wunderground.com/weather/api/d/terms.html",
-                "features": {},
-                "error": {
-                    "type": "keynotfound",
-                    "description": "this key does not exist"
-                }
-            }
-        }, 200)
+            "error": "Unauthorized"
+        }, 401)
 
 
 class TestSonarrSetup(unittest.TestCase):
-    """Test the WUnderground platform."""
+    """Test the Sonarr platform."""
 
     # pylint: disable=invalid-name
     DEVICES = []

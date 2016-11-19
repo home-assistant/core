@@ -1,6 +1,5 @@
 import logging
 import requests
-import json
 import time
 import voluptuous as vol
 
@@ -27,22 +26,22 @@ DEFAULT_DAYS  = '1'
 DEFAULT_UNIT = 'GB'
 
 SENSOR_TYPES = {
-        'diskspace': ['Disk Space', 'GB', 'mdi:harddisk'],
-        'queue': ['Queue', 'Episodes', 'mdi:download'],
-        'upcoming': ['Upcoming', 'Episodes', 'mdi:television'],
-        'wanted': ['Wanted', 'Episodes', 'mdi:television'],
-        'series': ['Series', 'Shows', 'mdi:television'],
-        'commands': ['Commands', 'Commands', 'mdi:code-braces']
-    }
+    'diskspace': ['Disk Space', 'GB', 'mdi:harddisk'],
+    'queue': ['Queue', 'Episodes', 'mdi:download'],
+    'upcoming': ['Upcoming', 'Episodes', 'mdi:television'],
+    'wanted': ['Wanted', 'Episodes', 'mdi:television'],
+    'series': ['Series', 'Shows', 'mdi:television'],
+    'commands': ['Commands', 'Commands', 'mdi:code-braces']
+}
 
 ENDPOINTS = {
-        'diskspace': 'http://{0}:{1}/api/diskspace?apikey={2}',
-        'queue': 'http://{0}:{1}/api/queue?apikey={2}',
-        'upcoming': 'http://{0}:{1}/api/calendar?apikey={2}&start={3}&end={4}',
-        'wanted': 'http://{0}:{1}/api/wanted/missing?apikey={2}',
-        'series': 'http://{0}:{1}/api/series?apikey={2}',
-        'commands': 'http://{0}:{1}/api/command?apikey={2}'
-        }
+    'diskspace': 'http://{0}:{1}/api/diskspace?apikey={2}',
+    'queue': 'http://{0}:{1}/api/queue?apikey={2}',
+    'upcoming': 'http://{0}:{1}/api/calendar?apikey={2}&start={3}&end={4}',
+    'wanted': 'http://{0}:{1}/api/wanted/missing?apikey={2}',
+    'series': 'http://{0}:{1}/api/series?apikey={2}',
+    'commands': 'http://{0}:{1}/api/command?apikey={2}'
+}
 
 # Suport to Yottabytes for the future, why not
 BYTE_SIZES = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
@@ -58,11 +57,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """ Setup the Sonarr platform """
     add_devices([Sonarr(hass, config, sensor) for sensor in config[CONF_MONITORED_CONDITIONS]])
     return True
 
 class Sonarr(Entity):
+    """Implement the Sonarr sensor class"""
     def __init__(self, hass, conf, sensor_type):
+        """ """
         from pytz import timezone
         # Configuration data
         self.conf = conf
@@ -86,6 +88,7 @@ class Sonarr(Entity):
         self.update()
 
     def update(self):
+        """Update the data for the sensor"""
         start = self.getDate(self.tz)
         end = self.getDate(self.tz, self.days)
         res = requests.get(ENDPOINTS[self.type].format(self.host, self.port, self.apikey, start, end))
@@ -117,18 +120,22 @@ class Sonarr(Entity):
 
     @property
     def name(self):
+        """Return the name of the sensor"""
         return "{} {}".format("Sonarr", self._name)
 
     @property
     def state(self):
+        """Return sensor state"""
         return self._state
 
     @property
     def unit_of_measurement(self):
+        """Return the unit of the sensor"""
         return self._unit
 
     @property
     def device_state_attributes(self):
+        """Return the state attributes of the sensor"""
         attributes = {}
         if self.type == 'upcoming':
             for show in self.data:
@@ -145,11 +152,11 @@ class Sonarr(Entity):
         elif self.type == 'diskspace':
             for data in self.data:
                 attributes[data['path']] = '{:.2f}/{:.2f}{} ({:.2f}%)'.format(
-                        self.toUnit(data['freeSpace']),
-                        self.toUnit(data['totalSpace']),
-                        self._unit,
-                        (self.toUnit(data['freeSpace'])/self.toUnit(data['totalSpace'])*100)
-                    )
+                    self.toUnit(data['freeSpace']),
+                    self.toUnit(data['totalSpace']),
+                    self._unit,
+                    (self.toUnit(data['freeSpace'])/self.toUnit(data['totalSpace'])*100)
+                )
         elif self.type == 'series':
             for show in self.data:
                 attributes[show['title']] = '{}/{} Episodes'.format(show['episodeFileCount'], show['episodeCount'])
@@ -157,11 +164,14 @@ class Sonarr(Entity):
 
     @property
     def icon(self):
+        """Return the icon of the sensor"""
         return self._icon
 
     def getDate(self, zone, offset=0):
+        """Get date based on timezone and offset of days"""
         day = 60*60*24
         return datetime.date(datetime.fromtimestamp(time.time() + day*offset, tz=zone))
 
     def toUnit(self, value):
+        """Convert bytes to give unit"""
         return value/1024**BYTE_SIZES.index(self._unit)
