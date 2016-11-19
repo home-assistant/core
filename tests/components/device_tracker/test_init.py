@@ -11,6 +11,8 @@ from tests.common import (
     assert_setup_component, fire_service_discovered, fire_time_changed,
     get_test_home_assistant, patch_yaml_files)
 
+from ...test_util.aiohttp import mock_aiohttp_client
+
 import homeassistant.components.device_tracker as device_tracker
 import homeassistant.util.dt as dt_util
 from homeassistant.bootstrap import setup_component
@@ -184,15 +186,43 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     def test_mac_vendor_lookup(self):
         """Test if vendor string is lookup in local OUI database."""
-
+        mac = 'B8:27:EB:00:00:00'
         vendor_string = 'Raspberry Pi Foundation'
+
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+
+        with mock_aiohttp_client() as aioclient_mock:
+            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
+                               text=vendor_string)
+
+            run_coroutine_threadsafe(device.async_seen(),
+                                     self.hass.loop).result()
+            assert aioclient_mock.call_count == 1
+
+        self.assertEqual(device.vendor, vendor_string)
+
+    def test_mac_vendor_lookup_unknown(self):
+        """Prevent another mac vendor lookup if was not found first time."""
         mac = 'B8:27:EB:00:00:00'
 
-        dev_id = 'test'
         device = device_tracker.Device(
-            self.hass, timedelta(seconds=180), True, dev_id,
-            mac, 'Test name')
-        self.assertEqual(device.vendor, vendor_string)
+            self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+
+        with mock_aiohttp_client() as aioclient_mock:
+            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
+                               status=404)
+
+            run_coroutine_threadsafe(device.async_seen(),
+                                     self.hass.loop).result()
+
+            self.assertEqual(device.vendor, 'unknown')
+
+            run_coroutine_threadsafe(device.async_seen(),
+                                     self.hass.loop).result()
+
+            assert aioclient_mock.call_count == 1, \
+                'vendor string lookup has been retried'
 
     def test_discovery(self):
         """Test discovery."""
@@ -386,13 +416,12 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         # MAC is not a string (but added)
         tracker.see(mac=567, host_name="Number MAC")
-
+        print(self.hass)
         # No device id or MAC(not added)
         with self.assertRaises(HomeAssistantError):
             run_coroutine_threadsafe(
                 tracker.async_see(), self.hass.loop).result()
         assert mock_warning.call_count == 0
-
         # Ignore gps on invalid GPS (both added & warnings)
         tracker.see(mac='mac_1_bad_gps', gps=1)
         tracker.see(mac='mac_2_bad_gps', gps=[1])
