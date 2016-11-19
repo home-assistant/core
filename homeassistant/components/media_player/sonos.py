@@ -8,7 +8,6 @@ import datetime
 import logging
 from os import path
 import socket
-import time
 import urllib
 import voluptuous as vol
 
@@ -21,6 +20,7 @@ from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import utcnow
 
 REQUIREMENTS = ['SoCo==0.12']
 
@@ -515,17 +515,19 @@ class SonosDevice(MediaPlayerDevice):
                     if rel_time is not None and \
                        self._media_position is not None:
 
+                        time_diff = utcnow() - self._media_position_updated_at
+                        time_diff = time_diff.total_seconds()
+
                         calculated_position = \
                             self._media_position + \
-                            time.time() - \
-                            self._media_position_updated_at
+                            time_diff
 
                         update_media_position = \
                             abs(calculated_position - rel_time) > 1.5
 
                     if update_media_position:
                         media_position = rel_time
-                        media_position_updated_at = time.time()
+                        media_position_updated_at = utcnow()
                     else:
                         # don't update media_position (don't want unneeded
                         # state transitions)
@@ -702,7 +704,7 @@ class SonosDevice(MediaPlayerDevice):
     def media_position_updated_at(self):
         """When was the position of the current playing media valid.
 
-        Returns value from time.time()."""
+        Returns value from homeassistant.util.dt.utcnow()."""
         if self._coordinator:
             return self._coordinator.media_position_updated_at
         else:

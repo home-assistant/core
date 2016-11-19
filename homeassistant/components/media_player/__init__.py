@@ -459,7 +459,7 @@ class MediaPlayerDevice(Entity):
     def media_position_updated_at(self):
         """When was the position of the current playing media valid.
 
-        Returns value from time.time()."""
+        Returns value from homeassistant.util.dt.utcnow()."""
         return None
 
     @property
