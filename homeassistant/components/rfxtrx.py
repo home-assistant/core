@@ -94,6 +94,7 @@ def valid_sensor(value):
 def _valid_light_switch(value):
     return _valid_device(value, "light_switch")
 
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
