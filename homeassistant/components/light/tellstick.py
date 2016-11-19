@@ -53,11 +53,11 @@ class TellstickLight(TellstickDevice, Light):
         return SUPPORT_TELLSTICK
 
     def _parse_ha_data(self, kwargs):
-        """Turn the value from HA into something useful"""
+        """Turn the value from HA into something useful."""
         return kwargs.get(ATTR_BRIGHTNESS)
 
     def _parse_tellcore_data(self, tellcore_data):
-        """Turn the value recieved from tellcore into something useful"""
+        """Turn the value recieved from tellcore into something useful."""
         if tellcore_data is not None:
             brightness = int(tellcore_data)
             return brightness
@@ -65,20 +65,19 @@ class TellstickLight(TellstickDevice, Light):
             return None
 
     def _update_model(self, new_state, data):
-        """Update the device entity state to match the arguments"""
+        """Update the device entity state to match the arguments."""
         if new_state:
-          brightness = data
-          if brightness is not None:
-              self._brightness = brightness
+            brightness = data
+            if brightness is not None:
+                self._brightness = brightness
 
-          self._state = (self._brightness > 0)
+            self._state = (self._brightness > 0)
         else:
-          self._state = False
+            self._state = False
 
     def _send_tellstick_command(self):
-        """Let tellcore update the physical device to match the current state"""
+        """Let tellcore update the device to match the current state."""
         if self._state:
             self._tellcore_device.dim(self._brightness)
         else:
             self._tellcore_device.turn_off()
-
