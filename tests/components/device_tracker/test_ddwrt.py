@@ -10,10 +10,8 @@ import requests_mock
 from tests.common import (
     assert_setup_component, get_test_home_assistant, load_fixture)
 
-from ...test_util.aiohttp import mock_aiohttp_client
-
 from homeassistant import config
-from homeassistant.bootstrap import async_setup_component, setup_component
+from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import (
