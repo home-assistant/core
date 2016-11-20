@@ -60,10 +60,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES)
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup the Sonarr platform """
-    add_devices([Sonarr(hass, config, sensor) for sensor in config[CONF_MONITORED_CONDITIONS]])
+    conditions = config.get(CONF_MONITORED_CONDITIONS)
+    add_devices(
+        [Sonarr(hass, config, sensor) for sensor in conditions]
+    )
     return True
+
 
 class Sonarr(Entity):
     """Implement the Sonarr sensor class"""
@@ -109,16 +114,26 @@ class Sonarr(Entity):
         if res.status_code == 200:
             if self.type in ['upcoming', 'queue', 'series', 'commands']:
                 if self.days == 1 and self.type == 'upcoming':
-                    # Sonarr API returns empty array if start and end dates are the same
-                    # So we need to filter to just today
-                    self.data = list(filter(lambda x: x['airDate'] == str(start), res.json()))
+                    # Sonarr API returns empty array if start and end dates are
+                    # the same, so we need to filter to just today
+                    self.data = list(
+                        filter(
+                            lambda x: x['airDate'] == str(start),
+                            res.json()
+                        )
+                    )
                 else:
                     self.data = res.json()
                 self._state = len(self.data)
             elif self.type == 'wanted':
                 data = res.json()
                 res = requests.get('{}&pageSize={}'.format(
-                    ENDPOINTS[self.type].format(self.ssl, self.host, self.port, self.apikey),
+                    ENDPOINTS[self.type].format(
+                        self.ssl,
+                        self.host,
+                        self.port,
+                        self.apikey
+                    ),
                     data['totalRecords']
                     ))
                 self.data = res.json()['records']
@@ -129,9 +144,17 @@ class Sonarr(Entity):
                     self.data = res.json()
                 else:
                     # Filter to only show lists that are included
-                    self.data = list(filter(lambda x: x['path'] in self.included, res.json()))
+                    self.data = list(
+                        filter(
+                            lambda x: x['path'] in self.included,
+                            res.json()
+                        )
+                    )
                 self._state = '{:.2f}'.format(
-                    to_unit(sum([data['freeSpace'] for data in self.data]), self._unit)
+                    to_unit(
+                        sum([data['freeSpace'] for data in self.data]),
+                        self._unit
+                    )
                 )
 
     @property
@@ -184,7 +207,7 @@ class Sonarr(Entity):
                         to_unit(
                             data['freeSpace'],
                             self._unit
-                        )/
+                        ) /
                         to_unit(
                             data['totalSpace'],
                             self._unit
@@ -204,10 +227,14 @@ class Sonarr(Entity):
         """Return the icon of the sensor"""
         return self._icon
 
+
 def get_date(zone, offset=0):
     """Get date based on timezone and offset of days"""
     day = 60*60*24
-    return datetime.date(datetime.fromtimestamp(time.time() + day*offset, tz=zone))
+    return datetime.date(
+        datetime.fromtimestamp(time.time() + day*offset, tz=zone)
+    )
+
 
 def to_unit(value, unit):
     """Convert bytes to give unit"""
