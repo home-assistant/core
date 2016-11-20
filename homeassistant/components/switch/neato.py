@@ -103,7 +103,6 @@ class NeatoConnectedSwitch(ToggleEntity):
             self.robot.start_cleaning()
         elif self.type == SWITCH_TYPE_SCHEDULE:
             self.robot.enable_schedule()
-        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
@@ -112,4 +111,3 @@ class NeatoConnectedSwitch(ToggleEntity):
             self.robot.send_to_base()
         elif self.type == SWITCH_TYPE_SCHEDULE:
             self.robot.disable_schedule()
-        self.schedule_update_ha_state()
