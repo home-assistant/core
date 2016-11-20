@@ -224,6 +224,49 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             assert aioclient_mock.call_count == 1, \
                 'vendor string lookup has been retried'
 
+    def test_mac_vendor_lookup_error(self):
+        """Failure during API call should be retried."""
+        mac = 'B8:27:EB:00:00:00'
+
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+
+        with mock_aiohttp_client() as aioclient_mock:
+            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
+                               status=500)
+
+            run_coroutine_threadsafe(device.async_seen(),
+                                     self.hass.loop).result()
+
+            self.assertEqual(device.vendor, None)
+
+            run_coroutine_threadsafe(device.async_seen(),
+                                     self.hass.loop).result()
+
+            assert aioclient_mock.call_count == 2, \
+                'vendor string lookup has been retried'
+
+    def test_mac_vendor_lookup_exception(self):
+        """Exception during API call should be retried."""
+        mac = 'B8:27:EB:00:00:00'
+
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+
+        with mock_aiohttp_client() as aioclient_mock:
+            aioclient_mock.get('http://api.macvendors.com/b8:27:eb', exc=True)
+
+            run_coroutine_threadsafe(device.async_seen(),
+                                     self.hass.loop).result()
+
+            self.assertEqual(device.vendor, None)
+
+            run_coroutine_threadsafe(device.async_seen(),
+                                     self.hass.loop).result()
+
+            assert aioclient_mock.call_count == 2, \
+                'vendor string lookup has been retried'
+
     def test_discovery(self):
         """Test discovery."""
         scanner = get_component('device_tracker.test').SCANNER
