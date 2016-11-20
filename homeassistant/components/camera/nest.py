@@ -51,6 +51,9 @@ class NestCamera(Camera):
         self._last_image = None
         self._next_snapshot_at = None
 
+        # TODO this is so the initial values are set, so remove this when update gets called correctly
+        self.update()
+
 
     # FIXME ends up with double name, ie Hallway(Hallway (E5C0))... maybe that's just the simulator?
     # FIXME duplication with climate/nest
