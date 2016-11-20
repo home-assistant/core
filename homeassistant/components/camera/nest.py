@@ -49,7 +49,8 @@ class NestCamera(Camera):
         # default to non-NestAware subscribed, but will be fixed during update
         self._time_between_snapshots = timedelta(seconds=30)
         self._last_image = None
-        self._last_image_at = None
+        self._next_snapshot_at = None
+
 
     # FIXME ends up with double name, ie Hallway(Hallway (E5C0))... maybe that's just the simulator?
     # FIXME duplication with climate/nest
@@ -91,8 +92,8 @@ class NestCamera(Camera):
             self._time_between_snapshots = timedelta(seconds=30)
 
     def _ready_for_snapshot(self, now):
-        return self._last_image_at is None or \
-                utcnow() > self._last_image_at + self._time_between_snapshots
+        return self._next_snapshot_at is None or \
+                now > self._next_snapshot_at
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -106,7 +107,7 @@ class NestCamera(Camera):
                 _LOGGER.error('Error getting camera image: %s', error)
                 return None
 
-            self._last_image_at = now
+            self._next_snapshot_at = now + self._time_between_snapshots
             self._last_image = response.content
 
         return self._last_image
