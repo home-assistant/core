@@ -3,7 +3,7 @@
 There are two different types of discoveries that can be fired/listened for.
  - listen/discover is for services. These are targetted at a component.
  - listen_platform/discover_platform is for platforms. These are used by
-   components to allow discovery of their platofrms.
+   components to allow discovery of their platforms.
 """
 import asyncio
 
