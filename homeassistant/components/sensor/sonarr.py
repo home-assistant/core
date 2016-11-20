@@ -1,6 +1,10 @@
+"""
+Support for Sonarr
+"""
 import logging
-import requests
 import time
+from datetime import datetime
+import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -9,9 +13,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.const import CONF_SSL
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from datetime import datetime
 _LOGGER = logging.getLogger(__name__)
-
 
 DEPENDENCIES = []
 REQUIREMENTS = ['pytz==2016.7']
@@ -23,7 +25,7 @@ CONF_INCLUDED = 'include_paths'
 CONF_UNIT = 'unit'
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8989
-DEFAULT_DAYS  = '1'
+DEFAULT_DAYS = '1'
 DEFAULT_UNIT = 'GB'
 
 SENSOR_TYPES = {
@@ -92,12 +94,21 @@ class Sonarr(Entity):
 
     def update(self):
         """Update the data for the sensor"""
-        start = self.getDate(self.tz)
-        end = self.getDate(self.tz, self.days)
-        res = requests.get(ENDPOINTS[self.type].format(self.ssl, self.host, self.port, self.apikey, start, end))
+        start = getDate(self.tz)
+        end = getDate(self.tz, self.days)
+        res = requests.get(
+            ENDPOINTS[self.type].format(
+                self.ssl,
+                self.host,
+                self.port,
+                self.apikey,
+                start,
+                end
+                )
+            )
         if res.status_code == 200:
             if self.type in ['upcoming', 'queue', 'series', 'commands']:
-                if self.days == 1 and self.type =='upcoming':
+                if self.days == 1 and self.type == 'upcoming':
                     # Sonarr API returns empty array if start and end dates are the same
                     # So we need to filter to just today
                     self.data = list(filter(lambda x: x['airDate'] == str(start), res.json()))
@@ -112,14 +123,16 @@ class Sonarr(Entity):
                     ))
                 self.data = res.json()['records']
                 self._state = len(self.data)
-            elif self.type =='diskspace':
+            elif self.type == 'diskspace':
                 # If included paths are not provided, use all data
                 if self.included == []:
                     self.data = res.json()
                 else:
                     # Filter to only show lists that are included
                     self.data = list(filter(lambda x: x['path'] in self.included, res.json()))
-                self._state = '{:.2f}'.format(self.toUnit(sum([data['freeSpace'] for data in self.data])))
+                self._state = '{:.2f}'.format(
+                    toUnit(sum([data['freeSpace'] for data in self.data]), self._unit)
+                )
 
     @property
     def name(self):
@@ -155,10 +168,10 @@ class Sonarr(Entity):
         elif self.type == 'diskspace':
             for data in self.data:
                 attributes[data['path']] = '{:.2f}/{:.2f}{} ({:.2f}%)'.format(
-                    self.toUnit(data['freeSpace']),
-                    self.toUnit(data['totalSpace']),
+                    toUnit(data['freeSpace'], self._unit),
+                    toUnit(data['totalSpace'], self._unit),
                     self._unit,
-                    (self.toUnit(data['freeSpace'])/self.toUnit(data['totalSpace'])*100)
+                    (toUnit(data['freeSpace'], self._unit)/toUnit(data['totalSpace'], self._unit)*100)
                 )
         elif self.type == 'series':
             for show in self.data:
@@ -170,11 +183,11 @@ class Sonarr(Entity):
         """Return the icon of the sensor"""
         return self._icon
 
-    def getDate(self, zone, offset=0):
-        """Get date based on timezone and offset of days"""
-        day = 60*60*24
-        return datetime.date(datetime.fromtimestamp(time.time() + day*offset, tz=zone))
+def getDate(zone, offset=0):
+    """Get date based on timezone and offset of days"""
+    day = 60*60*24
+    return datetime.date(datetime.fromtimestamp(time.time() + day*offset, tz=zone))
 
-    def toUnit(self, value):
-        """Convert bytes to give unit"""
-        return value/1024**BYTE_SIZES.index(self._unit)
+def toUnit(value, unit):
+    """Convert bytes to give unit"""
+    return value/1024**BYTE_SIZES.index(unit)
