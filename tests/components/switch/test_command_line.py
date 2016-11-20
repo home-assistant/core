@@ -1,4 +1,4 @@
-"""the tests for the Command line switch platform."""
+"""The tests for the Command line switch platform."""
 import json
 import os
 import tempfile
@@ -12,14 +12,15 @@ import homeassistant.components.switch.command_line as command_line
 from tests.common import get_test_home_assistant
 
 
+# pylint: disable=invalid-name
 class TestCommandSwitch(unittest.TestCase):
     """Test the command switch."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -162,16 +163,41 @@ class TestCommandSwitch(unittest.TestCase):
         """Test with state value."""
         self.hass = get_test_home_assistant()
 
-        # Set state command to false
-        statecmd = False
+        # args: hass, device_name, friendly_name, command_on, command_off,
+        #       command_state, value_template
+        init_args = [
+            self.hass,
+            "test_device_name",
+            "Test friendly name!",
+            "echo 'on command'",
+            "echo 'off command'",
+            False,
+            None,
+        ]
 
-        no_state_device = command_line.CommandSwitch(self.hass, "Test", "echo",
-                                                     "echo", statecmd, None)
+        no_state_device = command_line.CommandSwitch(*init_args)
         self.assertTrue(no_state_device.assumed_state)
 
         # Set state command
-        statecmd = 'cat {}'
+        init_args[-2] = 'cat {}'
 
-        state_device = command_line.CommandSwitch(self.hass, "Test", "echo",
-                                                  "echo", statecmd, None)
+        state_device = command_line.CommandSwitch(*init_args)
         self.assertFalse(state_device.assumed_state)
+
+    def test_entity_id_set_correctly(self):
+        """Test that entity_id is set correctly from object_id"""
+        self.hass = get_test_home_assistant()
+
+        init_args = [
+            self.hass,
+            "test_device_name",
+            "Test friendly name!",
+            "echo 'on command'",
+            "echo 'off command'",
+            False,
+            None,
+        ]
+
+        test_switch = command_line.CommandSwitch(*init_args)
+        self.assertEqual(test_switch.entity_id, 'switch.test_device_name')
+        self.assertEqual(test_switch.name, 'Test friendly name!')

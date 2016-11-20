@@ -3,8 +3,8 @@
 # NOTE: all testing is now driven through tox. The tox command below
 # performs roughly what this test did in the past.
 
-if [ "$1" == "--changed" ]; then
-  export files=`git diff upstream/dev --name-only | grep -v requirements_all.txt`
+if [ "$1" = "--changed" ]; then
+  export files="`git diff upstream/dev --name-only | grep -v requirements_all.txt`"
   echo "================================================="
   echo "FILES CHANGED (git diff upstream/dev --name-only)"
   echo "================================================="

@@ -86,6 +86,11 @@ class TestScriptComponent(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(events))
 
+        script.turn_off(self.hass, ENTITY_ID)
+        self.hass.block_till_done()
+        self.assertFalse(script.is_on(self.hass, ENTITY_ID))
+        self.assertEqual(0, len(events))
+
         state = self.hass.states.get('group.all_scripts')
         assert state is not None
         assert state.attributes.get('entity_id') == (ENTITY_ID,)
@@ -130,6 +135,7 @@ class TestScriptComponent(unittest.TestCase):
         """Test different ways of passing in variables."""
         calls = []
 
+        @callback
         def record_call(service):
             """Add recorded event to set."""
             calls.append(service)

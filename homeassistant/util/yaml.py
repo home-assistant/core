@@ -249,6 +249,7 @@ def _secret_yaml(loader: SafeLineLoader,
     _LOGGER.error('Secret %s not defined.', node.value)
     raise HomeAssistantError(node.value)
 
+
 yaml.SafeLoader.add_constructor('!include', _include_yaml)
 yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
                                 _ordered_dict)

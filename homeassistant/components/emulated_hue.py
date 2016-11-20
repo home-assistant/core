@@ -18,7 +18,7 @@ from homeassistant import util, core
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    STATE_ON, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
+    STATE_ON, STATE_OFF, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_SUPPORTED_FEATURES, SUPPORT_BRIGHTNESS
@@ -318,7 +318,16 @@ class HueLightsView(HomeAssistantView):
         # Construct what we need to send to the service
         data = {ATTR_ENTITY_ID: entity_id}
 
-        if brightness is not None:
+        # If the requested entity is a script add some variables
+        if entity.domain.lower() == "script":
+            data['variables'] = {
+                'requested_state': STATE_ON if result else STATE_OFF
+            }
+
+            if brightness is not None:
+                data['variables']['requested_level'] = brightness
+
+        elif brightness is not None:
             data[ATTR_BRIGHTNESS] = brightness
 
         if entity.domain.lower() in config.off_maps_to_on_domains:
@@ -402,6 +411,13 @@ def parse_hue_api_put_light_body(request_json, entity):
 
             report_brightness = True
             result = (brightness > 0)
+        elif entity.domain.lower() == "script":
+            # Convert 0-255 to 0-100
+            level = int(request_json[HUE_API_STATE_BRI]) / 255 * 100
+
+            brightness = round(level)
+            report_brightness = True
+            result = True
 
     return (result, brightness) if report_brightness else (result, None)
 

@@ -6,7 +6,7 @@ import requests
 
 from homeassistant import bootstrap, const, core
 import homeassistant.components as core_components
-from homeassistant.components import emulated_hue, http, light
+from homeassistant.components import emulated_hue, http, light, script
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.emulated_hue import (
     HUE_API_STATE_ON, HUE_API_STATE_BRI)
@@ -17,12 +17,12 @@ from tests.common import get_test_instance_port, get_test_home_assistant
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
 
-BRIDGE_URL_BASE = "http://127.0.0.1:{}".format(BRIDGE_SERVER_PORT) + "{}"
+BRIDGE_URL_BASE = 'http://127.0.0.1:{}'.format(BRIDGE_SERVER_PORT) + '{}'
 JSON_HEADERS = {const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
 
 def setup_hass_instance(emulated_hue_config):
-    """Setup the Home Assistant instance to test."""
+    """Set up the Home Assistant instance to test."""
     hass = get_test_home_assistant()
 
     # We need to do this to get access to homeassistant/turn_(on,off)
@@ -75,6 +75,7 @@ class TestEmulatedHue(unittest.TestCase):
         self.assertTrue('text/xml' in result.headers['content-type'])
 
         # Make sure the XML is parsable
+        # pylint: disable=bare-except
         try:
             ET.fromstring(result.text)
         except:
@@ -129,6 +130,23 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             ]
         })
 
+        bootstrap.setup_component(cls.hass, script.DOMAIN, {
+            'script': {
+                'set_kitchen_light': {
+                    'sequence': [
+                        {
+                            'service_template':
+                                "light.turn_{{ requested_state }}",
+                            'data_template': {
+                                'entity_id': 'light.kitchen_lights',
+                                'brightness': "{{ requested_level }}"
+                                }
+                        }
+                    ]
+                }
+            }
+        })
+
         start_hass_instance(cls.hass)
 
         # Kitchen light is explicitly excluded from being exposed
@@ -138,6 +156,14 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         cls.hass.states.set(
             kitchen_light_entity.entity_id, kitchen_light_entity.state,
             attributes=attrs)
+
+        # Expose the script
+        script_entity = cls.hass.states.get('script.set_kitchen_light')
+        attrs = dict(script_entity.attributes)
+        attrs[emulated_hue.ATTR_EMULATED_HUE] = True
+        cls.hass.states.set(
+            script_entity.entity_id, script_entity.state, attributes=attrs
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -157,6 +183,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         # Make sure the lights we added to the config are there
         self.assertTrue('light.ceiling_lights' in result_json)
         self.assertTrue('light.bed_light' in result_json)
+        self.assertTrue('script.set_kitchen_light' in result_json)
         self.assertTrue('light.kitchen_lights' not in result_json)
 
     def test_get_light_state(self):
@@ -231,6 +258,36 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             'light.kitchen_light', True)
         self.assertEqual(kitchen_result.status_code, 404)
 
+    def test_put_light_state_script(self):
+        """Test the setting of script variables."""
+        # Turn the kitchen light off first
+        self.hass.services.call(
+            light.DOMAIN, const.SERVICE_TURN_OFF,
+            {const.ATTR_ENTITY_ID: 'light.kitchen_lights'},
+            blocking=True)
+
+        # Emulated hue converts 0-100% to 0-255.
+        level = 23
+        brightness = round(level * 255 / 100)
+
+        script_result = self.perform_put_light_state(
+            'script.set_kitchen_light', True, brightness)
+
+        script_result_json = script_result.json()
+
+        self.assertEqual(script_result.status_code, 200)
+        self.assertEqual(len(script_result_json), 2)
+
+        # Wait until script is complete before continuing
+        self.hass.block_till_done()
+
+        kitchen_light = self.hass.states.get('light.kitchen_lights')
+        self.assertEqual(kitchen_light.state, 'on')
+        self.assertEqual(
+            kitchen_light.attributes[light.ATTR_BRIGHTNESS],
+            level)
+
+    # pylint: disable=invalid-name
     def test_put_with_form_urlencoded_content_type(self):
         """Test the form with urlencoded content."""
         # Needed for Alexa
@@ -242,7 +299,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         result = requests.put(
             BRIDGE_URL_BASE.format(
                 '/api/username/lights/{}/state'.format(
-                    "light.ceiling_lights")), data=data)
+                    'light.ceiling_lights')), data=data)
 
         self.assertEqual(result.status_code, 400)
 
@@ -290,8 +347,8 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         result = requests.put(
             BRIDGE_URL_BASE.format(
                 '/api/username/lights/{}/state'.format(
-                    "light.ceiling_lights")),
-                data=json.dumps({HUE_API_STATE_ON: 1234}))
+                    'light.ceiling_lights')),
+            data=json.dumps({HUE_API_STATE_ON: 1234}))
 
         self.assertEqual(result.status_code, 400)
 
@@ -299,13 +356,14 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         result = requests.put(
             BRIDGE_URL_BASE.format(
                 '/api/username/lights/{}/state'.format(
-                    "light.ceiling_lights")), data=json.dumps({
+                    'light.ceiling_lights')), data=json.dumps({
                         HUE_API_STATE_ON: True,
                         HUE_API_STATE_BRI: 'Hello world!'
                     }))
 
         self.assertEqual(result.status_code, 400)
 
+    # pylint: disable=invalid-name
     def perform_put_test_on_ceiling_lights(self,
                                            content_type='application/json'):
         """Test the setting of a light."""
@@ -351,6 +409,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         return None
 
+    # pylint: disable=no-self-use
     def perform_put_light_state(self, entity_id, is_on, brightness=None,
                                 content_type='application/json'):
         """Test the setting of a light state."""

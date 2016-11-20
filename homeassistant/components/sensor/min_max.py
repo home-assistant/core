@@ -58,8 +58,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     sensor_type = config.get(CONF_TYPE)
 
-    hass.loop.create_task(async_add_devices(
-        [MinMaxSensor(hass, entity_ids, name, sensor_type)], True))
+    yield from async_add_devices(
+        [MinMaxSensor(hass, entity_ids, name, sensor_type)], True)
     return True
 
 
@@ -100,7 +100,7 @@ class MinMaxSensor(Entity):
                 _LOGGER.warning("Unable to store state. "
                                 "Only numerical states are supported")
 
-            hass.loop.create_task(self.async_update_ha_state(True))
+            hass.async_add_job(self.async_update_ha_state, True)
 
         async_track_state_change(
             hass, entity_ids, async_min_max_sensor_state_listener)
