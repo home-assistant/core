@@ -76,6 +76,7 @@ class NestCamera(Camera):
         """Camera Brand."""
         return NEST_BRAND
 
+    # FIXME this doesn't seem to be getting called
     def update(self):
         """Cache value from Python-nest."""
         self._location = self.device.where
