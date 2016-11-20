@@ -572,7 +572,7 @@ xboxapi==0.1.1
 xmltodict==0.10.2
 
 # homeassistant.components.sensor.yahoo_finance
-yahoo-finance==1.3.2
+yahoo-finance==1.4.0
 
 # homeassistant.components.sensor.yweather
 yahooweather==0.8
