@@ -760,3 +760,29 @@ class TestSonarrSetup(unittest.TestCase):
             self.assertEqual('Episodes', device.unit_of_measurement)
             self.assertEqual('Sonarr Upcoming', device.name)
             self.assertEqual('S04E11', device.device_state_attributes["Bob's Burgers"])
+
+    @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
+    def test_ssl(self, req_mock):
+        config = {
+            'platform': 'sonarr',
+            'api_key': 'foo',
+            'days': '1',
+            'unit': 'GB',
+            "include_paths": [
+                '/data'
+            ],
+            'monitored_conditions': [
+                'upcoming'
+            ],
+            "ssl": "true"
+        }
+        sonarr.setup_platform(self.hass, config, self.add_devices,
+                                    None)
+        for device in self.DEVICES:
+            device.update()
+            self.assertEqual(1, device.state)
+            self.assertEqual('s', device.ssl)
+            self.assertEqual('mdi:television', device.icon)
+            self.assertEqual('Episodes', device.unit_of_measurement)
+            self.assertEqual('Sonarr Upcoming', device.name)
+            self.assertEqual('S04E11', device.device_state_attributes["Bob's Burgers"])

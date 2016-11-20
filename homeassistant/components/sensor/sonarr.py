@@ -6,6 +6,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_API_KEY
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_SSL
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from datetime import datetime
@@ -35,12 +36,12 @@ SENSOR_TYPES = {
 }
 
 ENDPOINTS = {
-    'diskspace': 'http://{0}:{1}/api/diskspace?apikey={2}',
-    'queue': 'http://{0}:{1}/api/queue?apikey={2}',
-    'upcoming': 'http://{0}:{1}/api/calendar?apikey={2}&start={3}&end={4}',
-    'wanted': 'http://{0}:{1}/api/wanted/missing?apikey={2}',
-    'series': 'http://{0}:{1}/api/series?apikey={2}',
-    'commands': 'http://{0}:{1}/api/command?apikey={2}'
+    'diskspace': 'http{0}://{1}:{2}/api/diskspace?apikey={3}',
+    'queue': 'http{0}://{1}:{2}/api/queue?apikey={3}',
+    'upcoming': 'http{0}://{1}:{2}/api/calendar?apikey={3}&start={4}&end={5}',
+    'wanted': 'http{0}://{1}:{2}/api/wanted/missing?apikey={3}',
+    'series': 'http{0}://{1}:{2}/api/series?apikey={3}',
+    'commands': 'http{0}://{1}:{2}/api/command?apikey={3}'
 }
 
 # Suport to Yottabytes for the future, why not
@@ -50,6 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES.keys()))]),
     vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
@@ -73,6 +75,7 @@ class Sonarr(Entity):
         self.apikey = conf.get(CONF_API_KEY)
         self.included = conf.get(CONF_INCLUDED)
         self.days = int(conf.get(CONF_DAYS))
+        self.ssl = 's' if conf.get(CONF_SSL) else ''
 
         # Object data
         self.tz = timezone(str(hass.config.time_zone))
@@ -91,7 +94,7 @@ class Sonarr(Entity):
         """Update the data for the sensor"""
         start = self.getDate(self.tz)
         end = self.getDate(self.tz, self.days)
-        res = requests.get(ENDPOINTS[self.type].format(self.host, self.port, self.apikey, start, end))
+        res = requests.get(ENDPOINTS[self.type].format(self.ssl, self.host, self.port, self.apikey, start, end))
         if res.status_code == 200:
             if self.type in ['upcoming', 'queue', 'series', 'commands']:
                 if self.days == 1 and self.type =='upcoming':
@@ -104,7 +107,7 @@ class Sonarr(Entity):
             elif self.type == 'wanted':
                 data = res.json()
                 res = requests.get('{}&pageSize={}'.format(
-                    ENDPOINTS[self.type].format(self.host, self.port, self.apikey),
+                    ENDPOINTS[self.type].format(self.ssl, self.host, self.port, self.apikey),
                     data['totalRecords']
                     ))
                 self.data = res.json()['records']
