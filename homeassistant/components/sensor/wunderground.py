@@ -31,33 +31,44 @@ MIN_TIME_BETWEEN_UPDATES_OBSERVATION = timedelta(minutes=5)
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
     'alerts': ['Alerts', None],
-    'weather': ['Weather Summary', None],
-    'station_id': ['Station ID', None],
+    'dewpoint_c': ['Dewpoint (°C)', TEMP_CELSIUS],
+    'dewpoint_f': ['Dewpoint (°F)', TEMP_FAHRENHEIT],
+    'dewpoint_string': ['Dewpoint Summary', None],
     'feelslike_c': ['Feels Like (°C)', TEMP_CELSIUS],
     'feelslike_f': ['Feels Like (°F)', TEMP_FAHRENHEIT],
     'feelslike_string': ['Feels Like', None],
     'heat_index_c': ['Dewpoint (°C)', TEMP_CELSIUS],
     'heat_index_f': ['Dewpoint (°F)', TEMP_FAHRENHEIT],
     'heat_index_string': ['Heat Index Summary', None],
-    'dewpoint_c': ['Dewpoint (°C)', TEMP_CELSIUS],
-    'dewpoint_f': ['Dewpoint (°F)', TEMP_FAHRENHEIT],
-    'dewpoint_string': ['Dewpoint Summary', None],
-    'wind_kph': ['Wind Speed', 'kpH'],
-    'wind_mph': ['Wind Speed', 'mpH'],
-    'UV': ['UV', None],
-    'pressure_in': ['Pressure', 'in'],
-    'pressure_mb': ['Pressure', 'mbar'],
-    'wind_dir': ['Wind Direction', None],
-    'wind_string': ['Wind Summary', None],
-    'temp_c': ['Temperature (°C)', TEMP_CELSIUS],
-    'temp_f': ['Temperature (°F)', TEMP_FAHRENHEIT],
-    'relative_humidity': ['Relative Humidity', '%'],
-    'visibility_mi': ['Visibility (miles)', 'mi'],
-    'visibility_km': ['Visibility (km)', 'km'],
+    'elevation': ['Elevation', 'ft'],
+    'location': ['Location', None],
+    'observation_time': ['Observation Time', None],
+    'precip_1hr_in': ['Precipation 1hr', 'in'],
+    'precip_1hr_metric': ['Precipation 1hr', 'mm'],
+    'precip_1hr_string': ['Precipation 1hr', None],
     'precip_today_in': ['Precipation Today', 'in'],
     'precip_today_metric': ['Precipitation Today', 'mm'],
     'precip_today_string': ['Precipitation today', None],
-    'solarradiation': ['Solar Radiation', None]
+    'pressure_in': ['Pressure', 'in'],
+    'pressure_mb': ['Pressure', 'mb'],
+    'pressure_trend': ['Pressure Trend', None],
+    'relative_humidity': ['Relative Humidity', '%'],
+    'station_id': ['Station ID', None],
+    'solarradiation': ['Solar Radiation', None],
+    'temperature_string': ['Temperature Summary', None],
+    'temp_c': ['Temperature (°C)', TEMP_CELSIUS],
+    'temp_f': ['Temperature (°F)', TEMP_FAHRENHEIT],
+    'UV': ['UV', None],
+    'visibility_km': ['Visibility (km)', 'km'],
+    'visibility_mi': ['Visibility (miles)', 'mi'],
+    'weather': ['Weather Summary', None],
+    'wind_degrees': ['Wind Degrees', None],
+    'wind_dir': ['Wind Direction', None],
+    'wind_gust_kph': ['Wind Gust', 'kpH'],
+    'wind_gust_mph': ['Wind Gust', 'mpH'],
+    'wind_kph': ['Wind Speed', 'kpH'],
+    'wind_mph': ['Wind Speed', 'mpH'],
+    'wind_string': ['Wind Summary', None],
 }
 
 # Alert Attributes
@@ -112,11 +123,22 @@ class WUndergroundSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.rest.data and self._condition in self.rest.data:
-            if self._condition == 'relative_humidity':
-                return int(self.rest.data[self._condition][:-1])
-            else:
-                return self.rest.data[self._condition]
+        if self.rest.data:
+
+            if self._condition == 'elevation' and self._condition in \
+                    self.rest.data['observation_location']:
+                return self.rest.data['observation_location'][self._condition]\
+                        .split()[0]
+
+            if self._condition == 'location' and \
+               'full' in self.rest.data['display_location']:
+                return self.rest.data['display_location']['full']
+
+            if self._condition in self.rest.data:
+                if self._condition == 'relative_humidity':
+                    return int(self.rest.data[self._condition][:-1])
+                else:
+                    return self.rest.data[self._condition]
 
         if self._condition == 'alerts':
             if self.rest.alerts:

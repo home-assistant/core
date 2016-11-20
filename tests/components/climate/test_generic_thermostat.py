@@ -3,7 +3,7 @@ import datetime
 import unittest
 from unittest import mock
 
-
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -216,6 +216,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
+        @callback
         def log_call(call):
             """Log service calls."""
             self.calls.append(call)
@@ -306,6 +307,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
+        @callback
         def log_call(call):
             """Log service calls."""
             self.calls.append(call)
@@ -397,6 +399,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
+        @callback
         def log_call(call):
             """Log service calls."""
             self.calls.append(call)
@@ -487,6 +490,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
+        @callback
         def log_call(call):
             """Log service calls."""
             self.calls.append(call)

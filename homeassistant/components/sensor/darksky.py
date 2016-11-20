@@ -113,6 +113,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             longitude=hass.config.longitude,
             units=units,
             interval=config.get(CONF_UPDATE_INTERVAL))
+        forecast_data.update()
         forecast_data.update_currently()
     except ValueError as error:
         _LOGGER.error(error)
@@ -124,7 +125,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(DarkSkySensor(forecast_data, variable, name))
 
-    add_devices(sensors)
+    add_devices(sensors, True)
 
 
 class DarkSkySensor(Entity):
@@ -138,8 +139,6 @@ class DarkSkySensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = None
-
-        self.update()
 
     @property
     def name(self):
@@ -276,8 +275,6 @@ class DarkSkyData(object):
         self.update_minutely = Throttle(interval)(self._update_minutely)
         self.update_hourly = Throttle(interval)(self._update_hourly)
         self.update_daily = Throttle(interval)(self._update_daily)
-
-        self.update()
 
     def _update(self):
         """Get the latest data from Dark Sky."""

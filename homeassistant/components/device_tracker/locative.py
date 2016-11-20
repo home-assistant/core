@@ -8,7 +8,9 @@ import asyncio
 from functools import partial
 import logging
 
-from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME
+from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE,
+                                 STATE_NOT_HOME,
+                                 HTTP_UNPROCESSABLE_ENTITY)
 from homeassistant.components.http import HomeAssistantView
 # pylint: disable=unused-import
 from homeassistant.components.device_tracker import (  # NOQA
@@ -76,11 +78,13 @@ class LocativeView(HomeAssistantView):
         device = data['device'].replace('-', '')
         location_name = data['id'].lower()
         direction = data['trigger']
+        gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 
         if direction == 'enter':
             yield from self.hass.loop.run_in_executor(
                 None, partial(self.see, dev_id=device,
-                              location_name=location_name))
+                              location_name=location_name,
+                              gps=gps_location))
             return 'Setting location to {}'.format(location_name)
 
         elif direction == 'exit':
@@ -88,9 +92,11 @@ class LocativeView(HomeAssistantView):
                 '{}.{}'.format(DOMAIN, device))
 
             if current_state is None or current_state.state == location_name:
+                location_name = STATE_NOT_HOME
                 yield from self.hass.loop.run_in_executor(
                     None, partial(self.see, dev_id=device,
-                                  location_name=STATE_NOT_HOME))
+                                  location_name=location_name,
+                                  gps=gps_location))
                 return 'Setting location to not home'
             else:
                 # Ignore the message if it is telling us to exit a zone that we

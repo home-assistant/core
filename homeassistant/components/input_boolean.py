@@ -23,17 +23,23 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 _LOGGER = logging.getLogger(__name__)
 
 CONF_INITIAL = 'initial'
+DEFAULT_INITIAL = False
 
 SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {
-    cv.slug: vol.Any({
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_INITIAL, default=False): cv.boolean,
-        vol.Optional(CONF_ICON): cv.icon,
-    }, None)}}, extra=vol.ALLOW_EXTRA)
+DEFAULT_CONFIG = {CONF_INITIAL: DEFAULT_INITIAL}
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        cv.slug: vol.Any({
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.boolean,
+            vol.Optional(CONF_ICON): cv.icon,
+        }, None)
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 
 def is_on(hass, entity_id):
@@ -65,10 +71,10 @@ def async_setup(hass, config):
 
     for object_id, cfg in config[DOMAIN].items():
         if not cfg:
-            cfg = {}
+            cfg = DEFAULT_CONFIG
 
         name = cfg.get(CONF_NAME)
-        state = cfg.get(CONF_INITIAL, False)
+        state = cfg.get(CONF_INITIAL)
         icon = cfg.get(CONF_ICON)
 
         entities.append(InputBoolean(object_id, name, state, icon))
@@ -89,7 +95,7 @@ def async_setup(hass, config):
             attr = 'async_toggle'
 
         tasks = [getattr(input_b, attr)() for input_b in target_inputs]
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handler_service, schema=SERVICE_SCHEMA)

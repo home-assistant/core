@@ -15,7 +15,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL, \
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==0.9.0', 'pubnub==3.8.2']
+REQUIREMENTS = ['python-wink==0.10.0', 'pubnub==3.8.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 WINK_COMPONENTS = [
-    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover'
+    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate'
 ]
 
 
@@ -108,8 +108,13 @@ class WinkDevice(Entity):
                                            error=self._pubnub_error)
 
     def _pubnub_update(self, message, channel):
-        self.wink.pubnub_update(json.loads(message))
-        self.update_ha_state()
+        try:
+            self.wink.pubnub_update(json.loads(message))
+            self.update_ha_state()
+        except (AttributeError, KeyError):
+            error = "Pubnub returned invalid json for " + self.name
+            logging.getLogger(__name__).error(error)
+            self.update_ha_state(True)
 
     def _pubnub_error(self, message):
         _LOGGER.error("Error on pubnub update for " + self.wink.name())
@@ -149,4 +154,5 @@ class WinkDevice(Entity):
     @property
     def _battery_level(self):
         """Return the battery level."""
-        return self.wink.battery_level * 100
+        if self.wink.battery_level is not None:
+            return self.wink.battery_level * 100

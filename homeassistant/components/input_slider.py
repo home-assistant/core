@@ -51,17 +51,21 @@ def _cv_input_slider(cfg):
     cfg[CONF_INITIAL] = state
     return cfg
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {
-    cv.slug: vol.All({
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_MIN): vol.Coerce(float),
-        vol.Required(CONF_MAX): vol.Coerce(float),
-        vol.Optional(CONF_INITIAL): vol.Coerce(float),
-        vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float),
-                                                    vol.Range(min=1e-3)),
-        vol.Optional(CONF_ICON): cv.icon,
-        vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
-    }, _cv_input_slider)}}, required=True, extra=vol.ALLOW_EXTRA)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        cv.slug: vol.All({
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Required(CONF_MIN): vol.Coerce(float),
+            vol.Required(CONF_MAX): vol.Coerce(float),
+            vol.Optional(CONF_INITIAL): vol.Coerce(float),
+            vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float),
+                                                        vol.Range(min=1e-3)),
+            vol.Optional(CONF_ICON): cv.icon,
+            vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
+        }, _cv_input_slider)
+    })
+}, required=True, extra=vol.ALLOW_EXTRA)
 
 
 def select_value(hass, entity_id, value):
@@ -101,7 +105,7 @@ def async_setup(hass, config):
 
         tasks = [input_slider.async_select_value(call.data[ATTR_VALUE])
                  for input_slider in target_inputs]
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_VALUE, async_select_value_service,

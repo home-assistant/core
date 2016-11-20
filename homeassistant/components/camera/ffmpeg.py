@@ -35,7 +35,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a FFmpeg Camera."""
     if not async_run_test(hass, config.get(CONF_INPUT)):
         return
-    hass.loop.create_task(async_add_devices([FFmpegCamera(hass, config)]))
+    yield from async_add_devices([FFmpegCamera(hass, config)])
 
 
 class FFmpegCamera(Camera):
@@ -85,7 +85,7 @@ class FFmpegCamera(Camera):
                     break
                 response.write(data)
         finally:
-            self.hass.loop.create_task(stream.close())
+            self.hass.async_add_job(stream.close())
             yield from response.write_eof()
 
     @property

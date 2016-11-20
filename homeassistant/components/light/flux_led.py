@@ -17,8 +17,8 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/0.8.zip'
-                '#flux_led==0.8']
+REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/0.9.zip'
+                '#flux_led==0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,9 +135,11 @@ class FluxLight(Light):
         rgb = kwargs.get(ATTR_RGB_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
-        if rgb:
+        if rgb is not None and brightness is not None:
+            self._bulb.setRgb(*tuple(rgb), brightness=brightness)
+        elif rgb is not None:
             self._bulb.setRgb(*tuple(rgb))
-        elif brightness:
+        elif brightness is not None:
             if self._mode == 'rgbw':
                 self._bulb.setWarmWhite255(brightness)
             elif self._mode == 'rgb':
