@@ -65,8 +65,7 @@ class TestLiteJetSwitch(unittest.TestCase):
         self.hass.block_till_done()
 
         if expect_states:
-            while self.hass.states.get(ENTITY_SWITCH) is None or \
-                  self.hass.states.get(ENTITY_OTHER_SWITCH) is None:
+            while self.switch() is None or self.other_switch() is None:
                 _LOGGER.warning('*** need to wait for expected states')
                 time.sleep(0.01)
             _LOGGER.info('*** all states ready for test')
@@ -74,6 +73,12 @@ class TestLiteJetSwitch(unittest.TestCase):
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
+
+    def switch(self):
+        return self.hass.states.get(ENTITY_SWITCH)
+
+    def other_switch(self):
+        return self.hass.states.get(ENTITY_OTHER_SWITCH)
 
     def test_include_switches_unspecified(self):
         """Test that switches are ignored by default."""
@@ -90,8 +95,8 @@ class TestLiteJetSwitch(unittest.TestCase):
     def test_on_off(self):
         """Test turning the switch on and off."""
 
-        assert self.hass.states.get(ENTITY_SWITCH).state == 'off'
-        assert self.hass.states.get(ENTITY_OTHER_SWITCH).state == 'off'
+        assert self.switch().state == 'off'
+        assert self.other_switch().state == 'off'
 
         assert not switch.is_on(self.hass, ENTITY_SWITCH)
 
@@ -114,8 +119,8 @@ class TestLiteJetSwitch(unittest.TestCase):
 
         assert switch.is_on(self.hass, ENTITY_SWITCH)
         assert not switch.is_on(self.hass, ENTITY_OTHER_SWITCH)
-        assert self.hass.states.get(ENTITY_SWITCH).state == 'on'
-        assert self.hass.states.get(ENTITY_OTHER_SWITCH).state == 'off'
+        assert self.switch().state == 'on'
+        assert self.other_switch().state == 'off'
 
         # Switch 2
 
@@ -124,8 +129,8 @@ class TestLiteJetSwitch(unittest.TestCase):
 
         assert switch.is_on(self.hass, ENTITY_OTHER_SWITCH)
         assert switch.is_on(self.hass, ENTITY_SWITCH)
-        assert self.hass.states.get(ENTITY_OTHER_SWITCH).state == 'on'
-        assert self.hass.states.get(ENTITY_SWITCH).state == 'on'
+        assert self.other_switch().state == 'on'
+        assert self.switch().state == 'on'
 
     def test_released_event(self):
         """Test handling an event from LiteJet."""
@@ -144,5 +149,5 @@ class TestLiteJetSwitch(unittest.TestCase):
 
         assert not switch.is_on(self.hass, ENTITY_OTHER_SWITCH)
         assert not switch.is_on(self.hass, ENTITY_SWITCH)
-        assert self.hass.states.get(ENTITY_OTHER_SWITCH).state == 'off'
-        assert self.hass.states.get(ENTITY_SWITCH).state == 'off'
+        assert self.other_switch().state == 'off'
+        assert self.switch().state == 'off'
