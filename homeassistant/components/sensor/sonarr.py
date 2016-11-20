@@ -1,6 +1,4 @@
-"""
-Support for Sonarr
-"""
+"""Support for Sonarr."""
 import logging
 import time
 from datetime import datetime
@@ -59,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup the Sonarr platform """
+    """Setup the Sonarr platform."""
     conditions = config.get(CONF_MONITORED_CONDITIONS)
     add_devices(
         [Sonarr(hass, config, sensor) for sensor in conditions]
@@ -68,9 +66,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class Sonarr(Entity):
-    """Implement the Sonarr sensor class"""
+    """Implement the Sonarr sensor class."""
+
     def __init__(self, hass, conf, sensor_type):
-        """ """
+        """Create sonarr entity."""
         from pytz import timezone
         # Configuration data
         self.conf = conf
@@ -95,7 +94,7 @@ class Sonarr(Entity):
         self.update()
 
     def update(self):
-        """Update the data for the sensor"""
+        """Update the data for the sensor."""
         start = get_date(self._tz)
         end = get_date(self._tz, self.days)
         res = requests.get(
@@ -156,22 +155,22 @@ class Sonarr(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor"""
+        """Return the name of the sensor."""
         return "{} {}".format("Sonarr", self._name)
 
     @property
     def state(self):
-        """Return sensor state"""
+        """Return sensor state."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of the sensor"""
+        """Return the unit of the sensor."""
         return self._unit
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the sensor"""
+        """Return the state attributes of the sensor."""
         attributes = {}
         if self.type == 'upcoming':
             for show in self.data:
@@ -221,12 +220,12 @@ class Sonarr(Entity):
 
     @property
     def icon(self):
-        """Return the icon of the sensor"""
+        """Return the icon of the sensor."""
         return self._icon
 
 
 def get_date(zone, offset=0):
-    """Get date based on timezone and offset of days"""
+    """Get date based on timezone and offset of days."""
     day = 60*60*24
     return datetime.date(
         datetime.fromtimestamp(time.time() + day*offset, tz=zone)
@@ -234,5 +233,5 @@ def get_date(zone, offset=0):
 
 
 def to_unit(value, unit):
-    """Convert bytes to give unit"""
+    """Convert bytes to give unit."""
     return value/1024**BYTE_SIZES.index(unit)
