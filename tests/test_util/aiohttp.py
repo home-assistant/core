@@ -1,8 +1,8 @@
 """Aiohttp test utils."""
 import asyncio
-from contextlib import contextmanager
 import functools
 import json as _json
+from contextlib import contextmanager
 from unittest import mock
 from urllib.parse import urlparse, parse_qs
 import yarl

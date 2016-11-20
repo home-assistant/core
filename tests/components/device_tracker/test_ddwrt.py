@@ -1,21 +1,24 @@
 """The tests for the DD-WRT device tracker platform."""
+import logging
 import os
 import unittest
 from unittest import mock
-import logging
+
 import requests
+
 import requests_mock
+from tests.common import (
+    assert_setup_component, get_test_home_assistant, load_fixture)
+
+from ...test_util.aiohttp import mock_aiohttp_client
 
 from homeassistant import config
-from homeassistant.bootstrap import setup_component
+from homeassistant.bootstrap import async_setup_component, setup_component
 from homeassistant.components import device_tracker
-from homeassistant.const import (
-    CONF_PLATFORM, CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME)
 from homeassistant.util import slugify
-
-from tests.common import (
-    get_test_home_assistant, assert_setup_component, load_fixture)
 
 TEST_HOST = '127.0.0.1'
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +49,7 @@ class TestDdwrt(unittest.TestCase):
                 'GET', r'http://%s/Status_Wireless.live.asp' % TEST_HOST,
                 status_code=401)
             with assert_setup_component(1):
-                assert setup_component(
+                yield from async_setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
                         CONF_HOST: TEST_HOST,
@@ -66,7 +69,7 @@ class TestDdwrt(unittest.TestCase):
                 'GET', r'http://%s/Status_Wireless.live.asp' % TEST_HOST,
                 status_code=444)
             with assert_setup_component(1):
-                assert setup_component(
+                yield from async_setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
                         CONF_HOST: TEST_HOST,
@@ -84,7 +87,7 @@ class TestDdwrt(unittest.TestCase):
     def test_no_response(self, data_mock, error_mock):
         """Create a Ddwrt scanner with no response in init, should fail."""
         with assert_setup_component(1):
-            assert setup_component(
+            yield from async_setup_component(
                 self.hass, DOMAIN, {DOMAIN: {
                     CONF_PLATFORM: 'ddwrt',
                     CONF_HOST: TEST_HOST,
@@ -101,7 +104,7 @@ class TestDdwrt(unittest.TestCase):
     def test_get_timeout(self, mock_error, mock_request):
         """Test get Ddwrt data with request time out."""
         with assert_setup_component(1):
-            assert setup_component(
+            yield from async_setup_component(
                 self.hass, DOMAIN, {DOMAIN: {
                     CONF_PLATFORM: 'ddwrt',
                     CONF_HOST: TEST_HOST,
@@ -129,7 +132,7 @@ class TestDdwrt(unittest.TestCase):
                 text=load_fixture('Ddwrt_Status_Lan.txt'))
 
             with assert_setup_component(1):
-                assert setup_component(
+                yield from async_setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
                         CONF_HOST: TEST_HOST,
@@ -157,7 +160,7 @@ class TestDdwrt(unittest.TestCase):
                 'GET', r'http://%s/Status_Lan.live.asp' % TEST_HOST, text=None)
 
             with assert_setup_component(1):
-                assert setup_component(
+                yield from async_setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
                         CONF_HOST: TEST_HOST,
@@ -185,7 +188,7 @@ class TestDdwrt(unittest.TestCase):
                 replace('dhcp_leases', 'missing'))
 
             with assert_setup_component(1):
-                assert setup_component(
+                yield from async_setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
                         CONF_HOST: TEST_HOST,
@@ -215,7 +218,7 @@ class TestDdwrt(unittest.TestCase):
                 text=load_fixture('Ddwrt_Status_Lan.txt'))
 
             with assert_setup_component(1):
-                assert setup_component(
+                yield from async_setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
                         CONF_HOST: TEST_HOST,
@@ -235,7 +238,7 @@ class TestDdwrt(unittest.TestCase):
                 text=load_fixture('Ddwrt_Status_Lan.txt'))
 
             with assert_setup_component(1):
-                assert setup_component(
+                yield from async_setup_component(
                     self.hass, DOMAIN, {DOMAIN: {
                         CONF_PLATFORM: 'ddwrt',
                         CONF_HOST: TEST_HOST,
