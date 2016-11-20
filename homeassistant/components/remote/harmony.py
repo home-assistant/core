@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
 
-REQUIREMENTS = ['pyharmony>=1.0.10']
+REQUIREMENTS = ['pyharmony>=1.0.11']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE = 'device'
@@ -112,7 +112,8 @@ class HarmonyRemote(remote.RemoteDevice):
     @property
     def state_attributes(self):
         """Overwrite inherited attributes."""
-        return {'current_activity': self._current_activity}
+        return {'current_activity': self._current_activity,
+                'auth_token': self._token}
 
     def is_on(self):
         """Return False if PowerOff is the current activity, otherwise true."""
