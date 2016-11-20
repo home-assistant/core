@@ -113,7 +113,7 @@ class HarmonyRemote(remote.RemoteDevice):
     def state_attributes(self):
         """Overwrite inherited attributes."""
         return {'current_activity': self._current_activity,
-                'auth_token': self._token}
+                'authtoken': self._token}
 
     def is_on(self):
         """Return False if PowerOff is the current activity, otherwise true."""
