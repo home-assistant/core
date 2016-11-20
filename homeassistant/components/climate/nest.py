@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1)),
 })
 
-STATE_ECO = 'eco'  # TODO move to climate, or is this nest only?
+STATE_ECO = 'eco'
 STATE_HEAT_COOL = 'heat-cool'
 
 
