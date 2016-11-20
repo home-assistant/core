@@ -196,7 +196,6 @@ class NestProtectSensor(NestSensor):
             self._state = getattr(self.device, self.variable)
         else:
             self._state = 'Unknown'
-            
             if state == 0:
                 self._state = 'Ok'
             if state == 1 or state == 2:
