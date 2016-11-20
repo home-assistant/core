@@ -54,7 +54,6 @@ class NestCamera(Camera):
         # TODO this is so the initial values are set, so remove this when update gets called correctly
         self.update()
 
-
     @property
     def name(self):
         """Return the name of the nest, if any."""
