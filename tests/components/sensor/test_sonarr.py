@@ -6,21 +6,6 @@ from homeassistant.components.sensor import sonarr
 
 from tests.common import get_test_home_assistant
 
-VALID_CONFIG = {
-    'platform': 'sonarr',
-    'api_key': 'foo',
-    'days': '2',
-    'unit': 'GB',
-    "include_paths": [
-        '/data'
-    ],
-    'monitored_conditions': [
-        'series', 'upcoming', 'wanted', 'queue', 'commands', 'diskspace'
-        # 'upcoming'
-    ]
-}
-
-
 def mocked_requests_get(*args, **kwargs):
     """Mock requests.get invocations."""
     class MockResponse:
