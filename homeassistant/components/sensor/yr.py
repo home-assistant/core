@@ -154,7 +154,7 @@ class YrData(object):
                 try_again('{} returned {}'.format(self._url, resp.status))
                 return
             text = yield from resp.text()
-            self.hass.async_add_job(resp.release)
+            self.hass.async_add_job(resp.release())
         except (asyncio.TimeoutError, aiohttp.errors.ClientError,
                 aiohttp.errors.ClientDisconnectedError) as err:
             try_again(err)

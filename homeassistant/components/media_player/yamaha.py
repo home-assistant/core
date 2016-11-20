@@ -18,17 +18,12 @@ from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON,
                                  STATE_PLAYING, STATE_IDLE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['rxv==0.3.1']
+REQUIREMENTS = ['rxv==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-                 SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | \
-                 SUPPORT_PLAY_MEDIA
-
-# Only supported by some sources
-SUPPORT_PLAYBACK = SUPPORT_PLAY_MEDIA | SUPPORT_PAUSE | SUPPORT_STOP | \
-                   SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 CONF_SOURCE_NAMES = 'source_names'
 CONF_SOURCE_IGNORE = 'source_ignore'
@@ -187,8 +182,16 @@ class YamahaDevice(MediaPlayerDevice):
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
         supported_commands = SUPPORT_YAMAHA
-        if self._is_playback_supported:
-            supported_commands |= SUPPORT_PLAYBACK
+
+        supports = self._receiver.get_playback_support()
+        mapping = {'play': SUPPORT_PLAY_MEDIA,
+                   'pause': SUPPORT_PAUSE,
+                   'stop': SUPPORT_STOP,
+                   'skip_f': SUPPORT_NEXT_TRACK,
+                   'skip_r': SUPPORT_PREVIOUS_TRACK}
+        for attr, feature in mapping.items():
+            if getattr(supports, attr, False):
+                supported_commands |= feature
         return supported_commands
 
     def turn_off(self):

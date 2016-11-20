@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.netatmo import WelcomeData
 from homeassistant.loader import get_component
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv
 
 DEPENDENCIES = ["netatmo"]
@@ -33,6 +33,7 @@ CONF_CAMERAS = 'cameras'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOME): cv.string,
+    vol.Optional(CONF_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_CAMERAS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES.keys()):
@@ -45,6 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup access to Netatmo binary sensor."""
     netatmo = get_component('netatmo')
     home = config.get(CONF_HOME, None)
+    timeout = config.get(CONF_TIMEOUT, 15)
 
     import lnetatmo
     try:
@@ -62,18 +64,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                camera_name not in config[CONF_CAMERAS]:
                 continue
         for variable in sensors:
-            add_devices([WelcomeBinarySensor(data, camera_name, home,
+            add_devices([WelcomeBinarySensor(data, camera_name, home, timeout,
                                              variable)])
 
 
 class WelcomeBinarySensor(BinarySensorDevice):
     """Represent a single binary sensor in a Netatmo Welcome device."""
 
-    def __init__(self, data, camera_name, home, sensor):
+    def __init__(self, data, camera_name, home, timeout, sensor):
         """Setup for access to the Netatmo camera events."""
         self._data = data
         self._camera_name = camera_name
         self._home = home
+        self._timeout = timeout
         if home:
             self._name = home + ' / ' + camera_name
         else:
@@ -114,14 +117,17 @@ class WelcomeBinarySensor(BinarySensorDevice):
         if self._sensor_name == "Someone known":
             self._state =\
                     self._data.welcomedata.someoneKnownSeen(self._home,
-                                                            self._camera_name)
+                                                            self._camera_name,
+                                                            self._timeout*60)
         elif self._sensor_name == "Someone unknown":
             self._state =\
                 self._data.welcomedata.someoneUnknownSeen(self._home,
-                                                          self._camera_name)
+                                                          self._camera_name,
+                                                          self._timeout*60)
         elif self._sensor_name == "Motion":
             self._state =\
                 self._data.welcomedata.motionDetected(self._home,
-                                                      self._camera_name)
+                                                      self._camera_name,
+                                                      self._timeout*60)
         else:
             return None

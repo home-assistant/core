@@ -305,6 +305,7 @@ def time_zone(value):
         'Invalid time zone passed in. Valid options can be found here: '
         'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones')
 
+
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
 
 

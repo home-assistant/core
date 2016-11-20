@@ -28,6 +28,9 @@ omit =
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
 
+    homeassistant/components/google.py
+    homeassistant/components/*/google.py
+
     homeassistant/components/insteon_hub.py
     homeassistant/components/*/insteon_hub.py
 
@@ -98,6 +101,9 @@ omit =
     homeassistant/components/netatmo.py
     homeassistant/components/*/netatmo.py
 
+    homeassistant/components/neato.py
+    homeassistant/components/*/neato.py
+
     homeassistant/components/homematic.py
     homeassistant/components/*/homematic.py
 
@@ -132,7 +138,7 @@ omit =
     homeassistant/components/climate/knx.py
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
-    homeassistant/components/cover/garadget.py    
+    homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
     homeassistant/components/cover/rpi_gpio.py
     homeassistant/components/cover/scsgate.py
@@ -144,12 +150,14 @@ omit =
     homeassistant/components/device_tracker/bluetooth_le_tracker.py
     homeassistant/components/device_tracker/bluetooth_tracker.py
     homeassistant/components/device_tracker/bt_home_hub_5.py
+    homeassistant/components/device_tracker/cisco_ios.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
     homeassistant/components/device_tracker/snmp.py
+    homeassistant/components/device_tracker/swisscom.py
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
@@ -278,6 +286,7 @@ omit =
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
+    homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/serial_pm.py
@@ -306,7 +315,6 @@ omit =
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/mystrom.py
-    homeassistant/components/switch/neato.py
     homeassistant/components/switch/netio.py
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/pilight.py
