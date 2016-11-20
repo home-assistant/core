@@ -71,7 +71,6 @@ ERRORS = {
     'ui_error_navigation_falling': 'Clear my path',
     'ui_error_picked_up': 'Picked up',
     'ui_error_stuck': 'Stuck!'
-
 }
 
 ALERTS = {
