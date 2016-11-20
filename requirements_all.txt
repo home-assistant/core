@@ -449,9 +449,6 @@ python-twitch==1.3.0
 # homeassistant.components.wink
 python-wink==0.10.0
 
-# homeassistant.components.sensor.sonarr
-pytz==2016.7
-
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
 

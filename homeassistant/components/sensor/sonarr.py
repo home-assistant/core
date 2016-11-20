@@ -15,9 +15,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = []
-REQUIREMENTS = ['pytz==2016.7']
-
 CONF_HOST = 'host'
 CONF_PORT = 'port'
 CONF_DAYS = 'days'
