@@ -2,7 +2,7 @@
 Support for scanning a network with nmap.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.nmap_scanner/
+https://home-assistant.io/components/device_tracker.nmap_tracker/
 """
 import logging
 import re
@@ -42,6 +42,7 @@ def get_scanner(hass, config):
     scanner = NmapDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
+
 
 Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
 

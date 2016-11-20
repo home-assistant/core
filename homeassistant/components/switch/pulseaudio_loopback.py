@@ -170,7 +170,7 @@ class PALoopbackSwitch(SwitchDevice):
             self._pa_svr.update_module_state(no_throttle=True)
             self._module_idx = self._pa_svr.get_module_idx(
                 self._sink_name, self._source_name)
-            self.update_ha_state()
+            self.schedule_update_ha_state()
         else:
             _LOGGER.warning(IGNORED_SWITCH_WARN)
 
@@ -181,7 +181,7 @@ class PALoopbackSwitch(SwitchDevice):
             self._pa_svr.update_module_state(no_throttle=True)
             self._module_idx = self._pa_svr.get_module_idx(
                 self._sink_name, self._source_name)
-            self.update_ha_state()
+            self.schedule_update_ha_state()
         else:
             _LOGGER.warning(IGNORED_SWITCH_WARN)
 

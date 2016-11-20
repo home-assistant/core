@@ -111,9 +111,11 @@ class LogitechMediaServer(object):
 
     def query(self, *parameters):
         """Send request and await response from server."""
-        response = urllib.parse.unquote(self.get(' '.join(parameters)))
+        response = self.get(' '.join(parameters))
+        response = response.split(' ')[-1].strip()
+        response = urllib.parse.unquote(response)
 
-        return response.split(' ')[-1].strip()
+        return response
 
     def get_player_status(self, player):
         """Get the status of a player."""

@@ -66,6 +66,7 @@ def _platform_validator(config):
 
     return getattr(platform, 'TRIGGER_SCHEMA')(config)
 
+
 _TRIGGER_SCHEMA = vol.All(
     cv.ensure_list,
     [
@@ -165,7 +166,7 @@ def async_setup(hass, config):
         for entity in component.async_extract_from_service(service_call):
             tasks.append(entity.async_trigger(
                 service_call.data.get(ATTR_VARIABLES), True))
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     @asyncio.coroutine
     def turn_onoff_service_handler(service_call):
@@ -174,7 +175,7 @@ def async_setup(hass, config):
         method = 'async_{}'.format(service_call.service)
         for entity in component.async_extract_from_service(service_call):
             tasks.append(getattr(entity, method)())
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     @asyncio.coroutine
     def toggle_service_handler(service_call):
@@ -185,7 +186,7 @@ def async_setup(hass, config):
                 tasks.append(entity.async_turn_off())
             else:
                 tasks.append(entity.async_turn_on())
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     @asyncio.coroutine
     def reload_service_handler(service_call):
@@ -348,8 +349,10 @@ def _async_process_config(hass, config, component):
                 tasks.append(entity.async_enable())
             entities.append(entity)
 
-    yield from asyncio.gather(*tasks, loop=hass.loop)
-    yield from component.async_add_entities(entities)
+    if tasks:
+        yield from asyncio.wait(tasks, loop=hass.loop)
+    if entities:
+        yield from component.async_add_entities(entities)
 
     return len(entities) > 0
 

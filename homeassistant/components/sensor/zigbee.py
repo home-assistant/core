@@ -55,7 +55,7 @@ class ZigBeeTemperatureSensor(Entity):
         self._config = config
         self._temp = None
         # Get initial state
-        hass.add_job(self.update_ha_state, True)
+        hass.add_job(self.async_update_ha_state, True)
 
     @property
     def name(self):

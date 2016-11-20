@@ -1,5 +1,6 @@
 """The tests for the Entity component helper."""
 # pylint: disable=protected-access
+import asyncio
 from collections import OrderedDict
 import logging
 import unittest
@@ -152,6 +153,30 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert 1 == len(self.hass.states.entity_ids())
         assert not ent.update.called
+
+    def test_adds_entities_with_update_befor_add_true_deadlock_protect(self):
+        """Test if call update befor add to state machine.
+
+        It need to run update inside executor and never call
+        async_add_entities with True
+        """
+        call = []
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
+
+        @asyncio.coroutine
+        def async_add_entities_fake(entities, update_befor_add):
+            """Fake add_entities_call."""
+            call.append(update_befor_add)
+        component._platforms['core'].async_add_entities = \
+            async_add_entities_fake
+
+        ent = EntityTest()
+        ent.update = Mock(spec_set=True)
+        component.add_entities([ent], True)
+
+        assert ent.update.called
+        assert len(call) == 1
+        assert not call[0]
 
     def test_not_adding_duplicate_entities(self):
         """Test for not adding duplicate entities."""

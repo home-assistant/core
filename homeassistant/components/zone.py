@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_LONGITUDE, CONF_ICON)
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.util.async import run_callback_threadsafe
 from homeassistant.util.location import distance
 import homeassistant.helpers.config_validation as cv
 
@@ -51,9 +52,19 @@ PLATFORM_SCHEMA = vol.Schema({
 
 def active_zone(hass, latitude, longitude, radius=0):
     """Find the active zone for given latitude, longitude."""
+    return run_callback_threadsafe(
+        hass.loop, async_active_zone, hass, latitude, longitude, radius
+    ).result()
+
+
+def async_active_zone(hass, latitude, longitude, radius=0):
+    """Find the active zone for given latitude, longitude.
+
+    This method must be run in the event loop.
+    """
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
     zones = (hass.states.get(entity_id) for entity_id
-             in sorted(hass.states.entity_ids(DOMAIN)))
+             in sorted(hass.states.async_entity_ids(DOMAIN)))
 
     min_dist = None
     closest = None
@@ -80,7 +91,10 @@ def active_zone(hass, latitude, longitude, radius=0):
 
 
 def in_zone(zone, latitude, longitude, radius=0):
-    """Test if given latitude, longitude is in given zone."""
+    """Test if given latitude, longitude is in given zone.
+
+    Async friendly.
+    """
     zone_dist = distance(
         latitude, longitude,
         zone.attributes[ATTR_LATITUDE], zone.attributes[ATTR_LONGITUDE])
@@ -110,7 +124,7 @@ def async_setup(hass, config):
         zone.entity_id = ENTITY_ID_HOME
         tasks.append(zone.async_update_ha_state())
 
-    yield from asyncio.gather(*tasks, loop=hass.loop)
+    yield from asyncio.wait(tasks, loop=hass.loop)
     return True
 
 

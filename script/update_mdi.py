@@ -63,5 +63,6 @@ def main():
 
     print('Updated to latest version')
 
+
 if __name__ == '__main__':
     main()
