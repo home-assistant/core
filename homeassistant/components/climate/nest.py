@@ -86,17 +86,10 @@ class NestThermostat(ClimateDevice):
         self._is_locked = None
         self._locked_temperature = None
 
-    # FIXME ends up with double name, ie Hallway(Hallway (E5C0))
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        if self._location is None or self._location == self._name:
-            return self._name
-        else:
-            if self._name == '':
-                return self._location.capitalize()
-            else:
-                return self._location.capitalize() + '(' + self._name + ')'
+        return self._name
 
     @property
     def temperature_unit(self):

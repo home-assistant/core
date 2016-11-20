@@ -108,16 +108,7 @@ class NestSensor(Entity):
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        if self._location is None:
-            return "{} {}".format(self._name, self.variable)
-        else:
-            if self._name == '':
-                return "{} {}".format(self._location.capitalize(),
-                                      self.variable)
-            else:
-                return "{}({}){}".format(self._location.capitalize(),
-                                         self._name,
-                                         self.variable)
+        return "{} {}".format(self._name, self.variable)
 
 
 class NestBasicSensor(NestSensor):
@@ -201,8 +192,3 @@ class NestProtectSensor(NestSensor):
     def update(self):
         """Retrieve latest state."""
         self._state = getattr(self.device, self.variable).capitalize()
-
-    @property
-    def name(self):
-        """Return the name of the nest, if any."""
-        return "{} {}".format(self._location.capitalize(), self.variable)

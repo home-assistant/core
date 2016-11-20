@@ -55,19 +55,10 @@ class NestCamera(Camera):
         self.update()
 
 
-    # FIXME ends up with double name, ie Hallway(Hallway (E5C0))... maybe that's just the simulator?
-    # FIXME duplication with climate/nest
     @property
     def name(self):
         """Return the name of the nest, if any."""
         return self._name
-        #if self._location is None or self._location == self._name:
-        #    return self._name
-        #else:
-        #    if self._name == '':
-        #        return self._location.capitalize()
-        #    else:
-        #        return self._location.capitalize() + '(' + self._name + ')'
 
     @property
     def is_recording(self):
