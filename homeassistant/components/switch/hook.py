@@ -8,9 +8,10 @@ There is no way to query for state or success of commands.
 
 """
 import logging
-import requests
-
+import asyncio
+import functools
 import voluptuous as vol
+import requests
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -27,18 +28,23 @@ SWITCH_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Hook by getting the access token and list of actions."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
     try:
-        response = requests.post(
-            HOOK_ENDPOINT + 'user/login',
-            data={
-                'username': username,
-                'password': password},
-            timeout=TIMEOUT)
+        future = hass.loop.run_in_executor(
+            None,
+            functools.partial(
+                requests.post,
+                HOOK_ENDPOINT + 'user/login',
+                data={
+                    'username': username,
+                    'password': password},
+                timeout=TIMEOUT))
+        response = yield from future
         data = response.json()
     except (requests.exceptions.RequestException, ValueError) as error:
         _LOGGER.error("Failed authentication API call: %s", error)
@@ -51,23 +57,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     try:
-        response = requests.get(
-            HOOK_ENDPOINT + 'device',
-            params={"token": data['data']['token']},
-            timeout=TIMEOUT)
+        future = hass.loop.run_in_executor(
+            None,
+            functools.partial(
+                requests.get,
+                HOOK_ENDPOINT + 'device',
+                params={"token": data['data']['token']},
+                timeout=TIMEOUT))
+        response = yield from future
         data = response.json()
     except (requests.exceptions.RequestException, ValueError) as error:
         _LOGGER.error("Failed getting devices: %s", error)
         return False
 
-    add_devices(
-        HookSmartHome(
-            hass,
-            token,
-            d['device_id'],
-            d['device_name'])
-        for lst in data['data']
-        for d in lst)
+    hass.loop.create_task(
+        add_devices(
+            HookSmartHome(
+                hass,
+                token,
+                d['device_id'],
+                d['device_name'])
+            for lst in data['data']
+            for d in lst))
 
 
 class HookSmartHome(SwitchDevice):
@@ -95,26 +106,37 @@ class HookSmartHome(SwitchDevice):
         """Return true if device is on."""
         return self._state
 
+    @asyncio.coroutine
     def _send(self, url):
         """Send the url to the Hook API."""
         try:
-            requests.get(
-                url,
-                params={"token": self._token},
-                timeout=TIMEOUT)
+            future = self._hass.loop.run_in_executor(
+                None,
+                functools.partial(
+                    requests.get,
+                    url,
+                    params={"token": self._token},
+                    timeout=TIMEOUT))
+            response = yield from future
+            _LOGGER.debug("Response from API: %s", response)
         except (requests.exceptions.RequestException) as error:
             _LOGGER.error("Failed setting state: %s", error)
             return False
-        return True
+        return response.status_code == 200
 
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
+    @asyncio.coroutine
+    def async_turn_on(self):
+        """Turn the device on asynchronously."""
         _LOGGER.debug("Turning on: %s", self._name)
-        if self._send(HOOK_ENDPOINT + 'device/trigger/' + self._id + '/On'):
-            self._state = True
+        success = self._hass.loop.create_task(self._send(
+            HOOK_ENDPOINT + 'device/trigger/' + self._id + '/On'))
+        self._state = success
 
-    def turn_off(self, **kwargs):
-        """Turn the device off."""
-        _LOGGER.debug("Turning on: %s", self._name)
-        if self._send(HOOK_ENDPOINT + 'device/trigger/' + self._id + '/Off'):
-            self._state = False
+    @asyncio.coroutine
+    def async_turn_off(self):
+        """Turn the device off asynchronously."""
+        _LOGGER.debug("Turning off: %s", self._name)
+        success = self._hass.loop.create_task(self._send(
+            HOOK_ENDPOINT + 'device/trigger/' + self._id + '/Off'))
+        # If it wasn't successful, keep state as true
+        self._state = not success
