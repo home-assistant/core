@@ -80,7 +80,7 @@ class Sonarr(Entity):
         self.ssl = 's' if conf.get(CONF_SSL) else ''
 
         # Object data
-        self.tz = timezone(str(hass.config.time_zone))
+        self._tz = timezone(str(hass.config.time_zone))
         self.type = sensor_type
         self._name = SENSOR_TYPES[self.type][0]
         if self.type == 'diskspace':
@@ -94,8 +94,8 @@ class Sonarr(Entity):
 
     def update(self):
         """Update the data for the sensor"""
-        start = getDate(self.tz)
-        end = getDate(self.tz, self.days)
+        start = get_date(self._tz)
+        end = get_date(self._tz, self.days)
         res = requests.get(
             ENDPOINTS[self.type].format(
                 self.ssl,
@@ -131,7 +131,7 @@ class Sonarr(Entity):
                     # Filter to only show lists that are included
                     self.data = list(filter(lambda x: x['path'] in self.included, res.json()))
                 self._state = '{:.2f}'.format(
-                    toUnit(sum([data['freeSpace'] for data in self.data]), self._unit)
+                    to_unit(sum([data['freeSpace'] for data in self.data]), self._unit)
                 )
 
     @property
@@ -155,27 +155,48 @@ class Sonarr(Entity):
         attributes = {}
         if self.type == 'upcoming':
             for show in self.data:
-                attributes[show['series']['title']] = 'S{:02d}E{:02d}'.format(show['seasonNumber'], show['episodeNumber'])
+                attributes[show['series']['title']] = 'S{:02d}E{:02d}'.format(
+                    show['seasonNumber'],
+                    show['episodeNumber']
+                )
         elif self.type == 'queue':
             for show in self.data:
-                attributes[show['series']['title'] + ' S{:02d}E{:02d}'.format(show['episode']['seasonNumber'], show['episode']['episodeNumber'])] = '{:.2f}%'.format(100*(1-(show['sizeleft']/show['size'])))
+                attributes[show['series']['title'] + ' S{:02d}E{:02d}'.format(
+                    show['episode']['seasonNumber'],
+                    show['episode']['episodeNumber']
+                )] = '{:.2f}%'.format(100*(1-(show['sizeleft']/show['size'])))
         elif self.type == 'wanted':
             for show in self.data:
-                attributes[show['series']['title'] + ' S{:02d}E{:02d}'.format(show['seasonNumber'], show['episodeNumber'])] = show['airDate']
+                attributes[show['series']['title'] + ' S{:02d}E{:02d}'.format(
+                    show['seasonNumber'],
+                    show['episodeNumber']
+                )] = show['airDate']
         elif self.type == 'commands':
             for command in self.data:
                 attributes[command['name']] = command['state']
         elif self.type == 'diskspace':
             for data in self.data:
                 attributes[data['path']] = '{:.2f}/{:.2f}{} ({:.2f}%)'.format(
-                    toUnit(data['freeSpace'], self._unit),
-                    toUnit(data['totalSpace'], self._unit),
+                    to_unit(data['freeSpace'], self._unit),
+                    to_unit(data['totalSpace'], self._unit),
                     self._unit,
-                    (toUnit(data['freeSpace'], self._unit)/toUnit(data['totalSpace'], self._unit)*100)
+                    (
+                        to_unit(
+                            data['freeSpace'],
+                            self._unit
+                        )/
+                        to_unit(
+                            data['totalSpace'],
+                            self._unit
+                        )*100
+                    )
                 )
         elif self.type == 'series':
             for show in self.data:
-                attributes[show['title']] = '{}/{} Episodes'.format(show['episodeFileCount'], show['episodeCount'])
+                attributes[show['title']] = '{}/{} Episodes'.format(
+                    show['episodeFileCount'],
+                    show['episodeCount']
+                )
         return attributes
 
     @property
@@ -183,11 +204,11 @@ class Sonarr(Entity):
         """Return the icon of the sensor"""
         return self._icon
 
-def getDate(zone, offset=0):
+def get_date(zone, offset=0):
     """Get date based on timezone and offset of days"""
     day = 60*60*24
     return datetime.date(datetime.fromtimestamp(time.time() + day*offset, tz=zone))
 
-def toUnit(value, unit):
+def to_unit(value, unit):
     """Convert bytes to give unit"""
     return value/1024**BYTE_SIZES.index(unit)
