@@ -30,8 +30,9 @@ import asyncio
 import logging
 from datetime import timedelta
 
-import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
@@ -96,7 +97,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     yield from async_add_devices(devices)
 
     def update_entities_telegram(telegram):
-        """Updates entities with latests telegram & trigger state update."""
+        """Update entities with latests telegram & trigger state update."""
         # make all device entities aware of new telegram
         for device in devices:
             device.telegram = telegram
@@ -108,7 +109,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                               update_entities_telegram, loop=hass.loop)
 
     # start DSMR asycnio.Protocol reader
-    transport, protocol = yield from hass.loop.create_task(dsmr)
+    transport, _ = yield from hass.loop.create_task(dsmr)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, transport.close)
 
