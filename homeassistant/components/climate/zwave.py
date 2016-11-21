@@ -1,5 +1,5 @@
 """
-Support for ZWave climate devices.
+Support for Z-Wave climate devices.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.zwave/
@@ -17,12 +17,13 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NAME = 'name'
-DEFAULT_NAME = 'ZWave Climate'
+DEFAULT_NAME = 'Z-Wave Climate'
 
 REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377
 REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
-
+ATTR_OPERATING_STATE = 'operating_state'
+ATTR_FAN_STATE = 'fan_state'
 
 WORKAROUND_ZXT_120 = 'zxt_120'
 
@@ -32,7 +33,7 @@ DEVICE_MAPPINGS = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ZWave Climate devices."""
+    """Set up the Z-Wave Climate devices."""
     if discovery_info is None or zwave.NETWORK is None:
         _LOGGER.debug("No discovery_info=%s or no NETWORK=%s",
                       discovery_info, zwave.NETWORK)
@@ -47,10 +48,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
-    """Represents a ZWave Climate device."""
+    """Representation of a Z-Wave Climate device."""
 
     def __init__(self, value, temp_unit):
-        """Initialize the zwave climate device."""
+        """Initialize the Z-Wave climate device."""
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
@@ -89,7 +90,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         if self._value.value_id == value.value_id or \
            self._value.node == value.node:
             self.update_properties()
-            self.update_ha_state()
+            self.schedule_update_ha_state()
             _LOGGER.debug("Value changed on network %s", value)
 
     def update_properties(self):
@@ -103,16 +104,18 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             _LOGGER.debug("self._current_operation=%s",
                           self._current_operation)
         # Current Temp
-        for value in (self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL)
-                      .values()):
+        for value in (
+                self._node.get_values(
+                    class_id=zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL)
+                .values()):
             if value.label == 'Temperature':
                 self._current_temperature = round((float(value.data)), 1)
                 self._unit = value.units
         # Fan Mode
-        for value in (self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_FAN_MODE)
-                      .values()):
+        for value in (
+                self._node.get_values(
+                    class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_FAN_MODE)
+                .values()):
             self._current_fan_mode = value.data
             self._fan_list = list(value.data_items)
             _LOGGER.debug("self._fan_list=%s", self._fan_list)
@@ -120,9 +123,10 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                           self._current_fan_mode)
         # Swing mode
         if self._zxt_120 == 1:
-            for value in (self._node.get_values(
-                    class_id=zwave.const.COMMAND_CLASS_CONFIGURATION)
-                          .values()):
+            for value in (
+                    self._node.get_values(
+                        class_id=zwave.const.COMMAND_CLASS_CONFIGURATION)
+                    .values()):
                 if value.command_class == \
                    zwave.const.COMMAND_CLASS_CONFIGURATION and \
                    value.index == 33:
@@ -133,9 +137,10 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                                   self._current_swing_mode)
         # Set point
         temps = []
-        for value in (self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT)
-                      .values()):
+        for value in (
+                self._node.get_values(
+                    class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT)
+                .values()):
             temps.append((round(float(value.data)), 1))
             if value.index == self._index:
                 if value.data == 0:
@@ -148,20 +153,22 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 else:
                     self._target_temperature = round((float(value.data)), 1)
         # Operating state
-        for value in (self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_OPERATING_STATE)
-                      .values()):
+        for value in (
+                self._node.get_values(
+                    class_id=zwave.const
+                    .COMMAND_CLASS_THERMOSTAT_OPERATING_STATE).values()):
             self._operating_state = value.data
 
         # Fan operating state
-        for value in (self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_FAN_STATE)
-                      .values()):
+        for value in (
+                self._node.get_values(
+                    class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_FAN_STATE)
+                .values()):
             self._fan_state = value.data
 
     @property
     def should_poll(self):
-        """No polling on ZWave."""
+        """No polling on Z-Wave."""
         return False
 
     @property
@@ -269,9 +276,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        data = {}
+        data = super().device_state_attributes
         if self._operating_state:
-            data["operating_state"] = self._operating_state,
+            data[ATTR_OPERATING_STATE] = self._operating_state,
         if self._fan_state:
-            data["fan_state"] = self._fan_state
+            data[ATTR_FAN_STATE] = self._fan_state
         return data

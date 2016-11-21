@@ -37,7 +37,8 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
             self.assertTrue('qos' in config)
 
         with patch('homeassistant.components.device_tracker.mqtt.'
-                   'setup_scanner', side_effect=mock_setup_scanner) as mock_sp:
+                   'setup_scanner', autospec=True,
+                   side_effect=mock_setup_scanner) as mock_sp:
 
             dev_id = 'paulus'
             topic = '/location/paulus'

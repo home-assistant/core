@@ -137,7 +137,7 @@ class TestNX584ZoneSensor(unittest.TestCase):
 class TestNX584Watcher(unittest.TestCase):
     """Test the NX584 watcher."""
 
-    @mock.patch.object(nx584.NX584ZoneSensor, 'update_ha_state')
+    @mock.patch.object(nx584.NX584ZoneSensor, 'schedule_update_ha_state')
     def test_process_zone_event(self, mock_update):
         """Test the processing of zone events."""
         zone1 = {'number': 1, 'name': 'foo', 'state': True}
@@ -151,7 +151,7 @@ class TestNX584Watcher(unittest.TestCase):
         self.assertFalse(zone1['state'])
         self.assertEqual(1, mock_update.call_count)
 
-    @mock.patch.object(nx584.NX584ZoneSensor, 'update_ha_state')
+    @mock.patch.object(nx584.NX584ZoneSensor, 'schedule_update_ha_state')
     def test_process_zone_event_missing_zone(self, mock_update):
         """Test the processing of zone events with missing zones."""
         watcher = nx584.NX584Watcher(None, {})

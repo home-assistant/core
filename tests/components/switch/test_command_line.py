@@ -1,4 +1,4 @@
-"""the tests for the Command line switch platform."""
+"""The tests for the Command line switch platform."""
 import json
 import os
 import tempfile
@@ -12,14 +12,15 @@ import homeassistant.components.switch.command_line as command_line
 from tests.common import get_test_home_assistant
 
 
+# pylint: disable=invalid-name
 class TestCommandSwitch(unittest.TestCase):
     """Test the command switch."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -165,13 +166,13 @@ class TestCommandSwitch(unittest.TestCase):
         # args: hass, device_name, friendly_name, command_on, command_off,
         #       command_state, value_template
         init_args = [
-                self.hass,
-                "test_device_name",
-                "Test friendly name!",
-                "echo 'on command'",
-                "echo 'off command'",
-                False,
-                None
+            self.hass,
+            "test_device_name",
+            "Test friendly name!",
+            "echo 'on command'",
+            "echo 'off command'",
+            False,
+            None,
         ]
 
         no_state_device = command_line.CommandSwitch(*init_args)
@@ -188,13 +189,13 @@ class TestCommandSwitch(unittest.TestCase):
         self.hass = get_test_home_assistant()
 
         init_args = [
-                self.hass,
-                "test_device_name",
-                "Test friendly name!",
-                "echo 'on command'",
-                "echo 'off command'",
-                False,
-                None
+            self.hass,
+            "test_device_name",
+            "Test friendly name!",
+            "echo 'on command'",
+            "echo 'off command'",
+            False,
+            None,
         ]
 
         test_switch = command_line.CommandSwitch(*init_args)
