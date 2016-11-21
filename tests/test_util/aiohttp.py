@@ -15,11 +15,13 @@ class AiohttpClientMocker:
         """Initialize the request mocker."""
         self._mocks = []
         self.mock_calls = []
+        self.last_request = {}
 
     def request(self, method, url, *,
                 auth=None,
                 status=200,
                 text=None,
+                data=None,
                 content=None,
                 json=None,
                 params=None,
@@ -66,9 +68,17 @@ class AiohttpClientMocker:
         return len(self.mock_calls)
 
     @asyncio.coroutine
-    def match_request(self, method, url, *, auth=None, params=None,
+    def match_request(self, method, url, *, data=None, auth=None, params=None,
                       headers=None):  # pylint: disable=unused-variable
         """Match a request against pre-registered requests."""
+        self.last_request = {
+            'method': method,
+            'url': url,
+            'data': data,
+            'auth': auth,
+            'params': params,
+        }
+
         for response in self._mocks:
             if response.match_request(method, url, params):
                 self.mock_calls.append((method, url))
