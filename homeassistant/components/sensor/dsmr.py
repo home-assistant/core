@@ -33,7 +33,7 @@ from datetime import timedelta
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'dsmr'
@@ -109,7 +109,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                               update_entities_telegram, loop=hass.loop)
 
     # start DSMR asycnio.Protocol reader
-    yield from hass.loop.create_task(dsmr)
+    transport, protocol = yield from hass.loop.create_task(dsmr)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, transport.close)
 
 
 class DSMREntity(Entity):
