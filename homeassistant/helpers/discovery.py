@@ -127,8 +127,9 @@ def load_platform(hass, component, platform, discovered=None,
 
     Use `listen_platform` to register a callback for these events.
     """
-    hass.add_job(async_load_platform(hass, component, platform, discovered,
-                 hass_config))
+    hass.add_job(
+        async_load_platform(hass, component, platform, discovered,
+                            hass_config))
 
 
 @asyncio.coroutine
