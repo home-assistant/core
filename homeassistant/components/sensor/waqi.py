@@ -27,7 +27,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the requested World Air Quality Index locations."""
-
     dev = []
     try:
         import pwaqi
