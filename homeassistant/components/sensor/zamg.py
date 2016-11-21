@@ -74,9 +74,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-
-_LOGGER = logging.getLogger(__name__)
-
 DEFAULT_NAME = 'zamg'
 ATTRIBUTION = 'Data provided by ZAMG'
 
@@ -126,7 +123,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     station_id = config.get(CONF_STATION_ID)
     name = config.get(CONF_NAME)
 
-    probe = ZamgData(station_id=station_id, logger=_LOGGER)
+    logger = logging.getLogger(__name__)
+    probe = ZamgData(station_id=station_id, logger=logger)
 
     sensors = [ZAMGWeather(probe, variable, name)
                for variable in config[CONF_MONITORED_CONDITIONS]]
