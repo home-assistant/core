@@ -4,7 +4,7 @@ import logging
 import logging.handlers
 import os
 import sys
-from collections import defaultdict
+from collections import OrderedDict
 
 from types import ModuleType
 from typing import Any, Optional, Dict
@@ -57,7 +57,7 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
         yield from hass.loop.run_in_executor(None, loader.prepare, hass)
 
     if config is None:
-        config = defaultdict(dict)
+        config = {}
 
     components = loader.load_order_component(domain)
 
@@ -345,7 +345,7 @@ def from_config_dict(config: Dict[str, Any],
 
     # run task
     future = asyncio.Future(loop=hass.loop)
-    hass.loop.create_task(_async_init_from_config_dict(future))
+    hass.async_add_job(_async_init_from_config_dict(future))
     hass.loop.run_until_complete(future)
 
     return future.result()
@@ -365,6 +365,12 @@ def async_from_config_dict(config: Dict[str, Any],
     Dynamically loads required components and its dependencies.
     This method is a coroutine.
     """
+    setup_lock = hass.data.get('setup_lock')
+    if setup_lock is None:
+        setup_lock = hass.data['setup_lock'] = asyncio.Lock(loop=hass.loop)
+
+    yield from setup_lock.acquire()
+
     core_config = config.get(core.DOMAIN, {})
 
     try:
@@ -388,10 +394,12 @@ def async_from_config_dict(config: Dict[str, Any],
         yield from hass.loop.run_in_executor(None, loader.prepare, hass)
 
     # Make a copy because we are mutating it.
-    # Convert it to defaultdict so components can always have config dict
+    # Use OrderedDict in case original one was one.
     # Convert values to dictionaries if they are None
-    config = defaultdict(
-        dict, {key: value or {} for key, value in config.items()})
+    new_config = OrderedDict()
+    for key, value in config.items():
+        new_config[key] = value or {}
+    config = new_config
 
     # Filter out the repeating and common config section [homeassistant]
     components = set(key.split(' ')[0] for key in config.keys()
@@ -416,6 +424,8 @@ def async_from_config_dict(config: Dict[str, Any],
     # Setup the components
     for domain in loader.load_order_components(components):
         yield from _async_setup_component(hass, domain, config)
+
+    setup_lock.release()
 
     return hass
 

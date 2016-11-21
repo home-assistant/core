@@ -78,6 +78,7 @@ def valid_publish_topic(value):
     """Validate that we can publish using this MQTT topic."""
     return valid_subscribe_topic(value, invalid_chars='#+\0')
 
+
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 _HBMQTT_CONFIG_SCHEMA = vol.Schema(dict)
 
