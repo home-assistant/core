@@ -40,6 +40,7 @@ DOMAIN = 'dsmr'
 
 REQUIREMENTS = [
     'https://github.com/aequitas/dsmr_parser/archive/async_protocol.zip'
+    '#dsmr_parser==0.4'
 ]
 
 # Smart meter sends telegram every 10 seconds
