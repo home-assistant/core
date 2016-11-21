@@ -225,7 +225,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                 'vendor string lookup has been retried'
 
     def test_mac_vendor_lookup_error(self):
-        """Failure during API call should be retried."""
+        """Prevent another lookup if failure during API call."""
         mac = 'B8:27:EB:00:00:00'
 
         device = device_tracker.Device(
@@ -238,16 +238,16 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             run_coroutine_threadsafe(device.async_seen(),
                                      self.hass.loop).result()
 
-            self.assertEqual(device.vendor, None)
+            self.assertEqual(device.vendor, 'unknown')
 
             run_coroutine_threadsafe(device.async_seen(),
                                      self.hass.loop).result()
 
-            assert aioclient_mock.call_count == 2, \
+            assert aioclient_mock.call_count == 1, \
                 'vendor string lookup has been retried'
 
     def test_mac_vendor_lookup_exception(self):
-        """Exception during API call should be retried."""
+        """Prevent another lookup if exception during API call."""
         mac = 'B8:27:EB:00:00:00'
 
         device = device_tracker.Device(
@@ -259,12 +259,12 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             run_coroutine_threadsafe(device.async_seen(),
                                      self.hass.loop).result()
 
-            self.assertEqual(device.vendor, None)
+            self.assertEqual(device.vendor, 'unknown')
 
             run_coroutine_threadsafe(device.async_seen(),
                                      self.hass.loop).result()
 
-            assert aioclient_mock.call_count == 2, \
+            assert aioclient_mock.call_count == 1, \
                 'vendor string lookup has been retried'
 
     def test_discovery(self):

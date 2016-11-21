@@ -10,9 +10,11 @@ import os
 from datetime import timedelta
 from typing import Any, Callable, Sequence
 
-import aiohttp
 import async_timeout
+
 import voluptuous as vol
+
+import aiohttp
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
@@ -491,17 +493,17 @@ class Device(Entity):
             if resp.status == 200:
                 vendor_string = yield from resp.text()
                 return vendor_string
-            # api 404 == mac vendor not found
-            elif resp.status == 404:
-                # set something other then None to prevent retry
-                return 'unknown'
-            # request failed, set None to try another time
-            else:
-                return None
+            # if vendor is not known to the API (404) or there
+            # was a failure during the lookup (500); set vendor
+            # to something other then None to prevent retry
+            # as the value is only relevant when it is to be stored
+            # in the 'known_devices.yaml' file which only happens
+            # the first time the device is seen.
+            return 'unknown'
         except (asyncio.TimeoutError, aiohttp.errors.ClientError,
                 aiohttp.errors.ClientDisconnectedError):
-            # request failed, set None to try another time
-            return None
+            # same as above
+            return 'unknown'
 
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
