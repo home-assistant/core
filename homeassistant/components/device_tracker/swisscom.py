@@ -86,14 +86,13 @@ class SwisscomDeviceScanner(object):
 
     def get_swisscom_data(self):
         """Retrieve data from Swisscom and return parsed result."""
-        request = requests.post('http://' + self.host + '/ws', headers={
-            'Content-Type': 'application/x-sah-ws-4-call+json'
-            },
-                                data="""{"service":"Devices",
-                                    "method":"get",
-                                    "parameters":
-                                    {"expression":"lan and not self"}}""",
-                                timeout=10)
+        url = 'http://{}/ws'.format(self.host)
+        headers = {'Content-Type': 'application/x-sah-ws-4-call+json'}
+        data = """
+        {"service":"Devices", "method":"get",
+        "parameters":{"expression":"lan and not self"}}"""
+
+        request = requests.post(url, headers=headers, data=data, timeout=10)
 
         devices = {}
         for device in request.json()['status']:

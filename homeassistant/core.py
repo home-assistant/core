@@ -30,7 +30,7 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE,
     SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, __version__)
 from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError)
+    HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 import homeassistant.util as util
@@ -210,8 +210,7 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-        run_callback_threadsafe(
-            self.loop, self.async_add_job, target, *args).result()
+        self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     @callback
     def async_add_job(self, target: Callable[..., None], *args: Any) -> None:
@@ -307,21 +306,18 @@ class HomeAssistant(object):
     @callback
     def _async_exception_handler(self, loop, context):
         """Handle all exception inside the core loop."""
-        message = context.get('message')
-        if message:
-            _LOGGER.warning(
-                "Error inside async loop: %s",
-                message
-            )
-
-        # for debug modus
+        kwargs = {}
         exception = context.get('exception')
-        if exception is not None:
-            exc_info = (type(exception), exception, exception.__traceback__)
-            _LOGGER.debug(
-                "Exception inside async loop: ",
-                exc_info=exc_info
-            )
+        if exception:
+            # Do not report on shutting down exceptions.
+            if isinstance(exception, ShuttingDown):
+                return
+
+            kwargs['exc_info'] = (type(exception), exception,
+                                  exception.__traceback__)
+
+        _LOGGER.error('Error doing job: %s', context['message'],
+                      **kwargs)
 
     @callback
     def _async_stop_handler(self, *args):
@@ -430,7 +426,7 @@ class EventBus(object):
         """
         if event_type != EVENT_HOMEASSISTANT_STOP and \
                 self._hass.state == CoreState.stopping:
-            raise HomeAssistantError('Home Assistant is shutting down.')
+            raise ShuttingDown('Home Assistant is shutting down.')
 
         # Copy the list of the current listeners because some listeners
         # remove themselves as a listener while being executed which
@@ -1180,7 +1176,7 @@ def _async_create_timer(hass, interval=TIMER_INTERVAL):
                         EVENT_TIME_CHANGED,
                         {ATTR_NOW: now}
                     )
-                except HomeAssistantError:
+                except ShuttingDown:
                     # HA raises error if firing event after it has shut down
                     break
 

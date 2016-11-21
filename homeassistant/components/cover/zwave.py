@@ -36,15 +36,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             and value.index == 0):
         value.set_change_verified(False)
         add_devices([ZwaveRollershutter(value)])
-    elif value.node.specific == zwave.const.GENERIC_TYPE_ENTRY_CONTROL:
-        if (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_BINARY or
-                value.command_class ==
-                zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
-            if (value.type != zwave.const.TYPE_BOOL and
-                    value.genre != zwave.const.GENRE_USER):
-                return
-            value.set_change_verified(False)
-            add_devices([ZwaveGarageDoor(value)])
+    elif (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_BINARY or
+          value.command_class == zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
+        if (value.type != zwave.const.TYPE_BOOL and
+                value.genre != zwave.const.GENRE_USER):
+            return
+        value.set_change_verified(False)
+        add_devices([ZwaveGarageDoor(value)])
     else:
         return
 
