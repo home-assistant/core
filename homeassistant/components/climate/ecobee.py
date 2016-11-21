@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         if entity_id:
             target_thermostats = [device for device in devices
-                                  if device.entity_id == entity_id]
+                                  if device.entity_id in entity_id]
         else:
             target_thermostats = devices
 
