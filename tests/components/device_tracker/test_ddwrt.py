@@ -1,21 +1,24 @@
 """The tests for the DD-WRT device tracker platform."""
+import logging
 import os
+import re
 import unittest
 from unittest import mock
-import logging
-import requests
-import requests_mock
 
+import requests
+
+import requests_mock
 from homeassistant import config
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import device_tracker
-from homeassistant.const import (
-    CONF_PLATFORM, CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_PLATFORM,
+                                 CONF_USERNAME)
 from homeassistant.util import slugify
+from tests.common import (assert_setup_component, get_test_home_assistant,
+                          load_fixture)
 
-from tests.common import (
-    get_test_home_assistant, assert_setup_component, load_fixture)
+from ...test_util.aiohttp import mock_aiohttp_client
 
 TEST_HOST = '127.0.0.1'
 _LOGGER = logging.getLogger(__name__)
@@ -25,6 +28,12 @@ class TestDdwrt(unittest.TestCase):
     """Tests for the Ddwrt device tracker platform."""
 
     hass = None
+
+    def run(self, result=None):
+        """Mock out http calls to macvendor API for whole test suite."""
+        with mock_aiohttp_client() as aioclient_mock:
+            aioclient_mock.get(re.compile('http://api.macvendors.com/.*'), text='')
+            super().run(result)
 
     def setup_method(self, _):
         """Setup things to be run when tests are started."""
@@ -136,6 +145,7 @@ class TestDdwrt(unittest.TestCase):
                         CONF_USERNAME: 'fake_user',
                         CONF_PASSWORD: '0'
                     }})
+                self.hass.block_till_done()
 
             path = self.hass.config.path(device_tracker.YAML_DEVICES)
             devices = config.load_yaml_config_file(path)
@@ -164,6 +174,7 @@ class TestDdwrt(unittest.TestCase):
                         CONF_USERNAME: 'fake_user',
                         CONF_PASSWORD: '0'
                     }})
+                self.hass.block_till_done()
 
             path = self.hass.config.path(device_tracker.YAML_DEVICES)
             devices = config.load_yaml_config_file(path)
@@ -192,6 +203,7 @@ class TestDdwrt(unittest.TestCase):
                         CONF_USERNAME: 'fake_user',
                         CONF_PASSWORD: '0'
                     }})
+                self.hass.block_till_done()
 
             path = self.hass.config.path(device_tracker.YAML_DEVICES)
             devices = config.load_yaml_config_file(path)
