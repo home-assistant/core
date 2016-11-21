@@ -32,7 +32,8 @@ class TestDdwrt(unittest.TestCase):
     def run(self, result=None):
         """Mock out http calls to macvendor API for whole test suite."""
         with mock_aiohttp_client() as aioclient_mock:
-            aioclient_mock.get(re.compile('http://api.macvendors.com/.*'), text='')
+            macvendor_re = re.compile('http://api.macvendors.com/.*')
+            aioclient_mock.get(macvendor_re, text='')
             super().run(result)
 
     def setup_method(self, _):
