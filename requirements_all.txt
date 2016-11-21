@@ -453,7 +453,7 @@ python-wink==0.10.0
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.20
+pyvera==0.2.21
 
 # homeassistant.components.notify.html5
 pywebpush==0.6.1
