@@ -6,6 +6,7 @@ to be updated with new values.
 
 import asyncio
 from decimal import Decimal
+from unittest.mock import Mock
 
 from homeassistant.bootstrap import async_setup_component
 from tests.common import assert_setup_component
@@ -31,12 +32,15 @@ def test_default_setup(hass, monkeypatch):
         ]),
     }
 
-    # mock queue for injecting DSMR telegram
-    queue = asyncio.Queue(loop=hass.loop)
-    monkeypatch.setattr('asyncio.Queue', lambda: queue)
+    # mock for injecting DSMR telegram
+    dsmr = Mock(return_value=Mock())
+    monkeypatch.setattr('dsmr_parser.protocol.create_dsmr_reader', dsmr)
 
     with assert_setup_component(1):
-        yield from async_setup_component(hass, 'sensor', {'sensor': config})
+        yield from async_setup_component(hass, 'sensor',
+                                         {'sensor': config})
+
+    telegram_callback = dsmr.call_args_list[0][0][2]
 
     # make sure entities have been created and return 'unknown' state
     power_consumption = hass.states.get('sensor.power_consumption')
@@ -44,7 +48,7 @@ def test_default_setup(hass, monkeypatch):
     assert power_consumption.attributes.get('unit_of_measurement') is None
 
     # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
-    yield from queue.put(telegram)
+    telegram_callback(telegram)
 
     # after receiving telegram entities need to have the chance to update
     yield from asyncio.sleep(0, loop=hass.loop)

@@ -26,18 +26,21 @@ stores/caches the latest telegram and notifies the Entities that the telegram
 has been updated.
 """
 
+import asyncio
 import logging
 from datetime import timedelta
-import asyncio
-import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_PORT
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'dsmr'
 
-REQUIREMENTS = ['dsmr-parser==0.3']
+REQUIREMENTS = [
+    'https://github.com/aequitas/dsmr_parser/archive/async_protocol.zip'
+]
 
 # Smart meter sends telegram every 10 seconds
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
@@ -65,6 +68,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     logging.getLogger('dsmr_parser').setLevel(logging.ERROR)
 
     from dsmr_parser import obis_references as obis
+    from dsmr_parser.protocol import create_dsmr_reader
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
@@ -84,122 +88,48 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     else:
         obis_mapping.append(['Gas Consumption', obis.GAS_METER_READING])
 
-    # make list available early to allow cross referencing dsmr/entities
-    devices = []
-
-    # queue for receiving parsed telegrams from async dsmr reader
-    queue = asyncio.Queue()
-
-    # create DSMR interface
-    dsmr = DSMR(hass, config, devices, queue)
-
     # generate device entities
-    devices += [DSMREntity(name, obis, dsmr) for name, obis in obis_mapping]
+    devices = [DSMREntity(name, obis) for name, obis in obis_mapping]
 
     # setup devices
     yield from async_add_devices(devices)
 
-    # add asynchronous serial reader/parser task
-    reader = hass.loop.create_task(dsmr.dsmr_parser.read(queue))
+    def update_entities_telegram(telegram):
+        """Updates entities with latests telegram & trigger state update."""
+        # make all device entities aware of new telegram
+        for device in devices:
+            device.telegram = telegram
+            hass.async_add_job(device.async_update_ha_state)
+            # hass.loop.create_task(device.async_update_ha_state())
 
-    # serial telegram reader is a infinite looping task, it will only resolve
-    # when it has an exception, in that case log this.
-    def handle_error(future):
-        """If result is an exception log it."""
-        _LOGGER.error('error during initialization of DSMR serial reader: %s',
-                      future.exception())
-    reader.add_done_callback(handle_error)
+    # creates a asyncio.Protocol for reading DSMR telegrams from serial
+    # and calls update_entities_telegram to update entities on arrival
+    dsmr = create_dsmr_reader(config[CONF_PORT], config[CONF_DSMR_VERSION],
+                              update_entities_telegram, loop=hass.loop)
 
-    # add task to receive telegrams and update entities
-    hass.async_add_job(dsmr.read_telegrams)
-
-
-class DSMR:
-    """DSMR interface."""
-
-    def __init__(self, hass, config, devices, queue):
-        """Setup DSMR serial interface, initialize, add device entity list."""
-        from dsmr_parser.serial import (
-            SERIAL_SETTINGS_V4,
-            SERIAL_SETTINGS_V2_2,
-            AsyncSerialReader
-        )
-        from dsmr_parser import telegram_specifications
-
-        # map dsmr version to settings
-        dsmr_versions = {
-            '4': (SERIAL_SETTINGS_V4, telegram_specifications.V4),
-            '2.2': (SERIAL_SETTINGS_V2_2, telegram_specifications.V2_2),
-        }
-
-        # initialize asynchronous telegram reader
-        dsmr_version = config[CONF_DSMR_VERSION]
-        self.dsmr_parser = AsyncSerialReader(
-            device=config[CONF_PORT],
-            serial_settings=dsmr_versions[dsmr_version][0],
-            telegram_specification=dsmr_versions[dsmr_version][1],
-        )
-
-        # keep list of device entities to update
-        self.devices = devices
-
-        self._queue = queue
-
-        # initialize empty telegram
-        self._telegram = {}
-
-        # forward stop event to reading loop
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                   self._queue.put_nowait)
-
-    @asyncio.coroutine
-    def read_telegrams(self):
-        """Receive parsed telegram from DSMR reader, update entities."""
-        while True:
-            # asynchronously get latest telegram when it arrives
-            event = yield from self._queue.get()
-
-            # stop loop if stop event was received
-            if getattr(event, 'event_type', None) == EVENT_HOMEASSISTANT_STOP:
-                self._queue.task_done()
-                return
-
-            self._telegram = event
-            _LOGGER.debug('received DSMR telegram')
-
-            # make all device entities aware of new telegram
-            for device in self.devices:
-                yield from device.async_update_ha_state()
-
-    @property
-    def telegram(self):
-        """Return telegram object."""
-        return self._telegram
+    # start DSMR asycnio.Protocol reader
+    yield from hass.loop.create_task(dsmr)
 
 
 class DSMREntity(Entity):
     """Entity reading values from DSMR telegram."""
 
-    def __init__(self, name, obis, interface):
+    def __init__(self, name, obis):
         """"Initialize entity."""
         # human readable name
         self._name = name
         # DSMR spec. value identifier
         self._obis = obis
-        # interface class to get telegram data
-        self._interface = interface
+        self.telegram = {}
 
     def get_dsmr_object_attr(self, attribute):
         """Read attribute from last received telegram for this DSMR object."""
-        # get most recent cached telegram from interface
-        telegram = self._interface.telegram
-
         # make sure telegram contains an object for this entities obis
-        if self._obis not in telegram:
+        if self._obis not in self.telegram:
             return None
 
         # get the attibute value if the object has it
-        dsmr_object = telegram[self._obis]
+        dsmr_object = self.telegram[self._obis]
         return getattr(dsmr_object, attribute, None)
 
     @property
