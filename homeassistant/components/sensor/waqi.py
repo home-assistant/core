@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 # Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1800)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -76,6 +76,16 @@ class WaqiSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return "AQI"
+
+    @property
+    def state_attributes(self):
+        """Return the state attributes of the last update."""
+        return {
+            "time": self._data.get('time', 'no data'),
+            "dominentpol": self._data.get('dominentpol', 'no data'),
+            "iaqi": self._data.get('iaqi', 'no data'),
+            "city": self._data.get('city', 'no data')
+        }
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
