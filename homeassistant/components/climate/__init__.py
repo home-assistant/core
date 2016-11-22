@@ -573,4 +573,4 @@ class ClimateDevice(Entity):
             return round(value, 1)
         else:
             # Users of fahrenheit generally expect integer units.
-            return int(value)
+            return round(value)
