@@ -102,6 +102,9 @@ homematic:
         description: New value
         example: 1
 
+  reconnect:
+    description: Reconnect to all Homematic Hubs.
+
 openalpr:
   scan:
     description: Scan immediately a device.
