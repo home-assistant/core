@@ -151,11 +151,10 @@ def async_load_platform(hass, component, platform, discovered=None,
     This method is a coroutine.
     """
     did_lock = False
-    if component not in hass.config.components:
-        setup_lock = hass.data.get('setup_lock')
-        if setup_lock and setup_lock.locked():
-            did_lock = True
-            yield from setup_lock.acquire()
+    setup_lock = hass.data.get('setup_lock')
+    if setup_lock and setup_lock.locked():
+        did_lock = True
+        yield from setup_lock.acquire()
 
     setup_success = True
 
