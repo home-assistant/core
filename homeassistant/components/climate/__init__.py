@@ -362,6 +362,8 @@ def setup(hass, config):
 class ClimateDevice(Entity):
     """Representation of a climate device."""
 
+    _precision = None
+
     # pylint: disable=no-self-use
     @property
     def state(self):
@@ -560,6 +562,17 @@ class ClimateDevice(Entity):
         """Return the maximum humidity."""
         return 99
 
+    @property
+    def decimal_count(self):
+        """The precision of report temperatures."""
+        if self._precision is not None:
+            return self._precision
+        if self.unit_of_measurement is TEMP_CELSIUS:
+            return 1
+        else:
+            # Users of fahrenheit generally expect integer units.
+            return 0
+
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
         if temp is None or not isinstance(temp, Number):
@@ -568,10 +581,4 @@ class ClimateDevice(Entity):
         value = convert_temperature(temp, self.temperature_unit,
                                     self.unit_of_measurement)
 
-        if self.unit_of_measurement is TEMP_CELSIUS:
-            decimal_count = 1
-        else:
-            # Users of fahrenheit generally expect integer units.
-            decimal_count = 0
-
-        return round(value, decimal_count)
+        return round(value, self.decimal_count)
