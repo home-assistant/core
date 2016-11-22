@@ -259,8 +259,9 @@ class Entity(object):
         # Convert temperature if we detect one
         try:
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
-            if unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
-                units = self.hass.config.units
+            units = self.hass.config.units
+            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
+                    unit_of_measure != units.temperature_unit):
                 state = str(units.temperature(float(state), unit_of_measure))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
         except ValueError:
