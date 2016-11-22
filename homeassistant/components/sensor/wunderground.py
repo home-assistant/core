@@ -10,9 +10,9 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS,
+    CONF_MONITORED_CONDITIONS, CONF_FORECAST_PERIODS, CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS,
     STATE_UNKNOWN, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -28,7 +28,7 @@ CONF_PWS_ID = 'pws_id'
 
 MIN_TIME_BETWEEN_UPDATES_ALERTS = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES_OBSERVATION = timedelta(minutes=5)
-MIN_TIME_BETWEEN_UPDATES_FORECAST = timedelta(minutes=15)
+MIN_TIME_BETWEEN_UPDATES_FORECAST = timedelta(minutes=30)
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
@@ -39,7 +39,6 @@ SENSOR_TYPES = {
     'feelslike_c': ['Feels Like (°C)', TEMP_CELSIUS],
     'feelslike_f': ['Feels Like (°F)', TEMP_FAHRENHEIT],
     'feelslike_string': ['Feels Like', None],
-    'forecast': ['Forecast', None],
     'heat_index_c': ['Dewpoint (°C)', TEMP_CELSIUS],
     'heat_index_f': ['Dewpoint (°F)', TEMP_FAHRENHEIT],
     'heat_index_string': ['Heat Index Summary', None],
@@ -82,32 +81,34 @@ ALERTS_ATTRS = [
     'message',
 ]
 
-# Forecast Attributes
-FORECAST_ATTRS = [
-    'icon_url',
-    'title',
-    'fcttext',
-]
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_PWS_ID): cv.string,
+    vol.Optional(CONF_FORECAST_PERIODS): cv.positive_int,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    forecast_periods = config.get(CONF_FORECAST_PERIODS, 0)
+    
     """Setup the WUnderground sensor."""
     rest = WUndergroundData(hass,
                             config.get(CONF_API_KEY),
-                            config.get(CONF_PWS_ID, None))
+                            config.get(CONF_PWS_ID, None),
+                            forecast_periods)
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(WUndergroundSensor(rest, variable))
 
+    for period in range(forecast_periods):
+        # sensors.append(WUndergroundSensor(rest, "forecast_icon_" + str(period)))
+        sensors.append(WUndergroundSensor(rest, "forecast_" + str(period)))
+
     try:
         rest.update()
+        rest.update_forecast()
     except ValueError as err:
         _LOGGER.error("Received error from WUnderground: %s", err)
         return False
@@ -124,10 +125,14 @@ class WUndergroundSensor(Entity):
         """Initialize the sensor."""
         self.rest = rest
         self._condition = condition
+        self.entity_id = ENTITY_ID_FORMAT.format("pws_" + self._condition)
 
     @property
     def name(self):
         """Return the name of the sensor."""
+        if self._condition.startswith("forecast"):
+            period = self._condition[-1:]
+            return self.rest.data.get('forecast_title_' + period, 'PWS_' + self._condition)
         return "PWS_" + self._condition
 
     @property
@@ -144,22 +149,23 @@ class WUndergroundSensor(Entity):
                'full' in self.rest.data['display_location']:
                 return self.rest.data['display_location']['full']
 
+            if self._condition.startswith('forecast'):
+                period = self._condition[-1:]
+                return self.rest.data.get('forecast_text_' + period, "None")
+
             if self._condition in self.rest.data:
                 if self._condition == 'relative_humidity':
                     return int(self.rest.data[self._condition][:-1])
                 else:
                     return self.rest.data[self._condition]
 
+
         if self._condition == 'alerts':
             if self.rest.alerts:
                 return len(self.rest.alerts)
             else:
                 return 0
-        elif self._condition == 'forecast':
-            if self.rest.forecast:
-                return len(self.rest.forecast)
-            else:
-                return 0
+
         return STATE_UNKNOWN
 
     @property
@@ -169,7 +175,7 @@ class WUndergroundSensor(Entity):
 
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
 
-        if self._condition != 'alerts' and self._condition != 'forecast':
+        if self._condition != 'alerts':
             return attrs
 
         if self._condition == 'alerts':
@@ -186,28 +192,6 @@ class WUndergroundSensor(Entity):
                             dkey = alert.capitalize()
                         attrs[dkey] = data[alert]
 
-        elif self._condition == 'forecast':
-            if not self.rest.forecast:
-                return attrs
-
-            summary = ""
-            for data in self.rest.forecast:
-                # Individual attributes
-                for item in FORECAST_ATTRS:
-                    if data[item]:
-                        dkey = item + '_' + str(data['period'])
-                        attrs[dkey] = data[item]
-
-                # Summary attribute
-                summary += data['title'] + ": " + data['fcttext'] + "\n"
-
-                """
-                index = data['period']
-                index_str = str(index)
-                attrs['forecast_' + index_str] = data['title'] + ": " + data['fcttext']
-                """
-            attrs['summary'] = summary
-
         return attrs
 
     @property
@@ -216,16 +200,23 @@ class WUndergroundSensor(Entity):
         if self._condition == 'weather':
             return self.rest.data['icon_url']
 
+        if self._condition.startswith('forecast'):
+            period = self._condition[-1:]
+            return self.rest.data.get('forecast_icon_' + str(period), None)
+
     @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
+        if self._condition.startswith('forecast'):
+            return None
+
         return SENSOR_TYPES[self._condition][1]
 
     def update(self):
         """Update current conditions."""
         if self._condition == 'alerts':
             self.rest.update_alerts()
-        elif self._condition == 'forecast':
+        elif self._condition.startswith('forecast'):
             self.rest.update_forecast()
         else:
             self.rest.update()
@@ -234,7 +225,7 @@ class WUndergroundSensor(Entity):
 class WUndergroundData(object):
     """Get data from WUnderground."""
 
-    def __init__(self, hass, api_key, pws_id=None):
+    def __init__(self, hass, api_key, pws_id=None, forecast_periods=0):
         """Initialize the data object."""
         self._hass = hass
         self._api_key = api_key
@@ -243,7 +234,7 @@ class WUndergroundData(object):
         self._longitude = hass.config.longitude
         self.data = None
         self.alerts = None
-        self.forecast = None
+        self.forecast_periods = forecast_periods
 
     def _build_url(self, baseurl=_RESOURCE):
         url = baseurl.format(self._api_key)
@@ -293,7 +284,12 @@ class WUndergroundData(object):
                 raise ValueError(result['response']["error"]
                                  ["description"])
             else:
-                self.forecast = result["forecast"]['txt_forecast']['forecastday']
+                for entry in result["forecast"]['txt_forecast']['forecastday']:
+                    period = entry['period']
+                    if period < self.forecast_periods:
+                        self.data['forecast_icon_' + str(period)] = entry['icon_url']
+                        self.data['forecast_title_' + str(period)] = entry['title']
+                        self.data['forecast_text_' + str(period)] = entry['fcttext']
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
             self.forecast = None
