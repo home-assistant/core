@@ -4,8 +4,6 @@ import logging
 import unittest
 from unittest.mock import patch
 
-import pytest
-
 import homeassistant.components.calendar as calendar_base
 import homeassistant.components.calendar.google as calendar
 import homeassistant.util.dt as dt_util
