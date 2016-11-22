@@ -569,7 +569,7 @@ class ClimateDevice(Entity):
         value = convert_temperature(temp, self.temperature_unit,
                                     self.unit_of_measurement)
 
-        if self.unit_of_measurement is TEMP_CELSIUS:
+        if self.unit_of_measurement == TEMP_CELSIUS:
             return round(value, 1)
         else:
             # Users of fahrenheit generally expect integer units.
