@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.20']
+REQUIREMENTS = ['pyvera==0.2.21']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,7 +132,8 @@ class VeraDevice(Entity):
         self.update()
 
     def _update_callback(self, _device):
-        self.update_ha_state(True)
+        self.update()
+        self.schedule_update_ha_state()
 
     @property
     def name(self):

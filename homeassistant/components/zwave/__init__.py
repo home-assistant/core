@@ -32,12 +32,16 @@ CONF_POLLING_INTERVAL = 'polling_interval'
 CONF_USB_STICK_PATH = 'usb_path'
 CONF_CONFIG_PATH = 'config_path'
 CONF_IGNORED = 'ignored'
+CONF_REFRESH_VALUE = 'refresh_value'
+CONF_REFRESH_DELAY = 'delay'
 
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
 DEFAULT_POLLING_INTERVAL = 60000
 DEFAULT_DEBUG = True
 DEFAULT_CONF_IGNORED = False
+DEFAULT_CONF_REFRESH_VALUE = False
+DEFAULT_CONF_REFRESH_DELAY = 2
 DOMAIN = 'zwave'
 
 NETWORK = None
@@ -144,6 +148,10 @@ CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_POLLING_INTENSITY):
         vol.All(cv.positive_int),
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
+    vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
+        cv.boolean,
+    vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
+        cv.positive_int
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -185,19 +193,19 @@ def _node_object_id(node):
     return node_object_id
 
 
-def _object_id(value):
+def object_id(value):
     """Return the object_id of the device value.
 
     The object_id contains node_id and value instance id
     to not collide with other entity_ids.
     """
-    object_id = "{}_{}_{}".format(slugify(_value_name(value)),
-                                  value.node.node_id, value.index)
+    _object_id = "{}_{}_{}".format(slugify(_value_name(value)),
+                                   value.node.node_id, value.index)
 
     # Add the instance id if there is more than one instance for the value
     if value.instance > 1:
-        return '{}_{}'.format(object_id, value.instance)
-    return object_id
+        return '{}_{}'.format(_object_id, value.instance)
+    return _object_id
 
 
 def nice_print_node(node):
@@ -254,7 +262,8 @@ def setup(hass, config):
 
     # Load configuration
     use_debug = config[DOMAIN].get(CONF_DEBUG)
-    customize = config[DOMAIN].get(CONF_CUSTOMIZE)
+    hass.data['zwave_customize'] = config[DOMAIN].get(CONF_CUSTOMIZE)
+    customize = hass.data['zwave_customize']
     autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
 
     # Setup options
@@ -332,7 +341,7 @@ def setup(hass, config):
                           node.generic, node.specific,
                           value.command_class, value.type,
                           value.genre)
-            name = "{}.{}".format(component, _object_id(value))
+            name = "{}.{}".format(component, object_id(value))
 
             node_config = customize.get(name, {})
 
@@ -585,7 +594,7 @@ class ZWaveDeviceEntity:
         The object_id contains node_id and value instance id to not collide
         with other entity_ids.
         """
-        return _object_id(self._value)
+        return object_id(self._value)
 
     @property
     def device_state_attributes(self):

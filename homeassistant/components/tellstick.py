@@ -111,7 +111,7 @@ class TellstickRegistry(object):
         entity = self._id_to_entity_map.get(tellstick_id, None)
         if entity is not None:
             entity.set_tellstick_state(method, data)
-            entity.update_ha_state()
+            entity.schedule_update_ha_state()
 
     def _setup_device_callback(self, hass, tellcore_lib):
         """Register the callback handler."""

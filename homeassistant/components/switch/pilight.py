@@ -27,18 +27,20 @@ DEPENDENCIES = ['pilight']
 COMMAND_SCHEMA = pilight.RF_CODE_SCHEMA.extend({
     vol.Optional('on'): cv.positive_int,
     vol.Optional('off'): cv.positive_int,
-    vol.Optional(CONF_UNIT): cv.string,
+    vol.Optional(CONF_UNIT): cv.positive_int,
     vol.Optional(CONF_ID): cv.positive_int,
     vol.Optional(CONF_STATE): cv.string,
-    vol.Optional(CONF_SYSTEMCODE): cv.string,
+    vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
 })
 
 SWITCHES_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,
     vol.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_OFF_CODE_RECIEVE): COMMAND_SCHEMA,
-    vol.Optional(CONF_ON_CODE_RECIEVE): COMMAND_SCHEMA,
+    vol.Optional(CONF_OFF_CODE_RECIEVE, default=[]): vol.All(cv.ensure_list,
+                                                             [COMMAND_SCHEMA]),
+    vol.Optional(CONF_ON_CODE_RECIEVE, default=[]): vol.All(cv.ensure_list,
+                                                            [COMMAND_SCHEMA])
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -125,11 +127,11 @@ class PilightSwitch(SwitchDevice):
         self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
                                  self._code_on, blocking=True)
         self._state = True
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn the switch on by calling pilight.send service with off code."""
         self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
                                  self._code_off, blocking=True)
         self._state = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()

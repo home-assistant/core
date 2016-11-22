@@ -18,7 +18,7 @@ from homeassistant.util import Throttle
 
 REQUIREMENTS = [
     'https://github.com/jabesq/netatmo-api-python/archive/'
-    'v0.6.0.zip#lnetatmo==0.6.0']
+    'v0.7.0.zip#lnetatmo==0.7.0']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -14,7 +14,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['batinfo==0.3']
+REQUIREMENTS = ['batinfo==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 

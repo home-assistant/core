@@ -109,7 +109,7 @@ class TelldusLiveSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return "{} {}".format(self._sensor_name or DEVICE_DEFAULT_NAME,
-                              self.quantity_name)
+                              self.quantity_name or "")
 
     @property
     def available(self):
@@ -125,6 +125,8 @@ class TelldusLiveSensor(Entity):
             return self._value_as_humidity
         elif self._sensor_type == SENSOR_TYPE_LUMINANCE:
             return self._value_as_luminance
+        else:
+            return self._sensor_value
 
     @property
     def device_state_attributes(self):
@@ -139,14 +141,17 @@ class TelldusLiveSensor(Entity):
     @property
     def quantity_name(self):
         """Name of quantity."""
-        return SENSOR_TYPES[self._sensor_type][0]
+        return SENSOR_TYPES[self._sensor_type][0] \
+            if self._sensor_type in SENSOR_TYPES else None
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return SENSOR_TYPES[self._sensor_type][1]
+        return SENSOR_TYPES[self._sensor_type][1] \
+            if self._sensor_type in SENSOR_TYPES else None
 
     @property
     def icon(self):
         """Return the icon."""
-        return SENSOR_TYPES[self._sensor_type][2]
+        return SENSOR_TYPES[self._sensor_type][2] \
+            if self._sensor_type in SENSOR_TYPES else None

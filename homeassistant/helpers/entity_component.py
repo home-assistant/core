@@ -138,6 +138,7 @@ class EntityComponent(object):
         entity_platform = self._platforms[key]
 
         try:
+            self.logger.info("Setting up %s.%s", self.domain, platform_type)
             if getattr(platform, 'async_setup_platform', None):
                 yield from platform.async_setup_platform(
                     self.hass, platform_config,
@@ -289,11 +290,16 @@ class EntityPlatform(object):
         self.entity_namespace = entity_namespace
         self.platform_entities = []
         self._async_unsub_polling = None
+        self._process_updates = False
 
     def add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
+        if update_before_add:
+            for entity in new_entities:
+                entity.update()
+
         run_coroutine_threadsafe(
-            self.async_add_entities(list(new_entities), update_before_add),
+            self.async_add_entities(list(new_entities), False),
             self.component.hass.loop
         ).result()
 
@@ -348,14 +354,38 @@ class EntityPlatform(object):
             self._async_unsub_polling()
             self._async_unsub_polling = None
 
-    @callback
+    @asyncio.coroutine
     def _update_entity_states(self, now):
         """Update the states of all the polling entities.
 
+        To protect from flooding the executor, we will update async entities
+        in parallel and other entities sequential.
+
         This method must be run in the event loop.
         """
-        for entity in self.platform_entities:
-            if entity.should_poll:
-                self.component.hass.async_add_job(
-                    entity.async_update_ha_state(True)
-                )
+        if self._process_updates:
+            return
+        self._process_updates = True
+
+        try:
+            tasks = []
+            to_update = []
+
+            for entity in self.platform_entities:
+                if not entity.should_poll:
+                    continue
+
+                update_coro = entity.async_update_ha_state(True)
+                if hasattr(entity, 'async_update'):
+                    tasks.append(
+                        self.component.hass.loop.create_task(update_coro))
+                else:
+                    to_update.append(update_coro)
+
+            for update_coro in to_update:
+                yield from update_coro
+
+            if tasks:
+                yield from asyncio.wait(tasks, loop=self.component.hass.loop)
+        finally:
+            self._process_updates = False
