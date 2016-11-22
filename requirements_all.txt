@@ -275,7 +275,7 @@ messagebird==1.2.0
 mficlient==0.3.0
 
 # homeassistant.components.sensor.miflora
-miflora==0.1.12
+miflora==0.1.13
 
 # homeassistant.components.discovery
 netdisco==0.7.6
