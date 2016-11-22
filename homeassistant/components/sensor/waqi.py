@@ -7,6 +7,7 @@ https://github.com/home-assistant/home-assistant/
 import logging
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 
 REQUIREMENTS = ["pwaqi==1.2"]
@@ -20,9 +21,7 @@ SENSOR_TYPES = {
 ATTR_LOCATION = 'locations'
 
 # Return cached results if last scan was less then this time ago
-# Cyprus Air Quality data is uploaded to server every 10mn
-# so this time should not be under
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1800)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -77,6 +76,7 @@ class WaqiSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return "AQI"
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the data from World Air Quality Index and updates the states."""
         import pwaqi
