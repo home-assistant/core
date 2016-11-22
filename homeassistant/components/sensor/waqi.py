@@ -82,9 +82,7 @@ class WaqiSensor(Entity):
         """Return the state attributes of the last update."""
         return {
             "time": self._data.get('time', 'no data'),
-            "dominentpol": self._data.get('dominentpol', 'no data'),
-            "iaqi": self._data.get('iaqi', 'no data'),
-            "city": self._data.get('city', 'no data')
+            "dominentpol": self._data.get('dominentpol', 'no data')
         }
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
