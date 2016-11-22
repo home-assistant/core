@@ -48,7 +48,7 @@ def async_listen(hass, service, callback):
 
 def discover(hass, service, discovered=None, component=None, hass_config=None):
     """Fire discovery event. Can ensure a component is loaded."""
-    hass.async_add_job(
+    hass.add_job(
         async_discover(hass, service, discovered, component, hass_config))
 
 
@@ -127,7 +127,7 @@ def load_platform(hass, component, platform, discovered=None,
 
     Use `listen_platform` to register a callback for these events.
     """
-    hass.async_add_job(
+    hass.add_job(
         async_load_platform(hass, component, platform, discovered,
                             hass_config))
 

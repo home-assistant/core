@@ -7,7 +7,8 @@ https://home-assistant.io/components/sensor.neato/
 import logging
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.neato import NEATO_ROBOTS, NEATO_LOGIN
+from homeassistant.components.neato import (
+    NEATO_ROBOTS, NEATO_LOGIN, ACTION, ERRORS, MODE, ALERTS)
 
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPE_STATUS = 'status'
@@ -16,52 +17,6 @@ SENSOR_TYPE_BATTERY = 'battery'
 SENSOR_TYPES = {
     SENSOR_TYPE_STATUS: ['Status'],
     SENSOR_TYPE_BATTERY: ['Battery']
-}
-
-STATES = {
-    1: 'Idle',
-    2: 'Busy',
-    3: 'Pause',
-    4: 'Error'
-}
-
-MODE = {
-    1: 'Eco',
-    2: 'Turbo'
-}
-
-ACTION = {
-    0: 'No action',
-    1: 'House cleaning',
-    2: 'Spot cleaning',
-    3: 'Manual cleaning',
-    4: 'Docking',
-    5: 'User menu active',
-    6: 'Cleaning cancelled',
-    7: 'Updating...',
-    8: 'Copying logs...',
-    9: 'Calculating position...',
-    10: 'IEC test'
-}
-
-ERRORS = {
-    'ui_error_brush_stuck': 'Brush stuck',
-    'ui_error_brush_overloaded': 'Brush overloaded',
-    'ui_error_bumper_stuck': 'Bumper stuck',
-    'ui_error_dust_bin_missing': 'Dust bin missing',
-    'ui_error_dust_bin_full': 'Dust bin full',
-    'ui_error_dust_bin_emptied': 'Dust bin emptied',
-    'ui_error_navigation_noprogress': 'Clear my path',
-    'ui_error_navigation_origin_unclean': 'Clear my path',
-    'ui_error_navigation_falling': 'Clear my path',
-    'ui_error_picked_up': 'Picked up',
-    'ui_error_stuck': 'Stuck!'
-
-}
-
-ALERTS = {
-    'ui_alert_dust_bin_full': 'Please empty dust bin',
-    'ui_alert_recovering_location': 'Returning to start'
 }
 
 
