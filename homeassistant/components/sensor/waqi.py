@@ -34,7 +34,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the requested World Air Quality Index locations."""
     dev = []
     import pwaqi
-    
     # Iterate each module
     for location_name in config[ATTR_LOCATION]:
         _LOGGER.debug('Adding location %s', location_name)
