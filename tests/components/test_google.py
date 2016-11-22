@@ -2,6 +2,8 @@
 import logging
 import unittest
 
+import pytest
+
 import homeassistant.components.google as google
 from homeassistant.bootstrap import setup_component
 from tests.common import get_test_home_assistant
@@ -9,6 +11,8 @@ from tests.common import get_test_home_assistant
 _LOGGER = logging.getLogger(__name__)
 
 
+# Because they connect to the internet
+@pytest.mark.skip
 class TestGoogle(unittest.TestCase):
     """Test the Google component."""
 
