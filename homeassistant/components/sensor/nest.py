@@ -195,14 +195,13 @@ class NestProtectSensor(NestSensor):
         if self.variable == 'battery_level':
             self._state = getattr(self.device, self.variable)
         else:
+            self._state = 'Unknown'
             if state == 0:
                 self._state = 'Ok'
             if state == 1 or state == 2:
                 self._state = 'Warning'
             if state == 3:
                 self._state = 'Emergency'
-
-        self._state = 'Unknown'
 
     @property
     def name(self):
