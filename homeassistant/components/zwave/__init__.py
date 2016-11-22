@@ -204,7 +204,7 @@ def object_id(value):
 
     # Add the instance id if there is more than one instance for the value
     if value.instance > 1:
-        return '{}_{}'.format(object_id, value.instance)
+        return '{}_{}'.format(_object_id, value.instance)
     return _object_id
 
 
