@@ -82,7 +82,6 @@ class WaqiSensor(Entity):
     def update(self):
         """Get the data from World Air Quality Index and updates the states."""
         import pwaqi
-
         try:
             self._data = pwaqi.getStationObservation(self._station_id)
 
