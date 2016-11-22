@@ -39,15 +39,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     mac_addr = binascii.unhexlify(
         config.get(CONF_MAC).encode().replace(b':', b''))
 
-    try:
-        broadlink = Broadlink.Device(ip_addr, mac_addr)
-        auth = broadlink.auth()
-        if auth:
-            _LOGGER.info('Broadlink connection successfully established.')
-
-    except ValueError as error:
-        _LOGGER.error(error)
-
     for object_id, device_config in devices.items():
 
         switches.append(
@@ -58,7 +49,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device_config.get(CONF_COMMAND_ON),
                 device_config.get(CONF_COMMAND_OFF),
                 device_config.get(CONF_OPTIMISTIC),
-                broadlink
+                ip_addr,
+                mac_addr
             )
         )
 
@@ -73,7 +65,7 @@ class BroadlinkSwitch(SwitchDevice):
     """Representation of an Broadlink switch."""
 
     def __init__(self, hass, object_id, friendly_name, command_on,
-                 command_off, optimistic, broadlink):
+                 command_off, optimistic, ip_addr, mac_addr):
         """Initialize the switch."""
         self._hass = hass
         self._name = friendly_name
@@ -81,7 +73,8 @@ class BroadlinkSwitch(SwitchDevice):
         self._command_on = command_on
         self._command_off = command_off
         self._optimistic = optimistic
-        self._broadlink = broadlink
+        self._ip_addr = ip_addr
+        self._mac_addr = mac_addr
 
     @staticmethod
     def _switch(command):
@@ -110,18 +103,36 @@ class BroadlinkSwitch(SwitchDevice):
         import base64
         self._state = True
         _LOGGER.info("Running command: %s", self._command_on)
-        auth = self._broadlink.auth()
+        try:
+            broadlink = Broadlink.Device(self._ip_addr, self._mac_addr)
+            auth = broadlink.auth()
+            if auth:
+                _LOGGER.info('Broadlink connection successfully established.')
+
+        except ValueError as error:
+            _LOGGER.error(error)
+
+        auth = broadlink.auth()
         if auth:
-            self._broadlink.send_data(base64.b64decode(self._command_on))
+            broadlink.send_data(base64.b64decode(self._command_on))
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         import base64
         self._state = False
         _LOGGER.info("Running command: %s", self._command_off)
-        auth = self._broadlink.auth()
+        try:
+            broadlink = Broadlink.Device(self._ip_addr, self._mac_addr)
+            auth = broadlink.auth()
+            if auth:
+                _LOGGER.info('Broadlink connection successfully established.')
+
+        except ValueError as error:
+            _LOGGER.error(error)
+
+        auth = broadlink.auth()
         if auth:
-            self._broadlink.send_data(base64.b64decode(self._command_off))
+            broadlink.send_data(base64.b64decode(self._command_off))
 
 
 class Broadlink():
