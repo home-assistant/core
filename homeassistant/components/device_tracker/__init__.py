@@ -530,7 +530,7 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
             else:
                 host_name = scanner.get_device_name(mac)
                 seen.add(mac)
-            hass.async_add_job(async_see_device(mac=mac, host_name=host_name))
+            hass.add_job(async_see_device(mac=mac, host_name=host_name))
 
     async_track_utc_time_change(
         hass, device_tracker_scan, second=range(0, 60, interval))
