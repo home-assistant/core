@@ -12,8 +12,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_FORECAST_PERIODS, CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    STATE_UNKNOWN, ATTR_ATTRIBUTION)
+    CONF_MONITORED_CONDITIONS, CONF_FORECAST_PERIODS, CONF_API_KEY,
+    TEMP_FAHRENHEIT, TEMP_CELSIUS, STATE_UNKNOWN, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -91,9 +91,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    forecast_periods = config.get(CONF_FORECAST_PERIODS, 0)
-    
     """Setup the WUnderground sensor."""
+    forecast_periods = config.get(CONF_FORECAST_PERIODS, 0)
+
     rest = WUndergroundData(hass,
                             config.get(CONF_API_KEY),
                             config.get(CONF_PWS_ID, None),
@@ -103,7 +103,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(WUndergroundSensor(rest, variable))
 
     for period in range(forecast_periods):
-        # sensors.append(WUndergroundSensor(rest, "forecast_icon_" + str(period)))
         sensors.append(WUndergroundSensor(rest, "forecast_" + str(period)))
 
     try:
@@ -132,7 +131,8 @@ class WUndergroundSensor(Entity):
         """Return the name of the sensor."""
         if self._condition.startswith("forecast"):
             period = self._condition[-1:]
-            return self.rest.data.get('forecast_title_' + period, 'PWS_' + self._condition)
+            return self.rest.data.get('forecast_title_' + period,
+                                      'PWS_' + self._condition)
         return "PWS_" + self._condition
 
     @property
@@ -158,7 +158,6 @@ class WUndergroundSensor(Entity):
                     return int(self.rest.data[self._condition][:-1])
                 else:
                     return self.rest.data[self._condition]
-
 
         if self._condition == 'alerts':
             if self.rest.alerts:
@@ -279,7 +278,8 @@ class WUndergroundData(object):
     def update_forecast(self):
         """Get the lastest forecast from WUnderground."""
         try:
-            result = requests.get(self._build_url(_FORECAST), timeout=10).json()
+            result = requests.get(self._build_url(_FORECAST),
+                                  timeout=10).json()
             if "error" in result['response']:
                 raise ValueError(result['response']["error"]
                                  ["description"])
@@ -287,10 +287,12 @@ class WUndergroundData(object):
                 for entry in result["forecast"]['txt_forecast']['forecastday']:
                     period = entry['period']
                     if period < self.forecast_periods:
-                        self.data['forecast_icon_' + str(period)] = entry['icon_url']
-                        self.data['forecast_title_' + str(period)] = entry['title']
-                        self.data['forecast_text_' + str(period)] = entry['fcttext']
+                        self.data['forecast_icon_' + str(period)] =\
+                            entry['icon_url']
+                        self.data['forecast_title_' + str(period)] =\
+                            entry['title']
+                        self.data['forecast_text_' + str(period)] = \
+                            entry['fcttext']
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
-            self.forecast = None
             raise

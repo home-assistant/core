@@ -80,7 +80,18 @@ def mocked_requests_get(*args, **kwargs):
                     "message": ALERT_MESSAGE,
                 },
 
-            ],
+            ], "forecast": {
+                "txt_forecast": {
+                    "forecastday": [
+                        {
+                            "period": 0,
+                            "icon_url": "http://ug.com/i/c/k/partlycloudy.gif",
+                            "title": "Monday",
+                            "fcttext": "Mostly cloudy",
+                        },
+                    ],
+                },
+            }
         }, 200)
     else:
         return MockResponse({
@@ -162,6 +173,8 @@ class TestWundergroundSetup(unittest.TestCase):
                 self.assertEqual('Holly Springs, NC', device.state)
             elif device.name == 'PWS_elevation':
                 self.assertEqual('413', device.state)
+            elif device.name == 'PWS_forecast_0':
+                self.assertEqual('Mostly cloudy', device.state)
             else:
                 self.assertIsNone(device.entity_picture)
                 self.assertEqual(FEELS_LIKE, device.state)
