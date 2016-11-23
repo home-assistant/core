@@ -65,8 +65,9 @@ def async_setup(hass, config):
             if device_type in RFLINK_EVENT:
                 hass.bus.fire(RFLINK_EVENT[device_type], {ATTR_PACKET: packet})
 
-    # port = '/dev/ttyACM0'
-    host = config[DOMAIN]['host']
+    # when connecting to tcp host instead of serial port (optional)
+    host = config[DOMAIN].get('host', None)
+    # tcp port when host configured, otherwise serial port
     port = config[DOMAIN]['port']
 
     connection = create_rflink_connection(
