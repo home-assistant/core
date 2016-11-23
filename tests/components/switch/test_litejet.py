@@ -53,14 +53,15 @@ class TestLiteJetSwitch(unittest.TestCase):
             }
         }
         expect_states = True
-        if method == 'test_include_switches_False':
+        if method == self.test_include_switches_False:
             config['litejet']['include_switches'] = False
             expect_states = False
-        elif method == 'test_include_switches_unspecified':
+        elif method == self.test_include_switches_unspecified:
             expect_states = False
         else:
             config['litejet']['include_switches'] = True
 
+        _LOGGER.warning("method=%s config=%s", method, config)
         assert bootstrap.setup_component(self.hass, litejet.DOMAIN, config)
         self.hass.block_till_done()
 
