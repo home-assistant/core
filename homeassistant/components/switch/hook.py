@@ -29,7 +29,7 @@ SWITCH_SCHEMA = vol.Schema({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup Hook by getting the access token and list of actions."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -66,15 +66,14 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Failed getting devices: %s", error)
         return False
 
-    hass.loop.create_task(
-        add_devices(
-            HookSmartHome(
-                hass,
-                token,
-                d['device_id'],
-                d['device_name'])
-            for lst in data['data']
-            for d in lst))
+    yield from async_add_devices(
+        HookSmartHome(
+            hass,
+            token,
+            d['device_id'],
+            d['device_name'])
+        for lst in data['data']
+        for d in lst)
 
 
 class HookSmartHome(SwitchDevice):
@@ -124,15 +123,15 @@ class HookSmartHome(SwitchDevice):
     def async_turn_on(self):
         """Turn the device on asynchronously."""
         _LOGGER.debug("Turning on: %s", self._name)
-        success = self._hass.loop.create_task(self._send(
-            HOOK_ENDPOINT + 'device/trigger/' + self._id + '/On'))
+        success = yield from self._send(
+            HOOK_ENDPOINT + 'device/trigger/' + self._id + '/On')
         self._state = success
 
     @asyncio.coroutine
     def async_turn_off(self):
         """Turn the device off asynchronously."""
         _LOGGER.debug("Turning off: %s", self._name)
-        success = self._hass.loop.create_task(self._send(
-            HOOK_ENDPOINT + 'device/trigger/' + self._id + '/Off'))
+        success = yield from self._send(
+            HOOK_ENDPOINT + 'device/trigger/' + self._id + '/Off')
         # If it wasn't successful, keep state as true
         self._state = not success
