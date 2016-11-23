@@ -25,7 +25,7 @@ VALID_CONFIG = {
 
 FEELS_LIKE = '40'
 WEATHER = 'Clear'
-ICON_URL = 'http://icons.wxug.com/i/c/k/clear.gif'
+ICON_URL = 'https://icons.wxug.com/i/c/k/clear.gif'
 ALERT_MESSAGE = 'This is a test alert message'
 
 
