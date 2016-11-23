@@ -562,16 +562,15 @@ class ClimateDevice(Entity):
 
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
-        if temp is None or not isinstance(temp, Number):
+        if (temp is None or not isinstance(temp, Number) or
+                self.temperature_unit == self.unit_of_measurement):
             return temp
 
         value = convert_temperature(temp, self.temperature_unit,
                                     self.unit_of_measurement)
 
-        if self.unit_of_measurement is TEMP_CELSIUS:
-            decimal_count = 1
+        if self.unit_of_measurement == TEMP_CELSIUS:
+            return round(value, 1)
         else:
             # Users of fahrenheit generally expect integer units.
-            decimal_count = 0
-
-        return round(value, decimal_count)
+            return round(value)
