@@ -201,7 +201,7 @@ class ZwaveColorLight(ZwaveDimmer):
         self._rgb = None
         self._ct = None
 
-        super().__init__(value)
+        super().__init__(value, refresh, delay)
 
         # Create a listener so the color values can be linked to this entity
         dispatcher.connect(
