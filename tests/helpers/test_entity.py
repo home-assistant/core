@@ -1,12 +1,12 @@
 """Test the entity helper."""
 # pylint: disable=protected-access
 import asyncio
-from unittest.mock import MagicMock
 
 import pytest
 
 import homeassistant.helpers.entity as entity
 from homeassistant.const import ATTR_HIDDEN
+from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import get_test_home_assistant
 
@@ -82,7 +82,7 @@ class TestHelpersEntity(object):
         def test():
             yield from ent.async_update_ha_state(True)
 
-        self.hass.loop.run_until_complete(test())
+        run_coroutine_threadsafe(test(), self.hass.loop).result()
 
         assert len(sync_update) == 1
         assert len(async_update) == 0
@@ -94,7 +94,7 @@ class TestHelpersEntity(object):
 
         ent.async_update = async_update_func
 
-        self.hass.loop.run_until_complete(test())
+        run_coroutine_threadsafe(test(), self.hass.loop).result()
 
         assert len(sync_update) == 1
         assert len(async_update) == 1
