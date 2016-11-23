@@ -413,23 +413,24 @@ class HomeAssistantWSGI(object):
 
     def wrong_login_attempt(self, remote_addr):
         """Registering wrong login attempt."""
-        if not self.is_trusted_ip(remote_addr) \
-                and self.login_threshold > 0 and self.is_ban_enabled:
-            if remote_addr in self.failed_login_attempts:
-                self.failed_login_attempts[remote_addr] += 1
-            else:
-                self.failed_login_attempts[remote_addr] = 1
+        if not self.is_ban_enabled or self.login_threshold < 1:
+            return
 
-            if self.failed_login_attempts[remote_addr] > self.login_threshold:
-                new_ban = IpBan(remote_addr)
-                self.ip_bans.append(new_ban)
-                update_ip_bans_config(self.hass.config.path(IP_BANS), new_ban)
-                _LOGGER.warning('Banned IP %s for too many login attempts',
-                                remote_addr)
-                persistent_notification.async_create(
-                    self.hass,
-                    'To many login attempts from {}'.format(remote_addr),
-                    'Banning IP address', NOTIFICATION_ID_BAN)
+        if remote_addr in self.failed_login_attempts:
+            self.failed_login_attempts[remote_addr] += 1
+        else:
+            self.failed_login_attempts[remote_addr] = 1
+
+        if self.failed_login_attempts[remote_addr] > self.login_threshold:
+            new_ban = IpBan(remote_addr)
+            self.ip_bans.append(new_ban)
+            update_ip_bans_config(self.hass.config.path(IP_BANS), new_ban)
+            _LOGGER.warning('Banned IP %s for too many login attempts',
+                            remote_addr)
+            persistent_notification.async_create(
+                self.hass,
+                'Too many login attempts from {}'.format(remote_addr),
+                'Banning IP address', NOTIFICATION_ID_BAN)
 
     def is_banned_ip(self, remote_addr):
         """Check if IP address is in a ban list."""
@@ -604,20 +605,28 @@ def load_ip_bans_config(path: str):
     """Loading list of banned IPs from config file."""
     ip_list = []
     ip_schema = vol.Schema({
-        vol.Optional('banned_at'): vol.Any(None, cv.exact_time)
+        vol.Optional('banned_at'): vol.Any(None, cv.datetime)
     })
 
     try:
-        list_ = load_yaml_config_file(path)
-        for ip_ban in list_:
+        try:
+            list_ = load_yaml_config_file(path)
+        except HomeAssistantError as err:
+            _LOGGER.error('Unable to load %s: %s', path, str(err))
+            return []
+
+        for ip_ban, ip_info in list_.items():
             try:
-                ban = ip_schema(list_[ip_ban])
-                ban['ip_ban'] = ip_address(ip_ban)
-                ip_list.append(IpBan(**ban))
+                ip_info = ip_schema(ip_info)
+                ip_info['ip_ban'] = ip_address(ip_ban)
+                ip_list.append(IpBan(**ip_info))
             except vol.Invalid:
+                _LOGGER.exception('Failed to load IP ban')
                 continue
 
     except(HomeAssistantError, FileNotFoundError):
+        # No need to report error, file absence means
+        # that no bans were applied.
         return []
 
     return ip_list

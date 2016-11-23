@@ -1,6 +1,6 @@
 """Helpers for config validation using voluptuous."""
 from collections import OrderedDict
-from datetime import timedelta, datetime, date
+from datetime import timedelta, datetime as datetime_sys
 import os
 import re
 from urllib.parse import urlparse
@@ -297,11 +297,20 @@ def time(value):
     return time_val
 
 
-def exact_time(value):
-    """Validate timestamp."""
-    if isinstance(value, date) or isinstance(value, datetime):
+def datetime(value):
+    """Validate datetime."""
+    if isinstance(value, datetime_sys):
         return value
-    return datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
+
+    try:
+        date_val = dt_util.parse_datetime(value)
+    except TypeError:
+        date_val = None
+
+    if date_val is None:
+        raise vol.Invalid('Invalid datetime specified: {}'.format(value))
+
+    return date_val
 
 
 def time_zone(value):
