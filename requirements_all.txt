@@ -429,7 +429,7 @@ python-mpd2==0.5.5
 python-mystrom==0.3.6
 
 # homeassistant.components.nest
-python-nest==2.11.0
+git+https://github.com/technicalpickles/python-nest.git@nest-cam#python-nest==3.0.0
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.6.1

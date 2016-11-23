@@ -51,7 +51,8 @@ class NestCamera(Camera):
         self._last_image = None
         self._next_snapshot_at = None
 
-        # TODO this is so the initial values are set, so remove this when update gets called correctly
+        # This is so the initial values are set.
+        # Remove this when update gets called correctly.
         self.update()
 
     @property
@@ -69,7 +70,7 @@ class NestCamera(Camera):
         """Camera Brand."""
         return NEST_BRAND
 
-    # FIXME this doesn't seem to be getting called
+    # this doesn't seem to be getting called regularly, for some reason
     def update(self):
         """Cache value from Python-nest."""
         self._location = self.device.where

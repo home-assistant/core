@@ -20,14 +20,12 @@ SENSOR_TYPES = ['humidity',
                 'operation_mode',
                 'last_connection']
 
-# FIXME detect these being used
 SENSOR_TYPES_DEPRECATED = ['battery_health',
                            'last_ip',
                            'local_ip']
 
 WEATHER_VARS = {}
 
-# FIXME detect these being used
 DEPRECATED_WEATHER_VARS = {'weather_humidity': 'humidity',
                            'weather_temperature': 'temperature',
                            'weather_condition': 'condition',
@@ -41,7 +39,6 @@ PROTECT_VARS = ['co_status',
                 'smoke_status',
                 'battery_health']
 
-# FIXME detect these being used
 PROTECT_VARS_DEPRECATED = ['battery_level']
 
 SENSOR_TEMP_TYPES = ['temperature', 'target']
