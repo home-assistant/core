@@ -1,23 +1,29 @@
-"""Support for Sonarr."""
+"""
+Support for Sonarr.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.sonarr/
+"""
 import logging
 import time
 from datetime import datetime
+
 import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (CONF_API_KEY, CONF_HOST, CONF_PORT)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.const import CONF_SSL
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_HOST = 'host'
-CONF_PORT = 'port'
 CONF_DAYS = 'days'
 CONF_INCLUDED = 'include_paths'
 CONF_UNIT = 'unit'
+
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8989
 DEFAULT_DAYS = '1'
@@ -41,7 +47,7 @@ ENDPOINTS = {
     'commands': 'http{0}://{1}:{2}/api/command?apikey={3}'
 }
 
-# Suport to Yottabytes for the future, why not
+# Support to Yottabytes for the future, why not
 BYTE_SIZES = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -57,21 +63,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Sonarr platform."""
+    """Set up the Sonarr platform."""
     conditions = config.get(CONF_MONITORED_CONDITIONS)
     add_devices(
-        [Sonarr(hass, config, sensor) for sensor in conditions]
+        [SonarrSensor(hass, config, sensor) for sensor in conditions]
     )
     return True
 
 
-class Sonarr(Entity):
-    """Implement the Sonarr sensor class."""
+class SonarrSensor(Entity):
+    """Implemention of the Sonarr sensor."""
 
     def __init__(self, hass, conf, sensor_type):
-        """Create sonarr entity."""
+        """Create Sonarr entity."""
         from pytz import timezone
-        # Configuration data
         self.conf = conf
         self.host = conf.get(CONF_HOST)
         self.port = conf.get(CONF_PORT)
@@ -99,19 +104,13 @@ class Sonarr(Entity):
         end = get_date(self._tz, self.days)
         res = requests.get(
             ENDPOINTS[self.type].format(
-                self.ssl,
-                self.host,
-                self.port,
-                self.apikey,
-                start,
-                end
-                )
-            )
+                self.ssl, self.host, self.port, self.apikey, start, end),
+            timeout=5)
         if res.status_code == 200:
             if self.type in ['upcoming', 'queue', 'series', 'commands']:
                 if self.days == 1 and self.type == 'upcoming':
-                    # Sonarr API returns empty array if start and end dates are
-                    # the same, so we need to filter to just today
+                    # Sonarr API returns an empty array if start and end dates
+                    # are the same, so we need to filter to just today
                     self.data = list(
                         filter(
                             lambda x: x['airDate'] == str(start),
@@ -125,13 +124,8 @@ class Sonarr(Entity):
                 data = res.json()
                 res = requests.get('{}&pageSize={}'.format(
                     ENDPOINTS[self.type].format(
-                        self.ssl,
-                        self.host,
-                        self.port,
-                        self.apikey
-                    ),
-                    data['totalRecords']
-                    ))
+                        self.ssl, self.host, self.port, self.apikey),
+                    data['totalRecords']), timeout=5)
                 self.data = res.json()['records']
                 self._state = len(self.data)
             elif self.type == 'diskspace':
@@ -156,7 +150,7 @@ class Sonarr(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format("Sonarr", self._name)
+        return '{} {}'.format('Sonarr', self._name)
 
     @property
     def state(self):
@@ -187,8 +181,7 @@ class Sonarr(Entity):
         elif self.type == 'wanted':
             for show in self.data:
                 attributes[show['series']['title'] + ' S{:02d}E{:02d}'.format(
-                    show['seasonNumber'],
-                    show['episodeNumber']
+                    show['seasonNumber'], show['episodeNumber']
                 )] = show['airDate']
         elif self.type == 'commands':
             for command in self.data:
@@ -198,16 +191,9 @@ class Sonarr(Entity):
                 attributes[data['path']] = '{:.2f}/{:.2f}{} ({:.2f}%)'.format(
                     to_unit(data['freeSpace'], self._unit),
                     to_unit(data['totalSpace'], self._unit),
-                    self._unit,
-                    (
-                        to_unit(
-                            data['freeSpace'],
-                            self._unit
-                        ) /
-                        to_unit(
-                            data['totalSpace'],
-                            self._unit
-                        )*100
+                    self._unit, (
+                        to_unit(data['freeSpace'], self._unit) /
+                        to_unit(data['totalSpace'], self._unit) * 100
                     )
                 )
         elif self.type == 'series':
@@ -226,7 +212,7 @@ class Sonarr(Entity):
 
 def get_date(zone, offset=0):
     """Get date based on timezone and offset of days."""
-    day = 60*60*24
+    day = 60 * 60 * 24
     return datetime.date(
         datetime.fromtimestamp(time.time() + day*offset, tz=zone)
     )
@@ -234,4 +220,4 @@ def get_date(zone, offset=0):
 
 def to_unit(value, unit):
     """Convert bytes to give unit."""
-    return value/1024**BYTE_SIZES.index(unit)
+    return value / 1024**BYTE_SIZES.index(unit)
