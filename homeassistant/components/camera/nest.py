@@ -88,7 +88,7 @@ class NestCamera(Camera):
 
     def _ready_for_snapshot(self, now):
         return self._next_snapshot_at is None or \
-                now > self._next_snapshot_at
+               now > self._next_snapshot_at
 
     def camera_image(self):
         """Return a still image response from the camera."""

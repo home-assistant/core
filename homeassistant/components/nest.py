@@ -18,9 +18,9 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = [
-        'git+https://github.com/technicalpickles/python-nest.git'
-        '@nest-cam'
-        '#python-nest==3.0.0']
+    'git+https://github.com/technicalpickles/python-nest.git'
+    '@nest-cam'
+    '#python-nest==3.0.0']
 
 DOMAIN = 'nest'
 
