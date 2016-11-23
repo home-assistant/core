@@ -29,11 +29,11 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_test_config_dir(*add_path):
     """Return a path to a test config dir."""
-    return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
+    return os.path.join(os.path.dirname(__file__), 'testing_config', *add_path)
 
 
 def get_test_home_assistant():
-    """Return a Home Assistant object pointing at test config dir."""
+    """Return a Home Assistant object pointing at test config directory."""
     if sys.platform == "win32":
         loop = asyncio.ProactorEventLoop()
     else:
@@ -75,6 +75,7 @@ def get_test_home_assistant():
     return hass
 
 
+# pylint: disable=protected-access
 @asyncio.coroutine
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
@@ -101,9 +102,10 @@ def async_test_home_assistant(loop):
 
     @asyncio.coroutine
     def mock_async_start():
-        with patch.object(loop, 'add_signal_handler'), \
-             patch('homeassistant.core._async_create_timer'), \
-             patch.object(hass, '_async_tasks_cleanup', return_value=None):
+        """Start the mocking."""
+        with patch.object(loop, 'add_signal_handler'),\
+            patch('homeassistant.core._async_create_timer'),\
+                patch.object(hass, '_async_tasks_cleanup', return_value=None):
             yield from orig_start()
 
     hass.async_start = mock_async_start
@@ -130,8 +132,10 @@ def mock_service(hass, domain, service):
     """
     calls = []
 
+    # pylint: disable=redefined-outer-name
     @ha.callback
     def mock_service(call):
+        """"Mocked service call."""
         calls.append(call)
 
     # pylint: disable=unnecessary-lambda

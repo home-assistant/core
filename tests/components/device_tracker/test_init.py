@@ -10,6 +10,7 @@ import os
 from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 from homeassistant.loader import get_component
+from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
@@ -280,7 +281,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertSequenceEqual((entity_id,),
                                  state.attributes.get(ATTR_ENTITY_ID))
 
-    @patch('homeassistant.components.device_tracker.DeviceTracker.see')
+    @patch('homeassistant.components.device_tracker.DeviceTracker.async_see')
     def test_see_service(self, mock_see):
         """Test the see service with a unicode dev_id and NO MAC."""
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
@@ -375,20 +376,22 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         # No device id or MAC(not added)
         with self.assertRaises(HomeAssistantError):
-            tracker.see()
+            run_coroutine_threadsafe(
+                tracker.async_see(), self.hass.loop).result()
         assert mock_warning.call_count == 0
 
         # Ignore gps on invalid GPS (both added & warnings)
         tracker.see(mac='mac_1_bad_gps', gps=1)
         tracker.see(mac='mac_2_bad_gps', gps=[1])
         tracker.see(mac='mac_3_bad_gps', gps='gps')
+        self.hass.block_till_done()
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0))
         assert mock_warning.call_count == 3
 
         assert len(config) == 4
 
-    @patch('homeassistant.components.device_tracker.log_exception')
+    @patch('homeassistant.components.device_tracker.async_log_exception')
     def test_config_failure(self, mock_ex):
         """Test that the device tracker see failures."""
         with assert_setup_component(0, device_tracker.DOMAIN):

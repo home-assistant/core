@@ -17,6 +17,7 @@ DOMAIN = 'demo'
 COMPONENTS_WITH_DEMO_PLATFORM = [
     'alarm_control_panel',
     'binary_sensor',
+    'calendar',
     'camera',
     'climate',
     'cover',

@@ -8,8 +8,8 @@ import rxv
 def sample_content(name):
     """Read content into a string from a file."""
     with open('tests/components/media_player/yamaha_samples/%s' % name,
-              encoding='utf-8') as f:
-        return f.read()
+              encoding='utf-8') as content:
+        return content.read()
 
 
 class FakeYamaha(rxv.rxv.RXV):
@@ -20,21 +20,25 @@ class FakeYamaha(rxv.rxv.RXV):
     ensure that usage of the rxv library by HomeAssistant is as we'd
     expect.
     """
-    _fake_input = "HDMI1"
+    _fake_input = 'HDMI1'
 
     def _discover_features(self):
-        self._desc_xml = ET.fromstring(sample_content("desc.xml"))
+        """Fake the discovery feature."""
+        self._desc_xml = ET.fromstring(sample_content('desc.xml'))
 
     @property
     def input(self):
+        """A fake input for the reciever."""
         return self._fake_input
 
     @input.setter
     def input(self, input_name):
+        """Set the input for the fake receiver."""
         assert input_name in self.inputs()
         self._fake_input = input_name
 
     def inputs(self):
+        """All inputs of the the fake receiver."""
         return {'AUDIO1': None,
                 'AUDIO2': None,
                 'AV1': None,
@@ -61,15 +65,17 @@ class FakeYamaha(rxv.rxv.RXV):
                 'iPod (USB)': 'iPod_USB'}
 
 
+# pylint: disable=no-member, invalid-name
 class TestYamaha(unittest.TestCase):
     """Test the media_player yamaha module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         super(TestYamaha, self).setUp()
         self.rec = FakeYamaha('10.0.0.0')
 
     def test_get_playback_support(self):
+        """Test the playback"""
         rec = self.rec
         support = rec.get_playback_support()
         self.assertFalse(support.play)
@@ -78,7 +84,7 @@ class TestYamaha(unittest.TestCase):
         self.assertFalse(support.skip_f)
         self.assertFalse(support.skip_r)
 
-        rec.input = "NET RADIO"
+        rec.input = 'NET RADIO'
         support = rec.get_playback_support()
         self.assertTrue(support.play)
         self.assertFalse(support.pause)

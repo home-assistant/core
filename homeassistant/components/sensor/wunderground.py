@@ -125,8 +125,8 @@ class WUndergroundSensor(Entity):
         """Return the state of the sensor."""
         if self.rest.data:
 
-            if self._condition == 'elevation' and \
-               self._condition in self.rest.data['observation_location']:
+            if self._condition == 'elevation' and self._condition in \
+                    self.rest.data['observation_location']:
                 return self.rest.data['observation_location'][self._condition]\
                         .split()[0]
 
@@ -222,7 +222,6 @@ class WUndergroundData(object):
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
             self.data = None
-            raise
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES_ALERTS)
     def update_alerts(self):
@@ -237,4 +236,3 @@ class WUndergroundData(object):
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
             self.alerts = None
-            raise

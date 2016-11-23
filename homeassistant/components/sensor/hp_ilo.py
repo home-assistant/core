@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-hpilo==3.8']
+REQUIREMENTS = ['python-hpilo==3.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the HP ILO sensor."""
+    """Set up the HP ILO sensor."""
     hostname = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     login = config.get(CONF_USERNAME)
@@ -83,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class HpIloSensor(Entity):
-    """Representation a HP ILO sensor."""
+    """Representation of a HP ILO sensor."""
 
     def __init__(self, hp_ilo_data, sensor_type, client_name):
         """Initialize the sensor."""
