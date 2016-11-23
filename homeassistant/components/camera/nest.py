@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     camera_devices = hass.data[nest.DATA_NEST].camera_devices()
     cameras = [NestCamera(structure, device)
                for structure, device in camera_devices]
-    add_devices(cameras)
+    add_devices(cameras, True)
 
 
 class NestCamera(Camera):
@@ -50,10 +50,6 @@ class NestCamera(Camera):
         self._time_between_snapshots = timedelta(seconds=30)
         self._last_image = None
         self._next_snapshot_at = None
-
-        # This is so the initial values are set.
-        # Remove this when update gets called correctly.
-        self.update()
 
     @property
     def name(self):
