@@ -24,23 +24,17 @@ KNOWN_DEVICES = []
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Rflink platform."""
-
     @asyncio.coroutine
     def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
         packet = event.data[rflink.ATTR_PACKET]
-        print(packet)
         device_id = rflink.serialize_id(packet)
-        print(device_id)
         if device_id not in KNOWN_DEVICES:
-            print('adding')
             KNOWN_DEVICES.append(device_id)
             device = RflinkLight(device_id, device_id, hass)
             yield from async_add_devices([device])
-            device._match_packet(packet)
-        print(KNOWN_DEVICES)
+            device.match_packet(packet)
 
-    print(DOMAIN, rflink.RFLINK_EVENT[DOMAIN])
     hass.bus.async_listen(rflink.RFLINK_EVENT[DOMAIN], add_new_device)
 
 
