@@ -10,7 +10,7 @@ import logging
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['rflink==0.0.4']
+REQUIREMENTS = ['rflink==0.0.5']
 
 DOMAIN = 'rflink'
 
