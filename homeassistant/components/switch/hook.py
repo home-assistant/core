@@ -11,7 +11,7 @@ import voluptuous as vol
 import async_timeout
 import aiohttp
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
@@ -20,9 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 HOOK_ENDPOINT = 'https://api.gethook.io/v1/'
 TIMEOUT = 10
 
-SWITCH_SCHEMA = vol.Schema({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string
+    vol.Required(CONF_PASSWORD): cv.string,
 })
 
 
