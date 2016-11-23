@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.components import group
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA # noqa
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 ATTR_DEVICE = 'device'
 ATTR_COMMAND = 'command'
