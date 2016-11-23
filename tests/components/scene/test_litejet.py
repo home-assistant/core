@@ -2,7 +2,6 @@
 import logging
 import unittest
 from unittest import mock
-import time
 
 from homeassistant import bootstrap
 from homeassistant.components import litejet
@@ -45,11 +44,6 @@ class TestLiteJetScene(unittest.TestCase):
                 }
             })
         self.hass.block_till_done()
-
-        while self.scene() is None or self.other_scene() is None:
-            _LOGGER.warning('*** need to wait for expected states')
-            time.sleep(0.01)
-        _LOGGER.info('*** all states ready for test')
 
     def teardown_method(self, method):
         """Stop everything that was started."""

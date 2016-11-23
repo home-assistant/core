@@ -2,7 +2,6 @@
 import logging
 import unittest
 from unittest import mock
-import time
 
 from homeassistant import bootstrap
 from homeassistant.components import litejet
@@ -52,24 +51,13 @@ class TestLiteJetSwitch(unittest.TestCase):
                 'port': '/tmp/this_will_be_mocked',
             }
         }
-        expect_states = True
         if method == self.test_include_switches_False:
             config['litejet']['include_switches'] = False
-            expect_states = False
-        elif method == self.test_include_switches_unspecified:
-            expect_states = False
-        else:
+        elif method != self.test_include_switches_unspecified:
             config['litejet']['include_switches'] = True
 
-        _LOGGER.warning("method=%s config=%s", method, config)
         assert bootstrap.setup_component(self.hass, litejet.DOMAIN, config)
         self.hass.block_till_done()
-
-        if expect_states:
-            while self.switch() is None or self.other_switch() is None:
-                _LOGGER.warning('*** need to wait for expected states')
-                time.sleep(0.01)
-            _LOGGER.info('*** all states ready for test')
 
     def teardown_method(self, method):
         """Stop everything that was started."""

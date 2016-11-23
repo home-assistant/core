@@ -2,7 +2,6 @@
 import logging
 import unittest
 from unittest import mock
-import time
 
 from homeassistant import bootstrap
 from homeassistant.components import litejet
@@ -57,11 +56,6 @@ class TestLiteJetLight(unittest.TestCase):
                 }
             })
         self.hass.block_till_done()
-
-        while self.light() is None or self.other_light() is None:
-            _LOGGER.warning('*** need to wait for expected states to appear')
-            time.sleep(0.01)
-        _LOGGER.info('*** all states ready for test')
 
         self.mock_lj.get_load_level.reset_mock()
 
