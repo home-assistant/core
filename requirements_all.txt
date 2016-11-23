@@ -261,6 +261,9 @@ knxip==0.3.3
 # homeassistant.components.device_tracker.owntracks
 libnacl==1.5.0
 
+# homeassistant.components.media_player.soundtouch
+libsoundtouch==0.1.0
+
 # homeassistant.components.light.lifx
 liffylights==0.9.4
 
