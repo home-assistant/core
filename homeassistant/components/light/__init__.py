@@ -18,7 +18,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 from homeassistant.util.async import run_callback_threadsafe
@@ -31,6 +31,13 @@ GROUP_NAME_ALL_LIGHTS = 'all lights'
 ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+
+# Configuration for possible effects
+CONF_EFFECT_LIST = "effect_list"
+
+PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_EFFECT_LIST): list
+})
 
 # Bitfield of features supported by the light entity
 ATTR_SUPPORTED_FEATURES = 'supported_features'
@@ -64,6 +71,9 @@ ATTR_FLASH = "flash"
 FLASH_SHORT = "short"
 FLASH_LONG = "long"
 
+# List of possible effects
+ATTR_EFFECT_LIST = "effect_list"
+
 # Apply an effect to the light, can be EFFECT_COLORLOOP.
 ATTR_EFFECT = "effect"
 EFFECT_COLORLOOP = "colorloop"
@@ -78,6 +88,8 @@ PROP_TO_ATTR = {
     'rgb_color': ATTR_RGB_COLOR,
     'xy_color': ATTR_XY_COLOR,
     'white_value': ATTR_WHITE_VALUE,
+    'effect_list': ATTR_EFFECT_LIST,
+    'effect': ATTR_EFFECT,
     'supported_features': ATTR_SUPPORTED_FEATURES,
 }
 
@@ -99,7 +111,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
                                             max=color_util.HASS_COLOR_MAX)),
     ATTR_WHITE_VALUE: vol.All(int, vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
-    ATTR_EFFECT: vol.In([EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_WHITE]),
+    ATTR_EFFECT: str,
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
@@ -312,6 +324,16 @@ class Light(ToggleEntity):
     @property
     def white_value(self):
         """Return the white value of this light between 0..255."""
+        return None
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return None
+
+    @property
+    def effect(self):
+        """Return the current effect."""
         return None
 
     @property
