@@ -137,7 +137,7 @@ class TestWundergroundSetup(unittest.TestCase):
             ]
         }
 
-        self.assertFalse(
+        self.assertTrue(
             wunderground.setup_platform(self.hass, invalid_config,
                                         self.add_devices, None))
 
