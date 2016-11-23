@@ -9,9 +9,9 @@ There is no way to query for state or success of commands.
 """
 import logging
 import asyncio
-import functools
 import voluptuous as vol
-import requests
+import async_timeout
+import aiohttp
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -35,18 +35,16 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     try:
-        future = hass.loop.run_in_executor(
-            None,
-            functools.partial(
-                requests.post,
+        with async_timeout.timeout(TIMEOUT, loop=hass.loop):
+            response = yield from hass.websession.post(
                 HOOK_ENDPOINT + 'user/login',
                 data={
                     'username': username,
-                    'password': password},
-                timeout=TIMEOUT))
-        response = yield from future
-        data = response.json()
-    except (requests.exceptions.RequestException, ValueError) as error:
+                    'password': password})
+            data = yield from response.json()
+    except (asyncio.TimeoutError,
+            aiohttp.errors.ClientError,
+            aiohttp.errors.ClientDisconnectedError) as error:
         _LOGGER.error("Failed authentication API call: %s", error)
         return False
 
@@ -57,16 +55,14 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     try:
-        future = hass.loop.run_in_executor(
-            None,
-            functools.partial(
-                requests.get,
+        with async_timeout.timeout(TIMEOUT, loop=hass.loop):
+            response = yield from hass.websession.get(
                 HOOK_ENDPOINT + 'device',
-                params={"token": data['data']['token']},
-                timeout=TIMEOUT))
-        response = yield from future
-        data = response.json()
-    except (requests.exceptions.RequestException, ValueError) as error:
+                params={"token": data['data']['token']})
+            data = yield from response.json()
+    except (asyncio.TimeoutError,
+            aiohttp.errors.ClientError,
+            aiohttp.errors.ClientDisconnectedError) as error:
         _LOGGER.error("Failed getting devices: %s", error)
         return False
 
@@ -110,19 +106,19 @@ class HookSmartHome(SwitchDevice):
     def _send(self, url):
         """Send the url to the Hook API."""
         try:
-            future = self._hass.loop.run_in_executor(
-                None,
-                functools.partial(
-                    requests.get,
+            _LOGGER.debug("Sending: %s", url)
+            with async_timeout.timeout(TIMEOUT, loop=self._hass.loop):
+                response = yield from self._hass.websession.get(
                     url,
-                    params={"token": self._token},
-                    timeout=TIMEOUT))
-            response = yield from future
-            _LOGGER.debug("Response from API: %s", response)
-        except (requests.exceptions.RequestException) as error:
+                    params={"token": self._token})
+                data = yield from response.json()
+        except (asyncio.TimeoutError,
+                aiohttp.errors.ClientError,
+                aiohttp.errors.ClientDisconnectedError) as error:
             _LOGGER.error("Failed setting state: %s", error)
             return False
-        return response.status_code == 200
+        _LOGGER.debug("Got: %s", data)
+        return data['return_value'] == '1'
 
     @asyncio.coroutine
     def async_turn_on(self):
