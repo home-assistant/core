@@ -11,7 +11,8 @@ import voluptuous as vol
 from homeassistant.components.nest import DATA_NEST, DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_PLATFORM, CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_PLATFORM,
+    CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS
 )
 
 DEPENDENCIES = ['nest']
@@ -33,8 +34,8 @@ DEPRECATED_WEATHER_VARS = {'weather_humidity': 'humidity',
                            'wind_speed': 'kph',
                            'wind_direction': 'direction'}
 
-SENSOR_UNITS = {'humidity': '%', 'battery_level': 'V',
-                'kph': 'kph', 'temperature': '°C'}
+SENSOR_UNITS = {'humidity': '%',
+                'temperature': '°C'}
 
 PROTECT_VARS = ['co_status',
                 'smoke_status',
@@ -138,7 +139,10 @@ class NestTempSensor(NestSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return TEMP_CELSIUS
+        if self.device.temperature_scale == 'C':
+            return TEMP_CELSIUS
+        else:
+            return TEMP_FAHRENHEIT
 
     @property
     def state(self):
