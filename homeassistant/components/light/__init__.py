@@ -18,7 +18,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 from homeassistant.util.async import run_callback_threadsafe
@@ -31,13 +31,6 @@ GROUP_NAME_ALL_LIGHTS = 'all lights'
 ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-# Configuration for possible effects
-CONF_EFFECT_LIST = "effect_list"
-
-PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_EFFECT_LIST): list
-})
 
 # Bitfield of features supported by the light entity
 ATTR_SUPPORTED_FEATURES = 'supported_features'

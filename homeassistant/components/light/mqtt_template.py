@@ -11,8 +11,8 @@ import voluptuous as vol
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR, ATTR_TRANSITION,
-    CONF_EFFECT_LIST, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
-    SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light)
+    PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT, SUPPORT_FLASH,
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light)
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, STATE_ON, STATE_OFF
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
@@ -27,6 +27,7 @@ DEPENDENCIES = ['mqtt']
 DEFAULT_NAME = 'MQTT Template Light'
 DEFAULT_OPTIMISTIC = False
 
+CONF_EFFECT_LIST = "effect_list"
 CONF_COMMAND_ON_TEMPLATE = 'command_on_template'
 CONF_COMMAND_OFF_TEMPLATE = 'command_off_template'
 CONF_STATE_TEMPLATE = 'state_template'
@@ -41,6 +42,7 @@ SUPPORT_MQTT_TEMPLATE = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH |
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_EFFECT_LIST): list,
     vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
