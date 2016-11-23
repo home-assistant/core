@@ -210,7 +210,8 @@ class Entity(object):
             else:
                 # PS: Run this in our own thread pool once we have
                 #     future support?
-                yield from self.hass.loop.run_in_executor(None, self.update)
+                yield from self.hass.loop.run_in_executor(
+                    self.hass.executor_entity, self.update)
 
         start = timer()
 

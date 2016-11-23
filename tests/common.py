@@ -50,6 +50,7 @@ def get_test_home_assistant():
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
         loop.close()
+        hass.executor_entity.shutdown(wait=False)
         stop_event.set()
 
     threading.Thread(name="LoopThread", target=run_loop, daemon=True).start()
@@ -59,6 +60,7 @@ def get_test_home_assistant():
 
     @patch.object(hass.loop, 'run_forever')
     @patch.object(hass.loop, 'close')
+    @patch.object(hass.executor_entity, 'shutdown')
     def start_hass(*mocks):
         """Helper to start hass."""
         orig_start()
