@@ -73,7 +73,7 @@ class AiohttpClientMocker:
                 self.mock_calls.append((method, url))
 
                 if self.exc:
-                    raise asyncio.TimeoutError()
+                    raise self.exc
                 return response
 
         assert False, "No mock registered for {} {}".format(method.upper(),

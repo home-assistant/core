@@ -1,5 +1,6 @@
 """The tests for the device tracker component."""
 # pylint: disable=protected-access
+import asyncio
 import json
 import logging
 import os
@@ -10,8 +11,6 @@ from unittest.mock import call, patch
 from tests.common import (
     assert_setup_component, fire_service_discovered, fire_time_changed,
     get_test_home_assistant, patch_yaml_files)
-
-from ...test_util.aiohttp import mock_aiohttp_client
 
 import homeassistant.components.device_tracker as device_tracker
 import homeassistant.util.dt as dt_util
@@ -24,6 +23,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
 from homeassistant.remote import JSONEncoder
 from homeassistant.util.async import run_coroutine_threadsafe
+
+from ...test_util.aiohttp import mock_aiohttp_client
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
 
@@ -254,7 +255,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
 
         with mock_aiohttp_client() as aioclient_mock:
-            aioclient_mock.get('http://api.macvendors.com/b8:27:eb', exc=True)
+            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
+                               exc=asyncio.TimeoutError())
 
             run_coroutine_threadsafe(device.async_seen(),
                                      self.hass.loop).result()
