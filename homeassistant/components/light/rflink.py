@@ -16,9 +16,7 @@ DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
 
-# PLATFORM_SCHEMA = rfxtrx.DEFAULT_SCHEMA
-
-KNOWN_DEVICES = []
+KNOWN_DEVICE_IDS = []
 
 
 @asyncio.coroutine
@@ -29,10 +27,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         """Check if device is known, otherwise add to list of known devices."""
         packet = event.data[rflink.ATTR_PACKET]
         device_id = rflink.serialize_id(packet)
-        if device_id not in KNOWN_DEVICES:
-            KNOWN_DEVICES.append(device_id)
+        if device_id not in KNOWN_DEVICE_IDS:
+            KNOWN_DEVICE_IDS.append(device_id)
             device = RflinkLight(device_id, device_id, hass)
             yield from async_add_devices([device])
+            # make sure the packet is processed by the new entity
             device.match_packet(packet)
 
     hass.bus.async_listen(rflink.RFLINK_EVENT[DOMAIN], add_new_device)
@@ -41,7 +40,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class RflinkLight(rflink.RflinkDevice, Light):
     """Representation of a Rflink light."""
 
+    # used for matching bus events
     domain = DOMAIN
+
+    def _handle_packet(self, packet):
+        """Domain specific packet handler."""
+        command = packet['command']
+        if command == 'on':
+            self._state = True
+        elif command == 'off':
+            self._state = False
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

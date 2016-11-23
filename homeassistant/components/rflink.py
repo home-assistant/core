@@ -2,12 +2,32 @@
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rflink/
+
+Technical overview:
+
+The Rflink gateway is a USB serial device (Arduino with Rflink firwmare)
+connected to a 433Mhz transceiver module.
+
+The the `rflink` Python module a asyncio transport/protocol is setup that
+fires an callback for every (valid/supported) packet received by the Rflink
+gateway.
+
+This component uses this callback to distribute 'rflink packet events' over
+the HASS bus which can be subscribed to by entities/platform implementations.
+
+The platform implementions take care of creating new devices (if enabled) for
+unsees incoming packet id's.
+
+Device Entities take care of matching to the packet id, interpreting and
+performing actions based on the packet contents. Common entitiy logic is
+maintained in this file.
 """
 import asyncio
 import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 REQUIREMENTS = ['rflink==0.0.5']
 
@@ -28,7 +48,7 @@ _LOGGER = logging.getLogger(__name__)
 def serialize_id(packet):
     """Serialize packet identifiers into device id."""
     return '_'.join(filter(None, [
-        packet['protocol'],
+        slugify(packet['protocol']),
         packet['id'],
         packet.get('switch', None),
     ]))
@@ -124,17 +144,20 @@ class RflinkDevice(Entity):
         and adjust state accordingly.
         """
         if serialize_id(packet) == self._device_id:
-            self._handle_packet(packet)
+            self.handle_packet(packet)
+
+    def handle_packet(self, packet):
+        """Handle incoming packet for device type."""
+
+        # call domain specific packet handler
+        self._handle_packet(packet)
+
+        # propagate changes through ha
+        self.hass.async_add_job(self.async_update_ha_state())
 
     def _handle_packet(self, packet):
-        """Handle incoming packet for device type."""
-        command = packet['command']
-        if command == 'on':
-            self._state = True
-        elif command == 'off':
-            self._state = False
-
-        self.hass.async_add_job(self.async_update_ha_state())
+        """Domain specific packet handler."""
+        raise NotImplementedError()
 
     @property
     def should_poll(self):
