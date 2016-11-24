@@ -34,6 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([AmcrestCam(config)])
     return True
 
+
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
