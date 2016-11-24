@@ -40,9 +40,6 @@ omit =
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
 
-    homeassistant/components/litejet.py
-    homeassistant/components/*/litejet.py
-
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
