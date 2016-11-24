@@ -10,12 +10,12 @@ from datetime import timedelta
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'api/2/all'
@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Glances sensor."""
+    """Set up the Glances sensor."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -104,7 +104,6 @@ class GlancesSensor(Entity):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
-    # pylint: disable=too-many-return-statements
     @property
     def state(self):
         """Return the state of the resources."""
