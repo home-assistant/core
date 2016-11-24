@@ -89,6 +89,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # Generate device entities
     devices = [DSMREntity(name, obis) for name, obis in obis_mapping]
 
+    devices.append(DerivativeDSMREntity('Hourly Gas Consumption', devices[-1]._obis))
+
     yield from async_add_devices(devices)
 
     def update_entities_telegram(telegram):
@@ -151,7 +153,10 @@ class DSMREntity(Entity):
         if self._obis == obis.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value)
         else:
-            return value
+            if value:
+                return value
+            else:
+                return STATE_UNKNOWN
 
     @property
     def unit_of_measurement(self):
@@ -168,4 +173,47 @@ class DSMREntity(Entity):
         elif value == '0001':
             return 'low'
         else:
-            return None
+            return STATE_UNKNOWN
+
+
+class DerivativeDSMREntity(DSMREntity):
+    """Calculated derivative for values where the DSMR doesn't offer one.
+
+    Gas readings are only reported per hour and don't offer a rate only
+    the current meter reading. This entity converts subsequents readings
+    into a hourly rate.
+    """
+
+    _previous_reading = None
+    _previous_timestamp = None
+    _state = STATE_UNKNOWN
+
+    @property
+    def state(self):
+        """Return current hourly rate, recalculate if needed."""
+
+        # check if the timestamp for the object differs from the previous one
+        timestamp = self.get_dsmr_object_attr('datetime')
+        if timestamp and timestamp != self._previous_timestamp:
+            current_reading = self.get_dsmr_object_attr('value')
+
+            if self._previous_reading is None:
+                # can't calculate rate without previous datapoint
+                # just store current point
+                pass
+            else:
+                # recalculate the rate
+                diff = self._previous_reading - current_reading
+                self._state = diff
+
+            self._previous_reading = current_reading
+            self._previous_timestamp = timestamp
+
+        return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, per hour, if any."""
+        unit = self.get_dsmr_object_attr('unit')
+        if unit:
+            return unit + '/h'
