@@ -56,7 +56,7 @@ SERVICE_CALL_LIMIT = 10  # seconds
 ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 
 # Size of a executor pool
-EXECUTOR_POOL_SIZE = 15
+EXECUTOR_POOL_SIZE = 10
 
 # Time for cleanup internal pending tasks
 TIME_INTERVAL_TASKS_CLEANUP = 10
