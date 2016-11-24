@@ -13,7 +13,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    TEMP_CELSIUS, CONF_RESOURCES, CONF_ALIAS, ATTR_STATE)
+    TEMP_CELSIUS, CONF_RESOURCES, CONF_ALIAS, ATTR_STATE, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -131,7 +131,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD, default=None): cv.string,
     vol.Required(CONF_RESOURCES, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-}, extra=vol.ALLOW_EXTRA)
+})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -147,7 +147,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if data.status is None:
         _LOGGER.error("NUT Sensor has no data, unable to setup.")
-        return
+        return False
 
     _LOGGER.debug('NUT Sensors Available: %s', data.status)
 
@@ -221,7 +221,7 @@ class NUTSensor(Entity):
             try:
                 return STATE_TYPES[self._data.status[KEY_STATUS]]
             except KeyError:
-                return 'Unknown'
+                return STATE_UNKNOWN
 
     def update(self):
         """Get the latest status and use it to update our sensor state."""
