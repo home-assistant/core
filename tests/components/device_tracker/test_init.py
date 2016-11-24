@@ -443,11 +443,13 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         # MAC is not a string (but added)
         tracker.see(mac=567, host_name="Number MAC")
+
         # No device id or MAC(not added)
         with self.assertRaises(HomeAssistantError):
             run_coroutine_threadsafe(
                 tracker.async_see(), self.hass.loop).result()
         assert mock_warning.call_count == 0
+
         # Ignore gps on invalid GPS (both added & warnings)
         tracker.see(mac='mac_1_bad_gps', gps=1)
         tracker.see(mac='mac_2_bad_gps', gps=[1])
