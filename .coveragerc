@@ -152,6 +152,7 @@ omit =
     homeassistant/components/device_tracker/bt_home_hub_5.py
     homeassistant/components/device_tracker/cisco_ios.py
     homeassistant/components/device_tracker/fritz.py
+    homeassistant/components/device_tracker/gpslogger.py
     homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
@@ -291,6 +292,7 @@ omit =
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/snmp.py
+    homeassistant/components/sensor/sonarr.py
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/steam_online.py
     homeassistant/components/sensor/supervisord.py
@@ -306,6 +308,7 @@ omit =
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/vasttrafik.py
+    homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/sensor/zamg.py
@@ -315,6 +318,7 @@ omit =
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
+    homeassistant/components/switch/hook.py
     homeassistant/components/switch/mystrom.py
     homeassistant/components/switch/netio.py
     homeassistant/components/switch/orvibo.py

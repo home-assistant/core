@@ -1,6 +1,7 @@
 """The tests for the Google Calendar component."""
 import logging
 import unittest
+from unittest.mock import patch
 
 import homeassistant.components.google as google
 from homeassistant.bootstrap import setup_component
@@ -20,7 +21,8 @@ class TestGoogle(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_setup_component(self):
+    @patch('homeassistant.components.google.do_authentication')
+    def test_setup_component(self, mock_do_auth):
         """Test setup component."""
         config = {
             'google': {
