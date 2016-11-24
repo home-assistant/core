@@ -98,6 +98,7 @@ class PvoutputSensor(Entity):
         """Return the state attributes of the Pi-Hole."""
         if self.pvcoutput is not None:
             return {
+                ATTR_ENERGY_GENERATION: self.pvcoutput.energy_generation,
                 ATTR_POWER_GENERATION: self.pvcoutput.power_generation,
                 ATTR_ENERGY_CONSUMPTION: self.pvcoutput.energy_consumption,
                 ATTR_POWER_CONSUMPTION: self.pvcoutput.power_consumption,
