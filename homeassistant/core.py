@@ -268,6 +268,9 @@ class HomeAssistant(object):
     @asyncio.coroutine
     def async_block_till_done(self):
         """Block till all pending work is done."""
+        # To flush out any call_soon_threadsafe
+        yield from asyncio.sleep(0, loop=self.loop)
+
         while self._pending_tasks:
             pending = [task for task in self._pending_tasks
                        if not task.done()]
