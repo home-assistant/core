@@ -113,7 +113,6 @@ class HomeAssistant(object):
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(self._async_exception_handler)
         self._pending_tasks = []
-        self._pending_sheduler = None
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -185,23 +184,9 @@ class HomeAssistant(object):
 
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
-        self._async_tasks_cleanup()
         _async_create_timer(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
         self.state = CoreState.running
-
-    @callback
-    def _async_tasks_cleanup(self):
-        """Cleanup all pending tasks in a time interval.
-
-        This method must be run in the event loop.
-        """
-        self._pending_tasks = [task for task in self._pending_tasks
-                               if not task.done()]
-
-        # sheduled next cleanup
-        self._pending_sheduler = self.loop.call_later(
-            TIME_INTERVAL_TASKS_CLEANUP, self._async_tasks_cleanup)
 
     def add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add job to the executor pool.
@@ -212,7 +197,28 @@ class HomeAssistant(object):
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     @callback
-    def async_add_job(self, target: Callable[..., None], *args: Any) -> None:
+    def _async_add_job(self, target: Callable[..., None], *args: Any) -> None:
+        """Add a job from within the eventloop.
+
+        This method must be run in the event loop.
+
+        target: target to call.
+        args: parameters for method to call.
+        """
+        if asyncio.iscoroutine(target):
+            self.loop.create_task(target)
+        elif is_callback(target):
+            self.loop.call_soon(target, *args)
+        elif asyncio.iscoroutinefunction(target):
+            self.loop.create_task(target(*args))
+        else:
+            self.loop.run_in_executor(None, target, *args)
+
+    async_add_job = _async_add_job
+
+    @callback
+    def _async_add_job_tracking(self, target: Callable[..., None],
+                                *args: Any) -> None:
         """Add a job from within the eventloop.
 
         This method must be run in the event loop.
@@ -236,6 +242,11 @@ class HomeAssistant(object):
             self._pending_tasks.append(task)
 
     @callback
+    def async_track_tasks(self):
+        """Track tasks so you can wait for all tasks to be done."""
+        self.async_add_job = self._async_add_job_tracking
+
+    @callback
     def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
         """Run a job from within the event loop.
 
@@ -249,16 +260,6 @@ class HomeAssistant(object):
         else:
             self.async_add_job(target, *args)
 
-    def _loop_empty(self) -> bool:
-        """Python 3.4.2 empty loop compatibility function."""
-        # pylint: disable=protected-access
-        if sys.version_info < (3, 4, 3):
-            return len(self.loop._scheduled) == 0 and \
-                   len(self.loop._ready) == 0
-        else:
-            return self.loop._current_handle is None and \
-                   len(self.loop._ready) == 0
-
     def block_till_done(self) -> None:
         """Block till all pending work is done."""
         run_coroutine_threadsafe(
@@ -267,18 +268,17 @@ class HomeAssistant(object):
     @asyncio.coroutine
     def async_block_till_done(self):
         """Block till all pending work is done."""
-        while True:
-            # Wait for the pending tasks are down
+        # To flush out any call_soon_threadsafe
+        yield from asyncio.sleep(0, loop=self.loop)
+
+        while self._pending_tasks:
             pending = [task for task in self._pending_tasks
                        if not task.done()]
             self._pending_tasks.clear()
             if len(pending) > 0:
                 yield from asyncio.wait(pending, loop=self.loop)
-
-            # Verify the loop is empty
-            ret = yield from self.loop.run_in_executor(None, self._loop_empty)
-            if ret and not self._pending_tasks:
-                break
+            else:
+                yield from asyncio.sleep(0, loop=self.loop)
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
@@ -291,9 +291,8 @@ class HomeAssistant(object):
         This method is a coroutine.
         """
         self.state = CoreState.stopping
+        self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        if self._pending_sheduler is not None:
-            self._pending_sheduler.cancel()
         yield from self.async_block_till_done()
         self.executor.shutdown()
         if self._websession is not None:
