@@ -22,11 +22,12 @@ from homeassistant.components.light import (
     FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
     SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME)
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['phue==0.8']
+REQUIREMENTS = ['phue==0.9']
 
 # Track previously setup bridges
 _CONFIGURED_BRIDGES = {}
@@ -37,6 +38,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ALLOW_UNREACHABLE = 'allow_unreachable'
 
 DEFAULT_ALLOW_UNREACHABLE = False
+DOMAIN = "light"
+SERVICE_HUE_SCENE = "hue_activate_scene"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -51,6 +54,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_ALLOW_UNREACHABLE): cv.boolean,
     vol.Optional(CONF_FILENAME): cv.string,
+})
+
+ATTR_GROUP_NAME = "group_name"
+ATTR_SCENE_NAME = "scene_name"
+SCENE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_GROUP_NAME): cv.string,
+    vol.Required(ATTR_SCENE_NAME): cv.string,
 })
 
 
@@ -166,6 +176,21 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
             add_devices(new_lights)
 
     _CONFIGURED_BRIDGES[socket.gethostbyname(host)] = True
+
+    # create a service for calling run_scene directly on the bridge,
+    # used to simplify automation rules.
+    def hue_activate_scene(call):
+        """Service to call directly directly into bridge to set scenes."""
+        group_name = call.data[ATTR_GROUP_NAME]
+        scene_name = call.data[ATTR_SCENE_NAME]
+        bridge.run_scene(group_name, scene_name)
+
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    hass.services.register(DOMAIN, SERVICE_HUE_SCENE, hue_activate_scene,
+                           descriptions.get(SERVICE_HUE_SCENE),
+                           schema=SCENE_SCHEMA)
+
     update_lights()
 
 

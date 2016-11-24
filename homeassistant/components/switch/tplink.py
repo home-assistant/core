@@ -6,6 +6,8 @@ https://home-assistant.io/components/switch.tplink/
 """
 import logging
 
+import time
+
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
@@ -21,6 +23,7 @@ DEFAULT_NAME = 'TPLink Switch HS100'
 
 ATTR_CURRENT_CONSUMPTION = 'Current consumption'
 ATTR_TOTAL_CONSUMPTION = 'Total consumption'
+ATTR_DAILY_CONSUMPTION = 'Daily consumption'
 ATTR_VOLTAGE = 'Voltage'
 ATTR_CURRENT = 'Current'
 
@@ -78,16 +81,28 @@ class SmartPlugSwitch(SwitchDevice):
 
     def update(self):
         """Update the TP-Link switch's state."""
-        self._state = self.smartplug.state
+        try:
+            self._state = self.smartplug.state
 
-        if self._emeter_present:
-            emeter_readings = self.smartplug.get_emeter_realtime()
+            if self._emeter_present:
+                emeter_readings = self.smartplug.get_emeter_realtime()
 
-            self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
-                = "%.1f W" % emeter_readings["power"]
-            self._emeter_params[ATTR_TOTAL_CONSUMPTION] \
-                = "%.2f kW" % emeter_readings["total"]
-            self._emeter_params[ATTR_VOLTAGE] \
-                = "%.2f V" % emeter_readings["voltage"]
-            self._emeter_params[ATTR_CURRENT] \
-                = "%.1f A" % emeter_readings["current"]
+                self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
+                    = "%.1f W" % emeter_readings["power"]
+                self._emeter_params[ATTR_TOTAL_CONSUMPTION] \
+                    = "%.2f kW" % emeter_readings["total"]
+                self._emeter_params[ATTR_VOLTAGE] \
+                    = "%.2f V" % emeter_readings["voltage"]
+                self._emeter_params[ATTR_CURRENT] \
+                    = "%.1f A" % emeter_readings["current"]
+
+                emeter_statics = self.smartplug.get_emeter_daily()
+                try:
+                    self._emeter_params[ATTR_DAILY_CONSUMPTION] \
+                        = "%.2f kW" % emeter_statics[int(time.strftime("%e"))]
+                except KeyError:
+                    # device returned no daily history
+                    pass
+
+        except OSError:
+            _LOGGER.warning('Could not update status for %s', self.name)

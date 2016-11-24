@@ -16,6 +16,8 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['tellcore-py==1.1.2']
 
+_LOGGER = logging.getLogger(__name__)
+
 DatatypeDescription = namedtuple('DatatypeDescription', ['name', 'unit'])
 
 CONF_DATATYPE_MASK = 'datatype_mask'
@@ -65,27 +67,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     }
 
     try:
-        core = telldus.TelldusCore()
+        tellcore_lib = telldus.TelldusCore()
     except OSError:
-        logging.getLogger(__name__).exception('Could not initialize Tellstick')
+        _LOGGER.exception('Could not initialize Tellstick')
         return
 
     sensors = []
     datatype_mask = config.get(CONF_DATATYPE_MASK)
 
-    for ts_sensor in core.sensors():
+    for tellcore_sensor in tellcore_lib.sensors():
         try:
-            sensor_name = config[ts_sensor.id]
+            sensor_name = config[tellcore_sensor.id]
         except KeyError:
             if config.get(CONF_ONLY_NAMED):
                 continue
-            sensor_name = str(ts_sensor.id)
+            sensor_name = str(tellcore_sensor.id)
 
         for datatype in sensor_value_descriptions:
-            if datatype & datatype_mask and ts_sensor.has_value(datatype):
-                sensor_info = sensor_value_descriptions[datatype]
-                sensors.append(TellstickSensor(
-                    sensor_name, ts_sensor, datatype, sensor_info))
+            if datatype & datatype_mask:
+                if tellcore_sensor.has_value(datatype):
+                    sensor_info = sensor_value_descriptions[datatype]
+                    sensors.append(TellstickSensor(
+                        sensor_name, tellcore_sensor, datatype, sensor_info))
 
     add_devices(sensors)
 
@@ -93,11 +96,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class TellstickSensor(Entity):
     """Representation of a Tellstick sensor."""
 
-    def __init__(self, name, sensor, datatype, sensor_info):
+    def __init__(self, name, tellcore_sensor, datatype, sensor_info):
         """Initialize the sensor."""
-        self.datatype = datatype
-        self.sensor = sensor
+        self._datatype = datatype
+        self._tellcore_sensor = tellcore_sensor
         self._unit_of_measurement = sensor_info.unit or None
+        self._value = None
 
         self._name = '{} {}'.format(name, sensor_info.name)
 
@@ -109,9 +113,13 @@ class TellstickSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.sensor.value(self.datatype).value
+        return self._value
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
+
+    def update(self):
+        """Update tellstick sensor."""
+        self._value = self._tellcore_sensor.value(self._datatype).value

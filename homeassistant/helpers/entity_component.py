@@ -138,6 +138,7 @@ class EntityComponent(object):
         entity_platform = self._platforms[key]
 
         try:
+            self.logger.info("Setting up %s.%s", self.domain, platform_type)
             if getattr(platform, 'async_setup_platform', None):
                 yield from platform.async_setup_platform(
                     self.hass, platform_config,
@@ -293,8 +294,12 @@ class EntityPlatform(object):
 
     def add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
+        if update_before_add:
+            for entity in new_entities:
+                entity.update()
+
         run_coroutine_threadsafe(
-            self.async_add_entities(list(new_entities), update_before_add),
+            self.async_add_entities(list(new_entities), False),
             self.component.hass.loop
         ).result()
 
@@ -372,7 +377,8 @@ class EntityPlatform(object):
 
                 update_coro = entity.async_update_ha_state(True)
                 if hasattr(entity, 'async_update'):
-                    tasks.append(update_coro)
+                    tasks.append(
+                        self.component.hass.loop.create_task(update_coro))
                 else:
                     to_update.append(update_coro)
 

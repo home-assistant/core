@@ -129,7 +129,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
         if self._pending_time:
             track_point_in_time(
-                self._hass, self.update_ha_state,
+                self._hass, self.async_update_ha_state,
                 self._state_ts + self._pending_time)
 
     def alarm_arm_away(self, code=None):
@@ -143,7 +143,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
         if self._pending_time:
             track_point_in_time(
-                self._hass, self.update_ha_state,
+                self._hass, self.async_update_ha_state,
                 self._state_ts + self._pending_time)
 
     def alarm_trigger(self, code=None):
@@ -155,11 +155,11 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
         if self._trigger_time:
             track_point_in_time(
-                self._hass, self.update_ha_state,
+                self._hass, self.async_update_ha_state,
                 self._state_ts + self._pending_time)
 
             track_point_in_time(
-                self._hass, self.update_ha_state,
+                self._hass, self.async_update_ha_state,
                 self._state_ts + self._pending_time + self._trigger_time)
 
     def _validate_code(self, code, state):
