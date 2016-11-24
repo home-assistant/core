@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
     customize = hass.data['zwave_customize']
-    name = super().entity_id
+    name = '{}.{}'.format(DOMAIN, zwave.object_id(value))
     node_config = customize.get(name, {})
     refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
     delay = node_config.get(zwave.CONF_REFRESH_DELAY)
@@ -201,7 +201,7 @@ class ZwaveColorLight(ZwaveDimmer):
         self._rgb = None
         self._ct = None
 
-        super().__init__(value)
+        super().__init__(value, refresh, delay)
 
         # Create a listener so the color values can be linked to this entity
         dispatcher.connect(

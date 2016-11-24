@@ -93,6 +93,7 @@ def get_scanner(hass, config):
 
     return scanner if scanner.success_init else None
 
+
 AsusWrtResult = namedtuple('AsusWrtResult', 'neighbors leases arp nvram')
 
 

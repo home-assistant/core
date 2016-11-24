@@ -193,19 +193,19 @@ def _node_object_id(node):
     return node_object_id
 
 
-def _object_id(value):
+def object_id(value):
     """Return the object_id of the device value.
 
     The object_id contains node_id and value instance id
     to not collide with other entity_ids.
     """
-    object_id = "{}_{}_{}".format(slugify(_value_name(value)),
-                                  value.node.node_id, value.index)
+    _object_id = "{}_{}_{}".format(slugify(_value_name(value)),
+                                   value.node.node_id, value.index)
 
     # Add the instance id if there is more than one instance for the value
     if value.instance > 1:
-        return '{}_{}'.format(object_id, value.instance)
-    return object_id
+        return '{}_{}'.format(_object_id, value.instance)
+    return _object_id
 
 
 def nice_print_node(node):
@@ -341,7 +341,7 @@ def setup(hass, config):
                           node.generic, node.specific,
                           value.command_class, value.type,
                           value.genre)
-            name = "{}.{}".format(component, _object_id(value))
+            name = "{}.{}".format(component, object_id(value))
 
             node_config = customize.get(name, {})
 
@@ -594,7 +594,7 @@ class ZWaveDeviceEntity:
         The object_id contains node_id and value instance id to not collide
         with other entity_ids.
         """
-        return _object_id(self._value)
+        return object_id(self._value)
 
     @property
     def device_state_attributes(self):

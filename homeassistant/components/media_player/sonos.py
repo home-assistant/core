@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         player = soco.SoCo(discovery_info)
 
         # if device allready exists by config
-        if player.uid in DEVICES:
+        if player.uid in [x.unique_id for x in DEVICES]:
             return True
 
         if player.is_visible:
@@ -350,9 +350,6 @@ class SonosDevice(MediaPlayerDevice):
 
         if is_available:
 
-            self._is_playing_tv = self._player.is_playing_tv
-            self._is_playing_line_in = self._player.is_playing_line_in
-
             track_info = None
             if self._last_avtransport_event:
                 variables = self._last_avtransport_event.variables
@@ -394,6 +391,10 @@ class SonosDevice(MediaPlayerDevice):
                 self._coordinator = None
 
             if not self._coordinator:
+
+                is_playing_tv = self._player.is_playing_tv
+                is_playing_line_in = self._player.is_playing_line_in
+
                 media_info = self._player.avTransport.GetMediaInfo(
                     [('InstanceID', 0)]
                 )
@@ -407,7 +408,23 @@ class SonosDevice(MediaPlayerDevice):
                     current_media_uri.startswith('x-sonosapi-stream:') or \
                     current_media_uri.startswith('x-rincon-mp3radio:')
 
-                if is_radio_stream:
+                if is_playing_tv or is_playing_line_in:
+                    # playing from line-in/tv.
+
+                    support_previous_track = False
+                    support_next_track = False
+                    support_pause = False
+
+                    if is_playing_tv:
+                        media_artist = SUPPORT_SOURCE_TV
+                    else:
+                        media_artist = SUPPORT_SOURCE_LINEIN
+
+                    media_album_name = None
+                    media_title = None
+                    media_image_url = None
+
+                elif is_radio_stream:
                     is_radio_stream = True
                     media_image_url = self._format_media_image_url(
                         current_media_uri
@@ -506,6 +523,8 @@ class SonosDevice(MediaPlayerDevice):
                 self._support_previous_track = support_previous_track
                 self._support_next_track = support_next_track
                 self._support_pause = support_pause
+                self._is_playing_tv = is_playing_tv
+                self._is_playing_line_in = is_playing_line_in
 
                 # update state of the whole group
                 # pylint: disable=protected-access
@@ -513,7 +532,7 @@ class SonosDevice(MediaPlayerDevice):
                     if device.entity_id is not self.entity_id:
                         self.hass.add_job(device.async_update_ha_state)
 
-                if self._queue is None:
+                if self._queue is None and self.entity_id is not None:
                     self._subscribe_to_player_events()
         else:
             self._player_volume = None
@@ -714,10 +733,13 @@ class SonosDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Name of the current input source."""
-        if self._is_playing_line_in:
-            return SUPPORT_SOURCE_LINEIN
-        if self._is_playing_tv:
-            return SUPPORT_SOURCE_TV
+        if self._coordinator:
+            return self._coordinator.source
+        else:
+            if self._is_playing_line_in:
+                return SUPPORT_SOURCE_LINEIN
+            elif self._is_playing_tv:
+                return SUPPORT_SOURCE_TV
 
         return None
 
