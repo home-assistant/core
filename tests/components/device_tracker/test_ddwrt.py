@@ -1,22 +1,22 @@
 """The tests for the DD-WRT device tracker platform."""
-import logging
 import os
-import re
 import unittest
 from unittest import mock
-
+import logging
+import re
 import requests
-
 import requests_mock
+
 from homeassistant import config
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import device_tracker
+from homeassistant.const import (
+    CONF_PLATFORM, CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_PLATFORM,
-                                 CONF_USERNAME)
 from homeassistant.util import slugify
-from tests.common import (assert_setup_component, get_test_home_assistant,
-                          load_fixture)
+
+from tests.common import (
+    get_test_home_assistant, assert_setup_component, load_fixture)
 
 from ...test_util.aiohttp import mock_aiohttp_client
 
