@@ -95,7 +95,7 @@ class PvoutputSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the Pi-Hole."""
+        """Return the state attributes of the monitored installation."""
         if self.pvcoutput is not None:
             return {
                 ATTR_ENERGY_GENERATION: self.pvcoutput.energy_generation,
