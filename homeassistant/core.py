@@ -115,8 +115,7 @@ class HomeAssistant(object):
         self._pending_tasks = []
         self._pending_sheduler = None
         self.bus = EventBus(self)
-        self.services = ServiceRegistry(self.bus, self.async_add_job,
-                                        self.loop)
+        self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config()  # type: Config
         # This is a dictionary that any component can store any data on.
@@ -849,12 +848,10 @@ class ServiceCall(object):
 class ServiceRegistry(object):
     """Offers services over the eventbus."""
 
-    def __init__(self, bus, async_add_job, loop):
+    def __init__(self, hass):
         """Initialize a service registry."""
         self._services = {}
-        self._async_add_job = async_add_job
-        self._bus = bus
-        self._loop = loop
+        self._hass = hass
         self._cur_id = 0
         self._async_unsub_call_event = None
 
@@ -862,7 +859,7 @@ class ServiceRegistry(object):
     def services(self):
         """Dict with per domain a list of available services."""
         return run_callback_threadsafe(
-            self._loop, self.async_services,
+            self._hass.loop, self.async_services,
         ).result()
 
     @callback
@@ -893,7 +890,7 @@ class ServiceRegistry(object):
         Schema is called to coerce and validate the service data.
         """
         run_callback_threadsafe(
-            self._loop,
+            self._hass.loop,
             self.async_register, domain, service, service_func, description,
             schema
         ).result()
@@ -923,10 +920,10 @@ class ServiceRegistry(object):
             self._services[domain] = {service: service_obj}
 
         if self._async_unsub_call_event is None:
-            self._async_unsub_call_event = self._bus.async_listen(
+            self._async_unsub_call_event = self._hass.bus.async_listen(
                 EVENT_CALL_SERVICE, self._event_to_service_call)
 
-        self._bus.async_fire(
+        self._hass.bus.async_fire(
             EVENT_SERVICE_REGISTERED,
             {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
@@ -950,7 +947,7 @@ class ServiceRegistry(object):
         """
         return run_coroutine_threadsafe(
             self.async_call(domain, service, service_data, blocking),
-            self._loop
+            self._hass.loop
         ).result()
 
     @asyncio.coroutine
@@ -983,7 +980,7 @@ class ServiceRegistry(object):
         }
 
         if blocking:
-            fut = asyncio.Future(loop=self._loop)
+            fut = asyncio.Future(loop=self._hass.loop)
 
             @callback
             def service_executed(event):
@@ -991,13 +988,13 @@ class ServiceRegistry(object):
                 if event.data[ATTR_SERVICE_CALL_ID] == call_id:
                     fut.set_result(True)
 
-            unsub = self._bus.async_listen(EVENT_SERVICE_EXECUTED,
-                                           service_executed)
+            unsub = self._hass.bus.async_listen(EVENT_SERVICE_EXECUTED,
+                                                service_executed)
 
-        self._bus.async_fire(EVENT_CALL_SERVICE, event_data)
+        self._hass.bus.async_fire(EVENT_CALL_SERVICE, event_data)
 
         if blocking:
-            done, _ = yield from asyncio.wait([fut], loop=self._loop,
+            done, _ = yield from asyncio.wait([fut], loop=self._hass.loop,
                                               timeout=SERVICE_CALL_LIMIT)
             success = bool(done)
             unsub()
@@ -1028,9 +1025,9 @@ class ServiceRegistry(object):
 
             if (service_handler.is_coroutinefunction or
                     service_handler.is_callback):
-                self._bus.async_fire(EVENT_SERVICE_EXECUTED, data)
+                self._hass.bus.async_fire(EVENT_SERVICE_EXECUTED, data)
             else:
-                self._bus.fire(EVENT_SERVICE_EXECUTED, data)
+                self._hass.bus.fire(EVENT_SERVICE_EXECUTED, data)
 
         try:
             if service_handler.schema:
@@ -1055,7 +1052,7 @@ class ServiceRegistry(object):
                 service_handler.func(service_call)
                 fire_service_executed()
 
-            self._async_add_job(execute_service)
+            self._hass.async_add_job(execute_service)
 
     def _generate_unique_id(self):
         """Generate a unique service call id."""
