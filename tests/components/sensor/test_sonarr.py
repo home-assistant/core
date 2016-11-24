@@ -6,8 +6,14 @@ from datetime import datetime
 import pytest
 
 from homeassistant.components.sensor import sonarr
+from homeassistant.const import STATE_UNAVAILABLE
 
 from tests.common import get_test_home_assistant
+
+
+def mocked_exception(*args, **kwargs):
+    """Mock exception thrown by requests.get."""
+    raise OSError
 
 
 def mocked_requests_get(*args, **kwargs):
@@ -814,3 +820,23 @@ class TestSonarrSetup(unittest.TestCase):
                 'S04E11',
                 device.device_state_attributes["Bob's Burgers"]
             )
+
+    @unittest.mock.patch('requests.get', side_effect=mocked_exception)
+    def test_exception_handling(self, req_mock):
+        """Tests exception being handled"""
+        config = {
+            'platform': 'sonarr',
+            'api_key': 'foo',
+            'days': '1',
+            'unit': 'GB',
+            "include_paths": [
+                '/data'
+            ],
+            'monitored_conditions': [
+                'upcoming'
+            ]
+        }
+        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        for device in self.DEVICES:
+            device.update()
+            self.assertEqual(STATE_UNAVAILABLE, device.state)

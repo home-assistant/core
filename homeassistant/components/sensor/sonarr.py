@@ -15,6 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_API_KEY, CONF_HOST, CONF_PORT)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.const import CONF_SSL
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
@@ -96,16 +97,24 @@ class SonarrSensor(Entity):
         self._icon = SENSOR_TYPES[self.type][2]
 
         # Update sensor
+        self._available = False
         self.update()
 
     def update(self):
         """Update the data for the sensor."""
         start = get_date(self._tz)
         end = get_date(self._tz, self.days)
-        res = requests.get(
-            ENDPOINTS[self.type].format(
-                self.ssl, self.host, self.port, self.apikey, start, end),
-            timeout=5)
+        try:
+            res = requests.get(
+                ENDPOINTS[self.type].format(
+                    self.ssl, self.host, self.port, self.apikey, start, end),
+                timeout=5)
+        except OSError:
+            _LOGGER.error('Host %s is not available', self.host)
+            self._available = False
+            self._state = STATE_UNAVAILABLE
+            return
+
         if res.status_code == 200:
             if self.type in ['upcoming', 'queue', 'series', 'commands']:
                 if self.days == 1 and self.type == 'upcoming':
@@ -146,6 +155,7 @@ class SonarrSensor(Entity):
                         self._unit
                     )
                 )
+            self._available = True
 
     @property
     def name(self):
@@ -158,6 +168,11 @@ class SonarrSensor(Entity):
         return self._state
 
     @property
+    def available(self):
+        """Return sensor availability."""
+        return self._available
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of the sensor."""
         return self._unit
@@ -166,6 +181,8 @@ class SonarrSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         attributes = {}
+        if not self.available:
+            return attributes
         if self.type == 'upcoming':
             for show in self.data:
                 attributes[show['series']['title']] = 'S{:02d}E{:02d}'.format(
