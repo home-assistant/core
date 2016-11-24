@@ -131,7 +131,7 @@ class HomeAssistant(ha.HomeAssistant):
         self._pending_sheduler = None
 
         self.bus = EventBus(remote_api, self)
-        self.services = ha.ServiceRegistry(self.bus, self.add_job, self.loop)
+        self.services = ha.ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop, self.remote_api)
         self.config = ha.Config()
         # This is a dictionary that any component can store any data on.
