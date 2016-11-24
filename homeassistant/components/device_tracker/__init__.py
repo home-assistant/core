@@ -280,6 +280,9 @@ class DeviceTracker(object):
             yield from self.group.async_update_tracked_entity_ids(
                 list(self.group.tracking) + [device.entity_id])
 
+        # lookup mac vendor string to be stored in config
+        device.set_vendor_for_mac()
+
         # update known_devices.yaml
         self.hass.async_add_job(
             self.async_update_config(self.hass.config.path(YAML_DEVICES),
@@ -464,9 +467,10 @@ class Device(Entity):
             self._state = STATE_HOME
             self.last_update_home = True
 
-        # lookup vendor string for mac address using api.macvendors.com
-        if not self.vendor:
-            self.vendor = yield from self.get_vendor_for_mac()
+    @asyncio.coroutine
+    def set_vendor_for_mac(self):
+        """Set vendor string using api.macvendors.com."""
+        self.vendor = yield from self.get_vendor_for_mac()
 
     @asyncio.coroutine
     def get_vendor_for_mac(self):
