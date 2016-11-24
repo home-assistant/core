@@ -1,12 +1,12 @@
 """Test the entity helper."""
 # pylint: disable=protected-access
 import asyncio
-from unittest.mock import MagicMock
 
 import pytest
 
 import homeassistant.helpers.entity as entity
 from homeassistant.const import ATTR_HIDDEN
+from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import get_test_home_assistant
 
@@ -27,43 +27,6 @@ def test_generate_entity_id_given_keys():
     assert entity.generate_entity_id(
         fmt, 'overwrite hidden true', current_ids=[
             'test.another_entity']) == 'test.overwrite_hidden_true'
-
-
-def test_async_update_support(event_loop):
-    """Test async update getting called."""
-    sync_update = []
-    async_update = []
-
-    class AsyncEntity(entity.Entity):
-        hass = MagicMock()
-        entity_id = 'sensor.test'
-
-        def update(self):
-            sync_update.append([1])
-
-    ent = AsyncEntity()
-    ent.hass.loop = event_loop
-
-    @asyncio.coroutine
-    def test():
-        yield from ent.async_update_ha_state(True)
-
-    event_loop.run_until_complete(test())
-
-    assert len(sync_update) == 1
-    assert len(async_update) == 0
-
-    @asyncio.coroutine
-    def async_update_func():
-        """Async update."""
-        async_update.append(1)
-
-    ent.async_update = async_update_func
-
-    event_loop.run_until_complete(test())
-
-    assert len(sync_update) == 1
-    assert len(async_update) == 1
 
 
 class TestHelpersEntity(object):
@@ -100,6 +63,41 @@ class TestHelpersEntity(object):
         assert entity.generate_entity_id(
             fmt, 'overwrite hidden true',
             hass=self.hass) == 'test.overwrite_hidden_true_2'
+
+    def test_async_update_support(self):
+        """Test async update getting called."""
+        sync_update = []
+        async_update = []
+
+        class AsyncEntity(entity.Entity):
+            hass = self.hass
+            entity_id = 'sensor.test'
+
+            def update(self):
+                sync_update.append([1])
+
+        ent = AsyncEntity()
+
+        @asyncio.coroutine
+        def test():
+            yield from ent.async_update_ha_state(True)
+
+        run_coroutine_threadsafe(test(), self.hass.loop).result()
+
+        assert len(sync_update) == 1
+        assert len(async_update) == 0
+
+        @asyncio.coroutine
+        def async_update_func():
+            """Async update."""
+            async_update.append(1)
+
+        ent.async_update = async_update_func
+
+        run_coroutine_threadsafe(test(), self.hass.loop).result()
+
+        assert len(sync_update) == 1
+        assert len(async_update) == 1
 
     def test_update_calls_async_update_if_available(self):
         """Test async update getting called."""

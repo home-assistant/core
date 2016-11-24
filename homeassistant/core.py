@@ -55,8 +55,9 @@ SERVICE_CALL_LIMIT = 10  # seconds
 # Pattern for validating entity IDs (format: <domain>.<entity>)
 ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 
-# Size of a executor pool
-EXECUTOR_POOL_SIZE = 15
+# Size of a executor pools
+EXECUTOR_DEFAULT_POOL_SIZE = 10
+EXECUTOR_ENTITY_POOL_SIZE = 5
 
 # Time for cleanup internal pending tasks
 TIME_INTERVAL_TASKS_CLEANUP = 10
@@ -109,7 +110,10 @@ class HomeAssistant(object):
         else:
             self.loop = loop or asyncio.get_event_loop()
 
-        self.executor = ThreadPoolExecutor(max_workers=EXECUTOR_POOL_SIZE)
+        self.executor = ThreadPoolExecutor(
+            max_workers=EXECUTOR_DEFAULT_POOL_SIZE)
+        self.executor_entity = ThreadPoolExecutor(
+            max_workers=EXECUTOR_ENTITY_POOL_SIZE)
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(self._async_exception_handler)
         self._pending_tasks = []
@@ -151,6 +155,7 @@ class HomeAssistant(object):
             self.loop.run_forever()
         finally:
             self.loop.close()
+            self.executor_entity.shutdown(wait=False)
 
     @asyncio.coroutine
     def async_start(self):
