@@ -6,7 +6,6 @@ from datetime import datetime
 import pytest
 
 from homeassistant.components.sensor import sonarr
-from homeassistant.const import STATE_UNAVAILABLE
 
 from tests.common import get_test_home_assistant
 
