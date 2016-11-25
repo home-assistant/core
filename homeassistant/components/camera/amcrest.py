@@ -7,7 +7,6 @@ https://home-assistant.io/components/camera.amcrest/
 import logging
 import voluptuous as vol
 
-from amcrest import AmcrestCamera
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
@@ -43,6 +42,8 @@ class AmcrestCam(Camera):
         super(AmcrestCam, self).__init__()
 
         self._name = device_info.get(CONF_NAME)
+
+        from amcrest import AmcrestCamera
         self._data = AmcrestCamera(device_info.get(CONF_HOST),
                                    device_info.get(CONF_PORT),
                                    device_info.get(CONF_USERNAME),
