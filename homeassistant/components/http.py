@@ -20,7 +20,7 @@ from aiohttp import web, hdrs
 from aiohttp.file_sender import FileSender
 from aiohttp.web_exceptions import (
     HTTPUnauthorized, HTTPMovedPermanently, HTTPNotModified)
-from aiohttp.web_urldispatcher import StaticRoute
+from aiohttp.web_urldispatcher import StaticResource
 
 from homeassistant.core import is_callback
 import homeassistant.remote as rem
@@ -33,7 +33,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components import persistent_notification
 
 DOMAIN = 'http'
-REQUIREMENTS = ('aiohttp_cors==0.4.0',)
+REQUIREMENTS = ('aiohttp_cors==0.5.0',)
 
 CONF_API_PASSWORD = 'api_password'
 CONF_SERVER_HOST = 'server_host'
@@ -212,13 +212,8 @@ class GzipFileSender(FileSender):
         file_size = st.st_size
 
         resp.content_length = file_size
-        resp.set_tcp_cork(True)
-        try:
-            with filepath.open('rb') as f:
-                yield from self._sendfile(request, resp, f, file_size)
-
-        finally:
-            resp.set_tcp_nodelay(True)
+        with filepath.open('rb') as f:
+            yield from self._sendfile(request, resp, f, file_size)
 
         return resp
 
@@ -226,26 +221,32 @@ class GzipFileSender(FileSender):
 _GZIP_FILE_SENDER = GzipFileSender()
 
 
-class HAStaticRoute(StaticRoute):
-    """StaticRoute with support for fingerprinting."""
+@asyncio.coroutine
+def staticresource_enhancer(app, handler):
+    """Enhance StaticResourceHandler.
 
-    def __init__(self, prefix, path):
-        """Initialize a static route with gzip and cache busting support."""
-        super().__init__(None, prefix, path)
-        self._file_sender = _GZIP_FILE_SENDER
+    Adds gzip encoding and fingerprinting matching.
+    """
+    inst = getattr(handler, '__self__', None)
+    if not isinstance(inst, StaticResource):
+        return handler
 
-    def match(self, path):
-        """Match path to filename."""
-        if not path.startswith(self._prefix):
-            return None
+    # pylint: disable=protected-access
+    inst._file_sender = _GZIP_FILE_SENDER
 
-        # Extra sauce to remove fingerprinted resource names
-        filename = path[self._prefix_len:]
-        fingerprinted = _FINGERPRINT.match(filename)
+    @asyncio.coroutine
+    def middleware_handler(request):
+        """Strip out fingerprints from resource names."""
+        fingerprinted = _FINGERPRINT.match(request.match_info['filename'])
+
         if fingerprinted:
-            filename = '{}.{}'.format(*fingerprinted.groups())
+            request.match_info['filename'] = \
+                '{}.{}'.format(*fingerprinted.groups())
 
-        return {'filename': filename}
+        resp = yield from handler(request)
+        return resp
+
+    return middleware_handler
 
 
 class HomeAssistantWSGI(object):
@@ -257,7 +258,8 @@ class HomeAssistantWSGI(object):
         """Initialize the WSGI Home Assistant server."""
         import aiohttp_cors
 
-        self.app = web.Application(loop=hass.loop)
+        self.app = web.Application(middlewares=[staticresource_enhancer],
+                                   loop=hass.loop)
         self.hass = hass
         self.development = development
         self.api_password = api_password
@@ -318,11 +320,7 @@ class HomeAssistantWSGI(object):
         Specify optional cache length of asset in days.
         """
         if os.path.isdir(path):
-            assert url_root.startswith('/')
-            if not url_root.endswith('/'):
-                url_root += '/'
-            route = HAStaticRoute(url_root, path)
-            self.app.router.register_route(route)
+            self.app.router.add_static(url_root, path)
             return
 
         filepath = Path(path)
