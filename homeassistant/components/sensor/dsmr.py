@@ -26,15 +26,15 @@ stores/caches the latest telegram and notifies the Entities that the telegram
 has been updated.
 """
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
