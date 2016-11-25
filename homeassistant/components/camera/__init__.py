@@ -33,8 +33,8 @@ def async_setup(hass, config):
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
-    hass.http.register_view(CameraImageView(hass, component.entities))
-    hass.http.register_view(CameraMjpegStream(hass, component.entities))
+    hass.http.register_view(CameraImageView(component.entities))
+    hass.http.register_view(CameraMjpegStream(component.entities))
 
     yield from component.async_setup(config)
     return True
@@ -165,9 +165,8 @@ class CameraView(HomeAssistantView):
 
     requires_auth = False
 
-    def __init__(self, hass, entities):
+    def __init__(self, entities):
         """Initialize a basic camera view."""
-        super().__init__(hass)
         self.entities = entities
 
     @asyncio.coroutine

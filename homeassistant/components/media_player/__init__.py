@@ -304,7 +304,7 @@ def setup(hass, config):
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
-    hass.http.register_view(MediaPlayerImageView(hass, component.entities))
+    hass.http.register_view(MediaPlayerImageView(component.entities))
 
     component.setup(config)
 
@@ -736,9 +736,8 @@ class MediaPlayerImageView(HomeAssistantView):
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
 
-    def __init__(self, hass, entities):
+    def __init__(self, entities):
         """Initialize a media player view."""
-        super().__init__(hass)
         self.entities = entities
 
     @asyncio.coroutine
@@ -755,7 +754,7 @@ class MediaPlayerImageView(HomeAssistantView):
             return web.Response(status=401)
 
         data, content_type = yield from _async_fetch_image(
-            self.hass, player.media_image_url)
+            request.app['hass'], player.media_image_url)
 
         if data is None:
             return web.Response(status=500)

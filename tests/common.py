@@ -215,7 +215,7 @@ def mock_http_component(hass):
         """Store registered view."""
         if isinstance(view, type):
             # Instantiate the view, if needed
-            view = view(hass)
+            view = view()
 
         hass.http.views[view.name] = view
 

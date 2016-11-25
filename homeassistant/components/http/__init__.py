@@ -205,9 +205,6 @@ class HomeAssistantWSGI(object):
         else:
             self.cors = None
 
-        # CACHE HACK
-        GZIP_FILE_SENDER.development = development
-
     def register_view(self, view):
         """Register a view with the WSGI server.
 
@@ -217,7 +214,19 @@ class HomeAssistantWSGI(object):
         """
         if isinstance(view, type):
             # Instantiate the view, if needed
-            view = view(self.hass)
+            view = view()
+
+        if not hasattr(view, 'url'):
+            class_name = view.__class__.__name__
+            raise AttributeError(
+                '{0} missing required attribute "url"'.format(class_name)
+            )
+
+        if not hasattr(view, 'name'):
+            class_name = view.__class__.__name__
+            raise AttributeError(
+                '{0} missing required attribute "name"'.format(class_name)
+            )
 
         view.register(self.app.router)
 
@@ -299,22 +308,6 @@ class HomeAssistantView(object):
     url = None
     extra_urls = []
     requires_auth = True  # Views inheriting from this class can override this
-
-    def __init__(self, hass):
-        """Initilalize the base view."""
-        if not hasattr(self, 'url'):
-            class_name = self.__class__.__name__
-            raise AttributeError(
-                '{0} missing required attribute "url"'.format(class_name)
-            )
-
-        if not hasattr(self, 'name'):
-            class_name = self.__class__.__name__
-            raise AttributeError(
-                '{0} missing required attribute "name"'.format(class_name)
-            )
-
-        self.hass = hass
 
     # pylint: disable=no-self-use
     def json(self, result, status_code=200):
