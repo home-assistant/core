@@ -42,7 +42,7 @@ SUPPORT_MQTT_TEMPLATE = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH |
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_EFFECT_LIST): list,
+    vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.sring]),
     vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
