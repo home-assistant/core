@@ -92,10 +92,10 @@ VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_PROFILE: str,
+    ATTR_PROFILE: cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
-    ATTR_COLOR_NAME: str,
+    ATTR_COLOR_NAME: cv.string,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
     ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
@@ -104,7 +104,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
                                             max=color_util.HASS_COLOR_MAX)),
     ATTR_WHITE_VALUE: vol.All(int, vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
-    ATTR_EFFECT: str,
+    ATTR_EFFECT: cv.string,
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
