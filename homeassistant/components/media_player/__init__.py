@@ -17,7 +17,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.const import (
@@ -304,7 +304,7 @@ def setup(hass, config):
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
-    hass.http.register_view(MediaPlayerImageView(hass, component.entities))
+    hass.http.register_view(MediaPlayerImageView(component.entities))
 
     component.setup(config)
 
@@ -736,9 +736,8 @@ class MediaPlayerImageView(HomeAssistantView):
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
 
-    def __init__(self, hass, entities):
+    def __init__(self, entities):
         """Initialize a media player view."""
-        super().__init__(hass)
         self.entities = entities
 
     @asyncio.coroutine
@@ -748,14 +747,14 @@ class MediaPlayerImageView(HomeAssistantView):
         if player is None:
             return web.Response(status=404)
 
-        authenticated = (request.authenticated or
+        authenticated = (request[KEY_AUTHENTICATED] or
                          request.GET.get('token') == player.access_token)
 
         if not authenticated:
             return web.Response(status=401)
 
         data, content_type = yield from _async_fetch_image(
-            self.hass, player.media_image_url)
+            request.app['hass'], player.media_image_url)
 
         if data is None:
             return web.Response(status=500)
