@@ -116,7 +116,7 @@ def load_ip_bans_config(path: str):
             ip_info = SCHEMA_IP_BAN_ENTRY(ip_info)
             ip_list.append(IpBan(ip_ban, ip_info['banned_at']))
         except vol.Invalid as err:
-            _LOGGER.error('Failed to load IP ban {}: {}', ip_info, err)
+            _LOGGER.error('Failed to load IP ban %s: %s', ip_info, err)
             continue
 
     return ip_list

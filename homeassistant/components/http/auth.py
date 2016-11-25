@@ -19,6 +19,7 @@ def auth_middleware(app, handler):
     if app['hass'].http.api_password is None:
         @asyncio.coroutine
         def no_auth_middleware_handler(request):
+            """Auth middleware to approve all requests."""
             request[KEY_AUTHENTICATED] = True
             return handler(request)
 
@@ -26,7 +27,7 @@ def auth_middleware(app, handler):
 
     @asyncio.coroutine
     def auth_middleware_handler(request):
-        """Strip out fingerprints from resource names."""
+        """Auth middleware to check authentication."""
         hass = app['hass']
 
         # Auth code verbose on purpose
