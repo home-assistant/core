@@ -81,57 +81,56 @@ def tearDownModule():
 class TestHttp:
     """Test HTTP component."""
 
-    def test_cors_allowed_with_password_in_url(self):
-        """Test cross origin resource sharing with password in url."""
-        req = requests.get(_url(const.URL_API),
-                           params={'api_password': API_PASSWORD},
-                           headers={const.HTTP_HEADER_ORIGIN: HTTP_BASE_URL})
+    def test_access_from_banned_ip(self):
+        """Test accessing to server from banned IP. Both trusted and not."""
+        hass.http.app[KEY_BANS_ENABLED] = True
+        for remote_addr in BANNED_IPS:
+            with patch('homeassistant.components.http.'
+                       'ban.get_real_ip',
+                       return_value=ip_address(remote_addr)):
+                req = requests.get(
+                    _url(const.URL_API))
+                assert req.status_code == 403
 
-        allow_origin = const.HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN
+    def test_access_from_banned_ip_when_ban_is_off(self):
+        """Test accessing to server from banned IP when feature is off"""
+        hass.http.app[KEY_BANS_ENABLED] = False
+        for remote_addr in BANNED_IPS:
+            with patch('homeassistant.components.http.'
+                       'ban.get_real_ip',
+                       return_value=ip_address(remote_addr)):
+                req = requests.get(
+                    _url(const.URL_API),
+                    headers={const.HTTP_HEADER_HA_AUTH: API_PASSWORD})
+                assert req.status_code == 200
 
-        assert req.status_code == 200
-        assert req.headers.get(allow_origin) == HTTP_BASE_URL
+    def test_ip_bans_file_creation(self):
+        """Testing if banned IP file created"""
+        hass.http.app[KEY_BANS_ENABLED] = True
+        hass.http.app[KEY_LOGIN_THRESHOLD] = 1
 
-    def test_cors_allowed_with_password_in_header(self):
-        """Test cross origin resource sharing with password in header."""
-        headers = {
-            const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
-            const.HTTP_HEADER_ORIGIN: HTTP_BASE_URL
-        }
-        req = requests.get(_url(const.URL_API), headers=headers)
+        m = mock_open()
 
-        allow_origin = const.HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN
+        def call_server():
+            with patch('homeassistant.components.http.'
+                       'ban.get_real_ip',
+                       return_value=ip_address("200.201.202.204")):
+                print("GETTING API")
+                return requests.get(
+                    _url(const.URL_API),
+                    headers={const.HTTP_HEADER_HA_AUTH: 'Wrong password'})
 
-        assert req.status_code == 200
-        assert req.headers.get(allow_origin) == HTTP_BASE_URL
+        with patch('homeassistant.components.http.ban.open', m, create=True):
+            req = call_server()
+            assert req.status_code == 401
+            assert len(hass.http.app[KEY_BANNED_IPS]) == len(BANNED_IPS)
+            assert m.call_count == 0
 
-    def test_cors_denied_without_origin_header(self):
-        """Test cross origin resource sharing with password in header."""
-        headers = {
-            const.HTTP_HEADER_HA_AUTH: API_PASSWORD
-        }
-        req = requests.get(_url(const.URL_API), headers=headers)
+            req = call_server()
+            assert req.status_code == 401
+            assert len(hass.http.app[KEY_BANNED_IPS]) == len(BANNED_IPS) + 1
+            m.assert_called_once_with(hass.config.path(IP_BANS_FILE), 'a')
 
-        allow_origin = const.HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN
-        allow_headers = const.HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS
-
-        assert req.status_code == 200
-        assert allow_origin not in req.headers
-        assert allow_headers not in req.headers
-
-    def test_cors_preflight_allowed(self):
-        """Test cross origin resource sharing preflight (OPTIONS) request."""
-        headers = {
-            const.HTTP_HEADER_ORIGIN: HTTP_BASE_URL,
-            'Access-Control-Request-Method': 'GET',
-            'Access-Control-Request-Headers': 'x-ha-access'
-        }
-        req = requests.options(_url(const.URL_API), headers=headers)
-
-        allow_origin = const.HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN
-        allow_headers = const.HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS
-
-        assert req.status_code == 200
-        assert req.headers.get(allow_origin) == HTTP_BASE_URL
-        assert req.headers.get(allow_headers) == \
-            const.HTTP_HEADER_HA_AUTH.upper()
+            req = call_server()
+            assert req.status_code == 403
+            assert m.call_count == 1
