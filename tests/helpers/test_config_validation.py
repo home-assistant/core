@@ -341,7 +341,7 @@ def test_template_complex():
         1, 'Hello',
         '{{ beer }}',
         '{% if 1 == 1 %}Hello{% else %}World{% endif %}',
-        {'test': 1, 'test': '{{ beer }}'},
+        {'test': 1, 'test2': '{{ beer }}'},
         ['{{ beer }}', 1]
     ):
         schema(value)

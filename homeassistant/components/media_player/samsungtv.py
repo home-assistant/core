@@ -128,6 +128,8 @@ class SamsungTVDevice(MediaPlayerDevice):
     def turn_off(self):
         """Turn off media player."""
         self.send_key('KEY_POWEROFF')
+        # Force closing of remote session to provide instant UI feedback
+        self.get_remote().close()
 
     def volume_up(self):
         """Volume up the media player."""

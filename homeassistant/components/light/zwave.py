@@ -24,26 +24,6 @@ AEOTEC = 0x86
 AEOTEC_ZW098_LED_BULB = 0x62
 AEOTEC_ZW098_LED_BULB_LIGHT = (AEOTEC, AEOTEC_ZW098_LED_BULB)
 
-LINEAR = 0x14f
-LINEAR_WD500Z_DIMMER = 0x3034
-LINEAR_WD500Z_DIMMER_LIGHT = (LINEAR, LINEAR_WD500Z_DIMMER)
-
-GE = 0x63
-GE_12724_DIMMER = 0x3031
-GE_12724_DIMMER_LIGHT = (GE, GE_12724_DIMMER)
-
-DRAGONTECH = 0x184
-DRAGONTECH_PD100_DIMMER = 0x3032
-DRAGONTECH_PD100_DIMMER_LIGHT = (DRAGONTECH, DRAGONTECH_PD100_DIMMER)
-
-ACT = 0x01
-ACT_ZDP100_DIMMER = 0x3030
-ACT_ZDP100_DIMMER_LIGHT = (ACT, ACT_ZDP100_DIMMER)
-
-HOMESEER = 0x0c
-HOMESEER_WD100_DIMMER = 0x3034
-HOMESEER_WD100_DIMMER_LIGHT = (HOMESEER, HOMESEER_WD100_DIMMER)
-
 COLOR_CHANNEL_WARM_WHITE = 0x01
 COLOR_CHANNEL_COLD_WHITE = 0x02
 COLOR_CHANNEL_RED = 0x04
@@ -51,15 +31,9 @@ COLOR_CHANNEL_GREEN = 0x08
 COLOR_CHANNEL_BLUE = 0x10
 
 WORKAROUND_ZW098 = 'zw098'
-WORKAROUND_DELAY = 'alt_delay'
 
 DEVICE_MAPPINGS = {
-    AEOTEC_ZW098_LED_BULB_LIGHT: WORKAROUND_ZW098,
-    LINEAR_WD500Z_DIMMER_LIGHT: WORKAROUND_DELAY,
-    GE_12724_DIMMER_LIGHT: WORKAROUND_DELAY,
-    DRAGONTECH_PD100_DIMMER_LIGHT: WORKAROUND_DELAY,
-    ACT_ZDP100_DIMMER_LIGHT: WORKAROUND_DELAY,
-    HOMESEER_WD100_DIMMER_LIGHT: WORKAROUND_DELAY,
+    AEOTEC_ZW098_LED_BULB_LIGHT: WORKAROUND_ZW098
 }
 
 # Generate midpoint color temperatures for bulbs that have limited
@@ -75,10 +49,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and add Z-Wave lights."""
     if discovery_info is None or zwave.NETWORK is None:
         return
-
     node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-
+    customize = hass.data['zwave_customize']
+    name = '{}.{}'.format(DOMAIN, zwave.object_id(value))
+    node_config = customize.get(name, {})
+    refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
+    delay = node_config.get(zwave.CONF_REFRESH_DELAY)
+    _LOGGER.debug('customize=%s name=%s node_config=%s CONF_REFRESH_VALUE=%s'
+                  ' CONF_REFRESH_DELAY=%s', customize, name, node_config,
+                  refresh, delay)
     if value.command_class != zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL:
         return
     if value.type != zwave.const.TYPE_BYTE:
@@ -89,9 +69,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value.set_change_verified(False)
 
     if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
-        add_devices([ZwaveColorLight(value)])
+        add_devices([ZwaveColorLight(value, refresh, delay)])
     else:
-        add_devices([ZwaveDimmer(value)])
+        add_devices([ZwaveDimmer(value, refresh, delay)])
 
 
 def brightness_state(value):
@@ -105,7 +85,7 @@ def brightness_state(value):
 class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
     """Representation of a Z-Wave dimmer."""
 
-    def __init__(self, value):
+    def __init__(self, value, refresh, delay):
         """Initialize the light."""
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
@@ -113,7 +93,8 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._brightness = None
         self._state = None
-        self._alt_delay = None
+        self._delay = delay
+        self._refresh_value = refresh
         self._zw098 = None
 
         # Enable appropriate workaround flags for our device
@@ -126,17 +107,14 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
                 if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZW098:
                     _LOGGER.debug("AEOTEC ZW098 workaround enabled")
                     self._zw098 = 1
-                elif DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_DELAY:
-                    _LOGGER.debug("Dimmer delay workaround enabled for node:"
-                                  " %s", value.parent_id)
-                    self._alt_delay = 1
 
         self.update_properties()
 
         # Used for value change event handling
         self._refreshing = False
         self._timer = None
-
+        _LOGGER.debug('self._refreshing=%s self.delay=%s',
+                      self._refresh_value, self._delay)
         dispatcher.connect(
             self._value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
 
@@ -149,26 +127,25 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id or \
            self._value.node == value.node:
-
-            if self._refreshing:
-                self._refreshing = False
-                self.update_properties()
-            else:
-                def _refresh_value():
-                    """Used timer callback for delayed value refresh."""
-                    self._refreshing = True
-                    self._value.refresh()
-
-                if self._timer is not None and self._timer.isAlive():
-                    self._timer.cancel()
-
-                if self._alt_delay:
-                    self._timer = Timer(5, _refresh_value)
+            if self._refresh_value:
+                if self._refreshing:
+                    self._refreshing = False
+                    self.update_properties()
                 else:
-                    self._timer = Timer(2, _refresh_value)
-                self._timer.start()
+                    def _refresh_value():
+                        """Used timer callback for delayed value refresh."""
+                        self._refreshing = True
+                        self._value.refresh()
 
-            self.update_ha_state()
+                    if self._timer is not None and self._timer.isAlive():
+                        self._timer.cancel()
+
+                    self._timer = Timer(self._delay, _refresh_value)
+                    self._timer.start()
+                self.update_ha_state()
+            else:
+                self.update_properties()
+                self.update_ha_state()
 
     @property
     def brightness(self):
@@ -213,7 +190,7 @@ def ct_to_rgb(temp):
 class ZwaveColorLight(ZwaveDimmer):
     """Representation of a Z-Wave color changing light."""
 
-    def __init__(self, value):
+    def __init__(self, value, refresh, delay):
         """Initialize the light."""
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
@@ -224,7 +201,7 @@ class ZwaveColorLight(ZwaveDimmer):
         self._rgb = None
         self._ct = None
 
-        super().__init__(value)
+        super().__init__(value, refresh, delay)
 
         # Create a listener so the color values can be linked to this entity
         dispatcher.connect(

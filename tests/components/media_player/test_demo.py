@@ -245,12 +245,16 @@ class TestMediaPlayerWeb(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-        setup_component(self.hass, http.DOMAIN, {
+        assert setup_component(self.hass, http.DOMAIN, {
             http.DOMAIN: {
                 http.CONF_SERVER_PORT: SERVER_PORT,
                 http.CONF_API_PASSWORD: API_PASSWORD,
             },
         })
+
+        assert setup_component(
+            self.hass, mp.DOMAIN,
+            {'media_player': {'platform': 'demo'}})
 
         self.hass.start()
 
@@ -287,10 +291,6 @@ class TestMediaPlayerWeb(unittest.TestCase):
 
         self.hass._websession = MockWebsession()
 
-        self.hass.block_till_done()
-        assert setup_component(
-            self.hass, mp.DOMAIN,
-            {'media_player': {'platform': 'demo'}})
         assert self.hass.states.is_state(entity_id, 'playing')
         state = self.hass.states.get(entity_id)
         req = requests.get(HTTP_BASE_URL +
