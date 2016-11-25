@@ -182,15 +182,25 @@ class RflinkDevice(Entity):
         """Assume device state until first device packet sets state."""
         return self._state is None
 
-    def _send_command(self, command):
+    def _send_command(self, command, *args):
         """Send a command for this device."""
         if command == "turn_on":
-            self._event(self._device_id.split('_') + ['on'])
+            cmd = 'on'
             self._state = True
 
         elif command == 'turn_off':
-            self._event(self._device_id.split('_') + ['off'])
+            cmd = 'off'
             self._state = False
+
+        elif command == 'dim':
+            # convert brightness to rflink dim level
+            cmd = str(int(args[0]/17))
+            self._state = True
+
+        # send protocol, device id, switch nr and command to rflink
+        self._event(self._device_id.split('_') + [cmd])
+
+        # todo, wait for rflink ok response
 
         self.update_ha_state()
 
