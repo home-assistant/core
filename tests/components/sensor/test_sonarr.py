@@ -839,4 +839,4 @@ class TestSonarrSetup(unittest.TestCase):
         sonarr.setup_platform(self.hass, config, self.add_devices, None)
         for device in self.DEVICES:
             device.update()
-            self.assertEqual(STATE_UNAVAILABLE, device.state)
+            self.assertEqual(None, device.state)
