@@ -102,7 +102,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up the HTTP API and debug interface."""
     conf = config.get(DOMAIN)
 
@@ -151,7 +152,7 @@ def setup(hass, config):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
         yield from server.start()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_server)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
 
     hass.http = server
     hass.config.api = rem.API(server_host if server_host != '0.0.0.0'
