@@ -203,7 +203,7 @@ class DerivativeDSMREntity(DSMREntity):
                 pass
             else:
                 # recalculate the rate
-                diff = self._previous_reading - current_reading
+                diff = current_reading - self._previous_reading
                 self._state = diff
 
             self._previous_reading = current_reading
