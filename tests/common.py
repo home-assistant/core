@@ -10,6 +10,8 @@ import logging
 import threading
 from contextlib import contextmanager
 
+from aiohttp import web
+
 from homeassistant import core as ha, loader
 from homeassistant.bootstrap import (
     setup_component, async_prepare_setup_component)
@@ -22,6 +24,9 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT)
 from homeassistant.components import sun, mqtt
+from homeassistant.components.http.auth import auth_middleware
+from homeassistant.components.http.const import (
+    KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED)
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -210,11 +215,21 @@ def mock_http_component(hass):
         """Store registered view."""
         if isinstance(view, type):
             # Instantiate the view, if needed
-            view = view(hass)
+            view = view()
 
         hass.http.views[view.name] = view
 
     hass.http.register_view = mock_register_view
+
+
+def mock_http_component_app(hass):
+    """Create an aiohttp.web.Application instance for testing."""
+    hass.http.api_password = None
+    app = web.Application(middlewares=[auth_middleware], loop=hass.loop)
+    app['hass'] = hass
+    app[KEY_USE_X_FORWARDED_FOR] = False
+    app[KEY_BANS_ENABLED] = False
+    return app
 
 
 def mock_mqtt_component(hass):

@@ -11,6 +11,8 @@ from homeassistant.core import callback
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.components import api, group
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.auth import is_trusted_ip
+from homeassistant.components.http.const import KEY_DEVELOPMENT
 from .version import FINGERPRINTS
 
 DOMAIN = 'frontend'
@@ -155,7 +157,7 @@ def setup(hass, config):
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local)
 
-    index_view = hass.data[DATA_INDEX_VIEW] = IndexView(hass)
+    index_view = hass.data[DATA_INDEX_VIEW] = IndexView()
     hass.http.register_view(index_view)
 
     # Components have registered panels before frontend got setup.
@@ -185,12 +187,14 @@ class BootstrapView(HomeAssistantView):
     @callback
     def get(self, request):
         """Return all data needed to bootstrap Home Assistant."""
+        hass = request.app['hass']
+
         return self.json({
-            'config': self.hass.config.as_dict(),
-            'states': self.hass.states.async_all(),
-            'events': api.async_events_json(self.hass),
-            'services': api.async_services_json(self.hass),
-            'panels': self.hass.data[DATA_PANELS],
+            'config': hass.config.as_dict(),
+            'states': hass.states.async_all(),
+            'events': api.async_events_json(hass),
+            'services': api.async_services_json(hass),
+            'panels': hass.data[DATA_PANELS],
         })
 
 
@@ -202,10 +206,8 @@ class IndexView(HomeAssistantView):
     requires_auth = False
     extra_urls = ['/states', '/states/{entity_id}']
 
-    def __init__(self, hass):
+    def __init__(self):
         """Initialize the frontend view."""
-        super().__init__(hass)
-
         from jinja2 import FileSystemLoader, Environment
 
         self.templates = Environment(
@@ -217,14 +219,16 @@ class IndexView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request, entity_id=None):
         """Serve the index view."""
+        hass = request.app['hass']
+
         if entity_id is not None:
-            state = self.hass.states.get(entity_id)
+            state = hass.states.get(entity_id)
 
             if (not state or state.domain != 'group' or
                     not state.attributes.get(group.ATTR_VIEW)):
                 return self.json_message('Entity not found', HTTP_NOT_FOUND)
 
-        if self.hass.http.development:
+        if request.app[KEY_DEVELOPMENT]:
             core_url = '/static/home-assistant-polymer/build/core.js'
             ui_url = '/static/home-assistant-polymer/src/home-assistant.html'
         else:
@@ -241,19 +245,18 @@ class IndexView(HomeAssistantView):
         if panel == 'states':
             panel_url = ''
         else:
-            panel_url = self.hass.data[DATA_PANELS][panel]['url']
+            panel_url = hass.data[DATA_PANELS][panel]['url']
 
         no_auth = 'true'
-        if self.hass.config.api.api_password:
+        if hass.config.api.api_password:
             # require password if set
             no_auth = 'false'
-            if self.hass.http.is_trusted_ip(
-                    self.hass.http.get_real_ip(request)):
+            if is_trusted_ip(request):
                 # bypass for trusted networks
                 no_auth = 'true'
 
         icons_url = '/static/mdi-{}.html'.format(FINGERPRINTS['mdi.html'])
-        template = yield from self.hass.loop.run_in_executor(
+        template = yield from hass.loop.run_in_executor(
             None, self.templates.get_template, 'index.html')
 
         # pylint is wrong
@@ -262,7 +265,7 @@ class IndexView(HomeAssistantView):
         resp = template.render(
             core_url=core_url, ui_url=ui_url, no_auth=no_auth,
             icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
-            panel_url=panel_url, panels=self.hass.data[DATA_PANELS])
+            panel_url=panel_url, panels=hass.data[DATA_PANELS])
 
         return web.Response(text=resp, content_type='text/html')
 

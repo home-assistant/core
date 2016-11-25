@@ -101,7 +101,7 @@ def setup(hass, config):
         message = message.async_render()
         async_log_entry(hass, name, message, domain, entity_id)
 
-    hass.http.register_view(LogbookView(hass, config))
+    hass.http.register_view(LogbookView(config))
 
     register_built_in_panel(hass, 'logbook', 'Logbook',
                             'mdi:format-list-bulleted-type')
@@ -118,9 +118,8 @@ class LogbookView(HomeAssistantView):
     name = 'api:logbook'
     extra_urls = ['/api/logbook/{datetime}']
 
-    def __init__(self, hass, config):
+    def __init__(self, config):
         """Initilalize the logbook view."""
-        super().__init__(hass)
         self.config = config
 
     @asyncio.coroutine
@@ -146,7 +145,8 @@ class LogbookView(HomeAssistantView):
             events = recorder.execute(query)
             return _exclude_events(events, self.config)
 
-        events = yield from self.hass.loop.run_in_executor(None, get_results)
+        events = yield from request.app['hass'].loop.run_in_executor(
+            None, get_results)
 
         return self.json(humanify(events))
 
