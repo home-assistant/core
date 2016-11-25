@@ -703,7 +703,8 @@ class SonosDevice(MediaPlayerDevice):
     def media_position_updated_at(self):
         """When was the position of the current playing media valid.
 
-        Returns value from homeassistant.util.dt.utcnow()."""
+        Returns value from homeassistant.util.dt.utcnow().
+        """
         if self._coordinator:
             return self._coordinator.media_position_updated_at
         else:
