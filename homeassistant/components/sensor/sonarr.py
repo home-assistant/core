@@ -15,7 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_API_KEY, CONF_HOST, CONF_PORT)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.const import CONF_SSL
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
@@ -87,6 +86,7 @@ class SonarrSensor(Entity):
         self.ssl = 's' if conf.get(CONF_SSL) else ''
 
         # Object data
+        self.data = []
         self._tz = timezone(str(hass.config.time_zone))
         self.type = sensor_type
         self._name = SENSOR_TYPES[self.type][0]
@@ -112,7 +112,7 @@ class SonarrSensor(Entity):
         except OSError:
             _LOGGER.error('Host %s is not available', self.host)
             self._available = False
-            self._state = STATE_UNAVAILABLE
+            self._state = None
             return
 
         if res.status_code == 200:
@@ -181,8 +181,6 @@ class SonarrSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         attributes = {}
-        if not self.available:
-            return attributes
         if self.type == 'upcoming':
             for show in self.data:
                 attributes[show['series']['title']] = 'S{:02d}E{:02d}'.format(
