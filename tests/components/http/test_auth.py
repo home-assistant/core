@@ -2,16 +2,14 @@
 # pylint: disable=protected-access
 import logging
 from ipaddress import ip_address, ip_network
-from unittest.mock import patch, mock_open
+from unittest.mock import patch
 
 import requests
 
 from homeassistant import bootstrap, const
 import homeassistant.components.http as http
 from homeassistant.components.http.const import (
-    KEY_TRUSTED_NETWORKS, KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED,
-    KEY_LOGIN_THRESHOLD, KEY_BANNED_IPS, HTTP_HEADER_X_FORWARDED_FOR)
-from homeassistant.components.http.ban import IpBan, IP_BANS_FILE
+    KEY_TRUSTED_NETWORKS, KEY_USE_X_FORWARDED_FOR, HTTP_HEADER_X_FORWARDED_FOR)
 
 from tests.common import get_test_instance_port, get_test_home_assistant
 
@@ -29,9 +27,6 @@ TRUSTED_NETWORKS = ['192.0.2.0/24', '2001:DB8:ABCD::/48', '100.64.0.1',
 TRUSTED_ADDRESSES = ['100.64.0.1', '192.0.2.100', 'FD01:DB8::1',
                      '2001:DB8:ABCD::1']
 UNTRUSTED_ADDRESSES = ['198.51.100.1', '2001:DB8:FA1::1', '127.0.0.1', '::1']
-BANNED_IPS = ['200.201.202.203', '100.64.0.2']
-
-CORS_ORIGINS = [HTTP_BASE_URL, HTTP_BASE]
 
 hass = None
 
@@ -48,15 +43,11 @@ def setUpModule():
 
     hass = get_test_home_assistant()
 
-    hass.bus.listen('test_event', lambda _: _)
-    hass.states.set('test.test', 'a_state')
-
     bootstrap.setup_component(
         hass, http.DOMAIN, {
             http.DOMAIN: {
                 http.CONF_API_PASSWORD: API_PASSWORD,
                 http.CONF_SERVER_PORT: SERVER_PORT,
-                http.CONF_CORS_ORIGINS: CORS_ORIGINS,
             }
         }
     )
@@ -67,8 +58,6 @@ def setUpModule():
         ip_network(trusted_network)
         for trusted_network in TRUSTED_NETWORKS]
 
-    hass.http.app[KEY_BANNED_IPS] = [IpBan(banned_ip) for banned_ip
-                                     in BANNED_IPS]
     hass.start()
 
 
@@ -131,7 +120,7 @@ class TestHttp:
 
         logs = caplog.text
 
-        # assert const.URL_API in logs
+        assert const.URL_API in logs
         assert API_PASSWORD not in logs
 
     def test_access_denied_with_wrong_password_in_url(self):
@@ -154,7 +143,7 @@ class TestHttp:
 
         logs = caplog.text
 
-        # assert const.URL_API in logs
+        assert const.URL_API in logs
         assert API_PASSWORD not in logs
 
     def test_access_granted_with_x_forwarded_for(self, caplog):

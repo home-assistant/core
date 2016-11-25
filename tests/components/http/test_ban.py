@@ -1,7 +1,6 @@
 """The tests for the Home Assistant HTTP component."""
 # pylint: disable=protected-access
-import logging
-from ipaddress import ip_address, ip_network
+from ipaddress import ip_address
 from unittest.mock import patch, mock_open
 
 import requests
@@ -9,8 +8,7 @@ import requests
 from homeassistant import bootstrap, const
 import homeassistant.components.http as http
 from homeassistant.components.http.const import (
-    KEY_TRUSTED_NETWORKS, KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED,
-    KEY_LOGIN_THRESHOLD, KEY_BANNED_IPS, HTTP_HEADER_X_FORWARDED_FOR)
+    KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD, KEY_BANNED_IPS)
 from homeassistant.components.http.ban import IpBan, IP_BANS_FILE
 
 from tests.common import get_test_instance_port, get_test_home_assistant
@@ -23,15 +21,7 @@ HA_HEADERS = {
     const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
     const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON,
 }
-# Don't add 127.0.0.1/::1 as trusted, as it may interfere with other test cases
-TRUSTED_NETWORKS = ['192.0.2.0/24', '2001:DB8:ABCD::/48', '100.64.0.1',
-                    'FD01:DB8::1']
-TRUSTED_ADDRESSES = ['100.64.0.1', '192.0.2.100', 'FD01:DB8::1',
-                     '2001:DB8:ABCD::1']
-UNTRUSTED_ADDRESSES = ['198.51.100.1', '2001:DB8:FA1::1', '127.0.0.1', '::1']
 BANNED_IPS = ['200.201.202.203', '100.64.0.2']
-
-CORS_ORIGINS = [HTTP_BASE_URL, HTTP_BASE]
 
 hass = None
 
@@ -48,24 +38,16 @@ def setUpModule():
 
     hass = get_test_home_assistant()
 
-    hass.bus.listen('test_event', lambda _: _)
-    hass.states.set('test.test', 'a_state')
-
     bootstrap.setup_component(
         hass, http.DOMAIN, {
             http.DOMAIN: {
                 http.CONF_API_PASSWORD: API_PASSWORD,
                 http.CONF_SERVER_PORT: SERVER_PORT,
-                http.CONF_CORS_ORIGINS: CORS_ORIGINS,
             }
         }
     )
 
     bootstrap.setup_component(hass, 'api')
-
-    hass.http.app[KEY_TRUSTED_NETWORKS] = [
-        ip_network(trusted_network)
-        for trusted_network in TRUSTED_NETWORKS]
 
     hass.http.app[KEY_BANNED_IPS] = [IpBan(banned_ip) for banned_ip
                                      in BANNED_IPS]
