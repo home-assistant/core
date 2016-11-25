@@ -8,7 +8,7 @@ import os
 from aiohttp import web
 
 from homeassistant.core import callback
-from homeassistant.const import EVENT_HOMEASSISTANT_START, HTTP_NOT_FOUND
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.components import api, group
 from homeassistant.components.http import HomeAssistantView
 from .version import FINGERPRINTS
@@ -18,7 +18,6 @@ DEPENDENCIES = ['api']
 URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
 STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static')
-PANELS = {}
 MANIFEST_JSON = {
     "background_color": "#FFFFFF",
     "description": "Open-source home automation platform running on Python 3.",
@@ -31,6 +30,16 @@ MANIFEST_JSON = {
     "start_url": "/",
     "theme_color": "#03A9F4"
 }
+
+for size in (192, 384, 512, 1024):
+    MANIFEST_JSON['icons'].append({
+        "src": "/static/icons/favicon-{}x{}.png".format(size, size),
+        "sizes": "{}x{}".format(size, size),
+        "type": "image/png"
+    })
+
+DATA_PANELS = 'frontend_panels'
+DATA_INDEX_VIEW = 'frontend_index_view'
 
 # To keep track we don't register a component twice (gives a warning)
 _REGISTERED_COMPONENTS = set()
@@ -68,10 +77,14 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
 
     Warning: this API will probably change. Use at own risk.
     """
+    panels = hass.data.get(DATA_PANELS)
+    if panels is None:
+        panels = hass.data[DATA_PANELS] = {}
+
     if url_path is None:
         url_path = component_name
 
-    if url_path in PANELS:
+    if url_path in panels:
         _LOGGER.warning('Overwriting component %s', url_path)
     if not os.path.isfile(path):
         _LOGGER.error('Panel %s component does not exist: %s',
@@ -106,7 +119,15 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
         fprinted_url = URL_PANEL_COMPONENT_FP.format(component_name, md5)
         data['url'] = fprinted_url
 
-    PANELS[url_path] = data
+    panels[url_path] = data
+
+    # Register index view for this route if IndexView already loaded
+    # Otherwise it will be done during setup.
+    index_view = hass.data.get(DATA_INDEX_VIEW)
+
+    if index_view:
+        hass.http.app.router.add_route('get', '/{}'.format(url_path),
+                                       index_view.get)
 
 
 def add_manifest_json_key(key, val):
@@ -134,28 +155,23 @@ def setup(hass, config):
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local)
 
+    index_view = hass.data[DATA_INDEX_VIEW] = IndexView(hass)
+    hass.http.register_view(index_view)
+
+    # Components have registered panels before frontend got setup.
+    # Now register their urls.
+    if DATA_PANELS in hass.data:
+        for url_path in hass.data[DATA_PANELS]:
+            hass.http.app.router.add_route('get', '/{}'.format(url_path),
+                                           index_view.get)
+    else:
+        hass.data[DATA_PANELS] = {}
+
     register_built_in_panel(hass, 'map', 'Map', 'mdi:account-location')
 
     for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
                   'dev-template'):
         register_built_in_panel(hass, panel)
-
-    def register_frontend_index(event):
-        """Register the frontend index urls.
-
-        Done when Home Assistant is started so that all panels are known.
-        """
-        hass.http.register_view(IndexView(
-            hass, ['/{}'.format(name) for name in PANELS]))
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, register_frontend_index)
-
-    for size in (192, 384, 512, 1024):
-        MANIFEST_JSON['icons'].append({
-            "src": "/static/icons/favicon-{}x{}.png".format(size, size),
-            "sizes": "{}x{}".format(size, size),
-            "type": "image/png"
-        })
 
     return True
 
@@ -174,7 +190,7 @@ class BootstrapView(HomeAssistantView):
             'states': self.hass.states.async_all(),
             'events': api.async_events_json(self.hass),
             'services': api.async_services_json(self.hass),
-            'panels': PANELS,
+            'panels': self.hass.data[DATA_PANELS],
         })
 
 
@@ -186,13 +202,12 @@ class IndexView(HomeAssistantView):
     requires_auth = False
     extra_urls = ['/states', '/states/{entity_id}']
 
-    def __init__(self, hass, extra_urls):
+    def __init__(self, hass):
         """Initialize the frontend view."""
         super().__init__(hass)
 
         from jinja2 import FileSystemLoader, Environment
 
-        self.extra_urls = self.extra_urls + extra_urls
         self.templates = Environment(
             loader=FileSystemLoader(
                 os.path.join(os.path.dirname(__file__), 'templates/')
@@ -223,7 +238,10 @@ class IndexView(HomeAssistantView):
         else:
             panel = request.path.split('/')[1]
 
-        panel_url = PANELS[panel]['url'] if panel != 'states' else ''
+        if panel == 'states':
+            panel_url = ''
+        else:
+            panel_url = self.hass.data[DATA_PANELS][panel]['url']
 
         no_auth = 'true'
         if self.hass.config.api.api_password:
@@ -244,7 +262,7 @@ class IndexView(HomeAssistantView):
         resp = template.render(
             core_url=core_url, ui_url=ui_url, no_auth=no_auth,
             icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
-            panel_url=panel_url, panels=PANELS)
+            panel_url=panel_url, panels=self.hass.data[DATA_PANELS])
 
         return web.Response(text=resp, content_type='text/html')
 
