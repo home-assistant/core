@@ -78,7 +78,6 @@ def setup(hass, yaml_config):
         cors_origins=None,
         use_x_forwarded_for=False,
         trusted_networks=None,
-        ip_bans=None,
         login_threshold=0,
         is_ban_enabled=False
     )

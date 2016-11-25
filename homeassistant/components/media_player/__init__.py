@@ -17,7 +17,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.const import (
@@ -748,7 +748,7 @@ class MediaPlayerImageView(HomeAssistantView):
         if player is None:
             return web.Response(status=404)
 
-        authenticated = (request.authenticated or
+        authenticated = (request[KEY_AUTHENTICATED] or
                          request.GET.get('token') == player.access_token)
 
         if not authenticated:

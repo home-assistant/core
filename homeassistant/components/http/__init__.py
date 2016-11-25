@@ -7,34 +7,33 @@ https://home-assistant.io/components/http/
 import asyncio
 import json
 import logging
-import mimetypes
 import ssl
-from datetime import datetime
-from ipaddress import ip_address, ip_network
+from ipaddress import ip_network
 from pathlib import Path
 
-import hmac
 import os
-import re
 import voluptuous as vol
-from aiohttp import web, hdrs
-from aiohttp.file_sender import FileSender
-from aiohttp.web_exceptions import (
-    HTTPUnauthorized, HTTPMovedPermanently, HTTPNotModified, HTTPForbidden)
-from aiohttp.web_urldispatcher import StaticResource
+from aiohttp import web
+from aiohttp.web_exceptions import HTTPUnauthorized, HTTPMovedPermanently
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.remote as rem
-from homeassistant import util
+from homeassistant.util import get_local_ip
 from homeassistant.components import persistent_notification
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    SERVER_PORT, HTTP_HEADER_HA_AUTH,  # HTTP_HEADER_CACHE_CONTROL,
-    CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_START, HTTP_HEADER_X_FORWARDED_FOR)
+    SERVER_PORT, CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
 from homeassistant.core import is_callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.yaml import dump
+from homeassistant.util.logging import HideSensitiveDataFilter
+
+from .auth import auth_middleware
+from .ban import ban_middleware, process_wrong_login
+from .const import (
+    KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
+    KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD,
+    KEY_DEVELOPMENT, KEY_AUTHENTICATED)
+from .static import GZIP_FILE_SENDER, staticresource_middleware
+from .util import get_real_ip
 
 DOMAIN = 'http'
 REQUIREMENTS = ('aiohttp_cors==0.5.0',)
@@ -51,13 +50,7 @@ CONF_TRUSTED_NETWORKS = 'trusted_networks'
 CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
 CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
 
-DATA_API_PASSWORD = 'api_password'
 NOTIFICATION_ID_LOGIN = 'http-login'
-NOTIFICATION_ID_BAN = 'ip-ban'
-
-IP_BANS = 'ip_bans.yaml'
-ATTR_BANNED_AT = "banned_at"
-
 
 # TLS configuation follows the best-practice guidelines specified here:
 # https://wiki.mozilla.org/Security/Server_Side_TLS
@@ -80,73 +73,57 @@ CIPHERS = "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:" \
           "AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:" \
           "AES256-SHA:DES-CBC3-SHA:!DSS"
 
-_FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
-
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_SERVER_HOST = '0.0.0.0'
+DEFAULT_DEVELOPMENT = '0'
+DEFAULT_LOGIN_ATTEMPT_THRESHOLD = -1
+
+HTTP_SCHEMA = vol.Schema({
+    vol.Optional(CONF_API_PASSWORD, default=None): cv.string,
+    vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
+    vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
+        vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+    vol.Optional(CONF_DEVELOPMENT, default=DEFAULT_DEVELOPMENT): cv.string,
+    vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
+    vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
+    vol.Optional(CONF_CORS_ORIGINS, default=[]): vol.All(cv.ensure_list,
+                                                         [cv.string]),
+    vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
+    vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
+        vol.All(cv.ensure_list, [ip_network]),
+    vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD,
+                 default=DEFAULT_LOGIN_ATTEMPT_THRESHOLD): cv.positive_int,
+    vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean
+})
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_API_PASSWORD): cv.string,
-        vol.Optional(CONF_SERVER_HOST): cv.string,
-        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
-            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
-        vol.Optional(CONF_DEVELOPMENT): cv.string,
-        vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_SSL_KEY): cv.isfile,
-        vol.Optional(CONF_CORS_ORIGINS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
-        vol.Optional(CONF_TRUSTED_NETWORKS):
-            vol.All(cv.ensure_list, [ip_network]),
-        vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD): cv.positive_int,
-        vol.Optional(CONF_IP_BAN_ENABLED): cv.boolean
-    }),
+    DOMAIN: HTTP_SCHEMA,
 }, extra=vol.ALLOW_EXTRA)
-
-
-# TEMP TO GET TESTS TO RUN
-def request_class():
-    """."""
-    raise Exception('not implemented')
-
-
-class HideSensitiveFilter(logging.Filter):
-    """Filter API password calls."""
-
-    def __init__(self, hass):
-        """Initialize sensitive data filter."""
-        super().__init__()
-        self.hass = hass
-
-    def filter(self, record):
-        """Hide sensitive data in messages."""
-        if self.hass.http.api_password is None:
-            return True
-
-        record.msg = record.msg.replace(self.hass.http.api_password, '*******')
-
-        return True
 
 
 def setup(hass, config):
     """Set up the HTTP API and debug interface."""
-    logging.getLogger('aiohttp.access').addFilter(HideSensitiveFilter(hass))
+    conf = config.get(DOMAIN)
 
-    conf = config.get(DOMAIN, {})
+    if conf is None:
+        conf = HTTP_SCHEMA({})
 
-    api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
-    server_host = conf.get(CONF_SERVER_HOST, '0.0.0.0')
-    server_port = conf.get(CONF_SERVER_PORT, SERVER_PORT)
-    development = str(conf.get(CONF_DEVELOPMENT, '')) == '1'
-    ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
-    ssl_key = conf.get(CONF_SSL_KEY)
-    cors_origins = conf.get(CONF_CORS_ORIGINS, [])
-    use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
-    trusted_networks = [
-        ip_network(trusted_network)
-        for trusted_network in conf.get(CONF_TRUSTED_NETWORKS, [])]
-    is_ban_enabled = bool(conf.get(CONF_IP_BAN_ENABLED, False))
-    login_threshold = int(conf.get(CONF_LOGIN_ATTEMPTS_THRESHOLD, -1))
-    ip_bans = load_ip_bans_config(hass.config.path(IP_BANS))
+    api_password = conf[CONF_API_PASSWORD]
+    server_host = conf[CONF_SERVER_HOST]
+    server_port = conf[CONF_SERVER_PORT]
+    development = conf[CONF_DEVELOPMENT] == '1'
+    ssl_certificate = conf[CONF_SSL_CERTIFICATE]
+    ssl_key = conf[CONF_SSL_KEY]
+    cors_origins = conf[CONF_CORS_ORIGINS]
+    use_x_forwarded_for = conf[CONF_USE_X_FORWARDED_FOR]
+    trusted_networks = conf[CONF_TRUSTED_NETWORKS]
+    is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
+    login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
+
+    if api_password is not None:
+        logging.getLogger('aiohttp.access').addFilter(
+            HideSensitiveDataFilter(api_password))
 
     server = HomeAssistantWSGI(
         hass,
@@ -159,7 +136,6 @@ def setup(hass, config):
         cors_origins=cors_origins,
         use_x_forwarded_for=use_x_forwarded_for,
         trusted_networks=trusted_networks,
-        ip_bans=ip_bans,
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled
     )
@@ -179,93 +155,11 @@ def setup(hass, config):
 
     hass.http = server
     hass.config.api = rem.API(server_host if server_host != '0.0.0.0'
-                              else util.get_local_ip(),
+                              else get_local_ip(),
                               api_password, server_port,
                               ssl_certificate is not None)
 
     return True
-
-
-class GzipFileSender(FileSender):
-    """FileSender class capable of sending gzip version if available."""
-
-    # pylint: disable=invalid-name
-
-    development = False
-
-    @asyncio.coroutine
-    def send(self, request, filepath):
-        """Send filepath to client using request."""
-        gzip = False
-        if 'gzip' in request.headers[hdrs.ACCEPT_ENCODING]:
-            gzip_path = filepath.with_name(filepath.name + '.gz')
-
-            if gzip_path.is_file():
-                filepath = gzip_path
-                gzip = True
-
-        st = filepath.stat()
-
-        modsince = request.if_modified_since
-        if modsince is not None and st.st_mtime <= modsince.timestamp():
-            raise HTTPNotModified()
-
-        ct, encoding = mimetypes.guess_type(str(filepath))
-        if not ct:
-            ct = 'application/octet-stream'
-
-        resp = self._response_factory()
-        resp.content_type = ct
-        if encoding:
-            resp.headers[hdrs.CONTENT_ENCODING] = encoding
-        if gzip:
-            resp.headers[hdrs.VARY] = hdrs.ACCEPT_ENCODING
-        resp.last_modified = st.st_mtime
-
-        # CACHE HACK
-        if not self.development:
-            cache_time = 31 * 86400  # = 1 month
-            resp.headers[hdrs.CACHE_CONTROL] = "public, max-age={}".format(
-                cache_time)
-
-        file_size = st.st_size
-
-        resp.content_length = file_size
-        with filepath.open('rb') as f:
-            yield from self._sendfile(request, resp, f, file_size)
-
-        return resp
-
-
-_GZIP_FILE_SENDER = GzipFileSender()
-
-
-@asyncio.coroutine
-def staticresource_enhancer(app, handler):
-    """Enhance StaticResourceHandler.
-
-    Adds gzip encoding and fingerprinting matching.
-    """
-    inst = getattr(handler, '__self__', None)
-    if not isinstance(inst, StaticResource):
-        return handler
-
-    # pylint: disable=protected-access
-    inst._file_sender = _GZIP_FILE_SENDER
-
-    @asyncio.coroutine
-    def middleware_handler(request):
-        """Strip out fingerprints from resource names."""
-        fingerprinted = _FINGERPRINT.match(request.match_info['filename'])
-
-        if fingerprinted:
-            request.match_info['filename'] = \
-                '{}.{}'.format(*fingerprinted.groups())
-
-        resp = yield from handler(request)
-        return resp
-
-    return middleware_handler
 
 
 class HomeAssistantWSGI(object):
@@ -274,12 +168,23 @@ class HomeAssistantWSGI(object):
     def __init__(self, hass, development, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
                  use_x_forwarded_for, trusted_networks,
-                 ip_bans, login_threshold, is_ban_enabled):
+                 login_threshold, is_ban_enabled):
         """Initialize the WSGI Home Assistant server."""
         import aiohttp_cors
 
-        self.app = web.Application(middlewares=[staticresource_enhancer],
-                                   loop=hass.loop)
+        middlewares = [auth_middleware, staticresource_middleware]
+
+        if is_ban_enabled:
+            middlewares.insert(0, ban_middleware)
+
+        self.app = web.Application(middlewares=middlewares, loop=hass.loop)
+        self.app['hass'] = hass
+        self.app[KEY_USE_X_FORWARDED_FOR] = use_x_forwarded_for
+        self.app[KEY_TRUSTED_NETWORKS] = trusted_networks
+        self.app[KEY_BANS_ENABLED] = is_ban_enabled
+        self.app[KEY_LOGIN_THRESHOLD] = login_threshold
+        self.app[KEY_DEVELOPMENT] = development
+
         self.hass = hass
         self.development = development
         self.api_password = api_password
@@ -287,16 +192,8 @@ class HomeAssistantWSGI(object):
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
-        self.use_x_forwarded_for = use_x_forwarded_for
-        self.trusted_networks = trusted_networks \
-            if trusted_networks is not None else []
-        self.event_forwarder = None
         self._handler = None
         self.server = None
-        self.login_threshold = login_threshold
-        self.ip_bans = ip_bans if ip_bans is not None else []
-        self.failed_login_attempts = {}
-        self.is_ban_enabled = is_ban_enabled
 
         if cors_origins:
             self.cors = aiohttp_cors.setup(self.app, defaults={
@@ -309,7 +206,7 @@ class HomeAssistantWSGI(object):
             self.cors = None
 
         # CACHE HACK
-        _GZIP_FILE_SENDER.development = development
+        GZIP_FILE_SENDER.development = development
 
     def register_view(self, view):
         """Register a view with the WSGI server.
@@ -352,8 +249,8 @@ class HomeAssistantWSGI(object):
 
         @asyncio.coroutine
         def serve_file(request):
-            """Redirect to location."""
-            res = yield from _GZIP_FILE_SENDER.send(request, filepath)
+            """Serve file from disk."""
+            res = yield from GZIP_FILE_SENDER.send(request, filepath)
             return res
 
         # aiohttp supports regex matching for variables. Using that as temp
@@ -394,54 +291,6 @@ class HomeAssistantWSGI(object):
         yield from self.app.shutdown()
         yield from self._handler.finish_connections(60.0)
         yield from self.app.cleanup()
-
-    def get_real_ip(self, request):
-        """Return the clients correct ip address, even in proxied setups."""
-        if self.use_x_forwarded_for \
-                and HTTP_HEADER_X_FORWARDED_FOR in request.headers:
-            return request.headers.get(
-                HTTP_HEADER_X_FORWARDED_FOR).split(',')[0]
-        else:
-            peername = request.transport.get_extra_info('peername')
-            return peername[0] if peername is not None else None
-
-    def is_trusted_ip(self, remote_addr):
-        """Match an ip address against trusted CIDR networks."""
-        return any(ip_address(remote_addr) in trusted_network
-                   for trusted_network in self.hass.http.trusted_networks)
-
-    def wrong_login_attempt(self, remote_addr):
-        """Registering wrong login attempt."""
-        if not self.is_ban_enabled or self.login_threshold < 1:
-            return
-
-        if remote_addr in self.failed_login_attempts:
-            self.failed_login_attempts[remote_addr] += 1
-        else:
-            self.failed_login_attempts[remote_addr] = 1
-
-        if self.failed_login_attempts[remote_addr] > self.login_threshold:
-            new_ban = IpBan(remote_addr)
-            self.ip_bans.append(new_ban)
-            update_ip_bans_config(self.hass.config.path(IP_BANS), new_ban)
-            _LOGGER.warning('Banned IP %s for too many login attempts',
-                            remote_addr)
-            persistent_notification.async_create(
-                self.hass,
-                'Too many login attempts from {}'.format(remote_addr),
-                'Banning IP address', NOTIFICATION_ID_BAN)
-
-    def is_banned_ip(self, remote_addr):
-        """Check if IP address is in a ban list."""
-        if not self.is_ban_enabled:
-            return False
-
-        ip_address_ = ip_address(remote_addr)
-        for ip_ban in self.ip_bans:
-            if ip_ban.ip_address == ip_address_:
-                return True
-
-        return False
 
 
 class HomeAssistantView(object):
@@ -484,7 +333,7 @@ class HomeAssistantView(object):
     def file(self, request, fil):
         """Return a file."""
         assert isinstance(fil, str), 'only string paths allowed'
-        response = yield from _GZIP_FILE_SENDER.send(request, Path(fil))
+        response = yield from GZIP_FILE_SENDER.send(request, Path(fil))
         return response
 
     def register(self, router):
@@ -511,56 +360,31 @@ class HomeAssistantView(object):
 
 
 def request_handler_factory(view, handler):
-    """Factory to wrap our handler classes.
+    """Factory to wrap our handler classes."""
+    assert asyncio.iscoroutinefunction(handler) or is_callback(handler), \
+        "Handler should be a coroutine or a callback."
 
-    Eventually authentication should be managed by middleware.
-    """
     @asyncio.coroutine
     def handle(request):
         """Handle incoming request."""
-        if not view.hass.is_running:
+        if not request.app['hass'].is_running:
             return web.Response(status=503)
 
-        remote_addr = view.hass.http.get_real_ip(request)
-
-        if view.hass.http.is_banned_ip(remote_addr):
-            raise HTTPForbidden()
-
-        # Auth code verbose on purpose
-        authenticated = False
-
-        if view.hass.http.api_password is None:
-            authenticated = True
-
-        elif view.hass.http.is_trusted_ip(remote_addr):
-            authenticated = True
-
-        elif hmac.compare_digest(request.headers.get(HTTP_HEADER_HA_AUTH, ''),
-                                 view.hass.http.api_password):
-            # A valid auth header has been set
-            authenticated = True
-
-        elif hmac.compare_digest(request.GET.get(DATA_API_PASSWORD, ''),
-                                 view.hass.http.api_password):
-            authenticated = True
+        remote_addr = get_real_ip(request)
+        authenticated = request.get(KEY_AUTHENTICATED, False)
 
         if view.requires_auth and not authenticated:
-            view.hass.http.wrong_login_attempt(remote_addr)
+            yield from process_wrong_login(request)
             _LOGGER.warning('Login attempt or request with an invalid '
                             'password from %s', remote_addr)
             persistent_notification.async_create(
-                view.hass,
+                request.app['hass'],
                 'Invalid password used from {}'.format(remote_addr),
                 'Login attempt failed', NOTIFICATION_ID_LOGIN)
             raise HTTPUnauthorized()
 
-        request.authenticated = authenticated
-
         _LOGGER.info('Serving %s to %s (auth: %s)',
                      request.path, remote_addr, authenticated)
-
-        assert asyncio.iscoroutinefunction(handler) or is_callback(handler), \
-            "Handler should be a coroutine or a callback."
 
         result = handler(request, **request.match_info)
 
@@ -587,55 +411,3 @@ def request_handler_factory(view, handler):
         return web.Response(body=result, status=status_code)
 
     return handle
-
-
-class IpBan(object):
-    """Represents banned IP address."""
-
-    def __init__(self, ip_ban: str, banned_at: datetime=None) -> None:
-        """Initializing Ip Ban object."""
-        self.ip_address = ip_address(ip_ban)
-        self.banned_at = banned_at
-        if self.banned_at is None:
-            self.banned_at = datetime.utcnow()
-
-
-def load_ip_bans_config(path: str):
-    """Loading list of banned IPs from config file."""
-    ip_list = []
-    ip_schema = vol.Schema({
-        vol.Optional('banned_at'): vol.Any(None, cv.datetime)
-    })
-
-    try:
-        try:
-            list_ = load_yaml_config_file(path)
-        except HomeAssistantError as err:
-            _LOGGER.error('Unable to load %s: %s', path, str(err))
-            return []
-
-        for ip_ban, ip_info in list_.items():
-            try:
-                ip_info = ip_schema(ip_info)
-                ip_info['ip_ban'] = ip_address(ip_ban)
-                ip_list.append(IpBan(**ip_info))
-            except vol.Invalid:
-                _LOGGER.exception('Failed to load IP ban')
-                continue
-
-    except(HomeAssistantError, FileNotFoundError):
-        # No need to report error, file absence means
-        # that no bans were applied.
-        return []
-
-    return ip_list
-
-
-def update_ip_bans_config(path: str, ip_ban: IpBan):
-    """Update config file with new banned IP address."""
-    with open(path, 'a') as out:
-        ip_ = {str(ip_ban.ip_address): {
-            ATTR_BANNED_AT: ip_ban.banned_at.strftime("%Y-%m-%dT%H:%M:%S")
-        }}
-        out.write('\n')
-        out.write(dump(ip_))

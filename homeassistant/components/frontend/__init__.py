@@ -11,6 +11,7 @@ from homeassistant.core import callback
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.components import api, group
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.auth import is_trusted_ip
 from .version import FINGERPRINTS
 
 DOMAIN = 'frontend'
@@ -247,8 +248,7 @@ class IndexView(HomeAssistantView):
         if self.hass.config.api.api_password:
             # require password if set
             no_auth = 'false'
-            if self.hass.http.is_trusted_ip(
-                    self.hass.http.get_real_ip(request)):
+            if is_trusted_ip(request):
                 # bypass for trusted networks
                 no_auth = 'true'
 
