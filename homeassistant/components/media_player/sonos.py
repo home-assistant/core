@@ -431,7 +431,6 @@ class SonosDevice(MediaPlayerDevice):
                     media_image_url = None
 
                 elif is_radio_stream:
-                    media_position = None
                     media_image_url = self._format_media_image_url(
                         current_media_uri
                     )
