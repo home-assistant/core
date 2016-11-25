@@ -124,6 +124,7 @@ class TestHtml5Notify(object):
             app = web.Application(loop=loop)
             view.register(app.router)
             client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
             resp = yield from client.post(REGISTER_URL,
                                           data=json.dumps(SUBSCRIPTION_1))
 
@@ -155,6 +156,7 @@ class TestHtml5Notify(object):
             app = web.Application(loop=loop)
             view.register(app.router)
             client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
 
             resp = yield from client.post(REGISTER_URL, data=json.dumps({
                 'browser': 'invalid browser',
@@ -209,6 +211,7 @@ class TestHtml5Notify(object):
             app = web.Application(loop=loop)
             view.register(app.router)
             client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
 
             resp = yield from client.delete(REGISTER_URL, data=json.dumps({
                 'subscription': SUBSCRIPTION_1['subscription'],
@@ -253,6 +256,7 @@ class TestHtml5Notify(object):
             app = web.Application(loop=loop)
             view.register(app.router)
             client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
 
             resp = yield from client.delete(REGISTER_URL, data=json.dumps({
                 'subscription': SUBSCRIPTION_3['subscription']
@@ -295,6 +299,7 @@ class TestHtml5Notify(object):
             app = web.Application(loop=loop)
             view.register(app.router)
             client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
 
             with patch('homeassistant.components.notify.html5._save_config',
                        return_value=False):
@@ -329,6 +334,7 @@ class TestHtml5Notify(object):
             app = web.Application(loop=loop)
             view.register(app.router)
             client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
 
             resp = yield from client.post(PUBLISH_URL, data=json.dumps({
                 'type': 'push',
@@ -384,6 +390,7 @@ class TestHtml5Notify(object):
             app = web.Application(loop=loop)
             view.register(app.router)
             client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
 
             resp = yield from client.post(PUBLISH_URL, data=json.dumps({
                 'type': 'push',

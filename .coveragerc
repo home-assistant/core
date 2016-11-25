@@ -40,9 +40,6 @@ omit =
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
 
-    homeassistant/components/litejet.py
-    homeassistant/components/*/litejet.py
-
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
@@ -318,6 +315,7 @@ omit =
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
+    homeassistant/components/switch/hook.py
     homeassistant/components/switch/mystrom.py
     homeassistant/components/switch/netio.py
     homeassistant/components/switch/orvibo.py

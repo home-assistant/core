@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 import logging
 from ipaddress import ip_network
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
 
 import requests
 
@@ -25,7 +25,7 @@ TRUSTED_NETWORKS = ['192.0.2.0/24', '2001:DB8:ABCD::/48', '100.64.0.1',
 TRUSTED_ADDRESSES = ['100.64.0.1', '192.0.2.100', 'FD01:DB8::1',
                      '2001:DB8:ABCD::1']
 UNTRUSTED_ADDRESSES = ['198.51.100.1', '2001:DB8:FA1::1', '127.0.0.1', '::1']
-
+BANNED_IPS = ['200.201.202.203', '100.64.0.1']
 
 CORS_ORIGINS = [HTTP_BASE_URL, HTTP_BASE]
 
@@ -62,6 +62,9 @@ def setUpModule():
     hass.http.trusted_networks = [
         ip_network(trusted_network)
         for trusted_network in TRUSTED_NETWORKS]
+
+    hass.http.ip_bans = [http.IpBan(banned_ip)
+                         for banned_ip in BANNED_IPS]
 
     hass.start()
 
@@ -227,3 +230,56 @@ class TestHttp:
         assert req.headers.get(allow_origin) == HTTP_BASE_URL
         assert req.headers.get(allow_headers) == \
             const.HTTP_HEADER_HA_AUTH.upper()
+
+    def test_access_from_banned_ip(self):
+        """Test accessing to server from banned IP. Both trusted and not."""
+        hass.http.is_ban_enabled = True
+        for remote_addr in BANNED_IPS:
+            with patch('homeassistant.components.http.'
+                       'HomeAssistantWSGI.get_real_ip',
+                       return_value=remote_addr):
+                req = requests.get(
+                    _url(const.URL_API))
+                assert req.status_code == 403
+
+    def test_access_from_banned_ip_when_ban_is_off(self):
+        """Test accessing to server from banned IP when feature is off"""
+        hass.http.is_ban_enabled = False
+        for remote_addr in BANNED_IPS:
+            with patch('homeassistant.components.http.'
+                       'HomeAssistantWSGI.get_real_ip',
+                       return_value=remote_addr):
+                req = requests.get(
+                    _url(const.URL_API),
+                    headers={const.HTTP_HEADER_HA_AUTH: API_PASSWORD})
+                assert req.status_code == 200
+
+    def test_ip_bans_file_creation(self):
+        """Testing if banned IP file created"""
+        hass.http.is_ban_enabled = True
+        hass.http.login_threshold = 1
+
+        m = mock_open()
+
+        def call_server():
+            with patch('homeassistant.components.http.'
+                       'HomeAssistantWSGI.get_real_ip',
+                       return_value="200.201.202.204"):
+                return requests.get(
+                    _url(const.URL_API),
+                    headers={const.HTTP_HEADER_HA_AUTH: 'Wrong password'})
+
+        with patch('homeassistant.components.http.open', m, create=True):
+            req = call_server()
+            assert req.status_code == 401
+            assert len(hass.http.ip_bans) == len(BANNED_IPS)
+            assert m.call_count == 0
+
+            req = call_server()
+            assert req.status_code == 401
+            assert len(hass.http.ip_bans) == len(BANNED_IPS) + 1
+            m.assert_called_once_with(hass.config.path(http.IP_BANS), 'a')
+
+            req = call_server()
+            assert req.status_code == 403
+            assert m.call_count == 1
