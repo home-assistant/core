@@ -77,6 +77,7 @@ class APIEventStream(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):
         """Provide a streaming interface for the event bus."""
+        # pylint: disable=no-self-use
         hass = request.app['hass']
         stop_obj = object()
         to_write = asyncio.Queue(loop=hass.loop)
@@ -217,8 +218,7 @@ class APIEntityStateView(HomeAssistantView):
         is_new_state = hass.states.get(entity_id) is None
 
         # Write state
-        hass.states.async_set(entity_id, new_state, attributes,
-                                   force_update)
+        hass.states.async_set(entity_id, new_state, attributes, force_update)
 
         # Read the state back for our response
         status_code = HTTP_CREATED if is_new_state else 200
