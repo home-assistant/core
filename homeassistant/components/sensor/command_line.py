@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.command_line/
 """
 import logging
 import subprocess
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -15,7 +14,6 @@ from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND,
     STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)

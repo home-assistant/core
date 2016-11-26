@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.command_line/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
