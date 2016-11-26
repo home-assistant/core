@@ -9,7 +9,7 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED, STATE_ON, STATE_PLAYING)
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
@@ -63,11 +63,14 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
     @property
     def state(self):
         """Return player state."""
+        state = STATE_OFF
         if 'playback_position' in self._state or self._state['player_state'] == 'playing':
-            return STATE_PLAYING
+            state = STATE_PLAYING
+        if int(self._state.get('playback_speed', 1234)) == 0:
+            state = STATE_PAUSED
         if self._state['player_state'] == 'navigator':
-            return STATE_ON
-        return STATE_OFF
+            state = STATE_ON
+        return state
 
     @property
     def name(self):
@@ -136,8 +139,10 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
             self._media_title = 'Blu-Ray'
         elif 'playback_url' in self._state:
             sources = self._sources
-            if self._state['playback_url'] in sources.values():
-                self._media_title = list(sources.keys())[list(sources.values()).index(self._state['playback_url'])]
+            sv = sources.values()
+            sk = sources.keys()
+            if self._state['playback_url'] in sv:
+                self._media_title = list(sk)[list(sv).index(self._state['playback_url'])]
             else:
                 self._media_title = self._state['playback_url']
 
