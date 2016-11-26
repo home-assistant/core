@@ -52,6 +52,7 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
         self._name = name
         self._sources = sources
         self._media_title = None
+        self._state = None
         self.update()
 
     def update(self):
@@ -141,11 +142,11 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
             self._media_title = 'Blu-Ray'
         elif 'playback_url' in self._state:
             sources = self._sources
-            sv = sources.values()
-            sk = sources.keys()
+            sval = sources.values()
+            skey = sources.keys()
             pburl = self._state['playback_url']
-            if pburl in sv:
-                self._media_title = list(sk)[list(sv).index(pburl)]
+            if pburl in sval:
+                self._media_title = list(skey)[list(sval).index(pburl)]
             else:
                 self._media_title = pburl
 
