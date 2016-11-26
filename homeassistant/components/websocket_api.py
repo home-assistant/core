@@ -90,7 +90,7 @@ GET_PANELS_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('type'): TYPE_GET_PANELS,
 })
 
-SERVER_MESSAGE_SCHEMA = vol.Schema({
+BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('id'): cv.positive_int,
     vol.Required('type'): vol.Any(TYPE_CALL_SERVICE,
                                   TYPE_SUBSCRIBE_EVENTS,
@@ -174,126 +174,115 @@ class WebsocketAPIView(HomeAssistantView):
     def get(self, request):
         """Handle an incoming websocket connection."""
         # pylint: disable=no-self-use
-        hass = request.app['hass']
-        wsock = web.WebSocketResponse()
-        yield from wsock.prepare(request)
+        return ActiveConnection(request.app['hass'], request).handle()
 
-        def debug(message1, message2=''):
-            """Print a debug message."""
-            _LOGGER.debug('WS %s: %s %s', id(wsock), message1, message2)
 
-        def log_error(message1, message2=''):
-            """Print an error message."""
-            _LOGGER.error('WS %s: %s %s', id(wsock), message1, message2)
+class ActiveConnection:
+    """Handle an active websocket client connection."""
+
+    def __init__(self, hass, request):
+        self.hass = hass
+        self.request = request
+        self.wsock = None
+        self.socket_task = None
+        self.event_listeners = {}
+
+    def debug(self, message1, message2=''):
+        """Print a debug message."""
+        _LOGGER.debug('WS %s: %s %s', id(self.wsock), message1, message2)
+
+    def log_error(self, message1, message2=''):
+        """Print an error message."""
+        _LOGGER.error('WS %s: %s %s', id(self.wsock), message1, message2)
+
+    def send_message(self, message):
+        """Helper method to send messages."""
+        self.debug('Sending', message)
+        self.wsock.send_json(message, dumps=JSON_DUMP)
+
+    @callback
+    def _cancel_connection(self, event):
+        """Cancel this connection."""
+        self.socket_task.cancel()
+
+    @asyncio.coroutine
+    def _call_service_helper(self, msg):
+        """Helper to call a service and fire complete message."""
+        yield from self.hass.services.async_call(msg['domain'], msg['service'],
+                                                 msg['service_data'], True)
+        try:
+            self.send_message(result_message(msg['id']))
+        except RuntimeError:
+            # Socket has been closed.
+            pass
+
+    @callback
+    def _forward_event(self, iden, event):
+        """Helper to forward events to websocket."""
+        if event.event_type == EVENT_TIME_CHANGED:
+            return
+
+        try:
+            self.send_message(event_message(iden, event))
+        except RuntimeError:
+            # Socket has been closed.
+            pass
+
+    @asyncio.coroutine
+    def handle(self):
+        """Handle the websocket connection."""
+        wsock = self.wsock = web.WebSocketResponse()
+        yield from wsock.prepare(self.request)
 
         # Set up to cancel this connection when Home Assistant shuts down
-        socket_task = asyncio.Task.current_task(loop=hass.loop)
+        self.socket_task = asyncio.Task.current_task(loop=self.hass.loop)
+        self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP,
+                                   self._cancel_connection)
 
-        @callback
-        def cancel_connection(event):
-            """Cancel this connection."""
-            socket_task.cancel()
-
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, cancel_connection)
-
-        def send_message(message):
-            """Helper method to send messages."""
-            debug('Sending', message)
-            wsock.send_json(message, dumps=JSON_DUMP)
-
-        debug('Connected')
+        self.debug('Connected')
 
         msg = None
         authenticated = False
-        event_listeners = {}
 
         try:
-            if request[KEY_AUTHENTICATED]:
+            if self.request[KEY_AUTHENTICATED]:
                 authenticated = True
 
             else:
-                send_message(auth_required_message())
+                self.send_message(auth_required_message())
                 msg = yield from wsock.receive_json()
                 msg = AUTH_MESSAGE_SCHEMA(msg)
 
-                if validate_password(request, msg['api_password']):
+                if validate_password(self.request, msg['api_password']):
                     authenticated = True
 
                 else:
-                    debug('Invalid password')
-                    send_message(auth_invalid_message('Invalid password'))
+                    self.debug('Invalid password')
+                    self.send_message(auth_invalid_message('Invalid password'))
                     return wsock
 
             if not authenticated:
                 return wsock
 
-            send_message(auth_ok_message())
+            self.send_message(auth_ok_message())
 
             msg = yield from wsock.receive_json()
 
             last_id = 0
 
             while msg:
-                debug('Received', msg)
-                msg = SERVER_MESSAGE_SCHEMA(msg)
+                self.debug('Received', msg)
+                msg = BASE_COMMAND_MESSAGE_SCHEMA(msg)
                 cur_id = msg['id']
 
                 if cur_id <= last_id:
-                    send_message(error_message(
+                    self.send_message(error_message(
                         cur_id, ERR_ID_REUSE,
                         'Identifier values have to increase.'))
 
-                elif msg['type'] == TYPE_SUBSCRIBE_EVENTS:
-                    msg = SUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
-
-                    event_listeners[msg['id']] = hass.bus.async_listen(
-                        msg['event_type'],
-                        partial(_forward_event, msg['id'], send_message))
-
-                    send_message(result_message(msg['id']))
-
-                elif msg['type'] == TYPE_UNSUBSCRIBE_EVENTS:
-                    msg = UNSUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
-
-                    subscription = msg['subscription']
-
-                    if subscription not in event_listeners:
-                        send_message(error_message(
-                            msg['id'], ERR_NOT_FOUND,
-                            'Subscription not found.'))
-                    else:
-                        event_listeners.pop(subscription)()
-                        send_message(result_message(msg['id']))
-
-                elif msg['type'] == TYPE_CALL_SERVICE:
-                    msg = CALL_SERVICE_MESSAGE_SCHEMA(msg)
-
-                    hass.async_add_job(_call_service_helper(hass, msg,
-                                                            send_message))
-
-                elif msg['type'] == TYPE_GET_STATES:
-                    msg = GET_STATES_MESSAGE_SCHEMA(msg)
-
-                    send_message(result_message(msg['id'],
-                                                hass.states.async_all()))
-
-                elif msg['type'] == TYPE_GET_SERVICES:
-                    msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
-
-                    send_message(result_message(msg['id'],
-                                                api.async_services_json(hass)))
-
-                elif msg['type'] == TYPE_GET_CONFIG:
-                    msg = GET_CONFIG_MESSAGE_SCHEMA(msg)
-
-                    send_message(result_message(msg['id'],
-                                                hass.config.as_dict()))
-
-                elif msg['type'] == TYPE_GET_PANELS:
-                    msg = GET_PANELS_MESSAGE_SCHEMA(msg)
-
-                    send_message(result_message(
-                        msg['id'], hass.data[frontend.DATA_PANELS]))
+                else:
+                    handler_name = 'handle_{}'.format(msg['type'])
+                    getattr(self, handler_name)(msg)
 
                 last_id = cur_id
                 msg = yield from wsock.receive_json()
@@ -305,10 +294,10 @@ class WebsocketAPIView(HomeAssistantView):
             else:
                 error_msg += str(err)
 
-            log_error(error_msg)
+            self.log_error(error_msg)
 
             if not authenticated:
-                send_message(auth_invalid_message(error_msg))
+                self.send_message(auth_invalid_message(error_msg))
 
             else:
                 if isinstance(msg, dict):
@@ -316,58 +305,93 @@ class WebsocketAPIView(HomeAssistantView):
                 else:
                     iden = None
 
-                send_message(error_message(iden, ERR_INVALID_FORMAT,
-                                           error_msg))
+                self.send_message(error_message(iden, ERR_INVALID_FORMAT,
+                                                error_msg))
 
         except TypeError as err:
             if wsock.closed:
-                debug('Connection closed by client')
+                self.debug('Connection closed by client')
             else:
-                log_error('Unexpected TypeError', msg)
+                self.log_error('Unexpected TypeError', msg)
 
         except ValueError as err:
             msg = 'Received invalid JSON'
             value = getattr(err, 'doc', None)  # Py3.5+ only
             if value:
                 msg += ': {}'.format(value)
-            log_error(msg)
+            self.log_error(msg)
 
         except asyncio.CancelledError:
-            debug('Connection cancelled by server')
+            self.debug('Connection cancelled by server')
 
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception('Unexpected error inside websocket API.')
+            error = 'Unexpected error inside websocket API. '
+            if msg is not None:
+                error += str(msg)
+            _LOGGER.exception(error)
 
         finally:
-            for unsub in event_listeners.values():
+            for unsub in self.event_listeners.values():
                 unsub()
 
             yield from wsock.close()
-            debug('Closed connection')
+            self.debug('Closed connection')
 
         return wsock
 
+    def handle_subscribe_events(self, msg):
+        """Handle subscribe events command."""
+        msg = SUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
 
-@asyncio.coroutine
-def _call_service_helper(hass, msg, send_message):
-    """Helper to call a service and fire complete message."""
-    yield from hass.services.async_call(msg['domain'], msg['service'],
-                                        msg['service_data'], True)
-    try:
-        send_message(result_message(msg['id']))
-    except RuntimeError:
-        # Socket has been closed.
-        pass
+        self.event_listeners[msg['id']] = self.hass.bus.async_listen(
+            msg['event_type'], partial(self._forward_event, msg['id']))
 
+        self.send_message(result_message(msg['id']))
 
-@callback
-def _forward_event(iden, send_message, event):
-    """Helper to forward events to websocket."""
-    if event.event_type == EVENT_TIME_CHANGED:
-        return
+    def handle_unsubscribe_events(self, msg):
+        """Handle unsubscribe events command."""
+        msg = UNSUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
 
-    try:
-        send_message(event_message(iden, event))
-    except RuntimeError:
-        # Socket has been closed.
-        pass
+        subscription = msg['subscription']
+
+        if subscription not in self.event_listeners:
+            self.send_message(error_message(
+                msg['id'], ERR_NOT_FOUND,
+                'Subscription not found.'))
+        else:
+            self.event_listeners.pop(subscription)()
+            self.send_message(result_message(msg['id']))
+
+    def handle_call_service(self, msg):
+        """Handle call service command."""
+        msg = CALL_SERVICE_MESSAGE_SCHEMA(msg)
+
+        self.hass.async_add_job(self._call_service_helper(msg))
+
+    def handle_get_states(self, msg):
+        """Handle get states command."""
+        msg = GET_STATES_MESSAGE_SCHEMA(msg)
+
+        self.send_message(result_message(msg['id'],
+                                         self.hass.states.async_all()))
+
+    def handle_get_services(self, msg):
+        """Handle get services command."""
+        msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
+
+        self.send_message(result_message(msg['id'],
+                                         api.async_services_json(self.hass)))
+
+    def handle_get_config(self, msg):
+        """Handle get config command."""
+        msg = GET_CONFIG_MESSAGE_SCHEMA(msg)
+
+        self.send_message(result_message(msg['id'],
+                                         self.hass.config.as_dict()))
+
+    def handle_get_panels(self, msg):
+        """Handle get panels command."""
+        msg = GET_PANELS_MESSAGE_SCHEMA(msg)
+
+        self.send_message(result_message(
+            msg['id'], self.hass.data[frontend.DATA_PANELS]))
