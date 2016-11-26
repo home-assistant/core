@@ -14,7 +14,7 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED, 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
-REQUIREMENTS = ['pdunehd==1.0']
+REQUIREMENTS = ['pdunehd==1.1']
 
 DEFAULT_NAME = "DuneHD"
 
@@ -84,22 +84,23 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
 
 	def volume_up(self):
 		"""Volume up media player."""
-		self._player.volumeUp()
+		self._player.volume_up()
 
 	def volume_down(self):
 		"""Volume down media player."""
-		self._player.volumeDown()
+		self._player.volume_down()
 
 	def mute_volume(self, mute):
 		self._player.mute(mute)
 
 	def turn_off(self):
 		"""Turn off media player."""
-		self._player.stop()
+		self._media_title = None
+		self._player.turn_off()
 
 	def turn_on(self):
 		"""Turn off media player."""
-		self._player.stop()
+		self._player.turn_on()
 
 	def media_play(self):
 		"""Play media media player."""
@@ -112,8 +113,11 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
 	@property
 	def media_title(self):
 		"""Current media source."""
+		if self._media_title:
+			return self._media_title
 		return self._state.get('playback_url', 'Not playing')
 
 	def select_source(self, source):
 		"""Select input source."""
-		self._player.launchMediaUrl(self._sources.get(source))
+		self._media_title = source
+		self._player.launch_media_url(self._sources.get(source))
