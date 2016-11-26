@@ -25,7 +25,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-DUNEHD_PLAYER_SUPPORT = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+DUNEHD_PLAYER_SUPPORT = \
+    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -33,12 +35,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sources = config.get(CONF_SOURCES, {})
 
     from pdunehd import DuneHDPlayer
-    add_devices([DuneHDPlayerEntity(DuneHDPlayer(config[CONF_HOST]), config[CONF_NAME], sources)])
+    add_devices([DuneHDPlayerEntity(
+        DuneHDPlayer(config[CONF_HOST]),
+        config[CONF_NAME],
+        sources)])
+
 
 class DuneHDPlayerEntity(MediaPlayerDevice):
-    """Implementation of the Dune HD player"""
+    """Implementation of the Dune HD player."""
 
     def __init__(self, player, name, sources):
+        """Setup entity to control Dune HD."""
         self._player = player
         self._name = name
         self._sources = sources
@@ -46,11 +53,13 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
         self.update()
 
     def update(self):
+        """Update internal status of the entity."""
         self._state = self._player.update_state()
         return True
 
     @property
     def state(self):
+        """Return player state."""
         if 'playback_state' in self._state:
             if self._state['playback_state'] == 'playing':
                 return STATE_PLAYING
@@ -96,6 +105,7 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
         self.update()
 
     def mute_volume(self, mute):
+        """Mute/unmute player volume."""
         self._player.mute(mute)
         self.update()
 
