@@ -72,10 +72,8 @@ def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
 
     msg = yield from no_auth_websocket_client.receive_json()
 
-    assert msg['type'] == wapi.TYPE_ERROR
-    error = msg['error']
-    assert error['code'] == wapi.ERR_INVALID_AUTH
-    assert error['message'].startswith('Invalid password')
+    assert msg['type'] == wapi.TYPE_AUTH_INVALID
+    assert msg['message'] == 'Invalid password'
 
 
 @asyncio.coroutine
@@ -92,10 +90,8 @@ def test_pre_auth_only_auth_allowed(no_auth_websocket_client):
 
     msg = yield from no_auth_websocket_client.receive_json()
 
-    assert msg['type'] == wapi.TYPE_ERROR
-    error = msg['error']
-    assert error['code'] == wapi.ERR_AUTH_REQUIRED
-    assert error['message'].startswith('Authentication required')
+    assert msg['type'] == wapi.TYPE_AUTH_INVALID
+    assert msg['message'].startswith('Message incorrectly formatted')
 
 
 @asyncio.coroutine
@@ -105,7 +101,7 @@ def test_invalid_message_format(websocket_client):
 
     msg = yield from websocket_client.receive_json()
 
-    assert msg['type'] == wapi.TYPE_ERROR
+    assert msg['type'] == wapi.TYPE_RESULT
     error = msg['error']
     assert error['code'] == wapi.ERR_INVALID_FORMAT
     assert error['message'].startswith('Message incorrectly formatted')
@@ -116,12 +112,9 @@ def test_invalid_json(websocket_client):
     """Test sending invalid JSON."""
     websocket_client.send_str('this is not JSON')
 
-    msg = yield from websocket_client.receive_json()
+    msg = yield from websocket_client.receive()
 
-    assert msg['type'] == wapi.TYPE_ERROR
-    error = msg['error']
-    assert error['code'] == wapi.ERR_INVALID_FORMAT
-    assert error['message'].startswith('Received invalid JSON')
+    assert msg.type == WSMsgType.close
 
 
 @asyncio.coroutine
@@ -147,6 +140,7 @@ def test_call_service(hass, websocket_client):
     hass.services.async_register('domain_test', 'test_service', service_call)
 
     websocket_client.send_json({
+        'id': 5,
         'type': wapi.TYPE_CALL_SERVICE,
         'domain': 'domain_test',
         'service': 'test_service',
@@ -155,7 +149,10 @@ def test_call_service(hass, websocket_client):
         }
     })
 
-    yield from websocket_client.close()
+    msg = yield from websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['success']
 
     assert len(calls) == 1
     call = calls[0]
@@ -171,18 +168,18 @@ def test_call_listen_event_match_event_type(hass, websocket_client):
     init_count = sum(hass.bus.async_listeners().values())
 
     websocket_client.send_json({
+        'id': 5,
         'type': wapi.TYPE_LISTEN_EVENT,
         'event_type': 'test_event'
     })
 
-    for _ in range(4):
-        yield from asyncio.sleep(0, loop=hass.loop)
-        list_count = sum(hass.bus.async_listeners().values())
-        if list_count == init_count + 1:
-            break
+    msg = yield from websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['success']
 
     # Verify we have a new listener
-    assert list_count == init_count + 1
+    assert sum(hass.bus.async_listeners().values()) == init_count + 1
 
     hass.bus.async_fire('ignore_event')
     hass.bus.async_fire('test_event', {'hello': 'world'})
@@ -191,6 +188,7 @@ def test_call_listen_event_match_event_type(hass, websocket_client):
     with timeout(3, loop=hass.loop):
         msg = yield from websocket_client.receive_json()
 
+    assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_EVENT
     event = msg['event']
 
