@@ -19,17 +19,17 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.1.4']
+REQUIREMENTS = ['denonavr==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = None
 
 SUPPORT_DENON = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
-                SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-                SUPPORT_SELECT_SOURCE | SUPPORT_PLAY_MEDIA | \
-                SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
-                SUPPORT_NEXT_TRACK
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY_MEDIA | \
+    SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
+    SUPPORT_NEXT_TRACK
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Denon platform."""
-    import denonavr
+    from denonavr import denonavr
 
     receiver = denonavr.DenonAVR(config.get(CONF_HOST), config.get(CONF_NAME))
 
