@@ -284,7 +284,7 @@ def setup(hass, config):
             return
 
         # channel exists?
-        if channel in hmdevice.ACTIONNODE[param]:
+        if channel not in hmdevice.ACTIONNODE[param]:
             _LOGGER.error("%i is not a channel in hm device %s",
                           channel, address)
             return
