@@ -24,13 +24,15 @@ DEPENDENCIES = 'http',
 
 ERR_ID_REUSE = 1
 ERR_INVALID_FORMAT = 2
+ERR_NOT_FOUND = 3
 
 TYPE_AUTH = 'auth'
 TYPE_AUTH_OK = 'auth_ok'
 TYPE_AUTH_REQUIRED = 'auth_required'
 TYPE_AUTH_INVALID = 'auth_invalid'
 TYPE_EVENT = 'event'
-TYPE_LISTEN_EVENT = 'listen_event'
+TYPE_SUBSCRIBE_EVENTS = 'subscribe_events'
+TYPE_UNSUBSCRIBE_EVENTS = 'unsubscribe_events'
 TYPE_CALL_SERVICE = 'call_service'
 TYPE_RESULT = 'result'
 
@@ -43,10 +45,16 @@ AUTH_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('api_password'): str,
 })
 
-LISTEN_EVENT_MESSAGE_SCHEMA = vol.Schema({
+SUBSCRIBE_EVENTS_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_LISTEN_EVENT,
+    vol.Required('type'): TYPE_SUBSCRIBE_EVENTS,
     vol.Optional('event_type', default=MATCH_ALL): str,
+})
+
+UNSUBSCRIBE_EVENTS_MESSAGE_SCHEMA = vol.Schema({
+    vol.Required('id'): cv.positive_int,
+    vol.Required('type'): TYPE_UNSUBSCRIBE_EVENTS,
+    vol.Required('subscription'): cv.positive_int,
 })
 
 CALL_SERVICE_MESSAGE_SCHEMA = vol.Schema({
@@ -59,7 +67,9 @@ CALL_SERVICE_MESSAGE_SCHEMA = vol.Schema({
 
 SERVER_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('id'): cv.positive_int,
-    vol.Required('type'): vol.Any(TYPE_CALL_SERVICE, TYPE_LISTEN_EVENT)
+    vol.Required('type'): vol.Any(TYPE_CALL_SERVICE,
+                                  TYPE_SUBSCRIBE_EVENTS,
+                                  TYPE_UNSUBSCRIBE_EVENTS)
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -204,14 +214,27 @@ class WebsocketAPIView(HomeAssistantView):
                         cur_id, ERR_ID_REUSE,
                         'Identifier values have to increase.'))
 
-                elif msg['type'] == TYPE_LISTEN_EVENT:
-                    msg = LISTEN_EVENT_MESSAGE_SCHEMA(msg)
+                elif msg['type'] == TYPE_SUBSCRIBE_EVENTS:
+                    msg = SUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
 
                     event_listeners[msg['id']] = hass.bus.async_listen(
                         msg['event_type'],
                         partial(_forward_event, msg['id'], send_message))
 
                     send_message(result_message(msg['id']))
+
+                elif msg['type'] == TYPE_UNSUBSCRIBE_EVENTS:
+                    msg = UNSUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
+
+                    subscription = msg['subscription']
+
+                    if subscription not in event_listeners:
+                        send_message(error_message(
+                            msg['id'], ERR_NOT_FOUND,
+                            'Subscription not found.'))
+                    else:
+                        event_listeners.pop(subscription)()
+                        send_message(result_message(msg['id']))
 
                 elif msg['type'] == TYPE_CALL_SERVICE:
                     msg = CALL_SERVICE_MESSAGE_SCHEMA(msg)
@@ -276,7 +299,7 @@ class WebsocketAPIView(HomeAssistantView):
 def _call_service_helper(hass, msg, send_message):
     """Helper to call a service and fire complete message."""
     yield from hass.services.async_call(msg['domain'], msg['service'],
-                                        msg['service_data'])
+                                        msg['service_data'], True)
     try:
         send_message(result_message(msg['id']))
     except RuntimeError:

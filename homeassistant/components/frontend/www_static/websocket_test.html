@@ -26,11 +26,15 @@
       <pre>
 Examples:
 {
-  "id": 2, "type": "listen_event", "event_type": "state_changed"
+  "id": 2, "type": "subscribe_events", "event_type": "state_changed"
 }
 
 {
   "id": 3, "type": "call_service", "domain": "light", "service": "turn_off"
+}
+
+{
+  "id": 4, "type": "unsubscribe_events", "subscription": 2
 }
       </pre>
     </div>

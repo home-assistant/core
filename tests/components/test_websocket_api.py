@@ -163,13 +163,13 @@ def test_call_service(hass, websocket_client):
 
 
 @asyncio.coroutine
-def test_call_listen_event_match_event_type(hass, websocket_client):
+def test_subscribe_unsubscribe_events(hass, websocket_client):
     """Test call service command."""
     init_count = sum(hass.bus.async_listeners().values())
 
     websocket_client.send_json({
         'id': 5,
-        'type': wapi.TYPE_LISTEN_EVENT,
+        'type': wapi.TYPE_SUBSCRIBE_EVENTS,
         'event_type': 'test_event'
     })
 
@@ -196,7 +196,16 @@ def test_call_listen_event_match_event_type(hass, websocket_client):
     assert event['data'] == {'hello': 'world'}
     assert event['origin'] == 'LOCAL'
 
-    yield from websocket_client.close()
+    websocket_client.send_json({
+        'id': 6,
+        'type': wapi.TYPE_UNSUBSCRIBE_EVENTS,
+        'subscription': 5
+    })
+
+    msg = yield from websocket_client.receive_json()
+    assert msg['id'] == 6
+    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['success']
 
     # Check our listener got unsubscribed
     assert sum(hass.bus.async_listeners().values()) == init_count
