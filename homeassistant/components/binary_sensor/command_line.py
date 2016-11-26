@@ -23,8 +23,6 @@ DEFAULT_NAME = 'Binary Command Sensor'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

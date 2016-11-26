@@ -22,8 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Command Sensor'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -96,7 +94,6 @@ class CommandSensorData(object):
         self.command = command
         self.value = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data with a shell command."""
         _LOGGER.info('Running command: %s', self.command)
