@@ -5,11 +5,10 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/dunehd/
 """
 from homeassistant.components.media_player import (
-	MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
 	SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
 	SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-	SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, PLATFORM_SCHEMA, MediaPlayerDevice)
-from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+	SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA, MediaPlayerDevice)
+from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
@@ -42,10 +41,11 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
 		self._player = player
 		self._name = name
 		self._sources = sources
+		self._media_title = None
 		self.update()
 
 	def update(self):
-		self._state = self._player.updateState()
+		self._state = self._player.update_state()
 		return True
 
 	@property
@@ -55,6 +55,8 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
 				return STATE_PLAYING
 			else:
 				return STATE_PAUSED
+		if self._state['player_state'] == 'navigator':
+			return STATE_ON
 		return STATE_OFF
 
 	@property
@@ -85,30 +87,37 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
 	def volume_up(self):
 		"""Volume up media player."""
 		self._player.volume_up()
+		self.update()
 
 	def volume_down(self):
 		"""Volume down media player."""
 		self._player.volume_down()
+		self.update()
 
 	def mute_volume(self, mute):
 		self._player.mute(mute)
+		self.update()
 
 	def turn_off(self):
 		"""Turn off media player."""
 		self._media_title = None
 		self._player.turn_off()
+		self.update()
 
 	def turn_on(self):
 		"""Turn off media player."""
 		self._player.turn_on()
+		self.update()
 
 	def media_play(self):
 		"""Play media media player."""
 		self._player.play()
+		self.update()
 
 	def media_pause(self):
 		"""Pause media player."""
 		self._player.pause()
+		self.update()
 
 	@property
 	def media_title(self):
@@ -121,3 +130,4 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
 		"""Select input source."""
 		self._media_title = source
 		self._player.launch_media_url(self._sources.get(source))
+		self.update()
