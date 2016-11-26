@@ -6,6 +6,7 @@ https://home-assistant.io/components/dunehd/
 """
 from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
@@ -13,7 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
-REQUIREMENTS = ['pdunehd==1.1']
+REQUIREMENTS = ['pdunehd==1.3']
 
 DEFAULT_NAME = "DuneHD"
 
@@ -26,7 +27,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 DUNEHD_PLAYER_SUPPORT = \
-    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
 
 # pylint: disable=unused-argument
@@ -55,16 +57,14 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
     def update(self):
         """Update internal status of the entity."""
         self._state = self._player.update_state()
+        self.__update_title()
         return True
 
     @property
     def state(self):
         """Return player state."""
-        if 'playback_state' in self._state:
-            if self._state['playback_state'] == 'playing':
-                return STATE_PLAYING
-            else:
-                return STATE_PAUSED
+        if 'playback_position' in self._state or self._state['player_state'] == 'playing':
+            return STATE_PLAYING
         if self._state['player_state'] == 'navigator':
             return STATE_ON
         return STATE_OFF
@@ -96,49 +96,60 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
 
     def volume_up(self):
         """Volume up media player."""
-        self._player.volume_up()
-        self.update()
+        self._state = self._player.volume_up()
 
     def volume_down(self):
         """Volume down media player."""
-        self._player.volume_down()
-        self.update()
+        self._state = self._player.volume_down()
 
     def mute_volume(self, mute):
         """Mute/unmute player volume."""
-        self._player.mute(mute)
-        self.update()
+        self._state = self._player.mute(mute)
 
     def turn_off(self):
         """Turn off media player."""
         self._media_title = None
-        self._player.turn_off()
-        self.update()
+        self._state = self._player.turn_off()
 
     def turn_on(self):
         """Turn off media player."""
-        self._player.turn_on()
-        self.update()
+        self._state = self._player.turn_on()
 
     def media_play(self):
         """Play media media player."""
-        self._player.play()
-        self.update()
+        self._state = self._player.play()
 
     def media_pause(self):
         """Pause media player."""
-        self._player.pause()
-        self.update()
+        self._state = self._player.pause()
 
     @property
     def media_title(self):
         """Current media source."""
+        self.__update_title()
         if self._media_title:
             return self._media_title
         return self._state.get('playback_url', 'Not playing')
 
+    def __update_title(self):
+        if self._state['player_state'] == 'bluray_playback':
+            self._media_title = 'Blu-Ray'
+        elif 'playback_url' in self._state:
+            sources = self._sources
+            if self._state['playback_url'] in sources.values():
+                self._media_title = list(sources.keys())[list(sources.values()).index(self._state['playback_url'])]
+            else:
+                self._media_title = self._state['playback_url']
+
     def select_source(self, source):
         """Select input source."""
         self._media_title = source
-        self._player.launch_media_url(self._sources.get(source))
-        self.update()
+        self._state = self._player.launch_media_url(self._sources.get(source))
+
+    def media_previous_track(self):
+        """Send previous track command."""
+        self._state = self._player.previous_track()
+
+    def media_next_track(self):
+        """Send next track command."""
+        self._state = self._player.next_track()
