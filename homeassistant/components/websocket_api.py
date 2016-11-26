@@ -9,7 +9,8 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
-    MATCH_ALL, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP)
+    MATCH_ALL, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
+    __version__)
 from homeassistant.components import api, frontend
 from homeassistant.core import callback
 from homeassistant.remote import JSONEncoder
@@ -105,14 +106,16 @@ BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema({
 def auth_ok_message():
     """Return an auth_ok message."""
     return {
-        'type': TYPE_AUTH_OK
+        'type': TYPE_AUTH_OK,
+        'ha_version': __version__,
     }
 
 
 def auth_required_message():
     """Return an auth_required message."""
     return {
-        'type': TYPE_AUTH_REQUIRED
+        'type': TYPE_AUTH_REQUIRED,
+        'ha_version': __version__,
     }
 
 
@@ -120,7 +123,7 @@ def auth_invalid_message(message):
     """Return an auth_invalid message."""
     return {
         'type': TYPE_AUTH_INVALID,
-        'message': message
+        'message': message,
     }
 
 
