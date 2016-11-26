@@ -7,7 +7,8 @@ https://home-assistant.io/components/dunehd/
 from homeassistant.components.media_player import (
 	SUPPORT_PAUSE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
 	SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA, MediaPlayerDevice)
-from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
+from homeassistant.const import (
+	CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
