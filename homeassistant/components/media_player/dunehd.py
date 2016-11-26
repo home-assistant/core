@@ -65,7 +65,7 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
         """Return player state."""
         state = STATE_OFF
         if 'playback_position' in self._state:
-            state = STATE_PLAYING            
+            state = STATE_PLAYING
         if self._state['player_state'] in ('playing', 'buffering'):
             state = STATE_PLAYING
         if int(self._state.get('playback_speed', 1234)) == 0:
