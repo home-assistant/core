@@ -64,8 +64,9 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
     def state(self):
         """Return player state."""
         state = STATE_OFF
-        if 'playback_position' in self._state or 
-        self._state['player_state'] in ('playing', 'buffering'):
+        if 'playback_position' in self._state:
+            state = STATE_PLAYING            
+        if self._state['player_state'] in ('playing', 'buffering'):
             state = STATE_PLAYING
         if int(self._state.get('playback_speed', 1234)) == 0:
             state = STATE_PAUSED
@@ -143,7 +144,7 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
             sv = sources.values()
             sk = sources.keys()
             pburl = self._state['playback_url']
-            if pburl  in sv:
+            if pburl in sv:
                 self._media_title = list(sk)[list(sv).index(pburl)]
             else:
                 self._media_title = pburl
