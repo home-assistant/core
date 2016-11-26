@@ -6,7 +6,7 @@ from async_timeout import timeout
 import pytest
 
 from homeassistant.core import callback
-from homeassistant.components import websocket_api as wapi
+from homeassistant.components import websocket_api as wapi, api, frontend
 
 from tests.common import mock_http_component_app
 
@@ -164,7 +164,7 @@ def test_call_service(hass, websocket_client):
 
 @asyncio.coroutine
 def test_subscribe_unsubscribe_events(hass, websocket_client):
-    """Test call service command."""
+    """Test subscribe/unsubscribe events command."""
     init_count = sum(hass.bus.async_listeners().values())
 
     websocket_client.send_json({
@@ -209,3 +209,77 @@ def test_subscribe_unsubscribe_events(hass, websocket_client):
 
     # Check our listener got unsubscribed
     assert sum(hass.bus.async_listeners().values()) == init_count
+
+
+@asyncio.coroutine
+def test_get_states(hass, websocket_client):
+    """ Test get_states command."""
+    hass.states.async_set('greeting.hello', 'world')
+    hass.states.async_set('greeting.bye', 'universe')
+
+    websocket_client.send_json({
+        'id': 5,
+        'type': wapi.TYPE_GET_STATES,
+    })
+
+    msg = yield from websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['success']
+
+    states = []
+    for state in hass.states.async_all():
+        state = state.as_dict()
+        state['last_changed'] = state['last_changed'].isoformat()
+        state['last_updated'] = state['last_updated'].isoformat()
+        states.append(state)
+
+    assert msg['result'] == states
+
+
+@asyncio.coroutine
+def test_get_services(hass, websocket_client):
+    """ Test get_services command."""
+    websocket_client.send_json({
+        'id': 5,
+        'type': wapi.TYPE_GET_SERVICES,
+    })
+
+    msg = yield from websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['success']
+    assert msg['result'] == api.async_services_json(hass)
+
+
+@asyncio.coroutine
+def test_get_config(hass, websocket_client):
+    """ Test get_config command."""
+    websocket_client.send_json({
+        'id': 5,
+        'type': wapi.TYPE_GET_CONFIG,
+    })
+
+    msg = yield from websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['success']
+    assert msg['result'] == hass.config.as_dict()
+
+
+@asyncio.coroutine
+def test_get_panels(hass, websocket_client):
+    """ Test get_panels command."""
+    frontend.register_built_in_panel(hass, 'map', 'Map',
+                                     'mdi:account-location')
+
+    websocket_client.send_json({
+        'id': 5,
+        'type': wapi.TYPE_GET_PANELS,
+    })
+
+    msg = yield from websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['success']
+    assert msg['result'] == hass.data[frontend.DATA_PANELS]

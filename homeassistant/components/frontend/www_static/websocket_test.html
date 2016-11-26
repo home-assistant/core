@@ -20,7 +20,7 @@
     <div class='controls'>
       <textarea id="messageinput">
         {
-          "id": 1, "type": "listen_event", "event_type": "state_changed"
+          "id": 1, "type": "subscribe_events", "event_type": "state_changed"
         }
       </textarea>
       <pre>
@@ -35,6 +35,22 @@ Examples:
 
 {
   "id": 4, "type": "unsubscribe_events", "subscription": 2
+}
+
+{
+  "id": 5, "type": "get_states"
+}
+
+{
+  "id": 6, "type": "get_config"
+}
+
+{
+  "id": 7, "type": "get_services"
+}
+
+{
+  "id": 8, "type": "get_panels"
 }
       </pre>
     </div>

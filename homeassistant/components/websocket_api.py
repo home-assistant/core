@@ -10,6 +10,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
     MATCH_ALL, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.components import api, frontend
 from homeassistant.core import callback
 from homeassistant.remote import JSONEncoder
 from homeassistant.helpers import config_validation as cv
@@ -34,6 +35,10 @@ TYPE_EVENT = 'event'
 TYPE_SUBSCRIBE_EVENTS = 'subscribe_events'
 TYPE_UNSUBSCRIBE_EVENTS = 'unsubscribe_events'
 TYPE_CALL_SERVICE = 'call_service'
+TYPE_GET_STATES = 'get_states'
+TYPE_GET_SERVICES = 'get_services'
+TYPE_GET_CONFIG = 'get_config'
+TYPE_GET_PANELS = 'get_panels'
 TYPE_RESULT = 'result'
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,11 +70,35 @@ CALL_SERVICE_MESSAGE_SCHEMA = vol.Schema({
     vol.Optional('service_data', default=None): dict
 })
 
+GET_STATES_MESSAGE_SCHEMA = vol.Schema({
+    vol.Required('id'): cv.positive_int,
+    vol.Required('type'): TYPE_GET_STATES,
+})
+
+GET_SERVICES_MESSAGE_SCHEMA = vol.Schema({
+    vol.Required('id'): cv.positive_int,
+    vol.Required('type'): TYPE_GET_SERVICES,
+})
+
+GET_CONFIG_MESSAGE_SCHEMA = vol.Schema({
+    vol.Required('id'): cv.positive_int,
+    vol.Required('type'): TYPE_GET_CONFIG,
+})
+
+GET_PANELS_MESSAGE_SCHEMA = vol.Schema({
+    vol.Required('id'): cv.positive_int,
+    vol.Required('type'): TYPE_GET_PANELS,
+})
+
 SERVER_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('id'): cv.positive_int,
     vol.Required('type'): vol.Any(TYPE_CALL_SERVICE,
                                   TYPE_SUBSCRIBE_EVENTS,
-                                  TYPE_UNSUBSCRIBE_EVENTS)
+                                  TYPE_UNSUBSCRIBE_EVENTS,
+                                  TYPE_GET_STATES,
+                                  TYPE_GET_SERVICES,
+                                  TYPE_GET_CONFIG,
+                                  TYPE_GET_PANELS)
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -209,7 +238,7 @@ class WebsocketAPIView(HomeAssistantView):
                 msg = SERVER_MESSAGE_SCHEMA(msg)
                 cur_id = msg['id']
 
-                if cur_id < last_id:
+                if cur_id <= last_id:
                     send_message(error_message(
                         cur_id, ERR_ID_REUSE,
                         'Identifier values have to increase.'))
@@ -241,6 +270,30 @@ class WebsocketAPIView(HomeAssistantView):
 
                     hass.async_add_job(_call_service_helper(hass, msg,
                                                             send_message))
+
+                elif msg['type'] == TYPE_GET_STATES:
+                    msg = GET_STATES_MESSAGE_SCHEMA(msg)
+
+                    send_message(result_message(msg['id'],
+                                                hass.states.async_all()))
+
+                elif msg['type'] == TYPE_GET_SERVICES:
+                    msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
+
+                    send_message(result_message(msg['id'],
+                                                api.async_services_json(hass)))
+
+                elif msg['type'] == TYPE_GET_CONFIG:
+                    msg = GET_CONFIG_MESSAGE_SCHEMA(msg)
+
+                    send_message(result_message(msg['id'],
+                                                hass.config.as_dict()))
+
+                elif msg['type'] == TYPE_GET_PANELS:
+                    msg = GET_PANELS_MESSAGE_SCHEMA(msg)
+
+                    send_message(result_message(
+                        msg['id'], hass.data[frontend.DATA_PANELS]))
 
                 last_id = cur_id
                 msg = yield from wsock.receive_json()
