@@ -36,6 +36,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 	add_devices([DuneHDPlayerEntity(DuneHDPlayer(config[CONF_HOST]), config[CONF_NAME], sources)])
 
 class DuneHDPlayerEntity(MediaPlayerDevice):
+	"""Implementation of the Dune HD player"""
+
 	def __init__(self, player, name, sources):
 		self._player = player
 		self._name = name
