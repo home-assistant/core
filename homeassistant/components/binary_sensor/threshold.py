@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, SENSOR_CLASSES_SCHEMA)
 from homeassistant.const import (
     CONF_NAME, CONF_ENTITY_ID, CONF_TYPE, STATE_UNKNOWN, CONF_SENSOR_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_ENTITY_ID)
+    ATTR_ENTITY_ID)
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
 
@@ -35,8 +35,8 @@ SENSOR_TYPES = [CONF_LOWER, CONF_UPPER]
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_THRESHOLD): vol.Coerce(float),
+    vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TYPE, default=CONF_UPPER): vol.In(SENSOR_TYPES),
     vol.Optional(CONF_SENSOR_CLASS, default=None): SENSOR_CLASSES_SCHEMA,
 })
 
@@ -50,9 +50,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     limit_type = config.get(CONF_TYPE)
     sensor_class = config.get(CONF_SENSOR_CLASS)
 
-    hass.loop.create_task(
-        async_add_devices([ThresholdSensor(hass, entity_id, name, threshold,
-                                           limit_type, sensor_class)], True))
+    yield from async_add_devices(
+        [ThresholdSensor(hass, entity_id, name, threshold, limit_type,
+                         sensor_class)], True)
     return True
 
 
@@ -64,7 +64,7 @@ class ThresholdSensor(BinarySensorDevice):
         """Initialize the Threshold sensor."""
         self._hass = hass
         self._entity_id = entity_id
-        self.is_upper = True if limit_type == 'upper' else False
+        self.is_upper = limit_type == 'upper'
         self._name = name
         self._threshold = threshold
         self._sensor_class = sensor_class
@@ -77,15 +77,15 @@ class ThresholdSensor(BinarySensorDevice):
         def async_threshold_sensor_state_listener(
                 entity, old_state, new_state):
             """Called when the sensor changes state."""
-            if new_state.state is None or new_state.state in STATE_UNKNOWN:
+            if new_state.state == STATE_UNKNOWN:
                 return
 
-            self._unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT)
+            try:
+                self.sensor_value = float(new_state.state)
+            except ValueError:
+                _LOGGER.error("State is not numerical")
 
-            self.sensor_value = float(new_state.state)
-
-            hass.loop.create_task(self.async_update_ha_state(True))
+            hass.async_add_job(self.async_update_ha_state, True)
 
         async_track_state_change(
             hass, entity_id, async_threshold_sensor_state_listener)
@@ -118,7 +118,6 @@ class ThresholdSensor(BinarySensorDevice):
             ATTR_SENSOR_VALUE: self.sensor_value,
             ATTR_THRESHOLD: self._threshold,
             ATTR_TYPE: CONF_UPPER if self.is_upper else CONF_LOWER,
-            ATTR_UNIT_OF_MEASUREMENT: self._unit_of_measurement,
         }
 
     @asyncio.coroutine

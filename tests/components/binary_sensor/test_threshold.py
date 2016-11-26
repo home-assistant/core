@@ -24,6 +24,7 @@ class TestThresholdSensor(unittest.TestCase):
             'binary_sensor': {
                 'platform': 'threshold',
                 'threshold': '15',
+                'type': 'upper',
                 'entity_id': 'sensor.test_monitored',
             }
         }
@@ -42,7 +43,6 @@ class TestThresholdSensor(unittest.TestCase):
         self.assertEqual(16, state.attributes.get('sensor_value'))
         self.assertEqual(float(config['binary_sensor']['threshold']),
                          state.attributes.get('threshold'))
-        self.assertEqual('°C', state.attributes.get('unit_of_measurement'))
 
         assert state.state == 'on'
 
