@@ -107,7 +107,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         rest.update()
-        rest.update_forecast()
     except ValueError as err:
         _LOGGER.error("Received error from WUnderground: %s", err)
         return False
