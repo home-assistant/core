@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.1.5']
+REQUIREMENTS = ['denonavr==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Denon platform."""
-    from denonavr import denonavr
+    import denonavr
 
     receiver = denonavr.DenonAVR(config.get(CONF_HOST), config.get(CONF_NAME))
 
@@ -214,7 +214,7 @@ class DenonDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self._receiver.input_func = source
+        return self._receiver.set_input_func(source)
 
     def turn_on(self):
         """Turn on media player."""
