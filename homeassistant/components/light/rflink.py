@@ -84,9 +84,16 @@ class DimmableRflinkLight(RflinkLight):
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
             # rflink only support 16 brightness levels
-            self._brightness = int(kwargs[ATTR_BRIGHTNESS]/16)*16
+            self._brightness = int(kwargs[ATTR_BRIGHTNESS]/17)*17
 
+        # if receiver supports dimming this will turn on the light
+        # at the requested dim level
         self._send_command("dim", self._brightness)
+
+        # if the receiving device does not support dimlevel this
+        # will ensure it is turned on when full brightness is set
+        if self._brightness == 255:
+            self._send_command("turn_on")
 
     @property
     def brightness(self):
