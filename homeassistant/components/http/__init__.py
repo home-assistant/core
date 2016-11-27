@@ -289,9 +289,20 @@ class HomeAssistantWSGI(object):
         else:
             context = None
 
+        # Aiohttp freezes apps after start so that no changes can be made.
+        # However in Home Assistant components can be discovered after boot.
+        # This will now raise a RunTimeError.
+        # To work around this we now fake that we are frozen.
+        # A more appropriate fix would be to create a new app and
+        # re-register all redirects, views, static paths.
+        self.app._frozen = True  # pylint: disable=protected-access
+
         self._handler = self.app.make_handler()
+
         self.server = yield from self.hass.loop.create_server(
             self._handler, self.server_host, self.server_port, ssl=context)
+
+        self.app._frozen = False  # pylint: disable=protected-access
 
     @asyncio.coroutine
     def stop(self):
