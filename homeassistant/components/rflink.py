@@ -85,19 +85,20 @@ def async_setup(hass, config):
         Rflink packets arrive as dictionaries of varying content depending
         on their type. Identify the packets and distribute accordingly.
         """
-        device_id = serialize_id(packet)
-
-        # don't process if set to ignore
-        for ignore in ignore_device_ids:
-            if (ignore == device_id or
-               ('*' in ignore and device_id.startswith(ignore))):
-                return
+        packet_type = identify_packet_type(packet)
 
         # fire bus event for packet type
-        packet_type = identify_packet_type(packet)
         if not packet_type:
             _LOGGER.info(packet)
         elif packet_type in RFLINK_EVENT:
+            device_id = serialize_id(packet)
+
+            # don't fire if device is set to ignore
+            for ignore in ignore_device_ids:
+                if (ignore == device_id or
+                   ('*' in ignore and device_id.startswith(ignore))):
+                    return
+
             hass.bus.fire(RFLINK_EVENT[packet_type], {ATTR_PACKET: packet})
         else:
             _LOGGER.debug('unhandled packet of type: %s', packet_type)
