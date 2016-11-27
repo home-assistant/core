@@ -18,6 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.const import (
@@ -705,8 +706,9 @@ def _async_fetch_image(hass, url):
 
     content, content_type = (None, None)
     try:
+        websession = async_get_clientsession(hass)
         with async_timeout.timeout(10, loop=hass.loop):
-            response = yield from hass.websession.get(url)
+            response = yield from websession.get(url)
             if response.status == 200:
                 content = yield from response.read()
                 content_type = response.headers.get(CONTENT_TYPE_HEADER)

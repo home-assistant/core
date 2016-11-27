@@ -13,7 +13,8 @@ DATA_CLIENTSESSION = 'aiohttp_clientsession'
 DATA_CLIENTSESSION_NOTVERIFY = 'aiohttp_clientsession_notverify'
 
 
-def get_clientsession(hass, verify_ssl=True):
+@callback
+def async_get_clientsession(hass, verify_ssl=True):
     """Return default aiohttp ClientSession.
 
     This method must be run in the event loop.
@@ -35,11 +36,14 @@ def get_clientsession(hass, verify_ssl=True):
     return hass.data[key]
 
 
-def create_clientsession(hass, verify_ssl=True, auto_cleanup=True, **kwargs):
+@callback
+def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
+                               **kwargs):
     """Create a new ClientSession with kwargs, i.e. for cookies.
 
-    Is auto_cleanup False, you need call detach() after this session will be
-    unused. True it do it self on homeassistant_stop.
+    If auto_cleanup is False, you need to call detach() after the session
+    returned is no longer used. Default is True, the session will be
+    automatically detached on homeassistant_stop.
 
     This method must be run in the event loop.
     """
@@ -57,13 +61,15 @@ def create_clientsession(hass, verify_ssl=True, auto_cleanup=True, **kwargs):
     return clientsession
 
 
+@callback
+# pylint: disable=invalid-name
 def _async_register_clientsession_shutdown(hass, clientsession):
     """Register ClientSession close on homeassistant shutdown.
 
     This method must be run in the event loop.
     """
     @callback
-    def _async_close_websession():
+    def _async_close_websession(event):
         """Close websession."""
         clientsession.detach()
 
@@ -71,6 +77,7 @@ def _async_register_clientsession_shutdown(hass, clientsession):
         EVENT_HOMEASSISTANT_STOP, _async_close_websession)
 
 
+@callback
 def _async_get_connector(hass, verify_ssl=True):
     """Return the connector pool for aiohttp.
 
@@ -78,7 +85,7 @@ def _async_get_connector(hass, verify_ssl=True):
     """
     if verify_ssl:
         if DATA_CONNECTOR not in hass.data:
-            connector = aiohttp.TCPConnector()
+            connector = aiohttp.TCPConnector(loop=hass.loop)
             hass.data[DATA_CONNECTOR] = connector
 
             _async_register_connector_shutdown(hass, connector)
@@ -86,7 +93,7 @@ def _async_get_connector(hass, verify_ssl=True):
             connector = hass.data[DATA_CONNECTOR]
     else:
         if DATA_CONNECTOR_NOTVERIFY not in hass.data:
-            connector = aiohttp.TCPConnector(verify_ssl=False)
+            connector = aiohttp.TCPConnector(loop=hass.loop, verify_ssl=False)
             hass.data[DATA_CONNECTOR_NOTVERIFY] = connector
 
             _async_register_connector_shutdown(hass, connector)
@@ -96,6 +103,8 @@ def _async_get_connector(hass, verify_ssl=True):
     return connector
 
 
+@callback
+# pylint: disable=invalid-name
 def _async_register_connector_shutdown(hass, connector):
     """Register connector pool close on homeassistant shutdown.
 

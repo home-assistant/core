@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,9 +102,10 @@ class MjpegCamera(Camera):
             return
 
         # connect to stream
+        websession = async_get_clientsession(self.hass)
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                stream = yield from self.hass.websession.get(
+                stream = yield from websession.get(
                     self._mjpeg_url,
                     auth=self._auth
                 )

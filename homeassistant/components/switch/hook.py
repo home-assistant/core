@@ -13,6 +13,7 @@ import aiohttp
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,10 +32,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up Hook by getting the access token and list of actions."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    websession = async_get_clientsession(hass)
 
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
-            response = yield from hass.websession.post(
+            response = yield from websession.post(
                 '{}{}'.format(HOOK_ENDPOINT, 'user/login'),
                 data={
                     'username': username,
@@ -54,7 +56,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
-            response = yield from hass.websession.get(
+            response = yield from websession.get(
                 '{}{}'.format(HOOK_ENDPOINT, 'device'),
                 params={"token": data['data']['token']})
             data = yield from response.json()
@@ -79,7 +81,7 @@ class HookSmartHome(SwitchDevice):
 
     def __init__(self, hass, token, device_id, device_name):
         """Initialize the switch."""
-        self._hass = hass
+        self.hass = hass
         self._token = token
         self._state = False
         self._id = device_id
@@ -102,8 +104,9 @@ class HookSmartHome(SwitchDevice):
         """Send the url to the Hook API."""
         try:
             _LOGGER.debug("Sending: %s", url)
-            with async_timeout.timeout(TIMEOUT, loop=self._hass.loop):
-                response = yield from self._hass.websession.get(
+            websession = async_get_clientsession(self.hass)
+            with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
+                response = yield from websession.get(
                     url, params={"token": self._token})
                 data = yield from response.json()
         except (asyncio.TimeoutError,
