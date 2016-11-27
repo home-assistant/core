@@ -11,7 +11,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant.const import (
     MATCH_ALL, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
     __version__)
-from homeassistant.components import api, frontend
+from homeassistant.components import frontend
 from homeassistant.core import callback
 from homeassistant.remote import JSONEncoder
 from homeassistant.helpers import config_validation as cv
@@ -400,7 +400,7 @@ class ActiveConnection:
         msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
         self.send_message(result_message(msg['id'],
-                                         api.async_services_json(self.hass)))
+                                         self.hass.services.async_services()))
 
     def handle_get_config(self, msg):
         """Handle get config command."""
