@@ -3,8 +3,7 @@ import asyncio
 import os
 import sys
 from datetime import timedelta
-from unittest import mock
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from io import StringIO
 import logging
 import threading
@@ -26,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.components import sun, mqtt
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
-    KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED)
+    KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -207,7 +206,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
 
 def mock_http_component(hass):
     """Mock the HTTP component."""
-    hass.http = mock.MagicMock()
+    hass.http = MagicMock()
     hass.config.components.append('http')
     hass.http.views = {}
 
@@ -222,19 +221,20 @@ def mock_http_component(hass):
     hass.http.register_view = mock_register_view
 
 
-def mock_http_component_app(hass):
+def mock_http_component_app(hass, api_password=None):
     """Create an aiohttp.web.Application instance for testing."""
-    hass.http.api_password = None
+    hass.http = MagicMock(api_password=api_password)
     app = web.Application(middlewares=[auth_middleware], loop=hass.loop)
     app['hass'] = hass
     app[KEY_USE_X_FORWARDED_FOR] = False
     app[KEY_BANS_ENABLED] = False
+    app[KEY_TRUSTED_NETWORKS] = []
     return app
 
 
 def mock_mqtt_component(hass):
     """Mock the MQTT component."""
-    with mock.patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
+    with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
         setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: {
                 mqtt.CONF_BROKER: 'mock-broker',
