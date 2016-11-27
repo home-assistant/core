@@ -28,18 +28,17 @@ def auth_middleware(app, handler):
     @asyncio.coroutine
     def auth_middleware_handler(request):
         """Auth middleware to check authentication."""
-        hass = app['hass']
-
         # Auth code verbose on purpose
         authenticated = False
 
-        if hmac.compare_digest(request.headers.get(HTTP_HEADER_HA_AUTH, ''),
-                               hass.http.api_password):
+        if (HTTP_HEADER_HA_AUTH in request.headers and
+                validate_password(request,
+                                  request.headers[HTTP_HEADER_HA_AUTH])):
             # A valid auth header has been set
             authenticated = True
 
-        elif hmac.compare_digest(request.GET.get(DATA_API_PASSWORD, ''),
-                                 hass.http.api_password):
+        elif (DATA_API_PASSWORD in request.GET and
+              validate_password(request, request.GET[DATA_API_PASSWORD])):
             authenticated = True
 
         elif is_trusted_ip(request):
@@ -59,3 +58,9 @@ def is_trusted_ip(request):
     return ip_addr and any(
         ip_addr in trusted_network for trusted_network
         in request.app[KEY_TRUSTED_NETWORKS])
+
+
+def validate_password(request, api_password):
+    """Test if password is valid."""
+    return hmac.compare_digest(api_password,
+                               request.app['hass'].http.api_password)
