@@ -57,6 +57,11 @@ class NestCamera(Camera):
         return self._name
 
     @property
+    def should_poll(self):
+        """NestCams should poll periodically."""
+        return True
+
+    @property
     def is_recording(self):
         """Return true if the device is recording."""
         return self._is_streaming
