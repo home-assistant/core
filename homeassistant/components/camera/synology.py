@@ -300,3 +300,5 @@ class SynologyCamera(Camera):
     def name(self):
         """Return the name of this device."""
         return self._name
+
+
