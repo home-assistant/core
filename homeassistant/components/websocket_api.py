@@ -29,18 +29,20 @@ ERR_INVALID_FORMAT = 2
 ERR_NOT_FOUND = 3
 
 TYPE_AUTH = 'auth'
+TYPE_AUTH_INVALID = 'auth_invalid'
 TYPE_AUTH_OK = 'auth_ok'
 TYPE_AUTH_REQUIRED = 'auth_required'
-TYPE_AUTH_INVALID = 'auth_invalid'
-TYPE_EVENT = 'event'
-TYPE_SUBSCRIBE_EVENTS = 'subscribe_events'
-TYPE_UNSUBSCRIBE_EVENTS = 'unsubscribe_events'
 TYPE_CALL_SERVICE = 'call_service'
-TYPE_GET_STATES = 'get_states'
-TYPE_GET_SERVICES = 'get_services'
+TYPE_EVENT = 'event'
 TYPE_GET_CONFIG = 'get_config'
 TYPE_GET_PANELS = 'get_panels'
+TYPE_GET_SERVICES = 'get_services'
+TYPE_GET_STATES = 'get_states'
+TYPE_PING = 'ping'
+TYPE_PONG = 'pong'
 TYPE_RESULT = 'result'
+TYPE_SUBSCRIBE_EVENTS = 'subscribe_events'
+TYPE_UNSUBSCRIBE_EVENTS = 'unsubscribe_events'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,6 +93,11 @@ GET_PANELS_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('type'): TYPE_GET_PANELS,
 })
 
+PING_MESSAGE_SCHEMA = vol.Schema({
+    vol.Required('id'): cv.positive_int,
+    vol.Required('type'): TYPE_PING,
+})
+
 BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('id'): cv.positive_int,
     vol.Required('type'): vol.Any(TYPE_CALL_SERVICE,
@@ -99,7 +106,8 @@ BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema({
                                   TYPE_GET_STATES,
                                   TYPE_GET_SERVICES,
                                   TYPE_GET_CONFIG,
-                                  TYPE_GET_PANELS)
+                                  TYPE_GET_PANELS,
+                                  TYPE_PING)
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -146,6 +154,14 @@ def error_message(iden, code, message):
             'code': code,
             'message': message,
         },
+    }
+
+
+def pong_message(iden):
+    """Return a pong message."""
+    return {
+        'id': iden,
+        'type': TYPE_PONG,
     }
 
 
@@ -399,3 +415,7 @@ class ActiveConnection:
 
         self.send_message(result_message(
             msg['id'], self.hass.data[frontend.DATA_PANELS]))
+
+    def handle_ping(self, msg):
+        """Handle ping command."""
+        self.send_message(pong_message(msg['id']))
