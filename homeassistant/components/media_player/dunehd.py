@@ -116,18 +116,22 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
         """Turn off media player."""
         self._media_title = None
         self._state = self._player.turn_off()
+        self.schedule_update_ha_state()
 
     def turn_on(self):
         """Turn off media player."""
         self._state = self._player.turn_on()
+        self.schedule_update_ha_state()
 
     def media_play(self):
         """Play media media player."""
         self._state = self._player.play()
+        self.schedule_update_ha_state()
 
     def media_pause(self):
         """Pause media player."""
         self._state = self._player.pause()
+        self.schedule_update_ha_state()
 
     @property
     def media_title(self):
@@ -154,11 +158,14 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
         """Select input source."""
         self._media_title = source
         self._state = self._player.launch_media_url(self._sources.get(source))
+        self.schedule_update_ha_state()
 
     def media_previous_track(self):
         """Send previous track command."""
         self._state = self._player.previous_track()
+        self.schedule_update_ha_state()
 
     def media_next_track(self):
         """Send next track command."""
         self._state = self._player.next_track()
+        self.schedule_update_ha_state()
