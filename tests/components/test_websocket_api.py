@@ -6,7 +6,7 @@ from async_timeout import timeout
 import pytest
 
 from homeassistant.core import callback
-from homeassistant.components import websocket_api as wapi, api, frontend
+from homeassistant.components import websocket_api as wapi, frontend
 
 from tests.common import mock_http_component_app
 
@@ -249,7 +249,7 @@ def test_get_services(hass, websocket_client):
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
-    assert msg['result'] == api.async_services_json(hass)
+    assert msg['result'] == hass.services.async_services()
 
 
 @asyncio.coroutine
