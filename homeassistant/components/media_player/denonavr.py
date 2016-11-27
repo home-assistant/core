@@ -43,15 +43,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     receiver = denonavr.DenonAVR(config.get(CONF_HOST), config.get(CONF_NAME))
 
-    if receiver.update():
-        add_devices([DenonDevice(receiver)])
-        _LOGGER.info("Denon receiver at host %s initialized",
-                     config.get(CONF_HOST))
-        return True
-    else:
-        _LOGGER.error("Denon receiver at host %s could not be initialized",
-                      config.get(CONF_HOST))
-        return False
+    add_devices([DenonDevice(receiver)])
+    _LOGGER.info("Denon receiver at host %s initialized",
+                 config.get(CONF_HOST))
 
 
 class DenonDevice(MediaPlayerDevice):
