@@ -146,7 +146,7 @@ ha-ffmpeg==0.15
 ha-philipsjs==0.0.1
 
 # homeassistant.components.mqtt.server
-hbmqtt==0.7.1
+hbmqtt==0.8
 
 # homeassistant.components.climate.heatmiser
 heatmiserV3==0.9.1
