@@ -283,3 +283,16 @@ def test_get_panels(hass, websocket_client):
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
     assert msg['result'] == hass.data[frontend.DATA_PANELS]
+
+
+@asyncio.coroutine
+def test_ping(websocket_client):
+    """ Test get_panels command."""
+    websocket_client.send_json({
+        'id': 5,
+        'type': wapi.TYPE_PING,
+    })
+
+    msg = yield from websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == wapi.TYPE_PONG
