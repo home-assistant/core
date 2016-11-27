@@ -47,7 +47,7 @@ def devices_from_config(domain_config, hass=None):
     """Parse config and add rflink switch devices."""
 
     devices = []
-    for device_id, config in domain_config['devices'].items():
+    for device_id, config in domain_config.get('devices', {}).items():
         # extract only valid keys from device configuration
         kwargs = {k: v for k, v in config.items() if k in VALID_CONFIG_KEYS}
         # determine which kind of entity to create

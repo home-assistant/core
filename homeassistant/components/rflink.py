@@ -48,6 +48,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def serialize_id(packet):
     """Serialize packet identifiers into device id."""
+    # invalid packet
+    if not (packet.get('protocol') and packet.get('id')):
+        return None
+
     return '_'.join(filter(None, [
         slugify(packet['protocol']),
         packet['id'],
@@ -92,6 +96,8 @@ def async_setup(hass, config):
             _LOGGER.info(packet)
         elif packet_type in RFLINK_EVENT:
             device_id = serialize_id(packet)
+            if not device_id:
+                return
 
             # don't fire if device is set to ignore
             for ignore in ignore_device_ids:
@@ -169,7 +175,9 @@ class RflinkDevice(Entity):
         or any of its aliasses (including wildcards).
         """
         device_id = serialize_id(packet)
-        if device_id == self._device_id or device_id in self._aliasses:
+        if device_id and (
+            device_id == self._device_id or
+                device_id in self._aliasses):
             self.handle_packet(packet)
 
     def handle_packet(self, packet):
