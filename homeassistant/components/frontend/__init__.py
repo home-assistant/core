@@ -16,7 +16,7 @@ from homeassistant.components.http.const import KEY_DEVELOPMENT
 from .version import FINGERPRINTS
 
 DOMAIN = 'frontend'
-DEPENDENCIES = ['api']
+DEPENDENCIES = ['api', 'websocket_api']
 URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
 STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static')
