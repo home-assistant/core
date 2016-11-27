@@ -203,7 +203,7 @@ class RflinkDevice(Entity):
     @property
     def assumed_state(self):
         """Assume device state until first device packet sets state."""
-        return self._state is None
+        return self._state is STATE_UNKNOWN
 
     def _send_command(self, command, *args):
         """Send a command for this device to Rflink gateway."""
