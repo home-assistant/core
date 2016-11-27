@@ -119,7 +119,7 @@ def validate_attributes(config):
     elif not isinstance(config[CONF_ATTRS], dict):
         _LOGGER.warning(
             'Universal Media Player (%s) specified attributes '
-        'not dict in config. They will be ignored.',
+            'not dict in config. They will be ignored.',
             config[CONF_NAME])
         config[CONF_ATTRS] = {}
 
@@ -184,7 +184,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
         if allow_override and service_name in self._cmds:
             call_from_config(
-                self.hass, self._cmds[service_name], variables=service_data, blocking=True)
+                self.hass, self._cmds[service_name],
+                variables=service_data, blocking=True)
             return
 
         active_child = self._child_state
