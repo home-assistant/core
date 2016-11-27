@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+import asyncio
 import requests
 
 from homeassistant import bootstrap, const
@@ -109,3 +110,42 @@ class TestHttp:
         assert req.headers.get(allow_origin) == HTTP_BASE_URL
         assert req.headers.get(allow_headers) == \
             const.HTTP_HEADER_HA_AUTH.upper()
+
+
+class TestView(http.HomeAssistantView):
+
+    name = 'test'
+    url = '/hello'
+
+    @asyncio.coroutine
+    def get(self, request):
+        """Return a get request."""
+        return 'hello'
+
+
+@asyncio.coroutine
+def test_registering_view_while_running(hass, test_client):
+    """Test that we can register a view while the server is running."""
+    yield from bootstrap.async_setup_component(
+        hass, http.DOMAIN, {
+            http.DOMAIN: {
+                http.CONF_SERVER_PORT: get_test_instance_port(),
+            }
+        }
+    )
+
+    yield from bootstrap.async_setup_component(hass, 'api')
+
+    yield from hass.async_start()
+
+    yield from hass.async_block_till_done()
+
+    hass.http.register_view(TestView)
+
+    client = yield from test_client(hass.http.app)
+
+    resp = yield from client.get('/hello')
+    assert resp.status == 200
+
+    text = yield from resp.text()
+    assert text == 'hello'
