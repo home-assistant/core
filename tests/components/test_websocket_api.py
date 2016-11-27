@@ -6,7 +6,7 @@ from async_timeout import timeout
 import pytest
 
 from homeassistant.core import callback
-from homeassistant.components import websocket_api as wapi, api, frontend
+from homeassistant.components import websocket_api as wapi, frontend
 
 from tests.common import mock_http_component_app
 
