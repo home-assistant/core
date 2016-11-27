@@ -26,15 +26,16 @@ stores/caches the latest telegram and notifies the Entities that the telegram
 has been updated.
 """
 import asyncio
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,16 +81,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         ['Power Production (low)', obis.ELECTRICITY_DELIVERED_TARIFF_1],
         ['Power Production (normal)', obis.ELECTRICITY_DELIVERED_TARIFF_2],
     ]
-    # Protocol version specific obis
-    if dsmr_version == '4':
-        obis_mapping.append(['Gas Consumption', obis.HOURLY_GAS_METER_READING])
-    else:
-        obis_mapping.append(['Gas Consumption', obis.GAS_METER_READING])
 
     # Generate device entities
     devices = [DSMREntity(name, obis) for name, obis in obis_mapping]
 
-    devices.append(DerivativeDSMREntity('Hourly Gas Consumption', devices[-1]._obis))
+    # Protocol version specific obis
+    if dsmr_version == '4':
+        gas_obis = obis.HOURLY_GAS_METER_READING
+    else:
+        gas_obis = obis.GAS_METER_READING
+
+    # add gas meter reading and derivative for usage
+    devices += [
+        DSMREntity('Gas Consumption', gas_obis),
+        DerivativeDSMREntity('Hourly Gas Consumption', gas_obis),
+    ]
 
     yield from async_add_devices(devices)
 
