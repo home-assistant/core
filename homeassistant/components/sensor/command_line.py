@@ -20,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Command Sensor'
 
+SCAN_INTERVAL = 60
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
