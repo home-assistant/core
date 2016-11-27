@@ -7,7 +7,8 @@ https://home-assistant.io/components/climate.proliphix/
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+    PRECISION_TENTHS, STATE_COOL, STATE_HEAT, STATE_IDLE,
+    ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
@@ -59,6 +60,15 @@ class ProliphixThermostat(ClimateDevice):
     def name(self):
         """Return the name of the thermostat."""
         return self._name
+
+    @property
+    def precision(self):
+        """Return the precision of the system.
+
+        Proliphix temperature values are passed back and forth in the
+        API as tenths of degrees F (i.e. 690 for 69 degrees).
+        """
+        return PRECISION_TENTHS
 
     @property
     def device_state_attributes(self):
