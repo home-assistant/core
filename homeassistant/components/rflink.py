@@ -25,7 +25,7 @@ maintained in this file.
 import asyncio
 import logging
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -36,6 +36,7 @@ DOMAIN = 'rflink'
 RFLINK_EVENT = {
     'light': 'rflink_switch_packet_received',
     'sensor': 'rflink_sensor_packet_received',
+    'switch': 'rflink_switch_packet_received',
     'send_command': 'rflink_send_command',
 }
 
@@ -76,12 +77,23 @@ def async_setup(hass, config):
     """Setup the Rflink component."""
     from rflink.protocol import create_rflink_connection
 
+    ignore_device_ids = config.get('ignore_device', [])
+
     def packet_callback(packet):
         """Handle incoming rflink packets.
 
         Rflink packets arrive as dictionaries of varying content depending
         on their type. Identify the packets and distribute accordingly.
         """
+        device_id = serialize_id(packet)
+
+        # don't process if set to ignore
+        for ignore in ignore_device_ids:
+            if (ignore == device_id or
+               ('*' in ignore and device_id.startswith(ignore))):
+                return
+
+        # fire bus event for packet type
         packet_type = identify_packet_type(packet)
         if not packet_type:
             _LOGGER.info(packet)
@@ -124,26 +136,39 @@ class RflinkDevice(Entity):
     Contains the common logic for Rflink entities.
     """
 
+    # should be set by component implementation
     domain = None
+    # default stae
+    _state = STATE_UNKNOWN
 
-    def __init__(self, name, device_id, hass):
+    def __init__(self, device_id, hass, name=None, aliasses=[], icon=None):
         """Initialize the device."""
-        self._name = name
-        self._state = None
-        self._device_id = device_id
         self.hass = hass
 
-        if self.domain:
-            hass.bus.async_listen(RFLINK_EVENT[self.domain], lambda event:
-                                  self.match_packet(event.data[ATTR_PACKET]))
+        # rflink specific attributes for every component type
+        self._device_id = device_id
+        if name:
+            self._name = name
+        else:
+            self._name = device_id
+        # generate list of device_ids to match against
+        self._aliasses = aliasses
+
+        # optional attributes
+        self._icon = icon
+
+        # listen to component domain specific messages
+        hass.bus.async_listen(RFLINK_EVENT[self.domain], lambda event:
+                              self.match_packet(event.data[ATTR_PACKET]))
 
     def match_packet(self, packet):
         """Match and handle incoming packets.
 
         Match incoming packet to this device id
-        and adjust state accordingly.
+        or any of its aliasses (including wildcards).
         """
-        if serialize_id(packet) == self._device_id:
+        device_id = serialize_id(packet)
+        if device_id == self._device_id or device_id in self._aliasses:
             self.handle_packet(packet)
 
     def handle_packet(self, packet):
@@ -167,10 +192,7 @@ class RflinkDevice(Entity):
     @property
     def name(self):
         """Return a name for the device."""
-        if self._name:
-            return self._name
-        else:
-            return self._device_id
+        return self._name
 
     @property
     def is_on(self):
@@ -183,7 +205,7 @@ class RflinkDevice(Entity):
         return self._state is None
 
     def _send_command(self, command, *args):
-        """Send a command for this device."""
+        """Send a command for this device to Rflink gateway."""
         if command == "turn_on":
             cmd = 'on'
             self._state = True
@@ -198,15 +220,30 @@ class RflinkDevice(Entity):
             self._state = True
 
         # send protocol, device id, switch nr and command to rflink
-        self._event(self._device_id.split('_') + [cmd])
-
+        self.hass.bus.fire(
+            RFLINK_EVENT['send_command'],
+            {ATTR_COMMAND: self._device_id.split('_') + [cmd]}
+        )
         # todo, wait for rflink ok response
 
         self.update_ha_state()
 
-    def _event(self, command):
-        """Fire command event."""
-        self.hass.bus.fire(
-            RFLINK_EVENT['send_command'],
-            {ATTR_COMMAND: command}
-        )
+
+class SwitchableRflinkDevice(RflinkDevice):
+    """Rflink entity which can switch on/off (eg: light, switch)."""
+
+    def _handle_packet(self, packet):
+        """Adjust state if Rflink picks up a remote command for this device."""
+        command = packet['command']
+        if command == 'on':
+            self._state = True
+        elif command == 'off':
+            self._state = False
+
+    def turn_on(self, **kwargs):
+        """Turn the device on."""
+        self._send_command("turn_on")
+
+    def turn_off(self, **kwargs):
+        """Turn the device off."""
+        self._send_command("turn_off")

@@ -7,9 +7,9 @@ https://home-assistant.io/components/light.rflink/
 import asyncio
 import logging
 
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 import homeassistant.components.rflink as rflink
-from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS, Light)
 
 from . import DOMAIN
 
@@ -19,61 +19,80 @@ _LOGGER = logging.getLogger(__name__)
 
 KNOWN_DEVICE_IDS = []
 
+VALID_CONFIG_KEYS = [
+    'aliasses',
+    'name',
+]
+
+
+def entity_type_for_device_id(device_id):
+    """Return entity class for procotol of a given device_id."""
+    entity_type_mapping = {
+        'newkaku': 'dimmable',
+    }
+    protocol = device_id.split('_')[0]
+    return entity_type_mapping.get(protocol, None)
+
+
+def entity_class_for_type(entity_type):
+    """Translate entity type to entity class."""
+    entity_device_mapping = {
+        'dimmable': DimmableRflinkLight,
+    }
+
+    return entity_device_mapping.get(entity_type, RflinkLight)
+
+
+def devices_from_config(domain_config, hass=None):
+    """Parse config and add rflink switch devices."""
+
+    devices = []
+    for device_id, config in domain_config['devices'].items():
+        # extract only valid keys from device configuration
+        kwargs = {k: v for k, v in config.items() if k in VALID_CONFIG_KEYS}
+        # determine which kind of entity to create
+        if 'type' in config:
+            entity_type = config['type']
+        else:
+            entity_type = entity_type_for_device_id(device_id)
+        entity_class = entity_class_for_type(entity_type)
+
+        devices.append(entity_class(device_id, hass, **kwargs))
+
+        # now we know
+        device_ids = [device_id] + config.get('aliasses', [])
+        KNOWN_DEVICE_IDS.extend(device_ids)
+    return devices
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Rflink platform."""
-    entity_device_mapping = {
-        'newkaku': DimmableRflinkLight,
-    }
+    # add devices from config
+    yield from async_add_devices(devices_from_config(config, hass))
 
     @asyncio.coroutine
     def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
         packet = event.data[rflink.ATTR_PACKET]
-        protocol = packet['protocol']
-        entity_type = entity_device_mapping.get(protocol, RflinkLight)
+        entity_type = entity_type_for_device_id(packet['protocol'])
+        entity_class = entity_class_for_type(entity_type)
 
         device_id = rflink.serialize_id(packet)
         if device_id not in KNOWN_DEVICE_IDS:
             KNOWN_DEVICE_IDS.append(device_id)
-            device = entity_type(device_id, device_id, hass)
+            device = entity_class(device_id, hass)
             yield from async_add_devices([device])
             # make sure the packet is processed by the new entity
             device.match_packet(packet)
-
-    yield from async_add_devices([
-        DimmableRflinkLight('test', 'newkaku_0031095e_c', hass),
-    ])
-
     hass.bus.async_listen(rflink.RFLINK_EVENT[DOMAIN], add_new_device)
 
 
-class RflinkLight(rflink.RflinkDevice, Light):
+class RflinkLight(rflink.SwitchableRflinkDevice, Light):
     """Representation of a Rflink light."""
 
     # used for matching bus events
     domain = DOMAIN
-
-    def _handle_packet(self, packet):
-        """Domain specific packet handler."""
-        command = packet['command']
-        if command == 'on':
-            self._state = True
-        elif command == 'off':
-            self._state = False
-
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            # rflink only support 16 brightness levels
-            self._brightness = int(kwargs[ATTR_BRIGHTNESS]/16)*16
-
-        self._send_command("turn_on")
-
-    def turn_off(self, **kwargs):
-        """Turn the device off."""
-        self._send_command("turn_off")
 
 
 class DimmableRflinkLight(RflinkLight):
