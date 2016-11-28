@@ -21,6 +21,7 @@ from homeassistant.components import group, zone
 from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
@@ -490,8 +491,10 @@ class Device(Entity):
         oui = '{:02x}:{:02x}:{:02x}'.format(*[int(b, 16) for b in oui_bytes])
         url = 'http://api.macvendors.com/' + oui
         try:
+            websession = async_get_clientsession(self.hass)
+
             with async_timeout.timeout(5, loop=self.hass.loop):
-                resp = yield from self.hass.websession.get(url)
+                resp = yield from websession.get(url)
             # mac vendor found, response is the string
             if resp.status == 200:
                 vendor_string = yield from resp.text()
