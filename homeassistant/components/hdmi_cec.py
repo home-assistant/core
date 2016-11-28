@@ -20,6 +20,11 @@ ATTR_DEVICE = 'device'
 ATTR_COMMAND = 'command'
 ATTR_KEY = 'key'
 ATTR_DURATION = 'duration'
+ATTR_SRC = 'src'
+ATTR_DST = 'dst'
+ATTR_CMD = 'cmd'
+ATTR_ATT = 'att'
+ATTR_RAW = 'raw'
 
 EVENT_CEC_COMMAND_RECEIVED = 'cec_command_received'
 EVENT_CEC_KEYPRESS_RECEIVED = 'cec_keypress_received'
@@ -119,10 +124,22 @@ def setup(hass, config):
 
 	def _send_command(call):
 		"""Send CEC command."""
-		cmd = call.data[ATTR_COMMAND]
-		cmds = cmd.split("\n")
-		for cmd in cmds:
-			_CEC.ProcessCommandTx(cmd)
+		if call.data is list:
+			data = call.data
+		else:
+			data = [ call.data ]
+		_LOGGER.info("data %s", data)
+		for d in data:
+			if ATTR_RAW in d:
+				command = d[ATTR_RAW]
+			else:
+				src = d[ATTR_SRC]
+				dst = d[ATTR_DST]
+				cmd = d[ATTR_CMD]
+				att = d[ATTR_ATT]
+				command = "%s%s:%s:%s" % ( src, dst, cmd, att )
+			_LOGGER.info("Sending %s", command)
+			_CEC.ProcessCommandTx(command)
 
 	def _start_cec(event):
 		"""Open CEC adapter."""
