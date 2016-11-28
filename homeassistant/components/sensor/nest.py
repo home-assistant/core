@@ -11,29 +11,35 @@ import voluptuous as vol
 from homeassistant.components.nest import DATA_NEST, DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_PLATFORM, CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_PLATFORM,
+    CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS
 )
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
                 'operation_mode',
-                'last_ip',
-                'local_ip',
-                'last_connection',
-                'battery_level']
+                'last_connection']
 
-WEATHER_VARS = {'weather_humidity': 'humidity',
-                'weather_temperature': 'temperature',
-                'weather_condition': 'condition',
-                'wind_speed': 'kph',
-                'wind_direction': 'direction'}
+SENSOR_TYPES_DEPRECATED = ['battery_health',
+                           'last_ip',
+                           'local_ip']
 
-SENSOR_UNITS = {'humidity': '%', 'battery_level': 'V',
-                'kph': 'kph', 'temperature': '°C'}
+WEATHER_VARS = {}
+
+DEPRECATED_WEATHER_VARS = {'weather_humidity': 'humidity',
+                           'weather_temperature': 'temperature',
+                           'weather_condition': 'condition',
+                           'wind_speed': 'kph',
+                           'wind_direction': 'direction'}
+
+SENSOR_UNITS = {'humidity': '%',
+                'temperature': '°C'}
 
 PROTECT_VARS = ['co_status',
                 'smoke_status',
-                'battery_level']
+                'battery_health']
+
+PROTECT_VARS_DEPRECATED = ['battery_level']
 
 SENSOR_TEMP_TYPES = ['temperature', 'target']
 
@@ -51,21 +57,22 @@ PLATFORM_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest Sensor."""
     nest = hass.data[DATA_NEST]
+    conf = config.get(CONF_MONITORED_CONDITIONS, _VALID_SENSOR_TYPES)
 
     all_sensors = []
     for structure, device in chain(nest.devices(), nest.protect_devices()):
         sensors = [NestBasicSensor(structure, device, variable)
-                   for variable in config[CONF_MONITORED_CONDITIONS]
+                   for variable in conf
                    if variable in SENSOR_TYPES and is_thermostat(device)]
         sensors += [NestTempSensor(structure, device, variable)
-                    for variable in config[CONF_MONITORED_CONDITIONS]
+                    for variable in conf
                     if variable in SENSOR_TEMP_TYPES and is_thermostat(device)]
         sensors += [NestWeatherSensor(structure, device,
                                       WEATHER_VARS[variable])
-                    for variable in config[CONF_MONITORED_CONDITIONS]
+                    for variable in conf
                     if variable in WEATHER_VARS and is_thermostat(device)]
         sensors += [NestProtectSensor(structure, device, variable)
-                    for variable in config[CONF_MONITORED_CONDITIONS]
+                    for variable in conf
                     if variable in PROTECT_VARS and is_protect(device)]
         all_sensors.extend(sensors)
 
@@ -99,16 +106,7 @@ class NestSensor(Entity):
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        if self._location is None:
-            return "{} {}".format(self._name, self.variable)
-        else:
-            if self._name == '':
-                return "{} {}".format(self._location.capitalize(),
-                                      self.variable)
-            else:
-                return "{}({}){}".format(self._location.capitalize(),
-                                         self._name,
-                                         self.variable)
+        return "{} {}".format(self._name, self.variable)
 
 
 class NestBasicSensor(NestSensor):
@@ -138,7 +136,10 @@ class NestTempSensor(NestSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return TEMP_CELSIUS
+        if self.device.temperature_scale == 'C':
+            return TEMP_CELSIUS
+        else:
+            return TEMP_FAHRENHEIT
 
     @property
     def state(self):
@@ -191,19 +192,4 @@ class NestProtectSensor(NestSensor):
 
     def update(self):
         """Retrieve latest state."""
-        state = getattr(self.device, self.variable)
-        if self.variable == 'battery_level':
-            self._state = getattr(self.device, self.variable)
-        else:
-            self._state = 'Unknown'
-            if state == 0:
-                self._state = 'Ok'
-            if state == 1 or state == 2:
-                self._state = 'Warning'
-            if state == 3:
-                self._state = 'Emergency'
-
-    @property
-    def name(self):
-        """Return the name of the nest, if any."""
-        return "{} {}".format(self._location.capitalize(), self.variable)
+        self._state = getattr(self.device, self.variable).capitalize()
