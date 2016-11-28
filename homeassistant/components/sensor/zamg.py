@@ -68,7 +68,6 @@ from homeassistant.components.weather import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
     CONF_MONITORED_CONDITIONS, CONF_NAME, __version__
 )
 from homeassistant.helpers.entity import Entity
@@ -171,7 +170,6 @@ class ZAMGWeather(Entity):
         """Return the state attributes."""
         return {
             ATTR_WEATHER_ATTRIBUTION: ATTRIBUTION,
-            ATTR_FRIENDLY_NAME: SENSOR_TYPES[self.variable][0],
             "station": self.probe.get_data('station_name'),
             "updated": "%s %s" % (self.probe.get_data('update_date'),
                                   self.probe.get_data('update_time'))
