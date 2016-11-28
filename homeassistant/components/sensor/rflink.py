@@ -22,6 +22,12 @@ KNOWN_DEVICE_IDS = []
 SENSOR_KEYS_AND_UNITS = {
     'temperature': '°C',
     'humidity': '%',
+    'battery': None,
+}
+
+SENSOR_ICONS = {
+    'humidity': 'mdi:water-percent',
+    'battery': 'battery',
 }
 
 
@@ -90,3 +96,12 @@ class RflinkSensor(rflink.RflinkDevice):
     def state(self):
         """Return value."""
         return self._state
+
+    @property
+    def icon(self):
+        """Return possible sensor specific icon or user override."""
+        print(self._icon, self._value_key)
+        if self._icon:
+            return self._icon
+        elif self._value_key in SENSOR_ICONS:
+            return SENSOR_ICONS[self._value_key]
