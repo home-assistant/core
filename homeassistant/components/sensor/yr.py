@@ -18,6 +18,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_ELEVATION, CONF_MONITORED_CONDITIONS,
     ATTR_ATTRIBUTION)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_utc_time_change)
@@ -155,8 +156,9 @@ class YrData(object):
 
         if self._nextrun is None or dt_util.utcnow() >= self._nextrun:
             try:
+                websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
-                    resp = yield from self.hass.websession.get(self._url)
+                    resp = yield from websession.get(self._url)
                 if resp.status != 200:
                     try_again('{} returned {}'.format(self._url, resp.status))
                     return

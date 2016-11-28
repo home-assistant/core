@@ -18,7 +18,6 @@ import threading
 from types import MappingProxyType
 from typing import Optional, Any, Callable, List  # NOQA
 
-import aiohttp
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -121,20 +120,11 @@ class HomeAssistant(object):
         self.data = {}
         self.state = CoreState.not_running
         self.exit_code = None
-        self._websession = None
 
     @property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
-
-    @property
-    def websession(self):
-        """Return an aiohttp session to make web requests."""
-        if self._websession is None:
-            self._websession = aiohttp.ClientSession(loop=self.loop)
-
-        return self._websession
 
     def start(self) -> None:
         """Start home assistant."""
@@ -295,8 +285,6 @@ class HomeAssistant(object):
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         yield from self.async_block_till_done()
         self.executor.shutdown()
-        if self._websession is not None:
-            yield from self._websession.close()
         self.state = CoreState.not_running
         self.loop.stop()
 
