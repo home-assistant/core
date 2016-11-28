@@ -12,7 +12,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers import config_validation as cv
 import voluptuous as vol
 
-REQUIREMENTS = ["pwaqi==1.2"]
+REQUIREMENTS = ["pwaqi==1.3"]
 
 _LOGGER = logging.getLogger(__name__)
 
