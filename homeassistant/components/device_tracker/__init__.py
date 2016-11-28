@@ -291,7 +291,7 @@ class DeviceTracker(object):
         This method is a coroutine.
         """
         with (yield from self._is_updating):
-            self.hass.loop.run_in_executor(
+            yield from self.hass.loop.run_in_executor(
                 None, update_config, self.hass.config.path(YAML_DEVICES),
                 dev_id, device)
 
