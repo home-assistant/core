@@ -7,6 +7,7 @@ from homeassistant.bootstrap import setup_component
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 import homeassistant.components.media_player as mp
 import homeassistant.components.http as http
+from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION
 
 import requests
 
@@ -289,7 +290,7 @@ class TestMediaPlayerWeb(unittest.TestCase):
             def close(self):
                 pass
 
-        self.hass._websession = MockWebsession()
+        self.hass.data[DATA_CLIENTSESSION] = MockWebsession()
 
         assert self.hass.states.is_state(entity_id, 'playing')
         state = self.hass.states.get(entity_id)
