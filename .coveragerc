@@ -188,6 +188,7 @@ omit =
     homeassistant/components/media_player/denon.py
     homeassistant/components/media_player/denonavr.py
     homeassistant/components/media_player/directv.py
+    homeassistant/components/media_player/dunehd.py
     homeassistant/components/media_player/emby.py
     homeassistant/components/media_player/firetv.py
     homeassistant/components/media_player/gpmdp.py
@@ -309,6 +310,7 @@ omit =
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
+    homeassistant/components/sensor/waqi.py
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/anel_pwrctrl.py
     homeassistant/components/switch/arest.py
