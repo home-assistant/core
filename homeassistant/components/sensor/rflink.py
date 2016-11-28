@@ -27,7 +27,7 @@ SENSOR_KEYS_AND_UNITS = {
 
 SENSOR_ICONS = {
     'humidity': 'mdi:water-percent',
-    'battery': 'battery',
+    'battery': 'mdi:battery',
 }
 
 
