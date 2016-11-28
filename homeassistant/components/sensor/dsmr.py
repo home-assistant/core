@@ -197,7 +197,6 @@ class DerivativeDSMREntity(DSMREntity):
     @property
     def state(self):
         """Return current hourly rate, recalculate if needed."""
-
         # check if the timestamp for the object differs from the previous one
         timestamp = self.get_dsmr_object_attr('datetime')
         if timestamp and timestamp != self._previous_timestamp:
