@@ -163,12 +163,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 'Sensor type: "%s" does not appear in the NUT status '
                 'output, cannot add.', sensor_type)
 
-    add_entities(entities)
-
     try:
         data.update(no_throttle=True)
     except data.pynuterror as err:
-        _LOGGER.error("Failure while testing NUT status retrieval, %s", err)
+        _LOGGER.error("Failure while testing NUT status retrieval. "
+                      "Cannot continue setup., %s", err)
+        return False
+
+    add_entities(entities)
 
 
 class NUTSensor(Entity):
