@@ -30,24 +30,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup an Amcrest IP Camera."""
-    add_devices([AmcrestCam(config)])
+    from amcrest import AmcrestCamera
+    data = AmcrestCamera(config.get(CONF_HOST),
+                         config.get(CONF_PORT),
+                         config.get(CONF_USERNAME),
+                         config.get(CONF_PASSWORD))
+    try:
+        data.camera.current_time
+    # pylint: disable=broad-except
+    except Exception as ex:
+        _LOGGER.error('Unable to connect to Amcrest camera: %s', str(ex))
+        return False
+
+    add_devices([AmcrestCam(config, data)])
     return True
 
 
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
-    def __init__(self, device_info):
+    def __init__(self, device_info, data):
         """Initialize an Amcrest camera."""
         super(AmcrestCam, self).__init__()
-
         self._name = device_info.get(CONF_NAME)
-
-        from amcrest import AmcrestCamera
-        self._data = AmcrestCamera(device_info.get(CONF_HOST),
-                                   device_info.get(CONF_PORT),
-                                   device_info.get(CONF_USERNAME),
-                                   device_info.get(CONF_PASSWORD))
+        self._data = data
 
     def camera_image(self):
         """Return a still image reponse from the camera."""
