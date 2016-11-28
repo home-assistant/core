@@ -29,7 +29,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['rflink==0.0.5']
+REQUIREMENTS = ['rflink==0.0.6']
 
 DOMAIN = 'rflink'
 
