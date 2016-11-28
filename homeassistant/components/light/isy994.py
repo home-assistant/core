@@ -64,7 +64,7 @@ class ISYLightDevice(isy.ISYDevice, Light):
         if not self._node.fastoff():
             _LOGGER.debug('Unable to turn on light.')
 
-    def turn_on(self, brightness=100, **kwargs) -> None:
+    def turn_on(self, brightness=255, **kwargs) -> None:
         """Send the turn on command to the ISY994 light device."""
         if not self._node.on(val=brightness):
             _LOGGER.debug('Unable to turn on light.')
