@@ -52,7 +52,8 @@ def setup(hass, config):
             config[DOMAIN][CONF_API_KEY], config[DOMAIN][CONF_SECRET_KEY],
             config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD],
             'read_station read_camera access_camera '
-            'read_thermostat write_thermostat')
+            'read_thermostat write_thermostat '
+            'read_presence access_presence')
     except HTTPError:
         _LOGGER.error("Unable to connect to Netatmo API")
         return False
@@ -71,6 +72,7 @@ class WelcomeData(object):
         """Initialize the data object."""
         self.auth = auth
         self.welcomedata = None
+        self.updatedevents = None
         self.camera_names = []
         self.home = home
 
@@ -87,8 +89,16 @@ class WelcomeData(object):
                 self.camera_names.append(camera['name'])
         return self.camera_names
 
+    def get_camera_type(self, camera=None, home=None, cid=None):
+        """Return all module available on the API as a list."""
+        camera_type = None
+        for camera_name in self.camera_names:
+            camera_type = self.welcomedata.cameraType(camera_name)
+            return camera_type
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the Netatmo API to update the data."""
         import lnetatmo
         self.welcomedata = lnetatmo.WelcomeData(self.auth)
+        self.updatedevents = lnetatmo.UpdateEvent(self.auth, home=self.home)

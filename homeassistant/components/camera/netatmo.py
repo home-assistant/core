@@ -1,6 +1,5 @@
 """
 Support for the Netatmo Welcome camera.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.netatmo/
 """
@@ -82,6 +81,32 @@ class WelcomeCamera(Camera):
                 self._data.welcomedata.cameraUrls(camera=self._camera_name)
             return None
         return response.content
+
+    def camera_stream(self):
+        """Return a stream response from the camera."""
+        try:
+            if self._localurl:
+                response = requests.get('{0}/live/index_local.m3u8'.format(
+                    self._localurl), timeout=10)
+            else:
+                response = requests.get('{0}//live/index.m3u8'.format(
+                    self._vpnurl), timeout=10)
+        except requests.exceptions.RequestException as error:
+            _LOGGER.error('Welcome VPN url changed: %s', error)
+            self._data.update()
+            (self._vpnurl, self._localurl) = \
+                self._data.welcomedata.cameraUrls(camera=self._camera_name)
+            return None
+        return response
+
+    # def mjpeg_steam(self, response):
+    #     """Generate an HTTP MJPEG Stream from the camera."""
+    #     stream = self.camera_stream()
+    #     return response(
+    #         stream.iter_content(chunk_size=1024),
+    #         mimetype=stream.headers['CONTENT_TYPE_HEADER'],
+    #         direct_passthrough=True
+    #         )
 
     @property
     def name(self):
