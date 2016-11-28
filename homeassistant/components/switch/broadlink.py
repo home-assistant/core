@@ -14,12 +14,16 @@ from homeassistant.const import (
     CONF_COMMAND_ON, CONF_OPTIMISTIC, CONF_HOST, CONF_MAC)
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['pycrypto==2.6.1']
+
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_NAME = 'Broadlink switch'
+
 SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_OFF, default='true'): cv.string,
-    vol.Optional(CONF_COMMAND_ON, default='true'): cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+    vol.Optional(CONF_COMMAND_OFF, default=None): cv.string,
+    vol.Optional(CONF_COMMAND_ON, default=None): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=True): cv.boolean,
 })
 
@@ -44,7 +48,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         switches.append(
             BroadlinkSwitch(
                 hass,
-                object_id,
                 device_config.get(CONF_FRIENDLY_NAME, object_id),
                 device_config.get(CONF_COMMAND_ON),
                 device_config.get(CONF_COMMAND_OFF),
@@ -64,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class BroadlinkSwitch(SwitchDevice):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, hass, object_id, friendly_name, command_on,
+    def __init__(self, hass, friendly_name, command_on,
                  command_off, optimistic, ip_addr, mac_addr):
         """Initialize the switch."""
         self._hass = hass
@@ -75,10 +78,6 @@ class BroadlinkSwitch(SwitchDevice):
         self._optimistic = optimistic
         self._ip_addr = ip_addr
         self._mac_addr = mac_addr
-
-    @staticmethod
-    def _switch(command):
-        """Execute the actual commands."""
 
     @property
     def name(self):
@@ -95,44 +94,28 @@ class BroadlinkSwitch(SwitchDevice):
         """Return if the state is based on assumptions."""
         return self._optimistic
 
-    def update(self):
-        """Update device state."""
-
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        import base64
+        self._sendpacket(self._command_on)
         self._state = True
-        _LOGGER.info("Running command: %s", self._command_on)
-        try:
-            broadlink = Broadlink.Device(self._ip_addr, self._mac_addr)
-            auth = broadlink.auth()
-            if auth:
-                _LOGGER.info('Broadlink connection successfully established.')
-
-        except ValueError as error:
-            _LOGGER.error(error)
-
-        auth = broadlink.auth()
-        if auth:
-            broadlink.send_data(base64.b64decode(self._command_on))
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        import base64
+        self._sendpacket(self._command_off)
         self._state = False
-        _LOGGER.info("Running command: %s", self._command_off)
+
+    def _sendpacket(self, packet):
+        """Send packet to device."""
+        import base64
         try:
             broadlink = Broadlink.Device(self._ip_addr, self._mac_addr)
             auth = broadlink.auth()
             if auth:
-                _LOGGER.info('Broadlink connection successfully established.')
+                _LOGGER.info('Packet sent successfully to device.')
+                broadlink.send_data(base64.b64decode(packet))
 
         except ValueError as error:
             _LOGGER.error(error)
-
-        auth = broadlink.auth()
-        if auth:
-            broadlink.send_data(base64.b64decode(self._command_off))
 
 
 class Broadlink():
