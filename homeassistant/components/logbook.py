@@ -139,9 +139,10 @@ class LogbookView(HomeAssistantView):
         def get_results():
             """Query DB for results."""
             events = recorder.get_model('Events')
-            query = recorder.query('Events').filter(
-                (events.time_fired > start_day) &
-                (events.time_fired < end_day))
+            query = recorder.query('Events').order_by(
+                events.time_fired).filter(
+                    (events.time_fired > start_day) &
+                    (events.time_fired < end_day))
             events = recorder.execute(query)
             return _exclude_events(events, self.config)
 
