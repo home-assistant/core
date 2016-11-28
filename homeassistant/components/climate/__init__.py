@@ -58,6 +58,11 @@ ATTR_OPERATION_LIST = "operation_list"
 ATTR_SWING_MODE = "swing_mode"
 ATTR_SWING_LIST = "swing_list"
 
+# The degree of precision for each platform
+PRECISION_WHOLE = 1
+PRECISION_HALVES = 0.5
+PRECISION_TENTHS = 0.1
+
 CONVERTIBLE_ATTRIBUTE = [
     ATTR_TEMPERATURE,
     ATTR_TARGET_TEMP_LOW,
@@ -372,6 +377,14 @@ class ClimateDevice(Entity):
             return STATE_UNKNOWN
 
     @property
+    def precision(self):
+        """Return the precision of the system."""
+        if self.unit_of_measurement == TEMP_CELSIUS:
+            return PRECISION_TENTHS
+        else:
+            return PRECISION_WHOLE
+
+    @property
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
@@ -562,16 +575,18 @@ class ClimateDevice(Entity):
 
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
-        if temp is None or not isinstance(temp, Number):
+        if (temp is None or not isinstance(temp, Number) or
+                self.temperature_unit == self.unit_of_measurement):
             return temp
 
         value = convert_temperature(temp, self.temperature_unit,
                                     self.unit_of_measurement)
 
-        if self.unit_of_measurement is TEMP_CELSIUS:
-            decimal_count = 1
+        # Round in the units appropriate
+        if self.precision == PRECISION_HALVES:
+            return round(value * 2) / 2.0
+        elif self.precision == PRECISION_TENTHS:
+            return round(value, 1)
         else:
-            # Users of fahrenheit generally expect integer units.
-            decimal_count = 0
-
-        return round(value, decimal_count)
+            # PRECISION_WHOLE as a fall back
+            return round(value)
