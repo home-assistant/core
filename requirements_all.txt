@@ -124,6 +124,9 @@ fuzzywuzzy==0.14.0
 # homeassistant.components.device_tracker.bluetooth_le_tracker
 # gattlib==0.20150805
 
+# homeassistant.components.nest
+git+https://github.com/technicalpickles/python-nest.git@nest-cam#python-nest==3.0.0
+
 # homeassistant.components.notify.gntp
 gntp==1.0.3
 
@@ -436,9 +439,6 @@ python-mpd2==0.5.5
 
 # homeassistant.components.switch.mystrom
 python-mystrom==0.3.6
-
-# homeassistant.components.nest
-python-nest==2.11.0
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.6.1
