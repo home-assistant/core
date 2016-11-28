@@ -358,7 +358,7 @@ def setup(hass, config):
             return
 
         # call key
-        hmdevice.getValue(param, value, channel)
+        hmdevice.setValue(param, value, channel)
 
     hass.services.register(
         DOMAIN, SERVICE_SET_DEV_VALUE, _service_handle_device,
@@ -572,7 +572,7 @@ def _device_from_servicecall(hass, service):
 
     for _, devices in hass.data[DATA_HOMEMATIC].devices.items():
         if address in devices:
-            hmdevice = devices[address]
+            return devices[address]
 
 
 class HMHub(Entity):
