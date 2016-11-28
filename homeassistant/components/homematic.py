@@ -48,7 +48,8 @@ EVENT_IMPULSE = 'homematic.impulse'
 
 SERVICE_VIRTUALKEY = 'virtualkey'
 SERVICE_RECONNECT = 'reconnect'
-SERVICE_SET_VALUE = 'set_value'
+SERVICE_SET_VAR_VALUE = 'set_var_value'
+SERVICE_SET_DEV_VALUE = 'set_dev_value'
 
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
@@ -121,6 +122,7 @@ CONF_RESOLVENAMES = 'resolvenames'
 CONF_VARIABLES = 'variables'
 CONF_DEVICES = 'devices'
 CONF_DELAY = 'delay'
+CONF_PRIMARY = 'primary'
 
 DEFAULT_LOCAL_IP = "0.0.0.0"
 DEFAULT_LOCAL_PORT = 0
@@ -131,6 +133,7 @@ DEFAULT_PASSWORD = ""
 DEFAULT_VARIABLES = False
 DEFAULT_DEVICES = True
 DEFAULT_DELAY = 0.5
+DEFAULT_PRIMARY = False
 
 
 DEVICE_SCHEMA = vol.Schema({
@@ -155,6 +158,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES):
                 vol.In(CONF_RESOLVENAMES_OPTIONS),
             vol.Optional(CONF_DEVICES, default=DEFAULT_DEVICES): cv.boolean,
+            vol.Optional(CONF_PRIMARY, default=DEFAULT_PRIMARY): cv.boolean,
         }},
         vol.Optional(CONF_LOCAL_IP, default=DEFAULT_LOCAL_IP): cv.string,
         vol.Optional(CONF_LOCAL_PORT, default=DEFAULT_LOCAL_PORT): cv.port,
@@ -166,35 +170,58 @@ SCHEMA_SERVICE_VIRTUALKEY = vol.Schema({
     vol.Required(ATTR_ADDRESS): cv.string,
     vol.Required(ATTR_CHANNEL): vol.Coerce(int),
     vol.Required(ATTR_PARAM): cv.string,
+    vol.Optional(ATTR_PROXY): cv.string,
 })
 
-SCHEMA_SERVICE_SET_VALUE = vol.Schema({
+SCHEMA_SERVICE_SET_VAR_VALUE = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_VALUE): cv.match_all,
+})
+
+SCHEMA_SERVICE_SET_DEV_VALUE = vol.Schema({
+    vol.Required(ATTR_ADDRESS): cv.string,
+    vol.Required(ATTR_CHANNEL): vol.Coerce(int),
+    vol.Required(ATTR_PARAM): cv.string,
+    vol.Required(ATTR_VALUE): cv.match_all,
+    vol.Optional(ATTR_PROXY): cv.string,
 })
 
 SCHEMA_SERVICE_RECONNECT = vol.Schema({})
 
 
-def virtualkey(hass, address, channel, param):
+def virtualkey(hass, address, channel, param, proxy=None):
     """Send virtual keypress to homematic controlller."""
     data = {
         ATTR_ADDRESS: address,
         ATTR_CHANNEL: channel,
         ATTR_PARAM: param,
+        ATTR_PROXY: proxy,
     }
 
     hass.services.call(DOMAIN, SERVICE_VIRTUALKEY, data)
 
 
-def set_value(hass, entity_id, value):
+def set_var_value(hass, entity_id, value):
     """Change value of homematic system variable."""
     data = {
         ATTR_ENTITY_ID: entity_id,
         ATTR_VALUE: value,
     }
 
-    hass.services.call(DOMAIN, SERVICE_SET_VALUE, data)
+    hass.services.call(DOMAIN, SERVICE_SET_VAR_VALUE, data)
+
+
+def set_dev_value(hass, address, channel, param, value, proxy=None):
+    """Send virtual keypress to homematic controlller."""
+    data = {
+        ATTR_ADDRESS: address,
+        ATTR_CHANNEL: channel,
+        ATTR_PARAM: param,
+        ATTR_VALUE: value,
+        ATTR_PROXY: proxy,
+    }
+
+    hass.services.call(DOMAIN, SERVICE_SET_DEV_VALUE, data)
 
 
 def reconnect(hass):
@@ -226,7 +253,7 @@ def setup(hass, config):
         remotes[rname][CONF_USERNAME] = rconfig.get(CONF_USERNAME)
         remotes[rname][CONF_PASSWORD] = rconfig.get(CONF_PASSWORD)
 
-        if server not in hosts:
+        if server not in hosts or rconfig.get(CONF_PRIMARY):
             hosts[server] = {
                 CONF_VARIABLES: rconfig.get(CONF_VARIABLES),
                 CONF_NAME: rname,
@@ -267,13 +294,9 @@ def setup(hass, config):
         address = service.data.get(ATTR_ADDRESS)
         channel = service.data.get(ATTR_CHANNEL)
         param = service.data.get(ATTR_PARAM)
-        hmdevice = None
-
-        for _, devices in hass.data[DATA_HOMEMATIC].devices.items():
-            if address in devices:
-                hmdevice = devices[address]
 
         # device not found
+        hmdevice = _device_from_servicecall(hass, service)
         if hmdevice is None:
             _LOGGER.error("%s not found for service virtualkey!", address)
             return
@@ -290,7 +313,7 @@ def setup(hass, config):
             return
 
         # call key
-        hmdevice.actionNodeData(param, 1, channel)
+        hmdevice.actionNodeData(param, True, channel)
 
     hass.services.register(
         DOMAIN, SERVICE_VIRTUALKEY, _hm_service_virtualkey,
@@ -308,9 +331,9 @@ def setup(hass, config):
                 hm_variable.hm_set(value)
 
     hass.services.register(
-        DOMAIN, SERVICE_SET_VALUE, _service_handle_value,
-        descriptions[DOMAIN][SERVICE_SET_VALUE],
-        schema=SCHEMA_SERVICE_SET_VALUE)
+        DOMAIN, SERVICE_SET_VAR_VALUE, _service_handle_value,
+        descriptions[DOMAIN][SERVICE_SET_VAR_VALUE],
+        schema=SCHEMA_SERVICE_SET_VAR_VALUE)
 
     def _service_handle_reconnect(service):
         """Reconnect to all homematic hubs."""
@@ -320,6 +343,27 @@ def setup(hass, config):
         DOMAIN, SERVICE_RECONNECT, _service_handle_reconnect,
         descriptions[DOMAIN][SERVICE_RECONNECT],
         schema=SCHEMA_SERVICE_RECONNECT)
+
+    def _service_handle_device(service):
+        """Service handle set_dev_value services."""
+        address = service.data.get(ATTR_ADDRESS)
+        channel = service.data.get(ATTR_CHANNEL)
+        param = service.data.get(ATTR_PARAM)
+        value = service.data.get(ATTR_VALUE)
+
+        # device not found
+        hmdevice = _device_from_servicecall(hass, service)
+        if hmdevice is None:
+            _LOGGER.error("%s not found!", address)
+            return
+
+        # call key
+        hmdevice.getValue(param, value, channel)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_DEV_VALUE, _service_handle_device,
+        descriptions[DOMAIN][SERVICE_SET_DEV_VALUE],
+        schema=SCHEMA_SERVICE_SET_DEV_VALUE)
 
     return True
 
@@ -516,6 +560,19 @@ def _hm_event_handler(hass, proxy, device, caller, attribute, value):
         return
 
     _LOGGER.warning("Event is unknown and not forwarded to HA")
+
+
+def _device_from_servicecall(hass, service):
+    """Extract homematic device from service call."""
+    address = service.data.get(ATTR_ADDRESS)
+    proxy = service.data.get(ATTR_PROXY)
+
+    if proxy:
+        return hass.data[DATA_HOMEMATIC].devices[proxy].get(address)
+
+    for _, devices in hass.data[DATA_HOMEMATIC].devices.items():
+        if address in devices:
+            hmdevice = devices[address]
 
 
 class HMHub(Entity):
