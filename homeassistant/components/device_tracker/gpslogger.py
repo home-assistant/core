@@ -21,7 +21,7 @@ DEPENDENCIES = ['http']
 
 def setup_scanner(hass, config, see):
     """Setup an endpoint for the GPSLogger application."""
-    hass.http.register_view(GPSLoggerView(hass, see))
+    hass.http.register_view(GPSLoggerView(see))
 
     return True
 
@@ -32,20 +32,18 @@ class GPSLoggerView(HomeAssistantView):
     url = '/api/gpslogger'
     name = 'api:gpslogger'
 
-    def __init__(self, hass, see):
+    def __init__(self, see):
         """Initialize GPSLogger url endpoints."""
-        super().__init__(hass)
         self.see = see
 
     @asyncio.coroutine
     def get(self, request):
         """A GPSLogger message received as GET."""
-        res = yield from self._handle(request.GET)
+        res = yield from self._handle(request.app['hass'], request.GET)
         return res
 
     @asyncio.coroutine
-    # pylint: disable=too-many-return-statements
-    def _handle(self, data):
+    def _handle(self, hass, data):
         """Handle gpslogger request."""
         if 'latitude' not in data or 'longitude' not in data:
             return ('Latitude and longitude not specified.',
@@ -66,7 +64,7 @@ class GPSLoggerView(HomeAssistantView):
         if 'battery' in data:
             battery = float(data['battery'])
 
-        yield from self.hass.loop.run_in_executor(
+        yield from hass.loop.run_in_executor(
             None, partial(self.see, dev_id=device,
                           gps=gps_location, battery=battery,
                           gps_accuracy=accuracy))

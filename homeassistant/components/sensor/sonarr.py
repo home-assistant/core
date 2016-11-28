@@ -86,6 +86,7 @@ class SonarrSensor(Entity):
         self.ssl = 's' if conf.get(CONF_SSL) else ''
 
         # Object data
+        self.data = []
         self._tz = timezone(str(hass.config.time_zone))
         self.type = sensor_type
         self._name = SENSOR_TYPES[self.type][0]
@@ -96,16 +97,24 @@ class SonarrSensor(Entity):
         self._icon = SENSOR_TYPES[self.type][2]
 
         # Update sensor
+        self._available = False
         self.update()
 
     def update(self):
         """Update the data for the sensor."""
         start = get_date(self._tz)
         end = get_date(self._tz, self.days)
-        res = requests.get(
-            ENDPOINTS[self.type].format(
-                self.ssl, self.host, self.port, self.apikey, start, end),
-            timeout=5)
+        try:
+            res = requests.get(
+                ENDPOINTS[self.type].format(
+                    self.ssl, self.host, self.port, self.apikey, start, end),
+                timeout=5)
+        except OSError:
+            _LOGGER.error('Host %s is not available', self.host)
+            self._available = False
+            self._state = None
+            return
+
         if res.status_code == 200:
             if self.type in ['upcoming', 'queue', 'series', 'commands']:
                 if self.days == 1 and self.type == 'upcoming':
@@ -146,6 +155,7 @@ class SonarrSensor(Entity):
                         self._unit
                     )
                 )
+            self._available = True
 
     @property
     def name(self):
@@ -156,6 +166,11 @@ class SonarrSensor(Entity):
     def state(self):
         """Return sensor state."""
         return self._state
+
+    @property
+    def available(self):
+        """Return sensor availability."""
+        return self._available
 
     @property
     def unit_of_measurement(self):

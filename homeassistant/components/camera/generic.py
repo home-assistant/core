@@ -18,6 +18,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.exceptions import TemplateError
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
@@ -108,8 +109,9 @@ class GenericCamera(Camera):
         # async
         else:
             try:
+                websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
-                    response = yield from self.hass.websession.get(
+                    response = yield from websession.get(
                         url, auth=self._auth)
                     self._last_image = yield from response.read()
                     yield from response.release()
