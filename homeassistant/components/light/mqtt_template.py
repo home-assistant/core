@@ -163,17 +163,14 @@ class MqttTemplate(Light):
 
             # read effect
             if self._templates[CONF_EFFECT_TEMPLATE] is not None:
-                try:
-                    effect = self._templates[CONF_EFFECT_TEMPLATE].\
-                        render_with_possible_json_value(payload)
-                except ValueError:
-                    _LOGGER.warning('Invalid effect value received')
+                effect = self._templates[CONF_EFFECT_TEMPLATE].\
+                    render_with_possible_json_value(payload)
+
+                # validate effect value
+                if effect in self._effect_list:
+                    self._effect = effect
                 else:
-                    # validate effect value
-                    if effect in self._effect_list:
-                        self._effect = effect
-                    else:
-                        _LOGGER.warning('Unsupported effect value received')
+                    _LOGGER.warning('Unsupported effect value received')
 
             self.update_ha_state()
 
