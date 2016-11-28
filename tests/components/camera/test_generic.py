@@ -27,8 +27,8 @@ def test_fetching_url(aioclient_mock, hass, test_client):
 
     resp = yield from client.get('/api/camera_proxy/camera.config_test')
 
-    assert aioclient_mock.call_count == 1
     assert resp.status == 200
+    assert aioclient_mock.call_count == 1
     body = yield from resp.text()
     assert body == 'hello world'
 

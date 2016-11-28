@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.wunderground/
 from datetime import timedelta
 import logging
 
+import re
 import requests
 import voluptuous as vol
 
@@ -172,7 +173,8 @@ class WUndergroundSensor(Entity):
     def entity_picture(self):
         """Return the entity picture."""
         if self._condition == 'weather':
-            return self.rest.data['icon_url']
+            url = self.rest.data['icon_url']
+            return re.sub(r'^http://', 'https://', url, flags=re.IGNORECASE)
 
     @property
     def unit_of_measurement(self):

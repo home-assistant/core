@@ -3,9 +3,9 @@ import asyncio
 import json
 from unittest.mock import patch, MagicMock, mock_open
 
-from aiohttp import web
-
 from homeassistant.components.notify import html5
+
+from tests.common import mock_http_component_app
 
 SUBSCRIPTION_1 = {
     'browser': 'chrome',
@@ -121,7 +121,8 @@ class TestHtml5Notify(object):
             assert view.json_path == hass.config.path.return_value
             assert view.registrations == {}
 
-            app = web.Application(loop=loop)
+            hass.loop = loop
+            app = mock_http_component_app(hass)
             view.register(app.router)
             client = yield from test_client(app)
             hass.http.is_banned_ip.return_value = False
@@ -153,7 +154,8 @@ class TestHtml5Notify(object):
 
             view = hass.mock_calls[1][1][0]
 
-            app = web.Application(loop=loop)
+            hass.loop = loop
+            app = mock_http_component_app(hass)
             view.register(app.router)
             client = yield from test_client(app)
             hass.http.is_banned_ip.return_value = False
@@ -208,7 +210,8 @@ class TestHtml5Notify(object):
             assert view.json_path == hass.config.path.return_value
             assert view.registrations == config
 
-            app = web.Application(loop=loop)
+            hass.loop = loop
+            app = mock_http_component_app(hass)
             view.register(app.router)
             client = yield from test_client(app)
             hass.http.is_banned_ip.return_value = False
@@ -253,7 +256,8 @@ class TestHtml5Notify(object):
             assert view.json_path == hass.config.path.return_value
             assert view.registrations == config
 
-            app = web.Application(loop=loop)
+            hass.loop = loop
+            app = mock_http_component_app(hass)
             view.register(app.router)
             client = yield from test_client(app)
             hass.http.is_banned_ip.return_value = False
@@ -296,7 +300,8 @@ class TestHtml5Notify(object):
             assert view.json_path == hass.config.path.return_value
             assert view.registrations == config
 
-            app = web.Application(loop=loop)
+            hass.loop = loop
+            app = mock_http_component_app(hass)
             view.register(app.router)
             client = yield from test_client(app)
             hass.http.is_banned_ip.return_value = False
@@ -331,7 +336,8 @@ class TestHtml5Notify(object):
 
             view = hass.mock_calls[2][1][0]
 
-            app = web.Application(loop=loop)
+            hass.loop = loop
+            app = mock_http_component_app(hass)
             view.register(app.router)
             client = yield from test_client(app)
             hass.http.is_banned_ip.return_value = False
@@ -387,7 +393,8 @@ class TestHtml5Notify(object):
 
             bearer_token = "Bearer {}".format(push_payload['data']['jwt'])
 
-            app = web.Application(loop=loop)
+            hass.loop = loop
+            app = mock_http_component_app(hass)
             view.register(app.router)
             client = yield from test_client(app)
             hass.http.is_banned_ip.return_value = False

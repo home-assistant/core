@@ -138,7 +138,6 @@ class HomeAssistant(ha.HomeAssistant):
         self.data = {}
         self.state = ha.CoreState.not_running
         self.exit_code = None
-        self._websession = None
         self.config.api = local_api
 
     def start(self):
