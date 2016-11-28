@@ -68,7 +68,6 @@ class ThresholdSensor(BinarySensorDevice):
         self._name = name
         self._threshold = threshold
         self._sensor_class = sensor_class
-        self._unit_of_measurement = None
         self._deviation = False
         self.sensor_value = 0
 
