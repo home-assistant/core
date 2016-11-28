@@ -6,6 +6,10 @@ https://home-assistant.io/components/hdmi_cec/
 """
 import logging
 
+import yaml
+
+import struct
+
 import voluptuous as vol
 
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, CONF_DEVICES)
@@ -106,7 +110,8 @@ def setup(hass, config):
 	def _self_command(call):
 		"""Standby all devices."""
 		result = _CEC.ProcessCommandSelf()
-		_LOGGER.info("%s", result)
+		_LOGGER.info(type(result))
+		_LOGGER.info("%s", yaml.dump(result, indent=2))
 		return result
 
 	def _select_device(call):
@@ -133,11 +138,25 @@ def setup(hass, config):
 			if ATTR_RAW in d:
 				command = d[ATTR_RAW]
 			else:
-				src = d[ATTR_SRC]
-				dst = d[ATTR_DST]
-				cmd = d[ATTR_CMD]
-				att = d[ATTR_ATT]
-				command = "%s%s:%s:%s" % ( src, dst, cmd, att )
+				if ATTR_SRC in d:
+					src = d[ATTR_SRC]
+				else:
+					src = str(_CEC.GetMyAddress())
+					_LOGGER.info("src %s", src)
+				if ATTR_DST in d:
+					dst = d[ATTR_DST]
+				else:
+					dst = "f"
+				if ATTR_CMD in d:
+					cmd = d[ATTR_CMD]
+				else:
+					_LOGGER.error("Attribute 'cmd' is missing")
+					return False
+				if ATTR_ATT in d:
+					att = ":%s" % d[ATTR_ATT]
+				else:
+					att = ""
+				command = "%s%s:%s%s" % ( src, dst, cmd, att )
 			_LOGGER.info("Sending %s", command)
 			_CEC.ProcessCommandTx(command)
 
@@ -202,11 +221,15 @@ class pyCecClient:
 			return False
 		else:
 			if self.lib.Open(adapter):
+				self.lib.GetCurrentConfiguration(self.cecconfig)
 				_LOGGER.info("connection opened")
 				return True
 			else:
 				_LOGGER.info("failed to open a connection to the CEC adapter")
 				return False
+
+	def GetMyAddress(self):
+		return self.cecconfig.logicalAddresses.primary
 
 	# display the addresses controlled by libCEC
 	def ProcessCommandSelf(self):
@@ -312,6 +335,7 @@ class pyCecClient:
 		self.cecconfig = cec.libcec_configuration()
 		self.cecconfig.strDeviceName   = "pyLibCec"
 		self.cecconfig.bActivateSource = 0
+		self.cecconfig.bMonitorOnly = 0
 		self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
 		self.cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
 		self.hass = hass
