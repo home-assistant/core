@@ -134,10 +134,6 @@ class RemoteDevice(ToggleEntity):
         data = {}
         return data
 
-    def state(self):
-        """Return device's state."""
-        return self.is_on
-
     def turn_on(self, **kwargs):
         """Turn a device on with the remote."""
         raise NotImplementedError()
