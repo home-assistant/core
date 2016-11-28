@@ -11,6 +11,7 @@ from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.helpers import config_validation as cv
+import homeassistant.loader as loader
 
 REQUIREMENTS = ['amcrest==1.0.0']
 
@@ -18,6 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 80
 DEFAULT_NAME = 'Amcrest Camera'
+
+NOTIFICATION_ID = 'amcrest_notification'
+NOTIFICATION_TITLE = 'Amcrest Camera Setup'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -35,11 +39,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                          config.get(CONF_PORT),
                          config.get(CONF_USERNAME),
                          config.get(CONF_PASSWORD))
+
+    persistent_notification = loader.get_component('persistent_notification')
     try:
         data.camera.current_time
     # pylint: disable=broad-except
     except Exception as ex:
         _LOGGER.error('Unable to connect to Amcrest camera: %s', str(ex))
+        persistent_notification.create(
+            hass, 'Error: {}<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(ex),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
         return False
 
     add_devices([AmcrestCam(config, data)])
