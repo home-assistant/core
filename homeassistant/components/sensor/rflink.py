@@ -8,6 +8,7 @@ import asyncio
 from functools import partial
 import logging
 
+from homeassistant.components import group
 import homeassistant.components.rflink as rflink
 
 from . import DOMAIN
@@ -27,6 +28,13 @@ SENSOR_KEYS_AND_UNITS = {
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Rflink platform."""
+    # add new (unconfigured) devices to user desired group
+    if config.get('new_devices_group'):
+        new_devices_group = yield from group.Group.async_create_group(
+            hass, config.get('new_devices_group'), [], True)
+    else:
+        new_devices_group = None
+
     @asyncio.coroutine
     def add_new_device(event):
         """Check if device is known, otherwise create device entity."""
@@ -44,6 +52,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             # make sure the packet is processed by the new entities
             for device in devices:
                 device.match_packet(packet)
+
+            # maybe add to new devices group
+            if new_devices_group:
+                yield from new_devices_group.async_update_tracked_entity_ids(
+                    list(new_devices_group.tracking) + [
+                        device.entity_id for device in devices])
 
     hass.bus.async_listen(rflink.RFLINK_EVENT[DOMAIN], add_new_device)
 

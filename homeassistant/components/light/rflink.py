@@ -7,6 +7,7 @@ https://home-assistant.io/components/light.rflink/
 import asyncio
 import logging
 
+from homeassistant.components import group
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 import homeassistant.components.rflink as rflink
@@ -71,6 +72,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # add devices from config
     yield from async_add_devices(devices_from_config(config, hass))
 
+    # add new (unconfigured) devices to user desired group
+    if config.get('new_devices_group'):
+        new_devices_group = yield from group.Group.async_create_group(
+            hass, config.get('new_devices_group'), [], True)
+    else:
+        new_devices_group = None
+
     @asyncio.coroutine
     def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
@@ -85,6 +93,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             yield from async_add_devices([device])
             # make sure the packet is processed by the new entity
             device.match_packet(packet)
+
+            # maybe add to new devices group
+            if new_devices_group:
+                yield from new_devices_group.async_update_tracked_entity_ids(
+                    list(new_devices_group.tracking) + [device.entity_id])
+
     hass.bus.async_listen(rflink.RFLINK_EVENT[DOMAIN], add_new_device)
 
 
