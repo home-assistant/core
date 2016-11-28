@@ -107,8 +107,8 @@ def get_service(hass, config):
         return None
 
     hass.http.register_view(
-        HTML5PushRegistrationView(hass, registrations, json_path))
-    hass.http.register_view(HTML5PushCallbackView(hass, registrations))
+        HTML5PushRegistrationView(registrations, json_path))
+    hass.http.register_view(HTML5PushCallbackView(registrations))
 
     gcm_api_key = config.get(ATTR_GCM_API_KEY)
     gcm_sender_id = config.get(ATTR_GCM_SENDER_ID)
@@ -168,9 +168,8 @@ class HTML5PushRegistrationView(HomeAssistantView):
     url = '/api/notify.html5'
     name = 'api:notify.html5'
 
-    def __init__(self, hass, registrations, json_path):
+    def __init__(self, registrations, json_path):
         """Init HTML5PushRegistrationView."""
-        super().__init__(hass)
         self.registrations = registrations
         self.json_path = json_path
 
@@ -237,9 +236,8 @@ class HTML5PushCallbackView(HomeAssistantView):
     url = '/api/notify.html5/callback'
     name = 'api:notify.html5/callback'
 
-    def __init__(self, hass, registrations):
+    def __init__(self, registrations):
         """Init HTML5PushCallbackView."""
-        super().__init__(hass)
         self.registrations = registrations
 
     def decode_jwt(self, token):
@@ -324,7 +322,7 @@ class HTML5PushCallbackView(HomeAssistantView):
 
         event_name = '{}.{}'.format(NOTIFY_CALLBACK_EVENT,
                                     event_payload[ATTR_TYPE])
-        self.hass.bus.fire(event_name, event_payload)
+        request.app['hass'].bus.fire(event_name, event_payload)
         return self.json({'status': 'ok',
                           'event': event_payload[ATTR_TYPE]})
 

@@ -14,12 +14,13 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPGatewayTimeout
 import async_timeout
 
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP)
+    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL)
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA)
+from homeassistant.helpers.aiohttp_client import (
+    async_get_clientsession, async_create_clientsession)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
@@ -59,23 +60,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a Synology IP Camera."""
-    if not config.get(CONF_VERIFY_SSL):
-        connector = aiohttp.TCPConnector(verify_ssl=False)
-
-        @asyncio.coroutine
-        def _async_close_connector(event):
-            """Close websession on shutdown."""
-            yield from connector.close()
-
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_close_connector)
-    else:
-        connector = hass.websession.connector
-
-    websession_init = aiohttp.ClientSession(
-        loop=hass.loop,
-        connector=connector
-    )
+    verify_ssl = config.get(CONF_VERIFY_SSL)
+    websession_init = async_get_clientsession(hass, verify_ssl)
 
     # Determine API to use for authentication
     syno_api_url = SYNO_API_URL.format(
@@ -118,19 +104,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         syno_auth_url
     )
 
-    websession_init.detach()
-
     # init websession
-    websession = aiohttp.ClientSession(
-        loop=hass.loop, connector=connector, cookies={'id': session_id})
-
-    @callback
-    def _async_close_websession(event):
-        """Close websession on shutdown."""
-        websession.detach()
-
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_close_websession)
+    websession = async_create_clientsession(
+        hass, verify_ssl, cookies={'id': session_id})
 
     # Use SessionID to get cameras in system
     syno_camera_url = SYNO_API_URL.format(

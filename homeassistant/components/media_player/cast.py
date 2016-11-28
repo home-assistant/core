@@ -81,6 +81,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 KNOWN_HOSTS.append(host)
             except pychromecast.ChromecastConnectionError:
                 pass
+        else:
+            try:
+                # add the device anyway, get_chromecasts couldn't find it
+                casts.append(CastDevice(pychromecast.Chromecast(*host)))
+                KNOWN_HOSTS.append(host)
+            except pychromecast.ChromecastConnectionError:
+                pass
 
     add_devices(casts)
 

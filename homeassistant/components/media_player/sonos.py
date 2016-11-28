@@ -20,6 +20,7 @@ from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import utcnow
 
 REQUIREMENTS = ['SoCo==0.12']
 
@@ -264,6 +265,8 @@ class SonosDevice(MediaPlayerDevice):
         self._coordinator = None
         self._media_content_id = None
         self._media_duration = None
+        self._media_position = None
+        self._media_position_updated_at = None
         self._media_image_url = None
         self._media_artist = None
         self._media_album_name = None
@@ -404,6 +407,9 @@ class SonosDevice(MediaPlayerDevice):
                 media_album_name = track_info.get('album')
                 media_title = track_info.get('title')
 
+                media_position = None
+                media_position_updated_at = None
+
                 is_radio_stream = \
                     current_media_uri.startswith('x-sonosapi-stream:') or \
                     current_media_uri.startswith('x-rincon-mp3radio:')
@@ -425,7 +431,6 @@ class SonosDevice(MediaPlayerDevice):
                     media_image_url = None
 
                 elif is_radio_stream:
-                    is_radio_stream = True
                     media_image_url = self._format_media_image_url(
                         current_media_uri
                     )
@@ -489,6 +494,46 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = True
                     support_pause = True
 
+                    position_info = self._player.avTransport.GetPositionInfo(
+                        [('InstanceID', 0),
+                         ('Channel', 'Master')]
+                    )
+                    rel_time = _parse_timespan(
+                        position_info.get("RelTime")
+                    )
+
+                    # player no longer reports position?
+                    update_media_position = rel_time is None and \
+                        self._media_position is not None
+
+                    # player started reporting position?
+                    update_media_position |= rel_time is not None and \
+                        self._media_position is None
+
+                    # position changed?
+                    if rel_time is not None and \
+                       self._media_position is not None:
+
+                        time_diff = utcnow() - self._media_position_updated_at
+                        time_diff = time_diff.total_seconds()
+
+                        calculated_position = \
+                            self._media_position + \
+                            time_diff
+
+                        update_media_position = \
+                            abs(calculated_position - rel_time) > 1.5
+
+                    if update_media_position:
+                        media_position = rel_time
+                        media_position_updated_at = utcnow()
+                    else:
+                        # don't update media_position (don't want unneeded
+                        # state transitions)
+                        media_position = self._media_position
+                        media_position_updated_at = \
+                            self._media_position_updated_at
+
                     playlist_position = track_info.get('playlist_position')
                     if playlist_position in ('', 'NOT_IMPLEMENTED', None):
                         playlist_position = None
@@ -514,6 +559,8 @@ class SonosDevice(MediaPlayerDevice):
                 self._media_duration = _parse_timespan(
                     track_info.get('duration')
                 )
+                self._media_position = media_position
+                self._media_position_updated_at = media_position_updated_at
                 self._media_image_url = media_image_url
                 self._media_artist = media_artist
                 self._media_album_name = media_album_name
@@ -541,6 +588,8 @@ class SonosDevice(MediaPlayerDevice):
             self._coordinator = None
             self._media_content_id = None
             self._media_duration = None
+            self._media_position = None
+            self._media_position_updated_at = None
             self._media_image_url = None
             self._media_artist = None
             self._media_album_name = None
@@ -641,6 +690,25 @@ class SonosDevice(MediaPlayerDevice):
             return self._coordinator.media_duration
         else:
             return self._media_duration
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        if self._coordinator:
+            return self._coordinator.media_position
+        else:
+            return self._media_position
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        if self._coordinator:
+            return self._coordinator.media_position_updated_at
+        else:
+            return self._media_position_updated_at
 
     @property
     def media_image_url(self):

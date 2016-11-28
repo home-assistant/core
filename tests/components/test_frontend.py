@@ -6,7 +6,7 @@ import unittest
 import requests
 
 import homeassistant.bootstrap as bootstrap
-from homeassistant.components import frontend, http
+from homeassistant.components import http
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 
 from tests.common import get_test_instance_port, get_test_home_assistant
@@ -45,7 +45,6 @@ def setUpModule():
 def tearDownModule():
     """Stop everything that was started."""
     hass.stop()
-    frontend.PANELS = {}
 
 
 class TestFrontend(unittest.TestCase):
