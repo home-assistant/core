@@ -7,8 +7,8 @@ https://home-assistant.io/components/remote.harmony/
 """
 
 import logging
-from homeassistant.const import CONF_NAME, CONF_HOST, \
-    CONF_PORT
+from homeassistant.const import (
+    CONF_NAME, CONF_HOST, CONF_PORT)
 from homeassistant.components.remote import PLATFORM_SCHEMA
 from homeassistant.util import slugify
 import homeassistant.components.remote as remote

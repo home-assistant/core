@@ -12,6 +12,7 @@ from tests.common import get_test_home_assistant, mock_service
 SERVICE_SYNC = 'sync'
 SERVICE_SEND_COMMAND = 'send_command'
 
+
 class TestDemoRemote(unittest.TestCase):
     """Test the demo remote."""
 
