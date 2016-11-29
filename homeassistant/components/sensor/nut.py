@@ -278,7 +278,7 @@ class PyNUTData(object):
 
         try:
             return self._client.list_vars(self._alias)
-        except self.pynuterror as err:
+        except (self.pynuterror, ConnectionResetError) as err:
             _LOGGER.debug("Error getting NUT vars for host %s: %s",
                           self._host, err)
             return None
