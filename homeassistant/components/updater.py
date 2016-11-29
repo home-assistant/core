@@ -41,6 +41,11 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {
     vol.Optional(CONF_REPORTING, default=True): cv.boolean
 }}, extra=vol.ALLOW_EXTRA)
 
+RESPONSE_SCHEMA = vol.Schema({
+    vol.Required('version'): str,
+    vol.Required('release-notes'): cv.url,
+})
+
 
 def _create_uuid(hass, filename=UPDATER_UUID_FILE):
     """Create UUID and save it in a file."""
@@ -83,7 +88,12 @@ def setup(hass, config):
 
 def check_newest_version(hass, huuid):
     """Check if a new version is available and report if one is."""
-    newest, releasenotes = get_newest_version(huuid)
+    result = get_newest_version(huuid)
+
+    if result is None:
+        return
+
+    newest, releasenotes = result
 
     if newest is None or 'dev' in CURRENT_VERSION:
         return
@@ -129,21 +139,24 @@ def get_newest_version(huuid):
     if not huuid:
         info_object = {}
 
+    res = None
     try:
         req = requests.post(UPDATER_URL, json=info_object, timeout=5)
         res = req.json()
+        res = RESPONSE_SCHEMA(res)
+
         _LOGGER.info(("Submitted analytics to Home Assistant servers. "
                       "Information submitted includes %s"), info_object)
         return (res['version'], res['release-notes'])
     except requests.RequestException:
-        _LOGGER.exception("Could not contact Home Assistant Update to check"
-                          "for updates")
+        _LOGGER.error("Could not contact Home Assistant Update to check "
+                      "for updates")
         return None
+
     except ValueError:
-        _LOGGER.exception("Received invalid response from Home Assistant"
-                          "Update")
+        _LOGGER.error("Received invalid response from Home Assistant Update")
         return None
-    except KeyError:
-        _LOGGER.exception("Response from Home Assistant Update did not"
-                          "include version")
+
+    except vol.Invalid:
+        _LOGGER.error('Got unexpected response: %s', res)
         return None
