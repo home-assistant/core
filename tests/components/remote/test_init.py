@@ -75,30 +75,13 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
 
-    def test_sync(self):
-        """ Test sync"""
-        sync_calls = mock_service(
-            self.hass, remote.DOMAIN, SERVICE_SYNC)
-
-        remote.sync(
-            self.hass, entity_id='entity_id_val')
-
-        self.hass.block_till_done()
-
-        self.assertEqual(1, len(sync_calls))
-        call = sync_calls[-1]
-
-        self.assertEqual(remote.DOMAIN, call.domain)
-        self.assertEqual(SERVICE_SYNC, call.service)
-        self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
-
     def test_send_command(self):
         """ Test send_command"""
         send_command_calls = mock_service(
             self.hass, remote.DOMAIN, SERVICE_SEND_COMMAND)
 
         remote.send_command(
-            self.hass, entity_id='entity_id_val')
+            self.hass, entity_id='entity_id_val', device='test_device', command='test_command')
 
         self.hass.block_till_done()
 
