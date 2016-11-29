@@ -5,10 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.homematic/
 """
 import logging
-import homeassistant.components.homematic as homematic
 from homeassistant.components.climate import ClimateDevice, STATE_AUTO
+from homeassistant.components.homematic import HMDevice
 from homeassistant.util.temperature import convert
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN, ATTR_TEMPERATURE
+from homeassistant.loader import get_component
 
 DEPENDENCIES = ['homematic']
 
@@ -29,14 +30,16 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     if discovery_info is None:
         return
 
+    homematic = get_component("homematic")
     return homematic.setup_hmdevice_discovery_helper(
+        hass,
         HMThermostat,
         discovery_info,
         add_callback_devices
     )
 
 
-class HMThermostat(homematic.HMDevice, ClimateDevice):
+class HMThermostat(HMDevice, ClimateDevice):
     """Representation of a Homematic thermostat."""
 
     @property
