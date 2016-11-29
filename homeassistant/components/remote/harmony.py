@@ -42,6 +42,7 @@ HARMONY_SYNC_SCHEMA = vol.Schema({
 # List of devices that have been registered
 DEVICES = []
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Harmony platform."""
     import pyharmony
