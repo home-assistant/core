@@ -23,7 +23,6 @@ ATTR_COMMAND = 'command'
 ATTR_ACTIVITY = 'activity'
 SERVICE_SEND_COMMAND = 'send_command'
 SERVICE_SYNC = 'sync'
-ATTR_DEFAULT = ''
 
 DOMAIN = 'remote'
 SCAN_INTERVAL = 30
@@ -36,10 +35,16 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 REMOTE_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_DEVICE): cv.string,
-    vol.Optional(ATTR_COMMAND): cv.string,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+REMOTE_SERVICE_TURN_ON_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_ACTIVITY): cv.string
+})
+
+REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_DEVICE): cv.string,
+    vol.Required(ATTR_COMMAND): cv.string,
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,7 +70,7 @@ def turn_off(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
-def send_command(hass, device=None, command=None, entity_id=None):
+def send_command(hass, device, command, entity_id=None):
     """Send a command to a device."""
     data = {ATTR_DEVICE: str(device), ATTR_COMMAND: command}
     if entity_id:
@@ -89,9 +94,9 @@ def setup(hass, config):
         """Handle calls to the remote services."""
         target_remotes = component.extract_from_service(service)
 
-        activity_id = service.data.get(ATTR_ACTIVITY, ATTR_DEFAULT)
-        device = str(service.data.get(ATTR_DEVICE, ATTR_DEFAULT))
-        command = str(service.data.get(ATTR_COMMAND, ATTR_DEFAULT))
+        activity_id = service.data.get(ATTR_ACTIVITY)
+        device = service.data.get(ATTR_DEVICE)
+        command = service.data.get(ATTR_COMMAND)
 
         for remote in target_remotes:
             if service.service == SERVICE_TURN_ON:
@@ -113,13 +118,10 @@ def setup(hass, config):
                            schema=REMOTE_SERVICE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_remote_service,
                            descriptions.get(SERVICE_TURN_ON),
-                           schema=REMOTE_SERVICE_SCHEMA)
+                           schema=REMOTE_SERVICE_TURN_ON_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, handle_remote_service,
                            descriptions.get(SERVICE_SEND_COMMAND),
-                           schema=REMOTE_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_SYNC, handle_remote_service,
-                           descriptions.get(SERVICE_SYNC),
-                           schema=REMOTE_SERVICE_SCHEMA)
+                           schema=REMOTE_SERVICE_SEND_COMMAND_SCHEMA)
 
     return True
 
@@ -127,23 +129,12 @@ def setup(hass, config):
 class RemoteDevice(ToggleEntity):
     """Representation of a remote."""
 
-    # pylint: disable=no-self-use, abstract-method
-    @property
-    def state_attributes(self):
-        """Return the optional state attributes."""
-        data = {}
-        return data
-
     def turn_on(self, **kwargs):
         """Turn a device on with the remote."""
         raise NotImplementedError()
 
     def turn_off(self, **kwargs):
         """Turn a device off with the remote."""
-        raise NotImplementedError()
-
-    def sync(self, **kwargs):
-        """Sync remote device."""
         raise NotImplementedError()
 
     def send_command(self, **kwargs):

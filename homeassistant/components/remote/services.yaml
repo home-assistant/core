@@ -33,7 +33,7 @@ send_command:
       description: Command to send
       example: 'Play'
 
-sync:
+harmony_sync:
   description: Syncs the remote's configuration
 
   fields:

@@ -7,13 +7,17 @@ https://home-assistant.io/components/remote.harmony/
 """
 
 import logging
+from os import path
+import urllib.parse
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT)
-from homeassistant.components.remote import PLATFORM_SCHEMA
+    CONF_NAME, CONF_HOST, CONF_PORT, ATTR_ENTITY_ID)
+from homeassistant.components.remote import PLATFORM_SCHEMA, DOMAIN
 from homeassistant.util import slugify
+from homeassistant.config import load_yaml_config_file
 import homeassistant.components.remote as remote
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+
 
 REQUIREMENTS = ['pyharmony==1.0.12']
 _LOGGER = logging.getLogger(__name__)
@@ -22,18 +26,27 @@ ATTR_DEVICE = 'device'
 ATTR_COMMAND = 'command'
 ATTR_ACTIVITY = 'activity'
 
+SERVICE_SYNC = 'harmony_sync'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT): cv.string,
-    vol.Required(ATTR_ACTIVITY, default='Not_Set'): cv.string,
+    vol.Required(ATTR_ACTIVITY, default=None): cv.string,
 })
 
+HARMONY_SYNC_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+# List of devices that have been registered
+DEVICES = []
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Harmony platform."""
     import pyharmony
-    import urllib.parse
+    global DEVICES
+
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -50,21 +63,52 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     _LOGGER.debug('received token: ' + token)
-    add_devices([HarmonyRemote(config.get(CONF_NAME),
-                               config.get(CONF_HOST),
-                               config.get(CONF_PORT),
-                               config.get(ATTR_ACTIVITY),
-                               harmony_conf_file,
-                               token)])
+    DEVICES = [HarmonyRemote(config.get(CONF_NAME),
+                             config.get(CONF_HOST),
+                             config.get(CONF_PORT),
+                             config.get(ATTR_ACTIVITY),
+                             harmony_conf_file,
+                             token)]
+    add_devices(DEVICES, True)
+    register_services(hass)
     return True
+
+
+def register_services(hass):
+    """Register all services for harmony devices."""
+    descriptions = load_yaml_config_file(
+        path.join(path.dirname(__file__), 'services.yaml'))
+
+    hass.services.register(DOMAIN, SERVICE_SYNC,
+                           _sync_service,
+                           descriptions.get(SERVICE_SYNC),
+                           schema=HARMONY_SYNC_SCHEMA)
+
+
+def _apply_service(service, service_func, *service_func_args):
+    """Internal func for applying a service."""
+    entity_ids = service.data.get('entity_id')
+
+    if entity_ids:
+        _devices = [device for device in DEVICES
+                    if device.entity_id in entity_ids]
+    else:
+        _devices = DEVICES
+
+    for device in _devices:
+        service_func(device, *service_func_args)
+        device.update_ha_state(True)
+
+
+def _sync_service(service):
+    _apply_service(service, HarmonyRemote.sync)
 
 
 class HarmonyRemote(remote.RemoteDevice):
     """Remote representation used to control a Harmony device."""
 
-    def __init__(self, name, host, port, activity, path, token):
+    def __init__(self, name, host, port, activity, out_path, token):
         """Initialize HarmonyRemote class."""
-
         import pyharmony
         from pathlib import Path
 
@@ -76,27 +120,17 @@ class HarmonyRemote(remote.RemoteDevice):
         self._current_activity = None
         self._default_activity = activity
         self._token = token
-        self._config_path = path
+        self._config_path = out_path
         _LOGGER.debug('retrieving harmony config using token: ' + token)
-        self._config = pyharmony.ha_get_config(self.token, host, port)
+        self._config = pyharmony.ha_get_config(self._token, host, port)
         if not Path(self._config_path).is_file():
-            _LOGGER.debug('writing harmony configuration to file: ' + path)
+            _LOGGER.debug('writing harmony configuration to file: ' + out_path)
             pyharmony.ha_write_config_file(self._config, self._config_path)
 
     @property
     def name(self):
         """Return the Harmony device's name."""
         return self._name
-
-    @property
-    def token(self):
-        """Return the token of the Harmony device."""
-        return self._token
-
-    @property
-    def config(self):
-        """Return the configuration of the Harmony device."""
-        return self._config
 
     @property
     def device_state_attributes(self):
@@ -129,7 +163,7 @@ class HarmonyRemote(remote.RemoteDevice):
         else:
             activity = self._default_activity
 
-        if activity != 'Not_Set':
+        if activity:
             pyharmony.ha_start_activity(self._token,
                                         self._ip,
                                         self._port,

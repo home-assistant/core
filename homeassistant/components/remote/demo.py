@@ -12,20 +12,19 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the demo remotes."""
     add_devices_callback([
-        DemoRemote('Remote One', False, None, False),
-        DemoRemote('Remote Two', True, 'mdi:remote', False),
+        DemoRemote('Remote One', False, None),
+        DemoRemote('Remote Two', True, 'mdi:remote'),
     ])
 
 
 class DemoRemote(RemoteDevice):
-    """Representation of a demo switch."""
+    """Representation of a demo remote."""
 
-    def __init__(self, name, state, icon, assumed):
+    def __init__(self, name, state, icon):
         """Initialize the Demo Remote."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self._icon = icon
-        self._assumed = assumed
 
     @property
     def should_poll(self):
@@ -41,11 +40,6 @@ class DemoRemote(RemoteDevice):
     def icon(self):
         """Return the icon to use for device if any."""
         return self._icon
-
-    @property
-    def assumed_state(self):
-        """Return if the state is based on assumptions."""
-        return self._assumed
 
     @property
     def is_on(self):
