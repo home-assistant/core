@@ -81,10 +81,8 @@ class TestRemote(unittest.TestCase):
             self.hass, remote.DOMAIN, SERVICE_SEND_COMMAND)
 
         remote.send_command(
-            self.hass,
-            entity_id='entity_id_val',
-            device='test_device',
-            command='test_command')
+            self.hass, entity_id='entity_id_val',
+            device='test_device', command='test_command')
 
         self.hass.block_till_done()
 
