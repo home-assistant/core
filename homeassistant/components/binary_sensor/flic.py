@@ -19,9 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CONF_AUTO_SCAN = "auto_scan"
-CONF_THRESHOLDS = "thresholds"
-CONF_THRESHOLD_DOUBLE_CLICK = "double_click"
-CONF_THRESHOLD_LONG_CLICK = "long_click"
+CONF_THRESHOLD_DOUBLE_CLICK = "threshold_double_click"
+CONF_THRESHOLD_LONG_CLICK = "threshold_long_click"
 
 EVENT_FLIC_SINGLE_CLICK = "flic_single_click"
 EVENT_FLIC_LONG_CLICK = "flic_long_click"
@@ -30,14 +29,13 @@ EVENT_FLIC_DOUBLE_CLICK = "flic_double_click"
 
 # Validation of the user's configuration
 THRESHOLDS_SCHEMA = vol.Schema({
-    vol.Optional(CONF_THRESHOLD_LONG_CLICK, default=500): float,
-    vol.Optional(CONF_THRESHOLD_DOUBLE_CLICK, default=300): float
 })
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default='localhost'): cv.string,
     vol.Optional(CONF_PORT, default=5551): cv.port,
     vol.Optional(CONF_AUTO_SCAN, default=True): cv.boolean,
-    vol.Optional(CONF_THRESHOLDS): THRESHOLDS_SCHEMA
+    vol.Optional(CONF_THRESHOLD_LONG_CLICK, default=0.5): float,
+    vol.Optional(CONF_THRESHOLD_DOUBLE_CLICK, default=0.3): float
 })
 
 
@@ -110,9 +108,8 @@ def start_scanning(hass, config, async_add_entities, client):
 @asyncio.coroutine
 def setup_button(hass, config, async_add_entities, client, address):
     """Setup single button device."""
-    threshold_config = config.get(CONF_THRESHOLDS)
-    double_click_threshold = threshold_config[CONF_THRESHOLD_DOUBLE_CLICK]
-    long_click_threshold = threshold_config[CONF_THRESHOLD_LONG_CLICK]
+    double_click_threshold = config.get(CONF_THRESHOLD_DOUBLE_CLICK)
+    long_click_threshold = config.get(CONF_THRESHOLD_LONG_CLICK)
 
     button = FlicButton(hass, client, address,
                         double_click_threshold, long_click_threshold)
