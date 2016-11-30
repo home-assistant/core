@@ -33,6 +33,9 @@ TwitterAPI==2.4.2
 # homeassistant.components.http
 aiohttp_cors==0.5.0
 
+# homeassistant.components.camera.amcrest
+amcrest==1.0.0
+
 # homeassistant.components.apcupsd
 apcaccess==0.0.4
 
