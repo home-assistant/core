@@ -128,7 +128,7 @@ class WelcomeBinarySensor(BinarySensorDevice):
     def update(self):
         """Request an update from the Netatmo API."""
         self._data.update()
-        self._data.welcomedata.updateEvent(home=self._data.home)
+        self._data.update_event()
 
         if self._sensor_name == "Someone known":
             self._state =\

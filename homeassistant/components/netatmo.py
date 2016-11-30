@@ -30,6 +30,7 @@ NETATMO_AUTH = None
 DEFAULT_DISCOVERY = True
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=10)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -101,3 +102,8 @@ class WelcomeData(object):
         """Call the Netatmo API to update the data."""
         import lnetatmo
         self.welcomedata = lnetatmo.WelcomeData(self.auth, size = 100)
+
+    @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
+    def update_event(self):
+        self.welcomedata.updateEvent(home=self.home)
+
