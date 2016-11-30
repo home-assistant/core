@@ -114,7 +114,8 @@ def setup(hass, config):
 
         for key, value in state.attributes.items():
             if key != 'unit_of_measurement':
-                json_body[0]['fields'][key] = value
+                if isinstance(value, (str, int, float)):
+                    json_body[0]['fields'][key] = value
 
         json_body[0]['tags'].update(tags)
 
