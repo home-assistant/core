@@ -97,8 +97,7 @@ class GenericCamera(Camera):
             def fetch():
                 """Read image from a URL."""
                 try:
-                    kwargs = {'timeout': 10, 'auth': self._auth}
-                    response = requests.get(url, **kwargs)
+                    response = requests.get(url, timeout=10, auth=self._auth)
                     return response.content
                 except requests.exceptions.RequestException as error:
                     _LOGGER.error('Error getting camera image: %s', error)
@@ -108,13 +107,13 @@ class GenericCamera(Camera):
                 None, fetch)
         # async
         else:
+            response = None
             try:
                 websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
                     response = yield from websession.get(
                         url, auth=self._auth)
-                    self._last_image = yield from response.read()
-                    yield from response.release()
+                self._last_image = yield from response.read()
             except asyncio.TimeoutError:
                 _LOGGER.error('Timeout getting camera image')
                 return self._last_image
@@ -122,6 +121,9 @@ class GenericCamera(Camera):
                     aiohttp.errors.ClientDisconnectedError) as err:
                 _LOGGER.error('Error getting new camera image: %s', err)
                 return self._last_image
+            finally:
+                if response is not None:
+                    self.hass.async_add_job(response.release())
 
         self._last_url = url
         return self._last_image

@@ -155,6 +155,7 @@ class YrData(object):
                                               nxt)
 
         if self._nextrun is None or dt_util.utcnow() >= self._nextrun:
+            resp = None
             try:
                 websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
@@ -163,11 +164,15 @@ class YrData(object):
                     try_again('{} returned {}'.format(self._url, resp.status))
                     return
                 text = yield from resp.text()
-                self.hass.async_add_job(resp.release())
+
             except (asyncio.TimeoutError, aiohttp.errors.ClientError,
                     aiohttp.errors.ClientDisconnectedError) as err:
                 try_again(err)
                 return
+
+            finally:
+                if resp is not None:
+                    self.hass.async_add_job(resp.release())
 
             try:
                 import xmltodict
