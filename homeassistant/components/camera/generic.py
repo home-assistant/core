@@ -114,7 +114,6 @@ class GenericCamera(Camera):
                     response = yield from websession.get(
                         url, auth=self._auth)
                 self._last_image = yield from response.read()
-                yield from response.release()
             except asyncio.TimeoutError:
                 _LOGGER.error('Timeout getting camera image')
                 return self._last_image
