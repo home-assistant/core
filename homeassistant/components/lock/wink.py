@@ -15,15 +15,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink platform."""
     import pywink
 
-    add_devices(WinkLockDevice(lock) for lock in pywink.get_locks())
+    add_devices(WinkLockDevice(lock, hass) for lock in pywink.get_locks())
 
 
 class WinkLockDevice(WinkDevice, LockDevice):
     """Representation of a Wink lock."""
 
-    def __init__(self, wink):
+    def __init__(self, wink, hass):
         """Initialize the lock."""
-        WinkDevice.__init__(self, wink)
+        WinkDevice.__init__(self, wink, hass)
 
     @property
     def is_locked(self):
