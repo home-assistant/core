@@ -87,14 +87,13 @@ def start_scanning(hass, config, async_add_entities, client):
     """Start a new flic client for scanning & connceting to new buttons."""
     import pyflic
 
-    _LOGGER.info("Start scan wizard")
     scan_wizard = pyflic.ScanWizard()
 
     def scan_completed_callback(scan_wizard, result, address, name):
         """Restart scan wizard to constantly check for new buttons."""
         if result == pyflic.ScanWizardResult.WizardSuccess:
             _LOGGER.info("Found new button (%s)", address)
-        else:
+        elif result != pyflic.ScanWizardResult.WizardFailedTimeout:
             _LOGGER.info("Failed to connect to button (%s). Reason: %s",
                          address, result)
 
