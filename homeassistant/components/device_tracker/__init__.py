@@ -490,6 +490,7 @@ class Device(Entity):
         # bytes like 00 get truncates to 0, API needs full bytes
         oui = '{:02x}:{:02x}:{:02x}'.format(*[int(b, 16) for b in oui_bytes])
         url = 'http://api.macvendors.com/' + oui
+        resp = None
         try:
             websession = async_get_clientsession(self.hass)
 

@@ -158,8 +158,13 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}))
+
+        # wait for async calls (macvendor) to finish
+        self.hass.block_till_done()
+
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0))
+
         assert len(config) == 1
         assert config[0].dev_id == 'dev1'
         assert config[0].track
