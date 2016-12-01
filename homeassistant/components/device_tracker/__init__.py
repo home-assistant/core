@@ -512,7 +512,7 @@ class Device(Entity):
             return 'unknown'
         finally:
             if resp is not None:
-                yield from resp.close()
+                yield from resp.release()
 
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
