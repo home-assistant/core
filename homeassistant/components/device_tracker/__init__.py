@@ -510,6 +510,9 @@ class Device(Entity):
                 aiohttp.errors.ClientDisconnectedError):
             # same as above
             return 'unknown'
+        finally:
+            if resp is not None:
+                yield from resp.close()
 
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
