@@ -70,7 +70,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    coordinates = dict(lat=latitude, lon=longitude, msl=elevation)
+    coordinates = {'lat': str(latitude),
+                   'lon': str(longitude),
+                   'msl': str(elevation)}
 
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
@@ -135,8 +137,8 @@ class YrData(object):
 
     def __init__(self, hass, coordinates, devices):
         """Initialize the data object."""
-        self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/?' \
-            'lat={lat};lon={lon};msl={msl}'.format(**coordinates)
+        self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/'
+        self._urlparams = coordinates
         self._nextrun = None
         self.devices = devices
         self.data = {}
@@ -159,9 +161,10 @@ class YrData(object):
             try:
                 websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
-                    resp = yield from websession.get(self._url)
+                    resp = yield from websession.get(self._url,
+                                                     params=self._urlparams)
                 if resp.status != 200:
-                    try_again('{} returned {}'.format(self._url, resp.status))
+                    try_again('{} returned {}'.format(resp.url, resp.status))
                     return
                 text = yield from resp.text()
 
