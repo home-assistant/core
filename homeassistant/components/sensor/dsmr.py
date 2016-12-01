@@ -65,20 +65,20 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # Suppress logging
     logging.getLogger('dsmr_parser').setLevel(logging.ERROR)
 
-    from dsmr_parser import obis_references as obis
+    from dsmr_parser import obis_references as obis_ref
     from dsmr_parser.protocol import create_dsmr_reader
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
     # Define list of name,obis mappings to generate entities
     obis_mapping = [
-        ['Power Consumption', obis.CURRENT_ELECTRICITY_USAGE],
-        ['Power Production', obis.CURRENT_ELECTRICITY_DELIVERY],
-        ['Power Tariff', obis.ELECTRICITY_ACTIVE_TARIFF],
-        ['Power Consumption (low)', obis.ELECTRICITY_USED_TARIFF_1],
-        ['Power Consumption (normal)', obis.ELECTRICITY_USED_TARIFF_2],
-        ['Power Production (low)', obis.ELECTRICITY_DELIVERED_TARIFF_1],
-        ['Power Production (normal)', obis.ELECTRICITY_DELIVERED_TARIFF_2],
+        ['Power Consumption', obis_ref.CURRENT_ELECTRICITY_USAGE],
+        ['Power Production', obis_ref.CURRENT_ELECTRICITY_DELIVERY],
+        ['Power Tariff', obis_ref.ELECTRICITY_ACTIVE_TARIFF],
+        ['Power Consumption (low)', obis_ref.ELECTRICITY_USED_TARIFF_1],
+        ['Power Consumption (normal)', obis_ref.ELECTRICITY_USED_TARIFF_2],
+        ['Power Production (low)', obis_ref.ELECTRICITY_DELIVERED_TARIFF_1],
+        ['Power Production (normal)', obis_ref.ELECTRICITY_DELIVERED_TARIFF_2],
     ]
 
     # Generate device entities
@@ -86,9 +86,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # Protocol version specific obis
     if dsmr_version == '4':
-        gas_obis = obis.HOURLY_GAS_METER_READING
+        gas_obis = obis_ref.HOURLY_GAS_METER_READING
     else:
-        gas_obis = obis.GAS_METER_READING
+        gas_obis = obis_ref.GAS_METER_READING
 
     # add gas meter reading and derivative for usage
     devices += [
