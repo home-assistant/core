@@ -146,8 +146,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
     """
     group = hass.states.get(entity_id)
 
-    if not group or ATTR_ENTITY_ID not in group.attributes or \
-       group.attributes.get(ATTR_HIDE_SWITCH):
+    if not group or ATTR_ENTITY_ID not in group.attributes:
         return []
 
     entity_ids = group.attributes[ATTR_ENTITY_ID]
