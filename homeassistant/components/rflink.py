@@ -29,7 +29,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['rflink==0.0.6']
+REQUIREMENTS = ['rflink==0.0.7']
 
 DOMAIN = 'rflink'
 
@@ -127,11 +127,20 @@ def async_setup(hass, config):
                                lambda x: transport.close())
 
     # provide channel for sending commands to rflink gateway
+    @asyncio.coroutine
+    def send_command_ack(event):
+        """Send command to rflink gateway via asyncio transport/protocol."""
+        command = event.data[ATTR_COMMAND]
+        yield from protocol.send_command_ack(*command)
     def send_command(event):
         """Send command to rflink gateway via asyncio transport/protocol."""
         command = event.data[ATTR_COMMAND]
         protocol.send_command(*command)
-    hass.bus.async_listen(RFLINK_EVENT['send_command'], send_command)
+
+    if config.get('wait_for_ack', True):
+        hass.bus.async_listen(RFLINK_EVENT['send_command'], send_command_ack)
+    else:
+        hass.bus.async_listen(RFLINK_EVENT['send_command'], send_command)
 
     # whoo
     return True
@@ -145,7 +154,7 @@ class RflinkDevice(Entity):
 
     # should be set by component implementation
     domain = None
-    # default stae
+    # default state
     _state = STATE_UNKNOWN
 
     def __init__(self, device_id, hass, name=None, aliasses=[], icon=None):
