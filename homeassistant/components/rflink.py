@@ -81,7 +81,7 @@ def async_setup(hass, config):
     """Setup the Rflink component."""
     from rflink.protocol import create_rflink_connection
 
-    ignore_device_ids = config.get('ignore_device', [])
+    ignore_device_ids = config.get('ignore_devices', [])
 
     def packet_callback(packet):
         """Handle incoming rflink packets.
