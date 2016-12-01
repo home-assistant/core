@@ -115,7 +115,7 @@ def get_changed_since(states, utc_point_in_time):
 def reproduce_state(hass, states, blocking=False):
     """Reproduce given state."""
     return run_coroutine_threadsafe(
-            async_reproduce_state(hass, states, blocking), hass.loop).result()
+        async_reproduce_state(hass, states, blocking), hass.loop).result()
 
 
 @asyncio.coroutine
