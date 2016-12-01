@@ -222,4 +222,7 @@ class FlicButton(BinarySensorDevice):
 
     def _fire_event(self, event):
         """Fire the passed event with device-dependent data."""
-        self._hass.bus.fire(event, self.address)
+        self._hass.bus.fire(event, {
+            "name": self.name,
+            "address": self.address
+        })
