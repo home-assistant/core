@@ -184,6 +184,7 @@ def is_protect(device):
     """Target devices that are Nest Protect Smoke Alarms."""
     return bool(device.__class__.__name__ == 'ProtectDevice')
 
+
 def is_camera(device):
     """Target devices that are Nest Protect Smoke Alarms."""
     return bool(device.__class__.__name__ == 'CameraDevice')
