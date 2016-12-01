@@ -133,7 +133,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
-        return self.currentsong['id']
+        return self.currentsong.get('file')
 
     @property
     def media_content_type(self):
