@@ -280,6 +280,7 @@ omit =
     homeassistant/components/sensor/miflora.py
     homeassistant/components/sensor/mqtt_room.py
     homeassistant/components/sensor/neurio_energy.py
+    homeassistant/components/sensor/nut.py
     homeassistant/components/sensor/nzbget.py
     homeassistant/components/sensor/ohmconnect.py
     homeassistant/components/sensor/onewire.py

@@ -416,6 +416,9 @@ pynetgear==0.3.3
 # homeassistant.components.switch.netio
 pynetio==0.1.6
 
+# homeassistant.components.sensor.nut
+pynut2==2.1.2
+
 # homeassistant.components.alarm_control_panel.nx584
 # homeassistant.components.binary_sensor.nx584
 pynx584==0.2
