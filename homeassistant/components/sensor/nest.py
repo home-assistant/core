@@ -96,10 +96,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors += [NestTempSensor(structure, device, variable)
                     for variable in conf
                     if variable in SENSOR_TEMP_TYPES and is_thermostat(device)]
-        sensors += [NestWeatherSensor(structure, device,
-                                      WEATHER_VARS[variable])
-                    for variable in conf
-                    if variable in WEATHER_VARS and is_thermostat(device)]
         sensors += [NestProtectSensor(structure, device, variable)
                     for variable in conf
                     if variable in PROTECT_VARS and is_protect(device)]
@@ -186,29 +182,6 @@ class NestTempSensor(NestSensor):
             self._state = "%s-%s" % (int(low), int(high))
         else:
             self._state = round(temp, 1)
-
-
-class NestWeatherSensor(NestSensor):
-    """Representation a basic Nest Weather Conditions sensor."""
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    def update(self):
-        """Retrieve latest state."""
-        if self.variable == 'kph' or self.variable == 'direction':
-            self._state = getattr(self.structure.weather.current.wind,
-                                  self.variable)
-        else:
-            self._state = getattr(self.structure.weather.current,
-                                  self.variable)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_UNITS.get(self.variable, None)
 
 
 class NestProtectSensor(NestSensor):
