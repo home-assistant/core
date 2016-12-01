@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.nest/
 """
 from itertools import chain
+import logging
 
 import voluptuous as vol
 
@@ -17,11 +18,13 @@ from homeassistant.const import (
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
-                'operation_mode',
-                'last_connection']
+                'operation_mode']
 
-SENSOR_TYPES_DEPRECATED = ['battery_health',
-                           'last_ip',
+SENSOR_TYPES_DEPRECATED = ['last_ip',
+                           'local_ip',
+                           'last_connection']
+
+SENSOR_TYPES_DEPRECATED = ['last_ip',
                            'local_ip']
 
 WEATHER_VARS = {}
@@ -43,21 +46,47 @@ PROTECT_VARS_DEPRECATED = ['battery_level']
 
 SENSOR_TEMP_TYPES = ['temperature', 'target']
 
+_SENSOR_TYPES_DEPRECATED = SENSOR_TYPES_DEPRECATED + \
+        list(DEPRECATED_WEATHER_VARS.keys()) + PROTECT_VARS_DEPRECATED
+
 _VALID_SENSOR_TYPES = SENSOR_TYPES + SENSOR_TEMP_TYPES + PROTECT_VARS + \
                       list(WEATHER_VARS.keys())
+
+_VALID_SENSOR_TYPES_WITH_DEPRECATED = _VALID_SENSOR_TYPES + \
+        _SENSOR_TYPES_DEPRECATED
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
     vol.Optional(CONF_SCAN_INTERVAL):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Required(CONF_MONITORED_CONDITIONS): [vol.In(_VALID_SENSOR_TYPES)],
+    vol.Required(CONF_MONITORED_CONDITIONS):
+        [vol.In(_VALID_SENSOR_TYPES_WITH_DEPRECATED)]
 })
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest Sensor."""
     nest = hass.data[DATA_NEST]
     conf = config.get(CONF_MONITORED_CONDITIONS, _VALID_SENSOR_TYPES)
+
+    for variable in conf:
+        if variable in _SENSOR_TYPES_DEPRECATED:
+            if variable in DEPRECATED_WEATHER_VARS:
+                wstr = ("Nest no longer provides weather data like %s. See "
+                        "https://home-assistant.io/components/#weather "
+                        "for a list of other weather components to use." %
+                        variable)
+            else:
+                wstr = (variable + " is no a longer supported "
+                        "monitored_conditions. See "
+                        "https://home-assistant.io/components/"
+                        "binary_sensor.nest/ "
+                        "for valid options, or remove monitored_conditions "
+                        "entirely to get a reasonable default")
+
+            _LOGGER.error(wstr)
 
     all_sensors = []
     for structure, device in chain(nest.devices(), nest.protect_devices()):
@@ -100,13 +129,13 @@ class NestSensor(Entity):
 
         # device specific
         self._location = self.device.where
-        self._name = self.device.name
+        self._name = self.device.name_long
         self._state = None
 
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        return "{} {}".format(self._name, self.variable)
+        return "{} {}".format(self._name, self.variable.replace("_", " "))
 
 
 class NestBasicSensor(NestSensor):
