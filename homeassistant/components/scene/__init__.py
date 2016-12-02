@@ -67,8 +67,7 @@ def async_setup(hass, config):
     def async_handle_scene_service(service):
         """Handle calls to the switch services."""
         target_scenes = component.async_extract_from_service(service)
-        print(target_scenes)
-        print(component.entities)
+
         tasks = [scene.async_activate() for scene in target_scenes]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
