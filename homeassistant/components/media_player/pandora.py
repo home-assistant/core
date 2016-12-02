@@ -121,7 +121,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self.update_playing_status()
 
         self._player_state = STATE_IDLE
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn the media player off."""
@@ -139,28 +139,24 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             _LOGGER.info('Killed Pianobar subprocess')
         self._pianobar = None
         self._player_state = STATE_OFF
-        try:
-            self.update_ha_state()
-        except exceptions.HomeAssistantError:
-            # System shutdown occurring.
-            pass
+        self.schedule_update_ha_state()
 
     def media_play(self):
         """Send play command."""
         self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
         self._player_state = STATE_PLAYING
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def media_pause(self):
         """Send pause command."""
         self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
         self._player_state = STATE_PAUSED
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def media_next_track(self):
         """Go to next track."""
         self._send_pianobar_command(SERVICE_MEDIA_NEXT_TRACK)
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def supported_media_commands(self):
