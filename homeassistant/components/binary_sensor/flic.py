@@ -60,9 +60,9 @@ def async_setup_platform(hass, config, async_add_entities,
 
     def new_button_callback(address):
         """Setup newly verified button as device in home assistant."""
-        asyncio.ensure_future(setup_button(hass, config, async_add_entities,
-                                           main_client, address),
-                              loop=loop)
+        hass.loop.create_task(async_setup_button(hass, config,
+                                                 async_add_entities,
+                                                 main_client, address))
 
     main_client.on_new_verified_button = new_button_callback
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, main_client.close)
@@ -76,11 +76,12 @@ def async_setup_platform(hass, config, async_add_entities,
         loop.run_in_executor(None, scan_client.handle_events)
 
     # Get addresses of already verified buttons
-    addresses = yield from get_verified_addresses(main_client)
+    addresses = yield from async_get_verified_addresses(main_client)
     if addresses:
         for address in addresses:
-            yield from setup_button(hass, config, async_add_entities,
-                                    main_client, address)
+            yield from async_setup_button(hass, config,
+                                          async_add_entities,
+                                          main_client, address)
 
 
 def start_scanning(hass, config, async_add_entities, client):
@@ -105,7 +106,7 @@ def start_scanning(hass, config, async_add_entities, client):
 
 
 @asyncio.coroutine
-def setup_button(hass, config, async_add_entities, client, address):
+def async_setup_button(hass, config, async_add_entities, client, address):
     """Setup single button device."""
     double_click_threshold = config.get(CONF_THRESHOLD_DOUBLE_CLICK)
     long_click_threshold = config.get(CONF_THRESHOLD_LONG_CLICK)
@@ -117,7 +118,8 @@ def setup_button(hass, config, async_add_entities, client, address):
     yield from async_add_entities([button])
 
 
-def get_verified_addresses(client):
+@asyncio.coroutine
+def async_get_verified_addresses(client):
     """Retrieve addresses of verified buttons."""
     future = asyncio.Future()
     loop = asyncio.get_event_loop()
@@ -206,7 +208,7 @@ class FlicButton(BinarySensorDevice):
                     self._last_click = now
 
                     @asyncio.coroutine
-                    def defer_single_click_check():
+                    def async_defer_single_click_check():
                         """Defer check, whether click was a single click.
 
                         Check if the button has been clicked again in
@@ -217,7 +219,7 @@ class FlicButton(BinarySensorDevice):
                         if self._last_click == now:
                             self._last_click = datetime.now()
                             self._fire_event(EVENT_FLIC_SINGLE_CLICK)
-                    fire_coroutine_threadsafe(defer_single_click_check(),
+                    fire_coroutine_threadsafe(async_defer_single_click_check(),
                                               self._hass.loop)
 
     def _fire_event(self, event):
