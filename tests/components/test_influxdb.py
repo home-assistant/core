@@ -257,6 +257,50 @@ class TestInfluxDB(unittest.TestCase):
                 self.assertFalse(mock_client.return_value.write_points.called)
             mock_client.return_value.write_points.reset_mock()
 
+    def test_event_listener_invalid_type(self, mock_client):
+        """Test the event listener when an attirbute has an invalid type."""
+        self._setup()
+
+        valid = {
+            '1': 1,
+            '1.0': 1.0,
+            STATE_ON: 1,
+            STATE_OFF: 0,
+            'foo': 'foo'
+        }
+        for in_, out in valid.items():
+            attrs = {
+                'unit_of_measurement': 'foobars',
+                'longitude': '1.1',
+                'latitude': '2.2',
+                'invalid_attribute': ['value1', 'value2']
+            }
+            state = mock.MagicMock(
+                state=in_, domain='fake', object_id='entity', attributes=attrs)
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+            body = [{
+                'measurement': 'foobars',
+                'tags': {
+                    'domain': 'fake',
+                    'entity_id': 'entity',
+                },
+                'time': 12345,
+                'fields': {
+                    'value': out,
+                    'longitude': '1.1',
+                    'latitude': '2.2'
+                },
+            }]
+            self.handler_method(event)
+            self.assertEqual(
+                mock_client.return_value.write_points.call_count, 1
+            )
+            self.assertEqual(
+                mock_client.return_value.write_points.call_args,
+                mock.call(body)
+            )
+            mock_client.return_value.write_points.reset_mock()
+
     def test_event_listener_default_measurement(self, mock_client):
         """Test the event listener with a default measurement."""
         config = {
