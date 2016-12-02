@@ -95,6 +95,7 @@ def async_setup(hass, config):
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_REMOTES)
     yield from component.async_setup(config)
 
+    @asyncio.coroutine
     def async_handle_remote_service(service):
         """Handle calls to the remote services."""
         target_remotes = component.async_extract_from_service(service)
