@@ -22,7 +22,8 @@ class AiohttpClientMocker:
                 text=None,
                 content=None,
                 json=None,
-                params=None):
+                params=None,
+                exc=None):
         """Mock a request."""
         if json:
             text = _json.dumps(json)
@@ -32,6 +33,8 @@ class AiohttpClientMocker:
             content = b''
         if params:
             url = str(yarl.URL(url).with_query(params))
+
+        self.exc = exc
 
         self._mocks.append(AiohttpClientMockResponse(
             method, url, status, content))
@@ -68,6 +71,9 @@ class AiohttpClientMocker:
         for response in self._mocks:
             if response.match_request(method, url, params):
                 self.mock_calls.append((method, url))
+
+                if self.exc:
+                    raise self.exc
                 return response
 
         assert False, "No mock registered for {} {}".format(method.upper(),
