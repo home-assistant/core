@@ -7,7 +7,7 @@ https://home-assistant.io/components/switch.vera/
 import logging
 
 from homeassistant.components.hdmi_cec import CecDevice, CEC_DEVICES, CEC_CLIENT
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.media_player import MediaPlayerDevice
 
 DEPENDENCIES = ['hdmi_cec']
 
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device in CEC_DEVICES['switch'])
 
 
-class CecSwitch(CecDevice, SwitchDevice):
+class CecSwitch(CecDevice, MediaPlayerDevice):
     """Representation of a Vera Switch."""
 
     def __init__(self, cecClient, logical=None, physical=None):

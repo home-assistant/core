@@ -72,7 +72,7 @@ CEC_LOGICAL_TO_TYPE = [0,  # TV0
                        2,  # Free use
                        2  # Broadcast
                        ]
-CEC_TYPE_TO_COMPONENT = ['media_player', 'recorder', 'switch', 'media_player', 'media_player', 'media_player']
+CEC_TYPE_TO_COMPONENT = ['media_player', 'media_player', 'switch', 'media_player', 'media_player', 'media_player']
 
 CEC_DEVICES = defaultdict(list)
 
@@ -131,13 +131,14 @@ def setup(hass, base_config):
             hass.services.register(DOMAIN, SERVICE_SELF, CEC_CLIENT.ProcessCommandSelf)
             hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.ProcessCommandVolume)
             for logicalAddress in range(15):
-                if logicalAddress in exclude:
+                if exclude is None or logicalAddress in exclude:
                     continue
                 dev_type = CEC_TYPE_TO_COMPONENT[CEC_LOGICAL_TO_TYPE[logicalAddress]]
                 if dev_type is None:
                     continue
                 CEC_DEVICES[dev_type].append(logicalAddress)
             for component in CEC_TYPE_TO_COMPONENT:
+                _LOGGER.info("registering component %s", component)
                 discovery.load_platform(hass, component, DOMAIN, {}, base_config)
             return True
         else:
@@ -175,6 +176,23 @@ class CecDevice(Entity):
                 self._state = STATE_UNKNOWN
             self.update()
             self.schedule_update_ha_state()
+
+    def turn_on(self, **kwargs):
+        """Turn device on."""
+        self.cecClient.ProcessCommandPowerOn()
+        self._state = STATE_ON
+        self.schedule_update_ha_state()
+
+    def turn_off(self, **kwargs):
+        """Turn device off."""
+        self.cecClient.ProcessCommandPowerOn()
+        self._state = STATE_OFF
+        self.schedule_update_ha_state()
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self._state
 
     @property
     def name(self):
