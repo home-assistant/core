@@ -378,6 +378,7 @@ pycmus==0.1.0
 
 # homeassistant.components.envisalink
 # homeassistant.components.zwave
+# homeassistant.components.binary_sensor.hikvision
 pydispatcher==2.0.5
 
 # homeassistant.components.media_player.emby
@@ -388,6 +389,9 @@ pyenvisalink==1.9
 
 # homeassistant.components.ifttt
 pyfttt==0.3
+
+# homeassistant.components.binary_sensor.hikvision
+pyhik==0.0.6
 
 # homeassistant.components.homematic
 pyhomematic==0.1.16
