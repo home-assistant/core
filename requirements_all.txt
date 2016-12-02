@@ -509,6 +509,9 @@ scsgate==0.1.0
 # homeassistant.components.notify.sendgrid
 sendgrid==3.6.3
 
+# homeassistant.components.media_player.aquostv
+sharp-aquos-rc==0.2
+
 # homeassistant.components.notify.slack
 slacker==0.9.30
 
