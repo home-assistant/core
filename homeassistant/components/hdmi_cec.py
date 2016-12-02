@@ -4,6 +4,7 @@ CEC component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/hdmi_cec/
 """
+import asyncio
 import logging
 
 import cec
@@ -19,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-global CEC_CLIENT
+CEC_CLIENT = {}
 
 ATTR_DEVICE = 'device'
 ATTR_COMMAND = 'command'
@@ -117,6 +118,7 @@ def setup(hass, base_config):
     for pair in parse_mapping(config.get(CONF_DEVICES, {})):
         flat[pair[0]] = pad_physical_address(pair[1])
 
+    global CEC_CLIENT
     CEC_CLIENT = pyCecClient(hass)
     exclude = config.get(CONF_EXCLUDE)
 
@@ -130,16 +132,17 @@ def setup(hass, base_config):
             hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.ProcessCommandTx)
             hass.services.register(DOMAIN, SERVICE_SELF, CEC_CLIENT.ProcessCommandSelf)
             hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.ProcessCommandVolume)
-            for logicalAddress in range(15):
-                if exclude is None or logicalAddress in exclude:
+            for components in [5]:
+                if exclude is not None and components in exclude:
                     continue
-                dev_type = CEC_TYPE_TO_COMPONENT[CEC_LOGICAL_TO_TYPE[logicalAddress]]
+                dev_type = CEC_TYPE_TO_COMPONENT[CEC_LOGICAL_TO_TYPE[components]]
+                _LOGGER.info("Probing %d %d %s", components, CEC_LOGICAL_TO_TYPE[components], dev_type)
                 if dev_type is None:
                     continue
-                CEC_DEVICES[dev_type].append(logicalAddress)
-            for component in CEC_TYPE_TO_COMPONENT:
-                _LOGGER.info("registering component %s", component)
-                discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+                CEC_DEVICES[dev_type].append(components)
+            # for components in ['media_player', 'switch']:
+            for components in ['media_player']:
+                discovery.load_platform(hass, components, DOMAIN, {}, base_config)
             return True
         else:
             return False
@@ -153,28 +156,42 @@ class CecDevice(Entity):
 
     deviceTypeNames = ["TV", "Recorder", "UNKNOWN", "Tuner", "Playback", "Audio"]
 
-    def __init__(self, cecClient, logical=None, physical=None):
+    def __init__(self, hass, cecClient, logical=None, physical=None):
         """Initialize the device."""
+        self.hass = hass
+
+        self._state = STATE_UNKNOWN
         self.physicalAddress = physical
         self.logicalAddress = logical
-        self.type = CEC_LOGICAL_TO_TYPE[logical]
+        if logical is not None:
+            self._name = "device %d" % logical
+            self.type = CEC_LOGICAL_TO_TYPE[logical]
+        else:
+            self._name = "UNKNOWN"
+            _LOGGER.warning("Initialization of no id")
+        _LOGGER.info("Initializing CEC device %s", self._name)
         self.cecClient = cecClient
         cecClient.RegisterCallback(self._update_callback, src=logical)
         self.update()
 
+    @asyncio.coroutine
     def async_update(self):
-        self.cecClient.ProcessCommandTx({'dst': hex(self.logicalAddress)[2:], 'cmd': '8F'})
+        _LOGGER.info("Updating status for device %s", hex(self.logicalAddress)[2:])
+        self.cecClient.ProcessCommandTx(
+            type('call', (object,), {'data': {'dst': hex(self.logicalAddress)[2:], 'cmd': '8F'}}))
 
     def _update_callback(self, src, dst, response, cmd, cmdChain):
+        _LOGGER.info("Got status for device %s -> %s, %s %s %s", src, dst, response, cmd, cmdChain)
         if cmd == '90':
             status = cmdChain[0]
+            _LOGGER.info("status: %s", status)
             if status == '00':
                 self._state = STATE_ON
             elif status == '01':
                 self._state = STATE_OFF
             else:
                 self._state = STATE_UNKNOWN
-            self.update()
+            _LOGGER.info("state set to %s", self._state)
             self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
@@ -205,6 +222,11 @@ class CecDevice(Entity):
         return False
 
     @property
+    def state(self):
+        """No polling needed."""
+        return self._state
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
@@ -212,14 +234,14 @@ class CecDevice(Entity):
         return attr
 
 
-def _commandHash(src, dst, cmd, response, ):
+def _commandHash(src, dst, cmd, response):
     if response is None:
         response = 0
     elif response:
         response = 1
     else:
         response = 2
-    return response * 0x1000 + src * 0x100 + dst * 0x10 + cmd
+    return response * 0x10000 + src * 0x1000 + dst * 0x100 + cmd
 
 
 class pyCecClient:
@@ -385,8 +407,12 @@ class pyCecClient:
             x += 1
         _LOGGER.info(strLog)
 
-    def RegisterCallback(self, callback, src=15, dst=15, cmd=0, response=False):
-        self.callbacks[_commandHash(src, dst, cmd, response)].append(callback)
+    def RegisterCallback(self, callback, src=15, dst=15, cmd=0, response=None):
+        hash = _commandHash(src, dst, cmd, response)
+        if hash not in self.callbacks:
+            self.callbacks[hash] = []
+        _LOGGER.info("registering callback %s %s", hex(hash), callback)
+        self.callbacks[hash].append(callback)
 
     def LogCallback(self, level, time, message):
         """logging callback"""
@@ -417,42 +443,47 @@ class pyCecClient:
         self.hass.bus.fire(EVENT_CEC_KEYPRESS_RECEIVED, {ATTR_KEY: key, ATTR_DURATION: duration})
         return 0
 
-    def CommandCallback(self, cmd):
+    def CommandCallback(self, command):
         """command received callback"""
-        _LOGGER.info("[command received] " + cmd)
-        self.hass.bus.fire(EVENT_CEC_COMMAND_RECEIVED, {ATTR_COMMAND: cmd})
-
-        cmdChain = cmd.split(':')
+        _LOGGER.info("[command receivedx] %s", command)
+        dir = command[0:2]
+        command = command[3:]
+        cmdChain = command.split(':')
         src = cmdChain.pop(0)
         dst = src[1]
         src = src[0]
         cmd = cmdChain.pop(0)
+        _LOGGER.info("[command received1] " + command)
         if cmd == '00':
             response = True
             cmd = cmdChain.pop(0)
         else:
             response = False
+        _LOGGER.info("[command received2] %s %s %s", src, dst, cmd)
+        _LOGGER.info("[command received21] %d", int(src, 16))
+        _LOGGER.info("[command received3] " + src)
+        _LOGGER.info("[command received4] " + dst)
+        _LOGGER.info("[command received5] " + cmd)
+        _LOGGER.info("[command callbacks] " + command)
+        commands = []
+        try:
+            for s in {int(src, 16), 15}:
+                for d in {int(dst, 16), 15}:
+                    for c in {int(cmd, 16), 0}:
+                        for r in {response, None}:
+                            hash = _commandHash(s, d, c, r)
+                            callbacks = self.callbacks.get(hash)
+                            _LOGGER.info("looking for callbacks for %s, %s", hex(hash), callbacks)
+                            if callbacks is not None:
+                                commands.extend(callbacks)
+        except Exception as e:
+            _LOGGER.error(e, exc_info=1)
 
-        commands = set()
-        commands.union(self.callbacks.get(_commandHash(15, 15, 0, None)))
-        commands.union(self.callbacks.get(_commandHash(15, 15, 0, response)))
-        commands.union(self.callbacks.get(_commandHash(15, 15, cmd, None)))
-        commands.union(self.callbacks.get(_commandHash(15, 15, cmd, response)))
-        commands.union(self.callbacks.get(_commandHash(15, dst, 0, None)))
-        commands.union(self.callbacks.get(_commandHash(15, dst, 0, response)))
-        commands.union(self.callbacks.get(_commandHash(15, dst, cmd, None)))
-        commands.union(self.callbacks.get(_commandHash(15, dst, cmd, response)))
-        commands.union(self.callbacks.get(_commandHash(src, 15, 0, None)))
-        commands.union(self.callbacks.get(_commandHash(src, 15, 0, response)))
-        commands.union(self.callbacks.get(_commandHash(src, 15, cmd, None)))
-        commands.union(self.callbacks.get(_commandHash(src, 15, cmd, response)))
-        commands.union(self.callbacks.get(_commandHash(src, dst, 0, None)))
-        commands.union(self.callbacks.get(_commandHash(src, dst, 0, response)))
-        commands.union(self.callbacks.get(_commandHash(src, dst, cmd, None)))
-        commands.union(self.callbacks.get(_commandHash(src, dst, cmd, response)))
         for c in commands:
+            _LOGGER.info("Calling callback %s")
             c(src, dst, response, cmd, cmdChain)
 
+        self.hass.bus.fire(EVENT_CEC_COMMAND_RECEIVED, {ATTR_COMMAND: command})
         return 0
 
     def __init__(self, hass):

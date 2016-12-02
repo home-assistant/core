@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Vera switches."""
+    _LOGGER.debug("setting CEC switches")
     add_devices(
         CecSwitch(CEC_CLIENT, logical=device) for
         device in CEC_DEVICES['switch'])
