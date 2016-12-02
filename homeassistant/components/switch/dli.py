@@ -45,7 +45,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             switches.append(
                 DLISwitch(
                     outlet[0],
-#                    config.get(CONF_URL) + ':' + str(outlet[0]),
                     '{}:{}'.format(config.get(CONF_URL), outlet[0]),
                     state,
                     switch
