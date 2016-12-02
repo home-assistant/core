@@ -116,7 +116,7 @@ def setup(hass, config):
             if key != 'unit_of_measurement':
                 if isinstance(value, (str, float, bool)):
                     json_body[0]['fields'][key] = value
-                if isinstance(value, int):
+                elif isinstance(value, int):
                     # Prevent column data errors in influxDB.
                     json_body[0]['fields'][key] = float(value)
 
