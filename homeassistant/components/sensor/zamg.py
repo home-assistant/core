@@ -1,8 +1,6 @@
-# ------------------------------------------------------------------------
 # coding=utf-8
 #
 #  Created by Martin J. Laubach on 2016-11-07
-# ------------------------------------------------------------------------
 
 """
 Sensor for data from Austrian "Zentralanstalt für Meteorologie und Geodynamik".
@@ -116,7 +114,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 })
 
 
-# ------------------------------------------------------------------------
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup platform."""
     station_id = config.get(CONF_STATION_ID)
@@ -131,7 +128,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors, True)
 
 
-# ------------------------------------------------------------------------
 class ZAMGWeather(Entity):
     """
     I am a weather wrapper for a specific station and a specific attribute.
@@ -176,7 +172,6 @@ class ZAMGWeather(Entity):
         }
 
 
-# ------------------------------------------------------------------------
 class ZamgData(object):
     """
     I represent weather data for a specific site.
@@ -254,5 +249,3 @@ class ZamgData(object):
     def get_data(self, variable):
         """Generic accessor for data."""
         return self.data.get(variable)
-
-# ------------------------------------------------------------------------
