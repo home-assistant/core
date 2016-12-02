@@ -29,8 +29,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if not isinstance(scene_config, list):
         scene_config = [scene_config]
 
-    async_add_devices(HomeAssistantScene(hass, _process_config(scene))
-                      for scene in scene_config)
+    yield from async_add_devices(HomeAssistantScene(
+        hass, _process_config(scene)) for scene in scene_config)
     return True
 
 
