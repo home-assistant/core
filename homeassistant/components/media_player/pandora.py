@@ -22,7 +22,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (STATE_OFF, STATE_PAUSED, STATE_PLAYING,
                                  STATE_IDLE)
 from homeassistant import util
-from homeassistant import exceptions
 
 REQUIREMENTS = ['pexpect==4.0.1']
 _LOGGER = logging.getLogger(__name__)
