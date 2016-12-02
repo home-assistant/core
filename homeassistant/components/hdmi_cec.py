@@ -132,7 +132,7 @@ def setup(hass, base_config):
             hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.ProcessCommandTx)
             hass.services.register(DOMAIN, SERVICE_SELF, CEC_CLIENT.ProcessCommandSelf)
             hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.ProcessCommandVolume)
-            for components in [5]:
+            for components in range(15):
                 if exclude is not None and components in exclude:
                     continue
                 dev_type = CEC_TYPE_TO_COMPONENT[CEC_LOGICAL_TO_TYPE[components]]
@@ -140,8 +140,7 @@ def setup(hass, base_config):
                 if dev_type is None:
                     continue
                 CEC_DEVICES[dev_type].append(components)
-            # for components in ['media_player', 'switch']:
-            for components in ['media_player']:
+            for components in ['media_player', 'switch']:
                 discovery.load_platform(hass, components, DOMAIN, {}, base_config)
             return True
         else:
@@ -159,26 +158,29 @@ class CecDevice(Entity):
     def __init__(self, hass, cecClient, logical=None, physical=None):
         """Initialize the device."""
         self.hass = hass
-
         self._state = STATE_UNKNOWN
         self.physicalAddress = physical
         self.logicalAddress = logical
-        if logical is not None:
-            self._name = "device %d" % logical
-            self.type = CEC_LOGICAL_TO_TYPE[logical]
-        else:
-            self._name = "UNKNOWN"
-            _LOGGER.warning("Initialization of no id")
+        self._update_name(logical)
         _LOGGER.info("Initializing CEC device %s", self._name)
         self.cecClient = cecClient
         cecClient.RegisterCallback(self._update_callback, src=logical)
         self.update()
 
+    def _update_name(self, logical):
+        if logical is not None:
+            self._type = CEC_LOGICAL_TO_TYPE[logical]
+            self._name = "%s %d" % (deviceTypeNames[self._type], logical)
+        else:
+            self._name = "UNKNOWN"
+            _LOGGER.warning("Initialization of no id")
+
     @asyncio.coroutine
     def async_update(self):
         _LOGGER.info("Updating status for device %s", hex(self.logicalAddress)[2:])
         self.cecClient.ProcessCommandTx(
-            type('call', (object,), {'data': {'dst': hex(self.logicalAddress)[2:], 'cmd': '8F'}}))
+            type('call', (object,), {'data': [{'dst': hex(self.logicalAddress)[2:], 'cmd': '8F'},
+                                              {'dst': hex(self.logicalAddress)[2:], 'cmd': '46'}]}))
 
     def _update_callback(self, src, dst, response, cmd, cmdChain):
         _LOGGER.info("Got status for device %s -> %s, %s %s %s", src, dst, response, cmd, cmdChain)
@@ -192,7 +194,15 @@ class CecDevice(Entity):
             else:
                 self._state = STATE_UNKNOWN
             _LOGGER.info("state set to %s", self._state)
-            self.schedule_update_ha_state()
+        elif cmd == '47':
+            self._update_name(self.logicalAddress)
+            n = self._name
+            self._name = ''
+            for c in cmdChain:
+                self._name += chr(int(c, 16))
+            if n is not None and n.strip() != '':
+                self._name = "%s (%s)" % (n, self._name)
+        self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
         """Turn device on."""
