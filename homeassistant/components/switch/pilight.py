@@ -11,7 +11,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import homeassistant.components.pilight as pilight
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE)
+from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE,
+                                 CONF_PROTOCOL)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +25,8 @@ CONF_UNIT = 'unit'
 
 DEPENDENCIES = ['pilight']
 
-COMMAND_SCHEMA = pilight.RF_CODE_SCHEMA.extend({
+COMMAND_SCHEMA = vol.Schema({
+    vol.Optional(CONF_PROTOCOL): cv.string,
     vol.Optional('on'): cv.positive_int,
     vol.Optional('off'): cv.positive_int,
     vol.Optional(CONF_UNIT): cv.positive_int,
