@@ -27,7 +27,7 @@ DEFAULT_PASSWORD = 'admin'
 DEFAULT_TIMEOUT = 20
 DEFAULT_CYCLETIME = 3
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,62 +56,107 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     cycl = config.get(CONF_CYCLETIME)
 
     power_switch = dlipower.PowerSwitch(
-        hostname=host, userid=user, password=pswd, timeout=tout,
-        cycletime=cycl)
+        hostname=host, userid=user, password=pswd,
+        timeout=tout, cycletime=cycl
+    )
 
     if not power_switch.verify():
         _LOGGER.error('Could not connect to DIN III Relay')
         return False
 
-    for switch in power_switch:
+    # for switch in power_switch:
+    #     add_devices(
+    #         [DINRelay(controllername, switch.outlet_number, power_switch)]
+    #     )
 
-        # TODO(dethpickle)  Throttle the update for all relays of one
-        # physical device using util.Throttle.
+# Idiot, pay attention to
+# https://dev-docs.home-assistant.io/en/master/api/entity.html
 
-        add_devices(
-            [DINRelay(controllername, host, switch.outlet_number,
-                      power_switch)]
-        )
+    devices = []
+    parent_device = DINRelayDevice(power_switch)
+
+    devices.extend(
+        DINRelay(controllername, device.outlet_number, parent_device)
+        for device in power_switch
+    )
+
+    add_devices(devices)
 
 
 class DINRelay(SwitchDevice):
 
-    """Representation of a DIN III Relay switch."""
+    """Representation of a individual DIN III Relay switch.
+    Eight per device."""
 
-    def __init__(self, name, host, outletnumber, switchref):
+    def __init__(self, name, outletnumber, parent_device):
         """Initialize the DIN III Relay switch."""
-        self._host = host
+        self._parent_device = parent_device
         self.controllername = name
         self.outletnumber = outletnumber
-        self.switchref = switchref
         self.update()
 
     @property
     def name(self):
-        """Return the display name of this light."""
+        """Return the display name of this relay."""
         return self._outletname
 
     @property
     def is_on(self):
-        """Return true if light is on."""
+        """Return true if relay is on."""
         return self._is_on
 
+    @property
+    def should_poll(self):
+        """Polling is needed."""
+        return True
+
     def turn_on(self, **kwargs):
-        """Instruct the light to turn on.        """
-        self.switchref.on(outlet=self.outletnumber)
+        """Instruct the relay to turn on."""
+        self._parent_device.turn_on(outlet=self.outletnumber)
 
     def turn_off(self, **kwargs):
-        """Instruct the light to turn off."""
-        self.switchref.off(outlet=self.outletnumber)
+        """Instruct the relay to turn off."""
+        self._parent_device.turn_off(outlet=self.outletnumber)
+
+    def update(self):
+        """Trigger update for all switches on the parent device."""
+        self._parent_device.update()
+        self._is_on = (
+            self._parent_device.statuslocal[self.outletnumber - 1][2] == 'ON'
+        )
+        self._outletname = "{}_{}".format(
+            self.controllername,
+            self._parent_device.statuslocal[self.outletnumber - 1][1]
+            )
+
+
+class DINRelayDevice(object):
+    """Device representation for per device throttling."""
+
+    def __init__(self, device):
+        """Initialize the DINRelay device."""
+        self._device = device
+
+    def turn_on(self, **kwargs):
+        """Instruct the relay to turn on."""
+        self._device.on(**kwargs)
+
+    def turn_off(self, **kwargs):
+        """Instruct the relay to turn off."""
+        self._device.off(**kwargs)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Fetch new state data for this light.
-
-        This is the only method that should fetch new data for Home Assistant.
+        """Fetch new state data for this device."""
+        self.statuslocal = self._device.statuslist()
         """
-        self.switchref.status(outlet=self.outletnumber)
-        self._is_on = (self.switchref.status(outlet=self.outletnumber) == 'ON')
-        self._outletname = "{}_{}".format(self.controllername,
-                                          self.switchref.get_outlet_name(
-                                            outlet=self.outletnumber))
+        statuslist looks like:
+            [[1, u'FR Lawn South', u'OFF'],
+             [2, u'FR Lawn North', u'OFF'],
+             [3, u'Plants Drip', u'ON'],
+             [4, u'BK Lawn North old', u'OFF'],
+             [5, u'BK Lawn North new', u'OFF'],
+             [6, u'BK Lawn South', u'ON'],
+             [7, u'BK Slope Low', u'OFF'],
+             [8, u'BK Slope High', u'OFF']]
+        """
