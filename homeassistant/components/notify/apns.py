@@ -11,17 +11,26 @@ import voluptuous as vol
 from homeassistant.helpers.event import track_state_change
 from homeassistant.config import load_yaml_config_file
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, BaseNotificationService)
+    ATTR_TARGET, ATTR_DATA, BaseNotificationService, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template as template_helper
 
 DOMAIN = "apns"
 APNS_DEVICES = "apns.yaml"
+CONF_CERTFILE = "cert_file"
+CONF_TOPIC = "topic"
 DEVICE_TRACKER_DOMAIN = "device_tracker"
 SERVICE_REGISTER = "apns_register"
 
 ATTR_PUSH_ID = "push_id"
 ATTR_NAME = "name"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_CERTFILE): cv.string,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_TOPIC): cv.string,
+})
 
 REGISTER_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_PUSH_ID): cv.string,
@@ -37,19 +46,8 @@ def get_service(hass, config):
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     name = config.get("name")
-    if name is None:
-        logging.error("Name must be specified.")
-        return None
-
     cert_file = config.get('cert_file')
-    if cert_file is None:
-        logging.error("Certificate must be specified.")
-        return None
-
     topic = config.get('topic')
-    if topic is None:
-        logging.error("Topic must be specified.")
-        return None
 
     sandbox = bool(config.get('sandbox', False))
 

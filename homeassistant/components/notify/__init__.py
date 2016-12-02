@@ -136,7 +136,8 @@ def setup(hass, config):
 
     for platform, p_config in config_per_platform(config, DOMAIN):
         if not setup_notify_platform(platform, p_config):
-            return False
+            _LOGGER.error("Failed to set up platform %s", platform)
+            continue
 
     def platform_discovered(platform, info):
         """Callback to load a platform."""
