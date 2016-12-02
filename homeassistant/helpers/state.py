@@ -138,7 +138,7 @@ def async_reproduce_state(hass, states, blocking=False):
         else:
             service_domain = state.domain
 
-        domain_services = hass.services.async_services[service_domain]
+        domain_services = hass.services.async_services()[service_domain]
 
         service = None
         for _service in domain_services.keys():
