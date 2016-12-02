@@ -15,9 +15,10 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID)
+    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
+    CONF_HOSTS)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
@@ -49,8 +50,17 @@ SERVICE_CLEAR_TIMER = 'sonos_clear_sleep_timer'
 SUPPORT_SOURCE_LINEIN = 'Line-in'
 SUPPORT_SOURCE_TV = 'TV'
 
+CONF_ADVERTISE_ADDR = 'advertise_addr'
+CONF_INTERFACE_ADDR = 'interface_addr'
+
 # Service call validation schemas
 ATTR_SLEEP_TIME = 'sleep_time'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
+    vol.Optional(CONF_INTERFACE_ADDR): cv.string,
+    vol.Optional(CONF_HOSTS): cv.ensure_list(cv.string),
+})
 
 SONOS_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
@@ -70,6 +80,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import soco
     global DEVICES
 
+    advertise_addr = config.get(CONF_ADVERTISE_ADDR, None)
+    if advertise_addr:
+        soco.config.EVENT_ADVERTISE_IP = advertise_addr
+
     if discovery_info:
         player = soco.SoCo(discovery_info)
 
@@ -87,18 +101,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     players = None
-    hosts = config.get('hosts', None)
+    hosts = config.get(CONF_HOSTS, None)
     if hosts:
         # Support retro compatibility with comma separated list of hosts
         # from config
+        hosts = hosts[0] if len(hosts) == 1 else hosts
         hosts = hosts.split(',') if isinstance(hosts, str) else hosts
         players = []
         for host in hosts:
             players.append(soco.SoCo(socket.gethostbyname(host)))
 
     if not players:
-        players = soco.discover(interface_addr=config.get('interface_addr',
-                                                          None))
+        players = soco.discover(interface_addr=config.get(CONF_INTERFACE_ADDR))
 
     if not players:
         _LOGGER.warning('No Sonos speakers found.')
