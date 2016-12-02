@@ -179,6 +179,7 @@ class TestNX584Watcher(unittest.TestCase):
 
         @mock.patch.object(watcher, '_process_zone_event')
         def run(fake_process):
+            """Run a fake process."""
             fake_process.side_effect = StopMe
             self.assertRaises(StopMe, watcher._run)
             self.assertEqual(fake_process.call_count, 1)
@@ -193,6 +194,7 @@ class TestNX584Watcher(unittest.TestCase):
         empty_me = [1, 2]
 
         def fake_run():
+            """Fake runner."""
             if empty_me:
                 empty_me.pop()
                 raise requests.exceptions.ConnectionError()

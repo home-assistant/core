@@ -41,6 +41,7 @@ class TestConversation(unittest.TestCase):
 
         @callback
         def record_call(service):
+            """Recorder for a call."""
             calls.append(service)
 
         self.hass.services.register('light', 'turn_on', record_call)
@@ -60,6 +61,7 @@ class TestConversation(unittest.TestCase):
 
         @callback
         def record_call(service):
+            """Recorder for a call."""
             calls.append(service)
 
         self.hass.services.register('light', 'turn_off', record_call)
