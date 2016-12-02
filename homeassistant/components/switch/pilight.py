@@ -22,6 +22,7 @@ CONF_ON_CODE = 'on_code'
 CONF_ON_CODE_RECIEVE = 'on_code_receive'
 CONF_SYSTEMCODE = 'systemcode'
 CONF_UNIT = 'unit'
+CONF_UNITCODE = 'unitcode'
 
 DEPENDENCIES = ['pilight']
 
@@ -30,6 +31,7 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Optional('on'): cv.positive_int,
     vol.Optional('off'): cv.positive_int,
     vol.Optional(CONF_UNIT): cv.positive_int,
+    vol.Optional(CONF_UNITCODE): cv.positive_int,
     vol.Optional(CONF_ID): cv.positive_int,
     vol.Optional(CONF_STATE): cv.string,
     vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
