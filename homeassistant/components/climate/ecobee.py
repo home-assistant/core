@@ -24,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_FAN_MIN_ON_TIME = 'fan_min_on_time'
 ATTR_RESUME_ALL = 'resume_all'
 
+DEFAULT_RESUME_ALL = False
+
 DEPENDENCIES = ['ecobee']
 
 SERVICE_SET_FAN_MIN_ON_TIME = 'ecobee_set_fan_min_on_time'
@@ -36,7 +38,7 @@ SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema({
 
 RESUME_PROGRAM_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_RESUME_ALL): cv.boolean,
+    vol.Optional(ATTR_RESUME_ALL, default=DEFAULT_RESUME_ALL): cv.boolean,
 })
 
 
@@ -55,15 +57,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def fan_min_on_time_set_service(service):
         """Set the minimum fan on time on the target thermostats."""
-        entity_id = service.data.get('entity_id')
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        fan_min_on_time = service.data[ATTR_FAN_MIN_ON_TIME]
 
         if entity_id:
             target_thermostats = [device for device in devices
                                   if device.entity_id in entity_id]
         else:
             target_thermostats = devices
-
-        fan_min_on_time = service.data[ATTR_FAN_MIN_ON_TIME]
 
         for thermostat in target_thermostats:
             thermostat.set_fan_min_on_time(str(fan_min_on_time))
@@ -72,15 +73,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def resume_program_set_service(service):
         """Resume the program on the target thermostats."""
-        entity_id = service.data.get('entity_id')
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        resume_all = service.data.get(ATTR_RESUME_ALL)
 
         if entity_id:
             target_thermostats = [device for device in devices
                                   if device.entity_id in entity_id]
         else:
             target_thermostats = devices
-
-        resume_all = service.data.get(ATTR_RESUME_ALL, False)
 
         for thermostat in target_thermostats:
             thermostat.resume_program(resume_all)
