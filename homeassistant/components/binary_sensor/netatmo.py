@@ -103,6 +103,7 @@ class WelcomeBinarySensor(BinarySensorDevice):
         self._unique_id = "Welcome_binary_sensor {0} - {1}".format(self._name,
                                                                    camera_id)
         self.update()
+        self.scan_interval=15
 
     @property
     def name(self):
