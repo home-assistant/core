@@ -144,10 +144,12 @@ class TestMediaPlayer(unittest.TestCase):
         self.mock_state_switch_id = switch.ENTITY_ID_FORMAT.format('state')
         self.hass.states.set(self.mock_state_switch_id, STATE_OFF)
 
-        self.mock_volume_id = input_slider.ENTITY_ID_FORMAT.format('volume_level')
+        self.mock_volume_id = input_slider.ENTITY_ID_FORMAT.format(
+                                'volume_level')
         self.hass.states.set(self.mock_volume_id, 0)
 
-        self.mock_source_list_id = input_select.ENTITY_ID_FORMAT.format('source_list')
+        self.mock_source_list_id = input_select.ENTITY_ID_FORMAT.format(
+                                     'source_list')
         self.hass.states.set(self.mock_source_list_id, ['dvd', 'htpc'])
 
         self.mock_source_id = input_select.ENTITY_ID_FORMAT.format('source')
