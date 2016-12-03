@@ -28,7 +28,9 @@ ATTR_WEATHER_PRESSURE = 'pressure'
 ATTR_WEATHER_TEMPERATURE = 'temperature'
 ATTR_WEATHER_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_WIND_SPEED = 'wind_speed'
+ATTR_FORECAST = 'forecast'
 
+CONF_FORECAST = 'forecast'
 
 def setup(hass, config):
     """Setup the weather component."""
@@ -83,6 +85,10 @@ class WeatherEntity(Entity):
         return None
 
     @property
+    def forecast(self):
+        return None
+
+    @property
     def state_attributes(self):
         """Return the state attributes."""
         data = {
@@ -109,6 +115,10 @@ class WeatherEntity(Entity):
         attribution = self.attribution
         if attribution is not None:
             data[ATTR_WEATHER_ATTRIBUTION] = attribution
+
+        forecast = self.forecast
+        if forecast is not None:
+            data[ATTR_FORECAST] = forecast
 
         return data
 
