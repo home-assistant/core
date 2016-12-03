@@ -29,3 +29,6 @@ class CecSwitch(CecDevice, SwitchDevice):
         """Initialize the Vera device."""
         self._state = False
         CecDevice.__init__(self, hass, cecClient, logical=logical, physical=physical)
+
+    def toggle(self, **kwargs):
+        self.turn_off() if self._state else self.turn_on()
