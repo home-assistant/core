@@ -6,13 +6,14 @@ https://home-assistant.io/components/switch.vera/
 """
 import logging
 
-from homeassistant.components.hdmi_cec import CecDevice, CEC_DEVICES, CEC_CLIENT
+from homeassistant.components.hdmi_cec import CecDevice, CEC_DEVICES, CEC_CLIENT, DOMAIN
 from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['hdmi_cec']
 
 _LOGGER = logging.getLogger(__name__)
 
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Vera switches."""

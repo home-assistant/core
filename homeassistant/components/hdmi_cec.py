@@ -198,21 +198,14 @@ class CecDevice(Entity):
         self._logical_address = logical
         self._vendor_id = None
         self._cec_type_id = None
-        self._update_name(logical)
+        self._cec_type_id = CEC_LOGICAL_TO_TYPE[logical]
         self._available = False
         self._hidden = False
-        _LOGGER.info("Initializing CEC device %s", self._name)
+        self._name = None
+        _LOGGER.info("Initializing CEC device %s", self.name)
         self.cecClient = cecClient
-        cecClient.RegisterCallback(self._update_callback, src=logical)
+        cecClient.RegisterCallback(self._update_callback)
         self.update()
-
-    def _update_name(self, logical):
-        if logical is not None:
-            self._cec_type_id = CEC_LOGICAL_TO_TYPE[logical]
-            self._name = "%s %d" % (deviceTypeNames[self._cec_type_id], logical)
-        else:
-            self._name = "UNKNOWN"
-            _LOGGER.warning("Initialization of no id")
 
     @asyncio.coroutine
     def async_update(self):
@@ -243,7 +236,7 @@ class CecDevice(Entity):
 
     def turn_on(self):
         """Turn device on."""
-        self.cecClient.SendCommandpowerOn(self._logical_address)
+        self.cecClient.SendCommandPowerOn(self._logical_address)
         self._state = STATE_ON
         self.schedule_update_ha_state()
         self._request_cec_power_status()
@@ -256,37 +249,36 @@ class CecDevice(Entity):
         self._request_cec_power_status()
 
     def _update_callback(self, src, dst, response, cmd, cmdChain):
-        _LOGGER.info("Got status for device %s -> %s, %s %s %s", src, dst, response, cmd, cmdChain)
-        if cmd == '90':
-            status = cmdChain[0]
+        if not (src == self._logical_address or src == 15):
+            return
+        _LOGGER.info("Got status for device %x -> %x, %s %x %s", src, dst, response, cmd, cmdChain)
+        if cmd == 0x90:
+            status = int(cmdChain[0], 16)
             _LOGGER.info("status: %s", status)
-            if status == '00':
+            if status == 0x00:
                 self._state = STATE_ON
-            elif status == '01':
+            elif status == 0x01:
                 self._state = STATE_OFF
             else:
                 self._state = STATE_UNKNOWN
             _LOGGER.info("state set to %s", self._state)
-        elif cmd == '47':
-            self._update_name(self._logical_address)
-            n = self._name
+        elif cmd == 0x47:
             self._name = ''
             for c in cmdChain:
                 self._name += chr(int(c, 16))
-            if n is not None and n.strip() != '':
-                self._name = "%s (%s)" % (n, self._name)
-        elif cmd == '87':
+        elif cmd == 0x87:
             self._vendor_id = 0
             for i in cmdChain:
                 self._vendor_id *= 0x100
                 self._vendor_id += int(i, 16)
-        elif cmd == '84':
+        elif cmd == 0x84:
             self._physical_address = "%d.%d.%d.%d" % (
                 int(cmdChain[0][0], 16), int(cmdChain[0][1], 16), int(cmdChain[1][0], 16),
                 int(cmdChain[1][1], 16))
             self._cec_type_id = int(cmdChain[2], 16)
 
-        self.schedule_update_ha_state()
+        if self.entity_id is not None:
+            self.schedule_update_ha_state()
 
     @property
     def is_on(self):
@@ -296,7 +288,9 @@ class CecDevice(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        n = self._name if self._name is not None else self.vendor_name if self.vendor_name is not None else None
+        return "%s %d" % (deviceTypeNames[self._cec_type_id], self._logical_address) if n is None \
+            else "%s %d (%s)" % (deviceTypeNames[self._cec_type_id], self._logical_address, n)
 
     @property
     def should_poll(self):
@@ -312,7 +306,6 @@ class CecDevice(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
-        attr['entity_id'] = self._logical_address
         return attr
 
     @property
@@ -372,21 +365,11 @@ class CecDevice(Entity):
         return state_attr
 
 
-def _commandHash(src, dst, cmd, response):
-    if response is None:
-        response = 0
-    elif response:
-        response = 1
-    else:
-        response = 2
-    return response * 0x10000 + src * 0x1000 + dst * 0x100 + cmd
-
-
 class pyCecClient:
     cecconfig = {}
     lib = {}
     hass = {}
-    callbacks = {}
+    callbacks = []
 
     def DetectAdapter(self):
         """detect an adapter and return the com port path"""
@@ -532,7 +515,6 @@ class pyCecClient:
         _LOGGER.info("requesting CEC bus information ...")
         strLog = "CEC bus information\n===================\n"
         addresses = self.lib.GetActiveDevices()
-        activeSource = self.lib.GetActiveSource()
         x = 0
         while x < 15:
             if addresses.IsSet(x):
@@ -552,12 +534,9 @@ class pyCecClient:
             x += 1
         _LOGGER.info(strLog)
 
-    def RegisterCallback(self, callback, src=15, dst=15, cmd=0, response=None):
-        hash = _commandHash(src, dst, cmd, response)
-        if hash not in self.callbacks:
-            self.callbacks[hash] = []
-        _LOGGER.info("registering callback %s %s", hex(hash), callback)
-        self.callbacks[hash].append(callback)
+    def RegisterCallback(self, callback):
+        if callback not in self.callbacks:
+            self.callbacks.append(callback)
 
     def LogCallback(self, level, time, message):
         """logging callback"""
@@ -595,9 +574,9 @@ class pyCecClient:
         command = command[3:]
         cmdChain = command.split(':')
         src = cmdChain.pop(0)
-        dst = src[1]
-        src = src[0]
-        cmd = cmdChain.pop(0)
+        dst = int(src[1], 16)
+        src = int(src[0], 16)
+        cmd = int(cmdChain.pop(0), 16)
         _LOGGER.info("[command received1] " + command)
         if cmd == '00':
             response = True
@@ -605,25 +584,8 @@ class pyCecClient:
         else:
             response = False
         _LOGGER.info("[command received2] %s %s %s", src, dst, cmd)
-        _LOGGER.info("[command received21] %d", int(src, 16))
-        _LOGGER.info("[command received3] " + src)
-        _LOGGER.info("[command received4] " + dst)
-        _LOGGER.info("[command received5] " + cmd)
-        _LOGGER.info("[command callbacks] " + command)
-        commands = []
         try:
-            for s in {int(src, 16), 15}:
-                for d in {int(dst, 16), 15}:
-                    for c in {int(cmd, 16), 0}:
-                        for r in {response, None}:
-                            hash = _commandHash(s, d, c, r)
-                            callbacks = self.callbacks.get(hash)
-                            _LOGGER.info("looking for callbacks for %s, %s", hex(hash), callbacks)
-                            if callbacks is not None:
-                                commands.extend(callbacks)
-
-            for c in commands:
-                _LOGGER.info("Calling callback %s")
+            for c in self.callbacks:
                 c(src, dst, response, cmd, cmdChain)
         except Exception as e:
             _LOGGER.error(e, exc_info=1)
