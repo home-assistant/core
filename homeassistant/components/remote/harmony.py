@@ -3,35 +3,38 @@ Support for Harmony Hub devices.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.harmony/
-
 """
-
 import logging
 from os import path
 import urllib.parse
+
+import voluptuous as vol
+
+import homeassistant.components.remote as remote
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, ATTR_ENTITY_ID)
 from homeassistant.components.remote import PLATFORM_SCHEMA, DOMAIN
 from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
-import homeassistant.components.remote as remote
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
-
 
 REQUIREMENTS = ['pyharmony==1.0.12']
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE = 'device'
 ATTR_COMMAND = 'command'
 ATTR_ACTIVITY = 'activity'
 
+DEFAULT_PORT = 5222
+DEVICES = []
+
 SERVICE_SYNC = 'harmony_sync'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(ATTR_ACTIVITY, default=None): cv.string,
 })
 
@@ -39,37 +42,32 @@ HARMONY_SYNC_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-# List of devices that have been registered
-DEVICES = []
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Harmony platform."""
+    """Set up the Harmony platform."""
     import pyharmony
     global DEVICES
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    _LOGGER.info('Loading Harmony platform: ' + name)
+    _LOGGER.debug("Loading Harmony platform: %s", name)
 
-    harmony_conf_file = hass.config.path('harmony_' + slugify(name) + '.conf')
+    harmony_conf_file = hass.config.path(
+        '{}{}{}'.format('harmony_', slugify(name), '.conf'))
 
     try:
-        _LOGGER.debug('calling pyharmony.ha_get_token for remote at: ' +
-                      host + ':' + port)
+        _LOGGER.debug("Calling pyharmony.ha_get_token for remote at: %s:%s",
+                      host, port)
         token = urllib.parse.quote_plus(pyharmony.ha_get_token(host, port))
     except ValueError as err:
-        _LOGGER.critical(err.args[0] + ' for remote: ' + name)
+        _LOGGER.warning("%s for remote: %s", err.args[0], name)
         return False
 
-    _LOGGER.debug('received token: ' + token)
-    DEVICES = [HarmonyRemote(config.get(CONF_NAME),
-                             config.get(CONF_HOST),
-                             config.get(CONF_PORT),
-                             config.get(ATTR_ACTIVITY),
-                             harmony_conf_file,
-                             token)]
+    _LOGGER.debug("Received token: %s", token)
+    DEVICES = [HarmonyRemote(
+        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
+        config.get(ATTR_ACTIVITY), harmony_conf_file, token)]
     add_devices(DEVICES, True)
     register_services(hass)
     return True
@@ -80,10 +78,9 @@ def register_services(hass):
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(DOMAIN, SERVICE_SYNC,
-                           _sync_service,
-                           descriptions.get(SERVICE_SYNC),
-                           schema=HARMONY_SYNC_SCHEMA)
+    hass.services.register(
+        DOMAIN, SERVICE_SYNC, _sync_service, descriptions.get(SERVICE_SYNC),
+        schema=HARMONY_SYNC_SCHEMA)
 
 
 def _apply_service(service, service_func, *service_func_args):
@@ -113,7 +110,7 @@ class HarmonyRemote(remote.RemoteDevice):
         import pyharmony
         from pathlib import Path
 
-        _LOGGER.debug('HarmonyRemote device init started for: ' + name)
+        _LOGGER.debug("HarmonyRemote device init started for: %s", name)
         self._name = name
         self._ip = host
         self._port = port
@@ -122,10 +119,11 @@ class HarmonyRemote(remote.RemoteDevice):
         self._default_activity = activity
         self._token = token
         self._config_path = out_path
-        _LOGGER.debug('retrieving harmony config using token: ' + token)
+        _LOGGER.debug("Retrieving harmony config using token: %s", token)
         self._config = pyharmony.ha_get_config(self._token, host, port)
         if not Path(self._config_path).is_file():
-            _LOGGER.debug('writing harmony configuration to file: ' + out_path)
+            _LOGGER.debug("Writing harmony configuration to file: %s",
+                          out_path)
             pyharmony.ha_write_config_file(self._config, self._config_path)
 
     @property
@@ -147,12 +145,10 @@ class HarmonyRemote(remote.RemoteDevice):
         """Return current activity."""
         import pyharmony
         name = self._name
-        _LOGGER.debug('polling ' + name + ' for current activity')
-        state = pyharmony.ha_get_current_activity(self._token,
-                                                  self._config,
-                                                  self._ip,
-                                                  self._port)
-        _LOGGER.debug(name + '\'s current activity reported as: ' + state)
+        _LOGGER.debug("Polling %s for current activity", name)
+        state = pyharmony.ha_get_current_activity(
+            self._token, self._config, self._ip, self._port)
+        _LOGGER.debug("%s current activity reported as: %s", name, state)
         self._current_activity = state
         self._state = bool(state != 'PowerOff')
 
@@ -165,14 +161,11 @@ class HarmonyRemote(remote.RemoteDevice):
             activity = self._default_activity
 
         if activity:
-            pyharmony.ha_start_activity(self._token,
-                                        self._ip,
-                                        self._port,
-                                        self._config,
-                                        activity)
+            pyharmony.ha_start_activity(
+                self._token, self._ip, self._port, self._config, activity)
             self._state = True
         else:
-            _LOGGER.error('No activity specified with turn_on service')
+            _LOGGER.error("No activity specified with turn_on service")
 
     def turn_off(self):
         """Start the PowerOff activity."""
@@ -182,17 +175,16 @@ class HarmonyRemote(remote.RemoteDevice):
     def send_command(self, **kwargs):
         """Send a command to one device."""
         import pyharmony
-        pyharmony.ha_send_command(self._token, self._ip,
-                                  self._port, kwargs[ATTR_DEVICE],
-                                  kwargs[ATTR_COMMAND])
+        pyharmony.ha_send_command(
+            self._token, self._ip, self._port, kwargs[ATTR_DEVICE],
+            kwargs[ATTR_COMMAND])
 
     def sync(self):
         """Sync the Harmony device with the web service."""
         import pyharmony
-        _LOGGER.debug('syncing hub with Harmony servers')
+        _LOGGER.debug("Syncing hub with Harmony servers")
         pyharmony.ha_sync(self._token, self._ip, self._port)
-        self._config = pyharmony.ha_get_config(self._token,
-                                               self._ip,
-                                               self._port)
-        _LOGGER.debug('writing hub config to file: ' + self._config_path)
+        self._config = pyharmony.ha_get_config(
+            self._token, self._ip, self._port)
+        _LOGGER.debug("Writing hub config to file: %s", self._config_path)
         pyharmony.ha_write_config_file(self._config, self._config_path)
