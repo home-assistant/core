@@ -25,7 +25,7 @@ VALID_CONFIG = {
 
 FEELS_LIKE = '40'
 WEATHER = 'Clear'
-ICON_URL = 'http://icons.wxug.com/i/c/k/clear.gif'
+HTTPS_ICON_URL = 'https://icons.wxug.com/i/c/k/clear.gif'
 ALERT_MESSAGE = 'This is a test alert message'
 
 
@@ -61,7 +61,7 @@ def mocked_requests_get(*args, **kwargs):
                 },
                 "feelslike_c": FEELS_LIKE,
                 "weather": WEATHER,
-                "icon_url": ICON_URL,
+                "icon_url": 'http://icons.wxug.com/i/c/k/clear.gif',
                 "display_location": {
                     "city": "Holly Springs",
                     "country": "US",
@@ -137,7 +137,7 @@ class TestWundergroundSetup(unittest.TestCase):
             ]
         }
 
-        self.assertFalse(
+        self.assertTrue(
             wunderground.setup_platform(self.hass, invalid_config,
                                         self.add_devices, None))
 
@@ -150,7 +150,7 @@ class TestWundergroundSetup(unittest.TestCase):
             device.update()
             self.assertTrue(str(device.name).startswith('PWS_'))
             if device.name == 'PWS_weather':
-                self.assertEqual(ICON_URL, device.entity_picture)
+                self.assertEqual(HTTPS_ICON_URL, device.entity_picture)
                 self.assertEqual(WEATHER, device.state)
                 self.assertIsNone(device.unit_of_measurement)
             elif device.name == 'PWS_alerts':

@@ -10,8 +10,9 @@ import telnetlib
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_SELECT_SOURCE,
+    SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
@@ -21,8 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Music station'
 
-SUPPORT_DENON = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+SUPPORT_DENON = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
+    SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
+    SUPPORT_SELECT_SOURCE | SUPPORT_NEXT_TRACK | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -51,6 +53,8 @@ class DenonDevice(MediaPlayerDevice):
         self._host = host
         self._pwstate = 'PWSTANDBY'
         self._volume = 0
+        self._source_list = {'TV': 'SITV', 'Tuner': 'SITUNER',
+                             'Internet Radio': 'SIIRP', 'Favorites': 'SIFVP'}
         self._muted = False
         self._mediasource = ''
 
@@ -58,7 +62,14 @@ class DenonDevice(MediaPlayerDevice):
     def telnet_request(cls, telnet, command):
         """Execute `command` and return the response."""
         telnet.write(command.encode('ASCII') + b'\r')
-        return telnet.read_until(b'\r', timeout=0.2).decode('ASCII').strip()
+        lines = []
+        while True:
+            line = telnet.read_until(b'\r', timeout=0.2)
+            if not line:
+                break
+            lines.append(line.decode('ASCII').strip())
+
+        return lines[0]
 
     def telnet_command(self, command):
         """Establish a telnet connection and sends `command`."""
@@ -75,9 +86,6 @@ class DenonDevice(MediaPlayerDevice):
             return False
 
         self._pwstate = self.telnet_request(telnet, 'PW?')
-        # PW? sends also SISTATUS, which is not interesting
-        telnet.read_until(b"\r", timeout=0.2)
-
         volume_str = self.telnet_request(telnet, 'MV?')[len('MV'):]
         self._volume = int(volume_str) / 60
         self._muted = (self.telnet_request(telnet, 'MU?') == 'MUON')
@@ -110,6 +118,11 @@ class DenonDevice(MediaPlayerDevice):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return list(self._source_list.keys())
 
     @property
     def media_title(self):
@@ -161,3 +174,7 @@ class DenonDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self.telnet_command('PWON')
+
+    def select_source(self, source):
+        """Select input source."""
+        self.telnet_command(self._source_list.get(source))

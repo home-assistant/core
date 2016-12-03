@@ -67,8 +67,20 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual((0, 0, 255),
                          color_util.color_name_to_rgb('blue'))
 
-        self.assertEqual((0, 255, 0),
+        self.assertEqual((0, 128, 0),
                          color_util.color_name_to_rgb('green'))
+
+        # spaces in the name
+        self.assertEqual((72, 61, 139),
+                         color_util.color_name_to_rgb('dark slate blue'))
+
+        # spaces removed from name
+        self.assertEqual((72, 61, 139),
+                         color_util.color_name_to_rgb('darkslateblue'))
+        self.assertEqual((72, 61, 139),
+                         color_util.color_name_to_rgb('dark slateblue'))
+        self.assertEqual((72, 61, 139),
+                         color_util.color_name_to_rgb('darkslate blue'))
 
     def test_color_name_to_rgb_unknown_name_default_white(self):
         """Test color_name_to_rgb."""

@@ -53,13 +53,13 @@ class VeraLight(VeraDevice, Light):
             self.vera_device.switch_on()
 
         self._state = STATE_ON
-        self.update_ha_state(True)
+        self.schedule_update_ha_state(True)
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self.vera_device.switch_off()
         self._state = STATE_OFF
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def is_on(self):
