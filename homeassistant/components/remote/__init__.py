@@ -82,12 +82,6 @@ def send_command(hass, device, command, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
 
 
-def sync(hass, entity_id=None):
-    """Sync remote device."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_SYNC, data)
-
-
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for remotes."""
@@ -111,8 +105,6 @@ def async_setup(hass, config):
             elif service.service == SERVICE_SEND_COMMAND:
                 yield from remote.async_send_command(
                     device=device, command=command)
-            elif service.service == SERVICE_SYNC:
-                yield from remote.async_sync()
             else:
                 yield from remote.async_turn_off()
 
@@ -131,7 +123,8 @@ def async_setup(hass, config):
             os.path.dirname(__file__), 'services.yaml'))
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_remote_service,
-        descriptions.get(SERVICE_TURN_OFF), schema=REMOTE_SERVICE_SCHEMA)
+        descriptions.get(SERVICE_TURN_OFF),
+        schema=REMOTE_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_remote_service,
         descriptions.get(SERVICE_TURN_ON),
@@ -146,14 +139,6 @@ def async_setup(hass, config):
 
 class RemoteDevice(ToggleEntity):
     """Representation of a remote."""
-
-    def sync(self):
-        """Sync remote device."""
-        raise NotImplementedError()
-
-    def async_sync(self):
-        """Sync remote device."""
-        yield from self.hass.loop.run_in_executor(None, self.sync)
 
     def send_command(self, **kwargs):
         """Send a command to a device."""
