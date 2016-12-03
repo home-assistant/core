@@ -166,7 +166,8 @@ class TestHelpersDiscovery:
 
         def component1_setup(hass, config):
             """Setup mock component."""
-            discovery.discover(hass, 'test_component2')
+            discovery.discover(hass, 'test_component2',
+                               component='test_component2')
             return True
 
         def component2_setup(hass, config):

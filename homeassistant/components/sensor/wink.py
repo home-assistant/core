@@ -22,24 +22,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for sensor in pywink.get_sensors():
         if sensor.capability() in SENSOR_TYPES:
-            add_devices([WinkSensorDevice(sensor)])
+            add_devices([WinkSensorDevice(sensor, hass)])
 
-    add_devices(WinkEggMinder(eggtray) for eggtray in pywink.get_eggtrays())
+    for eggtray in pywink.get_eggtrays():
+        add_devices([WinkEggMinder(eggtray, hass)])
 
     for piggy_bank in pywink.get_piggy_banks():
         try:
             if piggy_bank.capability() in SENSOR_TYPES:
-                add_devices([WinkSensorDevice(piggy_bank)])
+                add_devices([WinkSensorDevice(piggy_bank, hass)])
         except AttributeError:
-            logging.getLogger(__name__).error("Device is not a sensor")
+            logging.getLogger(__name__).info("Device is not a sensor")
 
 
 class WinkSensorDevice(WinkDevice, Entity):
     """Representation of a Wink sensor."""
 
-    def __init__(self, wink):
+    def __init__(self, wink, hass):
         """Initialize the Wink device."""
-        super().__init__(wink)
+        super().__init__(wink, hass)
         wink = get_component('wink')
         self.capability = self.wink.capability()
         if self.wink.UNIT == '°':
@@ -84,9 +85,9 @@ class WinkSensorDevice(WinkDevice, Entity):
 class WinkEggMinder(WinkDevice, Entity):
     """Representation of a Wink Egg Minder."""
 
-    def __init__(self, wink):
+    def __init__(self, wink, hass):
         """Initialize the sensor."""
-        WinkDevice.__init__(self, wink)
+        WinkDevice.__init__(self, wink, hass)
 
     @property
     def state(self):

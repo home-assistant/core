@@ -75,14 +75,16 @@ def setup(hass, yaml_config):
         api_password=None,
         ssl_certificate=None,
         ssl_key=None,
-        cors_origins=[],
+        cors_origins=None,
         use_x_forwarded_for=False,
-        trusted_networks=[]
+        trusted_networks=[],
+        login_threshold=0,
+        is_ban_enabled=False
     )
 
-    server.register_view(DescriptionXmlView(hass, config))
-    server.register_view(HueUsernameView(hass))
-    server.register_view(HueLightsView(hass, config))
+    server.register_view(DescriptionXmlView(config))
+    server.register_view(HueUsernameView)
+    server.register_view(HueLightsView(config))
 
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr, config.listen_port)
@@ -154,9 +156,8 @@ class DescriptionXmlView(HomeAssistantView):
     name = 'description:xml'
     requires_auth = False
 
-    def __init__(self, hass, config):
+    def __init__(self, config):
         """Initialize the instance of the view."""
-        super().__init__(hass)
         self.config = config
 
     @core.callback
@@ -198,10 +199,6 @@ class HueUsernameView(HomeAssistantView):
     extra_urls = ['/api/']
     requires_auth = False
 
-    def __init__(self, hass):
-        """Initialize the instance of the view."""
-        super().__init__(hass)
-
     @asyncio.coroutine
     def post(self, request):
         """Handle a POST request."""
@@ -226,30 +223,33 @@ class HueLightsView(HomeAssistantView):
                   '/api/{username}/lights/{entity_id}/state']
     requires_auth = False
 
-    def __init__(self, hass, config):
+    def __init__(self, config):
         """Initialize the instance of the view."""
-        super().__init__(hass)
         self.config = config
         self.cached_states = {}
 
     @core.callback
     def get(self, request, username, entity_id=None):
         """Handle a GET request."""
+        hass = request.app['hass']
+
         if entity_id is None:
-            return self.async_get_lights_list()
+            return self.async_get_lights_list(hass)
 
         if not request.path.endswith('state'):
-            return self.async_get_light_state(entity_id)
+            return self.async_get_light_state(hass, entity_id)
 
         return web.Response(text="Method not allowed", status=405)
 
     @asyncio.coroutine
     def put(self, request, username, entity_id=None):
         """Handle a PUT request."""
+        hass = request.app['hass']
+
         if not request.path.endswith('state'):
             return web.Response(text="Method not allowed", status=405)
 
-        if entity_id and self.hass.states.get(entity_id) is None:
+        if entity_id and hass.states.get(entity_id) is None:
             return self.json_message('Entity not found', HTTP_NOT_FOUND)
 
         try:
@@ -257,24 +257,25 @@ class HueLightsView(HomeAssistantView):
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
-        result = yield from self.async_put_light_state(json_data, entity_id)
+        result = yield from self.async_put_light_state(hass, json_data,
+                                                       entity_id)
         return result
 
     @core.callback
-    def async_get_lights_list(self):
+    def async_get_lights_list(self, hass):
         """Process a request to get the list of available lights."""
         json_response = {}
 
-        for entity in self.hass.states.async_all():
+        for entity in hass.states.async_all():
             if self.is_entity_exposed(entity):
                 json_response[entity.entity_id] = entity_to_json(entity)
 
         return self.json(json_response)
 
     @core.callback
-    def async_get_light_state(self, entity_id):
+    def async_get_light_state(self, hass, entity_id):
         """Process a request to get the state of an individual light."""
-        entity = self.hass.states.get(entity_id)
+        entity = hass.states.get(entity_id)
         if entity is None or not self.is_entity_exposed(entity):
             return web.Response(text="Entity not found", status=404)
 
@@ -292,12 +293,12 @@ class HueLightsView(HomeAssistantView):
         return self.json(json_response)
 
     @asyncio.coroutine
-    def async_put_light_state(self, request_json, entity_id):
+    def async_put_light_state(self, hass, request_json, entity_id):
         """Process a request to set the state of an individual light."""
         config = self.config
 
         # Retrieve the entity from the state machine
-        entity = self.hass.states.get(entity_id)
+        entity = hass.states.get(entity_id)
         if entity is None:
             return web.Response(text="Entity not found", status=404)
 
@@ -342,8 +343,8 @@ class HueLightsView(HomeAssistantView):
             self.cached_states[entity_id] = (result, brightness)
 
         # Perform the requested action
-        yield from self.hass.services.async_call(core.DOMAIN, service, data,
-                                                 blocking=True)
+        yield from hass.services.async_call(core.DOMAIN, service, data,
+                                            blocking=True)
 
         json_response = \
             [create_hue_success_response(entity_id, HUE_API_STATE_ON, result)]

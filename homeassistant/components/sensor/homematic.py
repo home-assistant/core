@@ -10,7 +10,8 @@ properly configured.
 
 import logging
 from homeassistant.const import STATE_UNKNOWN
-import homeassistant.components.homematic as homematic
+from homeassistant.components.homematic import HMDevice
+from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,14 +49,16 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     if discovery_info is None:
         return
 
+    homematic = get_component("homematic")
     return homematic.setup_hmdevice_discovery_helper(
+        hass,
         HMSensor,
         discovery_info,
         add_callback_devices
     )
 
 
-class HMSensor(homematic.HMDevice):
+class HMSensor(HMDevice):
     """Represents various Homematic sensors in Home Assistant."""
 
     @property
