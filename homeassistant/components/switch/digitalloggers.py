@@ -4,6 +4,10 @@ Dwight Hubbard's, python-dlipower.
 
 For more details about python-dlipower, please see
 https://github.com/dwighthubbard/python-dlipower
+
+Custom ports are NOT supported due to a limitation of the dlipower
+library, not the digital loggers switch
+
 """
 import logging
 from datetime import timedelta
@@ -25,9 +29,11 @@ DEFAULT_NAME = 'DINRelay'
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = 'admin'
 DEFAULT_TIMEOUT = 20
-DEFAULT_CYCLETIME = 3
+DEFAULT_CYCLETIME = 2
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+# TODO: Add DEFAULT_PORT contribute non-80 support to dlipower
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,14 +69,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not power_switch.verify():
         _LOGGER.error('Could not connect to DIN III Relay')
         return False
-
-    # for switch in power_switch:
-    #     add_devices(
-    #         [DINRelay(controllername, switch.outlet_number, power_switch)]
-    #     )
-
-# Idiot, pay attention to
-# https://dev-docs.home-assistant.io/en/master/api/entity.html
 
     devices = []
     parent_device = DINRelayDevice(power_switch)
@@ -127,10 +125,11 @@ class DINRelay(SwitchDevice):
         self._outletname = "{}_{}".format(
             self.controllername,
             self._parent_device.statuslocal[self.outletnumber - 1][1]
-            )
+        )
 
 
 class DINRelayDevice(object):
+
     """Device representation for per device throttling."""
 
     def __init__(self, device):
