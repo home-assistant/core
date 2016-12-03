@@ -287,6 +287,10 @@ class CecDevice(Entity):
 
     @property
     def name(self):
+        return "%s%d" % (DOMAIN, self._logical_address)
+
+    @property
+    def friendly_name(self):
         """Return the name of the device."""
         n = self._name if self._name is not None else self.vendor_name if self.vendor_name is not None else None
         return "%s %d" % (deviceTypeNames[self._cec_type_id], self._logical_address) if n is None \
