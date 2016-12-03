@@ -97,13 +97,9 @@ class HMThermostat(HMDevice, ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if not self.available:
+        if not self.available or temperature is None:
             return None
-        if temperature is None:
-            return
 
-        if self.current_operation == STATE_AUTO:
-            return self._hmdevice.actionNodeData('MANU_MODE', temperature)
         self._hmdevice.set_temperature(temperature)
 
     def set_operation_mode(self, operation_mode):
