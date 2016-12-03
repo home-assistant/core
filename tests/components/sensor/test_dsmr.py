@@ -71,6 +71,7 @@ def test_derivative():
     from dsmr_parser.objects import MBusObject
 
     entity = DerivativeDSMREntity('test', '1.0.0')
+    yield from entity.async_update()
 
     assert entity.state == STATE_UNKNOWN, 'initial state not unknown'
 
@@ -80,6 +81,7 @@ def test_derivative():
             {'value': 1, 'unit': 'm3'},
         ])
     }
+    yield from entity.async_update()
 
     assert entity.state == STATE_UNKNOWN, \
         'state after first update shoudl still be unknown'
@@ -90,6 +92,7 @@ def test_derivative():
             {'value': 2, 'unit': 'm3'},
         ])
     }
+    yield from entity.async_update()
 
     assert entity.state == 1, \
         'state should be difference between first and second update'

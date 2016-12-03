@@ -195,7 +195,18 @@ class DerivativeDSMREntity(DSMREntity):
 
     @property
     def state(self):
-        """Return current hourly rate, recalculate if needed."""
+        """Return the calculated current hourly rate."""
+        return self._state
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Recalculate hourly rate if timestamp has changed.
+
+        DSMR updates gas meter reading every hour. Along with the
+        new value a timestamp is provided for the reading. Test
+        if the last known timestamp differs from the current one
+        then calculate a new rate for the previous hour.
+        """
         # check if the timestamp for the object differs from the previous one
         timestamp = self.get_dsmr_object_attr('datetime')
         if timestamp and timestamp != self._previous_timestamp:
@@ -212,8 +223,6 @@ class DerivativeDSMREntity(DSMREntity):
 
             self._previous_reading = current_reading
             self._previous_timestamp = timestamp
-
-        return self._state
 
     @property
     def unit_of_measurement(self):
