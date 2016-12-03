@@ -9,7 +9,6 @@ import logging
 
 import cec
 import voluptuous as vol
-import yaml
 from collections import defaultdict
 
 import homeassistant.helpers.config_validation as cv
@@ -43,7 +42,7 @@ EVENT_CEC_COMMAND_RECEIVED = 'cec_command_received'
 EVENT_CEC_KEYPRESS_RECEIVED = 'cec_keypress_received'
 
 DOMAIN = 'hdmi_cec'
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+# ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 MAX_DEPTH = 4
 
@@ -83,7 +82,7 @@ VENDORS = {0x000039: 'Toshiba',
            0x9C645E: 'HarmanKardon',
            0: 'Unknown'}
 
-deviceTypeNames = ["TV", "Recorder", "UNKNOWN", "Tuner", "Playback", "Audio"]
+DEVICE_TYPE_NAMES = ["TV", "Recorder", "UNKNOWN", "Tuner", "Playback", "Audio"]
 
 CEC_LOGICAL_TO_TYPE = [0,  # TV0
                        1,  # Recorder 1
@@ -152,19 +151,18 @@ def setup(hass, base_config):
         flat[pair[0]] = pad_physical_address(pair[1])
 
     global CEC_CLIENT
-    CEC_CLIENT = pyCecClient(hass)
+    CEC_CLIENT = CecClient(hass)
     exclude = config.get(CONF_EXCLUDE)
 
     def _start_cec(event):
         """Open CEC adapter."""
         # initialise libCEC and enter the main loop
-        if CEC_CLIENT.InitLibCec():
-            hass.services.register(DOMAIN, SERVICE_POWER_ON, CEC_CLIENT.ProcessCommandPowerOn)
-            hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.ProcessCommandStandby)
-            hass.services.register(DOMAIN, SERVICE_SELECT_DEVICE, CEC_CLIENT.ProcessCommandActiveSource)
-            hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.ProcessCommandTx)
-            hass.services.register(DOMAIN, SERVICE_SELF, CEC_CLIENT.ProcessCommandSelf)
-            hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.ProcessCommandVolume)
+        if CEC_CLIENT.init_lib_cec():
+            hass.services.register(DOMAIN, SERVICE_POWER_ON, CEC_CLIENT.process_command_power_on)
+            hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.process_command_standby)
+            hass.services.register(DOMAIN, SERVICE_SELECT_DEVICE, CEC_CLIENT.process_command_active_source)
+            hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.process_command_tx)
+            hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.process_command_volume)
             for c in range(15):
                 if exclude is not None and c in exclude:
                     continue
@@ -174,7 +172,7 @@ def setup(hass, base_config):
                 if dev_type is None:
                     continue
                 CEC_DEVICES[dev_type].append(c)
-            for c in ['media_player', 'switch']:
+            for c in ['switch']:
                 discovery.load_platform(hass, c, DOMAIN, {}, base_config)
             return True
         else:
@@ -187,9 +185,9 @@ def setup(hass, base_config):
 class CecDevice(Entity):
     """Representation of a HDMI CEC device entity."""
 
-    deviceTypeNames = ["TV", "Recorder", "UNKNOWN", "Tuner", "Playback", "Audio"]
+    DEVICE_TYPE_NAMES = ["TV", "Recorder", "UNKNOWN", "Tuner", "Playback", "Audio"]
 
-    def __init__(self, hass, cecClient, logical):
+    def __init__(self, hass, cec_client, logical):
         """Initialize the device."""
         self.hass = hass
         self._icon = None
@@ -202,9 +200,10 @@ class CecDevice(Entity):
         self._available = False
         self._hidden = False
         self._name = None
+        self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         _LOGGER.info("Initializing CEC device %s", self.name)
-        self.cecClient = cecClient
-        cecClient.RegisterCallback(self._update_callback)
+        self.cec_client = cec_client
+        cec_client.register_callback(self._update_callback)
         self.update()
 
     @asyncio.coroutine
@@ -219,66 +218,54 @@ class CecDevice(Entity):
             _LOGGER.info("device not available. Not updating")
 
     def _request_physical_address(self):
-        self.cecClient.ProcessCommandTx(
+        self.cec_client.process_command_tx(
             type('call', (object,), {'data': {'dst': hex(self._logical_address)[2:], 'cmd': '83'}}))
 
     def _request_cec_vendor(self):
-        self.cecClient.ProcessCommandTx(
+        self.cec_client.process_command_tx(
             type('call', (object,), {'data': {'dst': hex(self._logical_address)[2:], 'cmd': '8C'}}))
 
     def _request_cec_osd_name(self):
-        self.cecClient.ProcessCommandTx(
+        self.cec_client.process_command_tx(
             type('call', (object,), {'data': {'dst': hex(self._logical_address)[2:], 'cmd': '46'}}))
 
     def _request_cec_power_status(self):
-        self.cecClient.ProcessCommandTx(
+        self.cec_client.process_command_tx(
             type('call', (object,), {'data': {'dst': hex(self._logical_address)[2:], 'cmd': '8F'}}))
 
-    def turn_on(self):
-        """Turn device on."""
-        self.cecClient.SendCommandPowerOn(self._logical_address)
-        self._state = STATE_ON
-        self.schedule_update_ha_state()
-        self._request_cec_power_status()
+    def _update_callback(self, src, dst, response, cmd, cmd_chain):
+        try:
+            if not (src == self._logical_address or src == 15):
+                return
+            _LOGGER.info("Got status for device %x -> %x, %s %x %s", src, dst, response, cmd, cmd_chain)
+            if cmd == 0x90:
+                status = int(cmd_chain[0], 16)
+                _LOGGER.info("status: %s", status)
+                if status == 0x00:
+                    self._state = STATE_ON
+                elif status == 0x01:
+                    self._state = STATE_OFF
+                else:
+                    self._state = STATE_UNKNOWN
+                _LOGGER.info("state set to %s", self._state)
+            elif cmd == 0x47:
+                self._name = ''
+                for c in cmd_chain:
+                    self._name += chr(int(c, 16))
+            elif cmd == 0x87:
+                self._vendor_id = 0
+                for i in cmd_chain:
+                    self._vendor_id *= 0x100
+                    self._vendor_id += int(i, 16)
+            elif cmd == 0x84:
+                self._physical_address = "%d.%d.%d.%d" % (
+                    int(cmd_chain[0][0], 16), int(cmd_chain[0][1], 16), int(cmd_chain[1][0], 16),
+                    int(cmd_chain[1][1], 16))
+                self._cec_type_id = int(cmd_chain[2], 16)
 
-    def turn_off(self):
-        """Turn device off."""
-        self.cecClient.SendCommandStandby(self._logical_address)
-        self._state = STATE_OFF
-        self.schedule_update_ha_state()
-        self._request_cec_power_status()
-
-    def _update_callback(self, src, dst, response, cmd, cmdChain):
-        if not (src == self._logical_address or src == 15):
-            return
-        _LOGGER.info("Got status for device %x -> %x, %s %x %s", src, dst, response, cmd, cmdChain)
-        if cmd == 0x90:
-            status = int(cmdChain[0], 16)
-            _LOGGER.info("status: %s", status)
-            if status == 0x00:
-                self._state = STATE_ON
-            elif status == 0x01:
-                self._state = STATE_OFF
-            else:
-                self._state = STATE_UNKNOWN
-            _LOGGER.info("state set to %s", self._state)
-        elif cmd == 0x47:
-            self._name = ''
-            for c in cmdChain:
-                self._name += chr(int(c, 16))
-        elif cmd == 0x87:
-            self._vendor_id = 0
-            for i in cmdChain:
-                self._vendor_id *= 0x100
-                self._vendor_id += int(i, 16)
-        elif cmd == 0x84:
-            self._physical_address = "%d.%d.%d.%d" % (
-                int(cmdChain[0][0], 16), int(cmdChain[0][1], 16), int(cmdChain[1][0], 16),
-                int(cmdChain[1][1], 16))
-            self._cec_type_id = int(cmdChain[2], 16)
-
-        if self.entity_id is not None:
             self.schedule_update_ha_state()
+        except Exception as e:
+            _LOGGER.error("callback failed: %s", e, exc_info=1)
 
     @property
     def is_on(self):
@@ -287,19 +274,10 @@ class CecDevice(Entity):
 
     @property
     def name(self):
-        return "%s%d" % (DOMAIN, self._logical_address)
-
-    @property
-    def friendly_name(self):
         """Return the name of the device."""
         n = self._name if self._name is not None else self.vendor_name if self.vendor_name is not None else None
-        return "%s %d" % (deviceTypeNames[self._cec_type_id], self._logical_address) if n is None \
-            else "%s %d (%s)" % (deviceTypeNames[self._cec_type_id], self._logical_address, n)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
+        return "%s %d" % (DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address) if n is None \
+            else "%s %d (%s)" % (DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address, n)
 
     @property
     def state(self):
@@ -326,7 +304,7 @@ class CecDevice(Entity):
 
     @property
     def type(self):
-        return deviceTypeNames[self._cec_type_id]
+        return DEVICE_TYPE_NAMES[self._cec_type_id]
 
     @property
     def type_id(self):
@@ -342,16 +320,17 @@ class CecDevice(Entity):
 
     @property
     def available(self):
-        return self.cecClient.lib.PollDevice(self._logical_address)
+        return self.cec_client.lib.PollDevice(self._logical_address)
 
-    def _icon_by_type(self, type):
-        _LOGGER.info("Serving icon for type %d" % type)
+    @staticmethod
+    def _icon_by_type(cec_type):
+        _LOGGER.info("Serving icon for type %d" % cec_type)
         return \
-            'mdi:television' if type == 0 else \
-                'mdi:microphone' if type == 1 else \
-                    'mdi:nest-thermostat' if type == 3 else \
-                        'mdi:play' if type == 4 else \
-                            'mdi:speaker' if type == 5 else \
+            'mdi:television' if cec_type == 0 else \
+                'mdi:microphone' if cec_type == 1 else \
+                    'mdi:nest-thermostat' if cec_type == 3 else \
+                        'mdi:play' if cec_type == 4 else \
+                            'mdi:speaker' if cec_type == 5 else \
                                 'mdi:help'
 
     @property
@@ -369,13 +348,13 @@ class CecDevice(Entity):
         return state_attr
 
 
-class pyCecClient:
+class CecClient:
     cecconfig = {}
     lib = {}
     hass = {}
     callbacks = []
 
-    def DetectAdapter(self):
+    def detect_adapter(self):
         """detect an adapter and return the com port path"""
         retval = None
         adapters = self.lib.DetectAdapters()
@@ -387,7 +366,7 @@ class pyCecClient:
             retval = adapter.strComName
         return retval
 
-    def InitLibCec(self):
+    def init_lib_cec(self):
         """initialise libCEC"""
         self.lib = cec.ICECAdapter.Create(self.cecconfig)
         # print libCEC version and compilation information
@@ -395,8 +374,8 @@ class pyCecClient:
             self.cecconfig.serverVersion) + " loaded: " + self.lib.GetLibInfo())
 
         # search for adapters
-        adapter = self.DetectAdapter()
-        if adapter == None:
+        adapter = self.detect_adapter()
+        if adapter is None:
             _LOGGER.info("No adapters found")
             return False
         else:
@@ -408,57 +387,40 @@ class pyCecClient:
                 _LOGGER.info("failed to open a connection to the CEC adapter")
                 return False
 
-    def GetMyAddress(self):
+    def get_my_logical_address(self):
         return self.cecconfig.logicalAddresses.primary
 
-    def ProcessCommandSelf(self, call):
-        """display the addresses controlled by libCEC"""
-        addresses = self.lib.GetLogicalAddresses()
-        result = "Addresses controlled by libCEC: "
-        x = 0
-        notFirst = False
-        while x < 15:
-            if addresses.IsSet(x):
-                if notFirst:
-                    result += ", "
-                result += self.lib.LogicalAddressToString(x)
-                if self.lib.IsActiveSource(x):
-                    result += " (*)"
-                notFirst = True
-            x += 1
-        _LOGGER.info(result)
-        _LOGGER.info("%s", yaml.dump(result, indent=2))
-        return result
-
-    def ProcessCommandActiveSource(self, call):
+    def process_command_active_source(self, call):
         """send an active source message"""
         self.lib.SetActiveSource(int(call.data[ATTR_TYPE], 16))
 
-    def SendCommandStandby(self, addr):
+    def send_command_standby(self, addr):
         """send a standby command"""
         _LOGGER.info("Standby device %s", addr)
         self.lib.StandbyDevices(cec.CECDEVICE_BROADCAST if addr is None else addr)
 
-    def ProcessCommandStandby(self, call):
+    def process_command_standby(self, call):
         """send a standby command"""
-        self.SendCommandStandby(call.data)
+        self.send_command_standby(call.data)
 
-    def SendCommandPowerOn(self, addr):
+    def send_command_power_on(self, addr):
         _LOGGER.info("Power on device %s", addr)
         self.lib.PowerOnDevices(cec.CECDEVICE_BROADCAST if addr is None else addr)
 
-    def ProcessCommandPowerOn(self, call):
-        self.SendCommandPowerOn(call.data)
+    def process_command_power_on(self, call):
+        self.send_command_power_on(call.data)
 
-    def ProcessCommandVolume(self, call):
+    def process_command_volume(self, call):
         for cmd, att in call.data:
             att = int(att)
-            if att < 1: att = 1
+            att = 1 if att < 1 else att
             if cmd == CMD_UP:
-                for _ in range(att): self.lib.VolumeUp(True)
+                for _ in range(att):
+                    self.lib.VolumeUp(True)
                 _LOGGER.info("Volume increased %d times", att)
             elif cmd == CMD_DOWN:
-                for _ in range(att): self.lib.VolumeDown(True)
+                for _ in range(att):
+                    self.lib.VolumeDown(True)
                 _LOGGER.info("Volume deceased %d times", att)
             elif cmd == CMD_MUTE:
                 self.lib.AudioMute()
@@ -472,7 +434,7 @@ class pyCecClient:
             else:
                 _LOGGER.warning("Unknown command %s", cmd)
 
-    def ProcessCommandTx(self, call):
+    def process_command_tx(self, call):
         """Send CEC command."""
         if call.data is list:
             data = call.data
@@ -486,7 +448,7 @@ class pyCecClient:
                 if ATTR_SRC in d:
                     src = d[ATTR_SRC]
                 else:
-                    src = str(self.GetMyAddress())
+                    src = str(self.get_my_logical_address())
                     _LOGGER.info("src %s", src)
                 if ATTR_DST in d:
                     dst = d[ATTR_DST]
@@ -503,9 +465,9 @@ class pyCecClient:
                     att = ""
                 command = "%s%s:%s%s" % (src, dst, cmd, att)
             _LOGGER.info("Sending %s", command)
-            self.SendCommand(command)
+            self.send_command(command)
 
-    def SendCommand(self, data):
+    def send_command(self, data):
         """send a custom command to cec adapter"""
         cmd = self.lib.CommandFromString(data)
         _LOGGER.info("transmit " + data)
@@ -514,35 +476,11 @@ class pyCecClient:
         else:
             _LOGGER.error("failed to send command")
 
-    def ProcessCommandScan(self, call):
-        """scan the bus and display devices that were found"""
-        _LOGGER.info("requesting CEC bus information ...")
-        strLog = "CEC bus information\n===================\n"
-        addresses = self.lib.GetActiveDevices()
-        x = 0
-        while x < 15:
-            if addresses.IsSet(x):
-                vendorId = self.lib.GetDeviceVendorId(x)
-                physicalAddress = self.lib.GetDevicePhysicalAddress(x)
-                active = self.lib.IsActiveSource(x)
-                cecVersion = self.lib.GetDeviceCecVersion(x)
-                power = self.lib.GetDevicePowerStatus(x)
-                osdName = self.lib.GetDeviceOSDName(x)
-                strLog += "device #" + str(x) + ": " + self.lib.LogicalAddressToString(x) + "\n"
-                strLog += "address:       " + str(physicalAddress) + "\n"
-                strLog += "active source: " + str(active) + "\n"
-                strLog += "vendor:        " + self.lib.VendorIdToString(vendorId) + "\n"
-                strLog += "CEC version:   " + self.lib.CecVersionToString(cecVersion) + "\n"
-                strLog += "OSD name:      " + osdName + "\n"
-                strLog += "power status:  " + self.lib.PowerStatusToString(power) + "\n\n\n"
-            x += 1
-        _LOGGER.info(strLog)
-
-    def RegisterCallback(self, callback):
+    def register_callback(self, callback):
         if callback not in self.callbacks:
             self.callbacks.append(callback)
 
-    def LogCallback(self, level, time, message):
+    def log_callback(self, level, time, message):
         """logging callback"""
         if level == cec.CEC_LOG_ERROR:
             levelstr = "ERROR:   "
@@ -565,32 +503,31 @@ class pyCecClient:
 
         return 0
 
-    def KeyPressCallback(self, key, duration):
+    def key_press_callback(self, key, duration):
         """key press callback"""
         _LOGGER.info("[key pressed] " + str(key))
         self.hass.bus.fire(EVENT_CEC_KEYPRESS_RECEIVED, {ATTR_KEY: key, ATTR_DURATION: duration})
         return 0
 
-    def CommandCallback(self, command):
+    def command_callback(self, command):
         """command received callback"""
         _LOGGER.info("[command receivedx] %s", command)
-        dir = command[0:2]
         command = command[3:]
-        cmdChain = command.split(':')
-        src = cmdChain.pop(0)
+        cmd_chain = command.split(':')
+        src = cmd_chain.pop(0)
         dst = int(src[1], 16)
         src = int(src[0], 16)
-        cmd = int(cmdChain.pop(0), 16)
+        cmd = int(cmd_chain.pop(0), 16)
         _LOGGER.info("[command received1] " + command)
         if cmd == '00':
             response = True
-            cmd = cmdChain.pop(0)
+            cmd = cmd_chain.pop(0)
         else:
             response = False
         _LOGGER.info("[command received2] %s %s %s", src, dst, cmd)
         try:
             for c in self.callbacks:
-                c(src, dst, response, cmd, cmdChain)
+                c(src, dst, response, cmd, cmd_chain)
         except Exception as e:
             _LOGGER.error(e, exc_info=1)
 
@@ -599,14 +536,14 @@ class pyCecClient:
 
     def __init__(self, hass):
         self.cecconfig = cec.libcec_configuration()
-        self.cecconfig.strDeviceName = "pyLibCec"
+        self.cecconfig.strDeviceName = "HA"
         self.cecconfig.bActivateSource = 0
         self.cecconfig.bMonitorOnly = 0
         self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
         self.cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
         self.hass = hass
         _LOGGER.debug("Setting callbacks...")
-        self.cecconfig.SetLogCallback(self.LogCallback)
-        self.cecconfig.SetKeyPressCallback(self.KeyPressCallback)
-        self.cecconfig.SetCommandCallback(self.CommandCallback)
+        self.cecconfig.SetLogCallback(self.log_callback)
+        self.cecconfig.SetKeyPressCallback(self.key_press_callback)
+        self.cecconfig.SetCommandCallback(self.command_callback)
         _LOGGER.debug("callbacks set")

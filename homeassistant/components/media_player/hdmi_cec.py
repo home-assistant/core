@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CecMediaPlayer(CecDevice, MediaPlayerDevice):
     """Representation of a Vera Switch."""
 
-    def __init__(self, hass, cecClient, logical):
+    def __init__(self, hass, cec_client, logical):
         """Initialize the Vera device."""
         self._state = False
-        CecDevice.__init__(self, hass, cecClient, logical)
+        CecDevice.__init__(self, hass, cec_client, logical)
