@@ -19,8 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CONF_AUTO_SCAN = "auto_scan"
-CONF_THRESHOLD_DOUBLE_CLICK = "threshold_double_click"
-CONF_THRESHOLD_LONG_CLICK = "threshold_long_click"
+CONF_THRESHOLD_DOUBLE_CLICK = "double_click_threshold"
+CONF_THRESHOLD_LONG_CLICK = "long_click_threshold"
 
 EVENT_FLIC_SINGLE_CLICK = "flic_single_click"
 EVENT_FLIC_LONG_CLICK = "flic_long_click"
