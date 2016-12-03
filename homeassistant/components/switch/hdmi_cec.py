@@ -45,7 +45,7 @@ class CecSwitch(CecDevice, SwitchDevice):
 
     def turn_off(self):
         """Turn device off."""
-        self.cec_client.SendCommandStandby(self._logical_address)
+        self.cec_client.send_command_standby(self._logical_address)
         self._state = STATE_OFF
         self.schedule_update_ha_state()
         self._request_cec_power_status()
