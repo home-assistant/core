@@ -9,10 +9,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
-from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL, \
-                                CONF_EMAIL, CONF_PASSWORD, \
-                                EVENT_HOMEASSISTANT_START, \
-                                EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -56,7 +55,7 @@ WINK_COMPONENTS = [
 
 
 def setup(hass, config):
-    """Setup the Wink component."""
+    """Set up the Wink component."""
     import pywink
     from pubnubsubhandler import PubNubSubscriptionHandler
 
@@ -95,7 +94,7 @@ def setup(hass, config):
 
     def force_update(call):
         """Force all devices to poll the Wink API."""
-        _LOGGER.info("Refreshing Wink states from API.")
+        _LOGGER.info("Refreshing Wink states from API")
         for entity in hass.data[DOMAIN]['entities']:
             entity.update_ha_state(True)
     hass.services.register(DOMAIN, 'Refresh state from Wink', force_update)
@@ -115,22 +114,21 @@ class WinkDevice(Entity):
         self.wink = wink
         self._battery = self.wink.battery_level
         hass.data[DOMAIN]['pubnub'].add_subscription(
-            self.wink.pubnub_channel,
-            self._pubnub_update)
+            self.wink.pubnub_channel, self._pubnub_update)
         hass.data[DOMAIN]['entities'].append(self)
 
     def _pubnub_update(self, message):
         try:
             if message is None:
-                _LOGGER.error("Error on pubnub update for " + self.name +
-                              " pollin API for current state")
+                _LOGGER.error("Error on pubnub update for %s "
+                              "polling API for current state", self.name)
                 self.update_ha_state(True)
             else:
                 self.wink.pubnub_update(message)
                 self.update_ha_state()
         except (ValueError, KeyError, AttributeError):
-            _LOGGER.error("Error in pubnub JSON for " + self.name +
-                          " pollin API for current state")
+            _LOGGER.error("Error in pubnub JSON for %s "
+                          "polling API for current state", self.name)
             self.update_ha_state(True)
 
     @property
