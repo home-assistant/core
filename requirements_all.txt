@@ -131,7 +131,7 @@ fuzzywuzzy==0.14.0
 # gattlib==0.20150805
 
 # homeassistant.components.nest
-git+https://github.com/technicalpickles/python-nest.git@nest-cam#python-nest==3.0.0
+git+https://github.com/technicalpickles/python-nest.git@0be5c8a6307ee81540f21aac4fcd22cc5d98c988#python-nest==3.0.0
 
 # homeassistant.components.notify.gntp
 gntp==1.0.3
