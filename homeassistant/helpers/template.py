@@ -439,4 +439,4 @@ ENV.globals['utcnow'] = dt_util.utcnow
 ENV.globals['as_timestamp'] = dt_util.as_timestamp
 ENV.globals['relative_time'] = dt_util.get_age
 ENV.globals['strptime'] = strptime
-ENV.globals['str_to_json'] = str_to_json
+ENV.globals['json_to_dict'] = json.loads
