@@ -33,8 +33,6 @@ DEFAULT_PASSWORD = 'admin'
 DEFAULT_TIMEOUT = 20
 DEFAULT_CYCLETIME = 2
 
-# TODO: Add DEFAULT_PORT contribute non-80 support to dlipower
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,6 +132,7 @@ class DINRelayDevice(object):
     def __init__(self, device):
         """Initialize the DINRelay device."""
         self._device = device
+        self.update()
 
     def turn_on(self, **kwargs):
         """Instruct the relay to turn on."""
@@ -147,14 +146,4 @@ class DINRelayDevice(object):
     def update(self):
         """Fetch new state data for this device."""
         self.statuslocal = self._device.statuslist()
-        """
-        statuslist looks like:
-            [[1, u'FR Lawn South', u'OFF'],
-             [2, u'FR Lawn North', u'OFF'],
-             [3, u'Plants Drip', u'ON'],
-             [4, u'BK Lawn North old', u'OFF'],
-             [5, u'BK Lawn North new', u'OFF'],
-             [6, u'BK Lawn South', u'ON'],
-             [7, u'BK Slope Low', u'OFF'],
-             [8, u'BK Slope High', u'OFF']]
-        """
+
