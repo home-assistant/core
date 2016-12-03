@@ -7,25 +7,29 @@ https://home-assistant.io/components/demo/
 import random
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_WHITE_VALUE,
-    ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_WHITE_VALUE, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT,
+    ATTR_RGB_COLOR, ATTR_WHITE_VALUE, ATTR_XY_COLOR, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE,
+    Light)
 
 LIGHT_COLORS = [
     [237, 224, 33],
     [255, 63, 111],
 ]
 
+LIGHT_EFFECT_LIST = ['rainbow', 'none']
+
 LIGHT_TEMPS = [240, 380]
 
-SUPPORT_DEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
-                SUPPORT_WHITE_VALUE)
+SUPPORT_DEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
+                SUPPORT_RGB_COLOR | SUPPORT_WHITE_VALUE)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the demo light platform."""
     add_devices_callback([
-        DemoLight("Bed Light", False),
+        DemoLight("Bed Light", False, effect_list=LIGHT_EFFECT_LIST,
+                  effect=LIGHT_EFFECT_LIST[0]),
         DemoLight("Ceiling Lights", True, LIGHT_COLORS[0], LIGHT_TEMPS[1]),
         DemoLight("Kitchen Lights", True, LIGHT_COLORS[1], LIGHT_TEMPS[0])
     ])
@@ -36,7 +40,7 @@ class DemoLight(Light):
 
     def __init__(
             self, name, state, rgb=None, ct=None, brightness=180,
-            xy_color=(.5, .5), white=200):
+            xy_color=(.5, .5), white=200, effect_list=None, effect=None):
         """Initialize the light."""
         self._name = name
         self._state = state
@@ -45,6 +49,8 @@ class DemoLight(Light):
         self._brightness = brightness
         self._xy_color = xy_color
         self._white = white
+        self._effect_list = effect_list
+        self._effect = effect
 
     @property
     def should_poll(self):
@@ -82,6 +88,16 @@ class DemoLight(Light):
         return self._white
 
     @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return self._effect_list
+
+    @property
+    def effect(self):
+        """Return the current effect."""
+        return self._effect
+
+    @property
     def is_on(self):
         """Return true if light is on."""
         return self._state
@@ -110,9 +126,12 @@ class DemoLight(Light):
         if ATTR_WHITE_VALUE in kwargs:
             self._white = kwargs[ATTR_WHITE_VALUE]
 
-        self.update_ha_state()
+        if ATTR_EFFECT in kwargs:
+            self._effect = kwargs[ATTR_EFFECT]
+
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self._state = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()

@@ -184,8 +184,8 @@ def setup(hass, config):
         filters.included_entities = include[CONF_ENTITIES]
         filters.included_domains = include[CONF_DOMAINS]
 
-    hass.http.register_view(Last5StatesView(hass))
-    hass.http.register_view(HistoryPeriodView(hass, filters))
+    hass.http.register_view(Last5StatesView)
+    hass.http.register_view(HistoryPeriodView(filters))
     register_built_in_panel(hass, 'history', 'History', 'mdi:poll-box')
 
     return True
@@ -197,14 +197,10 @@ class Last5StatesView(HomeAssistantView):
     url = '/api/history/entity/{entity_id}/recent_states'
     name = 'api:history:entity-recent-states'
 
-    def __init__(self, hass):
-        """Initilalize the history last 5 states view."""
-        super().__init__(hass)
-
     @asyncio.coroutine
     def get(self, request, entity_id):
         """Retrieve last 5 states of entity."""
-        result = yield from self.hass.loop.run_in_executor(
+        result = yield from request.app['hass'].loop.run_in_executor(
             None, last_5_states, entity_id)
         return self.json(result)
 
@@ -216,9 +212,8 @@ class HistoryPeriodView(HomeAssistantView):
     name = 'api:history:view-period'
     extra_urls = ['/api/history/period/{datetime}']
 
-    def __init__(self, hass, filters):
+    def __init__(self, filters):
         """Initilalize the history period view."""
-        super().__init__(hass)
         self.filters = filters
 
     @asyncio.coroutine
@@ -240,7 +235,7 @@ class HistoryPeriodView(HomeAssistantView):
         end_time = start_time + one_day
         entity_id = request.GET.get('filter_entity_id')
 
-        result = yield from self.hass.loop.run_in_executor(
+        result = yield from request.app['hass'].loop.run_in_executor(
             None, get_significant_states, start_time, end_time, entity_id,
             self.filters)
 

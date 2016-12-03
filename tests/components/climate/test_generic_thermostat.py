@@ -25,6 +25,7 @@ ENT_SWITCH = 'switch.test'
 MIN_TEMP = 3.0
 MAX_TEMP = 65.0
 TARGET_TEMP = 42.0
+TOLERANCE = 0.5
 
 
 class TestSetupClimateGenericThermostat(unittest.TestCase):
@@ -84,6 +85,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
+            'tolerance': 2,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR
         }})
@@ -113,7 +115,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
             'target_sensor': ENT_SENSOR,
             'min_temp': MIN_TEMP,
             'max_temp': MAX_TEMP,
-            'target_temp': TARGET_TEMP
+            'target_temp': TARGET_TEMP,
         }})
         state = self.hass.states.get(ENTITY)
         self.assertEqual(MIN_TEMP, state.attributes.get('min_temp'))
@@ -205,6 +207,30 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
+    def test_temp_change_heater_on_within_tolerance(self):
+        """Test if temperature change turn heater on within tolerance."""
+        self._setup_switch(False)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        self._setup_sensor(29)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_temp_change_heater_on_outside_tolerance(self):
+        """Test if temperature change doesn't turn heater on outside
+        tolerance.
+        """
+        self._setup_switch(False)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        self._setup_sensor(25)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
     def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
         """Setup the test sensor."""
         self.hass.states.set(ENT_SENSOR, temp, {
@@ -235,6 +261,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
+            'tolerance': 0.3,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True
@@ -326,6 +353,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
+            'tolerance': 0.3,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True,
@@ -418,6 +446,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
+            'tolerance': 0.3,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'min_cycle_duration': datetime.timedelta(minutes=10)
