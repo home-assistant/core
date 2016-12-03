@@ -239,7 +239,7 @@ class CecDevice(Entity):
                 return
             _LOGGER.info("Got status for device %x -> %x, %s %x %s", src, dst, response, cmd, cmd_chain)
             if cmd == 0x90:
-                status = int(cmd_chain[0], 16)
+                status = cmd_chain[0]
                 _LOGGER.info("status: %s", status)
                 if status == 0x00:
                     self._state = STATE_ON
@@ -251,18 +251,16 @@ class CecDevice(Entity):
             elif cmd == 0x47:
                 self._name = ''
                 for c in cmd_chain:
-                    self._name += chr(int(c, 16))
+                    self._name += chr(c)
             elif cmd == 0x87:
                 self._vendor_id = 0
                 for i in cmd_chain:
                     self._vendor_id *= 0x100
-                    self._vendor_id += int(i, 16)
+                    self._vendor_id += i
             elif cmd == 0x84:
                 self._physical_address = "%d.%d.%d.%d" % (
-                    int(cmd_chain[0][0], 16), int(cmd_chain[0][1], 16), int(cmd_chain[1][0], 16),
-                    int(cmd_chain[1][1], 16))
-                self._cec_type_id = int(cmd_chain[2], 16)
-
+                cmd_chain[0] / 0x10, cmd_chain[0] % 0x10, cmd_chain[1] / 0x10, cmd_chain[1] % 0x10)
+                self._cec_type_id = cmd_chain[2]
             self.schedule_update_ha_state()
         except Exception as e:
             _LOGGER.error("callback failed: %s", e, exc_info=1)
@@ -325,13 +323,7 @@ class CecDevice(Entity):
     @staticmethod
     def _icon_by_type(cec_type):
         _LOGGER.info("Serving icon for type %d" % cec_type)
-        return \
-            'mdi:television' if cec_type == 0 else \
-                'mdi:microphone' if cec_type == 1 else \
-                    'mdi:nest-thermostat' if cec_type == 3 else \
-                        'mdi:play' if cec_type == 4 else \
-                            'mdi:speaker' if cec_type == 5 else \
-                                'mdi:help'
+        return 'mdi:television' if cec_type == 0 else                 'mdi:microphone' if cec_type == 1 else                     'mdi:nest-thermostat' if cec_type == 3 else                        'mdi:play' if cec_type == 4 else                             'mdi:speaker' if cec_type == 5 else                                 'mdi:help'
 
     @property
     def state_attributes(self):
@@ -354,18 +346,6 @@ class CecClient:
     hass = {}
     callbacks = []
 
-    def detect_adapter(self):
-        """detect an adapter and return the com port path"""
-        retval = None
-        adapters = self.lib.DetectAdapters()
-        for adapter in adapters:
-            _LOGGER.info("found a CEC adapter:")
-            _LOGGER.info("port:     " + adapter.strComName)
-            _LOGGER.info("vendor:   " + hex(adapter.iVendorId))
-            _LOGGER.info("product:  " + hex(adapter.iProductId))
-            retval = adapter.strComName
-        return retval
-
     def init_lib_cec(self):
         """initialise libCEC"""
         self.lib = cec.ICECAdapter.Create(self.cecconfig)
@@ -374,7 +354,14 @@ class CecClient:
             self.cecconfig.serverVersion) + " loaded: " + self.lib.GetLibInfo())
 
         # search for adapters
-        adapter = self.detect_adapter()
+        adapter = None
+        adapters = self.lib.DetectAdapters()
+        for adapter in adapters:
+            _LOGGER.info("found a CEC adapter:")
+            _LOGGER.info("port:     " + adapter.strComName)
+            _LOGGER.info("vendor:   " + hex(adapter.iVendorId))
+            _LOGGER.info("product:  " + hex(adapter.iProductId))
+            adapter = adapter.strComName
         if adapter is None:
             _LOGGER.info("No adapters found")
             return False
@@ -511,20 +498,19 @@ class CecClient:
 
     def command_callback(self, command):
         """command received callback"""
-        _LOGGER.info("[command receivedx] %s", command)
+        _LOGGER.info("[command received] %s", command)
         command = command[3:]
         cmd_chain = command.split(':')
         src = cmd_chain.pop(0)
         dst = int(src[1], 16)
         src = int(src[0], 16)
         cmd = int(cmd_chain.pop(0), 16)
-        _LOGGER.info("[command received1] " + command)
-        if cmd == '00':
+        cmd_chain = list(map(lambda x: int(x, 16), cmd_chain))
+        if cmd == 00:
             response = True
             cmd = cmd_chain.pop(0)
         else:
             response = False
-        _LOGGER.info("[command received2] %s %s %s", src, dst, cmd)
         try:
             for c in self.callbacks:
                 c(src, dst, response, cmd, cmd_chain)
@@ -540,6 +526,7 @@ class CecClient:
         self.cecconfig.bActivateSource = 0
         self.cecconfig.bMonitorOnly = 0
         self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
+        self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_PLAYBACK_DEVICE)
         self.cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
         self.hass = hass
         _LOGGER.debug("Setting callbacks...")
