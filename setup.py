@@ -13,6 +13,7 @@ DOWNLOAD_URL = ('{}/archive/'
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
+# Pinning yarl because yarl 0.8 breaks aiohttp
 REQUIRES = [
     'requests>=2,<3',
     'pyyaml>=3.11,<4',
@@ -21,7 +22,8 @@ REQUIRES = [
     'jinja2>=2.8',
     'voluptuous==0.9.2',
     'typing>=3,<4',
-    'aiohttp==1.1.5',
+    'yarl==0.7.1',
+    'aiohttp==1.1.6',
     'async_timeout==1.1.0',
 ]
 
