@@ -182,7 +182,7 @@ class FlicButton(BinarySensorDevice):
         return attr
 
     def _button_up_down(self, channel, click_type, was_queued, time_diff):
-        """Called when the button is pressed or released."""
+        """Fire click event depending on click type."""
         import pyflic
 
         if not was_queued:
@@ -228,3 +228,13 @@ class FlicButton(BinarySensorDevice):
             "name": self.name,
             "address": self.address
         })
+
+    def _connection_status_changed(self, channel,
+                                   connection_status, disconnect_reason):
+        """Remove device, if button disconnects."""
+        import pyflic
+
+        if connection_status == pyflic.ConnectionStatus.Disconnected:
+            _LOGGER.info("Button (%s) disconnected. Reason: %s",
+                         self.address, disconnect_reason)
+            self.remove()
