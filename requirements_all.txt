@@ -84,6 +84,9 @@ directpy==0.1
 # homeassistant.components.updater
 distro==1.0.1
 
+# homeassistant.components.switch.digitalloggers
+dlipower==0.7.165
+
 # homeassistant.components.notify.xmpp
 dnspython3==1.15.0
 
