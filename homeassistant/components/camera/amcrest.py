@@ -5,13 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.amcrest/
 """
 import logging
+
 import voluptuous as vol
 
+import homeassistant.loader as loader
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.helpers import config_validation as cv
-import homeassistant.loader as loader
 
 REQUIREMENTS = ['amcrest==1.0.0']
 
@@ -33,19 +34,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup an Amcrest IP Camera."""
+    """Set up an Amcrest IP Camera."""
     from amcrest import AmcrestCamera
-    data = AmcrestCamera(config.get(CONF_HOST),
-                         config.get(CONF_PORT),
-                         config.get(CONF_USERNAME),
-                         config.get(CONF_PASSWORD))
+    data = AmcrestCamera(
+        config.get(CONF_HOST), config.get(CONF_PORT),
+        config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
 
     persistent_notification = loader.get_component('persistent_notification')
     try:
         data.camera.current_time
     # pylint: disable=broad-except
     except Exception as ex:
-        _LOGGER.error('Unable to connect to Amcrest camera: %s', str(ex))
+        _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
         persistent_notification.create(
             hass, 'Error: {}<br />'
             'You will need to restart hass after fixing.'
