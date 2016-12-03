@@ -9,6 +9,7 @@ import logging
 import os
 
 import voluptuous as vol
+
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
@@ -18,21 +19,24 @@ from homeassistant.const import (
 from homeassistant.components import group
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
-ATTR_DEVICE = 'device'
-ATTR_COMMAND = 'command'
+_LOGGER = logging.getLogger(__name__)
+
 ATTR_ACTIVITY = 'activity'
-SERVICE_SEND_COMMAND = 'send_command'
-SERVICE_SYNC = 'sync'
+ATTR_COMMAND = 'command'
+ATTR_DEVICE = 'device'
 
 DOMAIN = 'remote'
-SCAN_INTERVAL = 30
 
-GROUP_NAME_ALL_REMOTES = 'all remotes'
 ENTITY_ID_ALL_REMOTES = group.ENTITY_ID_FORMAT.format('all_remotes')
-
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+GROUP_NAME_ALL_REMOTES = 'all remotes'
+
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+
+SCAN_INTERVAL = 30
+SERVICE_SEND_COMMAND = 'send_command'
+SERVICE_SYNC = 'sync'
 
 REMOTE_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
@@ -46,8 +50,6 @@ REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_DEVICE): cv.string,
     vol.Required(ATTR_COMMAND): cv.string,
 })
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass, entity_id=None):
