@@ -37,8 +37,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Amcrest IP Camera."""
     from amcrest import AmcrestCamera
     data = AmcrestCamera(
-        config.get(CONF_HOST), config.get(CONF_PORT), config.get(CONF_USERNAME),
-        config.get(CONF_PASSWORD))
+        config.get(CONF_HOST), config.get(CONF_PORT),
+        config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
 
     persistent_notification = loader.get_component('persistent_notification')
     try:
