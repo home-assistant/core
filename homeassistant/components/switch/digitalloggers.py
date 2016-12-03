@@ -146,4 +146,3 @@ class DINRelayDevice(object):
     def update(self):
         """Fetch new state data for this device."""
         self.statuslocal = self._device.statuslist()
-
