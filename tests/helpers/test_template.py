@@ -123,6 +123,24 @@ class TestHelpersTemplate(unittest.TestCase):
                 template.Template('{{ %s | multiply(10) | round }}' % inp,
                                   self.hass).render())
 
+    def test_str_to_json(self):
+        """Test the parse timestamp method."""
+        invalid_json = 'some none valid json string'
+        temp = '{{ str_to_json(\'%s\') }}' % invalid_json
+        self.assertEqual(
+            'some none valid json string',
+            template.Template(temp, self.hass).render()
+        )
+
+        valid_json = '{"property1": "value1",' \
+            '"property2": ["value2_1", "value2_2"]}'
+        temp = '{%% set json_data = str_to_json(\'%s\') %%}' \
+            '{{ json_data.property2[0] }}' % valid_json
+        self.assertEqual(
+            'value2_1',
+            template.Template(temp, self.hass).render()
+        )
+
     def test_strptime(self):
         """Test the parse timestamp method."""
         tests = [
