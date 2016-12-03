@@ -1,6 +1,8 @@
 """
-Support for Digital Loggers DIN III Relays and possibly other items through
-Dwight Hubbard's, python-dlipower.
+Support for Digital Loggers DIN III Relays.
+
+Support for Digital Loggers DIN III Relays and possibly other items
+through Dwight Hubbard's, python-dlipower.
 
 For more details about python-dlipower, please see
 https://github.com/dwighthubbard/python-dlipower
@@ -82,9 +84,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DINRelay(SwitchDevice):
-
     """Representation of a individual DIN III Relay switch.
-    Eight per device."""
+    Eight per device.
+    """
 
     def __init__(self, name, outletnumber, parent_device):
         """Initialize the DIN III Relay switch."""
@@ -129,7 +131,6 @@ class DINRelay(SwitchDevice):
 
 
 class DINRelayDevice(object):
-
     """Device representation for per device throttling."""
 
     def __init__(self, device):
