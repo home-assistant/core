@@ -59,7 +59,7 @@ ATTR_SLEEP_TIME = 'sleep_time'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
     vol.Optional(CONF_INTERFACE_ADDR): cv.string,
-    vol.Optional(CONF_HOSTS): cv.ensure_list(cv.string),
+    vol.Optional(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string]),
 })
 
 SONOS_SCHEMA = vol.Schema({
