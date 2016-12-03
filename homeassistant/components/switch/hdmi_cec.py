@@ -18,17 +18,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Vera switches."""
     _LOGGER.info("setting CEC switches %s", CEC_DEVICES['switch'])
     add_devices(
-        CecSwitch(hass, CEC_CLIENT, logical=device) for
+        CecSwitch(hass, CEC_CLIENT, device) for
         device in CEC_DEVICES['switch'])
 
 
 class CecSwitch(CecDevice, SwitchDevice):
     """Representation of a Vera Switch."""
 
-    def __init__(self, hass, cecClient, logical=None, physical=None):
+    def __init__(self, hass, cecClient, logical):
         """Initialize the Vera device."""
         self._state = False
-        CecDevice.__init__(self, hass, cecClient, logical=logical, physical=physical)
+        CecDevice.__init__(self, hass, cecClient, logical)
 
     def toggle(self, **kwargs):
         self.turn_off() if self._state else self.turn_on()

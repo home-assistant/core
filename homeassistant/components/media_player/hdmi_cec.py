@@ -18,14 +18,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Vera switches."""
     _LOGGER.info("setting CEC media players %s", CEC_DEVICES['media_player'])
     add_devices(
-        CecMediaPlayer(hass, CEC_CLIENT, logical=device) for
+        CecMediaPlayer(hass, CEC_CLIENT, device) for
         device in CEC_DEVICES['media_player'])
 
 
 class CecMediaPlayer(CecDevice, MediaPlayerDevice):
     """Representation of a Vera Switch."""
 
-    def __init__(self, hass, cecClient, logical=None, physical=None):
+    def __init__(self, hass, cecClient, logical):
         """Initialize the Vera device."""
         self._state = False
-        CecDevice.__init__(self, hass, cecClient, logical=logical, physical=physical)
+        CecDevice.__init__(self, hass, cecClient, logical)
