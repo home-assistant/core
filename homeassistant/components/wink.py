@@ -120,14 +120,14 @@ class WinkDevice(Entity):
     def _pubnub_update(self, message):
         try:
             if message is None:
-                _LOGGER.error("Error on pubnub update for %s ",
+                _LOGGER.error("Error on pubnub update for %s "
                               "polling API for current state", self.name)
                 self.update_ha_state(True)
             else:
                 self.wink.pubnub_update(message)
                 self.update_ha_state()
         except (ValueError, KeyError, AttributeError):
-            _LOGGER.error("Error in pubnub JSON for %s ",
+            _LOGGER.error("Error in pubnub JSON for %s "
                           "polling API for current state", self.name)
             self.update_ha_state(True)
 
