@@ -6,8 +6,8 @@ https://home-assistant.io/components/switch.vera/
 """
 import logging
 
-from homeassistant.components.hdmi_cec import CecDevice, CEC_DEVICES, CEC_CLIENT, DOMAIN
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.hdmi_cec import CecDevice, CEC_DEVICES, CEC_CLIENT
+from homeassistant.components.switch import SwitchDevice, DOMAIN
 from homeassistant.const import STATE_OFF, STATE_STANDBY
 
 DEPENDENCIES = ['hdmi_cec']
@@ -32,21 +32,9 @@ class CecSwitch(CecDevice, SwitchDevice):
         """Initialize the Vera device."""
         self._state = False
         CecDevice.__init__(self, hass, cec_client, logical)
+        self.entity_id = "%s.%s_%s" % (DOMAIN, 'hdmi', hex(self._logical_address)[2:])
 
     @property
     def is_standby(self):
         """Return true if device is in standby."""
         return self._state == STATE_OFF or self._state == STATE_STANDBY
-
-    def toggle(self, **kwargs):
-        self.turn_off() if self._state else self.turn_on()
-
-
-def turn_on(self, **kwargs) -> None:
-    """Turn the entity on."""
-    raise NotImplementedError()
-
-
-def turn_off(self, **kwargs) -> None:
-    """Turn the entity off."""
-    raise NotImplementedError()
