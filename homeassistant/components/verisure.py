@@ -72,7 +72,7 @@ def setup(hass, config):
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     def capture_smartcam(service):
-        """Captures a new picture from a smartcam."""
+        """Capture a new picture from a smartcam."""
         device_id = service.data.get(ATTR_DEVICE_SERIAL)
         HUB.smartcam_capture(device_id)
         _LOGGER.debug('Capturing new image from %s', ATTR_DEVICE_SERIAL)
