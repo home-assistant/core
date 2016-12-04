@@ -318,6 +318,7 @@ omit =
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/anel_pwrctrl.py
     homeassistant/components/switch/arest.py
+    homeassistant/components/switch/digitalloggers.py
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
