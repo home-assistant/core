@@ -9,7 +9,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.weather import WeatherEntity, PLATFORM_SCHEMA, CONF_FORECAST
+from homeassistant.components.weather import (
+    WeatherEntity, PLATFORM_SCHEMA, CONF_FORECAST)
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
@@ -136,8 +137,8 @@ class OpenWeatherMapWeather(WeatherEntity):
 
     @property
     def forecast(self):
-        """Return the forecast object"""
-        if self._forecast == False:
+        """Return the forecast array."""
+        if self._forecast is False:
             return None
 
         forecast_array = []
@@ -180,7 +181,8 @@ class WeatherData(object):
     @Throttle(MIN_TIME_BETWEEN_FORECAST_UPDATES)
     def update_forecast(self):
         """Get the lastest forecast from OpenWeatherMap."""
-        fc = self.owm.three_hours_forecast_at_coords(self.latitude, self.longitude)
+        fc = self.owm.three_hours_forecast_at_coords(
+            self.latitude, self.longitude)
 
         if fc is None:
             _LOGGER.warning("Failed to fetch forecast data from OWM")

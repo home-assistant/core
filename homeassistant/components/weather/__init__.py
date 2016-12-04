@@ -32,6 +32,7 @@ ATTR_FORECAST = 'forecast'
 
 CONF_FORECAST = 'forecast'
 
+
 def setup(hass, config):
     """Setup the weather component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -86,6 +87,7 @@ class WeatherEntity(Entity):
 
     @property
     def forecast(self):
+        """Return the forecast."""
         return None
 
     @property
