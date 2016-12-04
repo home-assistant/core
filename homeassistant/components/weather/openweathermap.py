@@ -146,7 +146,8 @@ class OpenWeatherMapWeather(WeatherEntity):
         for forecast_entry in self.forecast_data.get_weathers():
             data_dict = {
                 'datetime': forecast_entry.get_reference_time('iso'),
-                'temp': forecast_entry.get_temperature('celsius').get('temp', None),
+                'temp': forecast_entry.get_temperature('celsius')
+                    .get('temp', None),
             }
             forecast_array.append(data_dict)
 
