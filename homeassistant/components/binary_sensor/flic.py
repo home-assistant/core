@@ -61,7 +61,8 @@ def async_setup_platform(hass, config, async_add_entities,
                                         main_client, address))
 
     main_client.on_new_verified_button = new_button_callback
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, main_client.close)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                               lambda event: main_client.close())
     hass.loop.run_in_executor(None, main_client.handle_events)
 
     # Initialize scan flic client responsible for scanning for new buttons
@@ -69,6 +70,8 @@ def async_setup_platform(hass, config, async_add_entities,
     if auto_scan:
         scan_client = pyflic.FlicClient(host, port)
         start_scanning(hass, config, async_add_entities, scan_client)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                   lambda event: scan_client.close())
         hass.loop.run_in_executor(None, scan_client.handle_events)
 
     # Get addresses of already verified buttons
