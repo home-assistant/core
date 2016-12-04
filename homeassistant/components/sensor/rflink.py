@@ -33,17 +33,16 @@ VALID_CONFIG_KEYS = [
     'name',
     'icon',
     'value_key',
-    'unit',
 ]
 
 
 def devices_from_config(domain_config, hass=None):
     """Parse config and add rflink sensor devices."""
-
     devices = []
     for device_id, config in domain_config.get('devices', {}).items():
         # extract only valid keys from device configuration
         kwargs = {k: v for k, v in config.items() if k in VALID_CONFIG_KEYS}
+        kwargs['unit'] = SENSOR_KEYS_AND_UNITS[kwargs['value_key']]
         devices.append(RflinkSensor(device_id, hass, **kwargs))
         rflink.KNOWN_DEVICE_IDS.append(device_id)
     return devices
