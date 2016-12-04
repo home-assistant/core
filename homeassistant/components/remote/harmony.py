@@ -14,17 +14,14 @@ import homeassistant.components.remote as remote
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, ATTR_ENTITY_ID)
-from homeassistant.components.remote import PLATFORM_SCHEMA, DOMAIN
+from homeassistant.components.remote import (
+    PLATFORM_SCHEMA, DOMAIN, ATTR_DEVICE, ATTR_COMMAND, ATTR_ACTIVITY)
 from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
 
 REQUIREMENTS = ['pyharmony==1.0.12']
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_DEVICE = 'device'
-ATTR_COMMAND = 'command'
-ATTR_ACTIVITY = 'activity'
 
 DEFAULT_PORT = 5222
 DEVICES = []
