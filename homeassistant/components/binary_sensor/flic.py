@@ -45,9 +45,6 @@ def async_setup_platform(hass, config, async_add_entities,
     """Setup the flic platform."""
     import pyflic
 
-    # Get event loop
-    loop = asyncio.get_event_loop()
-
     # Initialize main flic client responsible for
     # connecting to buttons and retrieving events
     host = config.get(CONF_HOST)
@@ -60,20 +57,19 @@ def async_setup_platform(hass, config, async_add_entities,
 
     def new_button_callback(address):
         """Setup newly verified button as device in home assistant."""
-        hass.loop.create_task(async_setup_button(hass, config,
-                                                 async_add_entities,
-                                                 main_client, address))
+        hass.add_job(async_setup_button(hass, config, async_add_entities,
+                                        main_client, address))
 
     main_client.on_new_verified_button = new_button_callback
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, main_client.close)
-    loop.run_in_executor(None, main_client.handle_events)
+    hass.loop.run_in_executor(None, main_client.handle_events)
 
     # Initialize scan flic client responsible for scanning for new buttons
     auto_scan = config.get(CONF_AUTO_SCAN)
     if auto_scan:
         scan_client = pyflic.FlicClient(host, port)
         start_scanning(hass, config, async_add_entities, scan_client)
-        loop.run_in_executor(None, scan_client.handle_events)
+        hass.loop.run_in_executor(None, scan_client.handle_events)
 
     # Get addresses of already verified buttons
     addresses = yield from async_get_verified_addresses(main_client)
@@ -95,8 +91,8 @@ def start_scanning(hass, config, async_add_entities, client):
         if result == pyflic.ScanWizardResult.WizardSuccess:
             _LOGGER.info("Found new button (%s)", address)
         elif result != pyflic.ScanWizardResult.WizardFailedTimeout:
-            _LOGGER.info("Failed to connect to button (%s). Reason: %s",
-                         address, result)
+            _LOGGER.warning("Failed to connect to button (%s). Reason: %s",
+                            address, result)
 
         # Restart scan wizard
         start_scanning(hass, config, async_add_entities, client)
@@ -185,42 +181,45 @@ class FlicButton(BinarySensorDevice):
         """Fire click event depending on click type."""
         import pyflic
 
-        if not was_queued:
-            # Set state
-            self._is_down = click_type == pyflic.ClickType.ButtonDown
-            self.update_ha_state()
+        if was_queued:
+            return
 
-            # Fire appropriate event
-            now = datetime.now()
-            last_down_diff = (now - self._last_down).total_seconds()
-            last_click_diff = (now - self._last_click).total_seconds()
+        # Set state
+        self._is_down = click_type == pyflic.ClickType.ButtonDown
+        self.schedule_update_ha_state()
 
-            if self._is_down:
-                self._last_down = now
-            else:
-                self._last_up = now
-                if last_down_diff >= self._long_click_threshold:
-                    self._fire_event(EVENT_FLIC_LONG_CLICK)
-                elif last_click_diff <= self._double_click_threshold:
-                    self._last_click = datetime.min
-                    self._fire_event(EVENT_FLIC_DOUBLE_CLICK)
-                else:
-                    self._last_click = now
+        # Fire appropriate event
+        now = datetime.now()
+        last_down_diff = (now - self._last_down).total_seconds()
+        last_click_diff = (now - self._last_click).total_seconds()
 
-                    @asyncio.coroutine
-                    def async_defer_single_click_check():
-                        """Defer check, whether click was a single click.
+        if self._is_down:
+            self._last_down = now
+            return
 
-                        Check if the button has been clicked again in
-                        a specific time interval to distinguish single clicks
-                        from double clicks.
-                        """
-                        yield from asyncio.sleep(self._double_click_threshold)
-                        if self._last_click == now:
-                            self._last_click = datetime.now()
-                            self._fire_event(EVENT_FLIC_SINGLE_CLICK)
-                    fire_coroutine_threadsafe(async_defer_single_click_check(),
-                                              self._hass.loop)
+        self._last_up = now
+        if last_down_diff >= self._long_click_threshold:
+            self._fire_event(EVENT_FLIC_LONG_CLICK)
+        elif last_click_diff <= self._double_click_threshold:
+            self._last_click = datetime.min
+            self._fire_event(EVENT_FLIC_DOUBLE_CLICK)
+        else:
+            self._last_click = now
+
+            @asyncio.coroutine
+            def async_defer_single_click_check():
+                """Defer check, whether click was a single click.
+
+                Check if the button has been clicked again in
+                a specific time interval to distinguish single clicks
+                from double clicks.
+                """
+                yield from asyncio.sleep(self._double_click_threshold)
+                if self._last_click == now:
+                    self._last_click = datetime.now()
+                    self._fire_event(EVENT_FLIC_SINGLE_CLICK)
+            fire_coroutine_threadsafe(async_defer_single_click_check(),
+                                      self._hass.loop)
 
     def _fire_event(self, event):
         """Fire the passed event with device-dependent data."""
