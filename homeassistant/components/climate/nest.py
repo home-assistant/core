@@ -31,9 +31,10 @@ STATE_HEAT_COOL = 'heat-cool'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest thermostat."""
-    _LOGGER.debug("Setting up nest thermostat")
     if discovery_info is None:
         return
+
+    _LOGGER.debug("Setting up nest thermostat")
 
     temp_unit = hass.config.units.temperature_unit
 
@@ -229,7 +230,7 @@ class NestThermostat(ClimateDevice):
         self._eco_temperature = self.device.eco_temperature
         self._locked_temperature = self.device.locked_temperature
         self._is_locked = self.device.is_locked
-        if self.device.temperature == 'C':
+        if self.device.temperature_scale == 'C':
             self._temperature_scale = TEMP_CELSIUS
         else:
             self._temperature_scale = TEMP_FAHRENHEIT
