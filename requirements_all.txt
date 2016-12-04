@@ -471,7 +471,7 @@ python-telegram-bot==5.2.0
 python-twitch==1.3.0
 
 # homeassistant.components.wink
-python-wink==0.10.1
+python-wink==0.11.0
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11

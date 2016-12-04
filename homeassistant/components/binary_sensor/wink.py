@@ -40,6 +40,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor in pywink.get_smoke_and_co_detectors():
         add_devices([WinkBinarySensorDevice(sensor, hass)])
 
+    for hub in pywink.get_hubs():
+        add_devices([WinkHub(hub, hass)])
+
 
 class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
     """Representation of a Wink binary sensor."""
@@ -79,3 +82,24 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
     def sensor_class(self):
         """Return the class of this sensor, from SENSOR_CLASSES."""
         return SENSOR_TYPES.get(self.capability)
+
+
+class WinkHub(WinkDevice, BinarySensorDevice, Entity):
+    """Representation of a Wink Hub."""
+
+    def __init(self, wink, hass):
+        """Initialize the hub sensor."""
+        WinkDevice.__init__(self, wink, hass)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'update needed': self.wink.update_needed(),
+            'firmware version': self.wink.firmware_version()
+        }
+
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self.wink.state()
