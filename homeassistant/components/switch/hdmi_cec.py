@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.hdmi_cec import CecDevice, CEC_DEVICES, CEC_CLIENT, DOMAIN
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_STANDBY
 
 DEPENDENCIES = ['hdmi_cec']
 
@@ -33,19 +33,20 @@ class CecSwitch(CecDevice, SwitchDevice):
         self._state = False
         CecDevice.__init__(self, hass, cec_client, logical)
 
+    @property
+    def is_standby(self):
+        """Return true if device is in standby."""
+        return self._state == STATE_OFF or self._state == STATE_STANDBY
+
     def toggle(self, **kwargs):
         self.turn_off() if self._state else self.turn_on()
 
-    def turn_on(self):
-        """Turn device on."""
-        self.cec_client.send_command_power_on(self._logical_address)
-        self._state = STATE_ON
-        self.schedule_update_ha_state()
-        self._request_cec_power_status()
 
-    def turn_off(self):
-        """Turn device off."""
-        self.cec_client.send_command_standby(self._logical_address)
-        self._state = STATE_OFF
-        self.schedule_update_ha_state()
-        self._request_cec_power_status()
+def turn_on(self, **kwargs) -> None:
+    """Turn the entity on."""
+    raise NotImplementedError()
+
+
+def turn_off(self, **kwargs) -> None:
+    """Turn the entity off."""
+    raise NotImplementedError()

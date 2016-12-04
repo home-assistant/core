@@ -14,13 +14,12 @@ from collections import defaultdict
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import discovery
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, CONF_DEVICES, STATE_ON, STATE_OFF,
-                                 STATE_UNKNOWN)
+                                 STATE_UNKNOWN, STATE_STANDBY)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 CEC_CLIENT = {}
-
 ATTR_DEVICE = 'device'
 ATTR_COMMAND = 'command'
 ATTR_TYPE = 'type'
@@ -42,7 +41,7 @@ EVENT_CEC_COMMAND_RECEIVED = 'cec_command_received'
 EVENT_CEC_KEYPRESS_RECEIVED = 'cec_keypress_received'
 
 DOMAIN = 'hdmi_cec'
-# ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 MAX_DEPTH = 4
 
@@ -110,6 +109,12 @@ DEVICE_SCHEMA = vol.Schema({
     vol.All(cv.positive_int): vol.Any(lambda devices: DEVICE_SCHEMA(devices), cv.string)
 })
 
+# Contains one string or a list of strings, each being an entity id
+ATTR_ENTITY_ID = 'entity_id'
+SWITCH_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
 CONF_EXCLUDE = 'exclude'
 CEC_ID_LIST_SCHEMA = vol.Schema([int])
 CONFIG_SCHEMA = vol.Schema({
@@ -133,22 +138,11 @@ def parse_mapping(mapping, parents=None):
             yield (val, cur)
 
 
-def pad_physical_address(addr):
-    """Right-pad a physical address."""
-    return addr + ['0'] * (MAX_DEPTH - len(addr))
-
-
 def setup(hass, base_config):
     """Setup CEC capability."""
 
     _LOGGER.debug("CEC setup")
     config = base_config.get(DOMAIN)
-
-    # Parse configuration into a dict of device name to physical address
-    # represented as a list of four elements.
-    flat = {}
-    for pair in parse_mapping(config.get(CONF_DEVICES, {})):
-        flat[pair[0]] = pad_physical_address(pair[1])
 
     global CEC_CLIENT
     CEC_CLIENT = CecClient(hass)
@@ -158,8 +152,10 @@ def setup(hass, base_config):
         """Open CEC adapter."""
         # initialise libCEC and enter the main loop
         if CEC_CLIENT.init_lib_cec():
-            hass.services.register(DOMAIN, SERVICE_POWER_ON, CEC_CLIENT.process_command_power_on)
-            hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.process_command_standby)
+            hass.services.register(DOMAIN, SERVICE_POWER_ON, CEC_CLIENT.process_command_power_on,
+                                   None, schema=SWITCH_SERVICE_SCHEMA)
+            hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.process_command_standby,
+                                   None, schema=SWITCH_SERVICE_SCHEMA)
             hass.services.register(DOMAIN, SERVICE_SELECT_DEVICE, CEC_CLIENT.process_command_active_source)
             hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.process_command_tx)
             hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.process_command_volume)
@@ -168,7 +164,6 @@ def setup(hass, base_config):
                     continue
                 # dev_type = CEC_TYPE_TO_COMPONENT[CEC_LOGICAL_TO_TYPE[c]]
                 dev_type = 'switch'
-                _LOGGER.info("Probing %d %d %s", c, CEC_LOGICAL_TO_TYPE[c], dev_type)
                 if dev_type is None:
                     continue
                 CEC_DEVICES[dev_type].append(c)
@@ -265,6 +260,20 @@ class CecDevice(Entity):
         except Exception as e:
             _LOGGER.error("callback failed: %s", e, exc_info=1)
 
+    def turn_on(self, **kwargs):
+        """Turn device on."""
+        _LOGGER.info("***************** turn_on *****************")
+        self.cec_client.lib.PowerOnDevices(self._logical_address)
+        self._state = STATE_ON
+        self.schedule_update_ha_state()
+
+    def turn_off(self, **kwargs):
+        """Turn device off."""
+        _LOGGER.info("***************** turn_off *****************")
+        self.cec_client.lib.StandbyDevices(self._logical_address)
+        self._state = STATE_STANDBY
+        self.schedule_update_ha_state()
+
     @property
     def is_on(self):
         """Return true if device is on."""
@@ -342,6 +351,18 @@ class CecDevice(Entity):
         return state_attr
 
 
+def _call_to_logical(call):
+    if call.data is None:
+        r = cec.CECDEVICE_BROADCAST
+    elif call.data[ATTR_ENTITY_ID] is not None:
+        r = call.data[ATTR_ENTITY_ID][0]
+        r = r.split('.')[1]
+    else:
+        r = call.data
+    _LOGGER.info("i############################## LOGICAL: %s" % r)
+    return int(r)
+
+
 class CecClient:
     cecconfig = {}
     lib = {}
@@ -383,21 +404,14 @@ class CecClient:
         """send an active source message"""
         self.lib.SetActiveSource(int(call.data[ATTR_TYPE], 16))
 
-    def send_command_standby(self, addr):
-        """send a standby command"""
-        _LOGGER.info("Standby device %s", addr)
-        self.lib.StandbyDevices(cec.CECDEVICE_BROADCAST if addr is None else addr)
-
     def process_command_standby(self, call):
         """send a standby command"""
-        self.send_command_standby(call.data)
-
-    def send_command_power_on(self, addr):
-        _LOGGER.info("Power on device %s", addr)
-        self.lib.PowerOnDevices(cec.CECDEVICE_BROADCAST if addr is None else addr)
+        _LOGGER.info("STANDBY %s", dir(call.data))
+        self.lib.StandbyDevices(_call_to_logical(call))
 
     def process_command_power_on(self, call):
-        self.send_command_power_on(call.data)
+        _LOGGER.info("POWER ON %s", dir(call.data))
+        self.lib.PowerOnDevices(_call_to_logical(call))
 
     def process_command_volume(self, call):
         for cmd, att in call.data:
@@ -471,6 +485,8 @@ class CecClient:
 
     def log_callback(self, level, time, message):
         """logging callback"""
+        if level != cec.CEC_LOG_TRAFFIC:
+            return 0
         if level == cec.CEC_LOG_ERROR:
             levelstr = "ERROR:   "
             _LOGGER.error(levelstr + "[" + str(time) + "]     " + message)
