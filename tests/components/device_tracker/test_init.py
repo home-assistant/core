@@ -256,6 +256,24 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
             self.assertEqual(device.vendor, 'unknown')
 
+    def test_mac_vendor_lookup_on_see(self):
+        """Test if macvendor is looked up when device is seen."""
+        mac = 'B8:27:EB:00:00:00'
+        vendor_string = 'Raspberry Pi Foundation'
+
+        tracker = device_tracker.DeviceTracker(
+            self.hass, timedelta(seconds=60), 0, [])
+
+        with mock_aiohttp_client() as aioclient_mock:
+            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
+                               text=vendor_string)
+
+            run_coroutine_threadsafe(
+                tracker.async_see(mac=mac), self.hass.loop).result()
+            assert aioclient_mock.call_count == 1, \
+                'No http request for macvendor made!'
+        self.assertEqual(tracker.devices['b827eb000000'].vendor, vendor_string)
+
     def test_discovery(self):
         """Test discovery."""
         scanner = get_component('device_tracker.test').SCANNER
