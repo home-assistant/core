@@ -11,7 +11,6 @@ import homeassistant.components.remote as remote
 
 from tests.common import mock_service, get_test_home_assistant
 TEST_PLATFORM = {remote.DOMAIN: {CONF_PLATFORM: 'test'}}
-SERVICE_SYNC = 'sync'
 SERVICE_SEND_COMMAND = 'send_command'
 
 
