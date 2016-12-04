@@ -26,7 +26,7 @@ DEPENDENCIES = ['enocean']
 SUPPORT_ENOCEAN = SUPPORT_BRIGHTNESS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ID): cv.ensure_list,
+    vol.Optional(CONF_ID, default=[]): cv.ensure_list,
     vol.Required(CONF_SENDER_ID): cv.ensure_list,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
