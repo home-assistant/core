@@ -282,7 +282,7 @@ class DeviceTracker(object):
                 list(self.group.tracking) + [device.entity_id])
 
         # lookup mac vendor string to be stored in config
-        device.set_vendor_for_mac()
+        yield from device.set_vendor_for_mac()
 
         # update known_devices.yaml
         self.hass.async_add_job(
