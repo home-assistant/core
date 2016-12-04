@@ -17,8 +17,6 @@ DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
 
-KNOWN_DEVICE_IDS = []
-
 SENSOR_KEYS_AND_UNITS = {
     'temperature': '°C',
     'humidity': '%',
@@ -47,6 +45,7 @@ def devices_from_config(domain_config, hass=None):
         # extract only valid keys from device configuration
         kwargs = {k: v for k, v in config.items() if k in VALID_CONFIG_KEYS}
         devices.append(RflinkSensor(device_id, hass, **kwargs))
+        rflink.KNOWN_DEVICE_IDS.append(device_id)
     return devices
 
 
@@ -68,8 +67,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         """Check if device is known, otherwise create device entity."""
         packet = event.data[rflink.ATTR_PACKET]
         device_id = rflink.serialize_id(packet)
-        if device_id not in KNOWN_DEVICE_IDS:
-            KNOWN_DEVICE_IDS.append(device_id)
+        if device_id not in rflink.KNOWN_DEVICE_IDS:
+            rflink.KNOWN_DEVICE_IDS.append(device_id)
             rflinksensor = partial(RflinkSensor, device_id, hass)
             devices = []
             # create entity for each value in this packet

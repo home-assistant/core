@@ -45,6 +45,8 @@ ATTR_COMMAND = 'command'
 
 _LOGGER = logging.getLogger(__name__)
 
+KNOWN_DEVICE_IDS = []
+
 
 def serialize_id(packet):
     """Serialize packet identifiers into device id."""

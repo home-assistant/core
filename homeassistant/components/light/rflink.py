@@ -18,8 +18,6 @@ DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
 
-KNOWN_DEVICE_IDS = []
-
 VALID_CONFIG_KEYS = [
     'aliasses',
     'name',
@@ -62,7 +60,7 @@ def devices_from_config(domain_config, hass=None):
 
         # now we know
         device_ids = [device_id] + config.get('aliasses', [])
-        KNOWN_DEVICE_IDS.extend(device_ids)
+        rflink.KNOWN_DEVICE_IDS.extend(device_ids)
     return devices
 
 
@@ -87,8 +85,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_class = entity_class_for_type(entity_type)
 
         device_id = rflink.serialize_id(packet)
-        if device_id not in KNOWN_DEVICE_IDS:
-            KNOWN_DEVICE_IDS.append(device_id)
+        if device_id not in rflink.KNOWN_DEVICE_IDS:
+            rflink.KNOWN_DEVICE_IDS.append(device_id)
             device = entity_class(device_id, hass)
             yield from async_add_devices([device])
             # make sure the packet is processed by the new entity
