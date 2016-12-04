@@ -144,7 +144,11 @@ class OpenWeatherMapWeather(WeatherEntity):
         forecast_array = []
 
         for forecast_entry in self.forecast_data.get_weathers():
-            forecast_array.append(forecast_entry.to_JSON())
+            data_dict = {
+                'datetime': forecast_entry.get_reference_time('iso'),
+                'temp': forecast_entry.get_temperature('celsius').get('temp', None),
+            }
+            forecast_array.append(data_dict)
 
         return forecast_array
 
@@ -181,11 +185,11 @@ class WeatherData(object):
     @Throttle(MIN_TIME_BETWEEN_FORECAST_UPDATES)
     def update_forecast(self):
         """Get the lastest forecast from OpenWeatherMap."""
-        fc = self.owm.three_hours_forecast_at_coords(
+        fcd = self.owm.three_hours_forecast_at_coords(
             self.latitude, self.longitude)
 
-        if fc is None:
+        if fcd is None:
             _LOGGER.warning("Failed to fetch forecast data from OWM")
             return
 
-        self.forecast_data = fc.get_forecast()
+        self.forecast_data = fcd.get_forecast()
