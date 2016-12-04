@@ -120,7 +120,8 @@ def setup(hass, config):
 
         for key, value in state.attributes.items():
             if key != 'unit_of_measurement':
-                if isinstance(value, (str, float, bool)):
+                if isinstance(value, (str, float, bool)) or \
+                        key.endswith('_id'):
                     json_body[0]['fields'][key] = value
                 elif isinstance(value, int):
                     # Prevent column data errors in influxDB.
