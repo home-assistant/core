@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.helpers.discovery import load_platform, discover
 
-REQUIREMENTS = ['netdisco==0.7.7']
+REQUIREMENTS = ['netdisco==0.8.0']
 
 DOMAIN = 'discovery'
 
