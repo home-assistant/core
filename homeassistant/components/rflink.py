@@ -76,6 +76,15 @@ def identify_packet_type(packet):
         return 'unknown'
 
 
+def ignore_device(device_id, ignore_device_ids):
+    """Validate device id with list of devices to ignore."""
+    # don't fire if device is set to ignore
+    for ignore in ignore_device_ids:
+        if (ignore == device_id or
+           (ignore.endswith('*') and device_id.startswith(ignore[:-1]))):
+            return
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup the Rflink component."""
@@ -99,11 +108,8 @@ def async_setup(hass, config):
             if not device_id:
                 return
 
-            # don't fire if device is set to ignore
-            for ignore in ignore_device_ids:
-                if (ignore == device_id or
-                   ('*' in ignore and device_id.startswith(ignore))):
-                    return
+            if ignore_device(device_id, ignore_device_ids):
+                return
 
             hass.bus.fire(RFLINK_EVENT[packet_type], {ATTR_PACKET: packet})
         else:
@@ -132,6 +138,7 @@ def async_setup(hass, config):
         """Send command to rflink gateway via asyncio transport/protocol."""
         command = event.data[ATTR_COMMAND]
         yield from protocol.send_command_ack(*command)
+
     def send_command(event):
         """Send command to rflink gateway via asyncio transport/protocol."""
         command = event.data[ATTR_COMMAND]
