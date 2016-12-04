@@ -13,7 +13,8 @@ from homeassistant.const import (CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = [
     '--only-binary=all '  # avoid compilation of gattlib
-    'git+https://github.com/getSenic/nuimo-linux-python'
+    'http://github.com/getSenic/nuimo-linux-python'
+    '/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip'
     '#nuimo==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)

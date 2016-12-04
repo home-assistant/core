@@ -18,8 +18,8 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = [
-    'git+https://github.com/technicalpickles/python-nest.git'
-    '@nest-cam'
+    'http://github.com/technicalpickles/python-nest'
+    '/archive/2512973b4b390d3965da43529cd20402ad374bfa.zip'  # nest-cam branch
     '#python-nest==3.0.0']
 
 DOMAIN = 'nest'
@@ -89,6 +89,7 @@ def setup_nest(hass, nest, config, pin=None):
     _LOGGER.debug("proceeding with discovery")
     discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
     _LOGGER.debug("setup done")
 
@@ -172,3 +173,18 @@ class NestDevice(object):
         except socket.error:
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
+
+
+def is_thermostat(device):
+    """Target devices that are Nest Thermostats."""
+    return bool(device.__class__.__name__ == 'Device')
+
+
+def is_protect(device):
+    """Target devices that are Nest Protect Smoke Alarms."""
+    return bool(device.__class__.__name__ == 'ProtectDevice')
+
+
+def is_camera(device):
+    """Target devices that are Nest Protect Smoke Alarms."""
+    return bool(device.__class__.__name__ == 'CameraDevice')
