@@ -30,10 +30,32 @@ SENSOR_ICONS = {
     'battery': 'mdi:battery',
 }
 
+VALID_CONFIG_KEYS = [
+    'aliasses',
+    'name',
+    'icon',
+    'value_key',
+    'unit',
+]
+
+
+def devices_from_config(domain_config, hass=None):
+    """Parse config and add rflink sensor devices."""
+
+    devices = []
+    for device_id, config in domain_config['devices'].items():
+        # extract only valid keys from device configuration
+        kwargs = {k: v for k, v in config.items() if k in VALID_CONFIG_KEYS}
+        devices.append(RflinkSensor(device_id, hass, **kwargs))
+    return devices
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Rflink platform."""
+    # add devices from config
+    yield from async_add_devices(devices_from_config(config, hass))
+
     # add new (unconfigured) devices to user desired group
     if config.get('new_devices_group'):
         new_devices_group = yield from group.Group.async_create_group(
