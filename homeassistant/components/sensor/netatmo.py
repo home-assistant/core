@@ -103,6 +103,7 @@ class NetAtmoSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         module_id = self.netatmo_data.\
             station_data.moduleByName(module=module_name)['_id']
+        self.module_id = module_id[1]
         self._unique_id = "Netatmo Sensor {0} - {1} ({2})".format(self._name,
                                                                   module_id,
                                                                   self.type)
@@ -154,16 +155,38 @@ class NetAtmoSensor(Entity):
             self._state = data['CO2']
         elif self.type == 'pressure':
             self._state = round(data['Pressure'], 1)
-        elif self.type == 'battery_vp':
+        elif self.type == 'battery_vp' and self.module_id == '6':
+            if data['battery_vp'] >= 5590:
+                self._state = "Full"
+            elif data['battery_vp'] >= 5180:
+                self._state = "High"
+            elif data['battery_vp'] >= 4770:
+                self._state = "Medium"
+            elif data['battery_vp'] >= 4360:
+                self._state = "Low"
+            elif data['battery_vp'] < 4360:
+                self._state = "Very Low"
+        elif self.type == 'battery_vp' and (self.module_id == '5' or self.module_id == '2'):
             if data['battery_vp'] >= 5500:
                 self._state = "Full"
-            elif data['battery_vp'] >= 5100:
+            elif data['battery_vp'] >= 5000:
                 self._state = "High"
-            elif data['battery_vp'] >= 4600:
+            elif data['battery_vp'] >= 4500:
                 self._state = "Medium"
-            elif data['battery_vp'] >= 4100:
+            elif data['battery_vp'] >= 4000:
                 self._state = "Low"
-            elif data['battery_vp'] < 4100:
+            elif data['battery_vp'] < 4000:
+                self._state = "Very Low"
+        elif self.type == 'battery_vp' and self.module_id == '3':
+            if data['battery_vp'] >= 5640:
+                self._state = "Full"
+            elif data['battery_vp'] >= 5280:
+                self._state = "High"
+            elif data['battery_vp'] >= 4920:
+                self._state = "Medium"
+            elif data['battery_vp'] >= 4560:
+                self._state = "Low"
+            elif data['battery_vp'] < 4560:
                 self._state = "Very Low"
         elif self.type == 'min_temp':
             self._state = data['min_temp']
@@ -222,11 +245,13 @@ class NetAtmoSensor(Entity):
                 self._state = "Full"
         elif self.type == 'wifi_status':
             if data['wifi_status'] >= 86:
-                self._state = "Bad"
+                self._state = "Low"
             elif data['wifi_status'] >= 71:
-                self._state = "Middle"
-            elif data['wifi_status'] <= 70:
-                self._state = "Good"
+                self._state = "Medium"
+            elif data['wifi_status'] >= 56:
+                self._state = "High"
+            elif data['wifi_status'] <= 55:
+                self._state = "Full"
 
 
 class NetAtmoData(object):
@@ -248,7 +273,7 @@ class NetAtmoData(object):
     def update(self):
         """Call the Netatmo API to update the data."""
         import lnetatmo
-        self.station_data = lnetatmo.DeviceList(self.auth)
+        self.station_data = lnetatmo.WeatherStationData(self.auth)
 
         if self.station is not None:
             self.data = self.station_data.lastData(station=self.station,
