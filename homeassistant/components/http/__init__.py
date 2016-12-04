@@ -277,9 +277,15 @@ class HomeAssistantWSGI(object):
     @asyncio.coroutine
     def start(self):
         """Start the wsgi server."""
+        cors_added = set()
         if self.cors is not None:
             for route in list(self.app.router.routes()):
+                if hasattr(route, 'resource'):
+                    route = route.resource
+                if route in cors_added:
+                    continue
                 self.cors.add(route)
+                cors_added.add(route)
 
         if self.ssl_certificate:
             context = ssl.SSLContext(SSL_VERSION)
