@@ -25,7 +25,6 @@ Another loop (DSMR class) is setup which reads the telegram queue,
 stores/caches the latest telegram and notifies the Entities that the telegram
 has been updated.
 """
-
 import asyncio
 import logging
 from datetime import timedelta
@@ -37,16 +36,21 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
-DOMAIN = 'dsmr'
+_LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['dsmr_parser==0.4']
 
+CONF_DSMR_VERSION = 'dsmr_version'
+
+DEFAULT_DSMR_VERSION = '2.2'
+DEFAULT_PORT = '/dev/ttyUSB0'
+DOMAIN = 'dsmr'
+
+ICON_GAS = 'mdi:fire'
+ICON_POWER = 'mdi:flash'
+
 # Smart meter sends telegram every 10 seconds
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
-
-CONF_DSMR_VERSION = 'dsmr_version'
-DEFAULT_PORT = '/dev/ttyUSB0'
-DEFAULT_DSMR_VERSION = '2.2'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
@@ -54,16 +58,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.string, vol.In(['4', '2.2'])),
 })
 
-_LOGGER = logging.getLogger(__name__)
-
-ICON_POWER = 'mdi:flash'
-ICON_GAS = 'mdi:fire'
-
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup DSMR sensors."""
-    # suppres logging
+    """Set up the DSMR sensor."""
+    # Suppress logging
     logging.getLogger('dsmr_parser').setLevel(logging.ERROR)
 
     from dsmr_parser import obis_references as obis
@@ -71,7 +70,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
-    # define list of name,obis mappings to generate entities
+    # Define list of name,obis mappings to generate entities
     obis_mapping = [
         ['Power Consumption', obis.CURRENT_ELECTRICITY_USAGE],
         ['Power Production', obis.CURRENT_ELECTRICITY_DELIVERY],
@@ -81,31 +80,30 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         ['Power Production (low)', obis.ELECTRICITY_DELIVERED_TARIFF_1],
         ['Power Production (normal)', obis.ELECTRICITY_DELIVERED_TARIFF_2],
     ]
-    # protocol version specific obis
+    # Protocol version specific obis
     if dsmr_version == '4':
         obis_mapping.append(['Gas Consumption', obis.HOURLY_GAS_METER_READING])
     else:
         obis_mapping.append(['Gas Consumption', obis.GAS_METER_READING])
 
-    # generate device entities
+    # Generate device entities
     devices = [DSMREntity(name, obis) for name, obis in obis_mapping]
 
-    # setup devices
     yield from async_add_devices(devices)
 
     def update_entities_telegram(telegram):
         """Update entities with latests telegram & trigger state update."""
-        # make all device entities aware of new telegram
+        # Make all device entities aware of new telegram
         for device in devices:
             device.telegram = telegram
             hass.async_add_job(device.async_update_ha_state)
 
-    # creates a asyncio.Protocol for reading DSMR telegrams from serial
+    # Creates a asyncio.Protocol for reading DSMR telegrams from serial
     # and calls update_entities_telegram to update entities on arrival
     dsmr = create_dsmr_reader(config[CONF_PORT], config[CONF_DSMR_VERSION],
                               update_entities_telegram, loop=hass.loop)
 
-    # start DSMR asycnio.Protocol reader
+    # Start DSMR asycnio.Protocol reader
     transport, _ = yield from hass.loop.create_task(dsmr)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, transport.close)
@@ -116,15 +114,13 @@ class DSMREntity(Entity):
 
     def __init__(self, name, obis):
         """"Initialize entity."""
-        # human readable name
         self._name = name
-        # DSMR spec. value identifier
         self._obis = obis
         self.telegram = {}
 
     def get_dsmr_object_attr(self, attribute):
         """Read attribute from last received telegram for this DSMR object."""
-        # make sure telegram contains an object for this entities obis
+        # Make sure telegram contains an object for this entities obis
         if self._obis not in self.telegram:
             return None
 
@@ -165,9 +161,8 @@ class DSMREntity(Entity):
     @staticmethod
     def translate_tariff(value):
         """Convert 2/1 to normal/low."""
-        # DSMR V2.2: Note: Tariff code 1 is used for low tariff
-        # and tariff code 2 is used for normal tariff.
-
+        # DSMR V2.2: Note: Rate code 1 is used for low rate and rate code 2 is
+        # used for normal rate.
         if value == '0002':
             return 'normal'
         elif value == '0001':

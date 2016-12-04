@@ -1,52 +1,56 @@
 """
 Support Hook, available at hooksmarthome.com.
 
-Controls RF switches like these:
-  https://www.amazon.com/Etekcity-Wireless-Electrical-Household-Appliances/dp/B00DQELHBS
-
-There is no way to query for state or success of commands.
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.hook/
 """
 import logging
 import asyncio
+
 import voluptuous as vol
 import async_timeout
 import aiohttp
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-HOOK_ENDPOINT = "https://api.gethook.io/v1/"
+HOOK_ENDPOINT = 'https://api.gethook.io/v1/'
 TIMEOUT = 10
 
-SWITCH_SCHEMA = vol.Schema({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string
+    vol.Required(CONF_PASSWORD): cv.string,
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup Hook by getting the access token and list of actions."""
+    """Set up Hook by getting the access token and list of actions."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    websession = async_get_clientsession(hass)
 
+    response = None
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
-            response = yield from hass.websession.post(
-                HOOK_ENDPOINT + 'user/login',
+            response = yield from websession.post(
+                '{}{}'.format(HOOK_ENDPOINT, 'user/login'),
                 data={
                     'username': username,
                     'password': password})
-            data = yield from response.json()
+        data = yield from response.json()
     except (asyncio.TimeoutError,
             aiohttp.errors.ClientError,
             aiohttp.errors.ClientDisconnectedError) as error:
         _LOGGER.error("Failed authentication API call: %s", error)
         return False
+    finally:
+        if response is not None:
+            yield from response.close()
 
     try:
         token = data['data']['token']
@@ -54,17 +58,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("No token. Check username and password")
         return False
 
+    response = None
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
-            response = yield from hass.websession.get(
-                HOOK_ENDPOINT + 'device',
+            response = yield from websession.get(
+                '{}{}'.format(HOOK_ENDPOINT, 'device'),
                 params={"token": data['data']['token']})
-            data = yield from response.json()
+        data = yield from response.json()
     except (asyncio.TimeoutError,
             aiohttp.errors.ClientError,
             aiohttp.errors.ClientDisconnectedError) as error:
         _LOGGER.error("Failed getting devices: %s", error)
         return False
+    finally:
+        if response is not None:
+            yield from response.close()
 
     yield from async_add_devices(
         HookSmartHome(
@@ -79,17 +87,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class HookSmartHome(SwitchDevice):
     """Representation of a Hook device, allowing on and off commands."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, token, device_id, device_name):
         """Initialize the switch."""
-        self._hass = hass
+        self.hass = hass
         self._token = token
         self._state = False
         self._id = device_id
         self._name = device_name
         _LOGGER.debug(
-            "Creating Hook object: ID: " + self._id +
-            " Name: " + self._name)
+            "Creating Hook object: ID: %s  Name: %s", self._id, self._name)
 
     @property
     def name(self):
@@ -104,18 +110,25 @@ class HookSmartHome(SwitchDevice):
     @asyncio.coroutine
     def _send(self, url):
         """Send the url to the Hook API."""
+        response = None
         try:
             _LOGGER.debug("Sending: %s", url)
-            with async_timeout.timeout(TIMEOUT, loop=self._hass.loop):
-                response = yield from self._hass.websession.get(
-                    url,
-                    params={"token": self._token})
-                data = yield from response.json()
+            websession = async_get_clientsession(self.hass)
+            with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
+                response = yield from websession.get(
+                    url, params={"token": self._token})
+            data = yield from response.json()
+
         except (asyncio.TimeoutError,
                 aiohttp.errors.ClientError,
                 aiohttp.errors.ClientDisconnectedError) as error:
             _LOGGER.error("Failed setting state: %s", error)
             return False
+
+        finally:
+            if response is not None:
+                yield from response.close()
+
         _LOGGER.debug("Got: %s", data)
         return data['return_value'] == '1'
 
@@ -123,15 +136,17 @@ class HookSmartHome(SwitchDevice):
     def async_turn_on(self):
         """Turn the device on asynchronously."""
         _LOGGER.debug("Turning on: %s", self._name)
-        success = yield from self._send(
-            HOOK_ENDPOINT + 'device/trigger/' + self._id + '/On')
+        url = '{}{}{}{}'.format(
+            HOOK_ENDPOINT, 'device/trigger/', self._id, '/On')
+        success = yield from self._send(url)
         self._state = success
 
     @asyncio.coroutine
     def async_turn_off(self):
         """Turn the device off asynchronously."""
         _LOGGER.debug("Turning off: %s", self._name)
-        success = yield from self._send(
-            HOOK_ENDPOINT + 'device/trigger/' + self._id + '/Off')
+        url = '{}{}{}{}'.format(
+            HOOK_ENDPOINT, 'device/trigger/', self._id, '/Off')
+        success = yield from self._send(url)
         # If it wasn't successful, keep state as true
         self._state = not success

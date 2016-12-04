@@ -12,7 +12,7 @@ from homeassistant.components.mqtt import PROTOCOL_311
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.util.async import run_coroutine_threadsafe
 
-REQUIREMENTS = ['hbmqtt==0.7.1']
+REQUIREMENTS = ['hbmqtt==0.8']
 DEPENDENCIES = ['http']
 
 
