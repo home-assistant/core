@@ -30,6 +30,7 @@ NETATMO_AUTH = None
 DEFAULT_DISCOVERY = True
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=10)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -65,13 +66,13 @@ def setup(hass, config):
     return True
 
 
-class WelcomeData(object):
+class CameraData(object):
     """Get the latest data from Netatmo."""
 
     def __init__(self, auth, home=None):
         """Initialize the data object."""
         self.auth = auth
-        self.welcomedata = None
+        self.camera_data = None
         self.updatedevents = None
         self.camera_names = []
         self.home = home
@@ -81,11 +82,11 @@ class WelcomeData(object):
         self.camera_names = []
         self.update()
         if not self.home:
-            for home in self.welcomedata.cameras:
-                for camera in self.welcomedata.cameras[home].values():
+            for home in self.camera_data.cameras:
+                for camera in self.camera_data.cameras[home].values():
                     self.camera_names.append(camera['name'])
         else:
-            for camera in self.welcomedata.cameras[self.home].values():
+            for camera in self.camera_data.cameras[self.home].values():
                 self.camera_names.append(camera['name'])
         return self.camera_names
 
@@ -93,12 +94,16 @@ class WelcomeData(object):
         """Return all module available on the API as a list."""
         camera_type = None
         for camera_name in self.camera_names:
-            camera_type = self.welcomedata.cameraType(camera_name)
+            camera_type = self.camera_data.cameraType(camera_name)
             return camera_type
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the Netatmo API to update the data."""
         import lnetatmo
-        self.welcomedata = lnetatmo.WelcomeData(self.auth)
-        self.updatedevents = lnetatmo.UpdateEvent(self.auth, home=self.home)
+        self.camera_data = lnetatmo.CameraData(self.auth)
+        # self.updatedevents = lnetatmo.UpdateEvent(self.auth, home=self.home)
+
+    # @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
+    # def update_event(self):
+    #     self.eventdata = self.camera_data.updateEvent(home=self.home)
