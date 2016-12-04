@@ -25,6 +25,39 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CecMediaPlayer(CecDevice, MediaPlayerDevice):
     """Representation of a Vera Switch."""
 
+    def media_previous_track(self):
+        pass
+
+    def media_seek(self, position):
+        pass
+
+    def clear_playlist(self):
+        pass
+
+    def play_media(self, media_type, media_id):
+        pass
+
+    def media_play(self):
+        pass
+
+    def set_volume_level(self, volume):
+        pass
+
+    def mute_volume(self, mute):
+        pass
+
+    def media_next_track(self):
+        pass
+
+    def select_source(self, source):
+        pass
+
+    def media_pause(self):
+        pass
+
+    def media_stop(self):
+        pass
+
     def __init__(self, hass, cec_client, logical):
         """Initialize the Vera device."""
         self._state = False

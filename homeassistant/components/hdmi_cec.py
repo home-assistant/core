@@ -344,6 +344,10 @@ class CecDevice(Entity):
         return state_attr
 
 
+def dst_from_data(call):
+    return cec.CECDEVICE_BROADCAST if call.data is None or call.data['dst'] is None else call.data['dst']
+
+
 class CecClient:
     cecconfig = {}
     lib = {}
@@ -388,11 +392,11 @@ class CecClient:
     def process_command_standby(self, call):
         """send a standby command"""
         _LOGGER.info("STANDBY %s", dir(call.data))
-        self.lib.StandbyDevices(cec.CECDEVICE_BROADCAST if call.data is None else call.data)
+        self.lib.StandbyDevices(dst_from_data(call))
 
     def process_command_power_on(self, call):
         _LOGGER.info("POWER ON %s", dir(call.data))
-        self.lib.PowerOnDevices(cec.CECDEVICE_BROADCAST if call.data is None else call.data)
+        self.lib.PowerOnDevices(dst_from_data(call))
 
     def process_command_volume(self, call):
         for cmd, att in call.data:
