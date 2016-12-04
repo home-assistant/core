@@ -1,7 +1,3 @@
-# coding=utf-8
-#
-#  Created by Martin J. Laubach on 2016-11-07
-
 """
 Sensor for data from Austrian "Zentralanstalt für Meteorologie und Geodynamik".
 
@@ -249,3 +245,4 @@ class ZamgData(object):
     def get_data(self, variable):
         """Generic accessor for data."""
         return self.data.get(variable)
+
