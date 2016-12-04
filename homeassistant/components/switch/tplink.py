@@ -51,7 +51,7 @@ class SmartPlugSwitch(SwitchDevice):
         self.smartplug = smartplug
         self._name = name
         self._state = None
-        self._emeter_present = (smartplug.model == 110)
+        self._emeter_present = ('110' in str(smartplug.model))
         _LOGGER.debug("Setting up TP-Link Smart Plug HS%i", smartplug.model)
         # Set up emeter cache
         self._emeter_params = {}
@@ -100,7 +100,7 @@ class SmartPlugSwitch(SwitchDevice):
                 try:
                     self._emeter_params[ATTR_DAILY_CONSUMPTION] \
                         = "%.2f kW" % emeter_statics[int(time.strftime("%e"))]
-                except KeyError:
+                except (KeyError, TypeError):
                     # device returned no daily history
                     pass
 
