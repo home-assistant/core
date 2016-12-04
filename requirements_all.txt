@@ -556,6 +556,9 @@ temperusb==1.5.1
 # homeassistant.components.thingspeak
 thingspeak==0.4.0
 
+# homeassistant.components.light.tikteck
+tikteck==0.4
+
 # homeassistant.components.sensor.transmission
 # homeassistant.components.switch.transmission
 transmissionrpc==0.11
