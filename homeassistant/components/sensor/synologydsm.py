@@ -151,15 +151,9 @@ class SynoApi():
         except:
             _LOGGER.error("Error setting up Synology DSM")
 
-    def utilisation(self):
-        """Return utilisation information from API."""
-        if self._api is not None:
-            return self._api.utilisation
-
-    def storage(self):
-        """Return storage information from API."""
-        if self._api is not None:
-            return self._api.storage
+        # Will be updated when `update` gets called.
+        self.utilisation = self._api.utilisation
+        self.storage = self._api.storage
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -219,14 +213,14 @@ class SynoNasUtilSensor(SynoNasSensor):
                           'memory_total_swap', 'memory_total_real']
 
         if self.var_id in network_sensors or self.var_id in memory_sensors:
-            attr = getattr(self._api.utilisation(), self.var_id)(False)
+            attr = getattr(self._api.utilisation, self.var_id)(False)
 
             if self.var_id in network_sensors:
                 return round(attr / 1024.0, 1)
             elif self.var_id in memory_sensors:
                 return round(attr / 1024.0 / 1024.0, 1)
         else:
-            return getattr(self._api.utilisation(), self.var_id)
+            return getattr(self._api.utilisation, self.var_id)
 
 
 class SynoNasStorageSensor(SynoNasSensor):
@@ -240,7 +234,7 @@ class SynoNasStorageSensor(SynoNasSensor):
 
         if self.monitor_device is not None:
             if self.var_id in temp_sensors:
-                attr = getattr(self._api.storage(),
+                attr = getattr(self._api.storage,
                                self.var_id)(self.monitor_device)
 
                 if self._api.temp_unit == TEMP_CELSIUS:
@@ -248,5 +242,5 @@ class SynoNasStorageSensor(SynoNasSensor):
                 else:
                     return round(attr * 1.8 + 32.0, 1)
             else:
-                return getattr(self._api.storage(),
+                return getattr(self._api.storage,
                                self.var_id)(self.monitor_device)
