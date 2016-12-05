@@ -332,7 +332,6 @@ class Device(Entity):
     gps = None  # type: GPSType
     gps_accuracy = 0
     last_seen = None  # type: dt_util.dt.datetime
-    battery = None  # type: str
     attributes = None  # type: dict
     vendor = None  # type: str
 
@@ -396,9 +395,6 @@ class Device(Entity):
             attr[ATTR_LONGITUDE] = self.gps[1]
             attr[ATTR_GPS_ACCURACY] = self.gps_accuracy
 
-        if self.battery:
-            attr[ATTR_BATTERY] = self.battery
-
         if self.attributes:
             for key, value in self.attributes.items():
                 attr[key] = value
@@ -419,8 +415,13 @@ class Device(Entity):
         self.host_name = host_name
         self.location_name = location_name
         self.gps_accuracy = gps_accuracy or 0
-        self.battery = battery
-        self.attributes = attributes
+        if (battery or attributes) and self.attributes is None:
+            self.attributes = {}
+        if battery:
+            self.attributes[ATTR_BATTERY] = battery
+        if attributes:
+            for key, value in attributes.items():
+                self.attributes[key] = value
         self.gps = None
 
         if gps is not None:
