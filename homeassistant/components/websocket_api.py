@@ -175,6 +175,17 @@ def result_message(iden, result=None):
     }
 
 
+def _dispose_task(task):
+    """Get rid of a task."""
+    if task.done():
+        try:
+            task.result()
+        except Exception:
+            pass
+    else:
+        task.cancel()
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Initialize the websocket API."""
@@ -206,6 +217,7 @@ class ActiveConnection:
         self.wsock = None
         self.socket_task = None
         self.event_listeners = {}
+        self.to_send = asyncio.Queue(loop=hass.loop)
 
     def debug(self, message1, message2=''):
         """Print a debug message."""
@@ -215,7 +227,8 @@ class ActiveConnection:
         """Print an error message."""
         _LOGGER.error('WS %s: %s %s', id(self.wsock), message1, message2)
 
-    def send_message(self, message):
+    @callback
+    def _send_message(self, message):
         """Helper method to send messages."""
         self.debug('Sending', message)
         self.wsock.send_json(message, dumps=JSON_DUMP)
@@ -230,23 +243,7 @@ class ActiveConnection:
         """Helper to call a service and fire complete message."""
         yield from self.hass.services.async_call(msg['domain'], msg['service'],
                                                  msg['service_data'], True)
-        try:
-            self.send_message(result_message(msg['id']))
-        except RuntimeError:
-            # Socket has been closed.
-            pass
-
-    @callback
-    def _forward_event(self, iden, event):
-        """Helper to forward events to websocket."""
-        if event.event_type == EVENT_TIME_CHANGED:
-            return
-
-        try:
-            self.send_message(event_message(iden, event))
-        except RuntimeError:
-            # Socket has been closed.
-            pass
+        yield from self.to_send.put(result_message(msg['id']))
 
     @asyncio.coroutine
     def handle(self):
@@ -263,13 +260,15 @@ class ActiveConnection:
 
         msg = None
         authenticated = False
+        task_queue_get = None
+        task_receive_msg = None
 
         try:
             if self.request[KEY_AUTHENTICATED]:
                 authenticated = True
 
             else:
-                self.send_message(auth_required_message())
+                self._send_message(auth_required_message())
                 msg = yield from wsock.receive_json()
                 msg = AUTH_MESSAGE_SCHEMA(msg)
 
@@ -278,34 +277,55 @@ class ActiveConnection:
 
                 else:
                     self.debug('Invalid password')
-                    self.send_message(auth_invalid_message('Invalid password'))
+                    self._send_message(
+                        auth_invalid_message('Invalid password'))
                     return wsock
 
             if not authenticated:
                 return wsock
 
-            self.send_message(auth_ok_message())
-
-            msg = yield from wsock.receive_json()
+            self._send_message(auth_ok_message())
 
             last_id = 0
 
-            while msg:
-                self.debug('Received', msg)
-                msg = BASE_COMMAND_MESSAGE_SCHEMA(msg)
-                cur_id = msg['id']
+            while True:
+                if task_queue_get is None:
+                    task_queue_get = self.hass.loop.create_task(
+                        self.to_send.get())
+                if task_receive_msg is None:
+                    task_receive_msg = self.hass.loop.create_task(
+                        wsock.receive_json())
 
-                if cur_id <= last_id:
-                    self.send_message(error_message(
-                        cur_id, ERR_ID_REUSE,
-                        'Identifier values have to increase.'))
+                done, _ = yield from asyncio.wait(
+                    [task_queue_get, task_receive_msg], loop=self.hass.loop,
+                    return_when=asyncio.FIRST_COMPLETED)
 
-                else:
-                    handler_name = 'handle_{}'.format(msg['type'])
-                    getattr(self, handler_name)(msg)
+                if task_receive_msg in done:
+                    msg = task_receive_msg.result()
+                    task_receive_msg = None
+                    self.debug('Received', msg)
+                    msg = BASE_COMMAND_MESSAGE_SCHEMA(msg)
+                    cur_id = msg['id']
 
-                last_id = cur_id
-                msg = yield from wsock.receive_json()
+                    if cur_id <= last_id:
+                        self._send_message(error_message(
+                            cur_id, ERR_ID_REUSE,
+                            'Identifier values have to increase.'))
+
+                    else:
+                        handler_name = 'handle_{}'.format(msg['type'])
+                        getattr(self, handler_name)(msg)
+                        last_id = cur_id
+
+                if task_queue_get in done:
+                    # This will cause messages to go missing?
+                    # task_receive_msg.cancel()
+                    # task_receive_msg = None
+                    self._send_message(task_queue_get.result())
+                    task_queue_get = None
+
+                    while self.to_send.qsize() > 0:
+                        self._send_message(self.to_send.get_nowait())
 
         except vol.Invalid as err:
             error_msg = 'Message incorrectly formatted: '
@@ -317,7 +337,7 @@ class ActiveConnection:
             self.log_error(error_msg)
 
             if not authenticated:
-                self.send_message(auth_invalid_message(error_msg))
+                self._send_message(auth_invalid_message(error_msg))
 
             else:
                 if isinstance(msg, dict):
@@ -325,8 +345,8 @@ class ActiveConnection:
                 else:
                     iden = None
 
-                self.send_message(error_message(iden, ERR_INVALID_FORMAT,
-                                                error_msg))
+                self._send_message(error_message(iden, ERR_INVALID_FORMAT,
+                                                 error_msg))
 
         except TypeError as err:
             if wsock.closed:
@@ -342,7 +362,10 @@ class ActiveConnection:
             self.log_error(msg)
 
         except asyncio.CancelledError:
-            self.debug('Connection cancelled by server')
+            if wsock.closed:
+                self.debug('Connection cancelled by client')
+            else:
+                self.debug('Connection cancelled by server')
 
         except Exception:  # pylint: disable=broad-except
             error = 'Unexpected error inside websocket API. '
@@ -357,16 +380,33 @@ class ActiveConnection:
             yield from wsock.close()
             self.debug('Closed connection')
 
+            if task_queue_get is not None:
+                _dispose_task(task_queue_get)
+
+            if task_receive_msg is not None:
+                _dispose_task(task_receive_msg)
+
         return wsock
+
+    # It is safe to use self._send_message inside the handle methods
+    # because we are not waiting for a new message.
 
     def handle_subscribe_events(self, msg):
         """Handle subscribe events command."""
         msg = SUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
 
-        self.event_listeners[msg['id']] = self.hass.bus.async_listen(
-            msg['event_type'], partial(self._forward_event, msg['id']))
+        @asyncio.coroutine
+        def forward_events(event):
+            """Helper to forward events to websocket."""
+            if event.event_type == EVENT_TIME_CHANGED:
+                return
 
-        self.send_message(result_message(msg['id']))
+            yield from self.to_send.put(event_message(msg['id'], event))
+
+        self.event_listeners[msg['id']] = self.hass.bus.async_listen(
+            msg['event_type'], forward_events)
+
+        self._send_message(result_message(msg['id']))
 
     def handle_unsubscribe_events(self, msg):
         """Handle unsubscribe events command."""
@@ -375,12 +415,12 @@ class ActiveConnection:
         subscription = msg['subscription']
 
         if subscription not in self.event_listeners:
-            self.send_message(error_message(
+            self._send_message(error_message(
                 msg['id'], ERR_NOT_FOUND,
                 'Subscription not found.'))
         else:
             self.event_listeners.pop(subscription)()
-            self.send_message(result_message(msg['id']))
+            self._send_message(result_message(msg['id']))
 
     def handle_call_service(self, msg):
         """Handle call service command."""
@@ -392,30 +432,30 @@ class ActiveConnection:
         """Handle get states command."""
         msg = GET_STATES_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(msg['id'],
-                                         self.hass.states.async_all()))
+        self._send_message(result_message(msg['id'],
+                                          self.hass.states.async_all()))
 
     def handle_get_services(self, msg):
         """Handle get services command."""
         msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(msg['id'],
-                                         self.hass.services.async_services()))
+        self._send_message(result_message(msg['id'],
+                                          self.hass.services.async_services()))
 
     def handle_get_config(self, msg):
         """Handle get config command."""
         msg = GET_CONFIG_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(msg['id'],
-                                         self.hass.config.as_dict()))
+        self._send_message(result_message(msg['id'],
+                                          self.hass.config.as_dict()))
 
     def handle_get_panels(self, msg):
         """Handle get panels command."""
         msg = GET_PANELS_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(
+        self._send_message(result_message(
             msg['id'], self.hass.data[frontend.DATA_PANELS]))
 
     def handle_ping(self, msg):
         """Handle ping command."""
-        self.send_message(pong_message(msg['id']))
+        self._send_message(pong_message(msg['id']))
