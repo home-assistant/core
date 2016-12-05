@@ -236,18 +236,6 @@ class ActiveConnection:
             # Socket has been closed.
             pass
 
-    @callback
-    def _forward_event(self, iden, event):
-        """Helper to forward events to websocket."""
-        if event.event_type == EVENT_TIME_CHANGED:
-            return
-
-        try:
-            self.send_message(event_message(iden, event))
-        except RuntimeError:
-            # Socket has been closed.
-            pass
-
     @asyncio.coroutine
     def handle(self):
         """Handle the websocket connection."""
@@ -363,8 +351,20 @@ class ActiveConnection:
         """Handle subscribe events command."""
         msg = SUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
 
+        @callback
+        def forward_events(event):
+            """Helper to forward events to websocket."""
+            if event.event_type == EVENT_TIME_CHANGED:
+                return
+
+            try:
+                self.send_message(event_message(msg['id'], event))
+            except RuntimeError:
+                # Socket has been closed.
+                pass
+
         self.event_listeners[msg['id']] = self.hass.bus.async_listen(
-            msg['event_type'], partial(self._forward_event, msg['id']))
+            msg['event_type'], forward_events)
 
         self.send_message(result_message(msg['id']))
 
