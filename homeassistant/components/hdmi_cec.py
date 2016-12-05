@@ -274,11 +274,10 @@ class CecDevice(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        n = self._name if self._name is not None else self.vendor_name if self.vendor_name is not None else None
-        return "%s %d" % (DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address) if n is None \
+        return "%s %d" % (DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address) if self._name is None \
             else "%s %d (%s)" % (DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address,
-                                 n) if self.vendor_name is None or self.vendor_name == 'Unknown' \
-            else "%s %s" % (self.vendor_name, n)
+                                 self._name) if self.vendor_name is None or self.vendor_name == 'Unknown' \
+            else "%s %s" % (self.vendor_name, self._name)
 
     @property
     def state(self):
