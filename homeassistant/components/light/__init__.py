@@ -115,6 +115,8 @@ LIGHT_TURN_OFF_SCHEMA = vol.Schema({
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
 })
 
+LIGHT_TOGGLE_SCHEMA = LIGHT_TURN_ON_SCHEMA
+
 PROFILE_SCHEMA = vol.Schema(
     vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
 )
@@ -265,7 +267,7 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, async_handle_light_service,
-        descriptions.get(SERVICE_TOGGLE), schema=LIGHT_TURN_ON_SCHEMA)
+        descriptions.get(SERVICE_TOGGLE), schema=LIGHT_TOGGLE_SCHEMA)
 
     return True
 
