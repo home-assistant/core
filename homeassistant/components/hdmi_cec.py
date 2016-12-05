@@ -72,6 +72,13 @@ CEC_LOGICAL_TO_TYPE = [0,  # TV0
 
 DEVICE_TYPE_NAMES = ["TV", "Recorder", "UNKNOWN", "Tuner", "Playback", "Audio"]
 
+ICON_UNKNOWN = 'mdi:help'
+ICON_AUDIO = 'mdi:speaker'
+ICON_PLAYER = 'mdi:play'
+ICON_TUNER = 'mdi:nest-thermostat'
+ICON_RECORDER = 'mdi:microphone'
+ICON_TV = 'mdi:television'
+
 CEC_DEVICES = defaultdict(list)
 
 CONF_EXCLUDE = 'exclude'
@@ -322,12 +329,12 @@ class CecDevice(Entity):
 
     @staticmethod
     def _icon_by_type(cec_type):
-        return 'mdi:television' if cec_type == 0 \
-            else 'mdi:microphone' if cec_type == 1 \
-            else 'mdi:nest-thermostat' if cec_type == 3 \
-            else 'mdi:play' if cec_type == 4 \
-            else 'mdi:speaker' if cec_type == 5 \
-            else 'mdi:help'
+        return ICON_TV if cec_type == 0 \
+            else ICON_RECORDER if cec_type == 1 \
+            else ICON_TUNER if cec_type == 3 \
+            else ICON_PLAYER if cec_type == 4 \
+            else ICON_AUDIO if cec_type == 5 \
+            else ICON_UNKNOWN
 
     @property
     def device_state_attributes(self):
