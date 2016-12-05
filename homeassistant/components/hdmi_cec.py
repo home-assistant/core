@@ -144,11 +144,11 @@ def setup(hass, base_config):
                 if exclude is not None and c in exclude:
                     continue
                 dev_type = 'switch'
-                if dev_type is None:
+                if dev_type is None or not CEC_CLIENT.lib_cec.PollDevice(c):
                     continue
                 CEC_DEVICES[dev_type].append(c)
             for c in ['switch']:
-                discovery.load_platform(hass, c, DOMAIN, {}, base_config)
+                discovery.load_platform(hass, c, DOMAIN, hass_config=base_config)
             return True
         else:
             return False
@@ -203,6 +203,9 @@ class CecDevice(Entity):
     @asyncio.coroutine
     def async_update_availability(self):
         self._available = self.cec_client.lib_cec.PollDevice(self._logical_address)
+        if not self._available:
+            self.remove()
+            self.schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_request_physical_address(self):
