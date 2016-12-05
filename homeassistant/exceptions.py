@@ -7,6 +7,12 @@ class HomeAssistantError(Exception):
     pass
 
 
+class ShuttingDown(HomeAssistantError):
+    """When trying to change something during shutdown."""
+
+    pass
+
+
 class InvalidEntityFormatError(HomeAssistantError):
     """When an invalid formatted entity is encountered."""
 

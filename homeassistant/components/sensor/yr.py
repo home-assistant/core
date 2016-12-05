@@ -18,8 +18,10 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_ELEVATION, CONF_MONITORED_CONDITIONS,
     ATTR_ATTRIBUTION)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import (
+    async_track_point_in_utc_time, async_track_utc_time_change)
 from homeassistant.util import dt as dt_util
 
 
@@ -68,7 +70,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    coordinates = dict(lat=latitude, lon=longitude, msl=elevation)
+    coordinates = {'lat': str(latitude),
+                   'lon': str(longitude),
+                   'msl': str(elevation)}
 
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
@@ -76,6 +80,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     yield from async_add_devices(dev)
 
     weather = YrData(hass, coordinates, dev)
+    # Update weather on the hour
+    async_track_utc_time_change(hass, weather.async_update, minute=0, second=0)
     yield from weather.async_update()
 
 
@@ -131,48 +137,56 @@ class YrData(object):
 
     def __init__(self, hass, coordinates, devices):
         """Initialize the data object."""
-        self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/?' \
-            'lat={lat};lon={lon};msl={msl}'.format(**coordinates)
+        self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/'
+        self._urlparams = coordinates
         self._nextrun = None
         self.devices = devices
         self.data = {}
         self.hass = hass
 
     @asyncio.coroutine
-    def async_update(self):
+    def async_update(self, *_):
         """Get the latest data from yr.no."""
         def try_again(err: str):
-            """Schedule again later."""
+            """Retry in 15 minutes."""
             _LOGGER.warning('Retrying in 15 minutes: %s', err)
+            self._nextrun = None
             nxt = dt_util.utcnow() + timedelta(minutes=15)
-            async_track_point_in_utc_time(self.hass, self.async_update, nxt)
+            if nxt.minute >= 15:
+                async_track_point_in_utc_time(self.hass, self.async_update,
+                                              nxt)
 
-        try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
-                resp = yield from self.hass.websession.get(self._url)
-            if resp.status != 200:
-                try_again('{} returned {}'.format(self._url, resp.status))
+        if self._nextrun is None or dt_util.utcnow() >= self._nextrun:
+            resp = None
+            try:
+                websession = async_get_clientsession(self.hass)
+                with async_timeout.timeout(10, loop=self.hass.loop):
+                    resp = yield from websession.get(self._url,
+                                                     params=self._urlparams)
+                if resp.status != 200:
+                    try_again('{} returned {}'.format(resp.url, resp.status))
+                    return
+                text = yield from resp.text()
+
+            except (asyncio.TimeoutError, aiohttp.errors.ClientError,
+                    aiohttp.errors.ClientDisconnectedError) as err:
+                try_again(err)
                 return
-            text = yield from resp.text()
-            self.hass.async_add_job(resp.release())
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError) as err:
-            try_again(err)
-            return
 
-        try:
-            import xmltodict
-            self.data = xmltodict.parse(text)['weatherdata']
-            model = self.data['meta']['model']
-            if '@nextrun' not in model:
-                model = model[0]
-            next_run = dt_util.parse_datetime(model['@nextrun'])
-        except (ExpatError, IndexError) as err:
-            try_again(err)
-            return
+            finally:
+                if resp is not None:
+                    self.hass.async_add_job(resp.release())
 
-        # Schedule next execution
-        async_track_point_in_utc_time(self.hass, self.async_update, next_run)
+            try:
+                import xmltodict
+                self.data = xmltodict.parse(text)['weatherdata']
+                model = self.data['meta']['model']
+                if '@nextrun' not in model:
+                    model = model[0]
+                self._nextrun = dt_util.parse_datetime(model['@nextrun'])
+            except (ExpatError, IndexError) as err:
+                try_again(err)
+                return
 
         now = dt_util.utcnow()
 

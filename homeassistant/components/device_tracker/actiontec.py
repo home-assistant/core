@@ -42,6 +42,7 @@ def get_scanner(hass, config):
     scanner = ActiontecDeviceScanner(config[DOMAIN])
     return scanner if scanner.success_init else None
 
+
 Device = namedtuple("Device", ["mac", "ip", "last_update"])
 
 

@@ -227,6 +227,8 @@ class TestMQTTCallbacks(unittest.TestCase):
             assert setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
+                    mqtt.CONF_BIRTH_MESSAGE: {mqtt.ATTR_TOPIC: 'birth',
+                                              mqtt.ATTR_PAYLOAD: 'birth'}
                 }
             })
 
@@ -291,6 +293,12 @@ class TestMQTTCallbacks(unittest.TestCase):
             3: 'home/sensor',
         }, mqtt.MQTT_CLIENT.progress)
 
+    def test_mqtt_birth_message_on_connect(self):
+        """Test birth message on connect."""
+        mqtt.MQTT_CLIENT._mqtt_on_connect(None, None, 0, 0)
+        mqtt.MQTT_CLIENT._mqttc.publish.assert_called_with('birth', 'birth', 0,
+                                                           False)
+
     def test_mqtt_disconnect_tries_no_reconnect_on_stop(self):
         """Test the disconnect tries."""
         mqtt.MQTT_CLIENT._mqtt_on_disconnect(None, None, 0)
@@ -317,6 +325,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.assertEqual({}, mqtt.MQTT_CLIENT.progress)
 
     def test_invalid_mqtt_topics(self):
+        """Test invalid topics."""
         self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'bad+topic')
         self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')
 

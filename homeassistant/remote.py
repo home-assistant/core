@@ -131,14 +131,13 @@ class HomeAssistant(ha.HomeAssistant):
         self._pending_sheduler = None
 
         self.bus = EventBus(remote_api, self)
-        self.services = ha.ServiceRegistry(self.bus, self.add_job, self.loop)
+        self.services = ha.ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop, self.remote_api)
         self.config = ha.Config()
         # This is a dictionary that any component can store any data on.
         self.data = {}
         self.state = ha.CoreState.not_running
         self.exit_code = None
-        self._websession = None
         self.config.api = local_api
 
     def start(self):

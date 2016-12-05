@@ -15,11 +15,13 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID)
+    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
+    CONF_HOSTS)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import utcnow
 
 REQUIREMENTS = ['SoCo==0.12']
 
@@ -48,8 +50,17 @@ SERVICE_CLEAR_TIMER = 'sonos_clear_sleep_timer'
 SUPPORT_SOURCE_LINEIN = 'Line-in'
 SUPPORT_SOURCE_TV = 'TV'
 
+CONF_ADVERTISE_ADDR = 'advertise_addr'
+CONF_INTERFACE_ADDR = 'interface_addr'
+
 # Service call validation schemas
 ATTR_SLEEP_TIME = 'sleep_time'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
+    vol.Optional(CONF_INTERFACE_ADDR): cv.string,
+    vol.Optional(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string]),
+})
 
 SONOS_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
@@ -69,11 +80,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import soco
     global DEVICES
 
+    advertise_addr = config.get(CONF_ADVERTISE_ADDR, None)
+    if advertise_addr:
+        soco.config.EVENT_ADVERTISE_IP = advertise_addr
+
     if discovery_info:
         player = soco.SoCo(discovery_info)
 
         # if device allready exists by config
-        if player.uid in DEVICES:
+        if player.uid in [x.unique_id for x in DEVICES]:
             return True
 
         if player.is_visible:
@@ -86,18 +101,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     players = None
-    hosts = config.get('hosts', None)
+    hosts = config.get(CONF_HOSTS, None)
     if hosts:
         # Support retro compatibility with comma separated list of hosts
         # from config
+        hosts = hosts[0] if len(hosts) == 1 else hosts
         hosts = hosts.split(',') if isinstance(hosts, str) else hosts
         players = []
         for host in hosts:
             players.append(soco.SoCo(socket.gethostbyname(host)))
 
     if not players:
-        players = soco.discover(interface_addr=config.get('interface_addr',
-                                                          None))
+        players = soco.discover(interface_addr=config.get(CONF_INTERFACE_ADDR))
 
     if not players:
         _LOGGER.warning('No Sonos speakers found.')
@@ -264,6 +279,8 @@ class SonosDevice(MediaPlayerDevice):
         self._coordinator = None
         self._media_content_id = None
         self._media_duration = None
+        self._media_position = None
+        self._media_position_updated_at = None
         self._media_image_url = None
         self._media_artist = None
         self._media_album_name = None
@@ -350,9 +367,6 @@ class SonosDevice(MediaPlayerDevice):
 
         if is_available:
 
-            self._is_playing_tv = self._player.is_playing_tv
-            self._is_playing_line_in = self._player.is_playing_line_in
-
             track_info = None
             if self._last_avtransport_event:
                 variables = self._last_avtransport_event.variables
@@ -394,6 +408,10 @@ class SonosDevice(MediaPlayerDevice):
                 self._coordinator = None
 
             if not self._coordinator:
+
+                is_playing_tv = self._player.is_playing_tv
+                is_playing_line_in = self._player.is_playing_line_in
+
                 media_info = self._player.avTransport.GetMediaInfo(
                     [('InstanceID', 0)]
                 )
@@ -403,12 +421,30 @@ class SonosDevice(MediaPlayerDevice):
                 media_album_name = track_info.get('album')
                 media_title = track_info.get('title')
 
+                media_position = None
+                media_position_updated_at = None
+
                 is_radio_stream = \
                     current_media_uri.startswith('x-sonosapi-stream:') or \
                     current_media_uri.startswith('x-rincon-mp3radio:')
 
-                if is_radio_stream:
-                    is_radio_stream = True
+                if is_playing_tv or is_playing_line_in:
+                    # playing from line-in/tv.
+
+                    support_previous_track = False
+                    support_next_track = False
+                    support_pause = False
+
+                    if is_playing_tv:
+                        media_artist = SUPPORT_SOURCE_TV
+                    else:
+                        media_artist = SUPPORT_SOURCE_LINEIN
+
+                    media_album_name = None
+                    media_title = None
+                    media_image_url = None
+
+                elif is_radio_stream:
                     media_image_url = self._format_media_image_url(
                         current_media_uri
                     )
@@ -472,6 +508,46 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = True
                     support_pause = True
 
+                    position_info = self._player.avTransport.GetPositionInfo(
+                        [('InstanceID', 0),
+                         ('Channel', 'Master')]
+                    )
+                    rel_time = _parse_timespan(
+                        position_info.get("RelTime")
+                    )
+
+                    # player no longer reports position?
+                    update_media_position = rel_time is None and \
+                        self._media_position is not None
+
+                    # player started reporting position?
+                    update_media_position |= rel_time is not None and \
+                        self._media_position is None
+
+                    # position changed?
+                    if rel_time is not None and \
+                       self._media_position is not None:
+
+                        time_diff = utcnow() - self._media_position_updated_at
+                        time_diff = time_diff.total_seconds()
+
+                        calculated_position = \
+                            self._media_position + \
+                            time_diff
+
+                        update_media_position = \
+                            abs(calculated_position - rel_time) > 1.5
+
+                    if update_media_position:
+                        media_position = rel_time
+                        media_position_updated_at = utcnow()
+                    else:
+                        # don't update media_position (don't want unneeded
+                        # state transitions)
+                        media_position = self._media_position
+                        media_position_updated_at = \
+                            self._media_position_updated_at
+
                     playlist_position = track_info.get('playlist_position')
                     if playlist_position in ('', 'NOT_IMPLEMENTED', None):
                         playlist_position = None
@@ -497,6 +573,8 @@ class SonosDevice(MediaPlayerDevice):
                 self._media_duration = _parse_timespan(
                     track_info.get('duration')
                 )
+                self._media_position = media_position
+                self._media_position_updated_at = media_position_updated_at
                 self._media_image_url = media_image_url
                 self._media_artist = media_artist
                 self._media_album_name = media_album_name
@@ -506,6 +584,8 @@ class SonosDevice(MediaPlayerDevice):
                 self._support_previous_track = support_previous_track
                 self._support_next_track = support_next_track
                 self._support_pause = support_pause
+                self._is_playing_tv = is_playing_tv
+                self._is_playing_line_in = is_playing_line_in
 
                 # update state of the whole group
                 # pylint: disable=protected-access
@@ -513,7 +593,7 @@ class SonosDevice(MediaPlayerDevice):
                     if device.entity_id is not self.entity_id:
                         self.hass.add_job(device.async_update_ha_state)
 
-                if self._queue is None:
+                if self._queue is None and self.entity_id is not None:
                     self._subscribe_to_player_events()
         else:
             self._player_volume = None
@@ -522,6 +602,8 @@ class SonosDevice(MediaPlayerDevice):
             self._coordinator = None
             self._media_content_id = None
             self._media_duration = None
+            self._media_position = None
+            self._media_position_updated_at = None
             self._media_image_url = None
             self._media_artist = None
             self._media_album_name = None
@@ -624,6 +706,25 @@ class SonosDevice(MediaPlayerDevice):
             return self._media_duration
 
     @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        if self._coordinator:
+            return self._coordinator.media_position
+        else:
+            return self._media_position
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        if self._coordinator:
+            return self._coordinator.media_position_updated_at
+        else:
+            return self._media_position_updated_at
+
+    @property
     def media_image_url(self):
         """Image url of current playing media."""
         if self._coordinator:
@@ -714,10 +815,13 @@ class SonosDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Name of the current input source."""
-        if self._is_playing_line_in:
-            return SUPPORT_SOURCE_LINEIN
-        if self._is_playing_tv:
-            return SUPPORT_SOURCE_TV
+        if self._coordinator:
+            return self._coordinator.source
+        else:
+            if self._is_playing_line_in:
+                return SUPPORT_SOURCE_LINEIN
+            elif self._is_playing_tv:
+                return SUPPORT_SOURCE_TV
 
         return None
 

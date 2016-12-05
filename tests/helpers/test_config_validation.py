@@ -1,6 +1,6 @@
 """Test config validators."""
 from collections import OrderedDict
-from datetime import timedelta
+from datetime import timedelta, datetime, date
 import enum
 import os
 from socket import _GLOBAL_DEFAULT_TIMEOUT
@@ -341,7 +341,7 @@ def test_template_complex():
         1, 'Hello',
         '{{ beer }}',
         '{% if 1 == 1 %}Hello{% else %}World{% endif %}',
-        {'test': 1, 'test': '{{ beer }}'},
+        {'test': 1, 'test2': '{{ beer }}'},
         ['{{ beer }}', 1]
     ):
         schema(value)
@@ -356,6 +356,17 @@ def test_time_zone():
 
     schema('America/Los_Angeles')
     schema('UTC')
+
+
+def test_datetime():
+    """Test date time validation."""
+    schema = vol.Schema(cv.datetime)
+    for value in [date.today(), 'Wrong DateTime', '2016-11-23']:
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    schema(datetime.now())
+    schema('2016-11-23T18:59:08')
 
 
 def test_key_dependency():

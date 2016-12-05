@@ -9,13 +9,14 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
-    SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_MUTE, MediaPlayerDevice)
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_UNKNOWN, CONF_HOST, CONF_NAME)
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['ha-philipsjs==0.0.1']
 
@@ -25,6 +26,9 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 SUPPORT_PHILIPS_JS = SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
                      SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE
+
+SUPPORT_PHILIPS_JS_TV = SUPPORT_PHILIPS_JS | SUPPORT_NEXT_TRACK | \
+                        SUPPORT_PREVIOUS_TRACK
 
 DEFAULT_DEVICE = 'default'
 DEFAULT_HOST = '127.0.0.1'
@@ -68,6 +72,8 @@ class PhilipsTV(MediaPlayerDevice):
         self._source_list = []
         self._connfail = 0
         self._source_mapping = {}
+        self._watching_tv = None
+        self._channel_name = None
 
     @property
     def name(self):
@@ -82,7 +88,10 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
-        return SUPPORT_PHILIPS_JS
+        if self._watching_tv:
+            return SUPPORT_PHILIPS_JS_TV
+        else:
+            return SUPPORT_PHILIPS_JS
 
     @property
     def state(self):
@@ -106,6 +115,7 @@ class PhilipsTV(MediaPlayerDevice):
             self._source = source
             if not self._tv.on:
                 self._state = STATE_OFF
+            self._watching_tv = bool(self._tv.source_id == 'tv')
 
     @property
     def volume_level(self):
@@ -141,10 +151,24 @@ class PhilipsTV(MediaPlayerDevice):
         if not self._tv.on:
             self._state = STATE_OFF
 
+    def media_previous_track(self):
+        """Send rewind commmand."""
+        self._tv.sendKey('Previous')
+
+    def media_next_track(self):
+        """Send fast forward commmand."""
+        self._tv.sendKey('Next')
+
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self._source
+        if self._watching_tv:
+            if self._channel_name:
+                return '{} - {}'.format(self._source, self._channel_name)
+            else:
+                return self._source
+        else:
+            return self._source
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -167,3 +191,12 @@ class PhilipsTV(MediaPlayerDevice):
             self._state = STATE_ON
         else:
             self._state = STATE_OFF
+
+        self._watching_tv = bool(self._tv.source_id == 'tv')
+
+        self._tv.getChannelId()
+        self._tv.getChannels()
+        if self._tv.channels and self._tv.channel_id in self._tv.channels:
+            self._channel_name = self._tv.channels[self._tv.channel_id]['name']
+        else:
+            self._channel_name = None

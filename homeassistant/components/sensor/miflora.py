@@ -16,7 +16,7 @@ from homeassistant.util import Throttle
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC)
 
-REQUIREMENTS = ['miflora==0.1.9']
+REQUIREMENTS = ['miflora==0.1.13']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +41,7 @@ SENSOR_TYPES = {
     'light': ['Light intensity', 'lux'],
     'moisture': ['Moisture', '%'],
     'conductivity': ['Conductivity', 'µS/cm'],
+    'battery': ['Battery', '%'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

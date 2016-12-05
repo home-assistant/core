@@ -127,11 +127,11 @@ class PilightSwitch(SwitchDevice):
         self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
                                  self._code_on, blocking=True)
         self._state = True
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn the switch on by calling pilight.send service with off code."""
         self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
                                  self._code_off, blocking=True)
         self._state = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()

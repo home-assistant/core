@@ -51,6 +51,7 @@ def _cv_input_slider(cfg):
     cfg[CONF_INITIAL] = state
     return cfg
 
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         cv.slug: vol.All({

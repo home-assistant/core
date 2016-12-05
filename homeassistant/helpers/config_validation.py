@@ -1,6 +1,6 @@
 """Helpers for config validation using voluptuous."""
 from collections import OrderedDict
-from datetime import timedelta
+from datetime import timedelta, datetime as datetime_sys
 import os
 import re
 from urllib.parse import urlparse
@@ -297,6 +297,22 @@ def time(value):
     return time_val
 
 
+def datetime(value):
+    """Validate datetime."""
+    if isinstance(value, datetime_sys):
+        return value
+
+    try:
+        date_val = dt_util.parse_datetime(value)
+    except TypeError:
+        date_val = None
+
+    if date_val is None:
+        raise vol.Invalid('Invalid datetime specified: {}'.format(value))
+
+    return date_val
+
+
 def time_zone(value):
     """Validate timezone."""
     if dt_util.get_time_zone(value) is not None:
@@ -304,6 +320,7 @@ def time_zone(value):
     raise vol.Invalid(
         'Invalid time zone passed in. Valid options can be found here: '
         'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones')
+
 
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
 

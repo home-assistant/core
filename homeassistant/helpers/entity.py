@@ -1,6 +1,7 @@
 """An abstract class for entities."""
 import asyncio
 import logging
+import functools as ft
 from timeit import default_timer as timer
 
 from typing import Any, Optional, List, Dict
@@ -258,9 +259,12 @@ class Entity(object):
         # Convert temperature if we detect one
         try:
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
-            if unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
-                units = self.hass.config.units
-                state = str(units.temperature(float(state), unit_of_measure))
+            units = self.hass.config.units
+            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
+                    unit_of_measure != units.temperature_unit):
+                prec = len(state) - state.index('.') - 1 if '.' in state else 0
+                temp = units.temperature(float(state), unit_of_measure)
+                state = str(round(temp) if prec == 0 else round(temp, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
         except ValueError:
             # Could not convert state to float
@@ -268,6 +272,18 @@ class Entity(object):
 
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update)
+
+    def schedule_update_ha_state(self, force_refresh=False):
+        """Shedule a update ha state change task.
+
+        That is only needed on executor to not block.
+        """
+        # We're already in a thread, do the force refresh here.
+        if force_refresh and not hasattr(self, 'async_update'):
+            self.update()
+            force_refresh = False
+
+        self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     def remove(self) -> None:
         """Remove entitiy from HASS."""
@@ -324,23 +340,23 @@ class ToggleEntity(Entity):
 
     def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
-        run_coroutine_threadsafe(self.async_turn_on(**kwargs),
-                                 self.hass.loop).result()
+        raise NotImplementedError()
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        raise NotImplementedError()
+        yield from self.hass.loop.run_in_executor(
+            None, ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        run_coroutine_threadsafe(self.async_turn_off(**kwargs),
-                                 self.hass.loop).result()
+        raise NotImplementedError()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        raise NotImplementedError()
+        yield from self.hass.loop.run_in_executor(
+            None, ft.partial(self.turn_off, **kwargs))
 
     def toggle(self) -> None:
         """Toggle the entity."""

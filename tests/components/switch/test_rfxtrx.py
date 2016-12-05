@@ -49,6 +49,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                             }}}))
 
     def test_invalid_config1(self):
+        """Test invalid configuration."""
         self.assertFalse(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
@@ -60,7 +61,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                             }}}))
 
     def test_invalid_config2(self):
-        """Test configuration."""
+        """Test invalid configuration."""
         self.assertFalse(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
@@ -73,6 +74,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                             }}}))
 
     def test_invalid_config3(self):
+        """Test invalid configuration."""
         self.assertFalse(setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,

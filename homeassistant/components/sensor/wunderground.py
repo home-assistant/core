@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.wunderground/
 from datetime import timedelta
 import logging
 
+import re
 import requests
 import voluptuous as vol
 
@@ -125,8 +126,8 @@ class WUndergroundSensor(Entity):
         """Return the state of the sensor."""
         if self.rest.data:
 
-            if self._condition == 'elevation' and \
-               self._condition in self.rest.data['observation_location']:
+            if self._condition == 'elevation' and self._condition in \
+                    self.rest.data['observation_location']:
                 return self.rest.data['observation_location'][self._condition]\
                         .split()[0]
 
@@ -172,7 +173,8 @@ class WUndergroundSensor(Entity):
     def entity_picture(self):
         """Return the entity picture."""
         if self._condition == 'weather':
-            return self.rest.data['icon_url']
+            url = self.rest.data['icon_url']
+            return re.sub(r'^http://', 'https://', url, flags=re.IGNORECASE)
 
     @property
     def unit_of_measurement(self):
@@ -222,7 +224,6 @@ class WUndergroundData(object):
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
             self.data = None
-            raise
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES_ALERTS)
     def update_alerts(self):
@@ -237,4 +238,3 @@ class WUndergroundData(object):
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
             self.alerts = None
-            raise
