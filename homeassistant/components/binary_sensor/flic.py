@@ -5,7 +5,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST, CONF_PORT, CONF_DISCOVERY, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.util.async import run_callback_threadsafe
@@ -16,8 +17,6 @@ REQUIREMENTS = ['https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4']
 _LOGGER = logging.getLogger(__name__)
 
 
-CONF_AUTO_SCAN = "auto_scan"
-
 EVENT_NAME = "flic_click"
 EVENT_DATA_NAME = "button_name"
 EVENT_DATA_ADDRESS = "button_address"
@@ -27,7 +26,7 @@ EVENT_DATA_TYPE = "click_type"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default='localhost'): cv.string,
     vol.Optional(CONF_PORT, default=5551): cv.port,
-    vol.Optional(CONF_AUTO_SCAN, default=True): cv.boolean
+    vol.Optional(CONF_DISCOVERY, default=True): cv.boolean
 })
 
 
@@ -41,7 +40,7 @@ def async_setup_platform(hass, config, async_add_entities,
     # connecting to buttons and retrieving events
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    auto_scan = config.get(CONF_AUTO_SCAN)
+    discovery = config.get(CONF_DISCOVERY)
 
     try:
         client = pyflic.FlicClient(host, port)
@@ -55,7 +54,7 @@ def async_setup_platform(hass, config, async_add_entities,
                                         client, address))
 
     client.on_new_verified_button = new_button_callback
-    if auto_scan:
+    if discovery:
         start_scanning(hass, config, async_add_entities, client)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
