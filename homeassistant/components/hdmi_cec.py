@@ -10,10 +10,11 @@ import logging
 import cec
 import voluptuous as vol
 from collections import defaultdict
-
+from functools import reduce
 from homeassistant.components import discovery
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_ON, STATE_OFF,
                                  STATE_UNKNOWN, STATE_STANDBY)
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,12 +24,14 @@ ATTR_DEVICE = 'device'
 ATTR_COMMAND = 'command'
 ATTR_TYPE = 'type'
 ATTR_KEY = 'key'
-ATTR_DURATION = 'duration'
+ATTR_DUR = 'dur'
 ATTR_SRC = 'src'
 ATTR_DST = 'dst'
 ATTR_CMD = 'cmd'
 ATTR_ATT = 'att'
 ATTR_RAW = 'raw'
+ATTR_DIR = 'dir'
+ATTR_ABT = 'abt'
 
 CMD_UP = 'up'
 CMD_DOWN = 'down'
@@ -167,18 +170,19 @@ class CecDevice(Entity):
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         _LOGGER.info("Initializing CEC device %s", self.name)
         self.cec_client = cec_client
-        cec_client.register_command_callback(self._update_callback)
+        hass.bus.listen(EVENT_CEC_COMMAND_RECEIVED, self._update_callback)
+        # hass.bus.listen(EVENT_CEC_KEYPRESS_RECEIVED, self._update_callback)
         self.update()
 
     @asyncio.coroutine
     def async_update(self):
-        yield self.async_update_availability()
+        yield from self.async_update_availability()
         if self.available:
             _LOGGER.info("Updating status for device %s", hex(self._logical_address)[2:])
-            yield self.async_request_cec_power_status()
-            yield self.async_request_cec_osd_name()
-            yield self.async_request_cec_vendor()
-            yield self.async_request_physical_address()
+            yield from self.async_request_cec_power_status()
+            yield from self.async_request_cec_osd_name()
+            yield from self.async_request_cec_vendor()
+            yield from self.async_request_physical_address()
         else:
             _LOGGER.info("device not available. Not updating")
 
@@ -189,27 +193,32 @@ class CecDevice(Entity):
     @asyncio.coroutine
     def async_request_physical_address(self):
         self.cec_client.tx(
-            type('call', (object,), {'data': {'dst': hex(self._logical_address)[2:], 'cmd': '83'}}))
+            type('call', (object,), {'data': {'dst': self._logical_address, 'cmd': 0x83}}))
 
     @asyncio.coroutine
     def async_request_cec_vendor(self):
         self.cec_client.tx(
-            type('call', (object,), {'data': {'dst': hex(self._logical_address)[2:], 'cmd': '8C'}}))
+            type('call', (object,), {'data': {'dst': self._logical_address, 'cmd': 0x8C}}))
 
     @asyncio.coroutine
     def async_request_cec_osd_name(self):
         self.cec_client.tx(
-            type('call', (object,), {'data': {'dst': hex(self._logical_address)[2:], 'cmd': '46'}}))
+            type('call', (object,), {'data': {'dst': self._logical_address, 'cmd': 0x46}}))
 
     @asyncio.coroutine
     def async_request_cec_power_status(self):
         self.cec_client.tx(
-            type('call', (object,), {'data': {'dst': hex(self._logical_address)[2:], 'cmd': '8F'}}))
+            type('call', (object,), {'data': {'dst': self._logical_address, 'cmd': 0x8F}}))
 
-    def _update_callback(self, src, dst, response, cmd, cmd_chain):
-        try:
-            if not (src == self._logical_address or src == 15):
-                return
+    @callback
+    def _update_callback(self, event):
+        if not ATTR_CMD in event.data:
+            return
+        cmd = event.data[ATTR_CMD]
+        src = event.data[ATTR_SRC] if ATTR_SRC in event.data else cec.CECDEVICE_UNREGISTERED
+        dst = event.data[ATTR_DST] if ATTR_DST in event.data else cec.CECDEVICE_BROADCAST
+        cmd_chain = event.data[ATTR_ATT] if ATTR_ATT in event.data else []
+        if src == self._logical_address or src == cec.CECDEVICE_BROADCAST:
             if cmd == 0x90:
                 status = cmd_chain[0]
                 if status == 0x00:
@@ -237,10 +246,7 @@ class CecDevice(Entity):
                 _LOGGER.info("Got physical address and type for device %x -> %x, %s, %s",
                              src, dst, self._physical_address, self.type)
 
-            self.schedule_update_ha_state()
-
-        except Exception as e:
-            _LOGGER.error("callback failed: %s", e, exc_info=1)
+            self.schedule_update_ha_state(False)
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
@@ -417,33 +423,29 @@ class CecClient:
 
     def tx(self, call):
         """Send CEC command."""
-        if call.data is list:
-            data = call.data
+        d = call.data
+        if ATTR_RAW in d:
+            command = d[ATTR_RAW]
         else:
-            data = [call.data]
-        for d in data:
-            if ATTR_RAW in d:
-                command = d[ATTR_RAW]
+            if ATTR_SRC in d:
+                src = d[ATTR_SRC]
             else:
-                if ATTR_SRC in d:
-                    src = d[ATTR_SRC]
-                else:
-                    src = str(self.get_logical_address())
-                if ATTR_DST in d:
-                    dst = d[ATTR_DST]
-                else:
-                    dst = "f"
-                if ATTR_CMD in d:
-                    cmd = d[ATTR_CMD]
-                else:
-                    _LOGGER.error("Attribute 'cmd' is missing")
-                    return False
-                if ATTR_ATT in d:
-                    att = ":%s" % d[ATTR_ATT]
-                else:
-                    att = ""
-                command = "%s%s:%s%s" % (src, dst, cmd, att)
-            self.send_command(command)
+                src = self.get_logical_address()
+            if ATTR_DST in d:
+                dst = d[ATTR_DST]
+            else:
+                dst = cec.CECDEVICE_BROADCAST
+            if ATTR_CMD in d:
+                cmd = d[ATTR_CMD]
+            else:
+                _LOGGER.error("Attribute 'cmd' is missing")
+                return False
+            if ATTR_ATT in d:
+                att = reduce(lambda x, y: "%s:%x" % (x, y), d[ATTR_ATT])
+            else:
+                att = ""
+            command = "%x%x:%x%s" % (src, dst, cmd, att)
+        self.send_command(command)
 
     def send_command(self, data):
         """send a custom command to cec adapter"""
@@ -451,10 +453,6 @@ class CecClient:
         _LOGGER.info("transmit " + data)
         if not self.lib_cec.Transmit(cmd):
             _LOGGER.warning("failed to send command")
-
-    def register_command_callback(self, callback):
-        if callback not in self.callbacks:
-            self.callbacks.append(callback)
 
     def cec_log_callback(self, level, time, message):
         """logging callback"""
@@ -472,31 +470,28 @@ class CecClient:
     def cec_key_press_callback(self, key, duration):
         """key press callback"""
         _LOGGER.info("[key pressed] " + str(key))
-        self.hass.bus.fire(EVENT_CEC_KEYPRESS_RECEIVED, {ATTR_KEY: key, ATTR_DURATION: duration})
+        self.hass.bus.fire(EVENT_CEC_KEYPRESS_RECEIVED, {ATTR_KEY: key, ATTR_DUR: duration})
         return 0
 
     def cec_command_callback(self, command):
         """command received callback"""
         _LOGGER.info("[command received] %s", command)
+        params = {ATTR_DIR: command[:2]}
         command = command[3:]
         cmd_chain = command.split(':')
-        src = cmd_chain.pop(0)
-        dst = int(src[1], 16)
-        src = int(src[0], 16)
-        cmd = int(cmd_chain.pop(0), 16)
+        addr = cmd_chain.pop(0)
+        params[ATTR_DST] = int(addr[1], 16)
+        params[ATTR_SRC] = int(addr[0], 16)
         cmd_chain = list(map(lambda x: int(x, 16), cmd_chain))
-        if cmd == 00:
-            response = True
-            cmd = cmd_chain.pop(0)
+        params[ATTR_CMD] = cmd_chain.pop(0)
+        if params[ATTR_CMD] == 00:
+            params[ATTR_ABT] = True
+            params[ATTR_CMD] = cmd_chain.pop(0)
         else:
-            response = False
-        try:
-            for c in self.callbacks:
-                c(src, dst, response, cmd, cmd_chain)
-        except Exception as e:
-            _LOGGER.error(e, exc_info=1)
+            params[ATTR_ABT] = False
+        params[ATTR_ATT] = cmd_chain
 
-        self.hass.bus.fire(EVENT_CEC_COMMAND_RECEIVED, {ATTR_COMMAND: command})
+        self.hass.bus.fire(EVENT_CEC_COMMAND_RECEIVED, params)
         return 0
 
     def __init__(self, hass):
