@@ -36,7 +36,6 @@ SERVICE_HANDLERS = {
     'yamaha': ('media_player', 'yamaha'),
     'logitech_mediaserver': ('media_player', 'squeezebox'),
     'directv': ('media_player', 'directv'),
-    'insteon_local': ('light'),
 }
 
 CONFIG_SCHEMA = vol.Schema({
