@@ -408,7 +408,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_media_image_url(self):
         """Test media_image_url property."""
-        TEST_URL="test_url"
+        TEST_URL = "test_url"
         config = self.config_children_only
         universal.validate_config(config)
 
