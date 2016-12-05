@@ -73,7 +73,7 @@ class GPSLoggerView(HomeAssistantView):
         if 'provider' in data:
             attrs['provider'] = data['provider']
 
-        yield from self.hass.loop.run_in_executor(
+        yield from hass.loop.run_in_executor(
             None, partial(self.see, dev_id=device,
                           gps=gps_location, battery=battery,
                           gps_accuracy=accuracy,
