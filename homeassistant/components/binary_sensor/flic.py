@@ -1,7 +1,6 @@
 """Contains functionality to use flic buttons as a binary sensor."""
 import asyncio
 import logging
-from datetime import datetime
 
 import voluptuous as vol
 
@@ -9,8 +8,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.util.async import (
-    fire_coroutine_threadsafe, run_callback_threadsafe)
+from homeassistant.util.async import run_callback_threadsafe
 
 
 REQUIREMENTS = ['https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4']
@@ -19,23 +17,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CONF_AUTO_SCAN = "auto_scan"
-CONF_THRESHOLD_DOUBLE_CLICK = "double_click_threshold"
-CONF_THRESHOLD_LONG_CLICK = "long_click_threshold"
 
-EVENT_FLIC_SINGLE_CLICK = "flic_single_click"
-EVENT_FLIC_LONG_CLICK = "flic_long_click"
-EVENT_FLIC_DOUBLE_CLICK = "flic_double_click"
-
+EVENT_NAME = "flic_click"
+EVENT_DATA_NAME = "button_name"
+EVENT_DATA_ADDRESS = "button_address"
+EVENT_DATA_TYPE = "click_type"
 
 # Validation of the user's configuration
-THRESHOLDS_SCHEMA = vol.Schema({
-})
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default='localhost'): cv.string,
     vol.Optional(CONF_PORT, default=5551): cv.port,
-    vol.Optional(CONF_AUTO_SCAN, default=True): cv.boolean,
-    vol.Optional(CONF_THRESHOLD_LONG_CLICK, default=0.5): float,
-    vol.Optional(CONF_THRESHOLD_DOUBLE_CLICK, default=0.3): float
+    vol.Optional(CONF_AUTO_SCAN, default=True): cv.boolean
 })
 
 
@@ -107,11 +99,7 @@ def start_scanning(hass, config, async_add_entities, client):
 @asyncio.coroutine
 def async_setup_button(hass, config, async_add_entities, client, address):
     """Setup single button device."""
-    double_click_threshold = config.get(CONF_THRESHOLD_DOUBLE_CLICK)
-    long_click_threshold = config.get(CONF_THRESHOLD_LONG_CLICK)
-
-    button = FlicButton(hass, client, address,
-                        double_click_threshold, long_click_threshold)
+    button = FlicButton(hass, client, address)
     _LOGGER.info("Connected to button (%s)", address)
 
     yield from async_add_entities([button])
@@ -135,27 +123,29 @@ def async_get_verified_addresses(client):
 class FlicButton(BinarySensorDevice):
     """Representation of a flic button."""
 
-    def __init__(self, hass, client, address,
-                 double_click_threshold, long_click_threshold):
+    def __init__(self, hass, client, address):
         """Initialize the flic button."""
         import pyflic
 
         self._hass = hass
         self._address = address
-        self._double_click_threshold = double_click_threshold
-        self._long_click_threshold = long_click_threshold
         self._is_down = False
-        self._last_click = self._last_down = self._last_up = datetime.min
+        self._click_types = {
+            pyflic.ClickType.ButtonSingleClick: "single",
+            pyflic.ClickType.ButtonDoubleClick: "double",
+            pyflic.ClickType.ButtonHold: "hold",
+        }
 
         # Initialize connection channel
         self._channel = pyflic.ButtonConnectionChannel(self._address)
-        self._channel.on_button_up_or_down = self._button_up_down
+        self._channel.on_button_up_or_down = self._on_up_down
+        self._channel.on_button_single_or_double_click_or_hold = self._on_click
         client.add_connection_channel(self._channel)
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self.address.replace(":", "")
+        return "flic_%s" % self.address.replace(":", "")
 
     @property
     def address(self):
@@ -180,55 +170,25 @@ class FlicButton(BinarySensorDevice):
 
         return attr
 
-    def _button_up_down(self, channel, click_type, was_queued, time_diff):
-        """Fire click event depending on click type."""
+    def _on_up_down(self, channel, click_type, was_queued, time_diff):
+        """Update device state, if event was not queued."""
         import pyflic
 
         if was_queued:
             return
 
-        # Set state
         self._is_down = click_type == pyflic.ClickType.ButtonDown
         self.schedule_update_ha_state()
 
-        # Fire appropriate event
-        now = datetime.now()
-        last_down_diff = (now - self._last_down).total_seconds()
-        last_click_diff = (now - self._last_click).total_seconds()
-
-        if self._is_down:
-            self._last_down = now
+    def _on_click(self, channel, click_type, was_queued, time_diff):
+        """Fire click event, if event was not queued."""
+        if was_queued:
             return
 
-        self._last_up = now
-        if last_down_diff >= self._long_click_threshold:
-            self._fire_event(EVENT_FLIC_LONG_CLICK)
-        elif last_click_diff <= self._double_click_threshold:
-            self._last_click = datetime.min
-            self._fire_event(EVENT_FLIC_DOUBLE_CLICK)
-        else:
-            self._last_click = now
-
-            @asyncio.coroutine
-            def async_defer_single_click_check():
-                """Defer check, whether click was a single click.
-
-                Check if the button has been clicked again in
-                a specific time interval to distinguish single clicks
-                from double clicks.
-                """
-                yield from asyncio.sleep(self._double_click_threshold)
-                if self._last_click == now:
-                    self._last_click = datetime.now()
-                    self._fire_event(EVENT_FLIC_SINGLE_CLICK)
-            fire_coroutine_threadsafe(async_defer_single_click_check(),
-                                      self._hass.loop)
-
-    def _fire_event(self, event):
-        """Fire the passed event with device-dependent data."""
-        self._hass.bus.fire(event, {
-            "name": self.name,
-            "address": self.address
+        self._hass.bus.fire(EVENT_NAME, {
+            EVENT_DATA_NAME: self.name,
+            EVENT_DATA_ADDRESS: self.address,
+            EVENT_DATA_TYPE: self._click_types[click_type]
         })
 
     def _connection_status_changed(self, channel,
