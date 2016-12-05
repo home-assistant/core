@@ -396,8 +396,7 @@ class Device(Entity):
             attr[ATTR_GPS_ACCURACY] = self.gps_accuracy
 
         if self.attributes:
-            for key, value in self.attributes.items():
-                attr[key] = value
+            attr.update(self.attributes)
 
         return attr
 
@@ -420,8 +419,7 @@ class Device(Entity):
         if battery:
             self.attributes[ATTR_BATTERY] = battery
         if attributes:
-            for key, value in attributes.items():
-                self.attributes[key] = value
+            self.attributea.update(attributes)
         self.gps = None
 
         if gps is not None:
