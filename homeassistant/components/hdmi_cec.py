@@ -6,11 +6,12 @@ https://home-assistant.io/components/hdmi_cec/
 """
 import asyncio
 import logging
+from collections import defaultdict
+from functools import reduce
 
 import cec
 import voluptuous as vol
-from collections import defaultdict
-from functools import reduce
+
 from homeassistant.components import discovery
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_ON, STATE_OFF,
                                  STATE_UNKNOWN, STATE_STANDBY)
@@ -120,6 +121,7 @@ ATTR_ATT = 'att'
 ATTR_RAW = 'raw'
 ATTR_DIR = 'dir'
 ATTR_ABT = 'abt'
+ATTR_NEW = 'new'
 
 
 def setup(hass, base_config):
@@ -147,8 +149,9 @@ def setup(hass, base_config):
                 if dev_type is None or not CEC_CLIENT.lib_cec.PollDevice(c):
                     continue
                 CEC_DEVICES[dev_type].append(c)
-            for c in ['switch']:
-                discovery.load_platform(hass, c, DOMAIN, hass_config=base_config)
+            _LOGGER.info("Found HDMI devices: %s", CEC_DEVICES)
+            for c in CEC_DEVICES.keys():
+                discovery.load_platform(hass, c, DOMAIN, discovered={ATTR_NEW: CEC_DEVICES[c]}, hass_config=base_config)
             return True
         else:
             return False
@@ -210,22 +213,22 @@ class CecDevice(Entity):
     @asyncio.coroutine
     def async_request_physical_address(self):
         self.cec_client.tx(
-            type('call', {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x83}}))
+            type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x83}}))
 
     @asyncio.coroutine
     def async_request_cec_vendor(self):
         self.cec_client.tx(
-            type('call', {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8C}}))
+            type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8C}}))
 
     @asyncio.coroutine
     def async_request_cec_osd_name(self):
         self.cec_client.tx(
-            type('call', {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x46}}))
+            type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x46}}))
 
     @asyncio.coroutine
     def async_request_cec_power_status(self):
         self.cec_client.tx(
-            type('call', {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8F}}))
+            type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8F}}))
 
     @callback
     def _update_callback(self, event):
@@ -291,10 +294,11 @@ class CecDevice(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "%s %d" % (DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address) if self._name is None \
-            else "%s %d (%s)" % (DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address,
-                                 self._name) if self.vendor_name is None or self.vendor_name == 'Unknown' \
-            else "%s %s" % (self.vendor_name, self._name)
+        return "%s %s" % (self.vendor_name, self._name) if self._name is not None and self.vendor_name is not None \
+                                                           and self.vendor_name != 'Unknown' \
+            else "%s %d" % (DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address) if self._name is None \
+            else "%s %d (%s)" % (
+            DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address, self._name)
 
     @property
     def state(self):
@@ -472,6 +476,7 @@ class CecClient:
         _LOGGER.info("[command received] %s", command)
         params = {ATTR_DIR: command[:2]}
         command = command[3:]
+        params[ATTR_RAW] = command
         cmd_chain = command.split(':')
         addr = cmd_chain.pop(0)
         params[ATTR_DST] = int(addr[1], 16)
@@ -492,7 +497,8 @@ class CecClient:
         self.cecconfig = cec.libcec_configuration()
         self.cecconfig.strDeviceName = "HA"
         self.cecconfig.bActivateSource = 0
-        self.cecconfig.bMonitorOnly = 1
+        self.cecconfig.bMonitorOnly = 0
+        self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
         self.cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
         self.hass = hass
         self.cecconfig.SetKeyPressCallback(self.cec_key_press_callback)
