@@ -73,10 +73,11 @@ class WelcomeData(object):
         self.auth = auth
         self.welcomedata = None
         self.camera_names = []
+        self.module_names = []
         self.home = home
 
     def get_camera_names(self):
-        """Return all module available on the API as a list."""
+        """Return all camera available on the API as a list."""
         self.camera_names = []
         self.update()
         if not self.home:
@@ -89,9 +90,11 @@ class WelcomeData(object):
         return self.camera_names
 
     def get_module_names(self, camera_name):
+        """Return all module available on the API as a list."""
         self.module_names = []
         self.update()
-        cam_id = self.welcomedata.cameraByName(camera = camera_name, home = self.home)['id']
+        cam_id = self.welcomedata.cameraByName(camera=camera_name,
+                                               home=self.home)['id']
         for module in self.welcomedata.modules.values():
             if cam_id == module['cam_id']:
                 self.module_names.append(module['name'])
@@ -101,9 +104,9 @@ class WelcomeData(object):
     def update(self):
         """Call the Netatmo API to update the data."""
         import lnetatmo
-        self.welcomedata = lnetatmo.WelcomeData(self.auth, size = 100)
+        self.welcomedata = lnetatmo.WelcomeData(self.auth, size=100)
 
     @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
     def update_event(self):
+        """Call the Netatmo API to update the list of events."""
         self.welcomedata.updateEvent(home=self.home)
-

@@ -28,7 +28,7 @@ SENSOR_TYPES = {
     "Motion": 'motion',
     "Tag Vibration": 'vibration',
     "Tag Open": 'opening',
- }
+}
 
 CONF_HOME = 'home'
 CONF_CAMERAS = 'cameras'
@@ -80,6 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                      module_name, home,
                                                      timeout, variable)])
 
+
 class WelcomeBinarySensor(BinarySensorDevice):
     """Represent a single binary sensor in a Netatmo Welcome device."""
 
@@ -95,7 +96,7 @@ class WelcomeBinarySensor(BinarySensorDevice):
         else:
             self._name = camera_name
         if module_name:
-            self._name += ' / ' +  module_name
+            self._name += ' / ' + module_name
         self._sensor_name = sensor
         self._name += ' ' + sensor
         camera_id = data.welcomedata.cameraByName(camera=camera_name,
@@ -103,7 +104,7 @@ class WelcomeBinarySensor(BinarySensorDevice):
         self._unique_id = "Welcome_binary_sensor {0} - {1}".format(self._name,
                                                                    camera_id)
         self.update()
-        self.scan_interval=15
+        self.scan_interval = 15
 
     @property
     def name(self):
