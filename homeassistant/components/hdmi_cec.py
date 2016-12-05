@@ -157,6 +157,15 @@ def setup(hass, base_config):
     return True
 
 
+def icon_by_type(cec_type):
+    return ICON_TV if cec_type == 0 \
+        else ICON_RECORDER if cec_type == 1 \
+        else ICON_TUNER if cec_type == 3 \
+        else ICON_PLAYER if cec_type == 4 \
+        else ICON_AUDIO if cec_type == 5 \
+        else ICON_UNKNOWN
+
+
 class CecDevice(Entity):
     """Representation of a HDMI CEC device entity."""
 
@@ -317,7 +326,7 @@ class CecDevice(Entity):
 
     @property
     def icon(self):
-        return self._icon_by_type(self._cec_type_id) if self._icon is None else self._icon
+        return icon_by_type(self._cec_type_id) if self._icon is None else self._icon
 
     @property
     def hidden(self):
@@ -326,15 +335,6 @@ class CecDevice(Entity):
     @property
     def available(self):
         return self._available
-
-    @staticmethod
-    def _icon_by_type(cec_type):
-        return ICON_TV if cec_type == 0 \
-            else ICON_RECORDER if cec_type == 1 \
-            else ICON_TUNER if cec_type == 3 \
-            else ICON_PLAYER if cec_type == 4 \
-            else ICON_AUDIO if cec_type == 5 \
-            else ICON_UNKNOWN
 
     @property
     def device_state_attributes(self):
