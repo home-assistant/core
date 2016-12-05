@@ -92,50 +92,56 @@ def setup(hass, config):
     def influx_event_listener(event):
         """Listen for new messages on the bus and sends them to Influx."""
         state = event.data.get('new_state')
-        if state is None or state.state in (
-                STATE_UNKNOWN, '', STATE_UNAVAILABLE) or \
-                state.entity_id in blacklist:
+        if state is None or state.entity_id in blacklist:
+            return
+
+        if len(whitelist) > 0 and state.entity_id not in whitelist:
             return
 
         try:
-            if len(whitelist) > 0 and state.entity_id not in whitelist:
-                return
-
             _state = state_helper.state_as_number(state)
         except ValueError:
             _state = state.state
 
-        measurement = state.attributes.get('unit_of_measurement')
-        if measurement in (None, ''):
-            if default_measurement:
-                measurement = default_measurement
-            else:
-                measurement = state.entity_id
-
+        # Create a counter for this state change
         json_body = [
             {
-                'measurement': measurement,
+                'measurement': "hass.state.count",
                 'tags': {
                     'domain': state.domain,
                     'entity_id': state.object_id,
                 },
                 'time': event.time_fired,
                 'fields': {
-                    'value': _state,
+                    'value': 1
                 }
             }
         ]
 
-        for key, value in state.attributes.items():
-            if key != 'unit_of_measurement':
-                if isinstance(value, (str, float, bool)) or \
-                        key.endswith('_id'):
-                    json_body[0]['fields'][key] = value
-                elif isinstance(value, int):
-                    # Prevent column data errors in influxDB.
-                    json_body[0]['fields'][key] = float(value)
-
         json_body[0]['tags'].update(tags)
+
+        state_fields = {}
+        if isinstance(_state, (int, float)):
+            state_fields['value'] = float(_state)
+
+        for key, value in state.attributes.items():
+            if isinstance(value, (int, float)):
+                state_fields[key] = float(value)
+
+        if len(state_fields) > 0:
+            json_body.append(
+                {
+                    'measurement': "hass.state",
+                    'tags': {
+                        'domain': state.domain,
+                        'entity_id': state.object_id
+                    },
+                    'time': event.time_fired,
+                    'fields': state_fields
+                }
+            )
+
+            json_body[1]['tags'].update(tags)
 
         try:
             influx.write_points(json_body)
