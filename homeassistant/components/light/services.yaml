@@ -82,6 +82,46 @@ toggle:
       description: Duration in seconds it takes to get to next state
       example: 60
 
+    rgb_color:
+      description: Color for the light in RGB-format
+      example: '[255, 100, 100]'
+
+    color_name:
+      description: A human readable color name
+      example: 'red'
+
+    xy_color:
+      description: Color for the light in XY-format
+      example: '[0.52, 0.43]'
+
+    color_temp:
+      description: Color temperature for the light in mireds (154-500)
+      example: '250'
+
+    white_value:
+      description: Number between 0..255 indicating level of white
+      example: '250'
+
+    brightness:
+      description: Number between 0..255 indicating brightness
+      example: 120
+
+    profile:
+      description: Name of a light profile to use
+      example: relax
+
+    flash:
+      description: If the light should flash
+      values:
+        - short
+        - long
+
+    effect:
+      description: Light effect
+      values:
+        - colorloop
+        - random
+
 hue_activate_scene:
   description: Activate a hue scene stored in the hue hub
 

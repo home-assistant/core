@@ -358,17 +358,17 @@ class ToggleEntity(Entity):
         yield from self.hass.loop.run_in_executor(
             None, ft.partial(self.turn_off, **kwargs))
 
-    def toggle(self) -> None:
+    def toggle(self, **kwargs) -> None:
         """Toggle the entity."""
         if self.is_on:
-            self.turn_off()
+            self.turn_off(**kwargs)
         else:
-            self.turn_on()
+            self.turn_on(**kwargs)
 
     @asyncio.coroutine
-    def async_toggle(self):
+    def async_toggle(self, **kwargs):
         """Toggle the entity."""
         if self.is_on:
-            yield from self.async_turn_off()
+            yield from self.async_turn_off(**kwargs)
         else:
-            yield from self.async_turn_on()
+            yield from self.async_turn_on(**kwargs)
