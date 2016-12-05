@@ -1,0 +1,29 @@
+# Sets up and builds python fliclib to be used with Home Assistant
+
+cd "$(dirname "$0")/.."
+
+if [ ! -d build ]; then
+  mkdir build
+fi
+
+cd build
+
+if [ -d fliclib-linux-hci ]; then
+  cd fliclib-linux-hci
+  git pull
+else
+  git clone --depth 1 https://github.com/50ButtonsEach/fliclib-linux-hci.git
+  cd fliclib-linux-hci
+fi
+cd "clientlib/python"
+
+# Write minimal setup.py since none is supplied by upstream
+cat > setup.py <<EOF
+from setuptools import setup
+
+setup(name='fliclib',
+      py_modules=['fliclib'],
+      )
+EOF
+
+python setup.py install
