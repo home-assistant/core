@@ -1,8 +1,8 @@
 """
-Support for Vera switches.
+Support for HDMI CEC devices as switches.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.vera/
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/hdmi_cec/
 """
 import logging
 
@@ -18,18 +18,18 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Vera switches."""
-    _LOGGER.info("setting CEC switches %s", CEC_DEVICES['switch'])
+    """Find and return HDMI devices as switches."""
+    _LOGGER.info("setting CEC switches %s", CEC_DEVICES[DOMAIN])
     add_devices(
         CecSwitch(hass, CEC_CLIENT, device) for
-        device in CEC_DEVICES['switch'])
+        device in CEC_DEVICES[DOMAIN])
 
 
 class CecSwitch(CecDevice, SwitchDevice):
-    """Representation of a Vera Switch."""
+    """Representation of a HDMI device as a Switch."""
 
     def __init__(self, hass, cec_client, logical):
-        """Initialize the Vera device."""
+        """Initialize the HDMI device."""
         _LOGGER.info("Creating %s switch %d", DOMAIN, logical)
         self._state = False
         CecDevice.__init__(self, hass, cec_client, logical)

@@ -17,42 +17,11 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_ON, STATE_OFF,
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
+DOMAIN = 'hdmi_cec'
+
 _LOGGER = logging.getLogger(__name__)
 
 CEC_CLIENT = {}
-ATTR_DEVICE = 'device'
-ATTR_COMMAND = 'command'
-ATTR_TYPE = 'type'
-ATTR_KEY = 'key'
-ATTR_DUR = 'dur'
-ATTR_SRC = 'src'
-ATTR_DST = 'dst'
-ATTR_CMD = 'cmd'
-ATTR_ATT = 'att'
-ATTR_RAW = 'raw'
-ATTR_DIR = 'dir'
-ATTR_ABT = 'abt'
-
-CMD_UP = 'up'
-CMD_DOWN = 'down'
-CMD_MUTE = 'mute'
-CMD_UNMUTE = 'unmute'
-CMD_MUTE_TOGGLE = 'toggle mute'
-
-EVENT_CEC_COMMAND_RECEIVED = 'cec_command_received'
-EVENT_CEC_KEYPRESS_RECEIVED = 'cec_keypress_received'
-
-DOMAIN = 'hdmi_cec'
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
-MAX_DEPTH = 4
-
-SERVICE_POWER_ON = 'turn_on'
-SERVICE_SELECT_DEVICE = 'select_device'
-SERVICE_SEND_COMMAND = 'send_command'
-SERVICE_STANDBY = 'turn_off'
-SERVICE_SELF = 'self'
-SERVICE_VOLUME = 'volume'
 
 VENDORS = {0x000039: 'Toshiba',
            0x0000F0: 'Samsung',
@@ -100,8 +69,8 @@ CEC_LOGICAL_TO_TYPE = [0,  # TV0
                        2,  # Free use
                        2  # Broadcast
                        ]
+
 DEVICE_TYPE_NAMES = ["TV", "Recorder", "UNKNOWN", "Tuner", "Playback", "Audio"]
-CEC_TYPE_TO_COMPONENT = ['media_player', 'media_player', 'switch', 'media_player', 'media_player', 'media_player']
 
 CEC_DEVICES = defaultdict(list)
 
@@ -111,6 +80,39 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_EXCLUDE, default=[]): vol.Schema([int])
     })
 }, extra=vol.REMOVE_EXTRA)
+
+CMD_UP = 'up'
+CMD_DOWN = 'down'
+CMD_MUTE = 'mute'
+CMD_UNMUTE = 'unmute'
+CMD_MUTE_TOGGLE = 'toggle mute'
+
+EVENT_CEC_COMMAND_RECEIVED = 'cec_command_received'
+EVENT_CEC_KEYPRESS_RECEIVED = 'cec_keypress_received'
+
+SERVICE_POWER_ON = 'turn_on'
+SERVICE_SELECT_DEVICE = 'select_device'
+SERVICE_SEND_COMMAND = 'send_command'
+SERVICE_STANDBY = 'turn_off'
+SERVICE_SELF = 'self'
+SERVICE_VOLUME = 'volume'
+
+ATTR_PHYSICAL_ADDRESS = 'physical_address'
+ATTR_TYPE_ID = 'type_id'
+ATTR_VENDOR_NAME = 'vendor_name'
+ATTR_VENDOR_ID = 'vendor_id'
+ATTR_DEVICE = 'device'
+ATTR_COMMAND = 'command'
+ATTR_TYPE = 'type'
+ATTR_KEY = 'key'
+ATTR_DUR = 'dur'
+ATTR_SRC = 'src'
+ATTR_DST = 'dst'
+ATTR_CMD = 'cmd'
+ATTR_ATT = 'att'
+ATTR_RAW = 'raw'
+ATTR_DIR = 'dir'
+ATTR_ABT = 'abt'
 
 
 def setup(hass, base_config):
@@ -134,7 +136,6 @@ def setup(hass, base_config):
             for c in range(15):
                 if exclude is not None and c in exclude:
                     continue
-                # dev_type = CEC_TYPE_TO_COMPONENT[CEC_LOGICAL_TO_TYPE[c]]
                 dev_type = 'switch'
                 if dev_type is None:
                     continue
@@ -151,8 +152,6 @@ def setup(hass, base_config):
 
 class CecDevice(Entity):
     """Representation of a HDMI CEC device entity."""
-
-    DEVICE_TYPE_NAMES = ["TV", "Recorder", "UNKNOWN", "Tuner", "Playback", "Audio"]
 
     def __init__(self, hass, cec_client, logical):
         """Initialize the device."""
@@ -171,7 +170,6 @@ class CecDevice(Entity):
         _LOGGER.info("Initializing CEC device %s", self.name)
         self.cec_client = cec_client
         hass.bus.listen(EVENT_CEC_COMMAND_RECEIVED, self._update_callback)
-        # hass.bus.listen(EVENT_CEC_KEYPRESS_RECEIVED, self._update_callback)
         self.update()
 
     @asyncio.coroutine
@@ -193,26 +191,26 @@ class CecDevice(Entity):
     @asyncio.coroutine
     def async_request_physical_address(self):
         self.cec_client.tx(
-            type('call', (object,), {'data': {'dst': self._logical_address, 'cmd': 0x83}}))
+            type('call', {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x83}}))
 
     @asyncio.coroutine
     def async_request_cec_vendor(self):
         self.cec_client.tx(
-            type('call', (object,), {'data': {'dst': self._logical_address, 'cmd': 0x8C}}))
+            type('call', {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8C}}))
 
     @asyncio.coroutine
     def async_request_cec_osd_name(self):
         self.cec_client.tx(
-            type('call', (object,), {'data': {'dst': self._logical_address, 'cmd': 0x46}}))
+            type('call', {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x46}}))
 
     @asyncio.coroutine
     def async_request_cec_power_status(self):
         self.cec_client.tx(
-            type('call', (object,), {'data': {'dst': self._logical_address, 'cmd': 0x8F}}))
+            type('call', {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8F}}))
 
     @callback
     def _update_callback(self, event):
-        if not ATTR_CMD in event.data:
+        if ATTR_CMD not in event.data:
             return
         cmd = event.data[ATTR_CMD]
         src = event.data[ATTR_SRC] if ATTR_SRC in event.data else cec.CECDEVICE_UNREGISTERED
@@ -336,18 +334,18 @@ class CecDevice(Entity):
         """Return the state attributes."""
         state_attr = {}
         if self.vendor_id is not None:
-            state_attr['vendor_id'] = self.vendor_id
-            state_attr['vendor_name'] = self.vendor_name
+            state_attr[ATTR_VENDOR_ID] = self.vendor_id
+            state_attr[ATTR_VENDOR_NAME] = self.vendor_name
         if self.type_id is not None:
-            state_attr['type_id'] = self.type_id
-            state_attr['type'] = self.type
+            state_attr[ATTR_TYPE_ID] = self.type_id
+            state_attr[ATTR_TYPE] = self.type
         if self.physical_address is not None:
-            state_attr['physical_address'] = self.physical_address
+            state_attr[ATTR_PHYSICAL_ADDRESS] = self.physical_address
         return state_attr
 
 
-def dst_from_data(call):
-    return cec.CECDEVICE_BROADCAST if call.data is None or call.data['dst'] is None else call.data['dst']
+def addr_from_data(call, type):
+    return cec.CECDEVICE_BROADCAST if call.data is None or call.data[type] is None else call.data[type]
 
 
 class CecClient:
@@ -390,11 +388,11 @@ class CecClient:
     def standby(self, call):
         """send a standby command"""
         _LOGGER.info("STANDBY %s", dir(call.data))
-        self.lib_cec.StandbyDevices(dst_from_data(call))
+        self.lib_cec.StandbyDevices(addr_from_data(call, ATTR_DST))
 
     def power_on(self, call):
         _LOGGER.info("POWER ON %s", dir(call.data))
-        self.lib_cec.PowerOnDevices(dst_from_data(call))
+        self.lib_cec.PowerOnDevices(addr_from_data(call, ATTR_DST))
 
     def volume(self, call):
         for cmd, att in call.data:
@@ -497,9 +495,7 @@ class CecClient:
         self.cecconfig = cec.libcec_configuration()
         self.cecconfig.strDeviceName = "HA"
         self.cecconfig.bActivateSource = 0
-        self.cecconfig.bMonitorOnly = 0
-        self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
-        self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_PLAYBACK_DEVICE)
+        self.cecconfig.bMonitorOnly = 1
         self.cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
         self.hass = hass
         _LOGGER.debug("Setting callbacks...")
