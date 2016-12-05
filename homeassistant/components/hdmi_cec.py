@@ -232,13 +232,13 @@ class CecDevice(Entity):
 
     @callback
     def _update_callback(self, event):
-        if ATTR_CMD not in event.data:
+        if ATTR_CMD not in event.data or ATTR_SRC not in event.data:
             return
         cmd = event.data[ATTR_CMD]
-        src = event.data[ATTR_SRC] if ATTR_SRC in event.data else cec.CECDEVICE_UNREGISTERED
-        dst = event.data[ATTR_DST] if ATTR_DST in event.data else cec.CECDEVICE_BROADCAST
+        src = event.data[ATTR_SRC]
+        dst = event.data[ATTR_DST] if ATTR_DST in event.data else None
         cmd_chain = event.data[ATTR_ATT] if ATTR_ATT in event.data else []
-        if src == self._logical_address or src == cec.CECDEVICE_BROADCAST:
+        if src == self._logical_address:
             if cmd == 0x90:
                 status = cmd_chain[0]
                 if status == 0x00:
@@ -479,8 +479,8 @@ class CecClient:
         params[ATTR_RAW] = command
         cmd_chain = command.split(':')
         addr = cmd_chain.pop(0)
-        params[ATTR_DST] = int(addr[1], 16)
         params[ATTR_SRC] = int(addr[0], 16)
+        params[ATTR_DST] = int(addr[1], 16)
         cmd_chain = list(map(lambda x: int(x, 16), cmd_chain))
         params[ATTR_CMD] = cmd_chain.pop(0)
         if params[ATTR_CMD] == 00:
