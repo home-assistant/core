@@ -47,7 +47,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device = INSTEON_LOCAL.dimmer(light['device_id'])
             device.beep()
             devs.append(InsteonLocalDimmerDevice(device, light['name']))
-
         add_devices(devs)
 
 
@@ -72,7 +71,7 @@ class InsteonLocalDimmerDevice(Light):
     @property
     def unique_id(self):
         """Return the ID of this insteon node."""
-        return self.node.deviceID
+        return self.node.deviceId
 
     @property
     def brightness(self):
