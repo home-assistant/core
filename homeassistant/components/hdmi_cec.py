@@ -344,8 +344,8 @@ class CecDevice(Entity):
         return state_attr
 
 
-def addr_from_data(call, type):
-    return cec.CECDEVICE_BROADCAST if call.data is None or call.data[type] is None else call.data[type]
+def addr_from_data(call, addr):
+    return cec.CECDEVICE_BROADCAST if call.data is None or call.data[addr] is None else call.data[addr]
 
 
 class CecClient:
@@ -451,19 +451,6 @@ class CecClient:
         if not self.lib_cec.Transmit(cmd):
             _LOGGER.warning("failed to send command")
 
-    def cec_log_callback(self, level, time, message):
-        """logging callback"""
-        if level == cec.CEC_LOG_ERROR:
-            levelstr = "ERROR:   "
-            _LOGGER.error(levelstr + "[" + str(time) + "]     " + message)
-        elif level == cec.CEC_LOG_WARNING:
-            levelstr = "WARNING: "
-            _LOGGER.warning(levelstr + "[" + str(time) + "]     " + message)
-        else:
-            levelstr = "UNKNOWN:   "
-            _LOGGER.error(levelstr + "[" + str(time) + "]     " + message)
-        return 0
-
     def cec_key_press_callback(self, key, duration):
         """key press callback"""
         _LOGGER.info("[key pressed] " + str(key))
@@ -498,8 +485,5 @@ class CecClient:
         self.cecconfig.bMonitorOnly = 1
         self.cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
         self.hass = hass
-        _LOGGER.debug("Setting callbacks...")
-        # self.cecconfig.SetLogCallback(self.cec_log_callback)
         self.cecconfig.SetKeyPressCallback(self.cec_key_press_callback)
         self.cecconfig.SetCommandCallback(self.cec_command_callback)
-        _LOGGER.debug("callbacks set")
