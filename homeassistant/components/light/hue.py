@@ -181,15 +181,13 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
                 lights[light_id].info = info
 
         for lightgroup_id, info in api_groups.items():
-            if info['type'] == 'LightGroup':
-                if lightgroup_id not in lightgroups:
-                    lightgroups[lightgroup_id] = \
-                        HueLightGroup(int(lightgroup_id), info,
-                                      bridge, update_lights,
-                                      bridge_type)
-                    new_lights.append(lightgroups[lightgroup_id])
-                else:
-                    lightgroups[lightgroup_id].info = info
+            if lightgroup_id not in lightgroups:
+                lightgroups[lightgroup_id] = HueLightGroup(
+                    int(lightgroup_id), info, bridge, update_lights,
+                    bridge_type)
+                new_lights.append(lightgroups[lightgroup_id])
+            else:
+                lightgroups[lightgroup_id].info = info
 
         if new_lights:
             add_devices(new_lights)
@@ -390,6 +388,21 @@ class HueLightGroup(Light):
     def name(self):
         """Return the name of the Hue light group."""
         return self.info.get('name', DEVICE_DEFAULT_NAME)
+
+    @property
+    def brightness(self):
+        """Return the brightness of this light between 0..255."""
+        return self.info['action'].get('bri')
+
+    @property
+    def xy_color(self):
+        """Return the XY color value."""
+        return self.info['action'].get('xy')
+
+    @property
+    def color_temp(self):
+        """Return the CT color value."""
+        return self.info['action'].get('ct')
 
     @property
     def is_on(self):
