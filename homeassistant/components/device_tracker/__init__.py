@@ -332,6 +332,7 @@ class Device(Entity):
     gps = None  # type: GPSType
     gps_accuracy = 0
     last_seen = None  # type: dt_util.dt.datetime
+    battery = None  # type: str
     attributes = None  # type: dict
     vendor = None  # type: str
 
@@ -369,6 +370,7 @@ class Device(Entity):
 
         self.away_hide = hide_if_away
         self.vendor = vendor
+        self._attributes = {}
 
     @property
     def name(self):
@@ -395,11 +397,15 @@ class Device(Entity):
             attr[ATTR_LONGITUDE] = self.gps[1]
             attr[ATTR_GPS_ACCURACY] = self.gps_accuracy
 
-        if self.attributes:
-            for key, value in self.attributes.items():
-                attr[key] = value
+        if self.battery:
+            attr[ATTR_BATTERY] = self.battery
 
         return attr
+
+    @property
+    def device_state_attributes(self):
+        """Return device state attributes."""
+        return self._attributes
 
     @property
     def hidden(self):
@@ -415,13 +421,10 @@ class Device(Entity):
         self.host_name = host_name
         self.location_name = location_name
         self.gps_accuracy = gps_accuracy or 0
-        if (battery or attributes) and self.attributes is None:
-            self.attributes = {}
-        if battery:
-            self.attributes[ATTR_BATTERY] = battery
+
         if attributes:
-            for key, value in attributes.items():
-                self.attributes[key] = value
+            self._attributes.update(attributes)
+
         self.gps = None
 
         if gps is not None:
