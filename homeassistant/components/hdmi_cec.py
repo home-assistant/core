@@ -172,29 +172,37 @@ class CecDevice(Entity):
 
     @asyncio.coroutine
     def async_update(self):
-        self._available = self.cec_client.lib_cec.PollDevice(self._logical_address)
+        yield self.async_update_availability()
         if self.available:
             _LOGGER.info("Updating status for device %s", hex(self._logical_address)[2:])
-            self._request_cec_power_status()
-            self._request_cec_osd_name()
-            self._request_cec_vendor()
-            self._request_physical_address()
+            yield self.async_request_cec_power_status()
+            yield self.async_request_cec_osd_name()
+            yield self.async_request_cec_vendor()
+            yield self.async_request_physical_address()
         else:
             _LOGGER.info("device not available. Not updating")
 
-    def _request_physical_address(self):
+    @asyncio.coroutine
+    def async_update_availability(self):
+        self._available = self.cec_client.lib_cec.PollDevice(self._logical_address)
+
+    @asyncio.coroutine
+    def async_request_physical_address(self):
         self.cec_client.tx(
             type('call', (object,), {'data': {'dst': hex(self._logical_address)[2:], 'cmd': '83'}}))
 
-    def _request_cec_vendor(self):
+    @asyncio.coroutine
+    def async_request_cec_vendor(self):
         self.cec_client.tx(
             type('call', (object,), {'data': {'dst': hex(self._logical_address)[2:], 'cmd': '8C'}}))
 
-    def _request_cec_osd_name(self):
+    @asyncio.coroutine
+    def async_request_cec_osd_name(self):
         self.cec_client.tx(
             type('call', (object,), {'data': {'dst': hex(self._logical_address)[2:], 'cmd': '46'}}))
 
-    def _request_cec_power_status(self):
+    @asyncio.coroutine
+    def async_request_cec_power_status(self):
         self.cec_client.tx(
             type('call', (object,), {'data': {'dst': hex(self._logical_address)[2:], 'cmd': '8F'}}))
 
@@ -240,7 +248,7 @@ class CecDevice(Entity):
         _LOGGER.info("***************** turn_on *****************")
         self.cec_client.lib_cec.PowerOnDevices(self._logical_address)
         self._state = STATE_ON
-        self.update()
+        self.async_update()
         self.schedule_update_ha_state()
 
     @asyncio.coroutine
@@ -249,7 +257,7 @@ class CecDevice(Entity):
         _LOGGER.info("***************** turn_off *****************")
         self.cec_client.lib_cec.StandbyDevices(self._logical_address)
         self._state = STATE_STANDBY
-        self.update()
+        self.async_update()
         self.schedule_update_ha_state()
 
     @property
@@ -335,6 +343,7 @@ class CecDevice(Entity):
 
 def dst_from_data(call):
     return cec.CECDEVICE_BROADCAST if call.data is None or call.data['dst'] is None else call.data['dst']
+
 
 class CecClient:
     cecconfig = {}
