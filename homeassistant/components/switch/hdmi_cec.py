@@ -30,6 +30,7 @@ class CecSwitch(CecDevice, SwitchDevice):
 
     def __init__(self, hass, cec_client, logical):
         """Initialize the Vera device."""
+        _LOGGER.info("Creating %s switch %d", DOMAIN, logical)
         self._state = False
         CecDevice.__init__(self, hass, cec_client, logical)
         self.entity_id = "%s.%s_%s" % (DOMAIN, 'hdmi', hex(self._logical_address)[2:])
