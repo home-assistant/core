@@ -37,12 +37,14 @@ def async_setup_platform(hass, config, async_add_entities,
     """Setup the flic platform."""
     import pyflic
 
-    # Initialize main flic client responsible for
+    # Initialize flic client responsible for
     # connecting to buttons and retrieving events
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    auto_scan = config.get(CONF_AUTO_SCAN)
+
     try:
-        main_client = pyflic.FlicClient(host, port)
+        client = pyflic.FlicClient(host, port)
     except ConnectionRefusedError:
         _LOGGER.error("Failed to connect to flic server.")
         return
@@ -50,29 +52,22 @@ def async_setup_platform(hass, config, async_add_entities,
     def new_button_callback(address):
         """Setup newly verified button as device in home assistant."""
         hass.add_job(async_setup_button(hass, config, async_add_entities,
-                                        main_client, address))
+                                        client, address))
 
-    main_client.on_new_verified_button = new_button_callback
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                               lambda event: main_client.close())
-    hass.loop.run_in_executor(None, main_client.handle_events)
-
-    # Initialize scan flic client responsible for scanning for new buttons
-    auto_scan = config.get(CONF_AUTO_SCAN)
+    client.on_new_verified_button = new_button_callback
     if auto_scan:
-        scan_client = pyflic.FlicClient(host, port)
-        start_scanning(hass, config, async_add_entities, scan_client)
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                   lambda event: scan_client.close())
-        hass.loop.run_in_executor(None, scan_client.handle_events)
+        start_scanning(hass, config, async_add_entities, client)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                               lambda event: client.close())
+    hass.loop.run_in_executor(None, client.handle_events)
 
     # Get addresses of already verified buttons
-    addresses = yield from async_get_verified_addresses(main_client)
+    addresses = yield from async_get_verified_addresses(client)
     if addresses:
         for address in addresses:
-            yield from async_setup_button(hass, config,
-                                          async_add_entities,
-                                          main_client, address)
+            yield from async_setup_button(hass, config, async_add_entities,
+                                          client, address)
 
 
 def start_scanning(hass, config, async_add_entities, client):
