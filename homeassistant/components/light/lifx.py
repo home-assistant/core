@@ -61,7 +61,7 @@ class LIFX(object):
     def __init__(self, add_devices_callback, server_addr=None,
                  broadcast_addr=None):
         """Initialize the light."""
-        import liffylights
+        import liffylights2
 
         self._devices = []
 
