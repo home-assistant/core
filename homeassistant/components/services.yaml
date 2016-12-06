@@ -153,3 +153,28 @@ verisure:
       device_serial:
         description: The serial number of the smartcam you want to capture an image from.
         example: '2DEU AT5Z'
+
+hdmi_cec:
+  send_command:
+    description: Sends CEC command into HDMI CEC capable adapter
+
+    fields:
+      raw:
+        description: Raw CEC command in format "00:00:00:00" where first two digits are source and destination, second byte is command and optional other bytes are command parameters. If raw command specified, other params are ignored.
+        example: '10:36'
+
+      src:
+        desctiption: Source of command
+        example: 1
+
+      dst:
+        description: Destination for command
+        example: 5
+
+      cmd:
+        description: Command
+        example: 144
+
+      att:
+        description: Optional parameters
+        example: [0, 2]
