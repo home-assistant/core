@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
+from homeassistant.util.temperature import convert
 
 DEPENDENCIES = ['nest']
 _LOGGER = logging.getLogger(__name__)
@@ -207,7 +208,7 @@ class NestThermostat(ClimateDevice):
         if self._is_locked:
             return self._locked_temperature[0]
         else:
-            return None
+            return convert(9, TEMP_CELSIUS, self.temperature_unit)
 
     @property
     def max_temp(self):
@@ -215,7 +216,7 @@ class NestThermostat(ClimateDevice):
         if self._is_locked:
             return self._locked_temperature[1]
         else:
-            return None
+            return convert(32, TEMP_CELSIUS, self.temperature_unit)
 
     def update(self):
         """Cache value from Python-nest."""
