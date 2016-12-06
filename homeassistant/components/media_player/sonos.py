@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_STOP)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
     CONF_HOSTS)
@@ -36,9 +36,10 @@ _SOCO_LOGGER.setLevel(logging.ERROR)
 _REQUESTS_LOGGER = logging.getLogger('requests')
 _REQUESTS_LOGGER.setLevel(logging.ERROR)
 
-SUPPORT_SONOS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA |\
-    SUPPORT_SEEK | SUPPORT_CLEAR_PLAYLIST | SUPPORT_SELECT_SOURCE
+SUPPORT_SONOS = SUPPORT_STOP | SUPPORT_PAUSE | SUPPORT_VOLUME_SET |\
+    SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
+    SUPPORT_PLAY_MEDIA | SUPPORT_SEEK | SUPPORT_CLEAR_PLAYLIST |\
+    SUPPORT_SELECT_SOURCE
 
 SERVICE_GROUP_PLAYERS = 'sonos_group_players'
 SERVICE_UNJOIN = 'sonos_unjoin'
@@ -289,6 +290,7 @@ class SonosDevice(MediaPlayerDevice):
         self._media_next_title = None
         self._support_previous_track = False
         self._support_next_track = False
+        self._support_stop = False
         self._support_pause = False
         self._current_track_uri = None
         self._current_track_is_radio_stream = False
@@ -433,6 +435,7 @@ class SonosDevice(MediaPlayerDevice):
 
                     support_previous_track = False
                     support_next_track = False
+                    support_stop = False
                     support_pause = False
 
                     if is_playing_tv:
@@ -450,6 +453,7 @@ class SonosDevice(MediaPlayerDevice):
                     )
                     support_previous_track = False
                     support_next_track = False
+                    support_stop = False
                     support_pause = False
 
                     # for radio streams we set the radio station name as the
@@ -506,6 +510,7 @@ class SonosDevice(MediaPlayerDevice):
                     )
                     support_previous_track = True
                     support_next_track = True
+                    support_stop = True
                     support_pause = True
 
                     position_info = self._player.avTransport.GetPositionInfo(
@@ -583,6 +588,7 @@ class SonosDevice(MediaPlayerDevice):
                 self._current_track_is_radio_stream = is_radio_stream
                 self._support_previous_track = support_previous_track
                 self._support_next_track = support_next_track
+                self._support_stop = support_stop
                 self._support_pause = support_pause
                 self._is_playing_tv = is_playing_tv
                 self._is_playing_line_in = is_playing_line_in
@@ -614,6 +620,7 @@ class SonosDevice(MediaPlayerDevice):
             self._current_track_is_radio_stream = False
             self._support_previous_track = False
             self._support_next_track = False
+            self._support_stop = False
             self._support_pause = False
             self._is_playing_tv = False
             self._is_playing_line_in = False
@@ -774,6 +781,9 @@ class SonosDevice(MediaPlayerDevice):
         if not self._support_next_track:
             supported = supported ^ SUPPORT_NEXT_TRACK
 
+        if not self._support_stop:
+            supported = supported ^ SUPPORT_STOP
+
         if not self._support_pause:
             supported = supported ^ SUPPORT_PAUSE
 
@@ -835,6 +845,13 @@ class SonosDevice(MediaPlayerDevice):
             self._coordinator.media_play()
         else:
             self._player.play()
+
+    def media_stop(self):
+        """Send stop command."""
+        if self._coordinator:
+            self._coordinator.media_stop()
+        else:
+            self._player.stop()
 
     def media_pause(self):
         """Send pause command."""
