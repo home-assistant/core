@@ -50,6 +50,7 @@ class CecSwitch(CecDevice, SwitchDevice):
         self._state = False
         CecDevice.__init__(self, hass, cec_client, logical)
         self.entity_id = "%s.%s_%s" % (DOMAIN, 'hdmi', hex(self._logical_address)[2:])
+        self.update()
 
     @property
     def is_standby(self):

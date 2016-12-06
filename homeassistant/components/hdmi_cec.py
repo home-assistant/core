@@ -237,11 +237,10 @@ class CecDevice(Entity):
         self._hidden = False
         self._name = None
         DEVICE_PRESENCE[logical] = True
-        self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         _LOGGER.info("Initializing CEC device %s", self.name)
         self.cec_client = cec_client
         hass.bus.listen(EVENT_CEC_COMMAND_RECEIVED, self._update_callback)
-        self.update()
+        self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
 
     @asyncio.coroutine
     def async_update(self):
@@ -394,7 +393,8 @@ class CecDevice(Entity):
 
 
 def addr_from_data(call, addr):
-    return cec.CECDEVICE_BROADCAST if call.data is None or call.data[addr] is None else call.data[addr]
+    return cec.CECDEVICE_BROADCAST if call.data is None or addr not in call.data or call.data[addr] is None else \
+        call.data[addr]
 
 
 class CecClient:
