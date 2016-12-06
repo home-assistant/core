@@ -15,7 +15,7 @@ from collections import defaultdict
 from functools import reduce
 from homeassistant.components import discovery
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_ON, STATE_OFF,
-                                 STATE_UNKNOWN, STATE_STANDBY)
+                                 STATE_UNKNOWN)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
@@ -149,11 +149,11 @@ def setup(hass, base_config):
 
             dev_type = 'switch'
             stop = threading.Event()
-            new_devices = filter(lambda x: CEC_CLIENT.lib_cec.PollDevice(x),
-                                 filter(lambda x: exclude is None or x not in exclude,
-                                        filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x],
-                                               range(15))))
             while True:
+                new_devices = filter(lambda x: CEC_CLIENT.lib_cec.PollDevice(x),
+                                     filter(lambda x: exclude is None or x not in exclude,
+                                            filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x],
+                                                   range(15))))
                 if new_devices:
                     discovery.load_platform(hass, dev_type, DOMAIN, discovered={ATTR_NEW: new_devices},
                                             hass_config=base_config)
@@ -280,24 +280,6 @@ class CecDevice(Entity):
                              src, dst, self._physical_address, self.type)
 
             self.schedule_update_ha_state(False)
-
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
-        """Turn device on."""
-        _LOGGER.info("***************** turn_on *****************")
-        self.cec_client.lib_cec.PowerOnDevices(self._logical_address)
-        self._state = STATE_ON
-        self.async_update()
-        self.schedule_update_ha_state()
-
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
-        """Turn device off."""
-        _LOGGER.info("***************** turn_off *****************")
-        self.cec_client.lib_cec.StandbyDevices(self._logical_address)
-        self._state = STATE_STANDBY
-        self.async_update()
-        self.schedule_update_ha_state()
 
     @property
     def is_on(self):

@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.hdmi_cec import CecDevice, CEC_CLIENT, ATTR_NEW, DEVICE_PRESENCE
 from homeassistant.components.switch import SwitchDevice, DOMAIN
-from homeassistant.const import STATE_OFF, STATE_STANDBY
+from homeassistant.const import STATE_OFF, STATE_STANDBY, STATE_ON
 
 DEPENDENCIES = ['hdmi_cec']
 
@@ -27,6 +27,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class CecSwitch(CecDevice, SwitchDevice):
     """Representation of a HDMI device as a Switch."""
+
+    def turn_on(self, **kwargs) -> None:
+        """Turn device on."""
+        _LOGGER.info("***************** turn_on *****************")
+        self.cec_client.lib_cec.PowerOnDevices(self._logical_address)
+        self._state = STATE_ON
+        self.async_update()
+        self.schedule_update_ha_state()
+
+    def turn_off(self, **kwargs) -> None:
+        """Turn device off."""
+        _LOGGER.info("***************** turn_off *****************")
+        self.cec_client.lib_cec.StandbyDevices(self._logical_address)
+        self._state = STATE_STANDBY
+        self.async_update()
+        self.schedule_update_ha_state()
 
     def __init__(self, hass, cec_client, logical):
         """Initialize the HDMI device."""
