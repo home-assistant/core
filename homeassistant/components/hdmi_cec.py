@@ -10,12 +10,14 @@ import threading
 import time
 
 import cec
+import os
 import voluptuous as vol
 from collections import defaultdict
 from functools import reduce
 from homeassistant.components import discovery
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_ON, STATE_OFF,
-                                 STATE_UNKNOWN)
+                                 STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
@@ -127,6 +129,32 @@ ATTR_DIR = 'dir'
 ATTR_ABT = 'abt'
 ATTR_NEW = 'new'
 
+SERVICE_SEND_COMMAND_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(ATTR_CMD): vol.Coerce(int),
+        vol.Optional(ATTR_SRC): vol.Coerce(int),
+        vol.Optional(ATTR_DST): vol.Coerce(int),
+        vol.Optional(ATTR_ATT): vol.Coerce(int),
+        vol.Optional(ATTR_RAW): vol.Coerce(str)
+    })
+}, extra=vol.REMOVE_EXTRA)
+
+SERVICE_VOLUME_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CMD_UP): vol.Coerce(int),
+        vol.Optional(CMD_DOWN): vol.Coerce(int),
+        vol.Optional(CMD_MUTE): None,
+        vol.Optional(CMD_UNMUTE): None,
+        vol.Optional(CMD_MUTE_TOGGLE): None
+    })
+}, extra=vol.REMOVE_EXTRA)
+
+SERVICE_POWER_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(ATTR_DST): vol.Coerce(int),
+    })
+}, extra=vol.REMOVE_EXTRA)
+
 
 def setup(hass, base_config):
     """Setup CEC capability."""
@@ -137,18 +165,26 @@ def setup(hass, base_config):
     global CEC_CLIENT
     CEC_CLIENT = CecClient(hass)
     exclude = config.get(CONF_EXCLUDE)
+    stop = threading.Event()
 
     def _start_cec(event):
         """Open CEC adapter."""
         # initialise libCEC and enter the main loop
         if CEC_CLIENT.init_lib_cec():
-            hass.services.register(DOMAIN, SERVICE_POWER_ON, CEC_CLIENT.power_on)
-            hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.standby)
-            hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.tx)
-            hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.volume)
+            descriptions = load_yaml_config_file(
+                os.path.join(os.path.dirname(__file__), 'services.yaml'))[DOMAIN]
+
+            hass.services.register(DOMAIN, SERVICE_POWER_ON, CEC_CLIENT.power_on, descriptions[SERVICE_POWER_ON],
+                                   SERVICE_POWER_SCHEMA)
+            hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.standby, descriptions[SERVICE_STANDBY],
+                                   SERVICE_POWER_SCHEMA)
+            hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.tx, descriptions[SERVICE_SEND_COMMAND],
+                                   SERVICE_SEND_COMMAND_SCHEMA)
+            hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.volume, descriptions[SERVICE_VOLUME],
+                                   SERVICE_VOLUME_SCHEMA)
 
             dev_type = 'switch'
-            stop = threading.Event()
+
             while True:
                 new_devices = filter(lambda x: CEC_CLIENT.lib_cec.PollDevice(x),
                                      filter(lambda x: exclude is None or x not in exclude,
@@ -167,7 +203,11 @@ def setup(hass, base_config):
         else:
             return False
 
+    def _stop_cec(event):
+        stop.set()
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_cec)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_cec)
     return True
 
 
