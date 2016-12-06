@@ -9,9 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN, CONF_HOST,
-    CONF_PORT, CONF_SSL, CONF_VERIFY_SSL, CONF_USERNAME, CONF_BLACKLIST,
-    CONF_PASSWORD, CONF_WHITELIST)
+    EVENT_STATE_CHANGED, CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL,
+    CONF_USERNAME, CONF_BLACKLIST, CONF_PASSWORD, CONF_WHITELIST)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
@@ -38,7 +37,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL): cv.boolean,
-        vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}):
             vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_WHITELIST, default=[]):
@@ -78,7 +76,6 @@ def setup(hass, config):
     blacklist = conf.get(CONF_BLACKLIST)
     whitelist = conf.get(CONF_WHITELIST)
     tags = conf.get(CONF_TAGS)
-    default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
 
     try:
         influx = InfluxDBClient(**kwargs)

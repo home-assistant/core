@@ -106,36 +106,43 @@ class TestInfluxDB(unittest.TestCase):
         """Test the event listener."""
         self._setup()
 
-        valid = {
-            '1': 1,
-            '1.0': 1.0,
-            STATE_ON: 1,
-            STATE_OFF: 0,
-            'foo': 'foo'
-        }
+        valid = {'1': 1, '1.0': 1.0, STATE_ON: 1, STATE_OFF: 0, 'str': 'str'}
         for in_, out in valid.items():
-            attrs = {
-                'unit_of_measurement': 'foobars',
-                'longitude': '1.1',
-                'latitude': '2.2'
-            }
-            state = mock.MagicMock(
-                state=in_, domain='fake', object_id='entity', attributes=attrs)
+            state = mock.MagicMock(state=in_, domain='fake',
+                                   object_id='entity')
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
-            body = [{
-                'measurement': 'foobars',
-                'tags': {
-                    'domain': 'fake',
-                    'entity_id': 'entity',
-                },
-                'time': 12345,
-                'fields': {
-                    'value': out,
-                    'longitude': '1.1',
-                    'latitude': '2.2'
-                },
-            }]
+
+            body = [
+                {
+                    'measurement': 'hass.state.count',
+                    'tags': {
+                        'domain': 'fake',
+                        'entity_id': 'entity',
+                    },
+                    'time': 12345,
+                    'fields': {
+                        'value': 1,
+                    }
+                }
+            ]
+
+            if isinstance(out, (int, float)):
+                body.append(
+                    {
+                        'measurement': 'hass.state',
+                        'tags': {
+                            'domain': 'fake',
+                            'entity_id': 'entity',
+                        },
+                        'time': 12345,
+                        'fields': {
+                            'value': float(out)
+                        }
+                    }
+                )
+
             self.handler_method(event)
+
             self.assertEqual(
                 mock_client.return_value.write_points.call_count, 1
             )
@@ -143,40 +150,7 @@ class TestInfluxDB(unittest.TestCase):
                 mock_client.return_value.write_points.call_args,
                 mock.call(body)
             )
-            mock_client.return_value.write_points.reset_mock()
 
-    def test_event_listener_no_units(self, mock_client):
-        """Test the event listener for missing units."""
-        self._setup()
-
-        for unit in (None, ''):
-            if unit:
-                attrs = {'unit_of_measurement': unit}
-            else:
-                attrs = {}
-            state = mock.MagicMock(
-                state=1, domain='fake', entity_id='entity-id',
-                object_id='entity', attributes=attrs)
-            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
-            body = [{
-                'measurement': 'entity-id',
-                'tags': {
-                    'domain': 'fake',
-                    'entity_id': 'entity',
-                },
-                'time': 12345,
-                'fields': {
-                    'value': 1,
-                },
-            }]
-            self.handler_method(event)
-            self.assertEqual(
-                mock_client.return_value.write_points.call_count, 1
-            )
-            self.assertEqual(
-                mock_client.return_value.write_points.call_args,
-                mock.call(body)
-            )
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_fail_write(self, mock_client):
@@ -191,39 +165,6 @@ class TestInfluxDB(unittest.TestCase):
             influx_client.exceptions.InfluxDBClientError('foo')
         self.handler_method(event)
 
-    def test_event_listener_states(self, mock_client):
-        """Test the event listener against ignored states."""
-        self._setup()
-
-        for state_state in (1, 'unknown', '', 'unavailable'):
-            state = mock.MagicMock(
-                state=state_state, domain='fake', entity_id='entity-id',
-                object_id='entity', attributes={})
-            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
-            body = [{
-                'measurement': 'entity-id',
-                'tags': {
-                    'domain': 'fake',
-                    'entity_id': 'entity',
-                },
-                'time': 12345,
-                'fields': {
-                    'value': 1,
-                },
-            }]
-            self.handler_method(event)
-            if state_state == 1:
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_count, 1
-                )
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_args,
-                    mock.call(body)
-                )
-            else:
-                self.assertFalse(mock_client.return_value.write_points.called)
-            mock_client.return_value.write_points.reset_mock()
-
     def test_event_listener_blacklist(self, mock_client):
         """Test the event listener against a blacklist."""
         self._setup()
@@ -233,18 +174,34 @@ class TestInfluxDB(unittest.TestCase):
                 state=1, domain='fake', entity_id='fake.{}'.format(entity_id),
                 object_id=entity_id, attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
-            body = [{
-                'measurement': 'fake.{}'.format(entity_id),
-                'tags': {
-                    'domain': 'fake',
-                    'entity_id': entity_id,
+
+            body = [
+                {
+                    'measurement': 'hass.state.count',
+                    'tags': {
+                        'domain': 'fake',
+                        'entity_id': entity_id,
+                    },
+                    'time': 12345,
+                    'fields': {
+                        'value': 1,
+                    }
                 },
-                'time': 12345,
-                'fields': {
-                    'value': 1,
-                },
-            }]
+                {
+                    'measurement': 'hass.state',
+                    'tags': {
+                        'domain': 'fake',
+                        'entity_id': entity_id,
+                    },
+                    'time': 12345,
+                    'fields': {
+                        'value': 1
+                    }
+                }
+            ]
+
             self.handler_method(event)
+
             if entity_id == 'ok':
                 self.assertEqual(
                     mock_client.return_value.write_points.call_count, 1
@@ -255,6 +212,7 @@ class TestInfluxDB(unittest.TestCase):
                 )
             else:
                 self.assertFalse(mock_client.return_value.write_points.called)
+
             mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_invalid_type(self, mock_client):
@@ -271,27 +229,43 @@ class TestInfluxDB(unittest.TestCase):
         for in_, out in valid.items():
             attrs = {
                 'unit_of_measurement': 'foobars',
-                'longitude': '1.1',
-                'latitude': '2.2',
                 'invalid_attribute': ['value1', 'value2']
             }
             state = mock.MagicMock(
                 state=in_, domain='fake', object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
-            body = [{
-                'measurement': 'foobars',
-                'tags': {
-                    'domain': 'fake',
-                    'entity_id': 'entity',
-                },
-                'time': 12345,
-                'fields': {
-                    'value': out,
-                    'longitude': '1.1',
-                    'latitude': '2.2'
-                },
-            }]
+
+            body = [
+                {
+                    'measurement': 'hass.state.count',
+                    'tags': {
+                        'domain': 'fake',
+                        'entity_id': 'entity',
+                    },
+                    'time': 12345,
+                    'fields': {
+                        'value': 1,
+                    }
+                }
+            ]
+
+            if isinstance(out, (int, float)):
+                body.append(
+                    {
+                        'measurement': 'hass.state',
+                        'tags': {
+                            'domain': 'fake',
+                            'entity_id': 'entity',
+                        },
+                        'time': 12345,
+                        'fields': {
+                            'value': float(out)
+                        }
+                    }
+                )
+
             self.handler_method(event)
+
             self.assertEqual(
                 mock_client.return_value.write_points.call_count, 1
             )
@@ -299,47 +273,5 @@ class TestInfluxDB(unittest.TestCase):
                 mock_client.return_value.write_points.call_args,
                 mock.call(body)
             )
-            mock_client.return_value.write_points.reset_mock()
 
-    def test_event_listener_default_measurement(self, mock_client):
-        """Test the event listener with a default measurement."""
-        config = {
-            'influxdb': {
-                'host': 'host',
-                'username': 'user',
-                'password': 'pass',
-                'default_measurement': 'state',
-                'blacklist': ['fake.blacklisted']
-            }
-        }
-        assert setup_component(self.hass, influxdb.DOMAIN, config)
-        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
-
-        for entity_id in ('ok', 'blacklisted'):
-            state = mock.MagicMock(
-                state=1, domain='fake', entity_id='fake.{}'.format(entity_id),
-                object_id=entity_id, attributes={})
-            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
-            body = [{
-                'measurement': 'state',
-                'tags': {
-                    'domain': 'fake',
-                    'entity_id': entity_id,
-                },
-                'time': 12345,
-                'fields': {
-                    'value': 1,
-                },
-            }]
-            self.handler_method(event)
-            if entity_id == 'ok':
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_count, 1
-                )
-                self.assertEqual(
-                    mock_client.return_value.write_points.call_args,
-                    mock.call(body)
-                )
-            else:
-                self.assertFalse(mock_client.return_value.write_points.called)
             mock_client.return_value.write_points.reset_mock()
