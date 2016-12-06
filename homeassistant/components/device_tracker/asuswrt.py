@@ -286,8 +286,10 @@ class AsusWrtDeviceScanner(object):
 
                 # match mac addresses to IP addresses in ARP table
                 for arp in result.arp:
-                    if match.group('mac').lower() in arp.decode('utf-8'):
-                        arp_match = _ARP_REGEX.search(arp.decode('utf-8'))
+                    if match.group('mac').lower() in \
+                            arp.decode('utf-8').lower():
+                        arp_match = _ARP_REGEX.search(
+                            arp.decode('utf-8').lower())
                         if not arp_match:
                             _LOGGER.warning('Could not parse arp row: %s', arp)
                             continue
