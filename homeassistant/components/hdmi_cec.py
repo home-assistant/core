@@ -6,12 +6,13 @@ https://home-assistant.io/components/hdmi_cec/
 """
 import asyncio
 import logging
-from collections import defaultdict
-from functools import reduce
+import threading
+import time
 
 import cec
 import voluptuous as vol
-
+from collections import defaultdict
+from functools import reduce
 from homeassistant.components import discovery
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_ON, STATE_OFF,
                                  STATE_UNKNOWN, STATE_STANDBY)
@@ -23,6 +24,8 @@ DOMAIN = 'hdmi_cec'
 _LOGGER = logging.getLogger(__name__)
 
 CEC_CLIENT = {}
+
+SCAN_INTERVAL = 30
 
 VENDORS = {0x000039: 'Toshiba',
            0x0000F0: 'Samsung',
@@ -81,6 +84,7 @@ ICON_RECORDER = 'mdi:microphone'
 ICON_TV = 'mdi:television'
 
 CEC_DEVICES = defaultdict(list)
+DEVICE_PRESENCE = {}
 
 CONF_EXCLUDE = 'exclude'
 CONFIG_SCHEMA = vol.Schema({
@@ -142,17 +146,24 @@ def setup(hass, base_config):
             hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.standby)
             hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.tx)
             hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.volume)
-            for c in range(15):
-                if exclude is not None and c in exclude:
-                    continue
-                dev_type = 'switch'
-                if dev_type is None or not CEC_CLIENT.lib_cec.PollDevice(c):
-                    continue
-                CEC_DEVICES[dev_type].append(c)
-            _LOGGER.info("Found HDMI devices: %s", CEC_DEVICES)
-            for c in CEC_DEVICES.keys():
-                discovery.load_platform(hass, c, DOMAIN, discovered={ATTR_NEW: CEC_DEVICES[c]}, hass_config=base_config)
-            return True
+
+            dev_type = 'switch'
+            stop = threading.Event()
+            new_devices = filter(lambda x: CEC_CLIENT.lib_cec.PollDevice(x),
+                                 filter(lambda x: exclude is None or x not in exclude,
+                                        filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x],
+                                               range(15))))
+            while True:
+                if new_devices:
+                    discovery.load_platform(hass, dev_type, DOMAIN, discovered={ATTR_NEW: new_devices},
+                                            hass_config=base_config)
+                seconds_since_scan = 0
+                while seconds_since_scan < SCAN_INTERVAL:
+                    if stop.is_set():
+                        return
+
+                    time.sleep(1)
+                    seconds_since_scan += 1
         else:
             return False
 
@@ -185,6 +196,7 @@ class CecDevice(Entity):
         self._available = False
         self._hidden = False
         self._name = None
+        DEVICE_PRESENCE[logical] = True
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         _LOGGER.info("Initializing CEC device %s", self.name)
         self.cec_client = cec_client
@@ -208,6 +220,7 @@ class CecDevice(Entity):
         self._available = self.cec_client.lib_cec.PollDevice(self._logical_address)
         if not self._available:
             self.remove()
+            DEVICE_PRESENCE[self._logical_address] = False
             self.schedule_update_ha_state()
 
     @asyncio.coroutine

@@ -6,7 +6,7 @@ https://home-assistant.io/components/hdmi_cec/
 """
 import logging
 
-from homeassistant.components.hdmi_cec import CecDevice, CEC_CLIENT, ATTR_NEW
+from homeassistant.components.hdmi_cec import CecDevice, CEC_CLIENT, ATTR_NEW, DEVICE_PRESENCE
 from homeassistant.components.switch import SwitchDevice, DOMAIN
 from homeassistant.const import STATE_OFF, STATE_STANDBY
 
@@ -21,7 +21,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return HDMI devices as switches."""
     if ATTR_NEW in discovery_info:
         _LOGGER.info("Setting up devices %s", discovery_info[ATTR_NEW])
-        add_devices(CecSwitch(hass, CEC_CLIENT, device) for device in discovery_info[ATTR_NEW])
+        add_devices(CecSwitch(hass, CEC_CLIENT, device) for device in
+                    filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x], discovery_info[ATTR_NEW]))
 
 
 class CecSwitch(CecDevice, SwitchDevice):
