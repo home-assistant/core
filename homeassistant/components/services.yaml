@@ -178,3 +178,33 @@ hdmi_cec:
       att:
         description: Optional parameters
         example: [0, 2]
+
+  turn_off:
+    description: turn off specific device
+
+    fields:
+      dst:
+        description: Target device to be turned off
+        example: 5
+
+  turn_on:
+    description: turn on specific device
+
+    fields:
+      dst:
+        description: Target device to be turned on
+        example: 5
+
+  volume:
+    description: Increase or decrease volume of systm
+
+    fields:
+      up:
+        description: Increases volume x times.
+        example: 3
+      down:
+        description: Decreases volume x times.
+        example: 3
+      mute: Mutes audio system. Value is ignored.
+      unmute: Unmutes audio system. Value is ignored.
+      toggle mute: Toggles mute of audio system. Value is ignored.
