@@ -185,7 +185,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
                 lightgroups[lightgroup_id] = HueLightGroup(
                     int(lightgroup_id), info, bridge, update_lights,
                     bridge_type)
-                new_lights.append(lightgroups[lightgroup_id])
+                new_lightgroups.append(lightgroups[lightgroup_id])
             else:
                 lightgroups[lightgroup_id].info = info
 
@@ -253,6 +253,8 @@ class HueLight(Light):
         self.update_lights = update_lights
         self.bridge_type = bridge_type
         self.allow_unreachable = allow_unreachable
+
+        self._command_func = self.bridge.set_light
 
     @property
     def unique_id(self):
@@ -337,7 +339,7 @@ class HueLight(Light):
         elif self.bridge_type == 'hue':
             command['effect'] = 'none'
 
-        self.bridge.set_light(self.light_id, command)
+        self._command_func(self.light_id, command)
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
@@ -359,39 +361,26 @@ class HueLight(Light):
         elif self.bridge_type == 'hue':
             command['alert'] = 'none'
 
-        self.bridge.set_light(self.light_id, command)
+        self._command_func(self.light_id, command)
 
     def update(self):
         """Synchronize state with bridge."""
         self.update_lights(no_throttle=True)
 
 
-class HueLightGroup(Light):
+class HueLightGroup(HueLight):
     """Representation of a Hue light group."""
 
-    def __init__(self, lightgroup_id, info, bridge, update_lights,
+    def __init__(self, light_id, info, bridge, update_lights,
                  bridge_type):
         """Initialize the light group."""
-        self.lightgroup_id = lightgroup_id
-        self.info = info
-        self.bridge = bridge
-        self.update_lights = update_lights
-        self.bridge_type = bridge_type
-
-    @property
-    def unique_id(self):
-        """Return the ID of this Hue light group."""
-        return "{}.{}".format(
-            self.__class__, self.info.get('uniqueid', self.name))
-
-    @property
-    def name(self):
-        """Return the name of the Hue light group."""
-        return self.info.get('name', DEVICE_DEFAULT_NAME)
+        super().__init__(light_id, info, bridge, update_lights,
+                         bridge_type, False)
+        self._command_func = self.bridge.set_group
 
     @property
     def brightness(self):
-        """Return the brightness of this light between 0..255."""
+        """Return the brightness of this light group between 0..255."""
         return self.info['action'].get('bri')
 
     @property
@@ -410,78 +399,3 @@ class HueLightGroup(Light):
         self.update_lights()
 
         return self.info['state']['any_on']
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_HUE
-
-    def turn_on(self, **kwargs):
-        """Turn the specified or all lights on."""
-        command = {'on': True}
-
-        if ATTR_TRANSITION in kwargs:
-            command['transitiontime'] = kwargs[ATTR_TRANSITION] * 10
-
-        if ATTR_XY_COLOR in kwargs:
-            command['xy'] = kwargs[ATTR_XY_COLOR]
-        elif ATTR_RGB_COLOR in kwargs:
-            xyb = color_util.color_RGB_to_xy(
-                *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-            command['xy'] = xyb[0], xyb[1]
-            command['bri'] = xyb[2]
-
-        if ATTR_BRIGHTNESS in kwargs:
-            command['bri'] = kwargs[ATTR_BRIGHTNESS]
-
-        if ATTR_COLOR_TEMP in kwargs:
-            command['ct'] = kwargs[ATTR_COLOR_TEMP]
-
-        flash = kwargs.get(ATTR_FLASH)
-
-        if flash == FLASH_LONG:
-            command['alert'] = 'lselect'
-            del command['on']
-        elif flash == FLASH_SHORT:
-            command['alert'] = 'select'
-            del command['on']
-        elif self.bridge_type == 'hue':
-            command['alert'] = 'none'
-
-        effect = kwargs.get(ATTR_EFFECT)
-
-        if effect == EFFECT_COLORLOOP:
-            command['effect'] = 'colorloop'
-        elif effect == EFFECT_RANDOM:
-            command['hue'] = random.randrange(0, 65535)
-            command['sat'] = random.randrange(150, 254)
-        elif self.bridge_type == 'hue':
-            command['effect'] = 'none'
-
-        self.bridge.set_group(self.lightgroup_id, command)
-
-    def turn_off(self, **kwargs):
-        """Turn the specified or all lights off."""
-        command = {'on': False}
-
-        if ATTR_TRANSITION in kwargs:
-            # Transition time is in 1/10th seconds and cannot exceed
-            # 900 seconds.
-            command['transitiontime'] = min(9000, kwargs[ATTR_TRANSITION] * 10)
-
-        flash = kwargs.get(ATTR_FLASH)
-
-        if flash == FLASH_LONG:
-            command['alert'] = 'lselect'
-            del command['on']
-        elif flash == FLASH_SHORT:
-            command['alert'] = 'select'
-            del command['on']
-        elif self.bridge_type == 'hue':
-            command['alert'] = 'none'
-
-        self.bridge.set_group(self.lightgroup_id, command)
-
-    def update(self):
-        """Synchronize state with bridge."""
-        self.update_lights(no_throttle=True)
