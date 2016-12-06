@@ -457,7 +457,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0))
         assert len(config) == 0
-        
+
     def test_see_state(self):
         """Test device tracker see records state correctly."""
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
