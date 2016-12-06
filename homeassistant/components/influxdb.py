@@ -60,8 +60,14 @@ def setup(hass, config):
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
     database = conf.get(CONF_DB_NAME)
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
+    if conf.get(CONF_USERNAME) is None:
+        username = 'root'
+    else:
+        username = conf.get(CONF_USERNAME)
+    if conf.get(CONF_PASSWORD) is None:
+        password = 'root'
+    else:
+        password = conf.get(CONF_PASSWORD)
     ssl = conf.get(CONF_SSL)
     verify_ssl = conf.get(CONF_VERIFY_SSL)
     blacklist = conf.get(CONF_BLACKLIST)
