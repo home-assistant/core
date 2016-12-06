@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 import urllib
 
-from unifi import controller
+from pyunifi import controller
 import voluptuous as vol
 
 from tests.common import get_test_home_assistant
