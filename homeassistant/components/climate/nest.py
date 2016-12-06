@@ -82,6 +82,7 @@ class NestThermostat(ClimateDevice):
         self._temperature = None
         self._temperature_scale = None
         self._mode = None
+        self._hvac_state = None
         self._fan = None
         self._eco_temperature = None
         self._is_locked = None
@@ -113,6 +114,14 @@ class NestThermostat(ClimateDevice):
             return STATE_AUTO
         else:
             return STATE_UNKNOWN
+
+    @property
+    def current_hvac_state(self):
+        """Return the currently active HVAC state. This differs from the
+        current mode in that while the thermostat might be set to Heat it
+        may not currently be blowing heat. The mode indicates it is set to
+        Heat, the state indicates whether or not it is actively heating."""
+        return self._hvac_state
 
     @property
     def target_temperature(self):
@@ -220,6 +229,7 @@ class NestThermostat(ClimateDevice):
         self._humidity = self.device.humidity,
         self._temperature = self.device.temperature
         self._mode = self.device.mode
+        self._hvac_state = self.device.hvac_state
         self._target_temperature = self.device.target
         self._fan = self.device.fan
         self._away = self.structure.away == 'away'
