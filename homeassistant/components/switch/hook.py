@@ -49,7 +49,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("Failed authentication API call: %s", error)
         return False
     finally:
-        yield from response.release()
+        if response is not None:
+            yield from response.release()
 
     try:
         token = data['data']['token']
@@ -70,7 +71,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("Failed getting devices: %s", error)
         return False
     finally:
-        yield from response.release()
+        if response is not None:
+            yield from response.release()
 
     yield from async_add_devices(
         HookSmartHome(
@@ -124,7 +126,8 @@ class HookSmartHome(SwitchDevice):
             return False
 
         finally:
-            yield from response.release()
+            if response is not None:
+                yield from response.release()
 
         _LOGGER.debug("Got: %s", data)
         return data['return_value'] == '1'
