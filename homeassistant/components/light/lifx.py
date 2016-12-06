@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['liffylights2==0.1.0']
+REQUIREMENTS = ['liffylights22==0.1.0']
 
 BYTE_MAX = 255
 
@@ -61,13 +61,13 @@ class LIFX(object):
     def __init__(self, add_devices_callback, server_addr=None,
                  broadcast_addr=None):
         """Initialize the light."""
-        import liffylights2
+        import liffylights22
 
         self._devices = []
 
         self._add_devices_callback = add_devices_callback
 
-        self._liffylights = liffylights.LiffyLights(
+        self._liffylights2 = liffylights2.LiffyLights(
             self.on_device, self.on_power, self.on_color, server_addr,
             broadcast_addr)
 
@@ -88,7 +88,7 @@ class LIFX(object):
             _LOGGER.debug("new bulb %s %s %d %d %d %d %d",
                           ipaddr, name, power, hue, sat, bri, kel)
             bulb = LIFXLight(
-                self._liffylights, ipaddr, name, power, hue, sat, bri, kel)
+                self._liffylights2, ipaddr, name, power, hue, sat, bri, kel)
             self._devices.append(bulb)
             self._add_devices_callback([bulb])
         else:
@@ -121,7 +121,7 @@ class LIFX(object):
 
     def probe(self, address=None):
         """Probe the light."""
-        self._liffylights.probe(address)
+        self._liffylights2.probe(address)
 
 
 def convert_rgb_to_hsv(rgb):
@@ -143,7 +143,7 @@ class LIFXLight(Light):
         """Initialize the light."""
         _LOGGER.debug("LIFXLight: %s %s", ipaddr, name)
 
-        self._liffylights = liffy
+        self._liffylights2 = liffy
         self._ip = ipaddr
         self.set_name(name)
         self.set_power(power)
@@ -232,9 +232,9 @@ class LIFXLight(Light):
                       hue, saturation, brightness, kelvin, fade)
 
         if self._power == 0:
-            self._liffylights.set_power(self._ip, 65535, fade)
+            self._liffylights2.set_power(self._ip, 65535, fade)
 
-        self._liffylights.set_color(self._ip, hue, saturation,
+        self._liffylights2.set_color(self._ip, hue, saturation,
                                     brightness, kelvin, fade)
 
     def turn_off(self, **kwargs):
@@ -245,7 +245,7 @@ class LIFXLight(Light):
             fade = 0
 
         _LOGGER.debug("turn_off: %s %d", self._ip, fade)
-        self._liffylights.set_power(self._ip, 0, fade)
+        self._liffylights2.set_power(self._ip, 0, fade)
 
     def set_name(self, name):
         """Set name of the light."""
