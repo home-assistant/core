@@ -10,8 +10,7 @@ RUN pip3 install --no-cache-dir colorlog cython
 
 # For the nmap tracker, bluetooth tracker, Z-Wave, tellstick
 RUN echo "deb http://download.telldus.com/debian/ stable main" >> /etc/apt/sources.list.d/telldus.list && \
-    wget http://download.telldus.se/debian/telldus-public.key && \
-    apt-key add telldus-public.key && \ 
+    wget -qO - http://download.telldus.se/debian/telldus-public.key | apt-key add - && \
     apt-get update && \
     apt-get install -y --no-install-recommends nmap net-tools cython3 libudev-dev sudo libglib2.0-dev bluetooth libbluetooth-dev \
             libtelldus-core2 libtelldus-core-dev && \
