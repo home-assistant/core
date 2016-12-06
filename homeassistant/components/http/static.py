@@ -63,6 +63,7 @@ class GzipFileSender(FileSender):
 
 
 GZIP_FILE_SENDER = GzipFileSender()
+FILE_SENDER = FileSender()
 
 
 @asyncio.coroutine
