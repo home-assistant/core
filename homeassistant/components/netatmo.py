@@ -73,8 +73,8 @@ class CameraData(object):
         """Initialize the data object."""
         self.auth = auth
         self.camera_data = None
-        self.updatedevents = None
         self.camera_names = []
+        self.module_names = []
         self.home = home
 
     def get_camera_names(self):
@@ -90,6 +90,17 @@ class CameraData(object):
                 self.camera_names.append(camera['name'])
         return self.camera_names
 
+    def get_module_names(self, camera_name):
+        """Return all module available on the API as a list."""
+        self.module_names = []
+        self.update()
+        cam_id = self.camera_data.cameraByName(camera=camera_name,
+                                               home=self.home)['id']
+        for module in self.camera_data.modules.values():
+            if cam_id == module['cam_id']:
+                self.module_names.append(module['name'])
+        return self.module_names
+
     def get_camera_type(self, camera=None, home=None, cid=None):
         """Return all module available on the API as a list."""
         camera_type = None
@@ -101,9 +112,8 @@ class CameraData(object):
     def update(self):
         """Call the Netatmo API to update the data."""
         import lnetatmo
-        self.camera_data = lnetatmo.CameraData(self.auth)
-        # self.updatedevents = lnetatmo.UpdateEvent(self.auth, home=self.home)
+        self.camera_data = lnetatmo.CameraData(self.auth, size=100)
 
-    # @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
-    # def update_event(self):
-    #     self.eventdata = self.camera_data.updateEvent(home=self.home)
+    @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
+    def update_event(self):
+        self.camera_data.updateEvent(home=self.home)
