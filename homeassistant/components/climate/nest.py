@@ -207,7 +207,7 @@ class NestThermostat(ClimateDevice):
         if self._is_locked:
             return self._locked_temperature[0]
         else:
-            return None
+            return self.device.eco_temperature.low
 
     @property
     def max_temp(self):
@@ -215,7 +215,7 @@ class NestThermostat(ClimateDevice):
         if self._is_locked:
             return self._locked_temperature[1]
         else:
-            return None
+            return self.device.target_temperature.high
 
     def update(self):
         """Cache value from Python-nest."""
