@@ -436,11 +436,9 @@ class CecClient:
 
     def standby(self, call):
         """send a standby command"""
-        _LOGGER.info("STANDBY %s", dir(call.data))
         self.lib_cec.StandbyDevices(addr_from_data(call, ATTR_DST))
 
     def power_on(self, call):
-        _LOGGER.info("POWER ON %s", dir(call.data))
         self.lib_cec.PowerOnDevices(addr_from_data(call, ATTR_DST))
 
     def volume(self, call):
