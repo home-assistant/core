@@ -28,6 +28,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         self._supported_media_commands = 0
         self._source = None
         self._tracks = 12
+        self._media_image_url = None
 
         self.service_calls = {
             'turn_on': mock_service(
@@ -91,6 +92,11 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
     def supported_media_commands(self):
         """Supported media commands flag."""
         return self._supported_media_commands
+
+    @property
+    def media_image_url(self):
+        """Image url of current playing media."""
+        return self._media_image_url
 
     def turn_on(self):
         """Mock turn_on function."""
@@ -399,6 +405,26 @@ class TestMediaPlayer(unittest.TestCase):
         self.mock_mp_1.update_ha_state()
         ump.update()
         self.assertEqual(1, ump.volume_level)
+
+    def test_media_image_url(self):
+        """Test media_image_url property."""
+        TEST_URL = "test_url"
+        config = self.config_children_only
+        universal.validate_config(config)
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
+        ump.update()
+
+        self.assertEqual(None, ump.media_image_url)
+
+        self.mock_mp_1._state = STATE_PLAYING
+        self.mock_mp_1._media_image_url = TEST_URL
+        self.mock_mp_1.update_ha_state()
+        ump.update()
+        # mock_mp_1 will convert the url to the api proxy url. This test
+        # ensures ump passes through the same url without an additional proxy.
+        self.assertEqual(self.mock_mp_1.entity_picture, ump.entity_picture)
 
     def test_is_volume_muted_children_only(self):
         """Test is volume muted property w/ children only."""
