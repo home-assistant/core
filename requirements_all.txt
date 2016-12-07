@@ -476,6 +476,9 @@ python-telegram-bot==5.2.0
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
 
+# homeassistant.components.media_player.vlc
+python-vlc==1.1.2
+
 # homeassistant.components.wink
 python-wink==0.11.0
 
