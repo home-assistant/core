@@ -250,7 +250,8 @@ def async_setup(hass, config):
             if not light.should_poll:
                 continue
 
-            update_coro = light.async_update_ha_state(True)
+            update_coro = hass.loop.create_task(
+                light.async_update_ha_state(True))
             if hasattr(light, 'async_update'):
                 update_tasks.append(hass.loop.create_task(update_coro))
             else:

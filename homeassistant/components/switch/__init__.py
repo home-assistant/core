@@ -95,7 +95,8 @@ def async_setup(hass, config):
             if not switch.should_poll:
                 continue
 
-            update_coro = switch.async_update_ha_state(True)
+            update_coro = hass.loop.create_task(
+                switch.async_update_ha_state(True))
             if hasattr(switch, 'async_update'):
                 update_tasks.append(hass.loop.create_task(update_coro))
             else:
