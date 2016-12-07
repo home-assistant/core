@@ -195,10 +195,8 @@ class Thermostat(ClimateDevice):
         mode = self.mode
         events = self.thermostat['events']
         for event in events:
-            if event['running'] and event['holdClimateRef'] == 'away':
-                mode = event['holdClimateRef']
-                break
-            elif event['running'] and event['type'] == 'autoAway':
+            if event['holdClimateRef'] == 'away' or \
+               event['type'] == 'autoAway':
                 mode = "away"
                 break
         return 'away' in mode
