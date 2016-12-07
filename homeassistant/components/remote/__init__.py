@@ -98,7 +98,6 @@ def async_setup(hass, config):
         device = service.data.get(ATTR_DEVICE)
         command = service.data.get(ATTR_COMMAND)
 
-        update_tasks = []
         for remote in target_remotes:
             if service.service == SERVICE_TURN_ON:
                 yield from remote.async_turn_on(activity=activity_id)
@@ -108,12 +107,17 @@ def async_setup(hass, config):
             else:
                 yield from remote.async_turn_off()
 
-            if remote.should_poll:
-                update_coro = remote.async_update_ha_state(True)
-                if hasattr(remote, 'async_update'):
-                    update_tasks.append(hass.loop.create_task(update_coro))
-                else:
-                    yield from update_coro
+        update_tasks = []
+        for remote in target_remotes:
+            if not remote.should_poll:
+                continue
+
+            update_coro = hass.loop.create_task(
+                remote.async_update_ha_state(True))
+            if hasattr(remote, 'async_update'):
+                update_tasks.append(hass.loop.create_task(update_coro))
+            else:
+                yield from update_coro
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
