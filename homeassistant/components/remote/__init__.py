@@ -4,7 +4,9 @@ Component to interface with universal remote control devices.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/remote/
 """
+import asyncio
 from datetime import timedelta
+import functools as ft
 import logging
 import os
 
@@ -80,21 +82,17 @@ def send_command(hass, device, command, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
 
 
-def sync(hass, entity_id=None):
-    """Sync remote device."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_SYNC, data)
-
-
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Track states and offer events for remotes."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_REMOTES)
-    component.setup(config)
+    yield from component.async_setup(config)
 
-    def handle_remote_service(service):
+    @asyncio.coroutine
+    def async_handle_remote_service(service):
         """Handle calls to the remote services."""
-        target_remotes = component.extract_from_service(service)
+        target_remotes = component.async_extract_from_service(service)
 
         activity_id = service.data.get(ATTR_ACTIVITY)
         device = service.data.get(ATTR_DEVICE)
@@ -102,28 +100,43 @@ def setup(hass, config):
 
         for remote in target_remotes:
             if service.service == SERVICE_TURN_ON:
-                remote.turn_on(activity=activity_id)
+                yield from remote.async_turn_on(activity=activity_id)
             elif service.service == SERVICE_SEND_COMMAND:
-                remote.send_command(device=device, command=command)
-            elif service.service == SERVICE_SYNC:
-                remote.sync()
+                yield from remote.async_send_command(
+                    device=device, command=command)
             else:
-                remote.turn_off()
+                yield from remote.async_turn_off()
 
-            if remote.should_poll:
-                remote.update_ha_state(True)
+        update_tasks = []
+        for remote in target_remotes:
+            if not remote.should_poll:
+                continue
 
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_remote_service,
-                           descriptions.get(SERVICE_TURN_OFF),
-                           schema=REMOTE_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_remote_service,
-                           descriptions.get(SERVICE_TURN_ON),
-                           schema=REMOTE_SERVICE_TURN_ON_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, handle_remote_service,
-                           descriptions.get(SERVICE_SEND_COMMAND),
-                           schema=REMOTE_SERVICE_SEND_COMMAND_SCHEMA)
+            update_coro = hass.loop.create_task(
+                remote.async_update_ha_state(True))
+            if hasattr(remote, 'async_update'):
+                update_tasks.append(hass.loop.create_task(update_coro))
+            else:
+                yield from update_coro
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_OFF, async_handle_remote_service,
+        descriptions.get(SERVICE_TURN_OFF),
+        schema=REMOTE_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_ON, async_handle_remote_service,
+        descriptions.get(SERVICE_TURN_ON),
+        schema=REMOTE_SERVICE_TURN_ON_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_SEND_COMMAND, async_handle_remote_service,
+        descriptions.get(SERVICE_SEND_COMMAND),
+        schema=REMOTE_SERVICE_SEND_COMMAND_SCHEMA)
 
     return True
 
@@ -131,14 +144,11 @@ def setup(hass, config):
 class RemoteDevice(ToggleEntity):
     """Representation of a remote."""
 
-    def turn_on(self, **kwargs):
-        """Turn a device on with the remote."""
-        raise NotImplementedError()
-
-    def turn_off(self, **kwargs):
-        """Turn a device off with the remote."""
-        raise NotImplementedError()
-
     def send_command(self, **kwargs):
         """Send a command to a device."""
         raise NotImplementedError()
+
+    def async_send_command(self, **kwargs):
+        """Send a command to a device."""
+        yield from self.hass.loop.run_in_executor(
+            None, ft.partial(self.send_command, **kwargs))
