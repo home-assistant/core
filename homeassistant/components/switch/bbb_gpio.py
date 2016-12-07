@@ -1,8 +1,13 @@
 """
 Allows to configure a switch using BBB GPIO.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.bbb_gpio/
+Switch example for two GPIOs pins P9_12 and P9_42 (GPIOxxx names allowed as well) 
+
+switch:
+  - platform: bbb_gpio
+    ports:
+      GPIO0_7: LED Red
+      P9_12: LED Green
 """
 import logging
 
