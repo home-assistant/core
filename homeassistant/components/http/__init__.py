@@ -32,7 +32,7 @@ from .const import (
     KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
     KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD,
     KEY_DEVELOPMENT, KEY_AUTHENTICATED)
-from .static import GZIP_FILE_SENDER, staticresource_middleware
+from .static import FILE_SENDER, GZIP_FILE_SENDER, staticresource_middleware
 from .util import get_real_ip
 
 DOMAIN = 'http'
@@ -344,7 +344,7 @@ class HomeAssistantView(object):
     def file(self, request, fil):
         """Return a file."""
         assert isinstance(fil, str), 'only string paths allowed'
-        response = yield from GZIP_FILE_SENDER.send(request, Path(fil))
+        response = yield from FILE_SENDER.send(request, Path(fil))
         return response
 
     def register(self, router):
