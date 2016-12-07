@@ -296,6 +296,7 @@ class SonosDevice(MediaPlayerDevice):
         self._last_avtransport_event = None
         self._is_playing_line_in = None
         self._is_playing_tv = None
+        self._favorite_sources = None
         self.soco_snapshot = Snapshot(self._player)
 
     @property
@@ -595,6 +596,7 @@ class SonosDevice(MediaPlayerDevice):
 
                 if self._queue is None and self.entity_id is not None:
                     self._subscribe_to_player_events()
+            self._favorite_sources = [fav['title'] for fav in self._player.get_sonos_favorites().get('favorites', [])]
         else:
             self._player_volume = None
             self._player_volume_muted = None
@@ -617,6 +619,7 @@ class SonosDevice(MediaPlayerDevice):
             self._support_pause = False
             self._is_playing_tv = False
             self._is_playing_line_in = False
+            self._favorite_sources = None
 
         self._last_avtransport_event = None
 
@@ -764,10 +767,6 @@ class SonosDevice(MediaPlayerDevice):
 
         supported = SUPPORT_SONOS
 
-        if not self.source_list:
-            # some devices do not allow source selection
-            supported = supported ^ SUPPORT_SELECT_SOURCE
-
         if not self._support_previous_track:
             supported = supported ^ SUPPORT_PREVIOUS_TRACK
 
@@ -801,16 +800,25 @@ class SonosDevice(MediaPlayerDevice):
             self._player.switch_to_line_in()
         elif source == SUPPORT_SOURCE_TV:
             self._player.switch_to_tv()
+        else:
+            favorites = self._player.get_sonos_favorites()['favorites']
+            fav = [fav for fav in favorites if fav['title'] == source]
+            if len(fav) == 1:
+                src = fav.pop()
+                self._player.play_uri(src['uri'], src['meta'], src['title'])
 
     @property
     def source_list(self):
         """List of available input sources."""
         model_name = self._speaker_info['model_name']
 
+        sources = self._favorite_sources
+
         if 'PLAY:5' in model_name:
-            return [SUPPORT_SOURCE_LINEIN]
+            sources += [SUPPORT_SOURCE_LINEIN]
         elif 'PLAYBAR' in model_name:
-            return [SUPPORT_SOURCE_LINEIN, SUPPORT_SOURCE_TV]
+            sources += [SUPPORT_SOURCE_LINEIN, SUPPORT_SOURCE_TV]
+        return sources
 
     @property
     def source(self):
