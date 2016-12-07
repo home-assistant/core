@@ -15,6 +15,7 @@ DEPENDENCIES = ['zoneminder']
 
 CONF_SECOND = 'second'
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ZoneMinder sensors."""
     sensors = []
@@ -23,11 +24,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     monitors = zoneminder.get_state('api/monitors.json')
     for i in monitors['monitors']:
         sensors.append(
-            ZMBinarySensor(hass, config, int(i['Monitor']['Id']), i['Monitor']['Name'])
+            ZMBinarySensor(hass, config, int(i['Monitor']['Id']),
+                i['Monitor']['Name'])
         )
 
     _LOGGER.debug("Adding devices")
     add_devices(sensors)
+
 
 class ZMBinarySensor(BinarySensorDevice):
     """Get the state of each ZoneMinder monitor."""
