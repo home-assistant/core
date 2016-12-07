@@ -1,5 +1,5 @@
 """
-Support for state (idle, alarm) of ZoneMinder monitors
+Support for state (idle, alarm) of ZoneMinder monitors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.zoneminder/
@@ -55,7 +55,6 @@ class ZMBinarySensor(BinarySensorDevice):
         monitor = zoneminder.get_state(
             'api/monitors/alarm/id:%i/command:status.json' % self._monitor_id
         )
-        """Refer to the output of `zmu -h` for what these status codes mean"""
         _LOGGER.debug("got status")
         if monitor['status'] == '0':
             self._state = False
