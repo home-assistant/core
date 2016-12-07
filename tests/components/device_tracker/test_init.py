@@ -256,6 +256,24 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
             self.assertEqual(device.vendor, 'unknown')
 
+    def test_mac_vendor_lookup_on_see(self):
+        """Test if macvendor is looked up when device is seen."""
+        mac = 'B8:27:EB:00:00:00'
+        vendor_string = 'Raspberry Pi Foundation'
+
+        tracker = device_tracker.DeviceTracker(
+            self.hass, timedelta(seconds=60), 0, [])
+
+        with mock_aiohttp_client() as aioclient_mock:
+            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
+                               text=vendor_string)
+
+            run_coroutine_threadsafe(
+                tracker.async_see(mac=mac), self.hass.loop).result()
+            assert aioclient_mock.call_count == 1, \
+                'No http request for macvendor made!'
+        self.assertEqual(tracker.devices['b827eb000000'].vendor, vendor_string)
+
     def test_discovery(self):
         """Test discovery."""
         scanner = get_component('device_tracker.test').SCANNER
@@ -439,6 +457,45 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0))
         assert len(config) == 0
+
+    def test_see_state(self):
+        """Test device tracker see records state correctly."""
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
+                                        TEST_PLATFORM))
+
+        params = {
+            'mac': 'AA:BB:CC:DD:EE:FF',
+            'dev_id': 'some_device',
+            'host_name': 'example.com',
+            'location_name': 'Work',
+            'gps': [.3, .8],
+            'gps_accuracy': 1,
+            'battery': 100,
+            'attributes': {
+                'test': 'test',
+                'number': 1,
+            },
+        }
+
+        device_tracker.see(self.hass, **params)
+        self.hass.block_till_done()
+
+        config = device_tracker.load_config(self.yaml_devices, self.hass,
+                                            timedelta(seconds=0))
+        assert len(config) == 1
+
+        state = self.hass.states.get('device_tracker.examplecom')
+        attrs = state.attributes
+        self.assertEqual(state.state, 'Work')
+        self.assertEqual(state.object_id, 'examplecom')
+        self.assertEqual(state.name, 'example.com')
+        self.assertEqual(attrs['friendly_name'], 'example.com')
+        self.assertEqual(attrs['battery'], 100)
+        self.assertEqual(attrs['latitude'], 0.3)
+        self.assertEqual(attrs['longitude'], 0.8)
+        self.assertEqual(attrs['test'], 'test')
+        self.assertEqual(attrs['gps_accuracy'], 1)
+        self.assertEqual(attrs['number'], 1)
 
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
     def test_see_failures(self, mock_warning):

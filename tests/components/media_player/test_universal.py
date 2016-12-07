@@ -5,6 +5,8 @@ import unittest
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_UNKNOWN, STATE_PLAYING, STATE_PAUSED)
 import homeassistant.components.switch as switch
+import homeassistant.components.input_slider as input_slider
+import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
 import homeassistant.components.media_player.universal as universal
 
@@ -26,6 +28,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         self._supported_media_commands = 0
         self._source = None
         self._tracks = 12
+        self._media_image_url = None
 
         self.service_calls = {
             'turn_on': mock_service(
@@ -90,6 +93,11 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         """Supported media commands flag."""
         return self._supported_media_commands
 
+    @property
+    def media_image_url(self):
+        """Image url of current playing media."""
+        return self._media_image_url
+
     def turn_on(self):
         """Mock turn_on function."""
         self._state = STATE_UNKNOWN
@@ -142,6 +150,17 @@ class TestMediaPlayer(unittest.TestCase):
         self.mock_state_switch_id = switch.ENTITY_ID_FORMAT.format('state')
         self.hass.states.set(self.mock_state_switch_id, STATE_OFF)
 
+        self.mock_volume_id = input_slider.ENTITY_ID_FORMAT.format(
+            'volume_level')
+        self.hass.states.set(self.mock_volume_id, 0)
+
+        self.mock_source_list_id = input_select.ENTITY_ID_FORMAT.format(
+            'source_list')
+        self.hass.states.set(self.mock_source_list_id, ['dvd', 'htpc'])
+
+        self.mock_source_id = input_select.ENTITY_ID_FORMAT.format('source')
+        self.hass.states.set(self.mock_source_id, 'dvd')
+
         self.config_children_only = {
             'name': 'test', 'platform': 'universal',
             'children': [media_player.ENTITY_ID_FORMAT.format('mock1'),
@@ -153,6 +172,9 @@ class TestMediaPlayer(unittest.TestCase):
                          media_player.ENTITY_ID_FORMAT.format('mock2')],
             'attributes': {
                 'is_volume_muted': self.mock_mute_switch_id,
+                'volume_level': self.mock_volume_id,
+                'source': self.mock_source_id,
+                'source_list': self.mock_source_list_id,
                 'state': self.mock_state_switch_id
             }
         }
@@ -384,6 +406,26 @@ class TestMediaPlayer(unittest.TestCase):
         ump.update()
         self.assertEqual(1, ump.volume_level)
 
+    def test_media_image_url(self):
+        """Test media_image_url property."""
+        TEST_URL = "test_url"
+        config = self.config_children_only
+        universal.validate_config(config)
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
+        ump.update()
+
+        self.assertEqual(None, ump.media_image_url)
+
+        self.mock_mp_1._state = STATE_PLAYING
+        self.mock_mp_1._media_image_url = TEST_URL
+        self.mock_mp_1.update_ha_state()
+        ump.update()
+        # mock_mp_1 will convert the url to the api proxy url. This test
+        # ensures ump passes through the same url without an additional proxy.
+        self.assertEqual(self.mock_mp_1.entity_picture, ump.entity_picture)
+
     def test_is_volume_muted_children_only(self):
         """Test is volume muted property w/ children only."""
         config = self.config_children_only
@@ -404,6 +446,42 @@ class TestMediaPlayer(unittest.TestCase):
         self.mock_mp_1.update_ha_state()
         ump.update()
         self.assertTrue(ump.is_volume_muted)
+
+    def test_source_list_children_and_attr(self):
+        """Test source list property w/ children and attrs."""
+        config = self.config_children_and_attr
+        universal.validate_config(config)
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+
+        self.assertEqual("['dvd', 'htpc']", ump.source_list)
+
+        self.hass.states.set(self.mock_source_list_id, ['dvd', 'htpc', 'game'])
+        self.assertEqual("['dvd', 'htpc', 'game']", ump.source_list)
+
+    def test_source_children_and_attr(self):
+        """Test source property w/ children and attrs."""
+        config = self.config_children_and_attr
+        universal.validate_config(config)
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+
+        self.assertEqual('dvd', ump.source)
+
+        self.hass.states.set(self.mock_source_id, 'htpc')
+        self.assertEqual('htpc', ump.source)
+
+    def test_volume_level_children_and_attr(self):
+        """Test volume level property w/ children and attrs."""
+        config = self.config_children_and_attr
+        universal.validate_config(config)
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+
+        self.assertEqual('0', ump.volume_level)
+
+        self.hass.states.set(self.mock_volume_id, 100)
+        self.assertEqual('100', ump.volume_level)
 
     def test_is_volume_muted_children_and_attr(self):
         """Test is volume muted property w/ children and attrs."""
@@ -443,18 +521,20 @@ class TestMediaPlayer(unittest.TestCase):
         config['commands']['volume_up'] = 'test'
         config['commands']['volume_down'] = 'test'
         config['commands']['volume_mute'] = 'test'
+        config['commands']['volume_set'] = 'test'
+        config['commands']['select_source'] = 'test'
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
         ump.update()
 
-        self.mock_mp_1._supported_media_commands = universal.SUPPORT_VOLUME_SET
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
         ump.update()
 
         check_flags = universal.SUPPORT_TURN_ON | universal.SUPPORT_TURN_OFF \
-            | universal.SUPPORT_VOLUME_STEP | universal.SUPPORT_VOLUME_MUTE
+            | universal.SUPPORT_VOLUME_STEP | universal.SUPPORT_VOLUME_MUTE \
+            | universal.SUPPORT_SELECT_SOURCE
 
         self.assertEqual(check_flags, ump.supported_media_commands)
 

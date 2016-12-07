@@ -23,9 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
-    "Someone known": "motion",
-    "Someone unknown": "motion",
-    "Motion": "motion",
+    "Someone known": 'occupancy',
+    "Someone unknown": 'motion',
+    "Motion": 'motion',
+    "Tag Vibration": 'vibration',
+    "Tag Open": 'opening',
 }
 
 CONF_HOME = 'home'
@@ -48,6 +50,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     home = config.get(CONF_HOME, None)
     timeout = config.get(CONF_TIMEOUT, 15)
 
+    module_name = None
+
     import lnetatmo
     try:
         data = WelcomeData(netatmo.NETATMO_AUTH, home)
@@ -64,23 +68,35 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                camera_name not in config[CONF_CAMERAS]:
                 continue
         for variable in sensors:
-            add_devices([WelcomeBinarySensor(data, camera_name, home, timeout,
-                                             variable)])
+            if variable in ('Tag Vibration', 'Tag Open'):
+                continue
+            add_devices([WelcomeBinarySensor(data, camera_name, module_name,
+                                             home, timeout, variable)])
+
+        for module_name in data.get_module_names(camera_name):
+            for variable in sensors:
+                if variable in ('Tag Vibration', 'Tag Open'):
+                    add_devices([WelcomeBinarySensor(data, camera_name,
+                                                     module_name, home,
+                                                     timeout, variable)])
 
 
 class WelcomeBinarySensor(BinarySensorDevice):
     """Represent a single binary sensor in a Netatmo Welcome device."""
 
-    def __init__(self, data, camera_name, home, timeout, sensor):
+    def __init__(self, data, camera_name, module_name, home, timeout, sensor):
         """Setup for access to the Netatmo camera events."""
         self._data = data
         self._camera_name = camera_name
+        self._module_name = module_name
         self._home = home
         self._timeout = timeout
         if home:
             self._name = home + ' / ' + camera_name
         else:
             self._name = camera_name
+        if module_name:
+            self._name += ' / ' + module_name
         self._sensor_name = sensor
         self._name += ' ' + sensor
         camera_id = data.welcomedata.cameraByName(camera=camera_name,
@@ -112,7 +128,7 @@ class WelcomeBinarySensor(BinarySensorDevice):
     def update(self):
         """Request an update from the Netatmo API."""
         self._data.update()
-        self._data.welcomedata.updateEvent(home=self._data.home)
+        self._data.update_event()
 
         if self._sensor_name == "Someone known":
             self._state =\
@@ -129,5 +145,16 @@ class WelcomeBinarySensor(BinarySensorDevice):
                 self._data.welcomedata.motionDetected(self._home,
                                                       self._camera_name,
                                                       self._timeout*60)
+        elif self._sensor_name == "Tag Vibration":
+            self._state =\
+                self._data.welcomedata.moduleMotionDetected(self._home,
+                                                            self._module_name,
+                                                            self._camera_name,
+                                                            self._timeout*60)
+        elif self._sensor_name == "Tag Open":
+            self._state =\
+                self._data.welcomedata.moduleOpened(self._home,
+                                                    self._module_name,
+                                                    self._camera_name)
         else:
             return None

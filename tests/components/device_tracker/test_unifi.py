@@ -3,9 +3,10 @@ import unittest
 from unittest import mock
 import urllib
 
-from unifi import controller
+from pyunifi import controller
 import voluptuous as vol
 
+from tests.common import get_test_home_assistant
 from homeassistant.components.device_tracker import DOMAIN, unifi as unifi
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
                                  CONF_PLATFORM)
@@ -13,6 +14,14 @@ from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
 
 class TestUnifiScanner(unittest.TestCase):
     """Test the Unifiy platform."""
+
+    def setUp(self):
+        """Initialize values for this testcase class."""
+        self.hass = get_test_home_assistant()
+
+    def tearDown(self):
+        """Stop everything that was started."""
+        self.hass.stop()
 
     @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
     @mock.patch.object(controller, 'Controller')
@@ -25,7 +34,7 @@ class TestUnifiScanner(unittest.TestCase):
                 CONF_PASSWORD: 'password',
             })
         }
-        result = unifi.get_scanner(None, config)
+        result = unifi.get_scanner(self.hass, config)
         self.assertEqual(mock_scanner.return_value, result)
         self.assertEqual(mock_ctrl.call_count, 1)
         self.assertEqual(
@@ -52,7 +61,7 @@ class TestUnifiScanner(unittest.TestCase):
                 'site_id': 'abcdef01',
             })
         }
-        result = unifi.get_scanner(None, config)
+        result = unifi.get_scanner(self.hass, config)
         self.assertEqual(mock_scanner.return_value, result)
         self.assertEqual(mock_ctrl.call_count, 1)
         self.assertEqual(
@@ -96,7 +105,7 @@ class TestUnifiScanner(unittest.TestCase):
         }
         mock_ctrl.side_effect = urllib.error.HTTPError(
             '/', 500, 'foo', {}, None)
-        result = unifi.get_scanner(None, config)
+        result = unifi.get_scanner(self.hass, config)
         self.assertFalse(result)
 
     def test_scanner_update(self):  # pylint: disable=no-self-use
