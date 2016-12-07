@@ -2,17 +2,39 @@
 Support for Sense HAT sensors.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/
+https://home-assistant.io/components/sensor.sensehat
 """
 import os
 import logging
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
+from datetime import timedelta
 
-REQUIREMENTS = ['https://github.com/RPi-Distro/python-sense-hat'
-                '/archive/master.zip#sense-hat==2.2.0']
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (TEMP_CELSIUS, CONF_DISPLAY_OPTIONS, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+
+REQUIREMENTS = ['sense-hat==2.2.0']
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_NAME = 'sensehat'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+
+SENSOR_TYPES = {
+    'temperature': ['temperature', TEMP_CELSIUS],
+    'humidity': ['humidity', "%"],
+    'pressure': ['pressure', "mb"],
+}
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_DISPLAY_OPTIONS, default=[]):
+        [vol.In(SENSOR_TYPES)],
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 def get_cpu_temp():
@@ -35,37 +57,71 @@ def get_average(temp_base):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    add_devices([AddTemperature(hass)])
-    add_devices([AddHumidity(hass)])
-    add_devices([AddPressure(hass)])
+    data = SenseHatData()
+    dev = []
+
+    for variable in config[CONF_DISPLAY_OPTIONS]:
+        _LOGGER.info("heyhey" + variable)
+        dev.append(SenseHatSensor(data, variable))
+
+    add_devices(dev)
 
 
-class AddTemperature(Entity):
-    """Representation of a Temperature Sensor."""
+class SenseHatSensor(Entity):
+    """Representation of a sensehat sensor."""
 
-    def __init__(self, hass):
+    def __init__(self, data, sensor_types):
         """Initialize the sensor."""
-        self._temp = None
-        """Get initial state."""
-        hass.add_job(self.update_ha_state, True)
+        self.data = data
+        self._name = SENSOR_TYPES[sensor_types][0]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_types][1]
+        self.type = sensor_types
+        self._state = None
+        """updating data."""
+        self.update()
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'Temperature'
+        return self._name
 
     @property
     def state(self):
-        """Return state of the sensor."""
-        return self._temp
+        """Return the state of the sensor."""
+        return self._state
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        """Return the unit the value is expressed in."""
+        return self._unit_of_measurement
 
-    def update(self, *args):
-        """Get the latest data."""
+    def update(self):
+        """Get the latest data and updates the states."""
+        self.data.update()
+        if not self.data.humidity:
+            _LOGGER.error("Don't receive data!")
+            return
+
+        if self.type == 'temperature':
+            self._state = self.data.temperature
+        if self.type == 'humidity':
+            self._state = self.data.humidity
+        if self.type == 'pressure':
+            self._state = self.data.pressure
+
+
+class SenseHatData(object):
+    """Get the latest data and update."""
+
+    def __init__(self):
+        """Initialize the data object."""
+        self.temperature = None
+        self.humidity = None
+        self.pressure = None
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Get the latest data from sensehat."""
         from sense_hat import SenseHat
         sense = SenseHat()
         temp_from_h = sense.get_temperature_from_humidity()
@@ -74,66 +130,6 @@ class AddTemperature(Entity):
         t_total = (temp_from_h+temp_from_p)/2
         t_correct = t_total - ((t_cpu-t_total)/1.5)
         t_correct = get_average(t_correct)
-        self._temp = t_correct
-
-
-class AddHumidity(Entity):
-    """Representation of a Humidity Sensor."""
-
-    def __init__(self, hass):
-        """Initialize the sensor."""
-        self._humidity = None
-        """Get initial state."""
-        hass.add_job(self.update_ha_state, True)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return 'Humidity'
-
-    @property
-    def state(self):
-        """Return state of the sensor."""
-        return self._humidity
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return '%'
-
-    def update(self, *args):
-        """Get the latest data."""
-        from sense_hat import SenseHat
-        sense = SenseHat()
-        self._humidity = sense.get_humidity()
-
-
-class AddPressure(Entity):
-    """Representation of a Pressure Sensor."""
-
-    def __init__(self, hass):
-        """Initialize the sensor."""
-        self._pressure = None
-        """Get initial state."""
-        hass.add_job(self.update_ha_state, True)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return 'Pressure'
-
-    @property
-    def state(self):
-        """Return state of the sensor."""
-        return self._pressure
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return 'mb'
-
-    def update(self, *args):
-        """Get the latest data."""
-        from sense_hat import SenseHat
-        sense = SenseHat()
-        self._pressure = sense.get_pressure()
+        self.temperature = t_correct
+        self.humidity = sense.get_humidity()
+        self.pressure = sense.get_pressure()
