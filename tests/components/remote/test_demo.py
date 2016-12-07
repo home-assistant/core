@@ -9,7 +9,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from tests.common import get_test_home_assistant, mock_service
 
-SERVICE_SYNC = 'sync'
 SERVICE_SEND_COMMAND = 'send_command'
 
 
@@ -81,22 +80,6 @@ class TestDemoRemote(unittest.TestCase):
 
         self.assertEqual(remote.DOMAIN, call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
-
-        # Test sync
-        sync_calls = mock_service(
-            self.hass, remote.DOMAIN, SERVICE_SYNC)
-
-        remote.sync(
-            self.hass, entity_id='entity_id_val')
-
-        self.hass.block_till_done()
-
-        self.assertEqual(1, len(sync_calls))
-        call = sync_calls[-1]
-
-        self.assertEqual(remote.DOMAIN, call.domain)
-        self.assertEqual(SERVICE_SYNC, call.service)
         self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
 
         # Test send_command
