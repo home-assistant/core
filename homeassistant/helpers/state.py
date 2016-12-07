@@ -178,7 +178,7 @@ def async_reproduce_state(hass, states, blocking=False):
 
     @asyncio.coroutine
     def async_handle_service_calls(coro_list):
-        """Handle service calls per domain sequence."""
+        """Handle service calls by domain sequence."""
         for coro in coro_list:
             yield from coro
 
