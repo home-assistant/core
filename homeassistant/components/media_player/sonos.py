@@ -596,7 +596,9 @@ class SonosDevice(MediaPlayerDevice):
 
                 if self._queue is None and self.entity_id is not None:
                     self._subscribe_to_player_events()
-            self._favorite_sources = [fav['title'] for fav in self._player.get_sonos_favorites().get('favorites', [])]
+            self._favorite_sources = [
+                    fav['title'] for fav in self._player.get_sonos_favorites().get('favorites', [])
+                ]
         else:
             self._player_volume = None
             self._player_volume_muted = None
