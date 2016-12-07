@@ -278,6 +278,8 @@ ATTR_GPS_ACCURACY = 'gps_accuracy'
 ATTR_ASSUMED_STATE = 'assumed_state'
 ATTR_STATE = 'state'
 
+ATTR_OPTION = 'option'
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
 SERVICE_HOMEASSISTANT_RESTART = 'restart'
@@ -317,6 +319,8 @@ SERVICE_SET_COVER_POSITION = 'set_cover_position'
 SERVICE_SET_COVER_TILT_POSITION = 'set_cover_tilt_position'
 SERVICE_STOP_COVER = 'stop_cover'
 SERVICE_STOP_COVER_TILT = 'stop_cover_tilt'
+
+SERVICE_SELECT_OPTION = 'select_option'
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123
