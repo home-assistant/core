@@ -178,9 +178,6 @@ https://github.com/GadgetReactor/pyHS100/archive/1f771b7d8090a91c6a58931532e4273
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.7.zip#pyW215==0.3.7
 
-# homeassistant.components.sensor.sensehat
-https://github.com/RPi-Distro/python-sense-hat/archive/master.zip#sense-hat==2.2.0
-
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
 https://github.com/TheRealLink/pylgtv/archive/v0.1.2.zip#pylgtv==0.1.2
@@ -514,6 +511,9 @@ scsgate==0.1.0
 
 # homeassistant.components.notify.sendgrid
 sendgrid==3.6.3
+
+# homeassistant.components.sensor.sensehat
+sense-hat==2.2.0
 
 # homeassistant.components.media_player.aquostv
 sharp-aquos-rc==0.2
