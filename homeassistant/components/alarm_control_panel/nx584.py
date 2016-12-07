@@ -63,11 +63,6 @@ class NX584Alarm(alarm.AlarmControlPanel):
         self._state = STATE_UNKNOWN
 
     @property
-    def should_poll(self):
-        """Polling needed."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the device."""
         return self._name
@@ -122,7 +117,3 @@ class NX584Alarm(alarm.AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._alarm.arm('exit')
-
-    def alarm_trigger(self, code=None):
-        """Alarm trigger command."""
-        raise NotImplementedError()

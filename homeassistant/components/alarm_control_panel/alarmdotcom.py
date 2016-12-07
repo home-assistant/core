@@ -56,11 +56,6 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         self._password = password
         self._state = STATE_UNKNOWN
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return True
-
     def update(self):
         """Fetch the latest state."""
         self._state = self._alarm.state
