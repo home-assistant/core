@@ -164,11 +164,28 @@ def async_reproduce_state(hass, states, blocking=False):
                json.dumps(dict(state.attributes), sort_keys=True))
         to_call[key].append(state.entity_id)
 
+    domain_tasks = {}
     for (service_domain, service, service_data), entity_ids in to_call.items():
         data = json.loads(service_data)
         data[ATTR_ENTITY_ID] = entity_ids
-        yield from hass.services.async_call(
-            service_domain, service, data, blocking)
+
+        if service_domain not in domain_tasks:
+            domain_tasks[service_domain] = []
+
+        domain_tasks[service_domain].append(
+            hass.services.async_call(service_domain, service, data, blocking)
+        )
+
+    @asyncio.coroutine
+    def async_handle_service_calls(coro_list):
+        """Handle service calls by domain sequence."""
+        for coro in coro_list:
+            yield from coro
+
+    execute_tasks = [async_handle_service_calls(coro_list)
+                     for coro_list in domain_tasks.values()]
+    if execute_tasks:
+        yield from asyncio.wait(execute_tasks, loop=hass.loop)
 
 
 def state_as_number(state):
