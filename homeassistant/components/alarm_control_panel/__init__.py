@@ -155,7 +155,8 @@ class AlarmControlPanel(Entity):
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        yield from self.hass.run_in_executor(None, self.alarm_disarm, code)
+        yield from self.hass.loop.run_in_executor(
+            None, self.alarm_disarm, code)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
@@ -164,7 +165,8 @@ class AlarmControlPanel(Entity):
     @asyncio.coroutine
     def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        yield from self.hass.run_in_executor(None, self.alarm_arm_home, code)
+        yield from self.hass.loop.run_in_executor(
+            None, self.alarm_arm_home, code)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
@@ -173,7 +175,8 @@ class AlarmControlPanel(Entity):
     @asyncio.coroutine
     def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        yield from self.hass.run_in_executor(None, self.alarm_arm_away, code)
+        yield from self.hass.loop.run_in_executor(
+            None, self.alarm_arm_away, code)
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
@@ -182,7 +185,8 @@ class AlarmControlPanel(Entity):
     @asyncio.coroutine
     def async_alarm_trigger(self, code=None):
         """Send alarm trigger command."""
-        yield from self.hass.run_in_executor(None, self.alarm_trigger, code)
+        yield from self.hass.loop.run_in_executor(
+            None, self.alarm_trigger, code)
 
     @property
     def state_attributes(self):
