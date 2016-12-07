@@ -11,6 +11,8 @@ import homeassistant.components.zoneminder as zoneminder
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['zoneminder']
+ZM_IDLE = '0'
+ZM_TAPE = '4'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -56,9 +58,9 @@ class ZMBinarySensor(BinarySensorDevice):
             'api/monitors/alarm/id:%i/command:status.json' % self._monitor_id
         )
         _LOGGER.debug("got status")
-        if monitor['status'] == '0':
+        if monitor['status'] == ZM_IDLE:
             self._state = False
-        elif monitor['status'] == '4':
+        elif monitor['status'] == ZM_TAPE:
             self._state = False
         else:
             self._state = 'Alarm'
