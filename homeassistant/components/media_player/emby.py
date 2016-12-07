@@ -185,13 +185,14 @@ class EmbyClient(MediaPlayerDevice):
         self.update_sessions(no_throttle=True)
         # Check if we should update progress
         try:
-            position = int(
-                self.session['PlayState']['PositionTicks']) / 10000000
+            position = self.session['PlayState']['PositionTicks']
+        except (KeyError, TypeError):
+            position = None
+        else:
+            position = int(position) / 10000000
             if position != self.media_status_last:
                 self.media_status_last = position
                 self.media_status_received = dt_util.utcnow()
-        except KeyError:
-            _LOGGER.debug("Error checking emby media position.")
 
     def play_percent(self):
         """Return current media percent complete."""
