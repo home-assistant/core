@@ -390,7 +390,7 @@ pycmus==0.1.0
 pydispatcher==2.0.5
 
 # homeassistant.components.media_player.emby
-pyemby==0.1
+pyemby==0.2
 
 # homeassistant.components.envisalink
 pyenvisalink==1.9
