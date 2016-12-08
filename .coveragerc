@@ -123,6 +123,7 @@ omit =
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/concord232.py
     homeassistant/components/binary_sensor/flic.py
+    homeassistant/components/binary_sensor/hikvision.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/amcrest.py
