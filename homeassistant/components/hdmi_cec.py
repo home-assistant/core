@@ -258,7 +258,7 @@ class CecDevice(Entity):
     def async_update_availability(self):
         self._available = self.cec_client.lib_cec.PollDevice(self._logical_address)
         if not self._available:
-            self.remove()
+            self.hass.async_add_job(self.remove)
             DEVICE_PRESENCE[self._logical_address] = False
             self.schedule_update_ha_state()
 
