@@ -439,8 +439,8 @@ class CecClient:
         self.lib_cec.PowerOnDevices(addr_from_data(call, ATTR_DST))
 
     def volume(self, call):
-        for cmd, att in call.data:
-            _LOGGER.info("************* VOLUME: %s, %s", cmd, att)
+        _LOGGER.info("************* VOLUME: %s, %s", call, call.data)
+        for cmd, att in call.data.items():
             att = int(att)
             att = 1 if att < 1 else att
             if cmd == CMD_UP:
