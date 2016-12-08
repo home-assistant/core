@@ -6,7 +6,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_DISCOVERY, EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_PORT, CONF_DISCOVERY, CONF_TIMEOUT,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.util.async import run_callback_threadsafe
@@ -16,17 +17,20 @@ REQUIREMENTS = ['https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_TIMEOUT = 3
 
 EVENT_NAME = "flic_click"
 EVENT_DATA_NAME = "button_name"
 EVENT_DATA_ADDRESS = "button_address"
 EVENT_DATA_TYPE = "click_type"
+EVENT_DATA_QUEUED_TIME = "queued_time"
 
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default='localhost'): cv.string,
     vol.Optional(CONF_PORT, default=5551): cv.port,
-    vol.Optional(CONF_DISCOVERY, default=True): cv.boolean
+    vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 
@@ -93,7 +97,8 @@ def start_scanning(hass, config, async_add_entities, client):
 @asyncio.coroutine
 def async_setup_button(hass, config, async_add_entities, client, address):
     """Setup single button device."""
-    button = FlicButton(hass, client, address)
+    timeout = config.get(CONF_TIMEOUT)
+    button = FlicButton(hass, client, address, timeout)
     _LOGGER.info("Connected to button (%s)", address)
 
     yield from async_add_entities([button])
@@ -117,12 +122,13 @@ def async_get_verified_addresses(client):
 class FlicButton(BinarySensorDevice):
     """Representation of a flic button."""
 
-    def __init__(self, hass, client, address):
+    def __init__(self, hass, client, address, timeout):
         """Initialize the flic button."""
         import pyflic
 
         self._hass = hass
         self._address = address
+        self._timeout = timeout
         self._is_down = False
         self._click_types = {
             pyflic.ClickType.ButtonSingleClick: "single",
@@ -164,11 +170,27 @@ class FlicButton(BinarySensorDevice):
 
         return attr
 
+    def _queued_event_check(self, click_type, time_diff):
+        """Generates a log message and returns true if timeout exceeded."""
+        time_string = "{:d} {}".format(
+            time_diff, "second" if time_diff == 1 else "seconds")
+
+        if time_diff > self._timeout:
+            _LOGGER.warning(
+                "Queued %s dropped for %s. Time in queue was %s.",
+                click_type, self.address, time_string)
+            return True
+        else:
+            _LOGGER.info(
+                "Queued %s allowed for %s. Time in queue was %s.",
+                click_type, self.address, time_string)
+            return False
+
     def _on_up_down(self, channel, click_type, was_queued, time_diff):
         """Update device state, if event was not queued."""
         import pyflic
 
-        if was_queued:
+        if was_queued and self._queued_event_check(click_type, time_diff):
             return
 
         self._is_down = click_type == pyflic.ClickType.ButtonDown
@@ -176,13 +198,14 @@ class FlicButton(BinarySensorDevice):
 
     def _on_click(self, channel, click_type, was_queued, time_diff):
         """Fire click event, if event was not queued."""
-        if was_queued:
+        if was_queued and self._queued_event_check(click_type, time_diff):
             return
 
         self._hass.bus.fire(EVENT_NAME, {
             EVENT_DATA_NAME: self.name,
             EVENT_DATA_ADDRESS: self.address,
-            EVENT_DATA_TYPE: self._click_types[click_type]
+            EVENT_DATA_TYPE: self._click_types[click_type],
+            EVENT_DATA_QUEUED_TIME: time_diff,
         })
 
     def _connection_status_changed(self, channel,
