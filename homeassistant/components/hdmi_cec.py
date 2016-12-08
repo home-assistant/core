@@ -174,14 +174,10 @@ def setup(hass, base_config):
             descriptions = load_yaml_config_file(
                 os.path.join(os.path.dirname(__file__), 'services.yaml'))[DOMAIN]
 
-            hass.services.register(DOMAIN, SERVICE_POWER_ON, CEC_CLIENT.power_on, descriptions[SERVICE_POWER_ON],
-                                   SERVICE_POWER_SCHEMA)
-            hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.standby, descriptions[SERVICE_STANDBY],
-                                   SERVICE_POWER_SCHEMA)
-            hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.tx, descriptions[SERVICE_SEND_COMMAND],
-                                   SERVICE_SEND_COMMAND_SCHEMA)
-            hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.volume, descriptions[SERVICE_VOLUME],
-                                   SERVICE_VOLUME_SCHEMA)
+            hass.services.register(DOMAIN, SERVICE_POWER_ON, CEC_CLIENT.power_on, descriptions[SERVICE_POWER_ON])
+            hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.standby, descriptions[SERVICE_STANDBY])
+            hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.tx, descriptions[SERVICE_SEND_COMMAND])
+            hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.volume, descriptions[SERVICE_VOLUME])
 
             dev_type = 'switch'
 
@@ -205,6 +201,7 @@ def setup(hass, base_config):
 
     def _stop_cec(event):
         stop.set()
+        CEC_CLIENT.lib_cec.Close()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_cec)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_cec)
@@ -443,6 +440,7 @@ class CecClient:
 
     def volume(self, call):
         for cmd, att in call.data:
+            _LOGGER.info("************* VOLUME: %s, %s", cmd, att)
             att = int(att)
             att = 1 if att < 1 else att
             if cmd == CMD_UP:
