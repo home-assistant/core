@@ -31,14 +31,15 @@ import logging
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['dsmr_parser==0.4']
+REQUIREMENTS = [('https://github.com/aequitas/dsmr_parser/archive/tcp.zip'
+                '#dsmr_parser==0.5')]
 
 CONF_DSMR_VERSION = 'dsmr_version'
 
@@ -54,6 +55,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_HOST, default=None): cv.string,
     vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
         cv.string, vol.In(['4', '2.2'])),
 })
@@ -63,10 +65,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the DSMR sensor."""
     # Suppress logging
-    logging.getLogger('dsmr_parser').setLevel(logging.ERROR)
+    logging.getLogger('dsmr_parser').setLevel(logging.DEBUG)
 
     from dsmr_parser import obis_references as obis_ref
-    from dsmr_parser.protocol import create_dsmr_reader
+    from dsmr_parser.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
@@ -107,8 +109,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # Creates a asyncio.Protocol for reading DSMR telegrams from serial
     # and calls update_entities_telegram to update entities on arrival
-    dsmr = create_dsmr_reader(config[CONF_PORT], config[CONF_DSMR_VERSION],
-                              update_entities_telegram, loop=hass.loop)
+    if config[CONF_HOST]:
+        dsmr = create_tcp_dsmr_reader(config[CONF_HOST],
+                                      config[CONF_PORT],
+                                      config[CONF_DSMR_VERSION],
+                                      update_entities_telegram,
+                                      loop=hass.loop)
+    else:
+        dsmr = create_dsmr_reader(config[CONF_PORT], config[CONF_DSMR_VERSION],
+                                  update_entities_telegram, loop=hass.loop)
 
     # Start DSMR asycnio.Protocol reader
     transport, _ = yield from hass.loop.create_task(dsmr)
