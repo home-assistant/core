@@ -133,6 +133,19 @@ homematic:
   reconnect:
     description: Reconnect to all Homematic Hubs.
 
+google_speech:
+  say:
+    description: Say some things on a media player.
+
+    fields:
+      entity_id:
+        description: Name(s) of media player entities
+        example: 'media_player.floor'
+
+      message:
+        description: Text they will speak on devices
+        example: 'My name is hanna'
+
 openalpr:
   scan:
     description: Scan immediately a device.
