@@ -76,6 +76,7 @@ class CameraData(object):
         self.camera_names = []
         self.module_names = []
         self.home = home
+        self.camera_type = None
 
     def get_camera_names(self):
         """Return all module available on the API as a list."""
@@ -103,10 +104,9 @@ class CameraData(object):
 
     def get_camera_type(self, camera=None, home=None, cid=None):
         """Return all module available on the API as a list."""
-        camera_type = None
         for camera_name in self.camera_names:
-            camera_type = self.camera_data.cameraType(camera_name)
-            return camera_type
+            self.camera_type = self.camera_data.cameraType(camera_name)
+            return self.camera_type
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -116,4 +116,6 @@ class CameraData(object):
 
     @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
     def update_event(self):
-        self.camera_data.updateEvent(home=self.home)
+        """Call the Netatmo API to update the events."""
+        self.camera_data.updateEvent(
+            home=self.home, cameratype=self.camera_type)
