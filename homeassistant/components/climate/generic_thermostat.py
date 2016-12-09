@@ -198,32 +198,30 @@ class GenericThermostat(ClimateDevice):
                 return
 
         if self.ac_mode:
-
             is_cooling = self._is_device_active
-            if not is_cooling:
-                too_hot = self._cur_temp - self._target_temp > self._tolerance
-                if too_hot:
-                    _LOGGER.info('Turning on AC %s', self.heater_entity_id)
-                    switch.turn_on(self.hass, self.heater_entity_id)
-            elif is_cooling:
+            if is_cooling:
                 too_cold = self._target_temp - self._cur_temp > self._tolerance
                 if too_cold:
                     _LOGGER.info('Turning off AC %s', self.heater_entity_id)
                     switch.turn_off(self.hass, self.heater_entity_id)
-        else:
-
-            is_heating = self._is_device_active
-            if not is_heating:
-                too_cold = self._target_temp - self._cur_temp > self._tolerance
-                if too_cold:
-                    _LOGGER.info('Turning on heater %s', self.heater_entity_id)
+            else:
+                too_hot = self._cur_temp - self._target_temp > self._tolerance
+                if too_hot:
+                    _LOGGER.info('Turning on AC %s', self.heater_entity_id)
                     switch.turn_on(self.hass, self.heater_entity_id)
-            elif is_heating:
+        else:
+            is_heating = self._is_device_active
+            if is_heating:
                 too_hot = self._cur_temp - self._target_temp > self._tolerance
                 if too_hot:
                     _LOGGER.info('Turning off heater %s',
                                  self.heater_entity_id)
                     switch.turn_off(self.hass, self.heater_entity_id)
+            else:
+                too_cold = self._target_temp - self._cur_temp > self._tolerance
+                if too_cold:
+                    _LOGGER.info('Turning on heater %s', self.heater_entity_id)
+                    switch.turn_on(self.hass, self.heater_entity_id)
 
     @property
     def _is_device_active(self):
