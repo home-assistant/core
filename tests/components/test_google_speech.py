@@ -53,6 +53,6 @@ class TestGoogleSpeech(object):
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_SPEECH
         assert calls[0].data[ATTR_MEDIA_CONTENT_ID] == \
-        """http://translate.google.com/translate_tts?tl=en&"""
-        """q=I%20person%20is%20on%20front%20of%20your%20door.%20Please"""
-        """%20open.&tk=5&client=hass&textlen=65"""
+            """http://translate.google.com/translate_tts?tl=en&"""
+            """q=I%20person%20is%20on%20front%20of%20your%20door.%20Please"""
+            """%20open.&tk=5&client=hass&textlen=65"""
