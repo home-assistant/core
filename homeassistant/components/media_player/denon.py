@@ -73,9 +73,10 @@ class DenonDevice(MediaPlayerDevice):
         self._source_list.update(MEDIA_MODES)
         self._muted = False
         self._mediasource = ''
+        self._mediainfo = ''
 
     @classmethod
-    def telnet_request(cls, telnet, command):
+    def telnet_request(cls, telnet, command, all_lines=False):
         """Execute `command` and return the response."""
         _LOGGER.debug('Sending: "%s"', command)
         telnet.write(command.encode('ASCII') + b'\r')
@@ -87,6 +88,8 @@ class DenonDevice(MediaPlayerDevice):
             lines.append(line.decode('ASCII').strip())
             _LOGGER.debug('Recived: "%s"', line)
 
+        if all_lines:
+            return lines
         return lines[0]
 
     def telnet_command(self, command):
@@ -109,6 +112,15 @@ class DenonDevice(MediaPlayerDevice):
         self._volume = int(volume_str) / 60
         self._muted = (self.telnet_request(telnet, 'MU?') == 'MUON')
         self._mediasource = self.telnet_request(telnet, 'SI?')[len('SI'):]
+
+        if self._mediasource in MEDIA_MODES.values():
+            self._mediainfo = ""
+            answer_codes = ["NSE0", "NSE1X", "NSE2X", "NSE3X", "NSE4", "NSE5",
+                            "NSE6", "NSE7", "NSE8"]
+            for line in self.telnet_request(telnet, 'NSE', all_lines=True):
+                self._mediainfo += line[len(answer_codes.pop()):] + '\n'
+        else:
+            self._mediainfo = self.source
 
         telnet.close()
         return True
@@ -146,8 +158,8 @@ class DenonDevice(MediaPlayerDevice):
 
     @property
     def media_title(self):
-        """Current media source."""
-        return self._mediasource
+        """Current media info."""
+        return self._mediainfo
 
     @property
     def supported_media_commands(self):
