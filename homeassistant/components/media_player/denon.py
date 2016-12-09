@@ -125,7 +125,7 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return list(self._source_list.keys())
+        return sorted(list(self._source_list.keys()))
 
     @property
     def media_title(self):
