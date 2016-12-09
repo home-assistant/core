@@ -8,12 +8,12 @@ import logging
 from urllib.parse import urljoin
 
 import voluptuous as vol
-from pyzabbix import ZabbixAPI
 
 from homeassistant.const import (
     CONF_PATH, CONF_HOST, CONF_SSL, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['pyzabbix==0.7.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,8 +35,11 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+
 def setup(hass, config):
     """Set up the Zabbix component."""
+    from pyzabbix import ZabbixAPI
+
     conf = config[DOMAIN]
     if conf[CONF_SSL]:
         schema = 'https'
@@ -50,8 +53,6 @@ def setup(hass, config):
     global ZAPI
     ZAPI = ZabbixAPI(url)
     ZAPI.login(username, password)
-    _LOGGER.info("Connected to Zabbix API Version %s" % ZAPI.api_version())
+    _LOGGER.info("Connected to Zabbix API Version %s", ZAPI.api_version())
 
     return True
-
-
