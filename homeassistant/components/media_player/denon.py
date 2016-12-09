@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_SELECT_SOURCE,
     SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_STOP, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +25,7 @@ DEFAULT_NAME = 'Music station'
 SUPPORT_DENON = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_SELECT_SOURCE | SUPPORT_NEXT_TRACK | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -165,6 +165,10 @@ class DenonDevice(MediaPlayerDevice):
     def media_pause(self):
         """Pause media player."""
         self.telnet_command('NS9B')
+
+    def media_stop(self):
+        """Pause media player."""
+        self.telnet_command('NS9C')
 
     def media_next_track(self):
         """Send the next track command."""
