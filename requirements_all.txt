@@ -629,3 +629,6 @@ yahooweather==0.8
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.6
+
+# homeassistant.components.zabbix
+pyzabbix=0.7.4
