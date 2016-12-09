@@ -253,13 +253,7 @@ class EmbyClient(MediaPlayerDevice):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        if self.media_duration is None:
-            return None
-
-        try:
-            return int(self.session['PlayState']['PositionTicks']) / 10000000
-        except KeyError:
-            return None
+        return self.media_status_last
 
     @property
     def media_position_updated_at(self):
