@@ -27,11 +27,12 @@ light:
         name: Living Room
 
 """
+DEPENDENCIES = ['insteon_local']
+
 from homeassistant.components.insteon_local import INSTEON_LOCAL
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light)
 
-# DEPENDENCIES = ['insteonlocal']
 
 SUPPORT_INSTEON_LOCAL = SUPPORT_BRIGHTNESS
 
@@ -81,10 +82,10 @@ class InsteonLocalDimmerDevice(Light):
     def update(self):
         """Update state of the sensor."""
         resp = self.node.status()
-        try:
-            self._value = resp['response']['level']
-        except KeyError:
-            pass
+        if resp is None:
+            self._value = 0
+        else:
+            self._value = int(resp['cmd2'])
 
     @property
     def is_on(self):
