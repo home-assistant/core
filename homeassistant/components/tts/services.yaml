@@ -1,0 +1,11 @@
+say:
+  description: Say some things on a media player.
+
+  fields:
+    entity_id:
+      description: Name(s) of media player entities
+      example: 'media_player.floor'
+
+    message:
+      description: Text they will speak on devices
+      example: 'My name is hanna'
