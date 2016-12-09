@@ -182,9 +182,9 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
 
         for lightgroup_id, info in api_groups.items():
             if lightgroup_id not in lightgroups:
-                lightgroups[lightgroup_id] = HueLightGroup(
+                lightgroups[lightgroup_id] = HueLight(
                     int(lightgroup_id), info, bridge, update_lights,
-                    bridge_type)
+                    bridge_type, allow_unreachable, True)
                 new_lightgroups.append(lightgroups[lightgroup_id])
             else:
                 lightgroups[lightgroup_id].info = info
@@ -245,7 +245,7 @@ class HueLight(Light):
     """Representation of a Hue light."""
 
     def __init__(self, light_id, info, bridge, update_lights,
-                 bridge_type, allow_unreachable):
+                 bridge_type, allow_unreachable, is_group=False):
         """Initialize the light."""
         self.light_id = light_id
         self.info = info
@@ -253,8 +253,12 @@ class HueLight(Light):
         self.update_lights = update_lights
         self.bridge_type = bridge_type
         self.allow_unreachable = allow_unreachable
+        self.is_group = is_group
 
-        self._command_func = self.bridge.set_light
+        if is_group:
+            self._command_func = self.bridge.set_group
+        else:
+            self._command_func = self.bridge.set_light
 
     @property
     def unique_id(self):
@@ -270,27 +274,37 @@ class HueLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self.info['state'].get('bri')
+        if self.is_group:
+            return self.info['action'].get('bri')
+        else:
+            return self.info['state'].get('bri')
 
     @property
     def xy_color(self):
         """Return the XY color value."""
-        return self.info['state'].get('xy')
+        if self.is_group:
+            return self.info['action'].get('xy')
+        else:
+            return self.info['state'].get('xy')
 
     @property
     def color_temp(self):
         """Return the CT color value."""
-        return self.info['state'].get('ct')
+        if self.is_group:
+            return self.info['action'].get('ct')
+        else:
+            return self.info['state'].get('ct')
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        self.update_lights()
-
-        if self.allow_unreachable:
-            return self.info['state']['on']
+        if self.is_group:
+            return self.info['state']['any_on']
         else:
-            return self.info['state']['reachable'] and self.info['state']['on']
+            if self.allow_unreachable:
+                return self.info['state']['on']
+            else:
+                return self.info['state']['reachable'] and self.info['state']['on']
 
     @property
     def supported_features(self):
@@ -366,36 +380,3 @@ class HueLight(Light):
     def update(self):
         """Synchronize state with bridge."""
         self.update_lights(no_throttle=True)
-
-
-class HueLightGroup(HueLight):
-    """Representation of a Hue light group."""
-
-    def __init__(self, light_id, info, bridge, update_lights,
-                 bridge_type):
-        """Initialize the light group."""
-        super().__init__(light_id, info, bridge, update_lights,
-                         bridge_type, False)
-        self._command_func = self.bridge.set_group
-
-    @property
-    def brightness(self):
-        """Return the brightness of this light group between 0..255."""
-        return self.info['action'].get('bri')
-
-    @property
-    def xy_color(self):
-        """Return the XY color value."""
-        return self.info['action'].get('xy')
-
-    @property
-    def color_temp(self):
-        """Return the CT color value."""
-        return self.info['action'].get('ct')
-
-    @property
-    def is_on(self):
-        """Return true if any light of the group is on."""
-        self.update_lights()
-
-        return self.info['state']['any_on']
