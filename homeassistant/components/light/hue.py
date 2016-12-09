@@ -179,6 +179,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
                 new_lights.append(lights[light_id])
             else:
                 lights[light_id].info = info
+                lights[light_id].update_ha_state()
 
         for lightgroup_id, info in api_groups.items():
             if lightgroup_id not in lightgroups:
@@ -188,6 +189,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
                 new_lightgroups.append(lightgroups[lightgroup_id])
             else:
                 lightgroups[lightgroup_id].info = info
+                lightgroups[lightgroup_id].update_ha_state()
 
         if new_lights:
             add_devices(new_lights)
