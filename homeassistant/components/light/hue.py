@@ -304,7 +304,8 @@ class HueLight(Light):
             if self.allow_unreachable:
                 return self.info['state']['on']
             else:
-                return self.info['state']['reachable'] and self.info['state']['on']
+                return self.info['state']['reachable'] and \
+                       self.info['state']['on']
 
     @property
     def supported_features(self):
