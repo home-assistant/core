@@ -171,7 +171,7 @@ class FlicButton(BinarySensorDevice):
         return attr
 
     def _queued_event_check(self, click_type, time_diff):
-        """Generates a log message and returns true if timeout exceeded."""
+        """Generate a log message and returns true if timeout exceeded."""
         time_string = "{:d} {}".format(
             time_diff, "second" if time_diff == 1 else "seconds")
 
