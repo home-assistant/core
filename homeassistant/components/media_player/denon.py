@@ -61,6 +61,7 @@ class DenonDevice(MediaPlayerDevice):
     @classmethod
     def telnet_request(cls, telnet, command):
         """Execute `command` and return the response."""
+        _LOGGER.debug('Sending: "%s"', command)
         telnet.write(command.encode('ASCII') + b'\r')
         lines = []
         while True:
@@ -68,12 +69,14 @@ class DenonDevice(MediaPlayerDevice):
             if not line:
                 break
             lines.append(line.decode('ASCII').strip())
+            _LOGGER.debug('Recived: "%s"', line)
 
         return lines[0]
 
     def telnet_command(self, command):
         """Establish a telnet connection and sends `command`."""
         telnet = telnetlib.Telnet(self._host)
+        _LOGGER.debug('Sending: "%s"', command)
         telnet.write(command.encode('ASCII') + b'\r')
         telnet.read_very_eager()  # skip response
         telnet.close()
