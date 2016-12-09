@@ -115,7 +115,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the WUnderground sensor."""
     rest = WUndergroundData(hass,
                             config.get(CONF_API_KEY),
-                            config.get(CONF_PWS_ID, None),
+                            config.get(CONF_PWS_ID),
                             config.get(CONF_LANG))
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
@@ -216,7 +216,7 @@ class WUndergroundSensor(Entity):
 class WUndergroundData(object):
     """Get data from WUnderground."""
 
-    def __init__(self, hass, api_key, pws_id=None, lang='EN'):
+    def __init__(self, hass, api_key, pws_id, lang):
         """Initialize the data object."""
         self._hass = hass
         self._api_key = api_key
