@@ -22,15 +22,31 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Music station'
 
-SUPPORT_DENON = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
-    SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_SELECT_SOURCE | SUPPORT_NEXT_TRACK | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP
+SUPPORT_DENON = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE \
+
+SUPPORT_MEDIA_MODES = SUPPORT_PAUSE | SUPPORT_STOP | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
+
+NORMAL_INPUTS = {'Cd': 'CD', 'Dvd': 'DVD', 'Blue ray': 'BD', 'TV': 'TV',
+                 'Satelite / Cable': 'SAT/CBL', 'Game': 'GAME',
+                 'Game2': 'GAME2', 'Video Aux': 'V.AUX', 'Dock': 'DOCK'}
+
+MEDIA_MODES = {'Tuner': 'TUNER', 'Media server': 'SERVER',
+               'Ipod dock': 'IPOD', 'Net/USB': 'NET/USB',
+               'Rapsody': 'RHAPSODY', 'Napster': 'NAPSTER',
+               'Pandora': 'PANDORA', 'LastFM': 'LASTFM',
+               'Flickr': 'FLICKR', 'Favorites': 'FAVORITES',
+               'Internet Radio': 'IRADIO', 'USB/IPOD': 'USB/IPOD'}
+
+# Sub-modes of 'NET/USB'
+# {'USB': 'USB', 'iPod Direct': 'IPD', 'Internet Radio': 'IRP',
+#  'Favorites': 'FVP'}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -53,8 +69,8 @@ class DenonDevice(MediaPlayerDevice):
         self._host = host
         self._pwstate = 'PWSTANDBY'
         self._volume = 0
-        self._source_list = {'TV': 'SITV', 'Tuner': 'SITUNER',
-                             'Internet Radio': 'SIIRP', 'Favorites': 'SIFVP'}
+        self._source_list = NORMAL_INPUTS.copy()
+        self._source_list.update(MEDIA_MODES)
         self._muted = False
         self._mediasource = ''
 
@@ -125,6 +141,7 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
+        # TODO: Add filtering/rename posibility?
         return sorted(list(self._source_list.keys()))
 
     @property
@@ -135,7 +152,17 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
-        return SUPPORT_DENON
+        if self._mediasource in MEDIA_MODES.values():
+            return SUPPORT_DENON | SUPPORT_MEDIA_MODES
+        else:
+            return SUPPORT_DENON
+
+    @property
+    def source(self):
+        """Return the current input source."""
+        for pretty_name, name in self._source_list.items():
+            if self._mediasource == name:
+                return pretty_name
 
     def turn_off(self):
         """Turn off media player."""
@@ -184,4 +211,4 @@ class DenonDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self.telnet_command(self._source_list.get(source))
+        self.telnet_command('SI' + self._source_list.get(source))
