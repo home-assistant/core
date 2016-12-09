@@ -53,8 +53,8 @@ class GroupNotifyPlatform(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send message to all entities in the group."""
-        payload = {ATTR_MESSAGE: message}
-        payload.update({key: val for key, val in kwargs.items() if val})
+        payload = kwargs
+        payload[ATTR_MESSAGE] = message
 
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
