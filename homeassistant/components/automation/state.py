@@ -65,9 +65,18 @@ def async_trigger(hass, config, action):
             return
 
         @callback
+        def clear_listener():
+            """Clear all unsub listener."""
+            nonlocal async_remove_state_for_cancel
+            nonlocal async_remove_state_for_listener
+            async_remove_state_for_listener = None
+            async_remove_state_for_cancel = None
+
+        @callback
         def state_for_listener(now):
             """Fire on state changes after a delay and calls action."""
             async_remove_state_for_cancel()
+            clear_listener()
             call_action()
 
         @callback
@@ -77,6 +86,7 @@ def async_trigger(hass, config, action):
                 return
             async_remove_state_for_listener()
             async_remove_state_for_cancel()
+            clear_listener()
 
         async_remove_state_for_listener = async_track_point_in_utc_time(
             hass, state_for_listener, dt_util.utcnow() + time_delta)
