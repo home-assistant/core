@@ -226,7 +226,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
     def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
