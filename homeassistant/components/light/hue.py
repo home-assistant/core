@@ -92,9 +92,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         host = urlparse(discovery_info[1]).hostname
 
         if "HASS Bridge" in discovery_info[0]:
-            pass
-        else:
-            host = urlparse(discovery_info[1]).hostname
+            _LOGGER.info('Emulated hue found, will not add')
+            return False
     else:
         host = config.get(CONF_HOST, None)
 
