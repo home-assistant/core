@@ -9,7 +9,7 @@ import logging
 from threading import Timer
 import voluptuous as vol
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA, DOMAIN)
+    BinarySensorDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
@@ -87,16 +87,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     entities = []
 
     for sensor in data.sensors:
-        # Build entity name, then parse customize config.
-        sensor_name = ('{}_{}'.format(data.name, sensor)).replace(' ', '_')
-        entity_name = ('{}.{}'.format(DOMAIN, sensor_name)).lower()
+        # Build sensor name, then parse customize config.
+        sensor_name = sensor.replace(' ', '_')
 
-        custom = customize.get(entity_name, {})
+        custom = customize.get(sensor_name.lower(), {})
         ignore = custom.get(CONF_IGNORED)
         delay = custom.get(CONF_DELAY)
 
-        _LOGGER.debug('Entity: %s, Options - Ignore: %s, Delay: %s',
-                      entity_name, ignore, delay)
+        _LOGGER.debug('Entity: %s - %s, Options - Ignore: %s, Delay: %s',
+                      data.name, sensor_name, ignore, delay)
         if not ignore:
             entities.append(HikvisionBinarySensor(sensor, data, delay))
 
