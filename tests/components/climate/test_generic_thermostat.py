@@ -193,7 +193,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.assertEqual(0, len(self.calls))
 
     def test_temp_change_heater_on_outside_tolerance(self):
-        """Test if temperature change turn heater on outside tolerance."""        
+        """Test if temperature change turn heater on outside tolerance."""
         self._setup_switch(False)
         climate.set_temperature(self.hass, 30)
         self.hass.block_till_done()
@@ -302,7 +302,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self._setup_switch(True)
         climate.set_temperature(self.hass, 30)
         self.hass.block_till_done()
-        self._setup_sensor(29.7)
+        self._setup_sensor(29.8)
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
@@ -326,7 +326,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self._setup_switch(False)
         climate.set_temperature(self.hass, 25)
         self.hass.block_till_done()
-        self._setup_sensor(25.3)
+        self._setup_sensor(25.2)
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
