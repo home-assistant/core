@@ -221,7 +221,7 @@ class GenericThermostat(ClimateDevice):
             elif is_heating:
                 too_hot = self._cur_temp - self._target_temp > self._tolerance
                 if too_hot:
-                    _LOGGER.info('Turning off heater %s', 
+                    _LOGGER.info('Turning off heater %s',
                                  self.heater_entity_id)
                     switch.turn_off(self.hass, self.heater_entity_id)
 
