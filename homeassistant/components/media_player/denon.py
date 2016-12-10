@@ -69,6 +69,8 @@ class DenonDevice(MediaPlayerDevice):
         self._host = host
         self._pwstate = 'PWSTANDBY'
         self._volume = 0
+        # Initial value 60dB, changed if we get a MVMAX
+        self._volume_max = 60
         self._source_list = NORMAL_INPUTS.copy()
         self._source_list.update(MEDIA_MODES)
         self._muted = False
@@ -139,8 +141,13 @@ class DenonDevice(MediaPlayerDevice):
             self._should_setup_sources = False
 
         self._pwstate = self.telnet_request(telnet, 'PW?')
-        volume_str = self.telnet_request(telnet, 'MV?')[len('MV'):]
-        self._volume = int(volume_str) / 60
+        for line in self.telnet_request(telnet, 'MV?', all_lines=True):
+            if line.startswith('MVMAX '):
+                # only grab two digit max, don't care about any half digit
+                self._volume_max = int(line[len('MVMAX '):len('MVMAX XX')])
+                continue
+            if line.startswith('MV'):
+                self._volume = int(line[len('MV'):])
         self._muted = (self.telnet_request(telnet, 'MU?') == 'MUON')
         self._mediasource = self.telnet_request(telnet, 'SI?')[len('SI'):]
 
@@ -174,7 +181,7 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self._volume
+        return self._volume / self._volume_max
 
     @property
     def is_volume_muted(self):
@@ -221,8 +228,8 @@ class DenonDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        # 60dB max
-        self.telnet_command('MV' + str(round(volume * 60)).zfill(2))
+        self.telnet_command('MV' +
+                            str(round(volume * self._volume_max)).zfill(2))
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
