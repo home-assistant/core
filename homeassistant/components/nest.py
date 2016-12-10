@@ -88,8 +88,6 @@ def setup_nest(hass, nest, config, pin=None):
 
     _LOGGER.debug("proceeding with discovery")
     discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
     _LOGGER.debug("setup done")
 
