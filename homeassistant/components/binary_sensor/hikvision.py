@@ -25,6 +25,8 @@ DEFAULT_PORT = 80
 DEFAULT_IGNORED = False
 DEFAULT_DELAY = 0
 
+ATTR_DELAY = 'delay'
+
 SENSOR_CLASS_MAP = {
     'Motion': 'motion',
     'Line Crossing': 'motion',
@@ -215,6 +217,10 @@ class HikvisionBinarySensor(BinarySensorDevice):
         """Return the state attributes."""
         attr = {}
         attr[ATTR_LAST_TRIP_TIME] = self._sensor_last_update()
+
+        if self._delay != 0:
+            attr[ATTR_DELAY] = self._delay
+
         return attr
 
     def _update_callback(self, signal, sender):
