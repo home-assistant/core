@@ -303,7 +303,7 @@ class HueLight(Light):
                 return self.info['state']['on']
             else:
                 return self.info['state']['reachable'] and \
-                       self.info['state']['on']
+                    self.info['state']['on']
 
     @property
     def supported_features(self):
