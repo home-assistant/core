@@ -25,9 +25,6 @@ SENSOR_TYPES_DEPRECATED = ['last_ip',
                            'local_ip',
                            'last_connection']
 
-SENSOR_TYPES_DEPRECATED = ['last_ip',
-                           'local_ip']
-
 WEATHER_VARS = {}
 
 DEPRECATED_WEATHER_VARS = {'weather_humidity': 'humidity',
@@ -61,7 +58,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_SCAN_INTERVAL):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_MONITORED_CONDITIONS, default=_VALID_SENSOR_TYPES):
-        vol.All(cv.ensure_l, [vol.In(_VALID_SENSOR_TYPES_WITH_DEPRECATED)])
+        vol.All(cv.ensure_list, [vol.In(_VALID_SENSOR_TYPES_WITH_DEPRECATED)])
 })
 
 _LOGGER = logging.getLogger(__name__)
