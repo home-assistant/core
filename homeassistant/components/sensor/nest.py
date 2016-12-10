@@ -101,6 +101,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(all_sensors, True)
 
+
 def is_thermostat(device):
     """Target devices that are Nest Thermostats."""
     return bool(device.__class__.__name__ == 'Device')

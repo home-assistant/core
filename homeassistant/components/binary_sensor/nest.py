@@ -50,9 +50,10 @@ _VALID_BINARY_SENSOR_TYPES_WITH_DEPRECATED = _VALID_BINARY_SENSOR_TYPES \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=_VALID_BINARY_SENSOR_TYPES):
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+                 default=_VALID_BINARY_SENSOR_TYPES):
         vol.All(cv.ensure_list,
-            [vol.In(_VALID_BINARY_SENSOR_TYPES_WITH_DEPRECATED)])
+                [vol.In(_VALID_BINARY_SENSOR_TYPES_WITH_DEPRECATED)])
 })
 
 _LOGGER = logging.getLogger(__name__)
