@@ -57,8 +57,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         body_off.hass = hass
     timeout = config.get(CONF_TIMEOUT)
 
+    req = None
     try:
-        req = None
         with async_timeout.timeout(timeout, loop=hass.loop):
             req = yield from websession.get(resource)
     except (TypeError, ValueError):
@@ -108,8 +108,8 @@ class RestSwitch(SwitchDevice):
         body_on_t = self._body_on.async_render()
         websession = async_get_clientsession(self.hass)
 
+        request = None
         try:
-            request = None
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 request = yield from websession.post(
                     self._resource, data=bytes(body_on_t, 'utf-8'))
@@ -132,8 +132,8 @@ class RestSwitch(SwitchDevice):
         body_off_t = self._body_off.async_render()
         websession = async_get_clientsession(self.hass)
 
+        request = None
         try:
-            request = None
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 request = yield from websession.post(
                     self._resource, data=bytes(body_off_t, 'utf-8'))
@@ -155,8 +155,8 @@ class RestSwitch(SwitchDevice):
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(self.hass)
 
+        request = None
         try:
-            request = None
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 request = yield from websession.get(self._resource)
                 text = yield from request.text()
