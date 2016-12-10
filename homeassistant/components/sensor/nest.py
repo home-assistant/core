@@ -8,6 +8,7 @@ from itertools import chain
 import logging
 
 import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.nest import DATA_NEST, DOMAIN
 from homeassistant.helpers.entity import Entity
@@ -59,8 +60,8 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
     vol.Optional(CONF_SCAN_INTERVAL):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Required(CONF_MONITORED_CONDITIONS):
-        [vol.In(_VALID_SENSOR_TYPES_WITH_DEPRECATED)]
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=_VALID_SENSOR_TYPES):
+        vol.All(cv.ensure_l, [vol.In(_VALID_SENSOR_TYPES_WITH_DEPRECATED)])
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,11 +69,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest Sensor."""
-    if discovery_info is None:
-        return
-
     nest = hass.data[DATA_NEST]
-    conf = config.get(CONF_MONITORED_CONDITIONS, _VALID_SENSOR_TYPES)
+    conf = config.get(CONF_MONITORED_CONDITIONS)
 
     for variable in conf:
         if variable in _SENSOR_TYPES_DEPRECATED:
@@ -105,7 +103,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         all_sensors.extend(sensors)
 
     add_devices(all_sensors, True)
-
 
 def is_thermostat(device):
     """Target devices that are Nest Thermostats."""

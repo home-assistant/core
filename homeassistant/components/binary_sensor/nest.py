@@ -8,6 +8,7 @@ from itertools import chain
 import logging
 
 import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
@@ -15,7 +16,6 @@ from homeassistant.components.sensor.nest import NestSensor
 from homeassistant.const import (CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS)
 from homeassistant.components.nest import (
     DATA_NEST, is_thermostat, is_camera)
-import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['nest']
 
@@ -50,9 +50,9 @@ _VALID_BINARY_SENSOR_TYPES_WITH_DEPRECATED = _VALID_BINARY_SENSOR_TYPES \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Required(CONF_MONITORED_CONDITIONS):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=_VALID_BINARY_SENSOR_TYPES):
         vol.All(cv.ensure_list,
-                [vol.In(_VALID_BINARY_SENSOR_TYPES_WITH_DEPRECATED)])
+            [vol.In(_VALID_BINARY_SENSOR_TYPES_WITH_DEPRECATED)])
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     nest = hass.data[DATA_NEST]
-    conf = config.get(CONF_MONITORED_CONDITIONS, _VALID_BINARY_SENSOR_TYPES)
+    conf = config.get(CONF_MONITORED_CONDITIONS)
 
     for variable in conf:
         if variable in _BINARY_TYPES_DEPRECATED:
