@@ -80,20 +80,14 @@ class DenonDevice(MediaPlayerDevice):
         self._should_setup_sources = True
 
     def _setup_sources(self, telnet):
-        self._source_list = NORMAL_INPUTS.copy()
-        self._source_list.update(MEDIA_MODES)
-
         # NSFRN - Network name
         self._name = self.telnet_request(telnet, 'NSFRN ?')[len('NSFRN '):]
 
-        # SSFUN - Renamed
+        # SSFUN - Configured sources with names
+        self._source_list = {}
         for line in self.telnet_request(telnet, 'SSFUN ?', all_lines=True):
             source, configured_name = line[len('SSFUN'):].split(" ", 1)
-            for pretty_name, name in self._source_list.items():
-                if source == name:
-                    self._source_list[configured_name] = name
-                    del self._source_list[pretty_name]
-                    break
+            self._source_list[configured_name] = source
 
         # SSSOD - Deleted sources
         for line in self.telnet_request(telnet, 'SSSOD ?', all_lines=True):
@@ -191,7 +185,6 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        # TODO: Add filtering/rename posibility?
         return sorted(list(self._source_list.keys()))
 
     @property
