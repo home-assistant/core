@@ -163,7 +163,6 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
             return
 
         new_lights = []
-        new_lightgroups = []
 
         api_name = api.get('config').get('name')
         if api_name in ('RaspBee-GW', 'deCONZ-GW'):
@@ -179,23 +178,20 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
                 new_lights.append(lights[light_id])
             else:
                 lights[light_id].info = info
-                lights[light_id].update_ha_state()
+                lights[light_id].schedule_update_ha_state()
 
         for lightgroup_id, info in api_groups.items():
             if lightgroup_id not in lightgroups:
                 lightgroups[lightgroup_id] = HueLight(
                     int(lightgroup_id), info, bridge, update_lights,
                     bridge_type, allow_unreachable, True)
-                new_lightgroups.append(lightgroups[lightgroup_id])
+                new_lights.append(lightgroups[lightgroup_id])
             else:
                 lightgroups[lightgroup_id].info = info
-                lightgroups[lightgroup_id].update_ha_state()
+                lightgroups[lightgroup_id].schedule_update_ha_state()
 
         if new_lights:
             add_devices(new_lights)
-
-        if new_lightgroups:
-            add_devices(new_lightgroups)
 
     _CONFIGURED_BRIDGES[socket.gethostbyname(host)] = True
 
