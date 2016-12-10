@@ -181,34 +181,10 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
-    def test_set_temp_change_heater_on(self):
-        """Test if temperature change turn heater on."""
-        self._setup_switch(False)
-        climate.set_temperature(self.hass, 30)
-        self.hass.block_till_done()
-        self._setup_sensor(25)
-        self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        call = self.calls[0]
-        self.assertEqual('switch', call.domain)
-        self.assertEqual(SERVICE_TURN_ON, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
-
-    def test_temp_change_heater_off(self):
-        """Test if temperature change turn heater off."""
-        self._setup_switch(True)
-        climate.set_temperature(self.hass, 25)
-        self.hass.block_till_done()
-        self._setup_sensor(30)
-        self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        call = self.calls[0]
-        self.assertEqual('switch', call.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call.service)
-        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
-
     def test_temp_change_heater_on_within_tolerance(self):
-        """Test if temperature change turn heater on within tolerance."""
+        """Test if temperature change doesn't turn heater on within
+        tolerance.
+        """
         self._setup_switch(False)
         climate.set_temperature(self.hass, 30)
         self.hass.block_till_done()
@@ -217,9 +193,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.assertEqual(0, len(self.calls))
 
     def test_temp_change_heater_on_outside_tolerance(self):
-        """Test if temperature change doesn't turn heater on outside
-        tolerance.
-        """
+        """Test if temperature change turn heater on outside tolerance."""
         self._setup_switch(False)
         climate.set_temperature(self.hass, 30)
         self.hass.block_till_done()
@@ -229,6 +203,30 @@ class TestClimateGenericThermostat(unittest.TestCase):
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
         self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_temp_change_heater_off_within_tolerance(self):
+        """Test if temperature change doesn't turn heater off within
+        tolerance.
+        """
+        self._setup_switch(True)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        self._setup_sensor(31)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_temp_change_heater_off_outside_tolerance(self):
+        """Test if temperature change turn heater off outside tolerance."""
+        self._setup_switch(True)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        self._setup_sensor(35)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
     def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
@@ -297,7 +295,18 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
-    def test_set_temp_change_ac_off(self):
+    def test_temp_change_ac_off_within_tolerance(self):
+        """Test if temperature change doesn't turn ac off within
+        tolerance.
+        """
+        self._setup_switch(True)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        self._setup_sensor(29.8)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_set_temp_change_ac_off_outside_tolerance(self):
         """Test if temperature change turn ac off."""
         self._setup_switch(True)
         climate.set_temperature(self.hass, 30)
@@ -310,7 +319,18 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
-    def test_temp_change_ac_on(self):
+    def test_temp_change_ac_on_within_tolerance(self):
+        """Test if temperature change doesn't turn ac on within
+        tolerance.
+        """
+        self._setup_switch(False)
+        climate.set_temperature(self.hass, 25)
+        self.hass.block_till_done()
+        self._setup_sensor(25.2)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_temp_change_ac_on_outside_tolerance(self):
         """Test if temperature change turn ac on."""
         self._setup_switch(False)
         climate.set_temperature(self.hass, 25)
