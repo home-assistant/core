@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.netatmo import CameraData
 from homeassistant.loader import get_component
-from homeassistant.const import CONF_TIMEOUT
+from homeassistant.const import CONF_TIMEOUT, CONF_OFFSET
 from homeassistant.helpers import config_validation as cv
 
 DEPENDENCIES = ["netatmo"]
@@ -44,6 +44,7 @@ CONF_PRESENCE_SENSORS = 'presence_sensors'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOME): cv.string,
     vol.Optional(CONF_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_OFFSET): cv.positive_int,
     vol.Optional(CONF_CAMERAS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(
@@ -61,6 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     netatmo = get_component('netatmo')
     home = config.get(CONF_HOME, None)
     timeout = config.get(CONF_TIMEOUT, 15)
+    offset = config.get(CONF_OFFSET, 90)
 
     module_name = None
 
@@ -87,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for variable in welcome_sensors:
                 add_devices([NetatmoBinarySensor(data, camera_name,
                                                  module_name, home, timeout,
-                                                 camera_type, variable)])
+                                                 offset, camera_type, variable)])
         if camera_type == "NOC":
             if CONF_CAMERAS in config:
                 if config[CONF_CAMERAS] != [] and \
@@ -96,14 +98,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for variable in presence_sensors:
                 add_devices([NetatmoBinarySensor(data, camera_name,
                                                  module_name, home, timeout,
-                                                 camera_type, variable)])
+                                                 offset, camera_type, variable)])
 
     for module_name in data.get_module_names(camera_name):
         for variable in welcome_sensors:
             if variable in ('Tag Vibration', 'Tag Open'):
                 add_devices([NetatmoBinarySensor(data, camera_name,
                                                  module_name, home,
-                                                 timeout, camera_type,
+                                                 timeout, offset, camera_type,
                                                  variable)])
 
 
@@ -111,13 +113,14 @@ class NetatmoBinarySensor(BinarySensorDevice):
     """Represent a single binary sensor in a Netatmo Camera device."""
 
     def __init__(self, data, camera_name, module_name, home,
-                 timeout, camera_type, sensor):
+                 timeout, offset, camera_type, sensor):
         """Setup for access to the Netatmo camera events."""
         self._data = data
         self._camera_name = camera_name
         self._module_name = module_name
         self._home = home
         self._timeout = timeout
+        self._offset = offset
         if home:
             self._name = home + ' / ' + camera_name
         else:
@@ -184,21 +187,23 @@ class NetatmoBinarySensor(BinarySensorDevice):
         elif self._cameratype == "NOC":
             if self._sensor_name == "Outdoor motion":
                 self._state =\
-                 self._data.camera_data.outdoormotionDetected(self._home,
-                                                              self._camera_name
-                                                              )
+                 self._data.camera_data.outdoormotionDetected(
+                     self._home, self._camera_name, self._offset)
             elif self._sensor_name == "Outdoor human":
                 self._state =\
                   self._data.camera_data.humanDetected(self._home,
-                                                       self._camera_name)
+                                                       self._camera_name,
+                                                       self._offset)
             elif self._sensor_name == "Outdoor animal":
                 self._state =\
                   self._data.camera_data.animalDetected(self._home,
-                                                        self._camera_name)
+                                                        self._camera_name,
+                                                        self._offset)
             elif self._sensor_name == "Outdoor vehicle":
                 self._state =\
                   self._data.camera_data.carDetected(self._home,
-                                                     self._camera_name)
+                                                     self._camera_name,
+                                                     self._offset)
             else:
                 return None
         elif self._sensor_name == "Tag Vibration":
