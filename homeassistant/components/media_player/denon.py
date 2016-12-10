@@ -75,6 +75,33 @@ class DenonDevice(MediaPlayerDevice):
         self._mediasource = ''
         self._mediainfo = ''
 
+        self._should_setup_sources = True
+
+    def _setup_sources(self, telnet):
+        self._source_list = NORMAL_INPUTS.copy()
+        self._source_list.update(MEDIA_MODES)
+
+        # NSFRN - Network name
+        self._name = self.telnet_request(telnet, 'NSFRN ?')[len('NSFRN '):]
+
+        # SSFUN - Renamed
+        for line in self.telnet_request(telnet, 'SSFUN ?', all_lines=True):
+            source, configured_name = line[len('SSFUN'):].split(" ", 1)
+            for pretty_name, name in self._source_list.items():
+                if source == name:
+                    self._source_list[configured_name] = name
+                    del self._source_list[pretty_name]
+                    break
+
+        # SSSOD - Deleted sources
+        for line in self.telnet_request(telnet, 'SSSOD ?', all_lines=True):
+            source, status = line[len('SSSOD'):].split(" ", 1)
+            if status == 'DEL':
+                for pretty_name, name in self._source_list.items():
+                    if source == name:
+                        del self._source_list[pretty_name]
+                        break
+
     @classmethod
     def telnet_request(cls, telnet, command, all_lines=False):
         """Execute `command` and return the response."""
@@ -106,6 +133,10 @@ class DenonDevice(MediaPlayerDevice):
             telnet = telnetlib.Telnet(self._host)
         except OSError:
             return False
+
+        if self._should_setup_sources:
+            self._setup_sources(telnet)
+            self._should_setup_sources = False
 
         self._pwstate = self.telnet_request(telnet, 'PW?')
         volume_str = self.telnet_request(telnet, 'MV?')[len('MV'):]
