@@ -21,6 +21,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA, MEDIA_TYPE_MUSIC, ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE, DOMAIN as DOMAIN_MP)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 
@@ -28,6 +29,10 @@ DOMAIN = 'tts'
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
+
+MEM_CACHE_TIME = 300
+MEM_CACHE_FILENAME = 'filename'
+MEM_CACHE_VOICE = 'voice'
 
 CONF_LANG = 'language'
 CONF_CACHE = 'cache'
@@ -100,8 +105,11 @@ def async_setup(hass, config):
             message = service.data.get(ATTR_MESSAGE)
             cache = service.data.get(ATTR_CACHE)
 
-            url = yield from tts.async_get_url(p_type, message, cache=cache)
-            if url is None:
+            try:
+                url = yield from tts.async_get_url(
+                    p_type, message, cache=cache)
+            except HomeAssistantError as err:
+                _LOGGER.error("Error on init tts: %s", err)
                 return
 
             data = {
@@ -134,8 +142,10 @@ class SpeechStore(object):
     def __init__(self, hass):
         """Initialize a speech store."""
         self.hass = hass
-        self.cache = {}
+        self.file_cache = {}
+        self.mem_cache = {}
         self.providers = {}
+        self._cache_dirs = {}
 
     @callback
     def async_register_engine(self, engine, provider, config):
@@ -143,6 +153,7 @@ class SpeechStore(object):
         provider.hass = self.hass
         provider.use_cache = config.get(CONF_CACHE)
         provider.language = config.get(CONF_LANG)
+        cache_dir_key = config.get(CONF_CACHE_DIR)
 
         def tts_cache_dir(hass, cache_dir):
             """Init cache folder."""
@@ -153,12 +164,14 @@ class SpeechStore(object):
                 os.mkdir(cache_dir)
             return cache_dir
 
-        cache_dir = yield from self.hass.loop.run_in_executor(
-            None, tts_cache_dir, self.hass, config.get(CONF_CACHE_DIR))
+        if cache_dir_key in self._cache_dirs:
+            provider.cache_dir = self._cache_dirs[cache_dir_key]
+        else:
+            provider.cache_dir = yield from self.hass.loop.run_in_executor(
+                None, tts_cache_dir, self.hass, cache_dir_key)
+            self._cache_dirs[cache_dir_key] = provider.cache_dir
 
-        provider.cache_dir = cache_dir
         self.providers[engine] = provider
-
         if provider.use_cache:
             self.hass.async_add_job(self.async_load_engine_cache(engine))
 
@@ -186,7 +199,7 @@ class SpeechStore(object):
             None, get_cache_files)
 
         if cache_files:
-            self.cache.update(cache_files)
+            self.file_cache.update(cache_files)
 
     @asyncio.coroutine
     def async_get_url(self, engine, message, cache=None):
@@ -196,86 +209,110 @@ class SpeechStore(object):
         """
         provider = self.providers[engine]
         key = "{}_{}".format(hash(message), engine)
-        use_cache = True if cache or provider.use_cache else False
+        use_cache = cache if cache is not None else provider.use_cache
 
-        if use_cache and key in self.cache:
-            file_name = self.cache[key]
+        # is file store in file cache
+        if use_cache and key in self.file_cache:
+            filename = self.file_cache[key]
+            self.hass.async_add_job(self.async_file_to_mem(engine, key))
+        # is speech allready in memory
+        if key in self.mem_cache:
+            filename = self.mem_cache[key][MEM_CACHE_FILENAME]
+        # load speech from provider into memory
         else:
-            file_name = yield from self.async_save_tts(engine, key, message)
-            if file_name is None:
-                return None
+            filename = yield from self.async_load_tts_audio(
+                engine, key, message, use_cache)
 
-        return "{}/{}".format(self.hass.config.api.base_url, file_name)
+        return "{}/{}".format(self.hass.config.api.base_url, filename)
 
     @asyncio.coroutine
-    def async_save_tts(self, engine, key, message):
+    def async_load_tts_audio(self, engine, key, message, cache):
         """Receive TTS and store for view.
 
         This method is a coroutine.
         """
         provider = self.providers[engine]
         extension, data = yield from provider.async_get_tts_audio(message)
-        file_name = "{}.{}".format(key, extension)
+        filename = "{}.{}".format(key, extension)
+        voice_file = os.path.join(provider.cache_dir, filename)
 
         if data is None:
-            _LOGGER.error("No TTS from %s for '%s'", engine, message)
-            return None
+            raise HomeAssistantError("No TTS from %s for '%s'",
+                                     engine, message)
 
-        def save_speech():
-            """Store speech to filesystem."""
-            voice_file = os.path.join(provider.cache_dir, file_name)
-            with open(voice_file, 'wb') as speech:
-                speech.write(data)
+        # save to memory
+        self._async_store_to_memcache(key, filename, data)
 
-        try:
-            yield from self.hass.loop.run_in_executor(None, save_speech)
-        except OSError:
-            _LOGGER.error("Can't write %s", file_name)
-            return None
+        if cache:
+            def save_speech():
+                """Store speech to filesystem."""
+                with open(voice_file, 'wb') as speech:
+                    speech.write(data)
 
-        if provider.use_cache:
-            self.cache[key] = file_name
+            try:
+                yield from self.hass.loop.run_in_executor(None, save_speech)
+                self.file_cache[key] = filename
+            except OSError:
+                raise HomeAssistantError("Can't write %s", filename)
 
-        return file_name
-
-    def get_provider_from_filename(self, voice_file_name):
-        """Return provider from voice file name.
-
-        Async friendly.
-        """
-        record = _RE_VOICE_FILE.match(voice_file_name)
-        if not record:
-            return None
-
-        return self.providers[record[1]]
+        return filename
 
     @asyncio.coroutine
-    def async_read_tts(self, voice_file_name):
+    def async_file_to_mem(self, engine, key):
+        """Load voice from file cache into memory.
+
+        This method is a coroutine.
+        """
+        provider = self.providers[engine]
+        filename = self.file_cache[key]
+
+        voice_file = os.path.join(provider.cache_dir, filename)
+
+        def load_speech():
+            """Load a speech from filesystem."""
+            with open(voice_file, 'rb') as speech:
+                return speech.read()
+
+        try:
+            data = yield from self.hass.loop.run_in_executor(None, load_speech)
+        except OSError:
+            raise HomeAssistantError("Can't read %s", voice_file)
+
+        self._async_store_to_memcache(key, filename, data)
+
+    @callback
+    def _async_store_to_memcache(self, key, filename, data):
+        """Store data to memcache and set timmer to remove it."""
+        self.mem_cache[key] = {
+            MEM_CACHE_FILENAME: filename,
+            MEM_CACHE_VOICE: data,
+        }
+
+        @callback
+        def async_remove_from_mem():
+            """Cleanup memcache."""
+            self.mem_cache.pop(key)
+
+        self.hass.loop.call_later(MEM_CACHE_TIME, async_remove_from_mem)
+
+    @asyncio.coroutine
+    def async_read_tts(self, filename):
         """Read a voice file and return binary.
 
         This method is a coroutine.
         """
-        provider = self.get_provider_from_filename(voice_file_name)
-        if not provider:
-            return None
+        record = _RE_VOICE_FILE.match(filename)
+        if not record:
+            raise HomeAssistantError("Wrong tts file format!")
 
-        voice_file = os.path.join(provider.cache_dir, voice_file_name)
+        key = "{}_{}".format(record[0], record[1])
+        engine = record[1]
 
-        def load_speech():
-            """Load a speech from filesystem."""
-            try:
-                with open(voice_file, 'rb') as speech:
-                    return speech.read()
-            except OSError:
-                return None
+        if key not in self.mem_cache:
+            yield from self.async_file_to_mem(engine, key)
 
-        data = yield from self.hass.loop.run_in_executor(None, load_speech)
-        content, _ = mimetypes.guess_type(voice_file_name)
-
-        if not provider.use_cache:
-            self.hass.async_add_job(os.unlink, voice_file)
-
-        return (content, data)
+        content, _ = mimetypes.guess_type(filename)
+        return (content, self.mem_cache[key][MEM_CACHE_VOICE])
 
 
 class Provider(object):
@@ -307,7 +344,7 @@ class TextToSpeechView(HomeAssistantView):
     """TTS view to serve an speech audio."""
 
     requires_auth = False
-    url = "/api/tts_proxy/{voice_file_name}"
+    url = "/api/tts_proxy/{filename}"
     name = "api:tts:speech"
 
     def __init__(self, tts):
@@ -315,12 +352,12 @@ class TextToSpeechView(HomeAssistantView):
         self.tts = tts
 
     @asyncio.coroutine
-    def get(self, request, voice_file_name):
+    def get(self, request, filename):
         """Start a get request."""
-        content, data = yield from self.tts.async_read_tts(voice_file_name)
-
-        if data is None:
-            _LOGGER.error("Voice file not found: %s", voice_file_name)
+        try:
+            content, data = yield from self.tts.async_read_tts(filename)
+        except HomeAssistantError as err:
+            _LOGGER.error("Error on load tts: %s", err)
             return web.Response(status=404)
 
         return web.Response(body=data, content_type=content)
