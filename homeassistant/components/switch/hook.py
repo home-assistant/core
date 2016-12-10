@@ -50,7 +50,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
     finally:
         if response is not None:
-            yield from response.close()
+            yield from response.release()
 
     try:
         token = data['data']['token']
@@ -72,7 +72,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
     finally:
         if response is not None:
-            yield from response.close()
+            yield from response.release()
 
     yield from async_add_devices(
         HookSmartHome(
@@ -127,7 +127,7 @@ class HookSmartHome(SwitchDevice):
 
         finally:
             if response is not None:
-                yield from response.close()
+                yield from response.release()
 
         _LOGGER.debug("Got: %s", data)
         return data['return_value'] == '1'

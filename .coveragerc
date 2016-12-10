@@ -122,6 +122,7 @@ omit =
     homeassistant/components/alarm_control_panel/simplisafe.py
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/concord232.py
+    homeassistant/components/binary_sensor/flic.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/amcrest.py
@@ -281,6 +282,7 @@ omit =
     homeassistant/components/sensor/mhz19.py
     homeassistant/components/sensor/miflora.py
     homeassistant/components/sensor/mqtt_room.py
+    homeassistant/components/sensor/netdata.py
     homeassistant/components/sensor/neurio_energy.py
     homeassistant/components/sensor/nut.py
     homeassistant/components/sensor/nzbget.py
@@ -314,7 +316,7 @@ omit =
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
-    homeassistant/components/sensor/waqi.py
+    homeassistant/components/sensor/zamg.py
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/anel_pwrctrl.py
     homeassistant/components/switch/arest.py

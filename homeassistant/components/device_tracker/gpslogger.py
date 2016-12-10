@@ -63,10 +63,20 @@ class GPSLoggerView(HomeAssistantView):
             accuracy = int(float(data['accuracy']))
         if 'battery' in data:
             battery = float(data['battery'])
+        attrs = {}
+        if 'speed' in data:
+            attrs['speed'] = float(data['speed'])
+        if 'direction' in data:
+            attrs['direction'] = float(data['direction'])
+        if 'altitude' in data:
+            attrs['altitude'] = float(data['altitude'])
+        if 'provider' in data:
+            attrs['provider'] = data['provider']
 
         yield from hass.loop.run_in_executor(
             None, partial(self.see, dev_id=device,
                           gps=gps_location, battery=battery,
-                          gps_accuracy=accuracy))
+                          gps_accuracy=accuracy,
+                          attributes=attrs))
 
         return 'Setting location for {}'.format(device)

@@ -122,6 +122,8 @@ class NetatmoBinarySensor(BinarySensorDevice):
             self._name = home + ' / ' + camera_name
         else:
             self._name = camera_name
+        if module_name:
+            self._name += ' / ' + module_name
         self._sensor_name = sensor
         self._name += ' ' + sensor
         camera_id = data.camera_data.cameraByName(camera=camera_name,
@@ -184,7 +186,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
                 self._state =\
                  self._data.camera_data.outdoormotionDetected(self._home,
                                                               self._camera_name
-                                                             )
+                                                              )
             elif self._sensor_name == "Outdoor human":
                 self._state =\
                   self._data.camera_data.humanDetected(self._home,

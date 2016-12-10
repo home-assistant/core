@@ -26,6 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a Nest Cam."""
     if discovery_info is None:
         return
+
     camera_devices = hass.data[nest.DATA_NEST].camera_devices()
     cameras = [NestCamera(structure, device)
                for structure, device in camera_devices]

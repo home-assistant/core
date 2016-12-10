@@ -167,13 +167,13 @@ hikvision==0.4
 # http://github.com/adafruit/Adafruit_Python_DHT/archive/310c59b0293354d07d94375f1365f7b9b9110c7d.zip#Adafruit_DHT==1.3.0
 
 # homeassistant.components.nest
-http://github.com/technicalpickles/python-nest/archive/2512973b4b390d3965da43529cd20402ad374bfa.zip#python-nest==3.0.0
+http://github.com/technicalpickles/python-nest/archive/7a2eb38d391bddeb78079437f001224c370b555a.zip#python-nest==3.0.1
 
 # homeassistant.components.light.flux_led
 https://github.com/Danielhiversen/flux_led/archive/0.9.zip#flux_led==0.9
 
 # homeassistant.components.switch.tplink
-https://github.com/GadgetReactor/pyHS100/archive/fadb76c5a0e04f4995f16055845ffedc6d658316.zip#pyHS100==0.2.1
+https://github.com/GadgetReactor/pyHS100/archive/1f771b7d8090a91c6a58931532e42730b021cbde.zip#pyHS100==0.2.0
 
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.7.zip#pyW215==0.3.7
@@ -205,7 +205,7 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 # https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
 
 # homeassistant.components.netatmo
-https://github.com/jabesq/netatmo-api-python/archive/v0.7.0.zip#lnetatmo==0.7.0
+https://github.com/jabesq/netatmo-api-python/archive/v0.8.0.zip#lnetatmo==0.8.0
 
 # homeassistant.components.neato
 https://github.com/jabesq/pybotvac/archive/v0.0.1.zip#pybotvac==0.0.1
@@ -240,6 +240,9 @@ https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e22462
 
 # homeassistant.components.scene.hunterdouglas_powerview
 https://github.com/sander76/powerviewApi/archive/246e782d60d5c0addcc98d7899a0186f9d5640b0.zip#powerviewApi==0.3.15
+
+# homeassistant.components.binary_sensor.flic
+https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4
 
 # homeassistant.components.light.osramlightify
 https://github.com/tfriedel/python-lightify/archive/d6eadcf311e6e21746182d1480e97b350dda2b3e.zip#lightify==1.0.4
@@ -296,7 +299,7 @@ mficlient==0.3.0
 miflora==0.1.13
 
 # homeassistant.components.discovery
-netdisco==0.7.7
+netdisco==0.8.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
@@ -476,6 +479,9 @@ python-twitch==1.3.0
 # homeassistant.components.wink
 python-wink==0.11.0
 
+# homeassistant.components.device_tracker.unifi
+pyunifi==1.3
+
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
 
@@ -565,9 +571,6 @@ twilio==5.4.0
 
 # homeassistant.components.sensor.uber
 uber_rides==0.2.7
-
-# homeassistant.components.device_tracker.unifi
-unifi==1.2.5
 
 # homeassistant.components.device_tracker.unifi
 urllib3

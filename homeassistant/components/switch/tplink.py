@@ -15,7 +15,7 @@ from homeassistant.const import (CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/GadgetReactor/pyHS100/archive/'
-                'fadb76c5a0e04f4995f16055845ffedc6d658316.zip#pyHS100==0.2.1']
+                '1f771b7d8090a91c6a58931532e42730b021cbde.zip#pyHS100==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

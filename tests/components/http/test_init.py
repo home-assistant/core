@@ -44,6 +44,10 @@ def setUpModule():
 
     bootstrap.setup_component(hass, 'api')
 
+    # Registering static path as it caused CORS to blow up
+    hass.http.register_static_path(
+        '/custom_components', hass.config.path('custom_components'))
+
     hass.start()
 
 
@@ -53,11 +57,12 @@ def tearDownModule():
     hass.stop()
 
 
-class TestHttp:
+class TestCors:
     """Test HTTP component."""
 
     def test_cors_allowed_with_password_in_url(self):
         """Test cross origin resource sharing with password in url."""
+
         req = requests.get(_url(const.URL_API),
                            params={'api_password': API_PASSWORD},
                            headers={const.HTTP_HEADER_ORIGIN: HTTP_BASE_URL})

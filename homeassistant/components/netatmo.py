@@ -18,7 +18,7 @@ from homeassistant.util import Throttle
 
 REQUIREMENTS = [
     'https://github.com/jabesq/netatmo-api-python/archive/'
-    'v0.7.0.zip#lnetatmo==0.7.0']
+    'v0.8.0.zip#lnetatmo==0.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ class CameraData(object):
         self.camera_type = None
 
     def get_camera_names(self):
-        """Return all module available on the API as a list."""
+        """Return all camera available on the API as a list."""
         self.camera_names = []
         self.update()
         if not self.home:

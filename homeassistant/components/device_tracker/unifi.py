@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 
 # Unifi package doesn't list urllib3 as a requirement
-REQUIREMENTS = ['urllib3', 'unifi==1.2.5']
+REQUIREMENTS = ['urllib3', 'pyunifi==1.3']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Setup Unifi device_tracker."""
-    from unifi.controller import Controller
+    from pyunifi.controller import Controller
 
     host = config[DOMAIN].get(CONF_HOST)
     username = config[DOMAIN].get(CONF_USERNAME)
