@@ -37,18 +37,8 @@ class GoogleProvider(Provider):
         self.hass = hass
         self.token = gtts_token.Token()
 
-    @property
-    def file_format(self):
-        """Return file/audio format."""
-        return "mp3"
-
-    @property
-    def content_type(self):
-        """Return file/audio format."""
-        return "audio/mpeg"
-
     @asyncio.coroutine
-    def async_run_tts(self, message):
+    def async_get_tts_audio(self, message):
         """Load TTS from google."""
         message = yarl.quote(message)
         message_tok = yield from self.hass.loop.run_in_executor(
@@ -71,4 +61,4 @@ class GoogleProvider(Provider):
             if request is not None:
                 yield from request.release()
 
-        return data
+        return ("mp3", data)

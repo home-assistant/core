@@ -6,6 +6,7 @@ https://home-assistant.io/components/tts/
 """
 import asyncio
 import logging
+import mimetypes
 import os
 import re
 
@@ -39,6 +40,7 @@ DEFAULT_LANG = 'en'
 SERVICE_SAY = 'say'
 
 ATTR_MESSAGE = 'message'
+ATTR_CACHE = 'cache'
 
 _RE_VOICE_FILE = re.compile(r"(\w)_(\w)\.\w{3,4}")
 
@@ -52,6 +54,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 SCHEMA_SERVICE_SAY = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.string,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_CACHE): cv.boolean,
 })
 
 
@@ -95,8 +98,9 @@ def async_setup(hass, config):
             """Service handle for say."""
             entity_ids = service.data.get(ATTR_ENTITY_ID)
             message = service.data.get(ATTR_MESSAGE)
+            cache = service.data.get(ATTR_CACHE)
 
-            url = yield from tts.async_get_url(p_type, message)
+            url = yield from tts.async_get_url(p_type, message, cache=cache)
             if url is None:
                 return
 
@@ -185,15 +189,16 @@ class SpeechStore(object):
             self.cache.update(cache_files)
 
     @asyncio.coroutine
-    def async_get_url(self, engine, message):
+    def async_get_url(self, engine, message, cache=None):
         """Get URL for play message.
 
         This method is a coroutine.
         """
         provider = self.providers[engine]
         key = "{}_{}".format(hash(message), engine)
+        use_cache = True if cache or provider.use_cache else False
 
-        if provider.use_cache and key in self.cache:
+        if use_cache and key in self.cache:
             file_name = self.cache[key]
         else:
             file_name = yield from self.async_save_tts(engine, key, message)
@@ -209,8 +214,8 @@ class SpeechStore(object):
         This method is a coroutine.
         """
         provider = self.providers[engine]
-        data = yield from provider.async_run_tts(message)
-        file_name = "{}.{}".format(key, provider.file_format)
+        extension, data = yield from provider.async_get_tts_audio(message)
+        file_name = "{}.{}".format(key, extension)
 
         if data is None:
             _LOGGER.error("No TTS from %s for '%s'", engine, message)
@@ -265,11 +270,12 @@ class SpeechStore(object):
                 return None
 
         data = yield from self.hass.loop.run_in_executor(None, load_speech)
+        content, _ = mimetypes.guess_type(voice_file_name)
 
         if not provider.use_cache:
             self.hass.async_add_job(os.unlink, voice_file)
 
-        return data
+        return (content, data)
 
 
 class Provider(object):
@@ -280,29 +286,21 @@ class Provider(object):
     cache_dir = DEFAULT_CACHE_DIR
     language = DEFAULT_LANG
 
-    @property
-    def file_format(self):
-        """Return file/audio format."""
-        raise NotImplementedError()
-
-    @property
-    def content_type(self):
-        """Return file/audio format."""
-        raise NotImplementedError()
-
-    def run_tts(self, message):
+    def get_tts_audio(self, message):
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
     @asyncio.coroutine
-    def async_run_tts(self, message):
+    def async_get_tts_audio(self, message):
         """Load tts audio file from provider.
+
+        Return a tuple of file extension and data as bytes.
 
         This method is a coroutine.
         """
-        data = yield from self.hass.loop.run_in_executor(
-            None, self.run_tts, message)
-        return data
+        extension, data = yield from self.hass.loop.run_in_executor(
+            None, self.get_tts_audio, message)
+        return (extension, data)
 
 
 class TextToSpeechView(HomeAssistantView):
@@ -319,11 +317,10 @@ class TextToSpeechView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request, voice_file_name):
         """Start a get request."""
-        provider = self.tts.get_provider_from_filename(voice_file_name)
-        data = yield from self.tts.async_read_tts(voice_file_name)
+        content, data = yield from self.tts.async_read_tts(voice_file_name)
 
         if data is None:
             _LOGGER.error("Voice file not found: %s", voice_file_name)
             return web.Response(status=404)
 
-        return web.Response(body=data, content_type=provider.content_type)
+        return web.Response(body=data, content_type=content)
