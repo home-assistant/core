@@ -76,7 +76,7 @@ class TellstickLight(TellstickDevice, Light):
             try:
                 self._state = (self._brightness > 0)
             except AttributeError:
-                self._state = False
+                self._state = True
         else:
             self._state = False
 
