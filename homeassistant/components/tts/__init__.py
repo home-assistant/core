@@ -66,7 +66,7 @@ SCHEMA_SERVICE_SAY = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup TTS."""
-    tts = SpeechStore(hass)
+    tts = SpeechManager(hass)
 
     hass.http.register_view(TextToSpeechView(tts))
 
@@ -93,7 +93,7 @@ def async_setup(hass, config):
                 _LOGGER.error('Error setting up platform %s', p_type)
                 return
 
-            tts.async_register_engine(p_type, provider, p_config)
+            yield from tts.async_register_engine(p_type, provider, p_config)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error setting up platform %s', p_type)
             return
@@ -136,7 +136,7 @@ def async_setup(hass, config):
     return True
 
 
-class SpeechStore(object):
+class SpeechManager(object):
     """Representation of a speech store."""
 
     def __init__(self, hass):
