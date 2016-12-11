@@ -51,6 +51,10 @@ class GoogleProvider(Provider):
             request = None
             with async_timeout.timeout(10, loop=self.hass.loop):
                 request = yield from websession.get(url)
+                if request.status != 200:
+                    _LOGGER.error("Error %d on load url %s", request.code,
+                                  request.url)
+                    return
                 data = yield from request.read()
 
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
