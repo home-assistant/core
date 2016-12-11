@@ -13,13 +13,13 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
     MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_TURN_ON,
-    MEDIA_TYPE_MUSIC)
+    MEDIA_TYPE_MUSIC, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
     CONF_HOST, STATE_OFF, STATE_PLAYING, STATE_PAUSED,
     CONF_NAME, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.1.6']
+REQUIREMENTS = ['denonavr==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +29,10 @@ SUPPORT_DENON = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_SELECT_SOURCE | SUPPORT_PLAY_MEDIA | \
     SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK
+    SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_SET
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -41,11 +41,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Denon platform."""
     import denonavr
 
-    receiver = denonavr.DenonAVR(config.get(CONF_HOST), config.get(CONF_NAME))
+    if config.get(CONF_HOST) is not None:
+        host = config.get(CONF_HOST)
+        name = config.get(CONF_NAME)
+    elif discovery_info is not None:
+        host = discovery_info[0]
+        name = discovery_info[1]
+    else:
+        receivers = denonavr.discover()
+        if receivers:
+            host = receivers[0]["host"]
+            name = receivers[0]["friendlyName"]
 
-    add_devices([DenonDevice(receiver)])
-    _LOGGER.info("Denon receiver at host %s initialized",
-                 config.get(CONF_HOST))
+    if host:
+        receiver = denonavr.DenonAVR(host, name)
+        add_devices([DenonDevice(receiver)])
+        _LOGGER.info("Denon receiver at host %s initialized", host)
+    else:
+        _LOGGER.error("Host of Denon AVR neither provided nor discovered")
 
 
 class DenonDevice(MediaPlayerDevice):
@@ -107,7 +120,8 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        # Volume is send in a format like -50.0. Minimum is around -80.0
+        # Volume is sent in a format like -50.0. Minimum is -80.0,
+        # maximum is 18.0
         return (float(self._volume) + 80) / 100
 
     @property
@@ -239,6 +253,22 @@ class DenonDevice(MediaPlayerDevice):
     def volume_down(self):
         """Volume down media player."""
         return self._receiver.volume_down()
+
+    def set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        # Volume has to be sent in a format like -50.0. Minimum is -80.0,
+        # maximum is 18.0
+        volume_denon = float((volume * 100) - 80)
+        if volume_denon > 18:
+            volume_denon = float(18)
+        try:
+            if self._receiver.set_volume(volume_denon):
+                self._volume = volume_denon
+                return True
+            else:
+                return False
+        except ValueError:
+            return False
 
     def mute_volume(self, mute):
         """Send mute command."""
