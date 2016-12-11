@@ -1,6 +1,7 @@
 """The tests for the TTS component."""
 import os
 import shutil
+from unittest.mock import patch
 
 import requests
 
@@ -146,3 +147,60 @@ class TestTTS(object):
         assert not os.path.isfile(os.path.join(
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
+
+    @patch('homeassistant.components.tts.demo.DemoProvider.get_tts_audio',
+           return_value=None)
+    def test_setup_component_test_with_cache_dir(self):
+        """Setup demo platform with cache and call service without cache."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        _, demo_data = self.demo_provider.get_tts_audio("bla")
+        cache_file = os.path.isfile(os.path.join(
+            self.default_tts_cache,
+            "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
+
+        with open(cache_file, "wb") as voice_file:
+            voice_file.write(demo_data)
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
+                'cache': True,
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'demo_say', {
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+        })
+        self.hass.block_till_done()
+
+        assert len(calls) == 1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(
+            "/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
+            "_demo.mp3") \
+            != -1
+
+    @patch('homeassistant.components.tts.demo.DemoProvider.get_tts_audio',
+           return_value=None)
+    def test_setup_component_test_with_error_on_get_tts(self):
+        """Setup demo platform with wrong get_tts_audio."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo'
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'demo_say', {
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+        })
+        self.hass.block_till_done()
+
+        assert len(calls) == 0
