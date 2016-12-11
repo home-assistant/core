@@ -425,7 +425,7 @@ class CecClient:
             return False
         else:
             if self.lib_cec.Open(adapter):
-                self.lib_cec.GetCurrentConfiguration(self.cecconfig)
+                # self.lib_cec.GetCurrentConfiguration(self.cecconfig)
                 _LOGGER.info("connection opened")
                 return True
             else:
@@ -512,7 +512,6 @@ class CecClient:
 
     def cec_command_callback(self, command):
         """command received callback"""
-        _LOGGER.info("[command received] %s", command)
         params = {ATTR_DIR: command[:2]}
         command = command[3:]
         params[ATTR_RAW] = command
@@ -539,6 +538,7 @@ class CecClient:
         self.cecconfig.bMonitorOnly = 0
         self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
         self.cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
+        self.cecconfig.strDeviceLanguage = "cze"
         self.hass = hass
         self.cecconfig.SetKeyPressCallback(self.cec_key_press_callback)
         self.cecconfig.SetCommandCallback(self.cec_command_callback)
