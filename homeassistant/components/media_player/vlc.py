@@ -4,7 +4,6 @@ Provide functionality to interact with vlc devices on the network.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.vlc/
 """
-# pylint: disable=import-error
 import logging
 
 import voluptuous as vol
@@ -23,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-              SUPPORT_PLAY_MEDIA
+    SUPPORT_PLAY_MEDIA
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
