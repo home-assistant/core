@@ -9,7 +9,6 @@ import logging
 import os
 import threading
 import time
-from _thread import start_new_thread
 from collections import defaultdict
 from functools import reduce
 
@@ -180,28 +179,39 @@ def setup(hass, base_config):
             hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.standby, descriptions[SERVICE_STANDBY])
             hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.tx, descriptions[SERVICE_SEND_COMMAND])
             hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.volume, descriptions[SERVICE_VOLUME])
-            hass.async_add_job(_discovery)
+            hass.add_job(_discovery)
             return True
         else:
             return False
 
+    def _discovery_int(devices, device):
+        _LOGGER.info("CEC discovering device %d", device)
+        if CEC_CLIENT.poll(device):
+            _LOGGER.info("CEC found device %d", device)
+            devices.add(device)
+
     def _discovery():
         dev_type = 'switch'
+
+        new_devices = set()
         while True:
-            new_devices = filter(lambda x: CEC_CLIENT.poll(x),
-                                 filter(lambda x: exclude is None or x not in exclude,
-                                        filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x],
-                                               range(15))))
-            if new_devices:
-                discovery.load_platform(hass, dev_type, DOMAIN, discovered={ATTR_NEW: new_devices},
-                                        hass_config=base_config)
+            for device in filter(lambda x: exclude is None or x not in exclude,
+                                 filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x],
+                                        range(15))):
+                hass.add_job(_discovery_int, new_devices, device)
+
             seconds_since_scan = 0
             while seconds_since_scan < SCAN_INTERVAL:
                 if stop.is_set():
                     return
-
                 time.sleep(1)
                 seconds_since_scan += 1
+
+            if new_devices:
+                to_add = new_devices
+                discovery.load_platform(hass, dev_type, DOMAIN, discovered={ATTR_NEW: to_add},
+                                        hass_config=base_config)
+                new_devices -= to_add
 
     def _stop_cec(event):
         stop.set()
@@ -265,23 +275,23 @@ class CecDevice(Entity):
 
     @asyncio.coroutine
     def async_request_physical_address(self):
-        start_new_thread(self.cec_client.tx,
-                         (type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x83}}),))
+        self.hass.add_job(self.cec_client.tx,
+                          type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x83}}))
 
     @asyncio.coroutine
     def async_request_cec_vendor(self):
-        start_new_thread(self.cec_client.tx,
-                         (type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8C}}),))
+        self.hass.add_job(self.cec_client.tx,
+                          type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8C}}))
 
     @asyncio.coroutine
     def async_request_cec_osd_name(self):
-        start_new_thread(self.cec_client.tx,
-                         (type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x46}}),))
+        self.hass.add_job(self.cec_client.tx,
+                          type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x46}}))
 
     @asyncio.coroutine
     def async_request_cec_power_status(self):
-        start_new_thread(self.cec_client.tx,
-                         (type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8F}}),))
+        self.hass.add_job(self.cec_client.tx,
+                          type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8F}}))
 
     @callback
     def _update_callback(self, event):
