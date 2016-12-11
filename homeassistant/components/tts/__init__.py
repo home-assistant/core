@@ -83,7 +83,7 @@ def async_setup(hass, config):
 
         try:
             if hasattr(platform, 'async_get_engine'):
-                provider = yield from platform.async_get_provider(
+                provider = yield from platform.async_get_engine(
                     hass, p_config)
             else:
                 provider = yield from hass.loop.run_in_executor(
@@ -309,6 +309,8 @@ class SpeechManager(object):
         engine = record[1]
 
         if key not in self.mem_cache:
+            if key not in self.file_cache:
+                raise HomeAssistantError("File not in cache!")
             yield from self.async_file_to_mem(engine, key)
 
         content, _ = mimetypes.guess_type(filename)
