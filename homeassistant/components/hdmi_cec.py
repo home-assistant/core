@@ -6,14 +6,16 @@ https://home-assistant.io/components/hdmi_cec/
 """
 import asyncio
 import logging
+import os
 import threading
 import time
-
-import cec
-import os
-import voluptuous as vol
+from _thread import start_new_thread
 from collections import defaultdict
 from functools import reduce
+
+import cec
+import voluptuous as vol
+
 from homeassistant.components import discovery
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_ON, STATE_OFF,
@@ -178,26 +180,28 @@ def setup(hass, base_config):
             hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.standby, descriptions[SERVICE_STANDBY])
             hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.tx, descriptions[SERVICE_SEND_COMMAND])
             hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.volume, descriptions[SERVICE_VOLUME])
-
-            dev_type = 'switch'
-
-            while True:
-                new_devices = filter(lambda x: CEC_CLIENT.lib_cec.PollDevice(x),
-                                     filter(lambda x: exclude is None or x not in exclude,
-                                            filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x],
-                                                   range(15))))
-                if new_devices:
-                    discovery.load_platform(hass, dev_type, DOMAIN, discovered={ATTR_NEW: new_devices},
-                                            hass_config=base_config)
-                seconds_since_scan = 0
-                while seconds_since_scan < SCAN_INTERVAL:
-                    if stop.is_set():
-                        return
-
-                    time.sleep(1)
-                    seconds_since_scan += 1
+            hass.async_add_job(_discovery)
+            return True
         else:
             return False
+
+    def _discovery():
+        dev_type = 'switch'
+        while True:
+            new_devices = filter(lambda x: CEC_CLIENT.poll(x),
+                                 filter(lambda x: exclude is None or x not in exclude,
+                                        filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x],
+                                               range(15))))
+            if new_devices:
+                discovery.load_platform(hass, dev_type, DOMAIN, discovered={ATTR_NEW: new_devices},
+                                        hass_config=base_config)
+            seconds_since_scan = 0
+            while seconds_since_scan < SCAN_INTERVAL:
+                if stop.is_set():
+                    return
+
+                time.sleep(1)
+                seconds_since_scan += 1
 
     def _stop_cec(event):
         stop.set()
@@ -253,7 +257,7 @@ class CecDevice(Entity):
 
     @asyncio.coroutine
     def async_update_availability(self):
-        self._available = self.cec_client.lib_cec.PollDevice(self._logical_address)
+        self._available = self.cec_client.poll(self._logical_address)
         if not self._available:
             self.hass.async_add_job(self.remove)
             DEVICE_PRESENCE[self._logical_address] = False
@@ -261,23 +265,23 @@ class CecDevice(Entity):
 
     @asyncio.coroutine
     def async_request_physical_address(self):
-        self.cec_client.tx(
-            type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x83}}))
+        start_new_thread(self.cec_client.tx,
+                         (type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x83}}),))
 
     @asyncio.coroutine
     def async_request_cec_vendor(self):
-        self.cec_client.tx(
-            type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8C}}))
+        start_new_thread(self.cec_client.tx,
+                         (type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8C}}),))
 
     @asyncio.coroutine
     def async_request_cec_osd_name(self):
-        self.cec_client.tx(
-            type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x46}}))
+        start_new_thread(self.cec_client.tx,
+                         (type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x46}}),))
 
     @asyncio.coroutine
     def async_request_cec_power_status(self):
-        self.cec_client.tx(
-            type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8F}}))
+        start_new_thread(self.cec_client.tx,
+                         (type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8F}}),))
 
     @callback
     def _update_callback(self, event):
@@ -496,6 +500,9 @@ class CecClient:
         _LOGGER.info("transmit " + data)
         if not self.lib_cec.Transmit(cmd):
             _LOGGER.warning("failed to send command")
+
+    def poll(self, id):
+        return self.lib_cec.PollDevice(id)
 
     def cec_key_press_callback(self, key, duration):
         """key press callback"""
