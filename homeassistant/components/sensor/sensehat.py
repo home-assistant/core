@@ -31,7 +31,7 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DISPLAY_OPTIONS, default=[]):
+    vol.Required(CONF_DISPLAY_OPTIONS, default=SENSOR_TYPES):
         [vol.In(SENSOR_TYPES)],
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
@@ -61,7 +61,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
 
     for variable in config[CONF_DISPLAY_OPTIONS]:
-        _LOGGER.info("heyhey" + variable)
         dev.append(SenseHatSensor(data, variable))
 
     add_devices(dev)
