@@ -67,6 +67,7 @@ ATTR_DEV_ID = 'dev_id'
 ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
+ATTR_GPS_UPDATED = 'gps_updated'
 ATTR_BATTERY = 'battery'
 ATTR_ATTRIBUTES = 'attributes'
 
@@ -341,6 +342,7 @@ class Device(Entity):
     host_name = None  # type: str
     location_name = None  # type: str
     gps = None  # type: GPSType
+    gps_updated = None  # type: dt_util.dt.datetime
     gps_accuracy = 0
     last_seen = None  # type: dt_util.dt.datetime
     battery = None  # type: str
@@ -406,6 +408,7 @@ class Device(Entity):
         if self.gps:
             attr[ATTR_LATITUDE] = self.gps[0]
             attr[ATTR_LONGITUDE] = self.gps[1]
+            attr[ATTR_GPS_UPDATED] = self.gps_updated
             attr[ATTR_GPS_ACCURACY] = self.gps_accuracy
 
         if self.battery:
@@ -431,18 +434,21 @@ class Device(Entity):
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
-        self.gps_accuracy = gps_accuracy or 0
+
         if battery:
             self.battery = battery
         if attributes:
             self._attributes.update(attributes)
 
-        self.gps = None
-
         if gps is not None:
             try:
                 self.gps = float(gps[0]), float(gps[1])
+                self.gps_accuracy = gps_accuracy or 0
+                self.gps_updated = self.last_seen
             except (ValueError, TypeError, IndexError):
+                self.gps = None
+                self.gps_updated = None
+                self.gps_accuracy = 0
                 _LOGGER.warning('Could not parse gps value for %s: %s',
                                 self.dev_id, gps)
 
@@ -467,7 +473,7 @@ class Device(Entity):
             return
         elif self.location_name:
             self._state = self.location_name
-        elif self.gps is not None:
+        elif self.gps is not None and self.last_seen == self.gps_updated:
             zone_state = zone.async_active_zone(
                 self.hass, self.gps[0], self.gps[1], self.gps_accuracy)
             if zone_state is None:
