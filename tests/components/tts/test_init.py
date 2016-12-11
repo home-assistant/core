@@ -148,17 +148,16 @@ class TestTTS(object):
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
 
-    @patch('homeassistant.components.tts.demo.DemoProvider.get_tts_audio',
-           return_value=None)
     def test_setup_component_test_with_cache_dir(self):
         """Setup demo platform with cache and call service without cache."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         _, demo_data = self.demo_provider.get_tts_audio("bla")
-        cache_file = os.path.isfile(os.path.join(
+        cache_file = os.path.join(
             self.default_tts_cache,
-            "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
+            "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3")
 
+        os.mkdir(self.default_tts_cache)
         with open(cache_file, "wb") as voice_file:
             voice_file.write(demo_data)
 
@@ -172,9 +171,11 @@ class TestTTS(object):
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        self.hass.services.call(tts.DOMAIN, 'demo_say', {
-            tts.ATTR_MESSAGE: "I person is on front of your door.",
-        })
+        with patch('homeassistant.components.tts.demo.DemoProvider.'
+                   'get_tts_audio', return_value=None):
+            self.hass.services.call(tts.DOMAIN, 'demo_say', {
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            })
         self.hass.block_till_done()
 
         assert len(calls) == 1
@@ -185,7 +186,7 @@ class TestTTS(object):
 
     @patch('homeassistant.components.tts.demo.DemoProvider.get_tts_audio',
            return_value=None)
-    def test_setup_component_test_with_error_on_get_tts(self):
+    def test_setup_component_test_with_error_on_get_tts(self, tts_mock):
         """Setup demo platform with wrong get_tts_audio."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -204,3 +205,33 @@ class TestTTS(object):
         self.hass.block_till_done()
 
         assert len(calls) == 0
+
+    def test_setup_component_load_cache_retrieve_without_mem_cache(self):
+        """Setup component and load cache and get without mem cache."""
+        _, demo_data = self.demo_provider.get_tts_audio("bla")
+        cache_file = os.path.join(
+            self.default_tts_cache,
+            "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3")
+
+        os.mkdir(self.default_tts_cache)
+        with open(cache_file, "wb") as voice_file:
+            voice_file.write(demo_data)
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
+                'cache': True,
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.start()
+
+        url = ("{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
+               "_demo.mp3").format(self.hass.config.api.base_url)
+
+        req = requests.get(url)
+        assert req.status_code == 200
+        assert req.content == demo_data
