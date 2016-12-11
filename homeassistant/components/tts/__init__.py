@@ -48,7 +48,7 @@ SERVICE_SAY = 'say'
 ATTR_MESSAGE = 'message'
 ATTR_CACHE = 'cache'
 
-_RE_VOICE_FILE = re.compile(r"(\w)_(\w)\.\w{3,4}")
+_RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([a-z]+)\.[a-z0-9]{3,4}")
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): cv.string,
@@ -191,9 +191,9 @@ class SpeechManager(object):
             folder_data = os.listdir(provider.cache_dir)
             for file_data in folder_data:
                 record = _RE_VOICE_FILE.match(file_data)
-                if record and record[1] == engine:
-                    key = "{}_{}".format(record[0], record[1])
-                    cache[key] = file_data
+                if record and record.group(2) == engine:
+                    key = "{}_{}".format(record.group(1), record.group(2))
+                    cache[key.lower()] = file_data.lower()
             return cache
 
         cache_files = yield from self.hass.loop.run_in_executor(
@@ -209,8 +209,8 @@ class SpeechManager(object):
         This method is a coroutine.
         """
         provider = self.providers[engine]
-        msg_hash = hashlib.sha1(bytes(message, 'utf-8'))
-        key = "{}_{}".format(msg_hash.hexdigest(), engine)
+        msg_hash = hashlib.sha1(bytes(message, 'utf-8')).hexdigest()
+        key = ("{}_{}".format(msg_hash, engine)).lower()
         use_cache = cache if cache is not None else provider.use_cache
 
         # is speech allready in memory
@@ -225,7 +225,7 @@ class SpeechManager(object):
             filename = yield from self.async_load_tts_audio(
                 engine, key, message, use_cache)
 
-        return "{}/tts_proxy/{}".format(
+        return "{}/api/tts_proxy/{}".format(
             self.hass.config.api.base_url, filename)
 
     @asyncio.coroutine
@@ -236,12 +236,14 @@ class SpeechManager(object):
         """
         provider = self.providers[engine]
         extension, data = yield from provider.async_get_tts_audio(message)
-        filename = "{}.{}".format(key, extension)
-        voice_file = os.path.join(provider.cache_dir, filename)
 
-        if data is None:
+        if data is None or extension is None:
             raise HomeAssistantError("No TTS from %s for '%s'",
                                      engine, message)
+
+        # create file infos
+        filename = ("{}.{}".format(key, extension)).lower()
+        voice_file = os.path.join(provider.cache_dir, filename)
 
         # save to memory
         self._async_store_to_memcache(key, filename, data)
@@ -256,7 +258,7 @@ class SpeechManager(object):
                 yield from self.hass.loop.run_in_executor(None, save_speech)
                 self.file_cache[key] = filename
             except OSError:
-                raise HomeAssistantError("Can't write %s", filename)
+                _LOGGER.error("Can't write %s", filename)
 
         return filename
 
@@ -304,16 +306,16 @@ class SpeechManager(object):
 
         This method is a coroutine.
         """
-        record = _RE_VOICE_FILE.match(filename)
+        record = _RE_VOICE_FILE.match(filename.lower())
         if not record:
             raise HomeAssistantError("Wrong tts file format!")
 
-        key = "{}_{}".format(record[0], record[1])
-        engine = record[1]
+        key = "{}_{}".format(record.group(1), record.group(2))
 
         if key not in self.mem_cache:
             if key not in self.file_cache:
-                raise HomeAssistantError("File not in cache!")
+                raise HomeAssistantError("%s not in cache!", key)
+            engine = record.group(2)
             yield from self.async_file_to_mem(engine, key)
 
         content, _ = mimetypes.guess_type(filename)

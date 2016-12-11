@@ -1,6 +1,11 @@
 """The tests for the TTS component."""
+import os
+import shutil
+
+import requests
 
 import homeassistant.components.tts as tts
+from homeassistant.components.tts.demo import DemoProvider
 from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA, MEDIA_TYPE_MUSIC, ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE, DOMAIN as DOMAIN_MP)
@@ -16,9 +21,14 @@ class TestTTS(object):
     def setup_method(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.demo_provider = DemoProvider()
+        self.default_tts_cache = self.hass.config.path(tts.DEFAULT_CACHE_DIR)
 
     def teardown_method(self):
         """Stop everything that was started."""
+        if os.path.isdir(self.default_tts_cache):
+            shutil.rmtree(self.default_tts_cache)
+
         self.hass.stop()
 
     def test_setup_component_demo(self):
@@ -55,5 +65,84 @@ class TestTTS(object):
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(
-            "/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3") \
+            "/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
+            "_demo.mp3") \
             != -1
+        assert os.path.isfile(os.path.join(
+            self.default_tts_cache,
+            "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
+
+    def test_setup_component_and_test_service_with_receive_voice(self):
+        """Setup the demo platform and call service and receive voice."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.start()
+
+        self.hass.services.call(tts.DOMAIN, 'demo_say', {
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+        })
+        self.hass.block_till_done()
+
+        assert len(calls) == 1
+        req = requests.get(calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        _, demo_data = self.demo_provider.get_tts_audio("bla")
+        assert req.status_code == 200
+        assert req.content == demo_data
+
+    def test_setup_component_test_without_cache(self):
+        """Setup demo platform without cache."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
+                'cache': False,
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'demo_say', {
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+        })
+        self.hass.block_till_done()
+
+        assert len(calls) == 1
+        assert not os.path.isfile(os.path.join(
+            self.default_tts_cache,
+            "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
+
+    def test_setup_component_test_with_cache_call_service_without_cache(self):
+        """Setup demo platform with cache and call service without cache."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
+                'cache': True,
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'demo_say', {
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_CACHE: False,
+        })
+        self.hass.block_till_done()
+
+        assert len(calls) == 1
+        assert not os.path.isfile(os.path.join(
+            self.default_tts_cache,
+            "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))

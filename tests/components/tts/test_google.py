@@ -1,10 +1,12 @@
 """The tests for the Google speech platform."""
 import asyncio
+import os
+import shutil
 from unittest.mock import patch
 
 import homeassistant.components.tts as tts
 from homeassistant.components.media_player import (
-    SERVICE_PLAY_MEDIA, DOMAIN as DOMAIN_MP)
+    SERVICE_PLAY_MEDIA, ATTR_MEDIA_CONTENT_ID, DOMAIN as DOMAIN_MP)
 from homeassistant.bootstrap import setup_component
 
 from tests.common import (
@@ -29,6 +31,10 @@ class TestTTSGooglePlatform(object):
 
     def teardown_method(self):
         """Stop everything that was started."""
+        default_tts = self.hass.config.path(tts.DEFAULT_CACHE_DIR)
+        if os.path.isdir(default_tts):
+            shutil.rmtree(default_tts)
+
         self.hass.stop()
 
     def test_setup_component(self):
@@ -67,6 +73,7 @@ class TestTTSGooglePlatform(object):
 
         assert len(calls) == 1
         assert len(aioclient_mock.mock_calls) == 1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
 
     @patch('gtts_token.gtts_token.Token.calculate_token', autospec=True,
            return_value=5)
