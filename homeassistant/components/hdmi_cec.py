@@ -192,7 +192,6 @@ def setup(hass, base_config):
 
     def _start_discovery():
         dev_type = 'switch'
-
         new_devices = set()
         while True:
             for device in filter(lambda x: exclude is None or x not in exclude,
@@ -340,7 +339,7 @@ class CecDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return "%s %s" % (self.vendor_name, self._name) if self._name is not None and self.vendor_name is not None \
-            and self.vendor_name != 'Unknown' \
+                                                           and self.vendor_name != 'Unknown' \
             else "%s %d" % (DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address) if self._name is None \
             else "%s %d (%s)" % (
             DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address, self._name)
