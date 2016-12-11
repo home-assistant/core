@@ -521,6 +521,9 @@ scsgate==0.1.0
 # homeassistant.components.notify.sendgrid
 sendgrid==3.6.3
 
+# homeassistant.components.sensor.sensehat
+sense-hat==2.2.0
+
 # homeassistant.components.media_player.aquostv
 sharp-aquos-rc==0.2
 
