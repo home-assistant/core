@@ -52,7 +52,7 @@ _RE_VOICE_FILE = re.compile(r"(\w)_(\w)\.\w{3,4}")
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): cv.string,
     vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
-    vol.Optional(CONF_CACHE_DIR, default=DEFAULT_LANG): cv.string,
+    vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
 })
 
 
@@ -184,7 +184,7 @@ class SpeechManager(object):
         provider = self.providers[engine]
 
         def get_cache_files():
-            """Return a list of given engine files."""
+            """Return a dict of given engine files."""
             cache = {}
 
             folder_data = os.listdir(provider.cache_dir)
@@ -211,13 +211,13 @@ class SpeechManager(object):
         key = "{}_{}".format(hash(message), engine)
         use_cache = cache if cache is not None else provider.use_cache
 
-        # is file store in file cache
-        if use_cache and key in self.file_cache:
-            filename = self.file_cache[key]
-            self.hass.async_add_job(self.async_file_to_mem(engine, key))
         # is speech allready in memory
         if key in self.mem_cache:
             filename = self.mem_cache[key][MEM_CACHE_FILENAME]
+        # is file store in file cache
+        elif use_cache and key in self.file_cache:
+            filename = self.file_cache[key]
+            self.hass.async_add_job(self.async_file_to_mem(engine, key))
         # load speech from provider into memory
         else:
             filename = yield from self.async_load_tts_audio(
@@ -282,7 +282,7 @@ class SpeechManager(object):
 
     @callback
     def _async_store_to_memcache(self, key, filename, data):
-        """Store data to memcache and set timmer to remove it."""
+        """Store data to memcache and set timer to remove it."""
         self.mem_cache[key] = {
             MEM_CACHE_FILENAME: filename,
             MEM_CACHE_VOICE: data,

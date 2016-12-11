@@ -10,7 +10,7 @@ from homeassistant.components.tts import Provider
 
 
 def get_engine(hass, config):
-    """Setup Google speech component."""
+    """Setup Demo speech component."""
     return DemoProvider()
 
 

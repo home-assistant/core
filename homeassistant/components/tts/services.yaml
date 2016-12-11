@@ -7,5 +7,5 @@ say:
       example: 'media_player.floor'
 
     message:
-      description: Text they will speak on devices
+      description: Text to speak on devices
       example: 'My name is hanna'
