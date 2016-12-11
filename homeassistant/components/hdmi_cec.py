@@ -439,17 +439,18 @@ class CecClient:
         self.lib_cec.PowerOnDevices(addr_from_data(call, ATTR_DST))
 
     def volume(self, call):
-        _LOGGER.info("************* VOLUME: %s, %s", call, call.data)
         for cmd, att in call.data.items():
             att = int(att)
             att = 1 if att < 1 else att
             if cmd == CMD_UP:
                 for _ in range(att):
-                    self.lib_cec.VolumeUp(True)
+                    self.send_command('%x5:44:41' % self.get_logical_address())
+                self.send_command('%x5:45' % self.get_logical_address())
                 _LOGGER.info("Volume increased %d times", att)
             elif cmd == CMD_DOWN:
                 for _ in range(att):
-                    self.lib_cec.VolumeDown(True)
+                    self.send_command('%x5:44:42' % self.get_logical_address())
+                self.send_command('%x5:45' % self.get_logical_address())
                 _LOGGER.info("Volume deceased %d times", att)
             elif cmd == CMD_MUTE:
                 self.lib_cec.AudioMute()
