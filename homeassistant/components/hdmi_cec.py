@@ -179,18 +179,18 @@ def setup(hass, base_config):
             hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.standby, descriptions[SERVICE_STANDBY])
             hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.tx, descriptions[SERVICE_SEND_COMMAND])
             hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.volume, descriptions[SERVICE_VOLUME])
-            hass.add_job(_discovery)
+            hass.add_job(_start_discovery)
             return True
         else:
             return False
 
-    def _discovery_int(devices, device):
+    def _do_discovery(devices, device):
         _LOGGER.info("CEC discovering device %d", device)
         if CEC_CLIENT.poll(device):
             _LOGGER.info("CEC found device %d", device)
             devices.add(device)
 
-    def _discovery():
+    def _start_discovery():
         dev_type = 'switch'
 
         new_devices = set()
@@ -198,7 +198,7 @@ def setup(hass, base_config):
             for device in filter(lambda x: exclude is None or x not in exclude,
                                  filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x],
                                         range(15))):
-                hass.add_job(_discovery_int, new_devices, device)
+                hass.add_job(_do_discovery, new_devices, device)
 
             seconds_since_scan = 0
             while seconds_since_scan < SCAN_INTERVAL:
@@ -340,7 +340,7 @@ class CecDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return "%s %s" % (self.vendor_name, self._name) if self._name is not None and self.vendor_name is not None \
-                                                           and self.vendor_name != 'Unknown' \
+            and self.vendor_name != 'Unknown' \
             else "%s %d" % (DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address) if self._name is None \
             else "%s %d (%s)" % (
             DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address, self._name)
@@ -511,8 +511,8 @@ class CecClient:
         if not self.lib_cec.Transmit(cmd):
             _LOGGER.warning("failed to send command")
 
-    def poll(self, id):
-        return self.lib_cec.PollDevice(id)
+    def poll(self, device_id):
+        return self.lib_cec.PollDevice(device_id)
 
     def cec_key_press_callback(self, key, duration):
         """key press callback"""
