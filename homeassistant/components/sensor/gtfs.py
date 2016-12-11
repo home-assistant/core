@@ -94,42 +94,43 @@ def get_next_departure(sched, start_station_id, end_station_id):
     item = {}
     for row in result:
         item = row
-    try:
-        today = datetime.datetime.today().strftime('%Y-%m-%d')
-        departure_time_string = '{} {}'.format(today, item[2])
-        arrival_time_string = '{} {}'.format(today, item[3])
-        departure_time = datetime.datetime.strptime(departure_time_string,
-                                                    TIME_FORMAT)
-        arrival_time = datetime.datetime.strptime(arrival_time_string,
-                                                  TIME_FORMAT)
 
-        seconds_until = (departure_time-datetime.datetime.now()).total_seconds()
-        minutes_until = int(seconds_until / 60)
-
-        route = sched.routes_by_id(item[1])[0]
-
-        origin_stoptime_arrival_time = '{} {}'.format(today, item[4])
-        origin_stoptime_departure_time = '{} {}'.format(today, item[5])
-        dest_stoptime_arrival_time = '{} {}'.format(today, item[11])
-        dest_stoptime_depart_time = '{} {}'.format(today, item[12])
-
-        origin_stop_time_dict = {
-            'Arrival Time': origin_stoptime_arrival_time,
-            'Departure Time': origin_stoptime_departure_time,
-            'Drop Off Type': item[6], 'Pickup Type': item[7],
-            'Shape Dist Traveled': item[8], 'Headsign': item[9],
-            'Sequence': item[10]
-        }
-
-        destination_stop_time_dict = {
-            'Arrival Time': dest_stoptime_arrival_time,
-            'Departure Time': dest_stoptime_depart_time,
-            'Drop Off Type': item[13], 'Pickup Type': item[14],
-            'Shape Dist Traveled': item[15], 'Headsign': item[16],
-            'Sequence': item[17]
-        }
-    except KeyError:
+    if item == {}:
         return None
+
+    today = datetime.datetime.today().strftime('%Y-%m-%d')
+    departure_time_string = '{} {}'.format(today, item[2])
+    arrival_time_string = '{} {}'.format(today, item[3])
+    departure_time = datetime.datetime.strptime(departure_time_string,
+                                                TIME_FORMAT)
+    arrival_time = datetime.datetime.strptime(arrival_time_string,
+                                              TIME_FORMAT)
+
+    seconds_until = (departure_time-datetime.datetime.now()).total_seconds()
+    minutes_until = int(seconds_until / 60)
+
+    route = sched.routes_by_id(item[1])[0]
+
+    origin_stoptime_arrival_time = '{} {}'.format(today, item[4])
+    origin_stoptime_departure_time = '{} {}'.format(today, item[5])
+    dest_stoptime_arrival_time = '{} {}'.format(today, item[11])
+    dest_stoptime_depart_time = '{} {}'.format(today, item[12])
+
+    origin_stop_time_dict = {
+        'Arrival Time': origin_stoptime_arrival_time,
+        'Departure Time': origin_stoptime_departure_time,
+        'Drop Off Type': item[6], 'Pickup Type': item[7],
+        'Shape Dist Traveled': item[8], 'Headsign': item[9],
+        'Sequence': item[10]
+    }
+
+    destination_stop_time_dict = {
+        'Arrival Time': dest_stoptime_arrival_time,
+        'Departure Time': dest_stoptime_depart_time,
+        'Drop Off Type': item[13], 'Pickup Type': item[14],
+        'Shape Dist Traveled': item[15], 'Headsign': item[16],
+        'Sequence': item[17]
+    }
 
     return {
         'trip_id': item[0],
