@@ -79,7 +79,7 @@ colorlog>2.1,<3
 concord232==0.14
 
 # homeassistant.components.media_player.denonavr
-denonavr==0.2.1
+denonavr==0.2.2
 
 # homeassistant.components.media_player.directv
 directpy==0.1

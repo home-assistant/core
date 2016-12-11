@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.2.1']
+REQUIREMENTS = ['denonavr==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,24 +41,33 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Denon platform."""
     import denonavr
 
+    # Initialize name and host
+    host = None
+    name = None
+
+    # Start assignment of host and name
+    # 1. option: manual setting
     if config.get(CONF_HOST) is not None:
         host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
+    # 2. option: discovery using netdisco
     elif discovery_info is not None:
         host = discovery_info[0]
         name = discovery_info[1]
+    # 3. option: discovery using denonavr library
     else:
         receivers = denonavr.discover()
         if receivers:
             host = receivers[0]["host"]
             name = receivers[0]["friendlyName"]
 
-    if host:
+    if host is not None:
         receiver = denonavr.DenonAVR(host, name)
         add_devices([DenonDevice(receiver)])
         _LOGGER.info("Denon receiver at host %s initialized", host)
     else:
-        _LOGGER.error("Host of Denon AVR neither provided nor discovered")
+        _LOGGER.error(
+            "Host of Denon AVR neither in configuration nor discovered")
 
 
 class DenonDevice(MediaPlayerDevice):
