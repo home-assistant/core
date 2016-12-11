@@ -426,11 +426,12 @@ class Device(Entity):
         if attributes:
             self._attributes.update(attributes)
 
+        self.gps = None
+
         if gps is not None:
             try:
                 self.gps = float(gps[0]), float(gps[1])
             except (ValueError, TypeError, IndexError):
-                self.gps = None
                 _LOGGER.warning('Could not parse gps value for %s: %s',
                                 self.dev_id, gps)
 
