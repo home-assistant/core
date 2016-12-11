@@ -18,6 +18,15 @@ class TestTTSGooglePlatform(object):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
+        self.url = "http://translate.google.com/translate_tts"
+        self.url_param = {
+            'tl': 'en',
+            'q': 'I%20person%20is%20on%20front%20of%20your%20door.',
+            'tk': 5,
+            'client': 'tw-ob',
+            'textlen': 48,
+        }
+
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
@@ -39,11 +48,8 @@ class TestTTSGooglePlatform(object):
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url = ("http://translate.google.com/translate_tts?tl=en&"
-               "q=I%20person%20is%20on%20front%20of%20your%20door."
-               "&tk=5&client=hass&textlen=48")
-
-        aioclient_mock.get(url, status=200, content=b'test')
+        aioclient_mock.get(
+            self.url, params=self.url_param, status=200, content=b'test')
 
         config = {
             tts.DOMAIN: {
@@ -68,11 +74,8 @@ class TestTTSGooglePlatform(object):
         """Test service call say with http response 400."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url = ("http://translate.google.com/translate_tts?tl=en&"
-               "q=I%20person%20is%20on%20front%20of%20your%20door."
-               "&tk=5&client=hass&textlen=48")
-
-        aioclient_mock.get(url, status=400, content=b'test')
+        aioclient_mock.get(
+            self.url, params=self.url_param, status=400, content=b'test')
 
         config = {
             tts.DOMAIN: {
@@ -97,11 +100,8 @@ class TestTTSGooglePlatform(object):
         """Test service call say with http timeout."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url = ("http://translate.google.com/translate_tts?tl=en&"
-               "q=I%20person%20is%20on%20front%20of%20your%20door."
-               "&tk=5&client=hass&textlen=48")
-
-        aioclient_mock.get(url, exc=asyncio.TimeoutError())
+        aioclient_mock.get(
+            self.url, params=self.url_param, exc=asyncio.TimeoutError())
 
         config = {
             tts.DOMAIN: {

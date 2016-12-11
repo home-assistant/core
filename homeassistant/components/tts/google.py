@@ -17,8 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 REQUIREMENTS = ["gTTS-token==1.1.1"]
 
 _LOGGER = logging.getLogger(__name__)
-GOOGLE_SPEECH_URL = ("http://translate.google.com/translate_tts?"
-                     "tl={}&q={}&tk={}&client=hass&textlen={}")
+GOOGLE_SPEECH_URL = "http://translate.google.com/translate_tts"
 
 
 @asyncio.coroutine
@@ -43,14 +42,22 @@ class GoogleProvider(Provider):
         message = yarl.quote(message)
         message_tok = yield from self.hass.loop.run_in_executor(
             None, self.token.calculate_token, message)
-        url = GOOGLE_SPEECH_URL.format(
-            self.language, message, message_tok, len(message))
         websession = async_get_clientsession(self.hass)
+
+        url_param = {
+            'tl': self.language,
+            'q': message,
+            'tk': message_tok,
+            'client': 'tw-ob',
+            'textlen': len(message),
+        }
 
         try:
             request = None
             with async_timeout.timeout(10, loop=self.hass.loop):
-                request = yield from websession.get(url)
+                request = yield from websession.get(
+                    GOOGLE_SPEECH_URL, params=url_param)
+
                 if request.status != 200:
                     _LOGGER.error("Error %d on load url %s", request.code,
                                   request.url)
@@ -58,7 +65,7 @@ class GoogleProvider(Provider):
                 data = yield from request.read()
 
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
-            _LOGGER.error("Timeout from %s", url)
+            _LOGGER.error("Timeout for google speech.")
             return
 
         finally:
