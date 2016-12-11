@@ -6,6 +6,7 @@ https://home-assistant.io/components/tts/
 """
 import asyncio
 import logging
+import hashlib
 import mimetypes
 import os
 import re
@@ -208,7 +209,8 @@ class SpeechManager(object):
         This method is a coroutine.
         """
         provider = self.providers[engine]
-        key = "{}_{}".format(hash(message), engine)
+        msg_hash = hashlib.sha1(bytes(message, 'utf-8'))
+        key = "{}_{}".format(msg_hash.hexdigest(), engine)
         use_cache = cache if cache is not None else provider.use_cache
 
         # is speech allready in memory
@@ -223,7 +225,8 @@ class SpeechManager(object):
             filename = yield from self.async_load_tts_audio(
                 engine, key, message, use_cache)
 
-        return "{}/{}".format(self.hass.config.api.base_url, filename)
+        return "{}/tts_proxy/{}".format(
+            self.hass.config.api.base_url, filename)
 
     @asyncio.coroutine
     def async_load_tts_audio(self, engine, key, message, cache):

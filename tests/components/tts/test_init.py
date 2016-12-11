@@ -2,7 +2,7 @@
 
 import homeassistant.components.tts as tts
 from homeassistant.components.media_player import (
-    SERVICE_PLAY_MEDIA, MEDIA_TYPE_MUSIC,
+    SERVICE_PLAY_MEDIA, MEDIA_TYPE_MUSIC, ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE, DOMAIN as DOMAIN_MP)
 from homeassistant.bootstrap import setup_component
 
@@ -54,3 +54,6 @@ class TestTTS(object):
 
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(
+            "/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3") \
+            != -1
