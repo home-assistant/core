@@ -212,6 +212,7 @@ omit =
     homeassistant/components/media_player/snapcast.py
     homeassistant/components/media_player/sonos.py
     homeassistant/components/media_player/squeezebox.py
+    homeassistant/components/media_player/vlc.py
     homeassistant/components/media_player/yamaha.py
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
