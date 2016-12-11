@@ -184,20 +184,13 @@ def setup(hass, base_config):
         else:
             return False
 
-    def _do_discovery(devices, device):
-        _LOGGER.info("CEC discovering device %d", device)
-        if CEC_CLIENT.poll(device):
-            _LOGGER.info("CEC found device %d", device)
-            devices.add(device)
-
     def _start_discovery():
         dev_type = 'switch'
-        new_devices = set()
         while True:
-            for device in filter(lambda x: exclude is None or x not in exclude,
-                                 filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x],
-                                        range(15))):
-                hass.add_job(_do_discovery, new_devices, device)
+            new_devices = filter(lambda x: CEC_CLIENT.poll(x),
+                                 filter(lambda x: exclude is None or x not in exclude,
+                                        filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x],
+                                               range(15))))
 
             seconds_since_scan = 0
             while seconds_since_scan < SCAN_INTERVAL:
@@ -207,10 +200,8 @@ def setup(hass, base_config):
                 seconds_since_scan += 1
 
             if new_devices:
-                to_add = new_devices
-                discovery.load_platform(hass, dev_type, DOMAIN, discovered={ATTR_NEW: to_add},
+                discovery.load_platform(hass, dev_type, DOMAIN, discovered={ATTR_NEW: new_devices},
                                         hass_config=base_config)
-                new_devices -= to_add
 
     def _stop_cec(event):
         stop.set()
@@ -268,7 +259,7 @@ class CecDevice(Entity):
     def async_update_availability(self):
         self._available = self.cec_client.poll(self._logical_address)
         if not self._available:
-            self.hass.async_add_job(self.remove)
+            self.hass.add_job(self.remove)
             DEVICE_PRESENCE[self._logical_address] = False
             self.schedule_update_ha_state()
 
