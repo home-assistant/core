@@ -74,8 +74,7 @@ CEC_LOGICAL_TO_TYPE = [0,  # TV0
                        2,  # Reserved 1
                        2,  # Reserved 2
                        2,  # Free use
-                       2  # Broadcast
-                       ]
+                       2]  # Broadcast
 
 DEVICE_TYPE_NAMES = ["TV", "Recorder", "UNKNOWN", "Tuner", "Playback", "Audio"]
 
