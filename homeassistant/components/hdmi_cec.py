@@ -245,7 +245,6 @@ class CecDevice(Entity):
         self._cec_type_id = None
         self._cec_type_id = CEC_LOGICAL_TO_TYPE[logical]
         self._available = False
-        self._hidden = False
         self._name = None
         DEVICE_PRESENCE[logical] = True
         self.cec_client = cec_client
@@ -254,7 +253,7 @@ class CecDevice(Entity):
 
     @asyncio.coroutine
     def async_update(self):
-        self._available = self.cec_client.poll(self._logical_address)
+        self._available = self.async_update_presence()
         if self.available:
             yield from self.async_request_cec_power_status()
             yield from self.async_request_cec_osd_name()
@@ -264,6 +263,10 @@ class CecDevice(Entity):
             self.hass.loop.create_task(self.async_remove())
             DEVICE_PRESENCE[self._logical_address] = False
         self.schedule_update_ha_state()
+
+    @asyncio.coroutine
+    def async_update_presence(self):
+        yield self.cec_client.poll(self._logical_address)
 
     @asyncio.coroutine
     def async_request_physical_address(self):
@@ -323,21 +326,15 @@ class CecDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return "%s %s" % (self.vendor_name, self._name) if self._name is not None and self.vendor_name is not None \
-                                                           and self.vendor_name != 'Unknown' \
+            and self.vendor_name != 'Unknown' \
             else "%s %d" % (DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address) if self._name is None \
             else "%s %d (%s)" % (
             DEVICE_TYPE_NAMES[self._cec_type_id], self._logical_address, self._name)
 
     @property
-    def state(self):
+    def state(self) -> str:
         """No polling needed."""
         return self._state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attr = {}
-        return attr
 
     @property
     def vendor_id(self):
@@ -362,10 +359,6 @@ class CecDevice(Entity):
     @property
     def icon(self):
         return icon_by_type(self._cec_type_id) if self._icon is None else self._icon
-
-    @property
-    def hidden(self):
-        return self._hidden or not self.available
 
     @property
     def available(self):

@@ -43,14 +43,14 @@ class CecSwitch(CecDevice, SwitchDevice):
         """Turn device on."""
         self.cec_client.lib_cec.PowerOnDevices(self._logical_address)
         self._state = STATE_ON
-        self.async_update()
+        self.update()
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
         self.cec_client.lib_cec.StandbyDevices(self._logical_address)
         self._state = STATE_STANDBY
-        self.async_update()
+        self.update()
         self.schedule_update_ha_state()
 
     @property
