@@ -17,7 +17,7 @@ import voluptuous as vol
 
 DOMAIN = 'tellduslive'
 
-REQUIREMENTS = ['tellduslive==0.1.9']
+REQUIREMENTS = ['tellduslive==0.1.13']
 
 _LOGGER = logging.getLogger(__name__)
 
