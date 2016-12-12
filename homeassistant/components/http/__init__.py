@@ -305,8 +305,12 @@ class HomeAssistantWSGI(object):
 
         self._handler = self.app.make_handler()
 
-        self.server = yield from self.hass.loop.create_server(
-            self._handler, self.server_host, self.server_port, ssl=context)
+        try:
+            self.server = yield from self.hass.loop.create_server(
+                self._handler, self.server_host, self.server_port, ssl=context)
+        except OSError as error:
+            _LOGGER.error("Failed to create HTTP server at port %d: %s",
+                          self.server_port, error)
 
         self.app._frozen = False  # pylint: disable=protected-access
 
