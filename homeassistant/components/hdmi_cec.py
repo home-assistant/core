@@ -399,6 +399,7 @@ class CecClient:
     callbacks = []
 
     def __init__(self, hass):
+        """Common initialization procedure of CEC entity"""
         self.cecconfig = cec.libcec_configuration()
         self.cecconfig.strDeviceName = "HA"
         self.cecconfig.bActivateSource = 0
@@ -411,7 +412,7 @@ class CecClient:
         self.cecconfig.SetCommandCallback(self.cec_command_callback)
 
     def init_lib_cec(self):
-        """initialise libCEC"""
+        """initialize libCEC"""
         self.lib_cec = cec.ICECAdapter.Create(self.cecconfig)
         # print libCEC version and compilation information
         _LOGGER.info("libCEC version " + self.lib_cec.VersionToString(
@@ -439,6 +440,7 @@ class CecClient:
                 return False
 
     def get_logical_address(self):
+        """het logical address of device"""
         return self.cecconfig.logicalAddresses.primary
 
     def standby(self, call):
@@ -446,9 +448,11 @@ class CecClient:
         self.lib_cec.StandbyDevices(addr_from_data(call, ATTR_DST))
 
     def power_on(self, call):
+        """send power on command"""
         self.lib_cec.PowerOnDevices(addr_from_data(call, ATTR_DST))
 
     def volume(self, call):
+        """Increase/decrease volume and mute/unmute system"""
         for cmd, att in call.data.items():
             att = int(att)
             att = 1 if att < 1 else att
@@ -507,6 +511,7 @@ class CecClient:
             _LOGGER.warning("failed to send command")
 
     def poll(self, device_id):
+        """poll device and return if present"""
         return self.lib_cec.PollDevice(device_id)
 
     def cec_key_press_callback(self, key, duration):
