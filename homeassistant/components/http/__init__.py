@@ -295,7 +295,7 @@ class HomeAssistantWSGI(object):
                 context.load_cert_chain(self.ssl_certificate, self.ssl_key)
             except OSError as error:
                 _LOGGER.error("Could not read SSL certificate from %s: %s",
-                              self.ssl_key, error)
+                              self.ssl_certificate, error)
                 context = None
         else:
             context = None
