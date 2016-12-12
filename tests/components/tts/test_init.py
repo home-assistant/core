@@ -44,6 +44,7 @@ class TestTTS(object):
             setup_component(self.hass, tts.DOMAIN, config)
 
         assert self.hass.services.has_service(tts.DOMAIN, 'demo_say')
+        assert self.hass.services.has_service(tts.DOMAIN, 'clear_cache')
 
     @patch('os.mkdir', side_effect=OSError(2, "No access"))
     def test_setup_component_demo_no_access_cache_folder(self, mock_mkdir):
@@ -54,10 +55,10 @@ class TestTTS(object):
             }
         }
 
-        with assert_setup_component(0, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
+        assert not setup_component(self.hass, tts.DOMAIN, config)
 
         assert not self.hass.services.has_service(tts.DOMAIN, 'demo_say')
+        assert not self.hass.services.has_service(tts.DOMAIN, 'clear_cache')
 
     def test_setup_component_and_test_service(self):
         """Setup the demo platform and call service."""
@@ -86,6 +87,36 @@ class TestTTS(object):
         assert os.path.isfile(os.path.join(
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
+
+        def test_setup_component_and_test_service_clear_cache(self):
+            """Setup the demo platform and call service clear cache."""
+            calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+            config = {
+                tts.DOMAIN: {
+                    'platform': 'demo',
+                }
+            }
+
+            with assert_setup_component(1, tts.DOMAIN):
+                setup_component(self.hass, tts.DOMAIN, config)
+
+            self.hass.services.call(tts.DOMAIN, 'demo_say', {
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            })
+            self.hass.block_till_done()
+
+            assert len(calls) == 1
+            assert os.path.isfile(os.path.join(
+                self.default_tts_cache,
+                "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
+
+            self.hass.services.call(tts.DOMAIN, tts.SERVICE_CLEAR_CACHE, {})
+            self.hass.block_till_done()
+
+            assert not os.path.isfile(os.path.join(
+                self.default_tts_cache,
+                "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
 
     def test_setup_component_and_test_service_with_receive_voice(self):
         """Setup the demo platform and call service and receive voice."""

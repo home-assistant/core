@@ -45,6 +45,7 @@ DEFAULT_LANG = 'en'
 DEFAULT_TIME_MEMORY = 300
 
 SERVICE_SAY = 'say'
+SERVICE_CLEAR_CACHE = 'clear_cache'
 
 ATTR_MESSAGE = 'message'
 ATTR_CACHE = 'cache'
@@ -65,6 +66,8 @@ SCHEMA_SERVICE_SAY = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_CACHE): cv.boolean,
 })
+
+SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
 
 
 @asyncio.coroutine
@@ -141,13 +144,22 @@ def async_setup(hass, config):
 
         hass.services.async_register(
             DOMAIN, "{}_{}".format(p_type, SERVICE_SAY), async_say_handle,
-            descriptions.get(SERVICE_SAY))
+            descriptions.get(SERVICE_SAY), schema=SCHEMA_SERVICE_SAY)
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
 
     if setup_tasks:
         yield from asyncio.wait(setup_tasks, loop=hass.loop)
+
+    @asyncio.coroutine
+    def async_clear_cache_handle(service):
+        """Handle clear cache service call."""
+        yield from tts.async_clear_cache()
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_CLEAR_CACHE, async_clear_cache_handle,
+        descriptions.get(SERVICE_CLEAR_CACHE), schema=SERVICE_CLEAR_CACHE)
 
     return True
 
@@ -209,6 +221,22 @@ class SpeechManager(object):
 
         if cache_files:
             self.file_cache.update(cache_files)
+
+    @asyncio.coroutine
+    def async_clear_cache(self):
+        """Read file cache and delete files."""
+        self.mem_cache = {}
+
+        def remove_files():
+            """Remove files from filesystem."""
+            for _, filename in self.file_cache.items():
+                try:
+                    os.remove(os.path.join(self.cache_dir), filename)
+                except OSError:
+                    pass
+
+        yield from self.hass.loop.run_in_executor(None, remove_files)
+        self.file_cache = {}
 
     @callback
     def async_register_engine(self, engine, provider, config):
