@@ -20,9 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_RESOLUTION = 'resolution'
 
-DEFAULT_RESOLUTION = 'high'
 DEFAULT_NAME = 'Amcrest Camera'
 DEFAULT_PORT = 80
+DEFAULT_RESOLUTION = 'high'
 
 NOTIFICATION_ID = 'amcrest_notification'
 NOTIFICATION_TITLE = 'Amcrest Camera Setup'
