@@ -297,6 +297,7 @@ class HomeAssistantWSGI(object):
                 _LOGGER.error("Could not read SSL certificate from %s: %s",
                               self.ssl_certificate, error)
                 context = None
+                return
         else:
             context = None
 
