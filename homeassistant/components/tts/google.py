@@ -52,8 +52,8 @@ class GoogleProvider(Provider):
             'textlen': len(message),
         }
 
+        request = None
         try:
-            request = None
             with async_timeout.timeout(10, loop=self.hass.loop):
                 request = yield from websession.get(
                     GOOGLE_SPEECH_URL, params=url_param)

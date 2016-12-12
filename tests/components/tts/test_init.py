@@ -45,6 +45,20 @@ class TestTTS(object):
 
         assert self.hass.services.has_service(tts.DOMAIN, 'demo_say')
 
+    @patch('os.mkdir', side_effect=OSError(2, "No access"))
+    def test_setup_component_demo_no_access_cache_folder(self, mock_mkdir):
+        """Setup the demo platform with defaults."""
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
+            }
+        }
+
+        with assert_setup_component(0, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        assert not self.hass.services.has_service(tts.DOMAIN, 'demo_say')
+
     def test_setup_component_and_test_service(self):
         """Setup the demo platform and call service."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
@@ -98,6 +112,44 @@ class TestTTS(object):
         _, demo_data = self.demo_provider.get_tts_audio("bla")
         assert req.status_code == 200
         assert req.content == demo_data
+
+    def test_setup_component_and_web_view_wrong_file(self):
+        """Setup the demo platform and receive wrong file from web."""
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.start()
+
+        url = ("{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
+               "_demo.mp3").format(self.hass.config.api.base_url)
+
+        req = requests.get(url)
+        assert req.status_code == 404
+
+    def test_setup_component_and_web_view_wrong_filename(self):
+        """Setup the demo platform and receive wrong filename from web."""
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.start()
+
+        url = ("{}/api/tts_proxy/265944dsk32c1b2a621be5930510bb2cd"
+               "_demo.mp3").format(self.hass.config.api.base_url)
+
+        req = requests.get(url)
+        assert req.status_code == 404
 
     def test_setup_component_test_without_cache(self):
         """Setup demo platform without cache."""
