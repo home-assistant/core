@@ -458,9 +458,11 @@ class SonosDevice(MediaPlayerDevice):
                     source_name = 'Radio'
                     # Check if currently playing radio station is in favorites
                     favs = self._player.get_sonos_favorites()['favorites']
-                    fav = [fav for fav in favs if fav['uri'] == current_media_uri]
-                    if len(fav) == 1:
-                        src = fav.pop()
+                    favc = [
+                        fav for fav in favs if fav['uri'] == current_media_uri
+                        ]
+                    if len(favc) == 1:
+                        src = favc.pop()
                         source_name = src['title']
 
                     # for radio streams we set the radio station name as the
