@@ -6,14 +6,14 @@ https://home-assistant.io/components/hdmi_cec/
 """
 import asyncio
 import logging
-import os
 import threading
 import time
-from collections import defaultdict
-from functools import reduce
 
 import cec
+import os
 import voluptuous as vol
+from collections import defaultdict
+from functools import reduce
 
 from homeassistant.components import discovery
 from homeassistant.config import load_yaml_config_file
@@ -179,29 +179,40 @@ def setup(hass, base_config):
             hass.services.register(DOMAIN, SERVICE_STANDBY, CEC_CLIENT.standby, descriptions[SERVICE_STANDBY])
             hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, CEC_CLIENT.tx, descriptions[SERVICE_SEND_COMMAND])
             hass.services.register(DOMAIN, SERVICE_VOLUME, CEC_CLIENT.volume, descriptions[SERVICE_VOLUME])
-            hass.add_job(_start_discovery)
+            hass.loop.create_task(_async_start_discovery())
             return True
         else:
             return False
 
-    def _start_discovery():
+    @asyncio.coroutine
+    def _async_sleep(scan_interval):
+        seconds_since_scan = 0
+        while seconds_since_scan < scan_interval:
+            if stop.is_set():
+                return
+            yield time.sleep(1)
+            seconds_since_scan += 1
+
+    @asyncio.coroutine
+    def _async_start_discovery():
         dev_type = 'switch'
         while True:
-            new_devices = filter(lambda x: CEC_CLIENT.poll(x),
-                                 filter(lambda x: exclude is None or x not in exclude,
-                                        filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x],
-                                               range(15))))
+            new_devices = set()
 
-            seconds_since_scan = 0
-            while seconds_since_scan < SCAN_INTERVAL:
-                if stop.is_set():
-                    return
-                time.sleep(1)
-                seconds_since_scan += 1
+            @asyncio.coroutine
+            def _do_discovery(x):
+                if CEC_CLIENT.poll(x):
+                    new_devices.add(x)
 
+            for d in filter(lambda x: exclude is None or x not in exclude,
+                            filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x], range(15))):
+                yield from _do_discovery(d)
             if new_devices:
                 discovery.load_platform(hass, dev_type, DOMAIN, discovered={ATTR_NEW: new_devices},
                                         hass_config=base_config)
+            yield from _async_sleep(SCAN_INTERVAL)
+            if stop.is_set():
+                return
 
     def _stop_cec(event):
         stop.set()
@@ -240,12 +251,12 @@ class CecDevice(Entity):
         DEVICE_PRESENCE[logical] = True
         _LOGGER.info("Initializing CEC device %s", self.name)
         self.cec_client = cec_client
-        hass.bus.listen(EVENT_CEC_COMMAND_RECEIVED, self._update_callback)
+        hass.bus.async_listen(EVENT_CEC_COMMAND_RECEIVED, self._update_callback)
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
 
     @asyncio.coroutine
     def async_update(self):
-        yield from self.async_update_availability()
+        self._available = self.cec_client.poll(self._logical_address)
         if self.available:
             _LOGGER.info("Updating status for device %s", hex(self._logical_address)[2:])
             yield from self.async_request_cec_power_status()
@@ -254,34 +265,25 @@ class CecDevice(Entity):
             yield from self.async_request_physical_address()
         else:
             _LOGGER.info("device not available. Not updating")
-
-    @asyncio.coroutine
-    def async_update_availability(self):
-        self._available = self.cec_client.poll(self._logical_address)
-        if not self._available:
-            self.hass.add_job(self.remove)
+            self.hass.loop.create_task(self.async_remove())
             DEVICE_PRESENCE[self._logical_address] = False
-            self.schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_request_physical_address(self):
-        self.hass.add_job(self.cec_client.tx,
-                          type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x83}}))
+        yield self.cec_client.tx(type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x83}}))
 
     @asyncio.coroutine
     def async_request_cec_vendor(self):
-        self.hass.add_job(self.cec_client.tx,
-                          type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8C}}))
+        yield self.cec_client.tx(type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8C}}))
 
     @asyncio.coroutine
     def async_request_cec_osd_name(self):
-        self.hass.add_job(self.cec_client.tx,
-                          type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x46}}))
+        yield self.cec_client.tx(type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x46}}))
 
     @asyncio.coroutine
     def async_request_cec_power_status(self):
-        self.hass.add_job(self.cec_client.tx,
-                          type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8F}}))
+        yield self.cec_client.tx(type('call', (object,), {'data': {ATTR_DST: self._logical_address, ATTR_CMD: 0x8F}}))
 
     @callback
     def _update_callback(self, event):
