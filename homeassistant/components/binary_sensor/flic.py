@@ -6,7 +6,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_DISCOVERY, EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_PORT, CONF_DISCOVERY, CONF_TIMEOUT,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.util.async import run_callback_threadsafe
@@ -16,6 +17,7 @@ REQUIREMENTS = ['https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_TIMEOUT = 3
 
 CLICK_TYPE_SINGLE = "single"
 CLICK_TYPE_DOUBLE = "double"
@@ -28,12 +30,14 @@ EVENT_NAME = "flic_click"
 EVENT_DATA_NAME = "button_name"
 EVENT_DATA_ADDRESS = "button_address"
 EVENT_DATA_TYPE = "click_type"
+EVENT_DATA_QUEUED_TIME = "queued_time"
 
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default='localhost'): cv.string,
     vol.Optional(CONF_PORT, default=5551): cv.port,
     vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_IGNORED_CLICK_TYPES): vol.All(cv.ensure_list,
                                                     [vol.In(CLICK_TYPES)])
 })
@@ -102,8 +106,9 @@ def start_scanning(hass, config, async_add_entities, client):
 @asyncio.coroutine
 def async_setup_button(hass, config, async_add_entities, client, address):
     """Setup single button device."""
+    timeout = config.get(CONF_TIMEOUT)
     ignored_click_types = config.get(CONF_IGNORED_CLICK_TYPES)
-    button = FlicButton(hass, client, address, ignored_click_types)
+    button = FlicButton(hass, client, address, timeout, ignored_click_types)
     _LOGGER.info("Connected to button (%s)", address)
 
     yield from async_add_entities([button])
@@ -127,12 +132,13 @@ def async_get_verified_addresses(client):
 class FlicButton(BinarySensorDevice):
     """Representation of a flic button."""
 
-    def __init__(self, hass, client, address, ignored_click_types):
+    def __init__(self, hass, client, address, timeout, ignored_click_types):
         """Initialize the flic button."""
         import pyflic
 
         self._hass = hass
         self._address = address
+        self._timeout = timeout
         self._is_down = False
         self._ignored_click_types = ignored_click_types or []
         self._hass_click_types = {
@@ -196,11 +202,27 @@ class FlicButton(BinarySensorDevice):
 
         return attr
 
+    def _queued_event_check(self, click_type, time_diff):
+        """Generate a log message and returns true if timeout exceeded."""
+        time_string = "{:d} {}".format(
+            time_diff, "second" if time_diff == 1 else "seconds")
+
+        if time_diff > self._timeout:
+            _LOGGER.warning(
+                "Queued %s dropped for %s. Time in queue was %s.",
+                click_type, self.address, time_string)
+            return True
+        else:
+            _LOGGER.info(
+                "Queued %s allowed for %s. Time in queue was %s.",
+                click_type, self.address, time_string)
+            return False
+
     def _on_up_down(self, channel, click_type, was_queued, time_diff):
         """Update device state, if event was not queued."""
         import pyflic
 
-        if was_queued:
+        if was_queued and self._queued_event_check(click_type, time_diff):
             return
 
         self._is_down = click_type == pyflic.ClickType.ButtonDown
@@ -208,13 +230,19 @@ class FlicButton(BinarySensorDevice):
 
     def _on_click(self, channel, click_type, was_queued, time_diff):
         """Fire click event, if event was not queued."""
+        # Return if click event was queued beyond allowed timeout
+        if was_queued and self._queued_event_check(click_type, time_diff):
+            return
+
+        # Return if click event is in ignored click types
         hass_click_type = self._hass_click_types[click_type]
-        if was_queued or hass_click_type in self._ignored_click_types:
+        if hass_click_type in self._ignored_click_types:
             return
 
         self._hass.bus.fire(EVENT_NAME, {
             EVENT_DATA_NAME: self.name,
             EVENT_DATA_ADDRESS: self.address,
+            EVENT_DATA_QUEUED_TIME: time_diff,
             EVENT_DATA_TYPE: hass_click_type
         })
 
