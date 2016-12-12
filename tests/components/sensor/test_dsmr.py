@@ -9,6 +9,8 @@ from decimal import Decimal
 from unittest.mock import Mock
 
 from homeassistant.bootstrap import async_setup_component
+from homeassistant.components.sensor.dsmr import DerivativeDSMREntity
+from homeassistant.const import STATE_UNKNOWN
 from tests.common import assert_setup_component
 
 
@@ -62,3 +64,37 @@ def test_default_setup(hass, monkeypatch):
     power_tariff = hass.states.get('sensor.power_tariff')
     assert power_tariff.state == 'low'
     assert power_tariff.attributes.get('unit_of_measurement') is None
+
+
+def test_derivative():
+    """Test calculation of derivative value."""
+    from dsmr_parser.objects import MBusObject
+
+    entity = DerivativeDSMREntity('test', '1.0.0')
+    yield from entity.async_update()
+
+    assert entity.state == STATE_UNKNOWN, 'initial state not unknown'
+
+    entity.telegram = {
+        '1.0.0': MBusObject([
+            {'value': 1},
+            {'value': 1, 'unit': 'm3'},
+        ])
+    }
+    yield from entity.async_update()
+
+    assert entity.state == STATE_UNKNOWN, \
+        'state after first update shoudl still be unknown'
+
+    entity.telegram = {
+        '1.0.0': MBusObject([
+            {'value': 2},
+            {'value': 2, 'unit': 'm3'},
+        ])
+    }
+    yield from entity.async_update()
+
+    assert entity.state == 1, \
+        'state should be difference between first and second update'
+
+    assert entity.unit_of_measurement == 'm3/h'

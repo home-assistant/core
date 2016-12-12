@@ -282,7 +282,7 @@ class DeviceTracker(object):
                 list(self.group.tracking) + [device.entity_id])
 
         # lookup mac vendor string to be stored in config
-        device.set_vendor_for_mac()
+        yield from device.set_vendor_for_mac()
 
         # update known_devices.yaml
         self.hass.async_add_job(
@@ -370,6 +370,7 @@ class Device(Entity):
 
         self.away_hide = hide_if_away
         self.vendor = vendor
+        self._attributes = {}
 
     @property
     def name(self):
@@ -399,11 +400,12 @@ class Device(Entity):
         if self.battery:
             attr[ATTR_BATTERY] = self.battery
 
-        if self.attributes:
-            for key, value in self.attributes.items():
-                attr[key] = value
-
         return attr
+
+    @property
+    def device_state_attributes(self):
+        """Return device state attributes."""
+        return self._attributes
 
     @property
     def hidden(self):
@@ -419,8 +421,11 @@ class Device(Entity):
         self.host_name = host_name
         self.location_name = location_name
         self.gps_accuracy = gps_accuracy or 0
-        self.battery = battery
-        self.attributes = attributes
+        if battery:
+            self.battery = battery
+        if attributes:
+            self._attributes.update(attributes)
+
         self.gps = None
 
         if gps is not None:
