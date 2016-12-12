@@ -297,6 +297,7 @@ class SonosDevice(MediaPlayerDevice):
         self._is_playing_line_in = None
         self._is_playing_tv = None
         self._favorite_sources = None
+        self._source_name = None
         self.soco_snapshot = Snapshot(self._player)
 
     @property
