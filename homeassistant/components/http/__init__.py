@@ -288,10 +288,15 @@ class HomeAssistantWSGI(object):
                 cors_added.add(route)
 
         if self.ssl_certificate:
-            context = ssl.SSLContext(SSL_VERSION)
-            context.options |= SSL_OPTS
-            context.set_ciphers(CIPHERS)
-            context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+            try:
+                context = ssl.SSLContext(SSL_VERSION)
+                context.options |= SSL_OPTS
+                context.set_ciphers(CIPHERS)
+                context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+            except OSError as error:
+                _LOGGER.error("Could not read SSL certificate from %s: %s",
+                              self.ssl_key, error)
+                context = None
         else:
             context = None
 
