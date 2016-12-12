@@ -122,7 +122,7 @@ class EmbyClient(MediaPlayerDevice):
         self.update_sessions = update_sessions
         self.client = client
         self.set_device(device)
-        self.media_status_last = None
+        self.media_status_last_position = None
         self.media_status_received = None
 
     def set_device(self, device):
@@ -188,10 +188,12 @@ class EmbyClient(MediaPlayerDevice):
             position = self.session['PlayState']['PositionTicks']
         except (KeyError, TypeError):
             position = None
+            self.media_status_last_position = position
+            self.media_status_received = None
         else:
             position = int(position) / 10000000
-            if position != self.media_status_last:
-                self.media_status_last = position
+            if position != self.media_status_last_position:
+                self.media_status_last_position = position
                 self.media_status_received = dt_util.utcnow()
 
     def play_percent(self):
@@ -253,7 +255,7 @@ class EmbyClient(MediaPlayerDevice):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        return self.media_status_last
+        return self.media_status_last_position
 
     @property
     def media_position_updated_at(self):
