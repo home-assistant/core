@@ -249,7 +249,6 @@ class CecDevice(Entity):
         self._hidden = False
         self._name = None
         DEVICE_PRESENCE[logical] = True
-        _LOGGER.info("Initializing CEC device %s", self.name)
         self.cec_client = cec_client
         hass.bus.async_listen(EVENT_CEC_COMMAND_RECEIVED, self._update_callback)
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
@@ -258,13 +257,11 @@ class CecDevice(Entity):
     def async_update(self):
         self._available = self.cec_client.poll(self._logical_address)
         if self.available:
-            _LOGGER.info("Updating status for device %s", hex(self._logical_address)[2:])
             yield from self.async_request_cec_power_status()
             yield from self.async_request_cec_osd_name()
             yield from self.async_request_cec_vendor()
             yield from self.async_request_physical_address()
         else:
-            _LOGGER.info("device not available. Not updating")
             self.hass.loop.create_task(self.async_remove())
             DEVICE_PRESENCE[self._logical_address] = False
         self.schedule_update_ha_state()
@@ -302,24 +299,19 @@ class CecDevice(Entity):
                     self._state = STATE_OFF
                 else:
                     self._state = STATE_UNKNOWN
-                _LOGGER.info("Got status for device %x -> %x, %s", src, dst, self._state)
             elif cmd == 0x47:
                 self._name = ''
                 for c in cmd_chain:
                     self._name += chr(c)
-                _LOGGER.info("Got name for device %x -> %x, %s", src, dst, self._name)
             elif cmd == 0x87:
                 self._vendor_id = 0
                 for i in cmd_chain:
                     self._vendor_id *= 0x100
                     self._vendor_id += i
-                _LOGGER.info("Got vendor for device %x -> %x, %s: %s", src, dst, self.vendor_id, self.vendor_name)
             elif cmd == 0x84:
                 self._physical_address = "%d.%d.%d.%d" % (
                     cmd_chain[0] / 0x10, cmd_chain[0] % 0x10, cmd_chain[1] / 0x10, cmd_chain[1] % 0x10)
                 self._cec_type_id = cmd_chain[2]
-                _LOGGER.info("Got physical address and type for device %x -> %x, %s, %s",
-                             src, dst, self._physical_address, self.type)
 
             self.schedule_update_ha_state(False)
 
@@ -406,6 +398,18 @@ class CecClient:
     hass = {}
     callbacks = []
 
+    def __init__(self, hass):
+        self.cecconfig = cec.libcec_configuration()
+        self.cecconfig.strDeviceName = "HA"
+        self.cecconfig.bActivateSource = 0
+        self.cecconfig.bMonitorOnly = 0
+        self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
+        self.cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
+        self.cecconfig.strDeviceLanguage = "cze"
+        self.hass = hass
+        self.cecconfig.SetKeyPressCallback(self.cec_key_press_callback)
+        self.cecconfig.SetCommandCallback(self.cec_command_callback)
+
     def init_lib_cec(self):
         """initialise libCEC"""
         self.lib_cec = cec.ICECAdapter.Create(self.cecconfig)
@@ -423,7 +427,7 @@ class CecClient:
             _LOGGER.info("product:  " + hex(adapter.iProductId))
             adapter = adapter.strComName
         if adapter is None:
-            _LOGGER.info("No adapters found")
+            _LOGGER.warning("No adapters found")
             return False
         else:
             if self.lib_cec.Open(adapter):
@@ -431,7 +435,7 @@ class CecClient:
                 _LOGGER.info("connection opened")
                 return True
             else:
-                _LOGGER.info("failed to open a connection to the CEC adapter")
+                _LOGGER.error("failed to open a connection to the CEC adapter")
                 return False
 
     def get_logical_address(self):
@@ -499,7 +503,6 @@ class CecClient:
     def send_command(self, data):
         """send a custom command to cec adapter"""
         cmd = self.lib_cec.CommandFromString(data)
-        _LOGGER.info("transmit " + data)
         if not self.lib_cec.Transmit(cmd):
             _LOGGER.warning("failed to send command")
 
@@ -532,15 +535,3 @@ class CecClient:
 
         self.hass.bus.fire(EVENT_CEC_COMMAND_RECEIVED, params)
         return 0
-
-    def __init__(self, hass):
-        self.cecconfig = cec.libcec_configuration()
-        self.cecconfig.strDeviceName = "HA"
-        self.cecconfig.bActivateSource = 0
-        self.cecconfig.bMonitorOnly = 0
-        self.cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
-        self.cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
-        self.cecconfig.strDeviceLanguage = "cze"
-        self.hass = hass
-        self.cecconfig.SetKeyPressCallback(self.cec_key_press_callback)
-        self.cecconfig.SetCommandCallback(self.cec_command_callback)

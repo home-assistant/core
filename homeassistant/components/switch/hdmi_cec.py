@@ -26,14 +26,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         devices = [CecSwitch(hass, CEC_CLIENT, device) for device in
                    filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x], discovery_info[ATTR_NEW])]
         yield from async_add_devices(devices)
+        for d in devices:
+            yield from d.async_update()
 
 
 class CecSwitch(CecDevice, SwitchDevice):
     """Representation of a HDMI device as a Switch."""
 
+    def __init__(self, hass, cec_client, logical):
+        """Initialize the HDMI device."""
+        self._state = False
+        CecDevice.__init__(self, hass, cec_client, logical)
+        self.entity_id = "%s.%s_%s" % (DOMAIN, 'hdmi', hex(self._logical_address)[2:])
+
     def turn_on(self, **kwargs) -> None:
         """Turn device on."""
-        _LOGGER.info("***************** turn_on *****************")
         self.cec_client.lib_cec.PowerOnDevices(self._logical_address)
         self._state = STATE_ON
         self.async_update()
@@ -41,19 +48,10 @@ class CecSwitch(CecDevice, SwitchDevice):
 
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
-        _LOGGER.info("***************** turn_off *****************")
         self.cec_client.lib_cec.StandbyDevices(self._logical_address)
         self._state = STATE_STANDBY
         self.async_update()
         self.schedule_update_ha_state()
-
-    def __init__(self, hass, cec_client, logical):
-        """Initialize the HDMI device."""
-        _LOGGER.info("Creating %s switch %d", DOMAIN, logical)
-        self._state = False
-        CecDevice.__init__(self, hass, cec_client, logical)
-        self.entity_id = "%s.%s_%s" % (DOMAIN, 'hdmi', hex(self._logical_address)[2:])
-        # yield from self.async_update()
 
     @property
     def is_standby(self):
