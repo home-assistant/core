@@ -24,6 +24,7 @@ REQUIREMENTS = ['denonavr==0.2.2']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = None
+KEY_DENON_CACHE = 'denonavr_hosts'
 
 SUPPORT_DENON = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
@@ -41,33 +42,49 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Denon platform."""
     import denonavr
 
-    # Initialize name and host
-    host = None
-    name = None
+    # Initialize list with receivers to be started
+    receivers = []
+
+    cache = hass.data.get(KEY_DENON_CACHE)
+    if cache is None:
+        cache = hass.data[KEY_DENON_CACHE] = set()
 
     # Start assignment of host and name
     # 1. option: manual setting
     if config.get(CONF_HOST) is not None:
         host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
-    # 2. option: discovery using netdisco
-    elif discovery_info is not None:
+        # Check if host not in cache, append it and save for later starting
+        if host not in cache:
+            cache.add(host)
+            receivers.append((host, name))
+    # 2a. option: discovery using netdisco
+    if discovery_info is not None:
         host = discovery_info[0]
         name = discovery_info[1]
-    # 3. option: discovery using denonavr library
+        # Check if host not in cache, append it and save for later starting
+        if host not in cache:
+            cache.add(host)
+            receivers.append((host, name))
+    # 2b. option: discovery using denonavr library
     else:
-        receivers = denonavr.discover()
-        if receivers:
-            host = receivers[0]["host"]
-            name = receivers[0]["friendlyName"]
+        d_receivers = denonavr.discover()
+        # More than one receiver could be discovered by that method
+        if d_receivers is not None:
+            for d_receiver in d_receivers:
+                host = d_receiver["host"]
+                name = d_receiver["friendlyName"]
+                # Check if host not in cache, append it and save for later
+                # starting
+                if host not in cache:
+                    cache.add(host)
+                    d_receivers.append((host, name))
 
-    if host is not None:
-        receiver = denonavr.DenonAVR(host, name)
-        add_devices([DenonDevice(receiver)])
-        _LOGGER.info("Denon receiver at host %s initialized", host)
-    else:
-        _LOGGER.error(
-            "Host of Denon AVR neither in configuration nor discovered")
+    # Add all freshly discovered receivers
+    for receiver in receivers:
+        new_receiver = denonavr.DenonAVR(receiver[0], receiver[1])
+        add_devices([DenonDevice(new_receiver)])
+        _LOGGER.info("Denon receiver at host %s initialized", receiver[0])
 
 
 class DenonDevice(MediaPlayerDevice):
