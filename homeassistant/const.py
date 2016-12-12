@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 34
-PATCH_VERSION = '5'
+MINOR_VERSION = 35
+PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -278,6 +278,8 @@ ATTR_GPS_ACCURACY = 'gps_accuracy'
 ATTR_ASSUMED_STATE = 'assumed_state'
 ATTR_STATE = 'state'
 
+ATTR_OPTION = 'option'
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
 SERVICE_HOMEASSISTANT_RESTART = 'restart'
@@ -317,6 +319,8 @@ SERVICE_SET_COVER_POSITION = 'set_cover_position'
 SERVICE_SET_COVER_TILT_POSITION = 'set_cover_tilt_position'
 SERVICE_STOP_COVER = 'stop_cover'
 SERVICE_STOP_COVER_TILT = 'stop_cover_tilt'
+
+SERVICE_SELECT_OPTION = 'select_option'
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123
