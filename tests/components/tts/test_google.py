@@ -26,7 +26,10 @@ class TestTTSGooglePlatform(object):
             'q': 'I%20person%20is%20on%20front%20of%20your%20door.',
             'tk': 5,
             'client': 'tw-ob',
-            'textlen': 48,
+            'textlen': 34,
+            'total': 1,
+            'idx': 0,
+            'ie': 'UTF-8',
         }
 
     def teardown_method(self):
@@ -154,3 +157,43 @@ class TestTTSGooglePlatform(object):
 
         assert len(calls) == 0
         assert len(aioclient_mock.mock_calls) == 1
+
+    @patch('gtts_token.gtts_token.Token.calculate_token', autospec=True,
+           return_value=5)
+    def test_service_say_long_size(self, mock_calculate, aioclient_mock):
+        """Test service call say with a lot of text."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        self.url_param['total'] = 9
+        self.url_param['q'] = "I%20person%20is%20on%20front%20of%20your%20door"
+        self.url_param['textlen'] = 33
+        for idx in range(0, 9):
+            self.url_param['idx'] = idx
+            aioclient_mock.get(
+                self.url, params=self.url_param, status=200, content=b'test')
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'google',
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'google_say', {
+            tts.ATTR_MESSAGE: ("I person is on front of your door."
+                               "I person is on front of your door."
+                               "I person is on front of your door."
+                               "I person is on front of your door."
+                               "I person is on front of your door."
+                               "I person is on front of your door."
+                               "I person is on front of your door."
+                               "I person is on front of your door."
+                               "I person is on front of your door."),
+        })
+        self.hass.block_till_done()
+
+        assert len(calls) == 1
+        assert len(aioclient_mock.mock_calls) == 9
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
