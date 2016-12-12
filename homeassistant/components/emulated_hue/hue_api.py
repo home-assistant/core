@@ -6,8 +6,8 @@ from aiohttp import web
 
 from homeassistant import core
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    STATE_ON, STATE_OFF, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON,
+    STATE_OFF, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_SUPPORTED_FEATURES, SUPPORT_BRIGHTNESS
@@ -251,8 +251,7 @@ def entity_to_json(entity, is_on=None, brightness=None):
     if brightness is None:
         brightness = 255 if is_on else 0
 
-    name = entity.attributes.get(
-        ATTR_EMULATED_HUE_NAME, entity.attributes[ATTR_FRIENDLY_NAME])
+    name = entity.attributes.get(ATTR_EMULATED_HUE_NAME, entity.name)
 
     return {
         'state':
