@@ -187,8 +187,7 @@ class EmbyClient(MediaPlayerDevice):
         try:
             position = self.session['PlayState']['PositionTicks']
         except (KeyError, TypeError):
-            position = None
-            self.media_status_last_position = position
+            self.media_status_last_position = None
             self.media_status_received = None
         else:
             position = int(position) / 10000000
