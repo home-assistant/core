@@ -9,3 +9,6 @@ say:
     message:
       description: Text to speak on devices
       example: 'My name is hanna'
+
+clear_cache:
+  description: Remove cache files and RAM cache.
