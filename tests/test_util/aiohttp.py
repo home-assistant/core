@@ -23,6 +23,7 @@ class AiohttpClientMocker:
                 content=None,
                 json=None,
                 params=None,
+                headers=None,
                 exc=None):
         """Mock a request."""
         if json:
@@ -65,8 +66,8 @@ class AiohttpClientMocker:
         return len(self.mock_calls)
 
     @asyncio.coroutine
-    def match_request(self, method, url, *, auth=None, params=None): \
-            # pylint: disable=unused-variable
+    def match_request(self, method, url, *, auth=None, params=None,
+                      headers=None):  # pylint: disable=unused-variable
         """Match a request against pre-registered requests."""
         for response in self._mocks:
             if response.match_request(method, url, params):
@@ -76,8 +77,8 @@ class AiohttpClientMocker:
                     raise self.exc
                 return response
 
-        assert False, "No mock registered for {} {}".format(method.upper(),
-                                                            url)
+        assert False, "No mock registered for {} {} {}".format(method.upper(),
+                                                               url, params)
 
 
 class AiohttpClientMockResponse:
