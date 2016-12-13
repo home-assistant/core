@@ -130,6 +130,9 @@ freesms==0.1.1
 # homeassistant.components.conversation
 fuzzywuzzy==0.14.0
 
+# homeassistant.components.google_speech
+gTTS-token==1.1.1
+
 # homeassistant.components.device_tracker.bluetooth_le_tracker
 # gattlib==0.20150805
 

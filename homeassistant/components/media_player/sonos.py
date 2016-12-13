@@ -12,10 +12,11 @@ import urllib
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_STOP)
+    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, MEDIA_TYPE_SPEECH,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST, SUPPORT_SELECT_SOURCE,
+    MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_STOP)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
     CONF_HOSTS)
@@ -909,6 +910,8 @@ class SonosDevice(MediaPlayerDevice):
                     _LOGGER.error('Error parsing media uri "%s", '
                                   "please check it's a valid media resource "
                                   'supported by Sonos', media_id)
+            elif media_type == MEDIA_TYPE_SPEECH:
+                self._player.play_uri(media_id, title="Speech")
             else:
                 self._player.play_uri(media_id)
 
