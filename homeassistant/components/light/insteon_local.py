@@ -27,15 +27,14 @@ light:
         name: Living Room
 
 """
-DEPENDENCIES = ['insteon_local']
-
-from homeassistant.components.insteon_local import INSTEON_LOCAL
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light)
 
+from homeassistant.components.insteon_local import INSTEON_LOCAL
 
 SUPPORT_INSTEON_LOCAL = SUPPORT_BRIGHTNESS
 
+DOMAIN = "light"
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon local light platform."""
@@ -85,7 +84,7 @@ class InsteonLocalDimmerDevice(Light):
         if resp is None:
             self._value = 0
         else:
-            self._value = int(resp['cmd2'])
+            self._value = int(resp['cmd2'], 16)
 
     @property
     def is_on(self):
@@ -104,3 +103,4 @@ class InsteonLocalDimmerDevice(Light):
     def turn_off(self, **kwargs):
         """Turn device off."""
         self.node.offInstant()
+
