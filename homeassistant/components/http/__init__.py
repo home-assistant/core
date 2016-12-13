@@ -323,10 +323,12 @@ class HomeAssistantWSGI(object):
     @asyncio.coroutine
     def stop(self):
         """Stop the wsgi server."""
-        self.server.close()
-        yield from self.server.wait_closed()
+        if self.server:
+            self.server.close()
+            yield from self.server.wait_closed()
         yield from self.app.shutdown()
-        yield from self._handler.finish_connections(60.0)
+        if self._handler:
+            yield from self._handler.finish_connections(60.0)
         yield from self.app.cleanup()
 
 
