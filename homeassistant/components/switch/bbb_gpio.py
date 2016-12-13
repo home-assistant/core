@@ -1,7 +1,8 @@
 """
 Allows to configure a switch using BBB GPIO.
 
-Switch example for two GPIOs pins P9_12 and P9_42 (GPIOxxx names allowed as well) 
+Switch example for two GPIOs pins P9_12 and P9_42.
+GPIO pin name support GPIOxxx and Px_x format.
 
 switch:
   - platform: bbb_gpio
