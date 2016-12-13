@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_HOST, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['pychromecast==0.7.6']
 
@@ -81,6 +82,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 KNOWN_HOSTS.append(host)
             except pychromecast.ChromecastConnectionError:
                 pass
+        else:
+            try:
+                # add the device anyway, get_chromecasts couldn't find it
+                casts.append(CastDevice(pychromecast.Chromecast(*host)))
+                KNOWN_HOSTS.append(host)
+            except pychromecast.ChromecastConnectionError:
+                pass
 
     add_devices(casts)
 
@@ -88,7 +96,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CastDevice(MediaPlayerDevice):
     """Representation of a Cast device on the network."""
 
-    # pylint: disable=abstract-method
     def __init__(self, chromecast):
         """Initialize the Cast device."""
         self.cast = chromecast
@@ -99,6 +106,7 @@ class CastDevice(MediaPlayerDevice):
 
         self.cast_status = self.cast.status
         self.media_status = self.cast.media_controller.status
+        self.media_status_received = None
 
     @property
     def should_poll(self):
@@ -225,6 +233,30 @@ class CastDevice(MediaPlayerDevice):
         """Flag of media commands that are supported."""
         return SUPPORT_CAST
 
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        if self.media_status is None or not (
+                self.media_status.player_is_playing or
+                self.media_status.player_is_idle):
+            return None
+
+        position = self.media_status.current_time
+
+        if self.media_status.player_is_playing:
+            position += (dt_util.utcnow() -
+                         self.media_status_received).total_seconds()
+
+        return position
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        return self.media_status_received
+
     def turn_on(self):
         """Turn on the ChromeCast."""
         # The only way we can turn the Chromecast is on is by launching an app
@@ -281,9 +313,10 @@ class CastDevice(MediaPlayerDevice):
     def new_cast_status(self, status):
         """Called when a new cast status is received."""
         self.cast_status = status
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def new_media_status(self, status):
         """Called when a new media status is received."""
         self.media_status = status
-        self.update_ha_state()
+        self.media_status_received = dt_util.utcnow()
+        self.schedule_update_ha_state()

@@ -14,8 +14,6 @@ from tests.common import assert_setup_component, mock_http_component
 @asyncio.coroutine
 def test_loading_file(hass, test_client):
     """Test that it loads image from disk."""
-    hass.allow_pool = True
-
     @mock.patch('os.path.isfile', mock.Mock(return_value=True))
     @mock.patch('os.access', mock.Mock(return_value=True))
     def setup_platform():

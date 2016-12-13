@@ -137,7 +137,7 @@ class TestNX584ZoneSensor(unittest.TestCase):
 class TestNX584Watcher(unittest.TestCase):
     """Test the NX584 watcher."""
 
-    @mock.patch.object(nx584.NX584ZoneSensor, 'update_ha_state')
+    @mock.patch.object(nx584.NX584ZoneSensor, 'schedule_update_ha_state')
     def test_process_zone_event(self, mock_update):
         """Test the processing of zone events."""
         zone1 = {'number': 1, 'name': 'foo', 'state': True}
@@ -151,7 +151,7 @@ class TestNX584Watcher(unittest.TestCase):
         self.assertFalse(zone1['state'])
         self.assertEqual(1, mock_update.call_count)
 
-    @mock.patch.object(nx584.NX584ZoneSensor, 'update_ha_state')
+    @mock.patch.object(nx584.NX584ZoneSensor, 'schedule_update_ha_state')
     def test_process_zone_event_missing_zone(self, mock_update):
         """Test the processing of zone events with missing zones."""
         watcher = nx584.NX584Watcher(None, {})
@@ -179,6 +179,7 @@ class TestNX584Watcher(unittest.TestCase):
 
         @mock.patch.object(watcher, '_process_zone_event')
         def run(fake_process):
+            """Run a fake process."""
             fake_process.side_effect = StopMe
             self.assertRaises(StopMe, watcher._run)
             self.assertEqual(fake_process.call_count, 1)
@@ -193,6 +194,7 @@ class TestNX584Watcher(unittest.TestCase):
         empty_me = [1, 2]
 
         def fake_run():
+            """Fake runner."""
             if empty_me:
                 empty_me.pop()
                 raise requests.exceptions.ConnectionError()

@@ -76,6 +76,15 @@ _IP_NEIGH_REGEX = re.compile(
     r'(\w+\s(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))))?\s' +
     r'(?P<status>(\w+))')
 
+_NVRAM_CMD = 'nvram get client_info_tmp'
+_NVRAM_REGEX = re.compile(
+    r'.*>.*>' +
+    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})' +
+    r'>' +
+    r'(?P<mac>(([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})))' +
+    r'>' +
+    r'.*')
+
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
@@ -84,7 +93,8 @@ def get_scanner(hass, config):
 
     return scanner if scanner.success_init else None
 
-AsusWrtResult = namedtuple('AsusWrtResult', 'neighbors leases arp')
+
+AsusWrtResult = namedtuple('AsusWrtResult', 'neighbors leases arp nvram')
 
 
 class AsusWrtDeviceScanner(object):
@@ -155,7 +165,8 @@ class AsusWrtDeviceScanner(object):
             active_clients = [client for client in data.values() if
                               client['status'] == 'REACHABLE' or
                               client['status'] == 'DELAY' or
-                              client['status'] == 'STALE']
+                              client['status'] == 'STALE' or
+                              client['status'] == 'IN_NVRAM']
             self.last_results = active_clients
             return True
 
@@ -184,13 +195,18 @@ class AsusWrtDeviceScanner(object):
                 ssh.sendline(_WL_CMD)
                 ssh.prompt()
                 leases_result = ssh.before.split(b'\n')[1:-1]
+                ssh.sendline(_NVRAM_CMD)
+                ssh.prompt()
+                nvram_result = ssh.before.split(b'\n')[1].split(b'<')[1:]
             else:
                 arp_result = ['']
+                nvram_result = ['']
                 ssh.sendline(_LEASES_CMD)
                 ssh.prompt()
                 leases_result = ssh.before.split(b'\n')[1:-1]
             ssh.logout()
-            return AsusWrtResult(neighbors, leases_result, arp_result)
+            return AsusWrtResult(neighbors, leases_result, arp_result,
+                                 nvram_result)
         except pxssh.ExceptionPxssh as exc:
             _LOGGER.error('Unexpected response from router: %s', exc)
             return None
@@ -213,13 +229,18 @@ class AsusWrtDeviceScanner(object):
                 telnet.write('{}\n'.format(_WL_CMD).encode('ascii'))
                 leases_result = (telnet.read_until(prompt_string).
                                  split(b'\n')[1:-1])
+                telnet.write('{}\n'.format(_NVRAM_CMD).encode('ascii'))
+                nvram_result = (telnet.read_until(prompt_string).
+                                split(b'\n')[1].split(b'<')[1:])
             else:
                 arp_result = ['']
+                nvram_result = ['']
                 telnet.write('{}\n'.format(_LEASES_CMD).encode('ascii'))
                 leases_result = (telnet.read_until(prompt_string).
                                  split(b'\n')[1:-1])
             telnet.write('exit\n'.encode('ascii'))
-            return AsusWrtResult(neighbors, leases_result, arp_result)
+            return AsusWrtResult(neighbors, leases_result, arp_result,
+                                 nvram_result)
         except EOFError:
             _LOGGER.error('Unexpected response from router')
             return None
@@ -265,8 +286,10 @@ class AsusWrtDeviceScanner(object):
 
                 # match mac addresses to IP addresses in ARP table
                 for arp in result.arp:
-                    if match.group('mac').lower() in arp.decode('utf-8'):
-                        arp_match = _ARP_REGEX.search(arp.decode('utf-8'))
+                    if match.group('mac').lower() in \
+                            arp.decode('utf-8').lower():
+                        arp_match = _ARP_REGEX.search(
+                            arp.decode('utf-8').lower())
                         if not arp_match:
                             _LOGGER.warning('Could not parse arp row: %s', arp)
                             continue
@@ -277,6 +300,26 @@ class AsusWrtDeviceScanner(object):
                             'ip': arp_match.group('ip'),
                             'mac': match.group('mac').upper(),
                             }
+
+                # match mac addresses to IP addresses in NVRAM table
+                for nvr in result.nvram:
+                    if match.group('mac').upper() in nvr.decode('utf-8'):
+                        nvram_match = _NVRAM_REGEX.search(nvr.decode('utf-8'))
+                        if not nvram_match:
+                            _LOGGER.warning('Could not parse nvr row: %s', nvr)
+                            continue
+
+                        # skip current check if already in ARP table
+                        if nvram_match.group('ip') in devices.keys():
+                            continue
+
+                        devices[nvram_match.group('ip')] = {
+                            'host': host,
+                            'status': 'IN_NVRAM',
+                            'ip': nvram_match.group('ip'),
+                            'mac': match.group('mac').upper(),
+                            }
+
         else:
             for lease in result.leases:
                 match = _LEASES_REGEX.search(lease.decode('utf-8'))

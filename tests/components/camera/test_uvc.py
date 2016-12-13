@@ -121,7 +121,7 @@ class TestUVCSetup(unittest.TestCase):
 
     @mock.patch.object(uvc, 'UnifiVideoCamera')
     def test_setup_incomplete_config(self, mock_uvc):
-        """"Test the setup with incomplete configuration."""
+        """Test the setup with incomplete configuration."""
         assert setup_component(
             self.hass, 'camera', {'platform': 'uvc', 'nvr': 'foo'})
         assert not mock_uvc.called
@@ -135,7 +135,7 @@ class TestUVCSetup(unittest.TestCase):
     @mock.patch.object(uvc, 'UnifiVideoCamera')
     @mock.patch('uvcclient.nvr.UVCRemote')
     def test_setup_nvr_errors(self, mock_remote, mock_uvc):
-        """"Test for NVR errors."""
+        """Test for NVR errors."""
         errors = [nvr.NotAuthorized, nvr.NvrError,
                   requests.exceptions.ConnectionError]
         config = {
@@ -223,6 +223,7 @@ class TestUVC(unittest.TestCase):
         responses = [0]
 
         def fake_login(*a):
+            """Fake login."""
             try:
                 responses.pop(0)
                 raise socket.error
@@ -277,6 +278,7 @@ class TestUVC(unittest.TestCase):
         responses = [0]
 
         def fake_snapshot():
+            """Fake snapshot."""
             try:
                 responses.pop()
                 raise camera.CameraAuthError()

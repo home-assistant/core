@@ -4,7 +4,7 @@ Support for MySensors lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mysensors/
 """
-# pylint: disable=abstract-method
+
 import logging
 
 from homeassistant.components import mysensors
@@ -31,7 +31,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    for gateway in mysensors.GATEWAYS.values():
+    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
+    if not gateways:
+        return
+
+    for gateway in gateways:
         # Define the S_TYPES and V_TYPES that the platform should handle as
         # states. Map them in a dict of lists.
         pres = gateway.const.Presentation
@@ -111,7 +115,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
             # optimistically assume that light has changed state
             self._state = True
             self._values[set_req.V_LIGHT] = STATE_ON
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def _turn_on_dimmer(self, **kwargs):
         """Turn on dimmer child device."""
@@ -131,7 +135,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
             # optimistically assume that light has changed state
             self._brightness = brightness
             self._values[set_req.V_DIMMER] = percent
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def _turn_on_rgb_and_w(self, hex_template, **kwargs):
         """Turn on RGB or RGBW child device."""
@@ -161,7 +165,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
             self._white = white
             if hex_color:
                 self._values[self.value_type] = hex_color
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def _turn_off_light(self, value_type=None, value=None):
         """Turn off light child device."""
@@ -207,7 +211,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
             self._state = False
             self._values[value_type] = (
                 STATE_OFF if set_req.V_LIGHT in self._values else value)
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def _update_light(self):
         """Update the controller with values from light child."""

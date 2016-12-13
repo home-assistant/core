@@ -35,7 +35,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a FFmpeg Camera."""
     if not async_run_test(hass, config.get(CONF_INPUT)):
         return
-    hass.loop.create_task(async_add_devices([FFmpegCamera(hass, config)]))
+    yield from async_add_devices([FFmpegCamera(hass, config)])
 
 
 class FFmpegCamera(Camera):
@@ -75,7 +75,6 @@ class FFmpegCamera(Camera):
 
         response = web.StreamResponse()
         response.content_type = 'multipart/x-mixed-replace;boundary=ffserver'
-        response.enable_chunked_encoding()
 
         yield from response.prepare(request)
 
@@ -86,8 +85,8 @@ class FFmpegCamera(Camera):
                     break
                 response.write(data)
         finally:
-            self.hass.loop.create_task(stream.close())
-            self.hass.loop.create_task(response.write_eof())
+            self.hass.async_add_job(stream.close())
+            yield from response.write_eof()
 
     @property
     def name(self):

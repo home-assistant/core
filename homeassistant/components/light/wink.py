@@ -23,15 +23,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink lights."""
     import pywink
 
-    add_devices(WinkLight(light) for light in pywink.get_bulbs())
+    add_devices(WinkLight(light, hass) for light in pywink.get_bulbs())
 
 
 class WinkLight(WinkDevice, Light):
     """Representation of a Wink light."""
 
-    def __init__(self, wink):
+    def __init__(self, wink, hass):
         """Initialize the Wink device."""
-        WinkDevice.__init__(self, wink)
+        WinkDevice.__init__(self, wink, hass)
 
     @property
     def is_on(self):
@@ -41,7 +41,10 @@ class WinkLight(WinkDevice, Light):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        return int(self.wink.brightness() * 255)
+        if self.wink.brightness() is not None:
+            return int(self.wink.brightness() * 255)
+        else:
+            return None
 
     @property
     def rgb_color(self):
@@ -52,6 +55,8 @@ class WinkLight(WinkDevice, Light):
             hue = self.wink.color_hue()
             saturation = self.wink.color_saturation()
             value = int(self.wink.brightness() * 255)
+            if hue is None or saturation is None or value is None:
+                return None
             rgb = colorsys.hsv_to_rgb(hue, saturation, value)
             r_value = int(round(rgb[0]))
             g_value = int(round(rgb[1]))

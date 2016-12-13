@@ -153,7 +153,6 @@ class Itunes(object):
         return self._request('PUT', path, {'level': level})
 
 
-# pylint: disable=unused-argument, abstract-method
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the iTunes platform."""
     add_devices([

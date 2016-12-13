@@ -3,6 +3,7 @@
 import unittest
 from unittest.mock import patch
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.components as core_components
 from homeassistant.components import conversation
@@ -38,7 +39,9 @@ class TestConversation(unittest.TestCase):
         """Setup and perform good turn on requests."""
         calls = []
 
+        @callback
         def record_call(service):
+            """Recorder for a call."""
             calls.append(service)
 
         self.hass.services.register('light', 'turn_on', record_call)
@@ -56,7 +59,9 @@ class TestConversation(unittest.TestCase):
         """Setup and perform good turn off requests."""
         calls = []
 
+        @callback
         def record_call(service):
+            """Recorder for a call."""
             calls.append(service)
 
         self.hass.services.register('light', 'turn_off', record_call)

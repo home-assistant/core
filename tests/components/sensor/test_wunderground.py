@@ -11,7 +11,7 @@ VALID_CONFIG_PWS = {
     'api_key': 'foo',
     'pws_id': 'bar',
     'monitored_conditions': [
-        'weather', 'feelslike_c', 'alerts'
+        'weather', 'feelslike_c', 'alerts', 'elevation', 'location'
     ]
 }
 
@@ -19,13 +19,23 @@ VALID_CONFIG = {
     'platform': 'wunderground',
     'api_key': 'foo',
     'monitored_conditions': [
+        'weather', 'feelslike_c', 'alerts', 'elevation', 'location'
+    ]
+}
+
+INVALID_CONFIG = {
+    'platform': 'wunderground',
+    'api_key': 'BOB',
+    'pws_id': 'bar',
+    'lang': 'foo',
+    'monitored_conditions': [
         'weather', 'feelslike_c', 'alerts'
     ]
 }
 
 FEELS_LIKE = '40'
 WEATHER = 'Clear'
-ICON_URL = 'http://icons.wxug.com/i/c/k/clear.gif'
+HTTPS_ICON_URL = 'https://icons.wxug.com/i/c/k/clear.gif'
 ALERT_MESSAGE = 'This is a test alert message'
 
 
@@ -61,7 +71,16 @@ def mocked_requests_get(*args, **kwargs):
                 },
                 "feelslike_c": FEELS_LIKE,
                 "weather": WEATHER,
-                "icon_url": ICON_URL
+                "icon_url": 'http://icons.wxug.com/i/c/k/clear.gif',
+                "display_location": {
+                    "city": "Holly Springs",
+                    "country": "US",
+                    "full": "Holly Springs, NC"
+                },
+                "observation_location": {
+                    "elevation": "413 ft",
+                    "full": "Twin Lake, Holly Springs, North Carolina"
+                },
             }, "alerts": [
                 {
                     "type": 'FLO',
@@ -119,17 +138,9 @@ class TestWundergroundSetup(unittest.TestCase):
         self.assertTrue(
             wunderground.setup_platform(self.hass, VALID_CONFIG,
                                         self.add_devices, None))
-        invalid_config = {
-            'platform': 'wunderground',
-            'api_key': 'BOB',
-            'pws_id': 'bar',
-            'monitored_conditions': [
-                'weather', 'feelslike_c', 'alerts'
-            ]
-        }
 
-        self.assertFalse(
-            wunderground.setup_platform(self.hass, invalid_config,
+        self.assertTrue(
+            wunderground.setup_platform(self.hass, INVALID_CONFIG,
                                         self.add_devices, None))
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
@@ -141,7 +152,7 @@ class TestWundergroundSetup(unittest.TestCase):
             device.update()
             self.assertTrue(str(device.name).startswith('PWS_'))
             if device.name == 'PWS_weather':
-                self.assertEqual(ICON_URL, device.entity_picture)
+                self.assertEqual(HTTPS_ICON_URL, device.entity_picture)
                 self.assertEqual(WEATHER, device.state)
                 self.assertIsNone(device.unit_of_measurement)
             elif device.name == 'PWS_alerts':
@@ -149,6 +160,10 @@ class TestWundergroundSetup(unittest.TestCase):
                 self.assertEqual(ALERT_MESSAGE,
                                  device.device_state_attributes['Message'])
                 self.assertIsNone(device.entity_picture)
+            elif device.name == 'PWS_location':
+                self.assertEqual('Holly Springs, NC', device.state)
+            elif device.name == 'PWS_elevation':
+                self.assertEqual('413', device.state)
             else:
                 self.assertIsNone(device.entity_picture)
                 self.assertEqual(FEELS_LIKE, device.state)

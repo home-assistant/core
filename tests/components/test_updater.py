@@ -6,6 +6,7 @@ import os
 
 import requests
 import requests_mock
+import voluptuous as vol
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.components import updater
@@ -86,7 +87,7 @@ class TestUpdater(unittest.TestCase):
         mock_get.side_effect = ValueError
         self.assertIsNone(updater.get_newest_version(uuid))
 
-        mock_get.side_effect = KeyError
+        mock_get.side_effect = vol.Invalid('Expected dictionary')
         self.assertIsNone(updater.get_newest_version(uuid))
 
     def test_uuid_function(self):
@@ -119,3 +120,13 @@ class TestUpdater(unittest.TestCase):
 
         assert len(history) == 1
         assert history[0].json() == {}
+
+    @patch('homeassistant.components.updater.get_newest_version')
+    def test_error_during_fetch_works(
+            self, mock_get_newest_version):
+        """Test if no entity is created if same version."""
+        mock_get_newest_version.return_value = None
+
+        updater.check_newest_version(self.hass, None)
+
+        self.assertIsNone(self.hass.states.get(updater.ENTITY_ID))

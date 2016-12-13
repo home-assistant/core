@@ -20,7 +20,7 @@ DEFAULT_NAME = 'EnOcean Switch'
 DEPENDENCIES = ['enocean']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ID): cv.string,
+    vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -79,4 +79,4 @@ class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
     def value_changed(self, val):
         """Update the internal state of the switch."""
         self._on_state = val
-        self.update_ha_state()
+        self.schedule_update_ha_state()

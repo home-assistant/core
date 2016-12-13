@@ -1,6 +1,8 @@
 """An abstract class for entities."""
 import asyncio
 import logging
+import functools as ft
+from timeit import default_timer as timer
 
 from typing import Any, Optional, List, Dict
 
@@ -210,7 +212,15 @@ class Entity(object):
                 #     future support?
                 yield from self.hass.loop.run_in_executor(None, self.update)
 
-        state = STATE_UNKNOWN if self.state is None else str(self.state)
+        start = timer()
+
+        state = self.state
+
+        if state is None:
+            state = STATE_UNKNOWN
+        else:
+            state = str(state)
+
         attr = self.state_attributes or {}
 
         device_attr = self.device_state_attributes
@@ -231,6 +241,14 @@ class Entity(object):
         self._attr_setter('hidden', bool, ATTR_HIDDEN, attr)
         self._attr_setter('assumed_state', bool, ATTR_ASSUMED_STATE, attr)
 
+        end = timer()
+
+        if end - start > 0.4:
+            _LOGGER.warning('Updating state for %s took %.3f seconds. '
+                            'Please report platform to the developers at '
+                            'https://goo.gl/Nvioub', self.entity_id,
+                            end - start)
+
         # Overwrite properties that have been set in the config file.
         attr.update(_OVERWRITE.get(self.entity_id, {}))
 
@@ -241,9 +259,12 @@ class Entity(object):
         # Convert temperature if we detect one
         try:
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
-            if unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
-                units = self.hass.config.units
-                state = str(units.temperature(float(state), unit_of_measure))
+            units = self.hass.config.units
+            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
+                    unit_of_measure != units.temperature_unit):
+                prec = len(state) - state.index('.') - 1 if '.' in state else 0
+                temp = units.temperature(float(state), unit_of_measure)
+                state = str(round(temp) if prec == 0 else round(temp, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
         except ValueError:
             # Could not convert state to float
@@ -251,6 +272,18 @@ class Entity(object):
 
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update)
+
+    def schedule_update_ha_state(self, force_refresh=False):
+        """Shedule a update ha state change task.
+
+        That is only needed on executor to not block.
+        """
+        # We're already in a thread, do the force refresh here.
+        if force_refresh and not hasattr(self, 'async_update'):
+            self.update()
+            force_refresh = False
+
+        self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     def remove(self) -> None:
         """Remove entitiy from HASS."""
@@ -309,13 +342,33 @@ class ToggleEntity(Entity):
         """Turn the entity on."""
         raise NotImplementedError()
 
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        yield from self.hass.loop.run_in_executor(
+            None, ft.partial(self.turn_on, **kwargs))
+
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         raise NotImplementedError()
 
-    def toggle(self, **kwargs) -> None:
-        """Toggle the entity off."""
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        yield from self.hass.loop.run_in_executor(
+            None, ft.partial(self.turn_off, **kwargs))
+
+    def toggle(self) -> None:
+        """Toggle the entity."""
         if self.is_on:
-            self.turn_off(**kwargs)
+            self.turn_off()
         else:
-            self.turn_on(**kwargs)
+            self.turn_on()
+
+    @asyncio.coroutine
+    def async_toggle(self):
+        """Toggle the entity."""
+        if self.is_on:
+            yield from self.async_turn_off()
+        else:
+            yield from self.async_turn_on()

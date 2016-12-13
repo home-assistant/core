@@ -28,7 +28,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(alarms)
 
 
-# pylint: disable=abstract-method
 class VerisureAlarm(alarm.AlarmControlPanel):
     """Represent a Verisure alarm status."""
 
@@ -85,18 +84,15 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         hub.my_pages.alarm.set(code, 'DISARMED')
         _LOGGER.info('verisure alarm disarming')
         hub.my_pages.alarm.wait_while_pending()
-        self.update()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         hub.my_pages.alarm.set(code, 'ARMED_HOME')
         _LOGGER.info('verisure alarm arming home')
         hub.my_pages.alarm.wait_while_pending()
-        self.update()
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         hub.my_pages.alarm.set(code, 'ARMED_AWAY')
         _LOGGER.info('verisure alarm arming away')
         hub.my_pages.alarm.wait_while_pending()
-        self.update()

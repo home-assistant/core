@@ -137,7 +137,7 @@ class FluxSwitch(SwitchDevice):
         self._state = True
         self.unsub_tracker = track_utc_time_change(self.hass, self.flux_update,
                                                    second=[0, 30])
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn off flux."""
@@ -146,7 +146,7 @@ class FluxSwitch(SwitchDevice):
             self.unsub_tracker = None
 
         self._state = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def flux_update(self, now=None):
         """Update all the lights using flux."""

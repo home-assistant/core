@@ -34,7 +34,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    for gateway in mysensors.GATEWAYS.values():
+    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
+    if not gateways:
+        return
+
+    platform_devices = []
+
+    for gateway in gateways:
         # Define the S_TYPES and V_TYPES that the platform should handle as
         # states. Map them in a dict of lists.
         pres = gateway.const.Presentation
@@ -84,6 +90,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
             map_sv_types, devices, add_devices, device_class_map))
+        platform_devices.append(devices)
 
     def send_ir_code_service(service):
         """Set IR code as device state attribute."""
@@ -91,11 +98,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ir_code = service.data.get(ATTR_IR_CODE)
 
         if entity_ids:
-            _devices = [device for device in devices.values()
+            _devices = [device for gw_devs in platform_devices
+                        for device in gw_devs.values()
                         if isinstance(device, MySensorsIRSwitch) and
                         device.entity_id in entity_ids]
         else:
-            _devices = [device for device in devices.values()
+            _devices = [device for gw_devs in platform_devices
+                        for device in gw_devs.values()
                         if isinstance(device, MySensorsIRSwitch)]
 
         kwargs = {ATTR_IR_CODE: ir_code}
@@ -133,7 +142,7 @@ class MySensorsSwitch(mysensors.MySensorsDeviceEntity, SwitchDevice):
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_ON
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
@@ -142,7 +151,7 @@ class MySensorsSwitch(mysensors.MySensorsDeviceEntity, SwitchDevice):
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_OFF
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
 
 class MySensorsIRSwitch(MySensorsSwitch):
@@ -178,7 +187,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
             # optimistically assume that switch has changed state
             self._values[self.value_type] = self._ir_code
             self._values[set_req.V_LIGHT] = STATE_ON
-            self.update_ha_state()
+            self.schedule_update_ha_state()
             # turn off switch after switch was turned on
             self.turn_off()
 
@@ -194,7 +203,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[set_req.V_LIGHT] = STATE_OFF
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def update(self):
         """Update the controller with the latest value from a sensor."""

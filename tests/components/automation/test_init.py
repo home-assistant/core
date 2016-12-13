@@ -1,20 +1,22 @@
 """The tests for the automation component."""
 import unittest
+from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.automation as automation
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import get_test_home_assistant, assert_setup_component, \
+    fire_time_changed
 
 
+# pylint: disable=invalid-name
 class TestAutomation(unittest.TestCase):
     """Test the event automation."""
-
-    # pylint: disable=invalid-name
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -22,13 +24,14 @@ class TestAutomation(unittest.TestCase):
         self.hass.config.components.append('group')
         self.calls = []
 
+        @callback
         def record_call(service):
-            """Record call."""
+            """Helper to record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -79,6 +82,59 @@ class TestAutomation(unittest.TestCase):
         assert state is not None
         assert state.attributes.get('last_triggered') == time
 
+        state = self.hass.states.get('group.all_automations')
+        assert state is not None
+        assert state.attributes.get('entity_id') == ('automation.hello',)
+
+    def test_action_delay(self):
+        """Test action delay."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'alias': 'hello',
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'action': [
+                    {
+                        'service': 'test.automation',
+                        'data_template': {
+                            'some': '{{ trigger.platform }} - '
+                                    '{{ trigger.event.event_type }}'
+                        }
+                    },
+                    {'delay': {'minutes': '10'}},
+                    {
+                        'service': 'test.automation',
+                        'data_template': {
+                            'some': '{{ trigger.platform }} - '
+                                    '{{ trigger.event.event_type }}'
+                        }
+                    },
+                ]
+            }
+        })
+
+        time = dt_util.utcnow()
+
+        with patch('homeassistant.components.automation.utcnow',
+                   return_value=time):
+            self.hass.bus.fire('test_event')
+            self.hass.block_till_done()
+
+        assert len(self.calls) == 1
+        assert self.calls[0].data['some'] == 'event - test_event'
+
+        future = dt_util.utcnow() + timedelta(minutes=10)
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+
+        assert len(self.calls) == 2
+        assert self.calls[1].data['some'] == 'event - test_event'
+
+        state = self.hass.states.get('automation.hello')
+        assert state is not None
+        assert state.attributes.get('last_triggered') == time
         state = self.hass.states.get('group.all_automations')
         assert state is not None
         assert state.attributes.get('entity_id') == ('automation.hello',)
@@ -381,20 +437,20 @@ class TestAutomation(unittest.TestCase):
 
     @patch('homeassistant.config.load_yaml_config_file', autospec=True,
            return_value={
-                automation.DOMAIN: {
-                    'alias': 'bye',
-                    'trigger': {
-                        'platform': 'event',
-                        'event_type': 'test_event2',
-                    },
-                    'action': {
-                        'service': 'test.automation',
-                        'data_template': {
-                            'event': '{{ trigger.event.event_type }}'
-                        }
-                    }
-                }
-            })
+               automation.DOMAIN: {
+                   'alias': 'bye',
+                   'trigger': {
+                       'platform': 'event',
+                       'event_type': 'test_event2',
+                   },
+                   'action': {
+                       'service': 'test.automation',
+                       'data_template': {
+                           'event': '{{ trigger.event.event_type }}'
+                       }
+                   }
+               }
+           })
     def test_reload_config_service(self, mock_load_yaml):
         """Test the reload config service."""
         assert setup_component(self.hass, automation.DOMAIN, {

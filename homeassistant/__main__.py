@@ -45,8 +45,7 @@ def monkey_patch_asyncio():
     See https://bugs.python.org/issue26617 for details of the Python
     bug.
     """
-    # pylint: disable=no-self-use, too-few-public-methods, protected-access
-    # pylint: disable=bare-except
+    # pylint: disable=no-self-use, protected-access, bare-except
     import asyncio.tasks
 
     class IgnoreCalls:

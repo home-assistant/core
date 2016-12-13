@@ -61,7 +61,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("No sensors added")
         return False
 
-    hass.loop.create_task(async_add_devices(sensors, True))
+    yield from async_add_devices(sensors, True)
     return True
 
 
@@ -82,7 +82,7 @@ class SensorTemplate(Entity):
         @callback
         def template_sensor_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
-            hass.loop.create_task(self.async_update_ha_state(True))
+            hass.async_add_job(self.async_update_ha_state, True)
 
         async_track_state_change(
             hass, entity_ids, template_sensor_state_listener)

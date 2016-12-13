@@ -5,17 +5,17 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/wink/
 """
 import logging
-import json
 
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
-from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL, \
-                                CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==0.9.0', 'pubnub==3.8.2']
+REQUIREMENTS = ['python-wink==0.11.0', 'pubnubsub-handler==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,20 +50,20 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 WINK_COMPONENTS = [
-    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover'
+    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate'
 ]
 
 
 def setup(hass, config):
-    """Setup the Wink component."""
+    """Set up the Wink component."""
     import pywink
+    from pubnubsubhandler import PubNubSubscriptionHandler
 
-    user_agent = config[DOMAIN][CONF_USER_AGENT]
+    user_agent = config[DOMAIN].get(CONF_USER_AGENT)
 
     if user_agent:
         pywink.set_user_agent(user_agent)
 
-    from pubnub import Pubnub
     access_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)
 
     if access_token:
@@ -76,43 +76,60 @@ def setup(hass, config):
         pywink.set_wink_credentials(email, password, client_id,
                                     client_secret)
 
-    global SUBSCRIPTION_HANDLER
-    SUBSCRIPTION_HANDLER = Pubnub(
-        'N/A', pywink.get_subscription_key(), ssl_on=True)
-    SUBSCRIPTION_HANDLER.set_heartbeat(120)
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN]['entities'] = []
+    hass.data[DOMAIN]['pubnub'] = PubNubSubscriptionHandler(
+        pywink.get_subscription_key(),
+        pywink.wink_api_fetch)
+
+    def start_subscription(event):
+        """Start the pubnub subscription."""
+        hass.data[DOMAIN]['pubnub'].subscribe()
+    hass.bus.listen(EVENT_HOMEASSISTANT_START, start_subscription)
+
+    def stop_subscription(event):
+        """Stop the pubnub subscription."""
+        hass.data[DOMAIN]['pubnub'].unsubscribe()
+    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, stop_subscription)
+
+    def force_update(call):
+        """Force all devices to poll the Wink API."""
+        _LOGGER.info("Refreshing Wink states from API")
+        for entity in hass.data[DOMAIN]['entities']:
+            entity.update_ha_state(True)
+    hass.services.register(DOMAIN, 'Refresh state from Wink', force_update)
 
     # Load components for the devices in Wink that we support
     for component in WINK_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
+
     return True
 
 
 class WinkDevice(Entity):
     """Representation a base Wink device."""
 
-    def __init__(self, wink):
+    def __init__(self, wink, hass):
         """Initialize the Wink device."""
-        from pubnub import Pubnub
         self.wink = wink
         self._battery = self.wink.battery_level
-        if self.wink.pubnub_channel in CHANNELS:
-            pubnub = Pubnub('N/A', self.wink.pubnub_key, ssl_on=True)
-            pubnub.set_heartbeat(120)
-            pubnub.subscribe(self.wink.pubnub_channel,
-                             self._pubnub_update,
-                             error=self._pubnub_error)
-        else:
-            CHANNELS.append(self.wink.pubnub_channel)
-            SUBSCRIPTION_HANDLER.subscribe(self.wink.pubnub_channel,
-                                           self._pubnub_update,
-                                           error=self._pubnub_error)
+        hass.data[DOMAIN]['pubnub'].add_subscription(
+            self.wink.pubnub_channel, self._pubnub_update)
+        hass.data[DOMAIN]['entities'].append(self)
 
-    def _pubnub_update(self, message, channel):
-        self.wink.pubnub_update(json.loads(message))
-        self.update_ha_state()
-
-    def _pubnub_error(self, message):
-        _LOGGER.error("Error on pubnub update for " + self.wink.name())
+    def _pubnub_update(self, message):
+        try:
+            if message is None:
+                _LOGGER.error("Error on pubnub update for %s "
+                              "polling API for current state", self.name)
+                self.update_ha_state(True)
+            else:
+                self.wink.pubnub_update(message)
+                self.update_ha_state()
+        except (ValueError, KeyError, AttributeError):
+            _LOGGER.error("Error in pubnub JSON for %s "
+                          "polling API for current state", self.name)
+            self.update_ha_state(True)
 
     @property
     def unique_id(self):
@@ -149,4 +166,5 @@ class WinkDevice(Entity):
     @property
     def _battery_level(self):
         """Return the battery level."""
-        return self.wink.battery_level * 100
+        if self.wink.battery_level is not None:
+            return self.wink.battery_level * 100

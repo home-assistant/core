@@ -31,7 +31,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         device in VERA_DEVICES['climate'])
 
 
-# pylint: disable=abstract-method
 class VeraThermostat(VeraDevice, ClimateDevice):
     """Representation of a Vera Thermostat."""
 

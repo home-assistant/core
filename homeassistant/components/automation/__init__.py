@@ -66,6 +66,7 @@ def _platform_validator(config):
 
     return getattr(platform, 'TRIGGER_SCHEMA')(config)
 
+
 _TRIGGER_SCHEMA = vol.All(
     cv.ensure_list,
     [
@@ -165,7 +166,7 @@ def async_setup(hass, config):
         for entity in component.async_extract_from_service(service_call):
             tasks.append(entity.async_trigger(
                 service_call.data.get(ATTR_VARIABLES), True))
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     @asyncio.coroutine
     def turn_onoff_service_handler(service_call):
@@ -174,7 +175,7 @@ def async_setup(hass, config):
         method = 'async_{}'.format(service_call.service)
         for entity in component.async_extract_from_service(service_call):
             tasks.append(getattr(entity, method)())
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     @asyncio.coroutine
     def toggle_service_handler(service_call):
@@ -185,7 +186,7 @@ def async_setup(hass, config):
                 tasks.append(entity.async_turn_off())
             else:
                 tasks.append(entity.async_turn_on())
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     @asyncio.coroutine
     def reload_service_handler(service_call):
@@ -218,7 +219,6 @@ def async_setup(hass, config):
 class AutomationEntity(ToggleEntity):
     """Entity to show status of entity."""
 
-    # pylint: disable=abstract-method
     def __init__(self, name, async_attach_triggers, cond_func, async_action,
                  hidden):
         """Initialize an automation entity."""
@@ -265,7 +265,7 @@ class AutomationEntity(ToggleEntity):
             return
 
         yield from self.async_enable()
-        self.hass.loop.create_task(self.async_update_ha_state())
+        yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs) -> None:
@@ -276,8 +276,6 @@ class AutomationEntity(ToggleEntity):
         self._async_detach_triggers()
         self._async_detach_triggers = None
         self._enabled = False
-        # It's important that the update is finished before this method
-        # ends because async_remove depends on it.
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
@@ -289,7 +287,7 @@ class AutomationEntity(ToggleEntity):
         if skip_condition or self._cond_func(variables):
             yield from self._async_action(self.entity_id, variables)
             self._last_triggered = utcnow()
-            self.hass.loop.create_task(self.async_update_ha_state())
+            yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_remove(self):
@@ -351,8 +349,10 @@ def _async_process_config(hass, config, component):
                 tasks.append(entity.async_enable())
             entities.append(entity)
 
-    yield from asyncio.gather(*tasks, loop=hass.loop)
-    hass.loop.create_task(component.async_add_entities(entities))
+    if tasks:
+        yield from asyncio.wait(tasks, loop=hass.loop)
+    if entities:
+        yield from component.async_add_entities(entities)
 
     return len(entities) > 0
 
@@ -367,7 +367,7 @@ def _async_get_action(hass, config, name):
         _LOGGER.info('Executing %s', name)
         logbook.async_log_entry(
             hass, name, 'has been triggered', DOMAIN, entity_id)
-        hass.loop.create_task(script_obj.async_run(variables))
+        yield from script_obj.async_run(variables)
 
     return action
 

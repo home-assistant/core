@@ -2,7 +2,6 @@
 from collections.abc import MutableSet
 from itertools import chain
 import threading
-import queue
 from datetime import datetime
 import re
 import enum
@@ -11,6 +10,7 @@ import random
 import string
 from functools import wraps
 from types import MappingProxyType
+from unicodedata import normalize
 
 from typing import Any, Optional, TypeVar, Callable, Sequence, KeysView, Union
 
@@ -36,7 +36,7 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = text.lower().replace(" ", "_")
+    text = normalize('NFKD', text).lower().replace(" ", "_")
 
     return RE_SLUGIFY.sub("", text)
 
@@ -109,7 +109,7 @@ def get_random_string(length=10):
 class OrderedEnum(enum.Enum):
     """Taken from Python 3.4.0 docs."""
 
-    # pylint: disable=no-init, too-few-public-methods
+    # pylint: disable=no-init
     def __ge__(self, other):
         """Return the greater than element."""
         if self.__class__ is other.__class__:
@@ -302,111 +302,3 @@ class Throttle(object):
                 throttle[0].release()
 
         return wrapper
-
-
-class ThreadPool(object):
-    """A priority queue-based thread pool."""
-
-    def __init__(self, job_handler, worker_count=0):
-        """Initialize the pool.
-
-        job_handler: method to be called from worker thread to handle job
-        worker_count: number of threads to run that handle jobs
-        busy_callback: method to be called when queue gets too big.
-                       Parameters: worker_count, list of current_jobs,
-                                   pending_jobs_count
-        """
-        self._job_handler = job_handler
-
-        self.worker_count = 0
-        self._work_queue = queue.Queue()
-        self.current_jobs = []
-        self._quit_task = object()
-
-        self.running = True
-
-        for _ in range(worker_count):
-            self.add_worker()
-
-    @property
-    def queue_size(self):
-        """Return estimated number of jobs that are waiting to be processed."""
-        return self._work_queue.qsize()
-
-    def add_worker(self):
-        """Add worker to the thread pool and reset warning limit."""
-        if not self.running:
-            raise RuntimeError("ThreadPool not running")
-
-        threading.Thread(
-            target=self._worker, daemon=True,
-            name='ThreadPool Worker {}'.format(self.worker_count)).start()
-
-        self.worker_count += 1
-
-    def remove_worker(self):
-        """Remove worker from the thread pool and reset warning limit."""
-        if not self.running:
-            raise RuntimeError("ThreadPool not running")
-
-        self._work_queue.put(self._quit_task)
-
-        self.worker_count -= 1
-
-    def add_job(self, job):
-        """Add a job to the queue."""
-        if not self.running:
-            raise RuntimeError("ThreadPool not running")
-
-        self._work_queue.put(job)
-
-    def add_many_jobs(self, jobs):
-        """Add a list of jobs to the queue."""
-        if not self.running:
-            raise RuntimeError("ThreadPool not running")
-
-        for job in jobs:
-            self._work_queue.put(job)
-
-    def block_till_done(self):
-        """Block till current work is done."""
-        self._work_queue.join()
-
-    def stop(self):
-        """Finish all the jobs and stops all the threads."""
-        self.block_till_done()
-
-        if not self.running:
-            return
-
-        # Tell the workers to quit
-        for _ in range(self.worker_count):
-            self.remove_worker()
-
-        self.running = False
-
-        # Wait till all workers have quit
-        self.block_till_done()
-
-    def _worker(self):
-        """Handle jobs for the thread pool."""
-        while True:
-            # Get new item from work_queue
-            job = self._work_queue.get()
-
-            if job is self._quit_task:
-                self._work_queue.task_done()
-                return
-
-            # Add to current running jobs
-            job_log = (utcnow(), job)
-            self.current_jobs.append(job_log)
-
-            # Do the job
-            self._job_handler(job)
-
-            # Remove from current running job
-            self.current_jobs.remove(job_log)
-
-            # Tell work_queue the task is done
-            self._work_queue.task_done()

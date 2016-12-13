@@ -120,7 +120,6 @@ def setup(hass, config):
     return True
 
 
-# pylint: disable=too-few-public-methods
 class CallRateDelayThrottle(object):
     """Helper class to provide service call rate throttling.
 

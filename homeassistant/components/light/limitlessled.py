@@ -4,7 +4,7 @@ Support for LimitlessLED bulbs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.limitlessled/
 """
-# pylint: disable=abstract-method
+
 import logging
 
 import voluptuous as vol
@@ -140,7 +140,7 @@ def state(new_state):
             # Update state.
             self._is_on = new_state
             self.group.enqueue(pipeline)
-            self.update_ha_state()
+            self.schedule_update_ha_state()
         return wrapper
     return decorator
 

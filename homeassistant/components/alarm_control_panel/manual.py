@@ -50,7 +50,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         )])
 
 
-# pylint: disable=abstract-method
 class ManualAlarm(alarm.AlarmControlPanel):
     """
     Represents an alarm status.
@@ -117,7 +116,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
         self._state = STATE_ALARM_DISARMED
         self._state_ts = dt_util.utcnow()
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
@@ -126,11 +125,11 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
         self._state = STATE_ALARM_ARMED_HOME
         self._state_ts = dt_util.utcnow()
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
         if self._pending_time:
             track_point_in_time(
-                self._hass, self.update_ha_state,
+                self._hass, self.async_update_ha_state,
                 self._state_ts + self._pending_time)
 
     def alarm_arm_away(self, code=None):
@@ -140,11 +139,11 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
         self._state = STATE_ALARM_ARMED_AWAY
         self._state_ts = dt_util.utcnow()
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
         if self._pending_time:
             track_point_in_time(
-                self._hass, self.update_ha_state,
+                self._hass, self.async_update_ha_state,
                 self._state_ts + self._pending_time)
 
     def alarm_trigger(self, code=None):
@@ -152,15 +151,15 @@ class ManualAlarm(alarm.AlarmControlPanel):
         self._pre_trigger_state = self._state
         self._state = STATE_ALARM_TRIGGERED
         self._state_ts = dt_util.utcnow()
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
         if self._trigger_time:
             track_point_in_time(
-                self._hass, self.update_ha_state,
+                self._hass, self.async_update_ha_state,
                 self._state_ts + self._pending_time)
 
             track_point_in_time(
-                self._hass, self.update_ha_state,
+                self._hass, self.async_update_ha_state,
                 self._state_ts + self._pending_time + self._trigger_time)
 
     def _validate_code(self, code, state):

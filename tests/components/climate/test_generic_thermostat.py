@@ -3,7 +3,7 @@ import datetime
 import unittest
 from unittest import mock
 
-
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -25,6 +25,7 @@ ENT_SWITCH = 'switch.test'
 MIN_TEMP = 3.0
 MAX_TEMP = 65.0
 TARGET_TEMP = 42.0
+TOLERANCE = 0.5
 
 
 class TestSetupClimateGenericThermostat(unittest.TestCase):
@@ -84,6 +85,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
+            'tolerance': 2,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR
         }})
@@ -113,7 +115,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
             'target_sensor': ENT_SENSOR,
             'min_temp': MIN_TEMP,
             'max_temp': MAX_TEMP,
-            'target_temp': TARGET_TEMP
+            'target_temp': TARGET_TEMP,
         }})
         state = self.hass.states.get(ENTITY)
         self.assertEqual(MIN_TEMP, state.attributes.get('min_temp'))
@@ -179,8 +181,19 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
-    def test_set_temp_change_heater_on(self):
-        """Test if temperature change turn heater on."""
+    def test_temp_change_heater_on_within_tolerance(self):
+        """Test if temperature change doesn't turn heater on within
+        tolerance.
+        """
+        self._setup_switch(False)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        self._setup_sensor(29)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_temp_change_heater_on_outside_tolerance(self):
+        """Test if temperature change turn heater on outside tolerance."""
         self._setup_switch(False)
         climate.set_temperature(self.hass, 30)
         self.hass.block_till_done()
@@ -192,12 +205,23 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
-    def test_temp_change_heater_off(self):
-        """Test if temperature change turn heater off."""
+    def test_temp_change_heater_off_within_tolerance(self):
+        """Test if temperature change doesn't turn heater off within
+        tolerance.
+        """
         self._setup_switch(True)
-        climate.set_temperature(self.hass, 25)
+        climate.set_temperature(self.hass, 30)
         self.hass.block_till_done()
-        self._setup_sensor(30)
+        self._setup_sensor(31)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_temp_change_heater_off_outside_tolerance(self):
+        """Test if temperature change turn heater off outside tolerance."""
+        self._setup_switch(True)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        self._setup_sensor(35)
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
@@ -216,6 +240,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
+        @callback
         def log_call(call):
             """Log service calls."""
             self.calls.append(call)
@@ -234,6 +259,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
+            'tolerance': 0.3,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True
@@ -269,7 +295,18 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
-    def test_set_temp_change_ac_off(self):
+    def test_temp_change_ac_off_within_tolerance(self):
+        """Test if temperature change doesn't turn ac off within
+        tolerance.
+        """
+        self._setup_switch(True)
+        climate.set_temperature(self.hass, 30)
+        self.hass.block_till_done()
+        self._setup_sensor(29.8)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_set_temp_change_ac_off_outside_tolerance(self):
         """Test if temperature change turn ac off."""
         self._setup_switch(True)
         climate.set_temperature(self.hass, 30)
@@ -282,7 +319,18 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
-    def test_temp_change_ac_on(self):
+    def test_temp_change_ac_on_within_tolerance(self):
+        """Test if temperature change doesn't turn ac on within
+        tolerance.
+        """
+        self._setup_switch(False)
+        climate.set_temperature(self.hass, 25)
+        self.hass.block_till_done()
+        self._setup_sensor(25.2)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_temp_change_ac_on_outside_tolerance(self):
         """Test if temperature change turn ac on."""
         self._setup_switch(False)
         climate.set_temperature(self.hass, 25)
@@ -306,6 +354,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
+        @callback
         def log_call(call):
             """Log service calls."""
             self.calls.append(call)
@@ -324,6 +373,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
+            'tolerance': 0.3,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True,
@@ -397,6 +447,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
+        @callback
         def log_call(call):
             """Log service calls."""
             self.calls.append(call)
@@ -415,6 +466,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
             'platform': 'generic_thermostat',
             'name': 'test',
+            'tolerance': 0.3,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'min_cycle_duration': datetime.timedelta(minutes=10)
@@ -487,6 +539,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
+        @callback
         def log_call(call):
             """Log service calls."""
             self.calls.append(call)

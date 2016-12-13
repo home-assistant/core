@@ -50,8 +50,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
 
-    hass.loop.create_task(async_add_devices(
-        [StatisticsSensor(hass, entity_id, name, sampling_size)], True))
+    yield from async_add_devices(
+        [StatisticsSensor(hass, entity_id, name, sampling_size)], True)
     return True
 
 
@@ -90,7 +90,7 @@ class StatisticsSensor(Entity):
             except ValueError:
                 self.count = self.count + 1
 
-            hass.loop.create_task(self.async_update_ha_state(True))
+            hass.async_add_job(self.async_update_ha_state, True)
 
         async_track_state_change(
             hass, entity_id, async_stats_sensor_state_listener)

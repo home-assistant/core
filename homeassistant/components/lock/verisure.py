@@ -27,7 +27,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(locks)
 
 
-# pylint: disable=abstract-method
 class VerisureDoorlock(LockDevice):
     """Representation of a Verisure doorlock."""
 

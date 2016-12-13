@@ -124,7 +124,7 @@ class RfxtrxSensor(Entity):
     @property
     def name(self):
         """Get the name of the sensor."""
-        return self._name
+        return "{} {}".format(self._name, self.data_type)
 
     @property
     def device_state_attributes(self):

@@ -4,49 +4,59 @@ Support to check for available updates.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/updater/
 """
-from datetime import datetime, timedelta
-import logging
 import json
+import logging
+import os
 import platform
 import uuid
-import os
-# pylint: disable=no-name-in-module,import-error
+from datetime import datetime, timedelta
+# pylint: disable=no-name-in-module, import-error
 from distutils.version import StrictVersion
 
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.const import __version__ as CURRENT_VERSION
 from homeassistant.const import ATTR_FRIENDLY_NAME
-import homeassistant.util.dt as dt_util
 from homeassistant.helpers import event
-import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['distro==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
-UPDATER_URL = 'https://updater.home-assistant.io/'
-DOMAIN = 'updater'
-ENTITY_ID = 'updater.updater'
+
 ATTR_RELEASE_NOTES = 'release_notes'
-UPDATER_UUID_FILE = '.uuid'
+
 CONF_REPORTING = 'reporting'
 
-REQUIREMENTS = ['distro==1.0.0']
+DOMAIN = 'updater'
+
+ENTITY_ID = 'updater.updater'
+
+UPDATER_URL = 'https://updater.home-assistant.io/'
+UPDATER_UUID_FILE = '.uuid'
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {
     vol.Optional(CONF_REPORTING, default=True): cv.boolean
 }}, extra=vol.ALLOW_EXTRA)
+
+RESPONSE_SCHEMA = vol.Schema({
+    vol.Required('version'): str,
+    vol.Required('release-notes'): cv.url,
+})
 
 
 def _create_uuid(hass, filename=UPDATER_UUID_FILE):
     """Create UUID and save it in a file."""
     with open(hass.config.path(filename), 'w') as fptr:
         _uuid = uuid.uuid4().hex
-        fptr.write(json.dumps({"uuid": _uuid}))
+        fptr.write(json.dumps({'uuid': _uuid}))
         return _uuid
 
 
 def _load_uuid(hass, filename=UPDATER_UUID_FILE):
-    """Load UUID from a file, or return None."""
+    """Load UUID from a file or return None."""
     try:
         with open(hass.config.path(filename)) as fptr:
             jsonf = json.loads(fptr.read())
@@ -58,12 +68,11 @@ def _load_uuid(hass, filename=UPDATER_UUID_FILE):
 
 
 def setup(hass, config):
-    """Setup the updater component."""
+    """Set up the updater component."""
     if 'dev' in CURRENT_VERSION:
         # This component only makes sense in release versions
-        _LOGGER.warning(('Updater component enabled in dev. '
-                         'You will not receive notifications of new '
-                         'versions but analytics will be submitted.'))
+        _LOGGER.warning("Updater component enabled in 'dev'. "
+                        "No notifications but analytics will be submitted")
 
     config = config.get(DOMAIN, {})
     huuid = _load_uuid(hass) if config.get(CONF_REPORTING) else None
@@ -79,30 +88,40 @@ def setup(hass, config):
 
 def check_newest_version(hass, huuid):
     """Check if a new version is available and report if one is."""
-    newest, releasenotes = get_newest_version(huuid)
+    result = get_newest_version(huuid)
+
+    if result is None:
+        return
+
+    newest, releasenotes = result
 
     if newest is None or 'dev' in CURRENT_VERSION:
         return
 
     if StrictVersion(newest) > StrictVersion(CURRENT_VERSION):
-        _LOGGER.info('The latest available version is %s.', newest)
+        _LOGGER.info("The latest available version is %s", newest)
         hass.states.set(
             ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available',
                                 ATTR_RELEASE_NOTES: releasenotes}
         )
     elif StrictVersion(newest) == StrictVersion(CURRENT_VERSION):
-        _LOGGER.info('You are on the latest version (%s) of Home Assistant.',
+        _LOGGER.info("You are on the latest version (%s) of Home Assistant",
                      newest)
 
 
 def get_newest_version(huuid):
     """Get the newest Home Assistant version."""
-    info_object = {'uuid': huuid, 'version': CURRENT_VERSION,
-                   'timezone': dt_util.DEFAULT_TIME_ZONE.zone,
-                   'os_name': platform.system(), "arch": platform.machine(),
-                   'python_version': platform.python_version(),
-                   'virtualenv': (os.environ.get('VIRTUAL_ENV') is not None),
-                   'docker': False, 'dev': ('dev' in CURRENT_VERSION)}
+    info_object = {
+        'arch': platform.machine(),
+        'dev': ('dev' in CURRENT_VERSION),
+        'docker': False,
+        'os_name': platform.system(),
+        'python_version': platform.python_version(),
+        'timezone': dt_util.DEFAULT_TIME_ZONE.zone,
+        'uuid': huuid,
+        'version': CURRENT_VERSION,
+        'virtualenv': (os.environ.get('VIRTUAL_ENV') is not None),
+    }
 
     if platform.system() == 'Windows':
         info_object['os_version'] = platform.win32_ver()[0]
@@ -120,18 +139,24 @@ def get_newest_version(huuid):
     if not huuid:
         info_object = {}
 
+    res = None
     try:
-        req = requests.post(UPDATER_URL, json=info_object)
+        req = requests.post(UPDATER_URL, json=info_object, timeout=5)
         res = req.json()
-        _LOGGER.info(('Submitted analytics to Home Assistant servers. '
-                      'Information submitted includes %s'), info_object)
+        res = RESPONSE_SCHEMA(res)
+
+        _LOGGER.info(("Submitted analytics to Home Assistant servers. "
+                      "Information submitted includes %s"), info_object)
         return (res['version'], res['release-notes'])
     except requests.RequestException:
-        _LOGGER.exception('Could not contact HASS Update to check for updates')
+        _LOGGER.error("Could not contact Home Assistant Update to check "
+                      "for updates")
         return None
+
     except ValueError:
-        _LOGGER.exception('Received invalid response from HASS Update')
+        _LOGGER.error("Received invalid response from Home Assistant Update")
         return None
-    except KeyError:
-        _LOGGER.exception('Response from HASS Update did not include version')
+
+    except vol.Invalid:
+        _LOGGER.error('Got unexpected response: %s', res)
         return None

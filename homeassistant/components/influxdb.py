@@ -21,25 +21,24 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DB_NAME = 'database'
 CONF_TAGS = 'tags'
+CONF_DEFAULT_MEASUREMENT = 'default_measurement'
 
 DEFAULT_DATABASE = 'home_assistant'
-DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 8086
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = False
+DEFAULT_VERIFY_SSL = True
 DOMAIN = 'influxdb'
 TIMEOUT = 5
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
         vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
         vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
         vol.Optional(CONF_BLACKLIST, default=[]):
             vol.All(cv.ensure_list, [cv.entity_id]),
         vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_PORT): cv.port,
+        vol.Optional(CONF_SSL): cv.boolean,
+        vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}):
             vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_WHITELIST, default=[]):
@@ -55,22 +54,34 @@ def setup(hass, config):
 
     conf = config[DOMAIN]
 
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    database = conf.get(CONF_DB_NAME)
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    ssl = conf.get(CONF_SSL)
-    verify_ssl = conf.get(CONF_VERIFY_SSL)
+    kwargs = {
+        'database': conf[CONF_DB_NAME],
+        'verify_ssl': conf[CONF_VERIFY_SSL],
+        'timeout': TIMEOUT
+    }
+
+    if CONF_HOST in conf:
+        kwargs['host'] = conf[CONF_HOST]
+
+    if CONF_PORT in conf:
+        kwargs['port'] = conf[CONF_PORT]
+
+    if CONF_USERNAME in conf:
+        kwargs['username'] = conf[CONF_USERNAME]
+
+    if CONF_PASSWORD in conf:
+        kwargs['password'] = conf[CONF_PASSWORD]
+
+    if CONF_SSL in conf:
+        kwargs['ssl'] = conf[CONF_SSL]
+
     blacklist = conf.get(CONF_BLACKLIST)
     whitelist = conf.get(CONF_WHITELIST)
     tags = conf.get(CONF_TAGS)
+    default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
 
     try:
-        influx = InfluxDBClient(
-            host=host, port=port, username=username, password=password,
-            database=database, ssl=ssl, verify_ssl=verify_ssl,
-            timeout=TIMEOUT)
+        influx = InfluxDBClient(**kwargs)
         influx.query("select * from /.*/ LIMIT 1;")
     except exceptions.InfluxDBClientError as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "
@@ -96,7 +107,10 @@ def setup(hass, config):
 
         measurement = state.attributes.get('unit_of_measurement')
         if measurement in (None, ''):
-            measurement = state.entity_id
+            if default_measurement:
+                measurement = default_measurement
+            else:
+                measurement = state.entity_id
 
         json_body = [
             {
@@ -114,7 +128,12 @@ def setup(hass, config):
 
         for key, value in state.attributes.items():
             if key != 'unit_of_measurement':
-                json_body[0]['fields'][key] = value
+                if isinstance(value, (str, float, bool)) or \
+                        key.endswith('_id'):
+                    json_body[0]['fields'][key] = value
+                elif isinstance(value, int):
+                    # Prevent column data errors in influxDB.
+                    json_body[0]['fields'][key] = float(value)
 
         json_body[0]['tags'].update(tags)
 

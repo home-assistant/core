@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timedelta
 import unittest
 
+from homeassistant.core import callback
 from homeassistant.const import MATCH_ALL
 from homeassistant.components import recorder
 from homeassistant.bootstrap import setup_component
@@ -110,6 +111,7 @@ class TestRecorder(unittest.TestCase):
 
         events = []
 
+        @callback
         def event_listener(event):
             """Record events from eventbus."""
             if event.event_type == event_type:

@@ -34,5 +34,6 @@ FINGERPRINTS = {}
     with open(fingerprint_file, 'w') as fp:
         fp.write(result)
 
+
 if __name__ == '__main__':
     fingerprint()

@@ -31,7 +31,7 @@ class TestTplink4DeviceScanner(unittest.TestCase):
         """Test grabbing the mac addresses from 2.4 and 5 GHz clients pages."""
         conf_dict = {
             CONF_PLATFORM: 'tplink',
-            CONF_HOST: 'fake_host',
+            CONF_HOST: 'fake-host',
             CONF_USERNAME: 'fake_user',
             CONF_PASSWORD: 'fake_pass'
         }

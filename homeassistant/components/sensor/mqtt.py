@@ -8,6 +8,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.mqtt import CONF_STATE_TOPIC, CONF_QOS
 from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT)
@@ -55,13 +56,14 @@ class MqttSensor(Entity):
         self._qos = qos
         self._unit_of_measurement = unit_of_measurement
 
+        @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
             if value_template is not None:
-                payload = value_template.render_with_possible_json_value(
+                payload = value_template.async_render_with_possible_json_value(
                     payload, self._state)
             self._state = payload
-            self.update_ha_state()
+            hass.async_add_job(self.async_update_ha_state())
 
         mqtt.subscribe(hass, self._state_topic, message_received, self._qos)
 

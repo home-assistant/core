@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.command_line/
 """
 import logging
 import subprocess
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -15,14 +14,13 @@ from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND,
     STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Command Sensor'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+SCAN_INTERVAL = 60
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND): cv.string,
@@ -54,7 +52,7 @@ class CommandSensor(Entity):
         self._hass = hass
         self.data = data
         self._name = name
-        self._state = False
+        self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
         self.update()
@@ -96,7 +94,6 @@ class CommandSensorData(object):
         self.command = command
         self.value = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data with a shell command."""
         _LOGGER.info('Running command: %s', self.command)

@@ -38,7 +38,7 @@ DEFAULT_VERSION = 1.4
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
 DOMAIN = 'mysensors'
-GATEWAYS = None
+MYSENSORS_GATEWAYS = 'mysensors_gateways'
 MQTT_COMPONENT = 'mqtt'
 REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
@@ -132,9 +132,15 @@ def setup(hass, config):
 
         return gateway
 
+    gateways = hass.data.get(MYSENSORS_GATEWAYS)
+    if gateways is not None:
+        _LOGGER.error(
+            '%s already exists in %s, will not setup %s component',
+            MYSENSORS_GATEWAYS, hass.data, DOMAIN)
+        return False
+
     # Setup all devices from config
-    global GATEWAYS
-    GATEWAYS = {}
+    gateways = []
     conf_gateways = config[DOMAIN][CONF_GATEWAYS]
 
     for index, gway in enumerate(conf_gateways):
@@ -146,16 +152,18 @@ def setup(hass, config):
         tcp_port = gway.get(CONF_TCP_PORT)
         in_prefix = gway.get(CONF_TOPIC_IN_PREFIX)
         out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX)
-        GATEWAYS[device] = setup_gateway(
+        ready_gateway = setup_gateway(
             device, persistence_file, baud_rate, tcp_port, in_prefix,
             out_prefix)
-        if GATEWAYS[device] is None:
-            GATEWAYS.pop(device)
+        if ready_gateway is not None:
+            gateways.append(ready_gateway)
 
-    if not GATEWAYS:
+    if not gateways:
         _LOGGER.error(
             'No devices could be setup as gateways, check your configuration')
         return False
+
+    hass.data[MYSENSORS_GATEWAYS] = gateways
 
     for component in ['sensor', 'switch', 'light', 'binary_sensor', 'climate',
                       'cover']:

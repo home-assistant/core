@@ -55,25 +55,30 @@ def setup_scanner(hass, config, see):
             """True if any door/window is opened."""
             return any([door[key] for key in door if "Open" in key])
 
+        attributes = dict(
+            unlocked=not vehicle["carLocked"],
+            tank_volume=vehicle["fuelTankVolume"],
+            average_fuel_consumption=round(
+                vehicle["averageFuelConsumption"] / 10, 1),  # l/100km
+            washer_fluid_low=vehicle["washerFluidLevel"] != "Normal",
+            brake_fluid_low=vehicle["brakeFluid"] != "Normal",
+            service_warning=vehicle["serviceWarningStatus"] != "Normal",
+            bulb_failures=len(vehicle["bulbFailures"]) > 0,
+            doors_open=any_opened(vehicle["doors"]),
+            windows_open=any_opened(vehicle["windows"]),
+            fuel=vehicle["fuelAmount"],
+            odometer=round(vehicle["odometer"] / 1000),  # km
+            range=vehicle["distanceToEmpty"])
+
+        if "heater" in vehicle and \
+           "status" in vehicle["heater"]:
+            attributes.update(heater_on=vehicle["heater"]["status"] != "off")
+
         see(dev_id=dev_id,
             host_name=host_name,
             gps=(position["latitude"],
                  position["longitude"]),
-            attributes=dict(
-                unlocked=not vehicle["carLocked"],
-                tank_volume=vehicle["fuelTankVolume"],
-                average_fuel_consumption=round(
-                    vehicle["averageFuelConsumption"] / 10, 1),  # l/100km
-                washer_fluid_low=vehicle["washerFluidLevel"] != "Normal",
-                brake_fluid_low=vehicle["brakeFluid"] != "Normal",
-                service_warning=vehicle["serviceWarningStatus"] != "Normal",
-                bulb_failures=len(vehicle["bulbFailures"]) > 0,
-                doors_open=any_opened(vehicle["doors"]),
-                windows_open=any_opened(vehicle["windows"]),
-                heater_on=vehicle["heater"]["status"] != "off",
-                fuel=vehicle["fuelAmount"],
-                odometer=round(vehicle["odometer"] / 1000),  # km
-                range=vehicle["distanceToEmpty"]))
+            attributes=attributes)
 
     def update(now):
         """Update status from the online service."""

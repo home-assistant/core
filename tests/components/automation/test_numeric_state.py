@@ -1,21 +1,24 @@
 """The tests for numeric state automation."""
 import unittest
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.automation as automation
 
 from tests.common import get_test_home_assistant
 
 
+# pylint: disable=invalid-name
 class TestAutomationNumericState(unittest.TestCase):
     """Test the event automation."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
         self.calls = []
 
+        @callback
         def record_call(service):
             """Helper to record calls."""
             self.calls.append(service)
@@ -449,8 +452,8 @@ class TestAutomationNumericState(unittest.TestCase):
                     'service': 'test.automation',
                     'data_template': {
                         'some': '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
-                                    'platform', 'entity_id', 'below', 'above',
-                                    'from_state.state', 'to_state.state'))
+                            'platform', 'entity_id', 'below', 'above',
+                            'from_state.state', 'to_state.state'))
                     },
                 }
             }

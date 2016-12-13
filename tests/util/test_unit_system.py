@@ -80,7 +80,8 @@ class TestUnitSystem(unittest.TestCase):
             METRIC_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit))
         self.assertEqual(
             26.7,
-            METRIC_SYSTEM.temperature(80, IMPERIAL_SYSTEM.temperature_unit))
+            round(METRIC_SYSTEM.temperature(
+                80, IMPERIAL_SYSTEM.temperature_unit), 1))
 
     def test_temperature_to_imperial(self):
         """Test temperature conversion to imperial system."""

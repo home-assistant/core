@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
 REQUIREMENTS = ['https://github.com/LinuxChristian/pyW215/archive/'
-                'v0.3.5.zip#pyW215==0.3.5']
+                'v0.3.7.zip#pyW215==0.3.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,20 +48,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     use_legacy_protocol = config.get(CONF_USE_LEGACY_PROTOCOL)
     name = config.get(CONF_NAME)
 
-    add_devices([SmartPlugSwitch(hass, SmartPlug(host,
-                                                 password,
-                                                 username,
-                                                 use_legacy_protocol),
-                                 name)])
+    data = SmartPlugData(SmartPlug(host,
+                                   password,
+                                   username,
+                                   use_legacy_protocol))
+
+    add_devices([SmartPlugSwitch(hass, data, name)], True)
 
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a D-link Smart Plug switch."""
 
-    def __init__(self, hass, smartplug, name):
+    def __init__(self, hass, data, name):
         """Initialize the switch."""
         self.units = hass.config.units
-        self.smartplug = smartplug
+        self.data = data
         self._name = name
 
     @property
@@ -73,22 +74,22 @@ class SmartPlugSwitch(SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         try:
-            ui_temp = self.units.temperature(int(self.smartplug.temperature),
+            ui_temp = self.units.temperature(int(self.data.temperature),
                                              TEMP_CELSIUS)
             temperature = "%i %s" % \
                           (ui_temp, self.units.temperature_unit)
-        except ValueError:
+        except (ValueError, TypeError):
             temperature = STATE_UNKNOWN
 
         try:
             current_consumption = "%.2f W" % \
-                                  float(self.smartplug.current_consumption)
+                                  float(self.data.current_consumption)
         except ValueError:
             current_consumption = STATE_UNKNOWN
 
         try:
-            total_consumption = "%.1f W" % \
-                                float(self.smartplug.total_consumption)
+            total_consumption = "%.1f kWh" % \
+                                float(self.data.total_consumption)
         except ValueError:
             total_consumption = STATE_UNKNOWN
 
@@ -104,19 +105,42 @@ class SmartPlugSwitch(SwitchDevice):
     def current_power_watt(self):
         """Return the current power usage in Watt."""
         try:
-            return float(self.smartplug.current_consumption)
+            return float(self.data.current_consumption)
         except ValueError:
             return None
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.smartplug.state == 'ON'
+        return self.data.state == 'ON'
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.smartplug.state = 'ON'
+        self.data.smartplug.state = 'ON'
 
     def turn_off(self):
         """Turn the switch off."""
-        self.smartplug.state = 'OFF'
+        self.data.smartplug.state = 'OFF'
+
+    def update(self):
+        """Get the latest data from the smart plug and updates the states."""
+        self.data.update()
+
+
+class SmartPlugData(object):
+    """Get the latest data from smart plug."""
+
+    def __init__(self, smartplug):
+        """Initialize the data object."""
+        self.smartplug = smartplug
+        self.state = None
+        self.temperature = None
+        self.current_consumption = None
+        self.total_consumption = None
+
+    def update(self):
+        """Get the latest data from the smart plug."""
+        self.state = self.smartplug.state
+        self.temperature = self.smartplug.temperature
+        self.current_consumption = self.smartplug.current_consumption
+        self.total_consumption = self.smartplug.total_consumption

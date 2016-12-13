@@ -5,35 +5,38 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/http/
 """
 import asyncio
-import hmac
 import json
 import logging
-import mimetypes
-import os
-from pathlib import Path
-import re
 import ssl
-from ipaddress import ip_address, ip_network
+from ipaddress import ip_network
+from pathlib import Path
 
+import os
 import voluptuous as vol
-from aiohttp import web, hdrs
-from aiohttp.file_sender import FileSender
-from aiohttp.web_exceptions import (
-    HTTPUnauthorized, HTTPMovedPermanently, HTTPNotModified)
-from aiohttp.web_urldispatcher import StaticRoute
+from aiohttp import web
+from aiohttp.web_exceptions import HTTPUnauthorized, HTTPMovedPermanently
 
-from homeassistant.core import callback, is_callback
-import homeassistant.remote as rem
-from homeassistant import util
-from homeassistant.const import (
-    SERVER_PORT, HTTP_HEADER_HA_AUTH,  # HTTP_HEADER_CACHE_CONTROL,
-    CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_START)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.remote as rem
+from homeassistant.util import get_local_ip
 from homeassistant.components import persistent_notification
+from homeassistant.const import (
+    SERVER_PORT, CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
+from homeassistant.core import is_callback
+from homeassistant.util.logging import HideSensitiveDataFilter
+
+from .auth import auth_middleware
+from .ban import ban_middleware, process_wrong_login
+from .const import (
+    KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
+    KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD,
+    KEY_DEVELOPMENT, KEY_AUTHENTICATED)
+from .static import FILE_SENDER, GZIP_FILE_SENDER, staticresource_middleware
+from .util import get_real_ip
 
 DOMAIN = 'http'
-REQUIREMENTS = ('aiohttp_cors==0.4.0',)
+REQUIREMENTS = ('aiohttp_cors==0.5.0',)
 
 CONF_API_PASSWORD = 'api_password'
 CONF_SERVER_HOST = 'server_host'
@@ -42,9 +45,11 @@ CONF_DEVELOPMENT = 'development'
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
 CONF_CORS_ORIGINS = 'cors_allowed_origins'
+CONF_USE_X_FORWARDED_FOR = 'use_x_forwarded_for'
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
+CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
+CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
 
-DATA_API_PASSWORD = 'api_password'
 NOTIFICATION_ID_LOGIN = 'http-login'
 
 # TLS configuation follows the best-practice guidelines specified here:
@@ -68,66 +73,58 @@ CIPHERS = "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:" \
           "AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:" \
           "AES256-SHA:DES-CBC3-SHA:!DSS"
 
-_FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
-
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_SERVER_HOST = '0.0.0.0'
+DEFAULT_DEVELOPMENT = '0'
+DEFAULT_LOGIN_ATTEMPT_THRESHOLD = -1
+
+HTTP_SCHEMA = vol.Schema({
+    vol.Optional(CONF_API_PASSWORD, default=None): cv.string,
+    vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
+    vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
+        vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+    vol.Optional(CONF_DEVELOPMENT, default=DEFAULT_DEVELOPMENT): cv.string,
+    vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
+    vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
+    vol.Optional(CONF_CORS_ORIGINS, default=[]): vol.All(cv.ensure_list,
+                                                         [cv.string]),
+    vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
+    vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
+        vol.All(cv.ensure_list, [ip_network]),
+    vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD,
+                 default=DEFAULT_LOGIN_ATTEMPT_THRESHOLD): cv.positive_int,
+    vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean
+})
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_API_PASSWORD): cv.string,
-        vol.Optional(CONF_SERVER_HOST): cv.string,
-        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
-            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
-        vol.Optional(CONF_DEVELOPMENT): cv.string,
-        vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_SSL_KEY): cv.isfile,
-        vol.Optional(CONF_CORS_ORIGINS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_TRUSTED_NETWORKS):
-            vol.All(cv.ensure_list, [ip_network])
-    }),
+    DOMAIN: HTTP_SCHEMA,
 }, extra=vol.ALLOW_EXTRA)
 
 
-# TEMP TO GET TESTS TO RUN
-def request_class():
-    """."""
-    raise Exception('not implemented')
-
-
-class HideSensitiveFilter(logging.Filter):
-    """Filter API password calls."""
-
-    def __init__(self, hass):
-        """Initialize sensitive data filter."""
-        super().__init__()
-        self.hass = hass
-
-    def filter(self, record):
-        """Hide sensitive data in messages."""
-        if self.hass.http.api_password is None:
-            return True
-
-        record.msg = record.msg.replace(self.hass.http.api_password, '*******')
-
-        return True
-
-
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Set up the HTTP API and debug interface."""
-    logging.getLogger('aiohttp.access').addFilter(HideSensitiveFilter(hass))
+    conf = config.get(DOMAIN)
 
-    conf = config.get(DOMAIN, {})
+    if conf is None:
+        conf = HTTP_SCHEMA({})
 
-    api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
-    server_host = conf.get(CONF_SERVER_HOST, '0.0.0.0')
-    server_port = conf.get(CONF_SERVER_PORT, SERVER_PORT)
-    development = str(conf.get(CONF_DEVELOPMENT, '')) == '1'
-    ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
-    ssl_key = conf.get(CONF_SSL_KEY)
-    cors_origins = conf.get(CONF_CORS_ORIGINS, [])
-    trusted_networks = [
-        ip_network(trusted_network)
-        for trusted_network in conf.get(CONF_TRUSTED_NETWORKS, [])]
+    api_password = conf[CONF_API_PASSWORD]
+    server_host = conf[CONF_SERVER_HOST]
+    server_port = conf[CONF_SERVER_PORT]
+    development = conf[CONF_DEVELOPMENT] == '1'
+    ssl_certificate = conf[CONF_SSL_CERTIFICATE]
+    ssl_key = conf[CONF_SSL_KEY]
+    cors_origins = conf[CONF_CORS_ORIGINS]
+    use_x_forwarded_for = conf[CONF_USE_X_FORWARDED_FOR]
+    trusted_networks = conf[CONF_TRUSTED_NETWORKS]
+    is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
+    login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
+
+    if api_password is not None:
+        logging.getLogger('aiohttp.access').addFilter(
+            HideSensitiveDataFilter(api_password))
 
     server = HomeAssistantWSGI(
         hass,
@@ -138,109 +135,32 @@ def setup(hass, config):
         ssl_certificate=ssl_certificate,
         ssl_key=ssl_key,
         cors_origins=cors_origins,
-        trusted_networks=trusted_networks
+        use_x_forwarded_for=use_x_forwarded_for,
+        trusted_networks=trusted_networks,
+        login_threshold=login_threshold,
+        is_ban_enabled=is_ban_enabled
     )
 
-    @callback
+    @asyncio.coroutine
     def stop_server(event):
         """Callback to stop the server."""
-        hass.loop.create_task(server.stop())
+        yield from server.stop()
 
-    @callback
+    @asyncio.coroutine
     def start_server(event):
         """Callback to start the server."""
-        hass.loop.create_task(server.start())
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
+        yield from server.start()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_server)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
 
     hass.http = server
     hass.config.api = rem.API(server_host if server_host != '0.0.0.0'
-                              else util.get_local_ip(),
+                              else get_local_ip(),
                               api_password, server_port,
                               ssl_certificate is not None)
 
     return True
-
-
-class GzipFileSender(FileSender):
-    """FileSender class capable of sending gzip version if available."""
-
-    # pylint: disable=invalid-name, too-few-public-methods
-
-    development = False
-
-    @asyncio.coroutine
-    def send(self, request, filepath):
-        """Send filepath to client using request."""
-        gzip = False
-        if 'gzip' in request.headers[hdrs.ACCEPT_ENCODING]:
-            gzip_path = filepath.with_name(filepath.name + '.gz')
-
-            if gzip_path.is_file():
-                filepath = gzip_path
-                gzip = True
-
-        st = filepath.stat()
-
-        modsince = request.if_modified_since
-        if modsince is not None and st.st_mtime <= modsince.timestamp():
-            raise HTTPNotModified()
-
-        ct, encoding = mimetypes.guess_type(str(filepath))
-        if not ct:
-            ct = 'application/octet-stream'
-
-        resp = self._response_factory()
-        resp.content_type = ct
-        if encoding:
-            resp.headers[hdrs.CONTENT_ENCODING] = encoding
-        if gzip:
-            resp.headers[hdrs.VARY] = hdrs.ACCEPT_ENCODING
-        resp.last_modified = st.st_mtime
-
-        # CACHE HACK
-        if not self.development:
-            cache_time = 31 * 86400  # = 1 month
-            resp.headers[hdrs.CACHE_CONTROL] = "public, max-age={}".format(
-                cache_time)
-
-        file_size = st.st_size
-
-        resp.content_length = file_size
-        resp.set_tcp_cork(True)
-        try:
-            with filepath.open('rb') as f:
-                yield from self._sendfile(request, resp, f, file_size)
-
-        finally:
-            resp.set_tcp_nodelay(True)
-
-        return resp
-
-_GZIP_FILE_SENDER = GzipFileSender()
-
-
-class HAStaticRoute(StaticRoute):
-    """StaticRoute with support for fingerprinting."""
-
-    def __init__(self, prefix, path):
-        """Initialize a static route with gzip and cache busting support."""
-        super().__init__(None, prefix, path)
-        self._file_sender = _GZIP_FILE_SENDER
-
-    def match(self, path):
-        """Match path to filename."""
-        if not path.startswith(self._prefix):
-            return None
-
-        # Extra sauce to remove fingerprinted resource names
-        filename = path[self._prefix_len:]
-        fingerprinted = _FINGERPRINT.match(filename)
-        if fingerprinted:
-            filename = '{}.{}'.format(*fingerprinted.groups())
-
-        return {'filename': filename}
 
 
 class HomeAssistantWSGI(object):
@@ -248,11 +168,24 @@ class HomeAssistantWSGI(object):
 
     def __init__(self, hass, development, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
-                 trusted_networks):
+                 use_x_forwarded_for, trusted_networks,
+                 login_threshold, is_ban_enabled):
         """Initialize the WSGI Home Assistant server."""
         import aiohttp_cors
 
-        self.app = web.Application(loop=hass.loop)
+        middlewares = [auth_middleware, staticresource_middleware]
+
+        if is_ban_enabled:
+            middlewares.insert(0, ban_middleware)
+
+        self.app = web.Application(middlewares=middlewares, loop=hass.loop)
+        self.app['hass'] = hass
+        self.app[KEY_USE_X_FORWARDED_FOR] = use_x_forwarded_for
+        self.app[KEY_TRUSTED_NETWORKS] = trusted_networks
+        self.app[KEY_BANS_ENABLED] = is_ban_enabled
+        self.app[KEY_LOGIN_THRESHOLD] = login_threshold
+        self.app[KEY_DEVELOPMENT] = development
+
         self.hass = hass
         self.development = development
         self.api_password = api_password
@@ -260,8 +193,6 @@ class HomeAssistantWSGI(object):
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
-        self.trusted_networks = trusted_networks
-        self.event_forwarder = None
         self._handler = None
         self.server = None
 
@@ -275,9 +206,6 @@ class HomeAssistantWSGI(object):
         else:
             self.cors = None
 
-        # CACHE HACK
-        _GZIP_FILE_SENDER.development = development
-
     def register_view(self, view):
         """Register a view with the WSGI server.
 
@@ -287,7 +215,19 @@ class HomeAssistantWSGI(object):
         """
         if isinstance(view, type):
             # Instantiate the view, if needed
-            view = view(self.hass)
+            view = view()
+
+        if not hasattr(view, 'url'):
+            class_name = view.__class__.__name__
+            raise AttributeError(
+                '{0} missing required attribute "url"'.format(class_name)
+            )
+
+        if not hasattr(view, 'name'):
+            class_name = view.__class__.__name__
+            raise AttributeError(
+                '{0} missing required attribute "name"'.format(class_name)
+            )
 
         view.register(self.app.router)
 
@@ -312,19 +252,15 @@ class HomeAssistantWSGI(object):
         Specify optional cache length of asset in days.
         """
         if os.path.isdir(path):
-            assert url_root.startswith('/')
-            if not url_root.endswith('/'):
-                url_root += '/'
-            route = HAStaticRoute(url_root, path)
-            self.app.router.register_route(route)
+            self.app.router.add_static(url_root, path)
             return
 
         filepath = Path(path)
 
         @asyncio.coroutine
         def serve_file(request):
-            """Redirect to location."""
-            res = yield from _GZIP_FILE_SENDER.send(request, filepath)
+            """Serve file from disk."""
+            res = yield from GZIP_FILE_SENDER.send(request, filepath)
             return res
 
         # aiohttp supports regex matching for variables. Using that as temp
@@ -341,9 +277,15 @@ class HomeAssistantWSGI(object):
     @asyncio.coroutine
     def start(self):
         """Start the wsgi server."""
+        cors_added = set()
         if self.cors is not None:
             for route in list(self.app.router.routes()):
+                if hasattr(route, 'resource'):
+                    route = route.resource
+                if route in cors_added:
+                    continue
                 self.cors.add(route)
+                cors_added.add(route)
 
         if self.ssl_certificate:
             context = ssl.SSLContext(SSL_VERSION)
@@ -353,9 +295,20 @@ class HomeAssistantWSGI(object):
         else:
             context = None
 
+        # Aiohttp freezes apps after start so that no changes can be made.
+        # However in Home Assistant components can be discovered after boot.
+        # This will now raise a RunTimeError.
+        # To work around this we now fake that we are frozen.
+        # A more appropriate fix would be to create a new app and
+        # re-register all redirects, views, static paths.
+        self.app._frozen = True  # pylint: disable=protected-access
+
         self._handler = self.app.make_handler()
+
         self.server = yield from self.hass.loop.create_server(
             self._handler, self.server_host, self.server_port, ssl=context)
+
+        self.app._frozen = False  # pylint: disable=protected-access
 
     @asyncio.coroutine
     def stop(self):
@@ -366,17 +319,6 @@ class HomeAssistantWSGI(object):
         yield from self._handler.finish_connections(60.0)
         yield from self.app.cleanup()
 
-    @staticmethod
-    def get_real_ip(request):
-        """Return the clients correct ip address, even in proxied setups."""
-        peername = request.transport.get_extra_info('peername')
-        return peername[0] if peername is not None else None
-
-    def is_trusted_ip(self, remote_addr):
-        """Match an ip address against trusted CIDR networks."""
-        return any(ip_address(remote_addr) in trusted_network
-                   for trusted_network in self.hass.http.trusted_networks)
-
 
 class HomeAssistantView(object):
     """Base view for all views."""
@@ -384,22 +326,6 @@ class HomeAssistantView(object):
     url = None
     extra_urls = []
     requires_auth = True  # Views inheriting from this class can override this
-
-    def __init__(self, hass):
-        """Initilalize the base view."""
-        if not hasattr(self, 'url'):
-            class_name = self.__class__.__name__
-            raise AttributeError(
-                '{0} missing required attribute "url"'.format(class_name)
-            )
-
-        if not hasattr(self, 'name'):
-            class_name = self.__class__.__name__
-            raise AttributeError(
-                '{0} missing required attribute "name"'.format(class_name)
-            )
-
-        self.hass = hass
 
     # pylint: disable=no-self-use
     def json(self, result, status_code=200):
@@ -418,7 +344,7 @@ class HomeAssistantView(object):
     def file(self, request, fil):
         """Return a file."""
         assert isinstance(fil, str), 'only string paths allowed'
-        response = yield from _GZIP_FILE_SENDER.send(request, Path(fil))
+        response = yield from FILE_SENDER.send(request, Path(fil))
         return response
 
     def register(self, router):
@@ -445,49 +371,31 @@ class HomeAssistantView(object):
 
 
 def request_handler_factory(view, handler):
-    """Factory to wrap our handler classes.
+    """Factory to wrap our handler classes."""
+    assert asyncio.iscoroutinefunction(handler) or is_callback(handler), \
+        "Handler should be a coroutine or a callback."
 
-    Eventually authentication should be managed by middleware.
-    """
     @asyncio.coroutine
     def handle(request):
         """Handle incoming request."""
-        remote_addr = HomeAssistantWSGI.get_real_ip(request)
+        if not request.app['hass'].is_running:
+            return web.Response(status=503)
 
-        # Auth code verbose on purpose
-        authenticated = False
-
-        if view.hass.http.api_password is None:
-            authenticated = True
-
-        elif view.hass.http.is_trusted_ip(remote_addr):
-            authenticated = True
-
-        elif hmac.compare_digest(request.headers.get(HTTP_HEADER_HA_AUTH, ''),
-                                 view.hass.http.api_password):
-            # A valid auth header has been set
-            authenticated = True
-
-        elif hmac.compare_digest(request.GET.get(DATA_API_PASSWORD, ''),
-                                 view.hass.http.api_password):
-            authenticated = True
+        remote_addr = get_real_ip(request)
+        authenticated = request.get(KEY_AUTHENTICATED, False)
 
         if view.requires_auth and not authenticated:
+            yield from process_wrong_login(request)
             _LOGGER.warning('Login attempt or request with an invalid '
                             'password from %s', remote_addr)
             persistent_notification.async_create(
-                view.hass,
+                request.app['hass'],
                 'Invalid password used from {}'.format(remote_addr),
                 'Login attempt failed', NOTIFICATION_ID_LOGIN)
             raise HTTPUnauthorized()
 
-        request.authenticated = authenticated
-
         _LOGGER.info('Serving %s to %s (auth: %s)',
                      request.path, remote_addr, authenticated)
-
-        assert asyncio.iscoroutinefunction(handler) or is_callback(handler), \
-            "Handler should be a coroutine or a callback."
 
         result = handler(request, **request.match_info)
 

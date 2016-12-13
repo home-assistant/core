@@ -12,7 +12,6 @@ from homeassistant.bootstrap import setup_component
 from tests.common import get_test_home_assistant, assert_setup_component
 
 
-@pytest.mark.skip
 class TestRestSwitchSetup(unittest.TestCase):
     """Tests for setting up the REST switch platform."""
 

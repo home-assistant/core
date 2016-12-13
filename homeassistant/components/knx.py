@@ -161,8 +161,6 @@ class KNXGroupAddress(Entity):
     @property
     def is_on(self):
         """Return True if the value is not 0 is on, else False."""
-        if self.should_poll:
-            self.update()
         return self._state != 0
 
     @property

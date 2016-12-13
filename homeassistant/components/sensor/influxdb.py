@@ -172,9 +172,11 @@ class InfluxSensorData(object):
 
         points = list(self.influx.query(self.query).get_points())
         if len(points) == 0:
-            _LOGGER.error('Query returned no points : %s', self.query)
-            return
-        if len(points) > 1:
-            _LOGGER.warning('Query returned multiple points, only first one'
-                            ' shown : %s', self.query)
-        self.value = points[0].get('value')
+            _LOGGER.warning('Query returned no points, sensor state set'
+                            ' to UNKNOWN : %s', self.query)
+            self.value = None
+        else:
+            if len(points) > 1:
+                _LOGGER.warning('Query returned multiple points, only first'
+                                ' one shown : %s', self.query)
+            self.value = points[0].get('value')

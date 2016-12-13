@@ -2,7 +2,7 @@
 Support for scanning a network with nmap.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.nmap_scanner/
+https://home-assistant.io/components/device_tracker.nmap_tracker/
 """
 import logging
 import re
@@ -25,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_EXCLUDE = 'exclude'
 # Interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL = 'home_interval'
+CONF_OPTIONS = 'scan_options'
+DEFAULT_OPTIONS = '-F --host-timeout 5s'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
@@ -33,7 +35,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOSTS): cv.ensure_list,
     vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
     vol.Optional(CONF_EXCLUDE, default=[]):
-        vol.All(cv.ensure_list, vol.Length(min=1))
+        vol.All(cv.ensure_list, vol.Length(min=1)),
+    vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTIONS):
+        cv.string
 })
 
 
@@ -42,6 +46,7 @@ def get_scanner(hass, config):
     scanner = NmapDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
+
 
 Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
 
@@ -68,8 +73,9 @@ class NmapDeviceScanner(object):
         self.last_results = []
 
         self.hosts = config[CONF_HOSTS]
-        self.exclude = config.get(CONF_EXCLUDE, [])
+        self.exclude = config[CONF_EXCLUDE]
         minutes = config[CONF_HOME_INTERVAL]
+        self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(minutes=minutes)
 
         self.success_init = self._update_info()
@@ -102,7 +108,7 @@ class NmapDeviceScanner(object):
         from nmap import PortScanner, PortScannerError
         scanner = PortScanner()
 
-        options = '-F --host-timeout 5s '
+        options = self._options
 
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval

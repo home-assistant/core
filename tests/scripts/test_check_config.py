@@ -165,7 +165,16 @@ class TestCheckConfig(unittest.TestCase):
 
             self.assertDictEqual({
                 'components': {'http': {'api_password': 'abc123',
-                                        'server_port': 8123}},
+                                        'cors_allowed_origins': [],
+                                        'development': '0',
+                                        'ip_ban_enabled': True,
+                                        'login_attempts_threshold': -1,
+                                        'server_host': '0.0.0.0',
+                                        'server_port': 8123,
+                                        'ssl_certificate': None,
+                                        'ssl_key': None,
+                                        'trusted_networks': [],
+                                        'use_x_forwarded_for': False}},
                 'except': {},
                 'secret_cache': {secrets_path: {'http_pw': 'abc123'}},
                 'secrets': {'http_pw': 'abc123'},

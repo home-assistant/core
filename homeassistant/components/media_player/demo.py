@@ -10,6 +10,7 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, MediaPlayerDevice)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
+import homeassistant.util.dt as dt_util
 
 
 # pylint: disable=unused-argument
@@ -18,8 +19,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([
         DemoYoutubePlayer(
             'Living Room', 'eyU3bRy2x44',
-            '♥♥ The Best Fireplace Video (3 hours)'),
-        DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours'),
+            '♥♥ The Best Fireplace Video (3 hours)', 300),
+        DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours',
+                          360000),
         DemoMusicPlayer(), DemoTVShowPlayer(),
     ])
 
@@ -42,7 +44,7 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     """A demo media players."""
 
     # We only implement the methods that we support
-    # pylint: disable=abstract-method
+
     def __init__(self, name):
         """Initialize the demo device."""
         self._name = name
@@ -78,44 +80,47 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self._player_state = STATE_PLAYING
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn the media player off."""
         self._player_state = STATE_OFF
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def mute_volume(self, mute):
         """Mute the volume."""
         self._volume_muted = mute
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_volume_level(self, volume):
         """Set the volume level, range 0..1."""
         self._volume_level = volume
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def media_play(self):
         """Send play command."""
         self._player_state = STATE_PLAYING
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def media_pause(self):
         """Send pause command."""
         self._player_state = STATE_PAUSED
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
 
 class DemoYoutubePlayer(AbstractDemoPlayer):
     """A Demo media player that only supports YouTube."""
 
     # We only implement the methods that we support
-    # pylint: disable=abstract-method
-    def __init__(self, name, youtube_id=None, media_title=None):
+
+    def __init__(self, name, youtube_id=None, media_title=None, duration=360):
         """Initialize the demo device."""
         super().__init__(name)
         self.youtube_id = youtube_id
         self._media_title = media_title
+        self._duration = duration
+        self._progress = int(duration * .15)
+        self._progress_updated_at = dt_util.utcnow()
 
     @property
     def media_content_id(self):
@@ -130,7 +135,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
     @property
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
-        return 360
+        return self._duration
 
     @property
     def media_image_url(self):
@@ -152,17 +157,46 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         """Flag of media commands that are supported."""
         return YOUTUBE_PLAYER_SUPPORT
 
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        if self._progress is None:
+            return None
+
+        position = self._progress
+
+        if self._player_state == STATE_PLAYING:
+            position += (dt_util.utcnow() -
+                         self._progress_updated_at).total_seconds()
+
+        return position
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        if self._player_state == STATE_PLAYING:
+            return self._progress_updated_at
+
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         self.youtube_id = media_id
-        self.update_ha_state()
+        self.schedule_update_ha_state()
+
+    def media_pause(self):
+        """Send pause command."""
+        self._progress = self.media_position
+        self._progress_updated_at = dt_util.utcnow()
+        super().media_pause()
 
 
 class DemoMusicPlayer(AbstractDemoPlayer):
     """A Demo media player that only supports YouTube."""
 
     # We only implement the methods that we support
-    # pylint: disable=abstract-method
+
     tracks = [
         ('Technohead', 'I Wanna Be A Hippy (Flamman & Abraxas Radio Mix)'),
         ('Paul Elstak', 'Luv U More'),
@@ -249,27 +283,27 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         """Send previous track command."""
         if self._cur_track > 0:
             self._cur_track -= 1
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def media_next_track(self):
         """Send next track command."""
         if self._cur_track < len(self.tracks) - 1:
             self._cur_track += 1
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def clear_playlist(self):
         """Clear players playlist."""
         self.tracks = []
         self._cur_track = 0
         self._player_state = STATE_OFF
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
 
 class DemoTVShowPlayer(AbstractDemoPlayer):
     """A Demo media player that only supports YouTube."""
 
     # We only implement the methods that we support
-    # pylint: disable=abstract-method
+
     def __init__(self):
         """Initialize the demo device."""
         super().__init__('Lounge room')
@@ -344,15 +378,15 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         """Send previous track command."""
         if self._cur_episode > 1:
             self._cur_episode -= 1
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def media_next_track(self):
         """Send next track command."""
         if self._cur_episode < self._episode_count:
             self._cur_episode += 1
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def select_source(self, source):
         """Set the input source."""
         self._source = source
-        self.update_ha_state()
+        self.schedule_update_ha_state()

@@ -127,17 +127,17 @@ class HomeAssistant(ha.HomeAssistant):
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(self._async_exception_handler)
-        self.pool = ha.create_worker_pool()
+        self._pending_tasks = []
+        self._pending_sheduler = None
 
         self.bus = EventBus(remote_api, self)
-        self.services = ha.ServiceRegistry(self.bus, self.add_job, self.loop)
+        self.services = ha.ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop, self.remote_api)
         self.config = ha.Config()
         # This is a dictionary that any component can store any data on.
         self.data = {}
         self.state = ha.CoreState.not_running
         self.exit_code = None
-        self._websession = None
         self.config.api = local_api
 
     def start(self):
@@ -175,8 +175,6 @@ class HomeAssistant(ha.HomeAssistant):
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_STOP,
                       origin=ha.EventOrigin.remote)
-
-        self.pool.stop()
 
         # Disconnect master event forwarding
         disconnect_remote_events(self.remote_api, self.config.api)

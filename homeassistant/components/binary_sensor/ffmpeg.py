@@ -138,7 +138,7 @@ class FFmpegBinarySensor(BinarySensorDevice):
     def _callback(self, state):
         """HA-FFmpeg callback for noise detection."""
         self._state = state
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def _start_ffmpeg(self, config):
         """Start a FFmpeg instance."""

@@ -3,12 +3,13 @@ import asyncio
 import os
 import sys
 from datetime import timedelta
-from unittest import mock
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from io import StringIO
 import logging
 import threading
 from contextlib import contextmanager
+
+from aiohttp import web
 
 from homeassistant import core as ha, loader
 from homeassistant.bootstrap import (
@@ -22,6 +23,9 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT)
 from homeassistant.components import sun, mqtt
+from homeassistant.components.http.auth import auth_middleware
+from homeassistant.components.http.const import (
+    KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -29,18 +33,17 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_test_config_dir(*add_path):
     """Return a path to a test config dir."""
-    return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
+    return os.path.join(os.path.dirname(__file__), 'testing_config', *add_path)
 
 
 def get_test_home_assistant():
-    """Return a Home Assistant object pointing at test config dir."""
+    """Return a Home Assistant object pointing at test config directory."""
     if sys.platform == "win32":
         loop = asyncio.ProactorEventLoop()
     else:
         loop = asyncio.new_event_loop()
 
     hass = loop.run_until_complete(async_test_home_assistant(loop))
-    hass.allow_pool = True
 
     # FIXME should not be a daemon. Means hass.stop() not called in teardown
     stop_event = threading.Event()
@@ -58,8 +61,6 @@ def get_test_home_assistant():
     orig_start = hass.start
     orig_stop = hass.stop
 
-    @patch.object(hass.loop, 'add_signal_handler')
-    @patch.object(ha, '_async_create_timer')
     @patch.object(hass.loop, 'run_forever')
     @patch.object(hass.loop, 'close')
     def start_hass(*mocks):
@@ -78,12 +79,14 @@ def get_test_home_assistant():
     return hass
 
 
+# pylint: disable=protected-access
 @asyncio.coroutine
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
     loop._thread_ident = threading.get_ident()
 
     hass = ha.HomeAssistant(loop)
+    hass.async_track_tasks()
 
     hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
@@ -99,19 +102,17 @@ def async_test_home_assistant(loop):
 
     hass.state = ha.CoreState.running
 
-    hass.allow_pool = False
-    orig_init = hass.async_init_pool
+    # Mock async_start
+    orig_start = hass.async_start
 
-    @ha.callback
-    def mock_async_init_pool():
-        """Prevent worker pool from being initialized."""
-        if hass.allow_pool:
-            with patch('homeassistant.core._async_monitor_worker_pool'):
-                orig_init()
-        else:
-            assert False, 'Thread pool not allowed. Set hass.allow_pool = True'
+    @asyncio.coroutine
+    def mock_async_start():
+        """Start the mocking."""
+        with patch.object(loop, 'add_signal_handler'), \
+                patch('homeassistant.core._async_create_timer'):
+            yield from orig_start()
 
-    hass.async_init_pool = mock_async_init_pool
+    hass.async_start = mock_async_start
 
     return hass
 
@@ -135,8 +136,14 @@ def mock_service(hass, domain, service):
     """
     calls = []
 
+    # pylint: disable=redefined-outer-name
+    @ha.callback
+    def mock_service(call):
+        """"Mocked service call."""
+        calls.append(call)
+
     # pylint: disable=unnecessary-lambda
-    hass.services.register(domain, service, lambda call: calls.append(call))
+    hass.services.register(domain, service, mock_service)
 
     return calls
 
@@ -199,7 +206,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
 
 def mock_http_component(hass):
     """Mock the HTTP component."""
-    hass.http = mock.MagicMock()
+    hass.http = MagicMock()
     hass.config.components.append('http')
     hass.http.views = {}
 
@@ -207,16 +214,27 @@ def mock_http_component(hass):
         """Store registered view."""
         if isinstance(view, type):
             # Instantiate the view, if needed
-            view = view(hass)
+            view = view()
 
         hass.http.views[view.name] = view
 
     hass.http.register_view = mock_register_view
 
 
+def mock_http_component_app(hass, api_password=None):
+    """Create an aiohttp.web.Application instance for testing."""
+    hass.http = MagicMock(api_password=api_password)
+    app = web.Application(middlewares=[auth_middleware], loop=hass.loop)
+    app['hass'] = hass
+    app[KEY_USE_X_FORWARDED_FOR] = False
+    app[KEY_BANS_ENABLED] = False
+    app[KEY_TRUSTED_NETWORKS] = []
+    return app
+
+
 def mock_mqtt_component(hass):
     """Mock the MQTT component."""
-    with mock.patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
+    with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
         setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: {
                 mqtt.CONF_BROKER: 'mock-broker',

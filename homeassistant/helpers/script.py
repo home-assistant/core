@@ -85,7 +85,7 @@ class Script():
                 def script_delay(now):
                     """Called after delay is done."""
                     self._async_unsub_delay_listener = None
-                    self.hass.loop.create_task(self.async_run(variables))
+                    self.hass.async_add_job(self.async_run(variables))
 
                 delay = action[CONF_DELAY]
 

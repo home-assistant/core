@@ -36,4 +36,5 @@ class MockScanner(object):
         """
         return None if device == 'DEV1' else device.lower()
 
+
 SCANNER = MockScanner()

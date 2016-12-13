@@ -14,12 +14,10 @@ import re
 import signal
 import sys
 import threading
-import time
 
 from types import MappingProxyType
 from typing import Optional, Any, Callable, List  # NOQA
 
-import aiohttp
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -31,7 +29,7 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE,
     SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, __version__)
 from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError)
+    HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 import homeassistant.util as util
@@ -53,16 +51,14 @@ TIMER_INTERVAL = 1  # seconds
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
 
-# Define number of MINIMUM worker threads.
-# During bootstrap of HA (see bootstrap._setup_component()) worker threads
-# will be added for each component that polls devices.
-MIN_WORKER_THREAD = 2
-
 # Pattern for validating entity IDs (format: <domain>.<entity>)
 ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 
-# Interval at which we check if the pool is getting busy
-MONITOR_POOL_INTERVAL = 30
+# Size of a executor pool
+EXECUTOR_POOL_SIZE = 10
+
+# Time for cleanup internal pending tasks
+TIME_INTERVAL_TASKS_CLEANUP = 10
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,33 +108,23 @@ class HomeAssistant(object):
         else:
             self.loop = loop or asyncio.get_event_loop()
 
-        self.executor = ThreadPoolExecutor(max_workers=5)
+        self.executor = ThreadPoolExecutor(max_workers=EXECUTOR_POOL_SIZE)
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(self._async_exception_handler)
-        self.pool = None
+        self._pending_tasks = []
         self.bus = EventBus(self)
-        self.services = ServiceRegistry(self.bus, self.async_add_job,
-                                        self.loop)
+        self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config()  # type: Config
         # This is a dictionary that any component can store any data on.
         self.data = {}
         self.state = CoreState.not_running
         self.exit_code = None
-        self._websession = None
 
     @property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
-
-    @property
-    def websession(self):
-        """Return an aiohttp session to make web requests."""
-        if self._websession is None:
-            self._websession = aiohttp.ClientSession(loop=self.loop)
-
-        return self._websession
 
     def start(self) -> None:
         """Start home assistant."""
@@ -190,23 +176,18 @@ class HomeAssistant(object):
         self.loop._thread_ident = threading.get_ident()
         _async_create_timer(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        if self.pool is not None:
-            yield from self.loop.run_in_executor(
-                None, self.pool.block_till_done)
         self.state = CoreState.running
 
     def add_job(self, target: Callable[..., None], *args: Any) -> None:
-        """Add job to the worker pool.
+        """Add job to the executor pool.
 
         target: target to call.
         args: parameters for method to call.
         """
-        if self.pool is None:
-            run_callback_threadsafe(self.pool, self.async_init_pool).result()
-        self.pool.add_job((target,) + args)
+        self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     @callback
-    def async_add_job(self, target: Callable[..., None], *args: Any) -> None:
+    def _async_add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add a job from within the eventloop.
 
         This method must be run in the event loop.
@@ -214,14 +195,52 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-        if is_callback(target):
+        if asyncio.iscoroutine(target):
+            self.loop.create_task(target)
+        elif is_callback(target):
             self.loop.call_soon(target, *args)
         elif asyncio.iscoroutinefunction(target):
             self.loop.create_task(target(*args))
         else:
-            if self.pool is None:
-                self.async_init_pool()
-            self.pool.add_job((target,) + args)
+            self.loop.run_in_executor(None, target, *args)
+
+    async_add_job = _async_add_job
+
+    @callback
+    def _async_add_job_tracking(self, target: Callable[..., None],
+                                *args: Any) -> None:
+        """Add a job from within the eventloop.
+
+        This method must be run in the event loop.
+
+        target: target to call.
+        args: parameters for method to call.
+        """
+        task = None
+
+        if asyncio.iscoroutine(target):
+            task = self.loop.create_task(target)
+        elif is_callback(target):
+            self.loop.call_soon(target, *args)
+        elif asyncio.iscoroutinefunction(target):
+            task = self.loop.create_task(target(*args))
+        else:
+            task = self.loop.run_in_executor(None, target, *args)
+
+        # if a task is sheduled
+        if task is not None:
+            self._pending_tasks.append(task)
+
+    @callback
+    def async_track_tasks(self):
+        """Track tasks so you can wait for all tasks to be done."""
+        self.async_add_job = self._async_add_job_tracking
+
+    @asyncio.coroutine
+    def async_stop_track_tasks(self):
+        """Track tasks so you can wait for all tasks to be done."""
+        yield from self.async_block_till_done()
+        self.async_add_job = self._async_add_job
 
     @callback
     def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
@@ -237,49 +256,25 @@ class HomeAssistant(object):
         else:
             self.async_add_job(target, *args)
 
-    def _loop_empty(self) -> bool:
-        """Python 3.4.2 empty loop compatibility function."""
-        # pylint: disable=protected-access
-        if sys.version_info < (3, 4, 3):
-            return len(self.loop._scheduled) == 0 and \
-                   len(self.loop._ready) == 0
-        else:
-            return self.loop._current_handle is None and \
-                   len(self.loop._ready) == 0
-
     def block_till_done(self) -> None:
         """Block till all pending work is done."""
-        complete = threading.Event()
+        run_coroutine_threadsafe(
+            self.async_block_till_done(), loop=self.loop).result()
 
-        @asyncio.coroutine
-        def sleep_wait():
-            """Sleep in thread pool."""
-            yield from self.loop.run_in_executor(None, time.sleep, 0)
+    @asyncio.coroutine
+    def async_block_till_done(self):
+        """Block till all pending work is done."""
+        # To flush out any call_soon_threadsafe
+        yield from asyncio.sleep(0, loop=self.loop)
 
-        def notify_when_done():
-            """Notify event loop when pool done."""
-            count = 0
-            while True:
-                # Wait for the work queue to empty
-                if self.pool is not None:
-                    self.pool.block_till_done()
-
-                # Verify the loop is empty
-                if self._loop_empty():
-                    count += 1
-
-                if count == 2:
-                    break
-
-                # sleep in the loop executor, this forces execution back into
-                # the event loop to avoid the block thread from starving the
-                # async loop
-                run_coroutine_threadsafe(sleep_wait(), self.loop).result()
-
-            complete.set()
-
-        threading.Thread(name="BlockThread", target=notify_when_done).start()
-        complete.wait()
+        while self._pending_tasks:
+            pending = [task for task in self._pending_tasks
+                       if not task.done()]
+            self._pending_tasks.clear()
+            if len(pending) > 0:
+                yield from asyncio.wait(pending, loop=self.loop)
+            else:
+                yield from asyncio.sleep(0, loop=self.loop)
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
@@ -292,14 +287,10 @@ class HomeAssistant(object):
         This method is a coroutine.
         """
         self.state = CoreState.stopping
+        self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        if self.pool is not None:
-            yield from self.loop.run_in_executor(
-                None, self.pool.block_till_done)
-            yield from self.loop.run_in_executor(None, self.pool.stop)
+        yield from self.async_block_till_done()
         self.executor.shutdown()
-        if self._websession is not None:
-            yield from self._websession.close()
         self.state = CoreState.not_running
         self.loop.stop()
 
@@ -307,39 +298,30 @@ class HomeAssistant(object):
     @callback
     def _async_exception_handler(self, loop, context):
         """Handle all exception inside the core loop."""
-        message = context.get('message')
-        if message:
-            _LOGGER.warning(
-                "Error inside async loop: %s",
-                message
-            )
-
-        # for debug modus
+        kwargs = {}
         exception = context.get('exception')
-        if exception is not None:
-            exc_info = (type(exception), exception, exception.__traceback__)
-            _LOGGER.debug(
-                "Exception inside async loop: ",
-                exc_info=exc_info
-            )
+        if exception:
+            # Do not report on shutting down exceptions.
+            if isinstance(exception, ShuttingDown):
+                return
 
-    @callback
-    def async_init_pool(self):
-        """Initialize the worker pool."""
-        self.pool = create_worker_pool()
-        _async_monitor_worker_pool(self)
+            kwargs['exc_info'] = (type(exception), exception,
+                                  exception.__traceback__)
+
+        _LOGGER.error('Error doing job: %s', context['message'],
+                      **kwargs)
 
     @callback
     def _async_stop_handler(self, *args):
         """Stop Home Assistant."""
         self.exit_code = 0
-        self.async_add_job(self.async_stop)
+        self.loop.create_task(self.async_stop())
 
     @callback
     def _async_restart_handler(self, *args):
         """Restart Home Assistant."""
         self.exit_code = RESTART_EXIT_CODE
-        self.async_add_job(self.async_stop)
+        self.loop.create_task(self.async_stop())
 
 
 class EventOrigin(enum.Enum):
@@ -436,7 +418,7 @@ class EventBus(object):
         """
         if event_type != EVENT_HOMEASSISTANT_STOP and \
                 self._hass.state == CoreState.stopping:
-            raise HomeAssistantError('Home Assistant is shutting down.')
+            raise ShuttingDown('Home Assistant is shutting down.')
 
         # Copy the list of the current listeners because some listeners
         # remove themselves as a listener while being executed which
@@ -859,12 +841,10 @@ class ServiceCall(object):
 class ServiceRegistry(object):
     """Offers services over the eventbus."""
 
-    def __init__(self, bus, async_add_job, loop):
+    def __init__(self, hass):
         """Initialize a service registry."""
         self._services = {}
-        self._async_add_job = async_add_job
-        self._bus = bus
-        self._loop = loop
+        self._hass = hass
         self._cur_id = 0
         self._async_unsub_call_event = None
 
@@ -872,7 +852,7 @@ class ServiceRegistry(object):
     def services(self):
         """Dict with per domain a list of available services."""
         return run_callback_threadsafe(
-            self._loop, self.async_services,
+            self._hass.loop, self.async_services,
         ).result()
 
     @callback
@@ -903,7 +883,7 @@ class ServiceRegistry(object):
         Schema is called to coerce and validate the service data.
         """
         run_callback_threadsafe(
-            self._loop,
+            self._hass.loop,
             self.async_register, domain, service, service_func, description,
             schema
         ).result()
@@ -933,10 +913,10 @@ class ServiceRegistry(object):
             self._services[domain] = {service: service_obj}
 
         if self._async_unsub_call_event is None:
-            self._async_unsub_call_event = self._bus.async_listen(
+            self._async_unsub_call_event = self._hass.bus.async_listen(
                 EVENT_CALL_SERVICE, self._event_to_service_call)
 
-        self._bus.async_fire(
+        self._hass.bus.async_fire(
             EVENT_SERVICE_REGISTERED,
             {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
@@ -960,7 +940,7 @@ class ServiceRegistry(object):
         """
         return run_coroutine_threadsafe(
             self.async_call(domain, service, service_data, blocking),
-            self._loop
+            self._hass.loop
         ).result()
 
     @asyncio.coroutine
@@ -993,7 +973,7 @@ class ServiceRegistry(object):
         }
 
         if blocking:
-            fut = asyncio.Future(loop=self._loop)
+            fut = asyncio.Future(loop=self._hass.loop)
 
             @callback
             def service_executed(event):
@@ -1001,13 +981,13 @@ class ServiceRegistry(object):
                 if event.data[ATTR_SERVICE_CALL_ID] == call_id:
                     fut.set_result(True)
 
-            unsub = self._bus.async_listen(EVENT_SERVICE_EXECUTED,
-                                           service_executed)
+            unsub = self._hass.bus.async_listen(EVENT_SERVICE_EXECUTED,
+                                                service_executed)
 
-        self._bus.async_fire(EVENT_CALL_SERVICE, event_data)
+        self._hass.bus.async_fire(EVENT_CALL_SERVICE, event_data)
 
         if blocking:
-            done, _ = yield from asyncio.wait([fut], loop=self._loop,
+            done, _ = yield from asyncio.wait([fut], loop=self._hass.loop,
                                               timeout=SERVICE_CALL_LIMIT)
             success = bool(done)
             unsub()
@@ -1038,9 +1018,9 @@ class ServiceRegistry(object):
 
             if (service_handler.is_coroutinefunction or
                     service_handler.is_callback):
-                self._bus.async_fire(EVENT_SERVICE_EXECUTED, data)
+                self._hass.bus.async_fire(EVENT_SERVICE_EXECUTED, data)
             else:
-                self._bus.fire(EVENT_SERVICE_EXECUTED, data)
+                self._hass.bus.fire(EVENT_SERVICE_EXECUTED, data)
 
         try:
             if service_handler.schema:
@@ -1065,7 +1045,7 @@ class ServiceRegistry(object):
                 service_handler.func(service_call)
                 fire_service_executed()
 
-            self._async_add_job(execute_service)
+            self._hass.async_add_job(execute_service)
 
     def _generate_unique_id(self):
         """Generate a unique service call id."""
@@ -1186,7 +1166,7 @@ def _async_create_timer(hass, interval=TIMER_INTERVAL):
                         EVENT_TIME_CHANGED,
                         {ATTR_NOW: now}
                     )
-                except HomeAssistantError:
+                except ShuttingDown:
                     # HA raises error if firing event after it has shut down
                     break
 
@@ -1196,65 +1176,3 @@ def _async_create_timer(hass, interval=TIMER_INTERVAL):
         hass.loop.create_task(timer(interval, stop_event))
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_timer)
-
-
-def create_worker_pool(worker_count=None):
-    """Create a worker pool."""
-    if worker_count is None:
-        worker_count = MIN_WORKER_THREAD
-
-    def job_handler(job):
-        """Called whenever a job is available to do."""
-        try:
-            func, *args = job
-            func(*args)
-        except Exception:  # pylint: disable=broad-except
-            # Catch any exception our service/event_listener might throw
-            # We do not want to crash our ThreadPool
-            _LOGGER.exception("BusHandler:Exception doing job")
-
-    return util.ThreadPool(job_handler, worker_count)
-
-
-def _async_monitor_worker_pool(hass):
-    """Create a monitor for the thread pool to check if pool is misbehaving."""
-    busy_threshold = hass.pool.worker_count * 3
-
-    handle = None
-
-    def schedule():
-        """Schedule the monitor."""
-        nonlocal handle
-        handle = hass.loop.call_later(MONITOR_POOL_INTERVAL,
-                                      check_pool_threshold)
-
-    def check_pool_threshold():
-        """Check pool size."""
-        nonlocal busy_threshold
-
-        pending_jobs = hass.pool.queue_size
-
-        if pending_jobs < busy_threshold:
-            schedule()
-            return
-
-        _LOGGER.warning(
-            "WorkerPool:All %d threads are busy and %d jobs pending",
-            hass.pool.worker_count, pending_jobs)
-
-        for start, job in hass.pool.current_jobs:
-            _LOGGER.warning("WorkerPool:Current job started at %s: %s",
-                            dt_util.as_local(start).isoformat(), job)
-
-        busy_threshold *= 2
-
-        schedule()
-
-    schedule()
-
-    @callback
-    def stop_monitor(event):
-        """Stop the monitor."""
-        handle.cancel()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_monitor)

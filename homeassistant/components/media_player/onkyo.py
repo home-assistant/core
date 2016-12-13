@@ -68,7 +68,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of an Onkyo device."""
 
-    # pylint: disable=abstract-method
     def __init__(self, receiver, sources, name=None):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
@@ -90,7 +89,7 @@ class OnkyoDevice(MediaPlayerDevice):
         except (ValueError, OSError, AttributeError, AssertionError):
             if self._receiver.command_socket:
                 self._receiver.command_socket = None
-                _LOGGER.info('Reseting connection to %s.', self._name)
+                _LOGGER.info('Resetting connection to %s.', self._name)
             else:
                 _LOGGER.info('%s is disconnected. Attempting to reconnect.',
                              self._name)
@@ -174,7 +173,7 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn the media player on."""
-        self._receiver.power_on()
+        self.command('system-power on')
 
     def select_source(self, source):
         """Set the input source."""

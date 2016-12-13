@@ -40,7 +40,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(cover_update)
 
 
-# pylint: disable=abstract-method
 class RfxtrxCover(rfxtrx.RfxtrxDevice, CoverDevice):
     """Representation of an rfxtrx cover."""
 

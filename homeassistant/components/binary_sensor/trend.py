@@ -4,8 +4,11 @@ A sensor that monitors trands in other components.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.trend/
 """
+import asyncio
 import logging
 import voluptuous as vol
+
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.binary_sensor import (
@@ -87,13 +90,12 @@ class SensorTrend(BinarySensorDevice):
         self.from_state = None
         self.to_state = None
 
-        self.update()
-
+        @callback
         def trend_sensor_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
             self.from_state = old_state
             self.to_state = new_state
-            self.update_ha_state(True)
+            hass.async_add_job(self.async_update_ha_state(True))
 
         track_state_change(hass, target_entity,
                            trend_sensor_state_listener)
@@ -118,7 +120,8 @@ class SensorTrend(BinarySensorDevice):
         """No polling needed."""
         return False
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data and update the states."""
         if self.from_state is None or self.to_state is None:
             return

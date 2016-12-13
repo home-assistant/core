@@ -41,7 +41,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([SimpliSafeAlarm(name, username, password, code)])
 
 
-# pylint: disable=abstract-method
 class SimpliSafeAlarm(alarm.AlarmControlPanel):
     """Representation a SimpliSafe alarm."""
 
@@ -61,11 +60,6 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
             self._state = STATE_ALARM_ARMED_AWAY
         else:
             self._state = STATE_UNKNOWN
-
-    @property
-    def should_poll(self):
-        """Poll the SimpliSafe API."""
-        return True
 
     @property
     def name(self):
@@ -105,7 +99,6 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
             return
         self.simplisafe.set_state('off')
         _LOGGER.info('SimpliSafe alarm disarming')
-        self.update()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
@@ -113,7 +106,6 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
             return
         self.simplisafe.set_state('home')
         _LOGGER.info('SimpliSafe alarm arming home')
-        self.update()
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
@@ -121,7 +113,6 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
             return
         self.simplisafe.set_state('away')
         _LOGGER.info('SimpliSafe alarm arming away')
-        self.update()
 
     def _validate_code(self, code, state):
         """Validate given code."""

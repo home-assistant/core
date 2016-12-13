@@ -41,3 +41,14 @@ alarm_trigger:
     code:
       description: An optional code to trigger the alarm control panel with
       example: 1234
+
+envisalink_alarm_keypress:
+  description: Send custom keypresses to the alarm
+
+  fields:
+    entity_id:
+      description: Name of the alarm control panel to trigger
+      example: 'alarm_control_panel.downstairs'
+    keypress:
+      description: 'String to send to the alarm panel (1-6 characters)'
+      example: '*71'

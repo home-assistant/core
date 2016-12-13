@@ -11,13 +11,10 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DISCOVER_BINARY_SENSORS = 'octoprint.binary_sensor'
-DISCOVER_SENSORS = 'octoprint.sensors'
 DOMAIN = 'octoprint'
 
 OCTOPRINT = None
@@ -43,12 +40,6 @@ def setup(hass, config):
     except requests.exceptions.RequestException as conn_err:
         _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
         return False
-
-    for component, discovery_service in (
-            ('sensor', DISCOVER_SENSORS),
-            ('binary_sensor', DISCOVER_BINARY_SENSORS)):
-        discovery.discover(hass, discovery_service, component=component,
-                           hass_config=config)
 
     return True
 

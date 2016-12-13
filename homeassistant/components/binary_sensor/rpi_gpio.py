@@ -72,7 +72,7 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
         def read_gpio(port):
             """Read state from GPIO."""
             self._state = rpi_gpio.read_input(self._port)
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
         rpi_gpio.edge_detect(self._port, read_gpio, self._bouncetime)
 

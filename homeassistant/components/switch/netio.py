@@ -97,6 +97,7 @@ class NetioApiView(HomeAssistantView):
     @callback
     def get(self, request, host):
         """Request handler."""
+        hass = request.app['hass']
         data = request.GET
         states, consumptions, cumulated_consumptions, start_dates = \
             [], [], [], []
@@ -119,7 +120,7 @@ class NetioApiView(HomeAssistantView):
         ndev.start_dates = start_dates
 
         for dev in DEVICES[host].entities:
-            self.hass.loop.create_task(dev.async_update_ha_state())
+            hass.async_add_job(dev.async_update_ha_state())
 
         return self.json(True)
 
@@ -156,7 +157,7 @@ class NetioSwitch(SwitchDevice):
         val[self.outlet - 1] = '1' if value else '0'
         self.netio.get('port list %s' % ''.join(val))
         self.netio.states[self.outlet - 1] = value
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def is_on(self):

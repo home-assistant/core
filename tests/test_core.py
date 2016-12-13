@@ -9,6 +9,7 @@ import pytz
 
 import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
+from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
@@ -56,7 +57,7 @@ def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
     ha.HomeAssistant.async_add_job(hass, job)
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
-    assert len(hass.pool.add_job.mock_calls) == 1
+    assert len(hass.loop.run_in_executor.mock_calls) == 1
 
 
 def test_async_run_job_calls_callback():
@@ -117,6 +118,101 @@ class TestHomeAssistant(unittest.TestCase):
     #     self.hass.block_till_done()
 
     #     self.assertEqual(1, len(calls))
+
+    def test_pending_sheduler(self):
+        """Add a coro to pending tasks."""
+        call_count = []
+
+        @asyncio.coroutine
+        def test_coro():
+            """Test Coro."""
+            call_count.append('call')
+
+        for i in range(3):
+            self.hass.add_job(test_coro())
+
+        run_coroutine_threadsafe(
+            asyncio.wait(self.hass._pending_tasks, loop=self.hass.loop),
+            loop=self.hass.loop
+        ).result()
+
+        assert len(self.hass._pending_tasks) == 3
+        assert len(call_count) == 3
+
+    def test_async_add_job_pending_tasks_coro(self):
+        """Add a coro to pending tasks."""
+        call_count = []
+
+        @asyncio.coroutine
+        def test_coro():
+            """Test Coro."""
+            call_count.append('call')
+
+        for i in range(2):
+            self.hass.add_job(test_coro())
+
+        @asyncio.coroutine
+        def wait_finish_callback():
+            """Wait until all stuff is scheduled."""
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+
+        run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop).result()
+
+        assert len(self.hass._pending_tasks) == 2
+        self.hass.block_till_done()
+        assert len(call_count) == 2
+
+    def test_async_add_job_pending_tasks_executor(self):
+        """Run a executor in pending tasks."""
+        call_count = []
+
+        def test_executor():
+            """Test executor."""
+            call_count.append('call')
+
+        @asyncio.coroutine
+        def wait_finish_callback():
+            """Wait until all stuff is scheduled."""
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+
+        for i in range(2):
+            self.hass.add_job(test_executor)
+
+        run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop).result()
+
+        assert len(self.hass._pending_tasks) == 2
+        self.hass.block_till_done()
+        assert len(call_count) == 2
+
+    def test_async_add_job_pending_tasks_callback(self):
+        """Run a callback in pending tasks."""
+        call_count = []
+
+        @ha.callback
+        def test_callback():
+            """Test callback."""
+            call_count.append('call')
+
+        @asyncio.coroutine
+        def wait_finish_callback():
+            """Wait until all stuff is scheduled."""
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
+
+        for i in range(2):
+            self.hass.add_job(test_callback)
+
+        run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop).result()
+
+        self.hass.block_till_done()
+
+        assert len(self.hass._pending_tasks) == 0
+        assert len(call_count) == 2
 
 
 class TestEvent(unittest.TestCase):
@@ -195,7 +291,6 @@ class TestEventBus(unittest.TestCase):
 
     def test_unsubscribe_listener(self):
         """Test unsubscribe listener from returned function."""
-        self.hass.allow_pool = False
         calls = []
 
         @ha.callback
@@ -219,7 +314,6 @@ class TestEventBus(unittest.TestCase):
 
     def test_listen_once_event_with_callback(self):
         """Test listen_once_event method."""
-        self.hass.allow_pool = False
         runs = []
 
         @ha.callback
@@ -237,7 +331,6 @@ class TestEventBus(unittest.TestCase):
 
     def test_listen_once_event_with_coroutine(self):
         """Test listen_once_event method."""
-        self.hass.allow_pool = False
         runs = []
 
         @asyncio.coroutine
@@ -283,7 +376,6 @@ class TestEventBus(unittest.TestCase):
 
     def test_callback_event_listener(self):
         """Test a  event listener listeners."""
-        self.hass.allow_pool = False
         callback_calls = []
 
         @ha.callback
@@ -297,7 +389,6 @@ class TestEventBus(unittest.TestCase):
 
     def test_coroutine_event_listener(self):
         """Test a  event listener listeners."""
-        self.hass.allow_pool = False
         coroutine_calls = []
 
         @asyncio.coroutine
@@ -376,7 +467,6 @@ class TestStateMachine(unittest.TestCase):
         self.states = self.hass.states
         self.states.set("light.Bowl", "on")
         self.states.set("switch.AC", "off")
-        self.hass.allow_pool = False
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -514,7 +604,12 @@ class TestServiceRegistry(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.services = self.hass.services
-        self.services.register("Test_Domain", "TEST_SERVICE", lambda x: None)
+
+        @ha.callback
+        def mock_service(call):
+            pass
+
+        self.services.register("Test_Domain", "TEST_SERVICE", mock_service)
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -523,7 +618,6 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_has_service(self):
         """Test has_service method."""
-        self.hass.allow_pool = False
         self.assertTrue(
             self.services.has_service("tesT_domaiN", "tesT_servicE"))
         self.assertFalse(
@@ -533,7 +627,6 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_services(self):
         """Test services."""
-        self.hass.allow_pool = False
         expected = {
             'test_domain': {'test_service': {'description': '', 'fields': {}}}
         }
@@ -543,6 +636,7 @@ class TestServiceRegistry(unittest.TestCase):
         """Test call with blocking."""
         calls = []
 
+        @ha.callback
         def service_handler(call):
             """Service handler."""
             calls.append(call)
@@ -556,7 +650,6 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_call_non_existing_with_blocking(self):
         """Test non-existing with blocking."""
-        self.hass.allow_pool = False
         prior = ha.SERVICE_CALL_LIMIT
         try:
             ha.SERVICE_CALL_LIMIT = 0.01
@@ -567,7 +660,6 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_async_service(self):
         """Test registering and calling an async service."""
-        self.hass.allow_pool = False
         calls = []
 
         @asyncio.coroutine
@@ -584,7 +676,6 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_callback_service(self):
         """Test registering and calling an async service."""
-        self.hass.allow_pool = False
         calls = []
 
         @ha.callback
@@ -636,72 +727,6 @@ class TestConfig(unittest.TestCase):
         }
 
         self.assertEqual(expected, self.config.as_dict())
-
-
-class TestWorkerPool(unittest.TestCase):
-    """Test WorkerPool methods."""
-
-    def test_exception_during_job(self):
-        """Test exception during a job."""
-        pool = ha.create_worker_pool(1)
-
-        def malicious_job(_):
-            raise Exception("Test breaking worker pool")
-
-        calls = []
-
-        def register_call(_):
-            calls.append(1)
-
-        pool.add_job((malicious_job, None))
-        pool.block_till_done()
-        pool.add_job((register_call, None))
-        pool.block_till_done()
-        self.assertEqual(1, len(calls))
-
-
-class TestWorkerPoolMonitor(object):
-    """Test monitor_worker_pool."""
-
-    @patch('homeassistant.core._LOGGER.warning')
-    def test_worker_pool_monitor(self, mock_warning, event_loop):
-        """Test we log an error and increase threshold."""
-        hass = MagicMock()
-        hass.pool.worker_count = 3
-        schedule_handle = MagicMock()
-        hass.loop.call_later.return_value = schedule_handle
-
-        ha._async_monitor_worker_pool(hass)
-        assert hass.loop.call_later.called
-        assert hass.bus.async_listen_once.called
-        assert not schedule_handle.called
-
-        check_threshold = hass.loop.call_later.mock_calls[0][1][1]
-
-        hass.pool.queue_size = 8
-        check_threshold()
-        assert not mock_warning.called
-
-        hass.pool.queue_size = 9
-        check_threshold()
-        assert mock_warning.called
-
-        mock_warning.reset_mock()
-        assert not mock_warning.called
-
-        check_threshold()
-        assert not mock_warning.called
-
-        hass.pool.queue_size = 17
-        check_threshold()
-        assert not mock_warning.called
-
-        hass.pool.queue_size = 18
-        check_threshold()
-        assert mock_warning.called
-
-        hass.bus.async_listen_once.mock_calls[0][1][1](None)
-        assert schedule_handle.cancel.called
 
 
 class TestAsyncCreateTimer(object):

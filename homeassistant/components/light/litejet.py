@@ -4,7 +4,6 @@ Support for LiteJet lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.litejet/
 """
-
 import logging
 
 import homeassistant.components.litejet as litejet
@@ -18,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup lights for the LiteJet platform."""
+    """Set up lights for the LiteJet platform."""
     litejet_ = hass.data['litejet_system']
 
     devices = []
@@ -30,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class LiteJetLight(Light):
-    """Represents a single LiteJet light."""
+    """Representation of a single LiteJet light."""
 
     def __init__(self, hass, lj, i, name):
         """Initialize a LiteJet light."""
@@ -48,7 +47,7 @@ class LiteJetLight(Light):
     def _on_load_changed(self):
         """Called on a LiteJet thread when a load's state changes."""
         _LOGGER.debug("Updating due to notification for %s", self._name)
-        self._hass.loop.create_task(self.async_update_ha_state(True))
+        self._hass.async_add_job(self.async_update_ha_state(True))
 
     @property
     def name(self):

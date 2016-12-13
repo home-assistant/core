@@ -6,17 +6,32 @@ https://home-assistant.io/components/sensor.zoneminder/
 """
 import logging
 
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.zoneminder as zoneminder
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['zoneminder']
 
+CONF_INCLUDE_ARCHIVED = "include_archived"
+
+DEFAULT_INCLUDE_ARCHIVED = False
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_INCLUDE_ARCHIVED, default=DEFAULT_INCLUDE_ARCHIVED):
+        cv.boolean,
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the ZoneMinder sensor platform."""
+    include_archived = config.get(CONF_INCLUDE_ARCHIVED)
+
     sensors = []
 
     monitors = zoneminder.get_state('api/monitors.json')
@@ -25,7 +40,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             ZMSensorMonitors(int(i['Monitor']['Id']), i['Monitor']['Name'])
         )
         sensors.append(
-            ZMSensorEvents(int(i['Monitor']['Id']), i['Monitor']['Name'])
+            ZMSensorEvents(int(i['Monitor']['Id']), i['Monitor']['Name'],
+                           include_archived)
         )
 
     add_devices(sensors)
@@ -64,10 +80,11 @@ class ZMSensorMonitors(Entity):
 class ZMSensorEvents(Entity):
     """Get the number of events for each monitor."""
 
-    def __init__(self, monitor_id, monitor_name):
+    def __init__(self, monitor_id, monitor_name, include_archived):
         """Initiate event sensor."""
         self._monitor_id = monitor_id
         self._monitor_name = monitor_name
+        self._include_archived = include_archived
         self._state = None
 
     @property
@@ -87,8 +104,13 @@ class ZMSensorEvents(Entity):
 
     def update(self):
         """Update the sensor."""
+        archived_filter = '/Archived:0'
+        if self._include_archived:
+            archived_filter = ''
+
         event = zoneminder.get_state(
-            'api/events/index/MonitorId:%i.json' % self._monitor_id
+            'api/events/index/MonitorId:%i%s.json' % (self._monitor_id,
+                                                      archived_filter)
         )
 
         self._state = event['pagination']['count']

@@ -1,28 +1,32 @@
 """The tests for the MQTT automation."""
 import unittest
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.automation as automation
 from tests.common import (
     mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
 
 
+# pylint: disable=invalid-name
 class TestAutomationMQTT(unittest.TestCase):
     """Test the event automation."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
         mock_mqtt_component(self.hass)
         self.calls = []
 
+        @callback
         def record_call(service):
+            """Helper to record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -38,16 +42,17 @@ class TestAutomationMQTT(unittest.TestCase):
                     'service': 'test.automation',
                     'data_template': {
                         'some': '{{ trigger.platform }} - {{ trigger.topic }}'
-                                ' - {{ trigger.payload }}'
+                                ' - {{ trigger.payload }} - '
+                                '{{ trigger.payload_json.hello }}'
                     },
                 }
             }
         })
 
-        fire_mqtt_message(self.hass, 'test-topic', 'test_payload')
+        fire_mqtt_message(self.hass, 'test-topic', '{ "hello": "world" }')
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
-        self.assertEqual('mqtt - test-topic - test_payload',
+        self.assertEqual('mqtt - test-topic - { "hello": "world" } - world',
                          self.calls[0].data['some'])
 
         automation.turn_off(self.hass)

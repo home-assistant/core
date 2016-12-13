@@ -33,6 +33,10 @@ def setup(hass, config):
 
     This will automatically import associated lights.
     """
+    _LOGGER.warning('Component disabled at request from Insteon. '
+                    'For more information: https://goo.gl/zLJaic')
+    return False
+    # pylint: disable=unreachable
     import insteon
 
     username = config[DOMAIN][CONF_USERNAME]

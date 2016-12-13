@@ -25,9 +25,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['https://github.com/web-push-libs/pywebpush/archive/'
-                'e743dc92558fc62178d255c0018920d74fa778ed.zip#'
-                'pywebpush==0.5.0', 'PyJWT==1.4.2']
+REQUIREMENTS = ['pywebpush==0.6.1', 'PyJWT==1.4.2']
 
 DEPENDENCIES = ['frontend']
 
@@ -109,8 +107,8 @@ def get_service(hass, config):
         return None
 
     hass.http.register_view(
-        HTML5PushRegistrationView(hass, registrations, json_path))
-    hass.http.register_view(HTML5PushCallbackView(hass, registrations))
+        HTML5PushRegistrationView(registrations, json_path))
+    hass.http.register_view(HTML5PushCallbackView(registrations))
 
     gcm_api_key = config.get(ATTR_GCM_API_KEY)
     gcm_sender_id = config.get(ATTR_GCM_SENDER_ID)
@@ -141,11 +139,23 @@ def _load_config(filename):
         return None
 
 
+class JSONBytesDecoder(json.JSONEncoder):
+    """JSONEncoder to decode bytes objects to unicode."""
+
+    # pylint: disable=method-hidden
+    def default(self, obj):
+        """Decode object if it's a bytes object, else defer to baseclass."""
+        if isinstance(obj, bytes):
+            return obj.decode()
+        return json.JSONEncoder.default(self, obj)
+
+
 def _save_config(filename, config):
     """Save configuration."""
     try:
         with open(filename, 'w') as fdesc:
-            fdesc.write(json.dumps(config))
+            fdesc.write(json.dumps(
+                config, cls=JSONBytesDecoder, indent=4, sort_keys=True))
     except (IOError, TypeError) as error:
         _LOGGER.error('Saving config file failed: %s', error)
         return False
@@ -158,9 +168,8 @@ class HTML5PushRegistrationView(HomeAssistantView):
     url = '/api/notify.html5'
     name = 'api:notify.html5'
 
-    def __init__(self, hass, registrations, json_path):
+    def __init__(self, registrations, json_path):
         """Init HTML5PushRegistrationView."""
-        super().__init__(hass)
         self.registrations = registrations
         self.json_path = json_path
 
@@ -227,9 +236,8 @@ class HTML5PushCallbackView(HomeAssistantView):
     url = '/api/notify.html5/callback'
     name = 'api:notify.html5/callback'
 
-    def __init__(self, hass, registrations):
+    def __init__(self, registrations):
         """Init HTML5PushCallbackView."""
-        super().__init__(hass)
         self.registrations = registrations
 
     def decode_jwt(self, token):
@@ -314,7 +322,7 @@ class HTML5PushCallbackView(HomeAssistantView):
 
         event_name = '{}.{}'.format(NOTIFY_CALLBACK_EVENT,
                                     event_payload[ATTR_TYPE])
-        self.hass.bus.fire(event_name, event_payload)
+        request.app['hass'].bus.fire(event_name, event_payload)
         return self.json({'status': 'ok',
                           'event': event_payload[ATTR_TYPE]})
 

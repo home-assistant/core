@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 import asyncio
 import threading
-import time
 import unittest
 from unittest.mock import patch
 
@@ -51,7 +50,6 @@ def setUpModule():
     bootstrap.setup_component(hass, 'api')
 
     hass.start()
-    time.sleep(0.05)
 
     master_api = remote.API('127.0.0.1', API_PASSWORD, MASTER_PORT)
 
@@ -63,6 +61,7 @@ def setUpModule():
                      target=loop.run_forever).start()
 
     slave = remote.HomeAssistant(master_api, loop=loop)
+    slave.async_track_tasks()
     slave.config.config_dir = get_test_config_dir()
     slave.config.skip_pip = True
     bootstrap.setup_component(
@@ -118,6 +117,7 @@ class TestRemoteMethods(unittest.TestCase):
         """Test Python API fire_event."""
         test_value = []
 
+        @ha.callback
         def listener(event):
             """Helper method that will verify our event got called."""
             test_value.append(1)
@@ -202,6 +202,7 @@ class TestRemoteMethods(unittest.TestCase):
         """Test Python API services.call."""
         test_value = []
 
+        @ha.callback
         def listener(service_call):
             """Helper method that will verify that our service got called."""
             test_value.append(1)

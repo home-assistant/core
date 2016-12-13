@@ -3,6 +3,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
@@ -11,21 +12,24 @@ from tests.common import (
     fire_time_changed, get_test_home_assistant, assert_setup_component)
 
 
+# pylint: disable=invalid-name
 class TestAutomationTime(unittest.TestCase):
     """Test the event automation."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
         self.calls = []
 
+        @callback
         def record_call(service):
+            """Helper to record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 
 
-REQUIREMENTS = ['astral==1.2']
+REQUIREMENTS = ['astral==1.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,14 +49,20 @@ def is_on(hass, entity_id=None):
 
 
 def next_setting(hass, entity_id=None):
-    """Local datetime object of the next sun setting."""
+    """Local datetime object of the next sun setting.
+
+    Async friendly.
+    """
     utc_next = next_setting_utc(hass, entity_id)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
 def next_setting_utc(hass, entity_id=None):
-    """UTC datetime object of the next sun setting."""
+    """UTC datetime object of the next sun setting.
+
+    Async friendly.
+    """
     entity_id = entity_id or ENTITY_ID
 
     state = hass.states.get(ENTITY_ID)
@@ -71,14 +77,20 @@ def next_setting_utc(hass, entity_id=None):
 
 
 def next_rising(hass, entity_id=None):
-    """Local datetime object of the next sun rising."""
+    """Local datetime object of the next sun rising.
+
+    Async friendly.
+    """
     utc_next = next_rising_utc(hass, entity_id)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
 def next_rising_utc(hass, entity_id=None):
-    """UTC datetime object of the next sun rising."""
+    """UTC datetime object of the next sun rising.
+
+    Async friendly.
+    """
     entity_id = entity_id or ENTITY_ID
 
     state = hass.states.get(ENTITY_ID)

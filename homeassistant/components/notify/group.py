@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.group/
 """
 import collections
+from copy import deepcopy
 import logging
 import voluptuous as vol
 
@@ -56,7 +57,7 @@ class GroupNotifyPlatform(BaseNotificationService):
         payload.update({key: val for key, val in kwargs.items() if val})
 
         for entity in self.entities:
-            sending_payload = payload.copy()
+            sending_payload = deepcopy(payload.copy())
             if entity.get(ATTR_DATA) is not None:
                 update(sending_payload, entity.get(ATTR_DATA))
             self.hass.services.call(DOMAIN, entity.get(ATTR_SERVICE),

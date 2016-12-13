@@ -228,6 +228,7 @@ class TestComponentsGroup(unittest.TestCase):
                         'entities': 'light.Bowl, ' + test_group.entity_id,
                         'icon': 'mdi:work',
                         'view': True,
+                        'control': 'hidden',
                     }
         group_conf['test_group'] = 'hello.world,sensor.happy'
         group_conf['empty_group'] = {'name': 'Empty Group', 'entities': None}
@@ -243,6 +244,8 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertEqual('mdi:work',
                          group_state.attributes.get(ATTR_ICON))
         self.assertTrue(group_state.attributes.get(group.ATTR_VIEW))
+        self.assertEqual('hidden',
+                         group_state.attributes.get(group.ATTR_CONTROL))
         self.assertTrue(group_state.attributes.get(ATTR_HIDDEN))
         self.assertEqual(1, group_state.attributes.get(group.ATTR_ORDER))
 
@@ -254,6 +257,7 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertIsNone(group_state.attributes.get(group.ATTR_AUTO))
         self.assertIsNone(group_state.attributes.get(ATTR_ICON))
         self.assertIsNone(group_state.attributes.get(group.ATTR_VIEW))
+        self.assertIsNone(group_state.attributes.get(group.ATTR_CONTROL))
         self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
         self.assertEqual(2, group_state.attributes.get(group.ATTR_ORDER))
 
@@ -357,7 +361,7 @@ class TestComponentsGroup(unittest.TestCase):
 
     def test_changing_group_visibility(self):
         """Test that a group can be hidden and shown."""
-        setup_component(self.hass, 'group', {
+        assert setup_component(self.hass, 'group', {
             'group': {
                 'test_group': 'hello.world,sensor.happy'
             }
@@ -367,10 +371,12 @@ class TestComponentsGroup(unittest.TestCase):
 
         # Hide the group
         group.set_visibility(self.hass, group_entity_id, False)
+        self.hass.block_till_done()
         group_state = self.hass.states.get(group_entity_id)
         self.assertTrue(group_state.attributes.get(ATTR_HIDDEN))
 
         # Show it again
         group.set_visibility(self.hass, group_entity_id, True)
+        self.hass.block_till_done()
         group_state = self.hass.states.get(group_entity_id)
         self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))

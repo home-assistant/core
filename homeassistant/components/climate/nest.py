@@ -5,14 +5,17 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.nest/
 """
 import logging
+
 import voluptuous as vol
-import homeassistant.components.nest as nest
+
+from homeassistant.components.nest import DATA_NEST
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
     PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE)
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
 
 DEPENDENCIES = ['nest']
 _LOGGER = logging.getLogger(__name__)
@@ -22,15 +25,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1)),
 })
 
+STATE_ECO = 'eco'
+STATE_HEAT_COOL = 'heat-cool'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest thermostat."""
+    if discovery_info is None:
+        return
+
+    _LOGGER.debug("Setting up nest thermostat")
+
     temp_unit = hass.config.units.temperature_unit
-    add_devices([NestThermostat(structure, device, temp_unit)
-                 for structure, device in nest.devices()])
+
+    add_devices(
+        [NestThermostat(structure, device, temp_unit)
+         for structure, device in hass.data[DATA_NEST].devices()],
+        True
+    )
 
 
-# pylint: disable=abstract-method
 class NestThermostat(ClimateDevice):
     """Representation of a Nest thermostat."""
 
@@ -54,98 +68,95 @@ class NestThermostat(ClimateDevice):
         if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(STATE_AUTO)
 
+        self._operation_list.append(STATE_ECO)
+
+        # feature of device
+        self._has_fan = self.device.has_fan
+
+        # data attributes
+        self._away = None
+        self._location = None
+        self._name = None
+        self._humidity = None
+        self._target_temperature = None
+        self._temperature = None
+        self._temperature_scale = None
+        self._mode = None
+        self._fan = None
+        self._eco_temperature = None
+        self._is_locked = None
+        self._locked_temperature = None
+        self._min_temperature = None
+        self._max_temperature = None
+
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        location = self.device.where
-        name = self.device.name
-        if location is None:
-            return name
-        else:
-            if name == '':
-                return location.capitalize()
-            else:
-                return location.capitalize() + '(' + name + ')'
+        return self._name
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        if self.device.has_humidifier or self.device.has_dehumidifier:
-            # Move these to Thermostat Device and make them global
-            return {
-                "humidity": self.device.humidity,
-                "target_humidity": self.device.target_humidity,
-            }
-        else:
-            # No way to control humidity not show setting
-            return {}
+        return self._temperature_scale
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.device.temperature
+        return self._temperature
 
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if self.device.mode == 'cool':
-            return STATE_COOL
-        elif self.device.mode == 'heat':
-            return STATE_HEAT
-        elif self.device.mode == 'range':
+        if self._mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
+            return self._mode
+        elif self._mode == STATE_HEAT_COOL:
             return STATE_AUTO
-        elif self.device.mode == 'off':
-            return STATE_OFF
         else:
             return STATE_UNKNOWN
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.device.mode != 'range' and not self.is_away_mode_on:
-            return self.device.target
+        if self._mode != STATE_HEAT_COOL and not self.is_away_mode_on:
+            return self._target_temperature
         else:
             return None
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if self.is_away_mode_on and self.device.away_temperature[0]:
-            # away_temperature is always a low, high tuple
-            return self.device.away_temperature[0]
-        if self.device.mode == 'range':
-            return self.device.target[0]
+        if (self.is_away_mode_on or self._mode == STATE_ECO) and \
+                self._eco_temperature[0]:
+            # eco_temperature is always a low, high tuple
+            return self._eco_temperature[0]
+        if self._mode == STATE_HEAT_COOL:
+            return self._target_temperature[0]
         else:
             return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        if self.is_away_mode_on and self.device.away_temperature[1]:
-            # away_temperature is always a low, high tuple
-            return self.device.away_temperature[1]
-        if self.device.mode == 'range':
-            return self.device.target[1]
+        if (self.is_away_mode_on or self._mode == STATE_ECO) and \
+                self._eco_temperature[1]:
+            # eco_temperature is always a low, high tuple
+            return self._eco_temperature[1]
+        if self._mode == STATE_HEAT_COOL:
+            return self._target_temperature[1]
         else:
             return None
 
     @property
     def is_away_mode_on(self):
         """Return if away mode is on."""
-        return self.structure.away
+        return self._away
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        if target_temp_low is not None and target_temp_high is not None:
-
-            if self.device.mode == 'range':
+        if self._mode == STATE_HEAT_COOL:
+            if target_temp_low is not None and target_temp_high is not None:
                 temp = (target_temp_low, target_temp_high)
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
@@ -154,14 +165,11 @@ class NestThermostat(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        if operation_mode == STATE_HEAT:
-            self.device.mode = 'heat'
-        elif operation_mode == STATE_COOL:
-            self.device.mode = 'cool'
+        if operation_mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
+            device_mode = operation_mode
         elif operation_mode == STATE_AUTO:
-            self.device.mode = 'range'
-        elif operation_mode == STATE_OFF:
-            self.device.mode = 'off'
+            device_mode = STATE_HEAT_COOL
+        self.device.mode = device_mode
 
     @property
     def operation_list(self):
@@ -179,9 +187,9 @@ class NestThermostat(ClimateDevice):
     @property
     def current_fan_mode(self):
         """Return whether the fan is on."""
-        if self.device.has_fan:
+        if self._has_fan:
             # Return whether the fan is on
-            return STATE_ON if self.device.fan else STATE_AUTO
+            return STATE_ON if self._fan else STATE_AUTO
         else:
             # No Fan available so disable slider
             return None
@@ -198,21 +206,29 @@ class NestThermostat(ClimateDevice):
     @property
     def min_temp(self):
         """Identify min_temp in Nest API or defaults if not available."""
-        temp = self.device.away_temperature.low
-        if temp is None:
-            return super().min_temp
-        else:
-            return temp
+        return self._min_temperature
 
     @property
     def max_temp(self):
         """Identify max_temp in Nest API or defaults if not available."""
-        temp = self.device.away_temperature.high
-        if temp is None:
-            return super().max_temp
-        else:
-            return temp
+        return self._max_temperature
 
     def update(self):
-        """Python-nest has its own mechanism for staying up to date."""
-        pass
+        """Cache value from Python-nest."""
+        self._location = self.device.where
+        self._name = self.device.name
+        self._humidity = self.device.humidity,
+        self._temperature = self.device.temperature
+        self._mode = self.device.mode
+        self._target_temperature = self.device.target
+        self._fan = self.device.fan
+        self._away = self.structure.away == 'away'
+        self._eco_temperature = self.device.eco_temperature
+        self._locked_temperature = self.device.locked_temperature
+        self._min_temperature = self.device.min_temperature
+        self._max_temperature = self.device.max_temperature
+        self._is_locked = self.device.is_locked
+        if self.device.temperature_scale == 'C':
+            self._temperature_scale = TEMP_CELSIUS
+        else:
+            self._temperature_scale = TEMP_FAHRENHEIT

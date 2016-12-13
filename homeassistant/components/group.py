@@ -29,11 +29,13 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_ENTITIES = 'entities'
 CONF_VIEW = 'view'
+CONF_CONTROL = 'control'
 
 ATTR_AUTO = 'auto'
 ATTR_ORDER = 'order'
 ATTR_VIEW = 'view'
 ATTR_VISIBLE = 'visible'
+ATTR_CONTROL = 'control'
 
 SERVICE_SET_VISIBILITY = 'set_visibility'
 SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
@@ -61,6 +63,7 @@ CONFIG_SCHEMA = vol.Schema({
         CONF_VIEW: cv.boolean,
         CONF_NAME: cv.string,
         CONF_ICON: cv.icon,
+        CONF_CONTROL: cv.string,
     }, cv.match_all))
 }, extra=vol.ALLOW_EXTRA)
 
@@ -175,15 +178,16 @@ def async_setup(hass, config):
         conf = yield from component.async_prepare_reload()
         if conf is None:
             return
-        hass.loop.create_task(_async_process_config(hass, conf, component))
+        yield from _async_process_config(hass, conf, component)
 
-    @callback
+    @asyncio.coroutine
     def visibility_service_handler(service):
         """Change visibility of a group."""
         visible = service.data.get(ATTR_VISIBLE)
-        for group in component.async_extract_from_service(
-                service, expand_group=False):
-            group.async_set_visible(visible)
+        tasks = [group.async_set_visible(visible) for group
+                 in component.async_extract_from_service(service,
+                                                         expand_group=False)]
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
@@ -205,21 +209,24 @@ def _async_process_config(hass, config, component):
         entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
+        control = conf.get(CONF_CONTROL)
 
-        # This order is important as groups get a number based on creation
-        # order.
+        # Don't create tasks and await them all. The order is important as
+        # groups get a number based on creation order.
         group = yield from Group.async_create_group(
-            hass, name, entity_ids, icon=icon, view=view, object_id=object_id)
+            hass, name, entity_ids, icon=icon, view=view,
+            control=control, object_id=object_id)
         groups.append(group)
 
-    yield from component.async_add_entities(groups)
+    if groups:
+        yield from component.async_add_entities(groups)
 
 
 class Group(Entity):
     """Track a group of entity ids."""
 
     def __init__(self, hass, name, order=None, user_defined=True, icon=None,
-                 view=False):
+                 view=False, control=None):
         """Initialize a group.
 
         This Object has factory function for creation.
@@ -237,20 +244,22 @@ class Group(Entity):
         self._assumed_state = False
         self._async_unsub_state_changed = None
         self._visible = True
+        self._control = control
 
     @staticmethod
     def create_group(hass, name, entity_ids=None, user_defined=True,
-                     icon=None, view=False, object_id=None):
+                     icon=None, view=False, control=None, object_id=None):
         """Initialize a group."""
         return run_coroutine_threadsafe(
             Group.async_create_group(hass, name, entity_ids, user_defined,
-                                     icon, view, object_id),
+                                     icon, view, control, object_id),
             hass.loop).result()
 
     @staticmethod
     @asyncio.coroutine
     def async_create_group(hass, name, entity_ids=None, user_defined=True,
-                           icon=None, view=False, object_id=None):
+                           icon=None, view=False, control=None,
+                           object_id=None):
         """Initialize a group.
 
         This method must be run in the event loop.
@@ -258,7 +267,8 @@ class Group(Entity):
         group = Group(
             hass, name,
             order=len(hass.states.async_entity_ids(DOMAIN)),
-            user_defined=user_defined, icon=icon, view=view)
+            user_defined=user_defined, icon=icon, view=view,
+            control=control)
 
         group.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id or name, hass=hass)
@@ -291,12 +301,12 @@ class Group(Entity):
         """Return the icon of the group."""
         return self._icon
 
-    @callback
+    @asyncio.coroutine
     def async_set_visible(self, visible):
         """Change visibility of the group."""
         if self._visible != visible:
             self._visible = visible
-            self.hass.loop.create_task(self.async_update_ha_state())
+            yield from self.async_update_ha_state()
 
     @property
     def hidden(self):
@@ -317,6 +327,8 @@ class Group(Entity):
             data[ATTR_AUTO] = True
         if self._view:
             data[ATTR_VIEW] = True
+        if self._control:
+            data[ATTR_CONTROL] = self._control
         return data
 
     @property
@@ -393,7 +405,7 @@ class Group(Entity):
         This method must be run in the event loop.
         """
         self._async_update_group_state(new_state)
-        self.hass.loop.create_task(self.async_update_ha_state())
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def _tracking_states(self):

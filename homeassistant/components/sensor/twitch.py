@@ -42,7 +42,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class TwitchSensor(Entity):
     """Representation of an Twitch channel."""
 
-    # pylint: disable=abstract-method
     def __init__(self, channel):
         """Initialize the sensor."""
         self._channel = channel

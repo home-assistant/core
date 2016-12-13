@@ -15,7 +15,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['schiene==0.17']
+REQUIREMENTS = ['schiene==0.18']
 
 _LOGGER = logging.getLogger(__name__)
 

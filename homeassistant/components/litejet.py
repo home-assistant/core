@@ -4,24 +4,25 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/litejet/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
-DOMAIN = 'litejet'
-
 REQUIREMENTS = ['pylitejet==0.1']
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_EXCLUDE_NAMES = 'exclude_names'
 CONF_INCLUDE_SWITCHES = 'include_switches'
 
-_LOGGER = logging.getLogger(__name__)
+DOMAIN = 'litejet'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_URL): cv.string,
+        vol.Required(CONF_PORT): cv.string,
         vol.Optional(CONF_EXCLUDE_NAMES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_INCLUDE_SWITCHES, default=False): cv.boolean
     })
@@ -32,7 +33,7 @@ def setup(hass, config):
     """Initialize the LiteJet component."""
     from pylitejet import LiteJet
 
-    url = config[DOMAIN].get(CONF_URL)
+    url = config[DOMAIN].get(CONF_PORT)
 
     hass.data['litejet_system'] = LiteJet(url)
     hass.data['litejet_config'] = config[DOMAIN]

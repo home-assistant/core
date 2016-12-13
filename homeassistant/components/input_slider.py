@@ -9,7 +9,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
@@ -52,17 +51,21 @@ def _cv_input_slider(cfg):
     cfg[CONF_INITIAL] = state
     return cfg
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {
-    cv.slug: vol.All({
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_MIN): vol.Coerce(float),
-        vol.Required(CONF_MAX): vol.Coerce(float),
-        vol.Optional(CONF_INITIAL): vol.Coerce(float),
-        vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float),
-                                                    vol.Range(min=1e-3)),
-        vol.Optional(CONF_ICON): cv.icon,
-        vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
-    }, _cv_input_slider)}}, required=True, extra=vol.ALLOW_EXTRA)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        cv.slug: vol.All({
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Required(CONF_MIN): vol.Coerce(float),
+            vol.Required(CONF_MAX): vol.Coerce(float),
+            vol.Optional(CONF_INITIAL): vol.Coerce(float),
+            vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float),
+                                                        vol.Range(min=1e-3)),
+            vol.Optional(CONF_ICON): cv.icon,
+            vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
+        }, _cv_input_slider)
+    })
+}, required=True, extra=vol.ALLOW_EXTRA)
 
 
 def select_value(hass, entity_id, value):
@@ -95,13 +98,14 @@ def async_setup(hass, config):
     if not entities:
         return False
 
-    @callback
+    @asyncio.coroutine
     def async_select_value_service(call):
         """Handle a calls to the input slider services."""
         target_inputs = component.async_extract_from_service(call)
 
-        for input_slider in target_inputs:
-            input_slider.select_value(call.data[ATTR_VALUE])
+        tasks = [input_slider.async_select_value(call.data[ATTR_VALUE])
+                 for input_slider in target_inputs]
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_VALUE, async_select_value_service,
@@ -160,7 +164,8 @@ class InputSlider(Entity):
             ATTR_STEP: self._step
         }
 
-    def select_value(self, value):
+    @asyncio.coroutine
+    def async_select_value(self, value):
         """Select new value."""
         num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
@@ -168,4 +173,4 @@ class InputSlider(Entity):
                             num_value, self._minimum, self._maximum)
             return
         self._current_value = num_value
-        self.hass.loop.create_task(self.async_update_ha_state())
+        yield from self.async_update_ha_state()

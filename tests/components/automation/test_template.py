@@ -1,29 +1,32 @@
 """The tests for the Template automation."""
 import unittest
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.automation as automation
 
 from tests.common import get_test_home_assistant, assert_setup_component
 
 
+# pylint: disable=invalid-name
 class TestAutomationTemplate(unittest.TestCase):
     """Test the event automation."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
         self.hass.states.set('test.entity', 'hello')
         self.calls = []
 
+        @callback
         def record_call(service):
-            """helper for recording calls."""
+            """Helper to record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

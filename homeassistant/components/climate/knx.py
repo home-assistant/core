@@ -56,6 +56,8 @@ class KNXThermostat(KNXMultiAddressDevice, ClimateDevice):
         self._unit_of_measurement = TEMP_CELSIUS  # KNX always used celsius
         self._away = False  # not yet supported
         self._is_fan_on = False  # not yet supported
+        self._current_temp = None
+        self._target_temp = None
 
     @property
     def should_poll(self):
@@ -70,16 +72,12 @@ class KNXThermostat(KNXMultiAddressDevice, ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        from knxip.conversion import knx2_to_float
-
-        return knx2_to_float(self.value('temperature'))
+        return self._current_temp
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        from knxip.conversion import knx2_to_float
-
-        return knx2_to_float(self.value('setpoint'))
+        return self._target_temp
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -94,3 +92,12 @@ class KNXThermostat(KNXMultiAddressDevice, ClimateDevice):
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         raise NotImplementedError()
+
+    def update(self):
+        """Update KNX climate."""
+        from knxip.conversion import knx2_to_float
+
+        super().update()
+
+        self._current_temp = knx2_to_float(self.value('temperature'))
+        self._target_temp = knx2_to_float(self.value('setpoint'))

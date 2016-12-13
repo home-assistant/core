@@ -8,6 +8,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import (
@@ -89,29 +90,30 @@ class MqttCover(CoverDevice):
         self._retain = retain
         self._optimistic = optimistic or state_topic is None
 
+        @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
             if value_template is not None:
-                payload = value_template.render_with_possible_json_value(
+                payload = value_template.async_render_with_possible_json_value(
                     payload)
             if payload == self._state_open:
                 self._state = False
-                _LOGGER.warning("state=%s", int(self._state))
-                self.update_ha_state()
+                hass.async_add_job(self.async_update_ha_state())
             elif payload == self._state_closed:
                 self._state = True
-                self.update_ha_state()
+                hass.async_add_job(self.async_update_ha_state())
             elif payload.isnumeric() and 0 <= int(payload) <= 100:
                 if int(payload) > 0:
                     self._state = False
                 else:
                     self._state = True
                 self._position = int(payload)
-                self.update_ha_state()
+                hass.async_add_job(self.async_update_ha_state())
             else:
                 _LOGGER.warning(
                     "Payload is not True, False, or integer (0-100): %s",
                     payload)
+
         if self._state_topic is None:
             # Force into optimistic mode.
             self._optimistic = True

@@ -18,6 +18,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.exceptions import TemplateError
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
@@ -43,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a generic IP Camera."""
-    hass.loop.create_task(async_add_devices([GenericCamera(hass, config)]))
+    yield from async_add_devices([GenericCamera(hass, config)])
 
 
 class GenericCamera(Camera):
@@ -91,13 +92,12 @@ class GenericCamera(Camera):
         if url == self._last_url and self._limit_refetch:
             return self._last_image
 
-        # aiohttp don't support DigestAuth jet
+        # aiohttp don't support DigestAuth yet
         if self._authentication == HTTP_DIGEST_AUTHENTICATION:
             def fetch():
                 """Read image from a URL."""
                 try:
-                    kwargs = {'timeout': 10, 'auth': self._auth}
-                    response = requests.get(url, **kwargs)
+                    response = requests.get(url, timeout=10, auth=self._auth)
                     return response.content
                 except requests.exceptions.RequestException as error:
                     _LOGGER.error('Error getting camera image: %s', error)
@@ -107,17 +107,23 @@ class GenericCamera(Camera):
                 None, fetch)
         # async
         else:
+            response = None
             try:
+                websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
-                    respone = yield from self.hass.websession.get(
-                        url,
-                        auth=self._auth
-                    )
-                    self._last_image = yield from respone.read()
-                    self.hass.loop.create_task(respone.release())
+                    response = yield from websession.get(
+                        url, auth=self._auth)
+                self._last_image = yield from response.read()
             except asyncio.TimeoutError:
                 _LOGGER.error('Timeout getting camera image')
                 return self._last_image
+            except (aiohttp.errors.ClientError,
+                    aiohttp.errors.ClientDisconnectedError) as err:
+                _LOGGER.error('Error getting new camera image: %s', err)
+                return self._last_image
+            finally:
+                if response is not None:
+                    self.hass.async_add_job(response.release())
 
         self._last_url = url
         return self._last_image

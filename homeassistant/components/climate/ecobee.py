@@ -72,7 +72,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         schema=SET_FAN_MIN_ON_TIME_SCHEMA)
 
 
-# pylint: disable=abstract-method
 class Thermostat(ClimateDevice):
     """A thermostat class for Ecobee."""
 
@@ -196,8 +195,9 @@ class Thermostat(ClimateDevice):
         mode = self.mode
         events = self.thermostat['events']
         for event in events:
-            if event['running']:
-                mode = event['holdClimateRef']
+            if event['holdClimateRef'] == 'away' or \
+               event['type'] == 'autoAway':
+                mode = "away"
                 break
         return 'away' in mode
 

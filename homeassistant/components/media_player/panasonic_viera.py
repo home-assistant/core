@@ -68,7 +68,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-# pylint: disable=abstract-method
 class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
@@ -80,16 +79,16 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         self._playing = True
         self._state = STATE_UNKNOWN
         self._remote = remote
+        self._volume = 0
 
     def update(self):
         """Retrieve the latest data."""
         try:
             self._muted = self._remote.get_mute()
+            self._volume = self._remote.get_volume() / 100
             self._state = STATE_ON
         except OSError:
             self._state = STATE_OFF
-            return False
-        return True
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
@@ -114,13 +113,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        volume = 0
-        try:
-            volume = self._remote.get_volume() / 100
-            self._state = STATE_ON
-        except OSError:
-            self._state = STATE_OFF
-        return volume
+        return self._volume
 
     @property
     def is_volume_muted(self):

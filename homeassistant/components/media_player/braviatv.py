@@ -21,8 +21,8 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
-    'https://github.com/aparraga/braviarc/archive/0.3.5.zip'
-    '#braviarc==0.3.5']
+    'https://github.com/aparraga/braviarc/archive/0.3.6.zip'
+    '#braviarc==0.3.6']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 
@@ -180,7 +180,6 @@ def request_configuration(config, hass, add_devices):
     )
 
 
-# pylint: disable=abstract-method
 class BraviaTVDevice(MediaPlayerDevice):
     """Representation of a Sony Bravia TV."""
 
@@ -219,7 +218,8 @@ class BraviaTVDevice(MediaPlayerDevice):
     def update(self):
         """Update TV info."""
         if not self._braviarc.is_connected():
-            self._braviarc.connect(self._pin, CLIENTID_PREFIX, NICKNAME)
+            if self._braviarc.get_power_status() != 'off':
+                self._braviarc.connect(self._pin, CLIENTID_PREFIX, NICKNAME)
             if not self._braviarc.is_connected():
                 return
 

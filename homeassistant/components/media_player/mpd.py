@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MpdDevice(MediaPlayerDevice):
     """Representation of a MPD server."""
 
-    # pylint: disable=no-member, abstract-method
+    # pylint: disable=no-member
     def __init__(self, server, port, location, password):
         """Initialize the MPD device."""
         import mpd
@@ -100,7 +100,7 @@ class MpdDevice(MediaPlayerDevice):
         try:
             self.status = self.client.status()
             self.currentsong = self.client.currentsong()
-        except (mpd.ConnectionError, BrokenPipeError, ValueError):
+        except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError):
             # Cleanly disconnect in case connection is not in valid state
             try:
                 self.client.disconnect()
@@ -133,7 +133,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
-        return self.currentsong['id']
+        return self.currentsong.get('file')
 
     @property
     def media_content_type(self):
