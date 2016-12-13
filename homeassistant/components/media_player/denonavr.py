@@ -57,17 +57,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # Check if host not in cache, append it and save for later starting
         if host not in cache:
             cache.add(host)
-            receivers.append((host, name))
-    # 2a. option: discovery using netdisco
+            receivers.append(
+                DenonDevice(denonavr.DenonAVR(host, name)))
+            _LOGGER.info("Denon receiver at host %s initialized", host)
+    # 2. option: discovery using netdisco
     if discovery_info is not None:
         host = discovery_info[0]
         name = discovery_info[1]
         # Check if host not in cache, append it and save for later starting
         if host not in cache:
             cache.add(host)
-            receivers.append((host, name))
-    # 2b. option: discovery using denonavr library
-    else:
+            receivers.append(
+                DenonDevice(denonavr.DenonAVR(host, name)))
+            _LOGGER.info("Denon receiver at host %s initialized", host)
+    # 3. option: discovery using denonavr library
+    if config.get(CONF_HOST) is None and discovery_info is None:
         d_receivers = denonavr.discover()
         # More than one receiver could be discovered by that method
         if d_receivers is not None:
@@ -78,13 +82,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 # starting
                 if host not in cache:
                     cache.add(host)
-                    d_receivers.append((host, name))
+                    receivers.append(
+                        DenonDevice(denonavr.DenonAVR(host, name)))
+                    _LOGGER.info("Denon receiver at host %s initialized", host)
 
     # Add all freshly discovered receivers
-    for receiver in receivers:
-        new_receiver = denonavr.DenonAVR(receiver[0], receiver[1])
-        add_devices([DenonDevice(new_receiver)])
-        _LOGGER.info("Denon receiver at host %s initialized", receiver[0])
+    if receivers:
+        add_devices(receivers)
 
 
 class DenonDevice(MediaPlayerDevice):
