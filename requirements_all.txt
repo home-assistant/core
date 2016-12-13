@@ -15,6 +15,9 @@ async_timeout==1.1.0
 # homeassistant.components.bbb_gpio
 Adafruit_BBIO==1.0.0
 
+# homeassistant.components.bbb_gpio
+Adafruit_BBIO==1.0.0
+
 # homeassistant.components.isy994
 PyISY==1.0.7
 
