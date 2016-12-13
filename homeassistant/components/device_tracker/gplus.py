@@ -89,10 +89,10 @@ def setup_scanner(hass, config, see):
         scripts = soup.find_all('script')
         script = (scripts[0]).contents[0]
         #print(script.body.attrs)
-        _LOGGER.error(script)
+        #_LOGGER.error(script)
         sdict = json.loads(script[25:-1])
         data['at'] = sdict['SNlM0e']
-        _LOGGER.info(data['at'])
+        #_LOGGER.info(data['at'])
 
     def get_position(_):
         """Get device position."""
@@ -106,19 +106,20 @@ def setup_scanner(hass, config, see):
                 '\n') if "www.google.com/maps/" in line]
             if len(matched_lines) == 0:
                 _LOGGER.error("Google didn't send the location. Updating data['at']")
-                update_data_at()
-
-            line = matched_lines[0]
-            words = line.split(',')
-            latitude = words[12]
-            longitude = words[13]
-            accuracy = words[15]
-
-            see(
-                dev_id=conf_id,
-                gps=(latitude, longitude),
-                gps_accuracy=int(accuracy),
-            )
+                update_data_at()#will try again next time.
+            else:
+                line = matched_lines[0]
+                words = line.split(',')
+                if len(words) > 15:
+                    latitude = words[12]
+                    longitude = words[13]
+                    accuracy = words[15]
+                    see(
+                        dev_id=conf_id,
+                        gps=(latitude, longitude),
+                        gps_accuracy=int(accuracy),)
+                else:
+                    _LOGGER.error("Unexpected. Please file an issue.")
         else:
             _LOGGER.error("Unable to update device position")
 
