@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         response = requests.get(version_url, timeout=10)
         if not response.ok:
-            _LOGGER.error("Response status is '%s'", response.status_code)
+            _LOGGER.debug("Response status is '%s'", response.status_code)
             return False
     except requests.exceptions.ConnectionError:
         _LOGGER.error("No route to resource/endpoint: %s", url)
