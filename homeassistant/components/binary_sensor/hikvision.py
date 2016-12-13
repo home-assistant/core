@@ -5,9 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.hikvision/
 """
 import logging
-
-from threading import Timer
+from datetime import timedelta
 import voluptuous as vol
+
+from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.util.dt import utcnow
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
@@ -99,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.debug('Entity: %s - %s, Options - Ignore: %s, Delay: %s',
                       data.name, sensor_name, ignore, delay)
         if not ignore:
-            entities.append(HikvisionBinarySensor(sensor, data, delay))
+            entities.append(HikvisionBinarySensor(hass, sensor, data, delay))
 
     add_entities(entities)
 
@@ -151,10 +153,11 @@ class HikvisionData(object):
 class HikvisionBinarySensor(BinarySensorDevice):
     """Representation of a Hikvision binary sensor."""
 
-    def __init__(self, sensor, cam, delay):
+    def __init__(self, hass, sensor, cam, delay):
         """Initialize the binary_sensor."""
         from pydispatch import dispatcher
 
+        self._hass = hass
         self._cam = cam
         self._name = self._cam.name + ' ' + sensor
         self._id = self._cam.cam_id + '.' + sensor
@@ -190,7 +193,6 @@ class HikvisionBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self):
         """Return an unique ID."""
-        # return '{}.{}'.format(self.__class__, id(self))
         return '{}.{}'.format(self.__class__, self._id)
 
     @property
@@ -233,16 +235,28 @@ class HikvisionBinarySensor(BinarySensorDevice):
 
         if self._delay > 0 and not self.is_on:
             # Set timer to wait until updating the state
-            def _delay_update():
+            def _delay_update(now):
                 """Timer callback for sensor update."""
                 _LOGGER.debug('%s Called delayed (%ssec) update.',
                               self._name, self._delay)
                 self.schedule_update_ha_state()
+                self._timer = None
 
-            if self._timer is not None and self._timer.isAlive():
-                self._timer.cancel()
+            if self._timer is not None:
+                self._timer()
+                self._timer = None
 
-            self._timer = Timer(self._delay, _delay_update)
-            self._timer.start()
+            self._timer = track_point_in_utc_time(
+                self._hass, _delay_update,
+                utcnow() + timedelta(seconds=self._delay))
+
+        elif self._delay > 0 and self.is_on:
+            # For delayed sensors kill any callbacks on true events and update
+            if self._timer is not None:
+                self._timer()
+                self._timer = None
+
+            self.schedule_update_ha_state()
+
         else:
             self.schedule_update_ha_state()
