@@ -7,15 +7,10 @@ https://home-assistant.io/components/binary_sensor.nest/
 from itertools import chain
 import logging
 
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.sensor.nest import NestSensor
-from homeassistant.const import (CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS)
-from homeassistant.components.nest import (
-    DATA_NEST, is_thermostat, is_camera)
+from homeassistant.components.nest import (DATA_NEST, is_thermostat, is_camera)
+from homeassistant.const import (CONF_MONITORED_CONDITIONS)
 
 DEPENDENCIES = ['nest']
 
@@ -46,30 +41,23 @@ _VALID_BINARY_SENSOR_TYPES = BINARY_TYPES + CLIMATE_BINARY_TYPES \
 _VALID_BINARY_SENSOR_TYPES_WITH_DEPRECATED = _VALID_BINARY_SENSOR_TYPES \
     + _BINARY_TYPES_DEPRECATED
 
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=_VALID_BINARY_SENSOR_TYPES):
-        vol.All(cv.ensure_list,
-            [vol.In(_VALID_BINARY_SENSOR_TYPES_WITH_DEPRECATED)])
-})
-
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Nest binary sensors."""
-    nest = hass.data[DATA_NEST]
-    conf = config.get(CONF_MONITORED_CONDITIONS)
+    if discovery_info is None:
+        return
 
-    for variable in conf:
+    nest = hass.data[DATA_NEST]
+    conditions = discovery_info.get(CONF_MONITORED_CONDITIONS)
+
+    for variable in conditions:
         if variable in _BINARY_TYPES_DEPRECATED:
             wstr = (variable + " is no a longer supported "
                     "monitored_conditions. See "
                     "https://home-assistant.io/components/binary_sensor.nest/ "
-                    "for valid options, or remove monitored_conditions "
-                    "entirely to get a reasonable default")
+                    "for valid options.")
             _LOGGER.error(wstr)
 
     sensors = []
@@ -78,16 +66,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                          nest.camera_devices())
     for structure, device in device_chain:
         sensors += [NestBinarySensor(structure, device, variable)
-                    for variable in conf
+                    for variable in conditions
                     if variable in BINARY_TYPES]
         sensors += [NestBinarySensor(structure, device, variable)
-                    for variable in conf
+                    for variable in conditions
                     if variable in CLIMATE_BINARY_TYPES
                     and is_thermostat(device)]
 
         if is_camera(device):
             sensors += [NestBinarySensor(structure, device, variable)
-                        for variable in conf
+                        for variable in conditions
                         if variable in CAMERA_BINARY_TYPES]
             for activity_zone in device.activity_zones:
                 sensors += [NestActivityZoneSensor(structure,

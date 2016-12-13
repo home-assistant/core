@@ -11,7 +11,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.const import (CONF_STRUCTURE, CONF_FILENAME)
+from homeassistant.const import (CONF_STRUCTURE, CONF_FILENAME,
+                                 CONF_SCAN_INTERVAL, CONF_BINARY_SENSORS,
+                                 CONF_SENSORS, CONF_MONITORED_CONDITIONS)
 from homeassistant.loader import get_component
 
 _CONFIGURING = {}
@@ -30,11 +32,25 @@ NEST_CONFIG_FILE = 'nest.conf'
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 
+SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_SCAN_INTERVAL):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
+})
+
+BINARY_SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_SCAN_INTERVAL):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string)
+        vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string),
+        vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
+        vol.Optional(CONF_BINARY_SENSORS): BINARY_SENSOR_SCHEMA
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -89,6 +105,14 @@ def setup_nest(hass, nest, config, pin=None):
     _LOGGER.debug("proceeding with discovery")
     discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
+
+    sensor_config = conf.get(CONF_SENSORS)
+    discovery.load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
+
+    binary_sensor_config = conf.get(CONF_BINARY_SENSORS)
+    discovery.load_platform(hass, 'binary_sensor', DOMAIN,
+                            binary_sensor_config, config)
+
     _LOGGER.debug("setup done")
 
     return True
