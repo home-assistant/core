@@ -114,7 +114,7 @@ class BroadlinkData(object):
         try:
             self._device.auth()
         except socket.timeout:
-            return
+            _LOGGER.error("Failed to connect to device.")
 
     def _update(self, retry=2):
         try:

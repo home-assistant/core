@@ -34,7 +34,7 @@ SWITCH_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+    vol.Optional(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_MAC): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
@@ -54,7 +54,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         broadlink_device.auth()
     except socket.timeout:
-        pass
+        _LOGGER.error("Failed to connect to device.")
+
+    def _learn_command(call):
+        try:
+            broadlink_device.auth()
+        except socket.timeout:
+            _LOGGER.error("Failed to connect to device.")
+            return
+        broadlink_device.enter_learning()
+        _LOGGER.info("Press the key you want HASS to learn")
+        start_time = utcnow()
+        while (utcnow() - start_time) < timedelta(seconds=20):
+            packet = broadlink_device.check_data()
+            if packet:
+                _LOGGER.info("Recieved packet is: %s",
+                             b64encode(packet).decode('utf8'))
+                return
+        _LOGGER.error("Did not received any signal.")
+    hass.services.register(DOMAIN, SERVICE_LEARN, _learn_command)
 
     for object_id, device_config in devices.items():
         switches.append(
@@ -71,19 +89,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     add_devices(switches)
-
-    def _learn_command(call):
-        broadlink_device.enter_learning()
-        start_time = utcnow()
-        while (utcnow() - start_time) < timedelta(seconds=20):
-            packet = broadlink_device.check_data()
-            if packet:
-                _LOGGER.info("Recieved packet is: %s",
-                             b64encode(packet).decode('utf8'))
-                return
-        _LOGGER.error("No signal received")
-
-    hass.services.register(DOMAIN, SERVICE_LEARN, _learn_command)
 
 
 class BroadlinkRM2Switch(SwitchDevice):
