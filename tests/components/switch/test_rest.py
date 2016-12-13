@@ -122,7 +122,7 @@ class TestRestSwitch:
             self.switch.async_turn_on(), self.hass.loop).result()
 
         assert self.body_on.template == \
-            aioclient_mock.last_request.get('data').decode()
+            aioclient_mock.mock_calls[-1][2].decode()
         assert self.switch.is_on
 
     def test_turn_on_status_not_ok(self, aioclient_mock):
@@ -132,7 +132,7 @@ class TestRestSwitch:
             self.switch.async_turn_on(), self.hass.loop).result()
 
         assert self.body_on.template == \
-            aioclient_mock.last_request.get('data').decode()
+            aioclient_mock.mock_calls[-1][2].decode()
         assert self.switch.is_on is None
 
     def test_turn_on_timeout(self, aioclient_mock):
@@ -150,7 +150,7 @@ class TestRestSwitch:
             self.switch.async_turn_off(), self.hass.loop).result()
 
         assert self.body_off.template == \
-            aioclient_mock.last_request.get('data').decode()
+            aioclient_mock.mock_calls[-1][2].decode()
         assert not self.switch.is_on
 
     def test_turn_off_status_not_ok(self, aioclient_mock):
@@ -160,7 +160,7 @@ class TestRestSwitch:
             self.switch.async_turn_off(), self.hass.loop).result()
 
         assert self.body_off.template == \
-            aioclient_mock.last_request.get('data').decode()
+            aioclient_mock.mock_calls[-1][2].decode()
         assert self.switch.is_on is None
 
     def test_turn_off_timeout(self, aioclient_mock):
