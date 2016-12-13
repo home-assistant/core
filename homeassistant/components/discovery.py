@@ -36,6 +36,7 @@ SERVICE_HANDLERS = {
     'yamaha': ('media_player', 'yamaha'),
     'logitech_mediaserver': ('media_player', 'squeezebox'),
     'directv': ('media_player', 'directv'),
+    'bose_soundtouch': ('media_player', 'bose_soundtouch'),
 }
 
 CONFIG_SCHEMA = vol.Schema({
