@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         remote.get_mute()
     except (socket.timeout, TimeoutError, OSError):
-        _LOGGER.error('Panasonic Viera TV teststestis not available at %s:%d',
+        _LOGGER.error('Panasonic Viera TV not available at %s:%d',
                       host, port)
 
     add_devices([PanasonicVieraTVDevice(name, remote)])
