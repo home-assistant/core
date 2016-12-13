@@ -28,7 +28,7 @@ class TelldusLiveSwitch(TelldusLiveEntity, ToggleEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.device.is_on()
+        return self.device.is_on
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
