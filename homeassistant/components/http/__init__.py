@@ -288,10 +288,16 @@ class HomeAssistantWSGI(object):
                 cors_added.add(route)
 
         if self.ssl_certificate:
-            context = ssl.SSLContext(SSL_VERSION)
-            context.options |= SSL_OPTS
-            context.set_ciphers(CIPHERS)
-            context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+            try:
+                context = ssl.SSLContext(SSL_VERSION)
+                context.options |= SSL_OPTS
+                context.set_ciphers(CIPHERS)
+                context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+            except OSError as error:
+                _LOGGER.error("Could not read SSL certificate from %s: %s",
+                              self.ssl_certificate, error)
+                context = None
+                return
         else:
             context = None
 
@@ -305,8 +311,12 @@ class HomeAssistantWSGI(object):
 
         self._handler = self.app.make_handler()
 
-        self.server = yield from self.hass.loop.create_server(
-            self._handler, self.server_host, self.server_port, ssl=context)
+        try:
+            self.server = yield from self.hass.loop.create_server(
+                self._handler, self.server_host, self.server_port, ssl=context)
+        except OSError as error:
+            _LOGGER.error("Failed to create HTTP server at port %d: %s",
+                          self.server_port, error)
 
         self.app._frozen = False  # pylint: disable=protected-access
 
