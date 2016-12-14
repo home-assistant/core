@@ -13,7 +13,7 @@ from aiohttp import web
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
@@ -33,8 +33,8 @@ def async_setup(hass, config):
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
-    hass.http.register_view(CameraImageView(hass, component.entities))
-    hass.http.register_view(CameraMjpegStream(hass, component.entities))
+    hass.http.register_view(CameraImageView(component.entities))
+    hass.http.register_view(CameraMjpegStream(component.entities))
 
     yield from component.async_setup(config)
     return True
@@ -165,9 +165,8 @@ class CameraView(HomeAssistantView):
 
     requires_auth = False
 
-    def __init__(self, hass, entities):
+    def __init__(self, entities):
         """Initialize a basic camera view."""
-        super().__init__(hass)
         self.entities = entities
 
     @asyncio.coroutine
@@ -178,7 +177,7 @@ class CameraView(HomeAssistantView):
         if camera is None:
             return web.Response(status=404)
 
-        authenticated = (request.authenticated or
+        authenticated = (request[KEY_AUTHENTICATED] or
                          request.GET.get('token') == camera.access_token)
 
         if not authenticated:

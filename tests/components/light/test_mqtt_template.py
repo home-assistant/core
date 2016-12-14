@@ -90,22 +90,24 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertIsNone(state.attributes.get('rgb_color'))
         self.assertIsNone(state.attributes.get('brightness'))
 
-    def test_state_brightness_color_change_via_topic(self): \
+    def test_state_brightness_color_effect_change_via_topic(self): \
             # pylint: disable=invalid-name
-        """Test state, brightness and color change via topic."""
+        """Test state, brightness, color and effect change via topic."""
         self.hass.config.components = ['mqtt']
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt_template',
                     'name': 'test',
+                    'effect_list': ['rainbow', 'colorloop'],
                     'state_topic': 'test_light_rgb',
                     'command_topic': 'test_light_rgb/set',
                     'command_on_template': 'on,'
                                            '{{ brightness|d }},'
                                            '{{ red|d }}-'
                                            '{{ green|d }}-'
-                                           '{{ blue|d }}',
+                                           '{{ blue|d }},'
+                                           '{{ effect|d }}',
                     'command_off_template': 'off',
                     'state_template': '{{ value.split(",")[0] }}',
                     'brightness_template': '{{ value.split(",")[1] }}',
@@ -114,7 +116,8 @@ class TestLightMQTTTemplate(unittest.TestCase):
                     'green_template': '{{ value.split(",")[2].'
                                       'split("-")[1] }}',
                     'blue_template': '{{ value.split(",")[2].'
-                                     'split("-")[2] }}'
+                                     'split("-")[2] }}',
+                    'effect_template': '{{ value.split(",")[3] }}'
                 }
             })
 
@@ -122,16 +125,18 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
         self.assertIsNone(state.attributes.get('rgb_color'))
         self.assertIsNone(state.attributes.get('brightness'))
+        self.assertIsNone(state.attributes.get('effect'))
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
         # turn on the light, full white
-        fire_mqtt_message(self.hass, 'test_light_rgb', 'on,255,255-255-255')
+        fire_mqtt_message(self.hass, 'test_light_rgb', 'on,255,255-255-255,')
         self.hass.block_till_done()
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
         self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
         self.assertEqual(255, state.attributes.get('brightness'))
+        self.assertIsNone(state.attributes.get('effect'))
 
         # turn the light off
         fire_mqtt_message(self.hass, 'test_light_rgb', 'off')
@@ -154,6 +159,13 @@ class TestLightMQTTTemplate(unittest.TestCase):
 
         light_state = self.hass.states.get('light.test')
         self.assertEqual([41, 42, 43], light_state.attributes.get('rgb_color'))
+
+        # change the effect
+        fire_mqtt_message(self.hass, 'test_light_rgb', 'on,,41-42-43,rainbow')
+        self.hass.block_till_done()
+
+        light_state = self.hass.states.get('light.test')
+        self.assertEqual('rainbow', light_state.attributes.get('effect'))
 
     def test_optimistic(self): \
             # pylint: disable=invalid-name
@@ -314,13 +326,15 @@ class TestLightMQTTTemplate(unittest.TestCase):
                 light.DOMAIN: {
                     'platform': 'mqtt_template',
                     'name': 'test',
+                    'effect_list': ['rainbow', 'colorloop'],
                     'state_topic': 'test_light_rgb',
                     'command_topic': 'test_light_rgb/set',
                     'command_on_template': 'on,'
                                            '{{ brightness|d }},'
                                            '{{ red|d }}-'
                                            '{{ green|d }}-'
-                                           '{{ blue|d }}',
+                                           '{{ blue|d }},'
+                                           '{{ effect|d }}',
                     'command_off_template': 'off',
                     'state_template': '{{ value.split(",")[0] }}',
                     'brightness_template': '{{ value.split(",")[1] }}',
@@ -329,7 +343,8 @@ class TestLightMQTTTemplate(unittest.TestCase):
                     'green_template': '{{ value.split(",")[2].'
                                       'split("-")[1] }}',
                     'blue_template': '{{ value.split(",")[2].'
-                                     'split("-")[2] }}'
+                                     'split("-")[2] }}',
+                    'effect_template': '{{ value.split(",")[3] }}',
                 }
             })
 
@@ -337,16 +352,19 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
         self.assertIsNone(state.attributes.get('rgb_color'))
         self.assertIsNone(state.attributes.get('brightness'))
+        self.assertIsNone(state.attributes.get('effect'))
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
         # turn on the light, full white
-        fire_mqtt_message(self.hass, 'test_light_rgb', 'on,255,255-255-255')
+        fire_mqtt_message(self.hass, 'test_light_rgb',
+                          'on,255,255-255-255,rainbow')
         self.hass.block_till_done()
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
         self.assertEqual(255, state.attributes.get('brightness'))
         self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
+        self.assertEqual('rainbow', state.attributes.get('effect'))
 
         # bad state value
         fire_mqtt_message(self.hass, 'test_light_rgb', 'offf')
@@ -371,3 +389,11 @@ class TestLightMQTTTemplate(unittest.TestCase):
         # color should not have changed
         state = self.hass.states.get('light.test')
         self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
+
+        # bad effect value
+        fire_mqtt_message(self.hass, 'test_light_rgb', 'on,255,a-b-c,white')
+        self.hass.block_till_done()
+
+        # effect should not have changed
+        state = self.hass.states.get('light.test')
+        self.assertEqual('rainbow', state.attributes.get('effect'))

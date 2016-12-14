@@ -90,7 +90,11 @@ homematic:
         description: Event to send i.e. PRESS_LONG, PRESS_SHORT
         example: PRESS_LONG
 
-  set_value:
+      proxy:
+        description: (Optional) for set a hosts value
+        example: Hosts name from config
+
+  set_var_value:
     description: Set the name of a node.
 
     fields:
@@ -101,6 +105,33 @@ homematic:
       value:
         description: New value
         example: 1
+
+  set_dev_value:
+    description: Set a device property on RPC XML inteface.
+
+    fields:
+      address:
+        description: Address of homematic device or BidCoS-RF for virtual remote
+        example: BidCoS-RF
+
+      channel:
+        description: Channel for calling a keypress
+        example: 1
+
+      param:
+        description: Event to send i.e. PRESS_LONG, PRESS_SHORT
+        example: PRESS_LONG
+
+      proxy:
+        description: (Optional) for set a hosts value
+        example: Hosts name from config
+
+      value:
+        description: New value
+        example: 1
+
+  reconnect:
+    description: Reconnect to all Homematic Hubs.
 
 openalpr:
   scan:

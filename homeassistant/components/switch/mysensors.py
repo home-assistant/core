@@ -38,6 +38,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not gateways:
         return
 
+    platform_devices = []
+
     for gateway in gateways:
         # Define the S_TYPES and V_TYPES that the platform should handle as
         # states. Map them in a dict of lists.
@@ -88,6 +90,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
             map_sv_types, devices, add_devices, device_class_map))
+        platform_devices.append(devices)
 
     def send_ir_code_service(service):
         """Set IR code as device state attribute."""
@@ -95,11 +98,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ir_code = service.data.get(ATTR_IR_CODE)
 
         if entity_ids:
-            _devices = [device for device in devices.values()
+            _devices = [device for gw_devs in platform_devices
+                        for device in gw_devs.values()
                         if isinstance(device, MySensorsIRSwitch) and
                         device.entity_id in entity_ids]
         else:
-            _devices = [device for device in devices.values()
+            _devices = [device for gw_devs in platform_devices
+                        for device in gw_devs.values()
                         if isinstance(device, MySensorsIRSwitch)]
 
         kwargs = {ATTR_IR_CODE: ir_code}

@@ -23,15 +23,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink lights."""
     import pywink
 
-    add_devices(WinkLight(light) for light in pywink.get_bulbs())
+    add_devices(WinkLight(light, hass) for light in pywink.get_bulbs())
 
 
 class WinkLight(WinkDevice, Light):
     """Representation of a Wink light."""
 
-    def __init__(self, wink):
+    def __init__(self, wink, hass):
         """Initialize the Wink device."""
-        WinkDevice.__init__(self, wink)
+        WinkDevice.__init__(self, wink, hass)
 
     @property
     def is_on(self):

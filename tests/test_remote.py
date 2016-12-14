@@ -61,6 +61,7 @@ def setUpModule():
                      target=loop.run_forever).start()
 
     slave = remote.HomeAssistant(master_api, loop=loop)
+    slave.async_track_tasks()
     slave.config.config_dir = get_test_config_dir()
     slave.config.skip_pip = True
     bootstrap.setup_component(

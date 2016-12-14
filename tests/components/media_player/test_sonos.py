@@ -5,7 +5,11 @@ import soco.snapshot
 from unittest import mock
 import soco
 
-from homeassistant.components.media_player import sonos
+from homeassistant.bootstrap import setup_component
+from homeassistant.components.media_player import sonos, DOMAIN
+from homeassistant.components.media_player.sonos import CONF_INTERFACE_ADDR, \
+    CONF_ADVERTISE_ADDR
+from homeassistant.const import CONF_HOSTS, CONF_PLATFORM
 
 from tests.common import get_test_home_assistant
 
@@ -22,12 +26,17 @@ class socoDiscoverMock():
 
 class AvTransportMock():
     """Mock class for the avTransport property on soco.SoCo object."""
+
     def __init__(self):
+        """Initialize ethe Transport mock."""
         pass
 
     def GetMediaInfo(self, _):
-        return {'CurrentURI': '',
-                'CurrentURIMetaData': ''}
+        """Get the media details."""
+        return {
+            'CurrentURI': '',
+            'CurrentURIMetaData': ''
+        }
 
 
 class SoCoMock():
@@ -102,18 +111,21 @@ def fake_add_device(devices, update_befor_add=False):
 class TestSonosMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         def monkey_available(self):
+            """Make a monkey available."""
             return True
 
         # Monkey patches
         self.real_available = sonos.SonosDevice.available
         sonos.SonosDevice.available = monkey_available
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         # Monkey patches
         sonos.SonosDevice.available = self.real_available
@@ -126,20 +138,95 @@ class TestSonosMediaPlayer(unittest.TestCase):
         """Test a single device using the autodiscovery provided by HASS."""
         sonos.setup_platform(self.hass, {}, fake_add_device, '192.0.2.1')
 
-        # Ensure registration took place (#2558)
         self.assertEqual(len(sonos.DEVICES), 1)
         self.assertEqual(sonos.DEVICES[0].name, 'Kitchen')
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
-    def test_ensure_setup_config(self, *args):
-        """Test a single address config'd by the HASS config file."""
-        sonos.setup_platform(self.hass,
-                             {'hosts': '192.0.2.1'},
-                             fake_add_device)
+    @mock.patch('soco.discover')
+    def test_ensure_setup_config_interface_addr(self, discover_mock, *args):
+        """Test a interface address config'd by the HASS config file."""
+        discover_mock.return_value = {SoCoMock('192.0.2.1')}
 
-        # Ensure registration took place (#2558)
+        config = {
+            DOMAIN: {
+                CONF_PLATFORM: 'sonos',
+                CONF_INTERFACE_ADDR: '192.0.1.1',
+            }
+        }
+
+        assert setup_component(self.hass, DOMAIN, config)
+
         self.assertEqual(len(sonos.DEVICES), 1)
+        self.assertEqual(discover_mock.call_count, 1)
+
+    @mock.patch('soco.SoCo', new=SoCoMock)
+    @mock.patch('socket.create_connection', side_effect=socket.error())
+    @mock.patch('soco.discover')
+    def test_ensure_setup_config_advertise_addr(self, discover_mock,
+                                                *args):
+        """Test a advertise address config'd by the HASS config file."""
+        discover_mock.return_value = {SoCoMock('192.0.2.1')}
+
+        config = {
+            DOMAIN: {
+                CONF_PLATFORM: 'sonos',
+                CONF_ADVERTISE_ADDR: '192.0.1.1',
+            }
+        }
+
+        assert setup_component(self.hass, DOMAIN, config)
+
+        self.assertEqual(len(sonos.DEVICES), 1)
+        self.assertEqual(discover_mock.call_count, 1)
+        self.assertEqual(soco.config.EVENT_ADVERTISE_IP, '192.0.1.1')
+
+    @mock.patch('soco.SoCo', new=SoCoMock)
+    @mock.patch('socket.create_connection', side_effect=socket.error())
+    def test_ensure_setup_config_hosts_string_single(self, *args):
+        """Test a single address config'd by the HASS config file."""
+        config = {
+            DOMAIN: {
+                CONF_PLATFORM: 'sonos',
+                CONF_HOSTS: ['192.0.2.1'],
+            }
+        }
+
+        assert setup_component(self.hass, DOMAIN, config)
+
+        self.assertEqual(len(sonos.DEVICES), 1)
+        self.assertEqual(sonos.DEVICES[0].name, 'Kitchen')
+
+    @mock.patch('soco.SoCo', new=SoCoMock)
+    @mock.patch('socket.create_connection', side_effect=socket.error())
+    def test_ensure_setup_config_hosts_string_multiple(self, *args):
+        """Test multiple address string config'd by the HASS config file."""
+        config = {
+            DOMAIN: {
+                CONF_PLATFORM: 'sonos',
+                CONF_HOSTS: ['192.0.2.1,192.168.2.2'],
+            }
+        }
+
+        assert setup_component(self.hass, DOMAIN, config)
+
+        self.assertEqual(len(sonos.DEVICES), 2)
+        self.assertEqual(sonos.DEVICES[0].name, 'Kitchen')
+
+    @mock.patch('soco.SoCo', new=SoCoMock)
+    @mock.patch('socket.create_connection', side_effect=socket.error())
+    def test_ensure_setup_config_hosts_list(self, *args):
+        """Test a multiple address list config'd by the HASS config file."""
+        config = {
+            DOMAIN: {
+                CONF_PLATFORM: 'sonos',
+                CONF_HOSTS: ['192.0.2.1', '192.168.2.2'],
+            }
+        }
+
+        assert setup_component(self.hass, DOMAIN, config)
+
+        self.assertEqual(len(sonos.DEVICES), 2)
         self.assertEqual(sonos.DEVICES[0].name, 'Kitchen')
 
     @mock.patch('soco.SoCo', new=SoCoMock)

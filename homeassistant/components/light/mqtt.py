@@ -283,7 +283,7 @@ class MqttLight(Light):
             should_update = True
 
         if should_update:
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -293,4 +293,4 @@ class MqttLight(Light):
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False
-            self.update_ha_state()
+            self.schedule_update_ha_state()

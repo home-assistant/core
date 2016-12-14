@@ -32,7 +32,7 @@ class TestDemoClimate(unittest.TestCase):
         self.hass.stop()
 
     def test_setup_params(self):
-        """Test the inititial parameters."""
+        """Test the initial parameters."""
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(21, state.attributes.get('temperature'))
         self.assertEqual('on', state.attributes.get('away_mode'))
@@ -93,8 +93,7 @@ class TestDemoClimate(unittest.TestCase):
         self.assertEqual(25.0, state.attributes.get('target_temp_high'))
 
     def test_set_target_temp_range_bad_attr(self):
-        """Test setting the target temperature range without required
-           attribute."""
+        """Test setting the target temperature range without attribute."""
         state = self.hass.states.get(ENTITY_ECOBEE)
         self.assertEqual(None, state.attributes.get('temperature'))
         self.assertEqual(21.0, state.attributes.get('target_temp_low'))
@@ -163,8 +162,10 @@ class TestDemoClimate(unittest.TestCase):
         self.assertEqual("Auto", state.attributes.get('swing_mode'))
 
     def test_set_operation_bad_attr_and_state(self):
-        """Test setting operation mode without required attribute, and
-           check the state."""
+        """Test setting operation mode without required attribute.
+
+        Also check the state.
+        """
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual("cool", state.attributes.get('operation_mode'))
         self.assertEqual("cool", state.state)

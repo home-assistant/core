@@ -140,7 +140,7 @@ def state(new_state):
             # Update state.
             self._is_on = new_state
             self.group.enqueue(pipeline)
-            self.update_ha_state()
+            self.schedule_update_ha_state()
         return wrapper
     return decorator
 

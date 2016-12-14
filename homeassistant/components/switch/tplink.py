@@ -97,8 +97,12 @@ class SmartPlugSwitch(SwitchDevice):
                     = "%.1f A" % emeter_readings["current"]
 
                 emeter_statics = self.smartplug.get_emeter_daily()
-                self._emeter_params[ATTR_DAILY_CONSUMPTION] \
-                    = "%.2f kW" % emeter_statics[int(time.strftime("%e"))]
+                try:
+                    self._emeter_params[ATTR_DAILY_CONSUMPTION] \
+                        = "%.2f kW" % emeter_statics[int(time.strftime("%e"))]
+                except KeyError:
+                    # device returned no daily history
+                    pass
 
         except OSError:
             _LOGGER.warning('Could not update status for %s', self.name)

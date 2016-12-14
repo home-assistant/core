@@ -75,8 +75,7 @@ def setup(hass, config):
                            descriptions[DOMAIN][SERVICE_CHECKIN],
                            schema=CHECKIN_SERVICE_SCHEMA)
 
-    hass.http.register_view(FoursquarePushReceiver(
-        hass, config[CONF_PUSH_SECRET]))
+    hass.http.register_view(FoursquarePushReceiver(config[CONF_PUSH_SECRET]))
 
     return True
 
@@ -88,9 +87,8 @@ class FoursquarePushReceiver(HomeAssistantView):
     url = "/api/foursquare"
     name = "foursquare"
 
-    def __init__(self, hass, push_secret):
+    def __init__(self, push_secret):
         """Initialize the OAuth callback view."""
-        super().__init__(hass)
         self.push_secret = push_secret
 
     @asyncio.coroutine
@@ -110,4 +108,4 @@ class FoursquarePushReceiver(HomeAssistantView):
                           "push secret: %s", secret)
             return self.json_message('Incorrect secret', HTTP_BAD_REQUEST)
 
-        self.hass.bus.async_fire(EVENT_PUSH, data)
+        request.app['hass'].bus.async_fire(EVENT_PUSH, data)

@@ -118,7 +118,7 @@ class AlexaIntentsView(HomeAssistantView):
 
     def __init__(self, hass, intents):
         """Initialize Alexa view."""
-        super().__init__(hass)
+        super().__init__()
 
         intents = copy.deepcopy(intents)
         template.attach(hass, intents)
@@ -150,7 +150,7 @@ class AlexaIntentsView(HomeAssistantView):
             return None
 
         intent = req.get('intent')
-        response = AlexaResponse(self.hass, intent)
+        response = AlexaResponse(request.app['hass'], intent)
 
         if req_type == 'LaunchRequest':
             response.add_speech(
@@ -282,7 +282,7 @@ class AlexaFlashBriefingView(HomeAssistantView):
 
     def __init__(self, hass, flash_briefings):
         """Initialize Alexa view."""
-        super().__init__(hass)
+        super().__init__()
         self.flash_briefings = copy.deepcopy(flash_briefings)
         template.attach(hass, self.flash_briefings)
 

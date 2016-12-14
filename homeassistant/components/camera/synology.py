@@ -14,12 +14,13 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPGatewayTimeout
 import async_timeout
 
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP)
+    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL)
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA)
+from homeassistant.helpers.aiohttp_client import (
+    async_get_clientsession, async_create_clientsession)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
@@ -59,23 +60,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a Synology IP Camera."""
-    if not config.get(CONF_VERIFY_SSL):
-        connector = aiohttp.TCPConnector(verify_ssl=False)
-
-        @asyncio.coroutine
-        def _async_close_connector(event):
-            """Close websession on shutdown."""
-            yield from connector.close()
-
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_close_connector)
-    else:
-        connector = hass.websession.connector
-
-    websession_init = aiohttp.ClientSession(
-        loop=hass.loop,
-        connector=connector
-    )
+    verify_ssl = config.get(CONF_VERIFY_SSL)
+    websession_init = async_get_clientsession(hass, verify_ssl)
 
     # Determine API to use for authentication
     syno_api_url = SYNO_API_URL.format(
@@ -87,24 +73,27 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         'version': '1',
         'query': 'SYNO.'
     }
+    query_req = None
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
             query_req = yield from websession_init.get(
                 syno_api_url,
                 params=query_payload
             )
+
+        query_resp = yield from query_req.json()
+        auth_path = query_resp['data'][AUTH_API]['path']
+        camera_api = query_resp['data'][CAMERA_API]['path']
+        camera_path = query_resp['data'][CAMERA_API]['path']
+        streaming_path = query_resp['data'][STREAMING_API]['path']
+
     except (asyncio.TimeoutError, aiohttp.errors.ClientError):
         _LOGGER.exception("Error on %s", syno_api_url)
         return False
 
-    query_resp = yield from query_req.json()
-    auth_path = query_resp['data'][AUTH_API]['path']
-    camera_api = query_resp['data'][CAMERA_API]['path']
-    camera_path = query_resp['data'][CAMERA_API]['path']
-    streaming_path = query_resp['data'][STREAMING_API]['path']
-
-    # cleanup
-    yield from query_req.release()
+    finally:
+        if query_req is not None:
+            yield from query_req.release()
 
     # Authticate to NAS to get a session id
     syno_auth_url = SYNO_API_URL.format(
@@ -118,19 +107,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         syno_auth_url
     )
 
-    websession_init.detach()
-
     # init websession
-    websession = aiohttp.ClientSession(
-        loop=hass.loop, connector=connector, cookies={'id': session_id})
-
-    @callback
-    def _async_close_websession(event):
-        """Close websession on shutdown."""
-        websession.detach()
-
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_close_websession)
+    websession = async_create_clientsession(
+        hass, verify_ssl, cookies={'id': session_id})
 
     # Use SessionID to get cameras in system
     syno_camera_url = SYNO_API_URL.format(
@@ -190,20 +169,23 @@ def get_session_id(hass, websession, username, password, login_url):
         'session': 'SurveillanceStation',
         'format': 'sid'
     }
+    auth_req = None
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
             auth_req = yield from websession.get(
                 login_url,
                 params=auth_payload
             )
+        auth_resp = yield from auth_req.json()
+        return auth_resp['data']['sid']
+
     except (asyncio.TimeoutError, aiohttp.errors.ClientError):
         _LOGGER.exception("Error on %s", login_url)
         return False
 
-    auth_resp = yield from auth_req.json()
-    yield from auth_req.release()
-
-    return auth_resp['data']['sid']
+    finally:
+        if auth_req is not None:
+            yield from auth_req.release()
 
 
 class SynologyCamera(Camera):
@@ -271,30 +253,34 @@ class SynologyCamera(Camera):
             'cameraId': self._camera_id,
             'format': 'mjpeg'
         }
+        stream = None
+        response = None
         try:
             with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
                 stream = yield from self._websession.get(
                     streaming_url,
                     params=streaming_payload
                 )
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
-            _LOGGER.exception("Error on %s", streaming_url)
-            raise HTTPGatewayTimeout()
+            response = web.StreamResponse()
+            response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
 
-        response = web.StreamResponse()
-        response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
+            yield from response.prepare(request)
 
-        yield from response.prepare(request)
-
-        try:
             while True:
                 data = yield from stream.content.read(102400)
                 if not data:
                     break
                 response.write(data)
+
+        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+            _LOGGER.exception("Error on %s", streaming_url)
+            raise HTTPGatewayTimeout()
+
         finally:
-            self.hass.async_add_job(stream.release())
-            yield from response.write_eof()
+            if stream is not None:
+                self.hass.async_add_job(stream.release())
+            if response is not None:
+                yield from response.write_eof()
 
     @property
     def name(self):

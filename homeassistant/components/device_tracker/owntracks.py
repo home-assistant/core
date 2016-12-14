@@ -147,7 +147,7 @@ def setup_scanner(hass, config, see):
                          data_type, max_gps_accuracy, payload)
             return None
         if convert(data.get('acc'), float, 1.0) == 0.0:
-            _LOGGER.warning('Ignoring %s update because GPS accuracy'
+            _LOGGER.warning('Ignoring %s update because GPS accuracy '
                             'is zero: %s',
                             data_type, payload)
             return None

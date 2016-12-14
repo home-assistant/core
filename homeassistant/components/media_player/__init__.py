@@ -17,7 +17,8 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.const import (
@@ -58,6 +59,8 @@ ATTR_MEDIA_SEEK_POSITION = 'seek_position'
 ATTR_MEDIA_CONTENT_ID = 'media_content_id'
 ATTR_MEDIA_CONTENT_TYPE = 'media_content_type'
 ATTR_MEDIA_DURATION = 'media_duration'
+ATTR_MEDIA_POSITION = 'media_position'
+ATTR_MEDIA_POSITION_UPDATED_AT = 'media_position_updated_at'
 ATTR_MEDIA_TITLE = 'media_title'
 ATTR_MEDIA_ARTIST = 'media_artist'
 ATTR_MEDIA_ALBUM_NAME = 'media_album_name'
@@ -119,6 +122,8 @@ ATTR_TO_PROPERTY = [
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
@@ -304,7 +309,7 @@ def setup(hass, config):
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
-    hass.http.register_view(MediaPlayerImageView(hass, component.entities))
+    hass.http.register_view(MediaPlayerImageView(component.entities))
 
     component.setup(config)
 
@@ -444,6 +449,19 @@ class MediaPlayerDevice(Entity):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
+        return None
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        return None
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
         return None
 
     @property
@@ -704,27 +722,35 @@ def _async_fetch_image(hass, url):
         return cache_images[url]
 
     content, content_type = (None, None)
+    websession = async_get_clientsession(hass)
+    response = None
     try:
         with async_timeout.timeout(10, loop=hass.loop):
-            response = yield from hass.websession.get(url)
-            if response.status == 200:
-                content = yield from response.read()
-                content_type = response.headers.get(CONTENT_TYPE_HEADER)
-            yield from response.release()
+            response = yield from websession.get(url)
+        if response.status == 200:
+            content = yield from response.read()
+            content_type = response.headers.get(CONTENT_TYPE_HEADER)
+
     except asyncio.TimeoutError:
         pass
 
-    if content:
-        cache_images[url] = (content, content_type)
-        cache_urls.append(url)
+    finally:
+        if response is not None:
+            yield from response.release()
 
-        while len(cache_urls) > cache_maxsize:
-            # remove oldest item from cache
-            oldest_url = cache_urls[0]
-            if oldest_url in cache_images:
-                del cache_images[oldest_url]
+    if not content:
+        return (None, None)
 
-            cache_urls = cache_urls[1:]
+    cache_images[url] = (content, content_type)
+    cache_urls.append(url)
+
+    while len(cache_urls) > cache_maxsize:
+        # remove oldest item from cache
+        oldest_url = cache_urls[0]
+        if oldest_url in cache_images:
+            del cache_images[oldest_url]
+
+        cache_urls = cache_urls[1:]
 
     return content, content_type
 
@@ -736,9 +762,8 @@ class MediaPlayerImageView(HomeAssistantView):
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
 
-    def __init__(self, hass, entities):
+    def __init__(self, entities):
         """Initialize a media player view."""
-        super().__init__(hass)
         self.entities = entities
 
     @asyncio.coroutine
@@ -748,14 +773,14 @@ class MediaPlayerImageView(HomeAssistantView):
         if player is None:
             return web.Response(status=404)
 
-        authenticated = (request.authenticated or
+        authenticated = (request[KEY_AUTHENTICATED] or
                          request.GET.get('token') == player.access_token)
 
         if not authenticated:
             return web.Response(status=401)
 
         data, content_type = yield from _async_fetch_image(
-            self.hass, player.media_image_url)
+            request.app['hass'], player.media_image_url)
 
         if data is None:
             return web.Response(status=500)

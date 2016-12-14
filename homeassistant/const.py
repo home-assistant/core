@@ -2,7 +2,7 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
 MINOR_VERSION = 34
-PATCH_VERSION = '0.dev0'
+PATCH_VERSION = '1'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -360,7 +360,6 @@ HTTP_HEADER_CONTENT_LENGTH = 'Content-Length'
 HTTP_HEADER_CACHE_CONTROL = 'Cache-Control'
 HTTP_HEADER_EXPIRES = 'Expires'
 HTTP_HEADER_ORIGIN = 'Origin'
-HTTP_HEADER_X_FORWARDED_FOR = 'X-Forwarded-For'
 HTTP_HEADER_X_REQUESTED_WITH = 'X-Requested-With'
 HTTP_HEADER_ACCEPT = 'Accept'
 HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN = 'Access-Control-Allow-Origin'

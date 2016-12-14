@@ -8,10 +8,11 @@ from homeassistant.components import automation, zone
 from tests.common import get_test_home_assistant
 
 
+# pylint: disable=invalid-name
 class TestAutomationZone(unittest.TestCase):
     """Test the event automation."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
@@ -28,11 +29,12 @@ class TestAutomationZone(unittest.TestCase):
 
         @callback
         def record_call(service):
+            """Helper to record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -56,9 +58,9 @@ class TestAutomationZone(unittest.TestCase):
                     'service': 'test.automation',
                     'data_template': {
                         'some': '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
-                                    'platform', 'entity_id',
-                                    'from_state.state', 'to_state.state',
-                                    'zone.name'))
+                            'platform', 'entity_id',
+                            'from_state.state', 'to_state.state',
+                            'zone.name'))
                     },
 
                 }

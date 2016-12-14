@@ -13,11 +13,13 @@ class TestMinMaxSensor(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.values = [17, 20, 15.2]
+        self.values = [17, 20, 15.3]
         self.count = len(self.values)
         self.min = min(self.values)
         self.max = max(self.values)
         self.mean = round(sum(self.values) / self.count, 2)
+        self.mean_1_digit = round(sum(self.values) / self.count, 1)
+        self.mean_4_digits = round(sum(self.values) / self.count, 4)
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -80,6 +82,95 @@ class TestMinMaxSensor(unittest.TestCase):
         self.assertEqual(str(float(self.max)), state.state)
         self.assertEqual(self.min, state.attributes.get('min_value'))
         self.assertEqual(self.mean, state.attributes.get('mean'))
+
+    def test_mean_sensor(self):
+        """Test the mean sensor."""
+        config = {
+            'sensor': {
+                'platform': 'min_max',
+                'name': 'test',
+                'type': 'mean',
+                'entity_ids': [
+                    'sensor.test_1',
+                    'sensor.test_2',
+                    'sensor.test_3',
+                ]
+            }
+        }
+
+        assert setup_component(self.hass, 'sensor', config)
+
+        entity_ids = config['sensor']['entity_ids']
+
+        for entity_id, value in dict(zip(entity_ids, self.values)).items():
+            self.hass.states.set(entity_id, value)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_mean')
+
+        self.assertEqual(str(float(self.mean)), state.state)
+        self.assertEqual(self.min, state.attributes.get('min_value'))
+        self.assertEqual(self.max, state.attributes.get('max_value'))
+
+    def test_mean_1_digit_sensor(self):
+        """Test the mean with 1-digit precision sensor."""
+        config = {
+            'sensor': {
+                'platform': 'min_max',
+                'name': 'test',
+                'type': 'mean',
+                'round_digits': 1,
+                'entity_ids': [
+                    'sensor.test_1',
+                    'sensor.test_2',
+                    'sensor.test_3',
+                ]
+            }
+        }
+
+        assert setup_component(self.hass, 'sensor', config)
+
+        entity_ids = config['sensor']['entity_ids']
+
+        for entity_id, value in dict(zip(entity_ids, self.values)).items():
+            self.hass.states.set(entity_id, value)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_mean')
+
+        self.assertEqual(str(float(self.mean_1_digit)), state.state)
+        self.assertEqual(self.min, state.attributes.get('min_value'))
+        self.assertEqual(self.max, state.attributes.get('max_value'))
+
+    def test_mean_4_digit_sensor(self):
+        """Test the mean with 1-digit precision sensor."""
+        config = {
+            'sensor': {
+                'platform': 'min_max',
+                'name': 'test',
+                'type': 'mean',
+                'round_digits': 4,
+                'entity_ids': [
+                    'sensor.test_1',
+                    'sensor.test_2',
+                    'sensor.test_3',
+                ]
+            }
+        }
+
+        assert setup_component(self.hass, 'sensor', config)
+
+        entity_ids = config['sensor']['entity_ids']
+
+        for entity_id, value in dict(zip(entity_ids, self.values)).items():
+            self.hass.states.set(entity_id, value)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_mean')
+
+        self.assertEqual(str(float(self.mean_4_digits)), state.state)
+        self.assertEqual(self.min, state.attributes.get('min_value'))
+        self.assertEqual(self.max, state.attributes.get('max_value'))
 
     def test_not_enough_sensor_value(self):
         """Test that there is nothing done if not enough values available."""

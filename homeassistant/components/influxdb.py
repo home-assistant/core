@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DB_NAME = 'database'
 CONF_TAGS = 'tags'
+CONF_DEFAULT_MEASUREMENT = 'default_measurement'
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_HOST = 'localhost'
@@ -40,6 +41,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}):
             vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_WHITELIST, default=[]):
@@ -65,6 +67,7 @@ def setup(hass, config):
     blacklist = conf.get(CONF_BLACKLIST)
     whitelist = conf.get(CONF_WHITELIST)
     tags = conf.get(CONF_TAGS)
+    default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
 
     try:
         influx = InfluxDBClient(
@@ -96,7 +99,10 @@ def setup(hass, config):
 
         measurement = state.attributes.get('unit_of_measurement')
         if measurement in (None, ''):
-            measurement = state.entity_id
+            if default_measurement:
+                measurement = default_measurement
+            else:
+                measurement = state.entity_id
 
         json_body = [
             {
@@ -114,7 +120,11 @@ def setup(hass, config):
 
         for key, value in state.attributes.items():
             if key != 'unit_of_measurement':
-                json_body[0]['fields'][key] = value
+                if isinstance(value, (str, float, bool)):
+                    json_body[0]['fields'][key] = value
+                elif isinstance(value, int):
+                    # Prevent column data errors in influxDB.
+                    json_body[0]['fields'][key] = float(value)
 
         json_body[0]['tags'].update(tags)
 

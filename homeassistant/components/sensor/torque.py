@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = {}
 
     hass.http.register_view(TorqueReceiveDataView(
-        hass, email, vehicle, sensors, add_devices))
+        email, vehicle, sensors, add_devices))
     return True
 
 
@@ -69,9 +69,8 @@ class TorqueReceiveDataView(HomeAssistantView):
     url = API_PATH
     name = 'api:torque'
 
-    def __init__(self, hass, email, vehicle, sensors, add_devices):
+    def __init__(self, email, vehicle, sensors, add_devices):
         """Initialize a Torque view."""
-        super().__init__(hass)
         self.email = email
         self.vehicle = vehicle
         self.sensors = sensors
@@ -80,6 +79,7 @@ class TorqueReceiveDataView(HomeAssistantView):
     @callback
     def get(self, request):
         """Handle Torque data request."""
+        hass = request.app['hass']
         data = request.GET
 
         if self.email is not None and self.email != data[SENSOR_EMAIL_FIELD]:
@@ -108,7 +108,7 @@ class TorqueReceiveDataView(HomeAssistantView):
                 self.sensors[pid] = TorqueSensor(
                     ENTITY_NAME_FORMAT.format(self.vehicle, names[pid]),
                     units.get(pid, None))
-                self.hass.async_add_job(self.add_devices, [self.sensors[pid]])
+                hass.async_add_job(self.add_devices, [self.sensors[pid]])
 
         return None
 

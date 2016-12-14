@@ -4,7 +4,6 @@ Support for Neato Connected Vaccums switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.neato/
 """
-import time
 import logging
 
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -57,17 +56,21 @@ class NeatoConnectedSwitch(ToggleEntity):
         self._state = self.robot.state
         _LOGGER.debug('self._state=%s', self._state)
         if self.type == SWITCH_TYPE_CLEAN:
-            if (self.robot.state['action'] == 1 and
+            if (self.robot.state['action'] == 1 or
+                    self.robot.state['action'] == 2 or
+                    self.robot.state['action'] == 3 and
                     self.robot.state['state'] == 2):
                 self._clean_state = STATE_ON
             else:
                 self._clean_state = STATE_OFF
+            _LOGGER.debug('schedule_state=%s', self._schedule_state)
         if self.type == SWITCH_TYPE_SCHEDULE:
             _LOGGER.debug('self._state=%s', self._state)
             if self.robot.schedule_enabled:
                 self._schedule_state = STATE_ON
             else:
                 self._schedule_state = STATE_OFF
+            _LOGGER.debug('schedule_state=%s', self._schedule_state)
 
     @property
     def name(self):
@@ -105,7 +108,6 @@ class NeatoConnectedSwitch(ToggleEntity):
         """Turn the switch off."""
         if self.type == SWITCH_TYPE_CLEAN:
             self.robot.pause_cleaning()
-            time.sleep(1)
             self.robot.send_to_base()
         elif self.type == SWITCH_TYPE_SCHEDULE:
             self.robot.disable_schedule()

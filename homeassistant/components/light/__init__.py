@@ -4,6 +4,7 @@ Provides functionality to interact with lights.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light/
 """
+import asyncio
 import logging
 import os
 import csv
@@ -64,6 +65,9 @@ ATTR_FLASH = "flash"
 FLASH_SHORT = "short"
 FLASH_LONG = "long"
 
+# List of possible effects
+ATTR_EFFECT_LIST = "effect_list"
+
 # Apply an effect to the light, can be EFFECT_COLORLOOP.
 ATTR_EFFECT = "effect"
 EFFECT_COLORLOOP = "colorloop"
@@ -78,6 +82,8 @@ PROP_TO_ATTR = {
     'rgb_color': ATTR_RGB_COLOR,
     'xy_color': ATTR_XY_COLOR,
     'white_value': ATTR_WHITE_VALUE,
+    'effect_list': ATTR_EFFECT_LIST,
+    'effect': ATTR_EFFECT,
     'supported_features': ATTR_SUPPORTED_FEATURES,
 }
 
@@ -87,19 +93,20 @@ VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_PROFILE: str,
+    ATTR_PROFILE: cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
-    ATTR_COLOR_NAME: str,
+    ATTR_COLOR_NAME: cv.string,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
     ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
                            vol.Coerce(tuple)),
-    ATTR_COLOR_TEMP: vol.All(int, vol.Range(min=color_util.HASS_COLOR_MIN,
-                                            max=color_util.HASS_COLOR_MAX)),
-    ATTR_WHITE_VALUE: vol.All(int, vol.Range(min=0, max=255)),
+    ATTR_COLOR_TEMP: vol.All(vol.Coerce(int),
+                             vol.Range(min=color_util.HASS_COLOR_MIN,
+                                       max=color_util.HASS_COLOR_MAX)),
+    ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
-    ATTR_EFFECT: vol.In([EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_WHITE]),
+    ATTR_EFFECT: cv.string,
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
@@ -158,7 +165,7 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
         ] if value is not None
     }
 
-    hass.async_add_job(hass.services.async_call, DOMAIN, SERVICE_TURN_ON, data)
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
 
 
 def turn_off(hass, entity_id=None, transition=None):
@@ -177,8 +184,8 @@ def async_turn_off(hass, entity_id=None, transition=None):
         ] if value is not None
     }
 
-    hass.async_add_job(hass.services.async_call, DOMAIN, SERVICE_TURN_OFF,
-                       data)
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, data))
 
 
 def toggle(hass, entity_id=None, transition=None):
@@ -193,13 +200,83 @@ def toggle(hass, entity_id=None, transition=None):
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Expose light control via statemachine and services."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LIGHTS)
-    component.setup(config)
+    yield from component.async_setup(config)
 
-    # Load built-in profiles and custom profiles
+    # load profiles from files
+    profiles = yield from hass.loop.run_in_executor(
+        None, _load_profile_data, hass)
+
+    if profiles is None:
+        return False
+
+    @asyncio.coroutine
+    def async_handle_light_service(service):
+        """Hande a turn light on or off service call."""
+        # Get the validated data
+        params = service.data.copy()
+
+        # Convert the entity ids to valid light ids
+        target_lights = component.async_extract_from_service(service)
+        params.pop(ATTR_ENTITY_ID, None)
+
+        # Processing extra data for turn light on request.
+        profile = profiles.get(params.pop(ATTR_PROFILE, None))
+
+        if profile:
+            params.setdefault(ATTR_XY_COLOR, profile[:2])
+            params.setdefault(ATTR_BRIGHTNESS, profile[2])
+
+        color_name = params.pop(ATTR_COLOR_NAME, None)
+
+        if color_name is not None:
+            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+
+        update_tasks = []
+        for light in target_lights:
+            if service.service == SERVICE_TURN_ON:
+                yield from light.async_turn_on(**params)
+            elif service.service == SERVICE_TURN_OFF:
+                yield from light.async_turn_off(**params)
+            else:
+                yield from light.async_toggle(**params)
+
+            if light.should_poll:
+                update_coro = light.async_update_ha_state(True)
+                if hasattr(light, 'async_update'):
+                    update_tasks.append(hass.loop.create_task(update_coro))
+                else:
+                    yield from update_coro
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    # Listen for light on and light off service calls.
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_ON, async_handle_light_service,
+        descriptions.get(SERVICE_TURN_ON), schema=LIGHT_TURN_ON_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_OFF, async_handle_light_service,
+        descriptions.get(SERVICE_TURN_OFF), schema=LIGHT_TURN_OFF_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_TOGGLE, async_handle_light_service,
+        descriptions.get(SERVICE_TOGGLE), schema=LIGHT_TOGGLE_SCHEMA)
+
+    return True
+
+
+def _load_profile_data(hass):
+    """Load built-in profiles and custom profiles."""
     profile_paths = [os.path.join(os.path.dirname(__file__),
                                   LIGHT_PROFILES_FILE),
                      hass.config.path(LIGHT_PROFILES_FILE)]
@@ -221,67 +298,8 @@ def setup(hass, config):
             except vol.MultipleInvalid as ex:
                 _LOGGER.error("Error parsing light profile from %s: %s",
                               profile_path, ex)
-                return False
-
-    def handle_light_service(service):
-        """Hande a turn light on or off service call."""
-        # Get the validated data
-        params = service.data.copy()
-
-        # Convert the entity ids to valid light ids
-        target_lights = component.extract_from_service(service)
-        params.pop(ATTR_ENTITY_ID, None)
-
-        service_fun = None
-        if service.service == SERVICE_TURN_OFF:
-            service_fun = 'turn_off'
-        elif service.service == SERVICE_TOGGLE:
-            service_fun = 'toggle'
-
-        if service_fun:
-            for light in target_lights:
-                getattr(light, service_fun)(**params)
-
-            for light in target_lights:
-                if light.should_poll:
-                    light.update_ha_state(True)
-            return
-
-        # Processing extra data for turn light on request.
-        profile = profiles.get(params.pop(ATTR_PROFILE, None))
-
-        if profile:
-            params.setdefault(ATTR_XY_COLOR, profile[:2])
-            params.setdefault(ATTR_BRIGHTNESS, profile[2])
-
-        color_name = params.pop(ATTR_COLOR_NAME, None)
-
-        if color_name is not None:
-            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
-
-        for light in target_lights:
-            light.turn_on(**params)
-
-        for light in target_lights:
-            if light.should_poll:
-                light.update_ha_state(True)
-
-    # Listen for light on and light off service calls.
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_light_service,
-                           descriptions.get(SERVICE_TURN_ON),
-                           schema=LIGHT_TURN_ON_SCHEMA)
-
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_light_service,
-                           descriptions.get(SERVICE_TURN_OFF),
-                           schema=LIGHT_TURN_OFF_SCHEMA)
-
-    hass.services.register(DOMAIN, SERVICE_TOGGLE, handle_light_service,
-                           descriptions.get(SERVICE_TOGGLE),
-                           schema=LIGHT_TOGGLE_SCHEMA)
-
-    return True
+                return None
+    return profiles
 
 
 class Light(ToggleEntity):
@@ -312,6 +330,16 @@ class Light(ToggleEntity):
     @property
     def white_value(self):
         """Return the white value of this light between 0..255."""
+        return None
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return None
+
+    @property
+    def effect(self):
+        """Return the current effect."""
         return None
 
     @property

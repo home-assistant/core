@@ -77,8 +77,10 @@ class APIEventStream(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):
         """Provide a streaming interface for the event bus."""
+        # pylint: disable=no-self-use
+        hass = request.app['hass']
         stop_obj = object()
-        to_write = asyncio.Queue(loop=self.hass.loop)
+        to_write = asyncio.Queue(loop=hass.loop)
 
         restrict = request.GET.get('restrict')
         if restrict:
@@ -106,7 +108,7 @@ class APIEventStream(HomeAssistantView):
         response.content_type = 'text/event-stream'
         yield from response.prepare(request)
 
-        unsub_stream = self.hass.bus.async_listen(MATCH_ALL, forward_events)
+        unsub_stream = hass.bus.async_listen(MATCH_ALL, forward_events)
 
         try:
             _LOGGER.debug('STREAM %s ATTACHED', id(stop_obj))
@@ -117,7 +119,7 @@ class APIEventStream(HomeAssistantView):
             while True:
                 try:
                     with async_timeout.timeout(STREAM_PING_INTERVAL,
-                                               loop=self.hass.loop):
+                                               loop=hass.loop):
                         payload = yield from to_write.get()
 
                     if payload is stop_obj:
@@ -145,7 +147,7 @@ class APIConfigView(HomeAssistantView):
     @ha.callback
     def get(self, request):
         """Get current configuration."""
-        return self.json(self.hass.config.as_dict())
+        return self.json(request.app['hass'].config.as_dict())
 
 
 class APIDiscoveryView(HomeAssistantView):
@@ -158,10 +160,11 @@ class APIDiscoveryView(HomeAssistantView):
     @ha.callback
     def get(self, request):
         """Get discovery info."""
-        needs_auth = self.hass.config.api.api_password is not None
+        hass = request.app['hass']
+        needs_auth = hass.config.api.api_password is not None
         return self.json({
-            'base_url': self.hass.config.api.base_url,
-            'location_name': self.hass.config.location_name,
+            'base_url': hass.config.api.base_url,
+            'location_name': hass.config.location_name,
             'requires_api_password': needs_auth,
             'version': __version__
         })
@@ -176,7 +179,7 @@ class APIStatesView(HomeAssistantView):
     @ha.callback
     def get(self, request):
         """Get current states."""
-        return self.json(self.hass.states.async_all())
+        return self.json(request.app['hass'].states.async_all())
 
 
 class APIEntityStateView(HomeAssistantView):
@@ -188,7 +191,7 @@ class APIEntityStateView(HomeAssistantView):
     @ha.callback
     def get(self, request, entity_id):
         """Retrieve state of entity."""
-        state = self.hass.states.get(entity_id)
+        state = request.app['hass'].states.get(entity_id)
         if state:
             return self.json(state)
         else:
@@ -197,6 +200,7 @@ class APIEntityStateView(HomeAssistantView):
     @asyncio.coroutine
     def post(self, request, entity_id):
         """Update state of entity."""
+        hass = request.app['hass']
         try:
             data = yield from request.json()
         except ValueError:
@@ -211,15 +215,14 @@ class APIEntityStateView(HomeAssistantView):
         attributes = data.get('attributes')
         force_update = data.get('force_update', False)
 
-        is_new_state = self.hass.states.get(entity_id) is None
+        is_new_state = hass.states.get(entity_id) is None
 
         # Write state
-        self.hass.states.async_set(entity_id, new_state, attributes,
-                                   force_update)
+        hass.states.async_set(entity_id, new_state, attributes, force_update)
 
         # Read the state back for our response
         status_code = HTTP_CREATED if is_new_state else 200
-        resp = self.json(self.hass.states.get(entity_id), status_code)
+        resp = self.json(hass.states.get(entity_id), status_code)
 
         resp.headers.add('Location', URL_API_STATES_ENTITY.format(entity_id))
 
@@ -228,7 +231,7 @@ class APIEntityStateView(HomeAssistantView):
     @ha.callback
     def delete(self, request, entity_id):
         """Remove entity."""
-        if self.hass.states.async_remove(entity_id):
+        if request.app['hass'].states.async_remove(entity_id):
             return self.json_message('Entity removed')
         else:
             return self.json_message('Entity not found', HTTP_NOT_FOUND)
@@ -243,7 +246,7 @@ class APIEventListenersView(HomeAssistantView):
     @ha.callback
     def get(self, request):
         """Get event listeners."""
-        return self.json(async_events_json(self.hass))
+        return self.json(async_events_json(request.app['hass']))
 
 
 class APIEventView(HomeAssistantView):
@@ -271,7 +274,8 @@ class APIEventView(HomeAssistantView):
                 if state:
                     event_data[key] = state
 
-        self.hass.bus.async_fire(event_type, event_data, ha.EventOrigin.remote)
+        request.app['hass'].bus.async_fire(event_type, event_data,
+                                           ha.EventOrigin.remote)
 
         return self.json_message("Event {} fired.".format(event_type))
 
@@ -285,7 +289,7 @@ class APIServicesView(HomeAssistantView):
     @ha.callback
     def get(self, request):
         """Get registered services."""
-        return self.json(async_services_json(self.hass))
+        return self.json(async_services_json(request.app['hass']))
 
 
 class APIDomainServicesView(HomeAssistantView):
@@ -300,12 +304,12 @@ class APIDomainServicesView(HomeAssistantView):
 
         Returns a list of changed states.
         """
+        hass = request.app['hass']
         body = yield from request.text()
         data = json.loads(body) if body else None
 
-        with AsyncTrackStates(self.hass) as changed_states:
-            yield from self.hass.services.async_call(domain, service, data,
-                                                     True)
+        with AsyncTrackStates(hass) as changed_states:
+            yield from hass.services.async_call(domain, service, data, True)
 
         return self.json(changed_states)
 
@@ -320,6 +324,7 @@ class APIEventForwardingView(HomeAssistantView):
     @asyncio.coroutine
     def post(self, request):
         """Setup an event forwarder."""
+        hass = request.app['hass']
         try:
             data = yield from request.json()
         except ValueError:
@@ -340,14 +345,14 @@ class APIEventForwardingView(HomeAssistantView):
 
         api = rem.API(host, api_password, port)
 
-        valid = yield from self.hass.loop.run_in_executor(
+        valid = yield from hass.loop.run_in_executor(
             None, api.validate_api)
         if not valid:
             return self.json_message("Unable to validate API.",
                                      HTTP_UNPROCESSABLE_ENTITY)
 
         if self.event_forwarder is None:
-            self.event_forwarder = rem.EventForwarder(self.hass)
+            self.event_forwarder = rem.EventForwarder(hass)
 
         self.event_forwarder.async_connect(api)
 
@@ -389,7 +394,7 @@ class APIComponentsView(HomeAssistantView):
     @ha.callback
     def get(self, request):
         """Get current loaded components."""
-        return self.json(self.hass.config.components)
+        return self.json(request.app['hass'].config.components)
 
 
 class APIErrorLogView(HomeAssistantView):
@@ -402,7 +407,7 @@ class APIErrorLogView(HomeAssistantView):
     def get(self, request):
         """Serve error log."""
         resp = yield from self.file(
-            request, self.hass.config.path(ERROR_LOG_FILENAME))
+            request, request.app['hass'].config.path(ERROR_LOG_FILENAME))
         return resp
 
 
@@ -417,7 +422,7 @@ class APITemplateView(HomeAssistantView):
         """Render a template."""
         try:
             data = yield from request.json()
-            tpl = template.Template(data['template'], self.hass)
+            tpl = template.Template(data['template'], request.app['hass'])
             return tpl.async_render(data.get('variables'))
         except (ValueError, TemplateError) as ex:
             return self.json_message('Error rendering template: {}'.format(ex),

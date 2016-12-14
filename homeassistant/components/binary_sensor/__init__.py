@@ -4,6 +4,7 @@ Component to interface with binary sensors.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -39,13 +40,13 @@ SENSOR_CLASSES = [
 SENSOR_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(SENSOR_CLASSES))
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Track states and offer events for binary sensors."""
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
-    component.setup(config)
-
+    yield from component.async_setup(config)
     return True
 
 

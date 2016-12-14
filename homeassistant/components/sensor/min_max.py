@@ -32,6 +32,7 @@ ATTR_TO_PROPERTY = [
 ]
 
 CONF_ENTITY_IDS = 'entity_ids'
+CONF_ROUND_DIGITS = 'round_digits'
 
 DEFAULT_NAME = 'Min/Max/Avg Sensor'
 
@@ -48,6 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.string, vol.In(SENSOR_TYPES.values())),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
+    vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
 })
 
 
@@ -57,20 +59,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     entity_ids = config.get(CONF_ENTITY_IDS)
     name = config.get(CONF_NAME)
     sensor_type = config.get(CONF_TYPE)
+    round_digits = config.get(CONF_ROUND_DIGITS)
 
     yield from async_add_devices(
-        [MinMaxSensor(hass, entity_ids, name, sensor_type)], True)
+        [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits)],
+        True)
     return True
 
 
 class MinMaxSensor(Entity):
     """Representation of a min/max sensor."""
 
-    def __init__(self, hass, entity_ids, name, sensor_type):
+    def __init__(self, hass, entity_ids, name, sensor_type, round_digits):
         """Initialize the min/max sensor."""
         self._hass = hass
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
+        self._round_digits = round_digits
         self._name = '{} {}'.format(
             name, next(v for k, v in SENSOR_TYPES.items()
                        if self._sensor_type == v))
@@ -148,6 +153,7 @@ class MinMaxSensor(Entity):
         if len(sensor_values) == self.count_sensors:
             self.min_value = min(sensor_values)
             self.max_value = max(sensor_values)
-            self.mean = round(sum(sensor_values) / self.count_sensors, 2)
+            self.mean = round(sum(sensor_values) / self.count_sensors,
+                              self._round_digits)
         else:
             self.min_value = self.max_value = self.mean = STATE_UNKNOWN

@@ -37,6 +37,7 @@ class TestDemoClimate(unittest.TestCase):
         self.assertEqual(25, state.attributes.get(light.ATTR_BRIGHTNESS))
         self.assertEqual(
             (82, 91, 0), state.attributes.get(light.ATTR_RGB_COLOR))
+        self.assertEqual('rainbow', state.attributes.get(light.ATTR_EFFECT))
         light.turn_on(
             self.hass, ENTITY_LIGHT, rgb_color=(251, 252, 253),
             white_value=254)
@@ -45,10 +46,11 @@ class TestDemoClimate(unittest.TestCase):
         self.assertEqual(254, state.attributes.get(light.ATTR_WHITE_VALUE))
         self.assertEqual(
             (251, 252, 253), state.attributes.get(light.ATTR_RGB_COLOR))
-        light.turn_on(self.hass, ENTITY_LIGHT, color_temp=400)
+        light.turn_on(self.hass, ENTITY_LIGHT, color_temp=400, effect='none')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_LIGHT)
         self.assertEqual(400, state.attributes.get(light.ATTR_COLOR_TEMP))
+        self.assertEqual('none', state.attributes.get(light.ATTR_EFFECT))
 
     def test_turn_off(self):
         """Test light turn off method."""

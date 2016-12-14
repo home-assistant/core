@@ -1,5 +1,6 @@
 """The tests for the device tracker component."""
 # pylint: disable=protected-access
+import asyncio
 import json
 import logging
 import unittest
@@ -22,6 +23,8 @@ from homeassistant.remote import JSONEncoder
 from tests.common import (
     get_test_home_assistant, fire_time_changed, fire_service_discovered,
     patch_yaml_files, assert_setup_component)
+
+from ...test_util.aiohttp import mock_aiohttp_client
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
 
@@ -107,6 +110,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(device.config_picture, config.config_picture)
         self.assertEqual(device.away_hide, config.away_hide)
         self.assertEqual(device.consider_home, config.consider_home)
+        self.assertEqual(device.vendor, config.vendor)
 
     # pylint: disable=invalid-name
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
@@ -154,8 +158,13 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}))
+
+        # wait for async calls (macvendor) to finish
+        self.hass.block_till_done()
+
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0))
+
         assert len(config) == 1
         assert config[0].dev_id == 'dev1'
         assert config[0].track
@@ -180,6 +189,72 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         gravatar_url = ("https://www.gravatar.com/avatar/"
                         "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
         self.assertEqual(device.config_picture, gravatar_url)
+
+    def test_mac_vendor_lookup(self):
+        """Test if vendor string is lookup on macvendors API."""
+        mac = 'B8:27:EB:00:00:00'
+        vendor_string = 'Raspberry Pi Foundation'
+
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+
+        with mock_aiohttp_client() as aioclient_mock:
+            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
+                               text=vendor_string)
+
+            run_coroutine_threadsafe(device.set_vendor_for_mac(),
+                                     self.hass.loop).result()
+            assert aioclient_mock.call_count == 1
+
+        self.assertEqual(device.vendor, vendor_string)
+
+    def test_mac_vendor_lookup_unknown(self):
+        """Prevent another mac vendor lookup if was not found first time."""
+        mac = 'B8:27:EB:00:00:00'
+
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+
+        with mock_aiohttp_client() as aioclient_mock:
+            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
+                               status=404)
+
+            run_coroutine_threadsafe(device.set_vendor_for_mac(),
+                                     self.hass.loop).result()
+
+            self.assertEqual(device.vendor, 'unknown')
+
+    def test_mac_vendor_lookup_error(self):
+        """Prevent another lookup if failure during API call."""
+        mac = 'B8:27:EB:00:00:00'
+
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+
+        with mock_aiohttp_client() as aioclient_mock:
+            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
+                               status=500)
+
+            run_coroutine_threadsafe(device.set_vendor_for_mac(),
+                                     self.hass.loop).result()
+
+            self.assertEqual(device.vendor, 'unknown')
+
+    def test_mac_vendor_lookup_exception(self):
+        """Prevent another lookup if exception during API call."""
+        mac = 'B8:27:EB:00:00:00'
+
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+
+        with mock_aiohttp_client() as aioclient_mock:
+            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
+                               exc=asyncio.TimeoutError())
+
+            run_coroutine_threadsafe(device.set_vendor_for_mac(),
+                                     self.hass.loop).result()
+
+            self.assertEqual(device.vendor, 'unknown')
 
     def test_discovery(self):
         """Test discovery."""

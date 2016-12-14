@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,29 +102,33 @@ class MjpegCamera(Camera):
             return
 
         # connect to stream
+        websession = async_get_clientsession(self.hass)
+        stream = None
+        response = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                stream = yield from self.hass.websession.get(
-                    self._mjpeg_url,
-                    auth=self._auth
-                )
-        except asyncio.TimeoutError:
-            raise HTTPGatewayTimeout()
+                stream = yield from websession.get(self._mjpeg_url,
+                                                   auth=self._auth)
 
-        response = web.StreamResponse()
-        response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
+            response = web.StreamResponse()
+            response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
 
-        yield from response.prepare(request)
+            yield from response.prepare(request)
 
-        try:
             while True:
                 data = yield from stream.content.read(102400)
                 if not data:
                     break
                 response.write(data)
+
+        except asyncio.TimeoutError:
+            raise HTTPGatewayTimeout()
+
         finally:
-            self.hass.async_add_job(stream.release())
-            yield from response.write_eof()
+            if stream is not None:
+                self.hass.async_add_job(stream.release())
+            if response is not None:
+                yield from response.write_eof()
 
     @property
     def name(self):

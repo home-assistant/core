@@ -87,17 +87,10 @@ def update_and_define_min_max(config, minimum_default,
 class KNXSensorBaseClass():
     """Sensor Base Class for all KNX Sensors."""
 
-    _unit_of_measurement = None
-
     @property
     def cache(self):
         """We don't want to cache any Sensor Value."""
         return False
-
-    @property
-    def unit_of_measurement(self):
-        """Return the defined Unit of Measurement for the KNX Sensor."""
-        return self._unit_of_measurement
 
 
 class KNXSensorFloatClass(KNXGroupAddress, KNXSensorBaseClass):
@@ -121,6 +114,11 @@ class KNXSensorFloatClass(KNXGroupAddress, KNXSensorBaseClass):
     def state(self):
         """Return the Value of the KNX Sensor."""
         return self._value
+
+    @property
+    def unit_of_measurement(self):
+        """Return the defined Unit of Measurement for the KNX Sensor."""
+        return self._unit_of_measurement
 
     def update(self):
         """Update KNX sensor."""

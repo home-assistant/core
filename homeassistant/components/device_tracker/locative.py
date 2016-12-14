@@ -23,7 +23,7 @@ DEPENDENCIES = ['http']
 
 def setup_scanner(hass, config, see):
     """Setup an endpoint for the Locative application."""
-    hass.http.register_view(LocativeView(hass, see))
+    hass.http.register_view(LocativeView(see))
 
     return True
 
@@ -34,27 +34,26 @@ class LocativeView(HomeAssistantView):
     url = '/api/locative'
     name = 'api:locative'
 
-    def __init__(self, hass, see):
+    def __init__(self, see):
         """Initialize Locative url endpoints."""
-        super().__init__(hass)
         self.see = see
 
     @asyncio.coroutine
     def get(self, request):
         """Locative message received as GET."""
-        res = yield from self._handle(request.GET)
+        res = yield from self._handle(request.app['hass'], request.GET)
         return res
 
     @asyncio.coroutine
     def post(self, request):
         """Locative message received."""
         data = yield from request.post()
-        res = yield from self._handle(data)
+        res = yield from self._handle(request.app['hass'], data)
         return res
 
     @asyncio.coroutine
     # pylint: disable=too-many-return-statements
-    def _handle(self, data):
+    def _handle(self, hass, data):
         """Handle locative request."""
         if 'latitude' not in data or 'longitude' not in data:
             return ('Latitude and longitude not specified.',
@@ -81,19 +80,19 @@ class LocativeView(HomeAssistantView):
         gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 
         if direction == 'enter':
-            yield from self.hass.loop.run_in_executor(
+            yield from hass.loop.run_in_executor(
                 None, partial(self.see, dev_id=device,
                               location_name=location_name,
                               gps=gps_location))
             return 'Setting location to {}'.format(location_name)
 
         elif direction == 'exit':
-            current_state = self.hass.states.get(
+            current_state = hass.states.get(
                 '{}.{}'.format(DOMAIN, device))
 
             if current_state is None or current_state.state == location_name:
                 location_name = STATE_NOT_HOME
-                yield from self.hass.loop.run_in_executor(
+                yield from hass.loop.run_in_executor(
                     None, partial(self.see, dev_id=device,
                                   location_name=location_name,
                                   gps=gps_location))

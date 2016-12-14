@@ -325,6 +325,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.assertEqual({}, mqtt.MQTT_CLIENT.progress)
 
     def test_invalid_mqtt_topics(self):
+        """Test invalid topics."""
         self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'bad+topic')
         self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')
 
