@@ -58,7 +58,7 @@ class CecMediaPlayer(CecDevice, MediaPlayerDevice):
     def media_stop(self):
         pass
 
-    def __init__(self, hass, cec_client, logical):
+    def __init__(self, hass, lib_cec, logical):
         """Initialize the Vera device."""
         self._state = False
-        CecDevice.__init__(self, hass, cec_client, logical)
+        CecDevice.__init__(self, hass, lib_cec, logical)

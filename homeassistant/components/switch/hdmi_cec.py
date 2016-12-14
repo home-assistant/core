@@ -28,10 +28,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class CecSwitch(CecDevice, SwitchDevice):
     """Representation of a HDMI device as a Switch."""
 
-    def __init__(self, hass, cec_client, logical):
+    def __init__(self, hass, lib_cec, logical):
         """Initialize the HDMI device."""
         self._state = False
-        CecDevice.__init__(self, hass, cec_client, logical)
+        CecDevice.__init__(self, hass, lib_cec, logical)
         self.entity_id = "%s.%s_%s" % (DOMAIN, 'hdmi', hex(self._logical_address)[2:])
         self.update()
 
