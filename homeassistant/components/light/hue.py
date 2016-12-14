@@ -118,8 +118,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
 
     try:
         bridge = phue.Bridge(
-            host,
-            config_file_path=hass.config.path(filename))
+            host, config_file_path=hass.config.path(filename))
     except ConnectionRefusedError:  # Wrong host was given
         _LOGGER.error("Error connecting to the Hue bridge at %s", host)
 
@@ -174,25 +173,28 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
         else:
             bridge_type = 'hue'
 
-        for light_id, info in api_lights.items():
-            if light_id not in lights:
-                lights[light_id] = HueLight(int(light_id), info,
-                                            bridge, update_lights,
-                                            bridge_type, allow_unreachable)
-                new_lights.append(lights[light_id])
-            else:
-                lights[light_id].info = info
-                lights[light_id].schedule_update_ha_state()
+        for is_group, fetched, current in (
+                (False, api_lights.items(), lights),
+                (True, api_groups.items(), lightgroups)):
 
-        for lightgroup_id, info in api_groups.items():
-            if lightgroup_id not in lightgroups:
-                lightgroups[lightgroup_id] = HueLight(
-                    int(lightgroup_id), info, bridge, update_lights,
-                    bridge_type, allow_unreachable, True)
-                new_lights.append(lightgroups[lightgroup_id])
-            else:
-                lightgroups[lightgroup_id].info = info
-                lightgroups[lightgroup_id].schedule_update_ha_state()
+            for light_id, info in fetched:
+                light = current.get(light_id)
+
+                is_new = False
+                if light is None:
+                    is_new = True
+                    light = current[light_id] = HueLight(
+                        int(light_id), bridge, update_lights,
+                        bridge_type, allow_unreachable, is_group)
+                    new_lights.append(light)
+
+                if is_group:
+                    light.info = info['action']
+                else:
+                    light.info = info['state']
+
+                if not is_new:
+                    light.schedule_update_ha_state()
 
         if new_lights:
             add_devices(new_lights)
@@ -246,11 +248,11 @@ def request_configuration(host, hass, add_devices, filename,
 class HueLight(Light):
     """Representation of a Hue light."""
 
-    def __init__(self, light_id, info, bridge, update_lights,
-                 bridge_type, allow_unreachable, is_group=False):
+    def __init__(self, light_id, bridge, update_lights,
+                 bridge_type, allow_unreachable, is_group):
         """Initialize the light."""
         self.light_id = light_id
-        self.info = info
+        self.info = None
         self.bridge = bridge
         self.update_lights = update_lights
         self.bridge_type = bridge_type
@@ -276,38 +278,26 @@ class HueLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if self.is_group:
-            return self.info['action'].get('bri')
-        else:
-            return self.info['state'].get('bri')
+        return self.info.get('bri')
 
     @property
     def xy_color(self):
         """Return the XY color value."""
-        if self.is_group:
-            return self.info['action'].get('xy')
-        else:
-            return self.info['state'].get('xy')
+        return self.info.get('xy')
 
     @property
     def color_temp(self):
         """Return the CT color value."""
-        if self.is_group:
-            return self.info['action'].get('ct')
-        else:
-            return self.info['state'].get('ct')
+        return self.info.get('ct')
 
     @property
     def is_on(self):
         """Return true if device is on."""
         if self.is_group:
-            return self.info['state']['any_on']
+            return self.info['any_on']
         else:
-            if self.allow_unreachable:
-                return self.info['state']['on']
-            else:
-                return self.info['state']['reachable'] and \
-                    self.info['state']['on']
+            return self.info['on'] and (self.info['reachable'] or
+                                        self.allow_unreachable)
 
     @property
     def supported_features(self):
