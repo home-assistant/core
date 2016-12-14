@@ -53,7 +53,7 @@ ATTR_CACHE = 'cache'
 _RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([a-z]+)\.[a-z0-9]{3,4}")
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG): cv.string,
+    vol.Optional(CONF_LANG): cv.string,
     vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
     vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
     vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY):
