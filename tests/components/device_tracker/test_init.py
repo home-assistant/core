@@ -543,50 +543,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(attrs['gps_accuracy'], 1)
         self.assertEqual(attrs['number'], 1)
 
-    def test_see_state_gps(self):
-        """Test device tracker see sets location correctly."""
-        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
-                                        TEST_PLATFORM))
-
-        params = {
-            'mac': 'AA:BB:CC:DD:EE:FF',
-            'host_name': 'example.com',
-            'gps': [.3, .8],
-            'gps_accuracy': 1
-        }
-
-        device_tracker.see(self.hass, **params)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get('device_tracker.examplecom')
-        attrs = state.attributes
-        self.assertEqual(state.state, 'not_home')
-        self.assertEqual(state.object_id, 'examplecom')
-        self.assertEqual(state.name, 'example.com')
-        self.assertEqual(attrs['friendly_name'], 'example.com')
-        self.assertEqual(attrs['latitude'], 0.3)
-        self.assertEqual(attrs['longitude'], 0.8)
-        self.assertEqual(attrs['gps_accuracy'], 1)
-
-        # Test when a tracker without GPS updates.
-        params = {
-            'mac': 'AA:BB:CC:DD:EE:FF',
-            'host_name': 'example.com',
-        }
-
-        device_tracker.see(self.hass, **params)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get('device_tracker.examplecom')
-        attrs = state.attributes
-        self.assertEqual(state.state, 'home')
-        self.assertEqual(state.object_id, 'examplecom')
-        self.assertEqual(state.name, 'example.com')
-        self.assertEqual(attrs['friendly_name'], 'example.com')
-        self.assertEqual(attrs['latitude'], 0.3)
-        self.assertEqual(attrs['longitude'], 0.8)
-        self.assertEqual(attrs['gps_accuracy'], 1)
-
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
     def test_see_failures(self, mock_warning):
         """Test that the device tracker see failures."""
