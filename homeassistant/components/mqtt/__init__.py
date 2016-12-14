@@ -35,6 +35,7 @@ REQUIREMENTS = ['paho-mqtt==1.2']
 CONF_EMBEDDED = 'embedded'
 CONF_BROKER = 'broker'
 CONF_CLIENT_ID = 'client_id'
+CONF_DISCOVERY = 'discovery'
 CONF_KEEPALIVE = 'keepalive'
 CONF_CERTIFICATE = 'certificate'
 CONF_CLIENT_KEY = 'client_key'
@@ -94,24 +95,25 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_CLIENT_ID): cv.string,
-        vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE):
-            vol.All(vol.Coerce(int), vol.Range(min=15)),
-        vol.Optional(CONF_BROKER): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CERTIFICATE): cv.isfile,
-        vol.Inclusive(CONF_CLIENT_KEY, 'client_key_auth',
-                      msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
         vol.Inclusive(CONF_CLIENT_CERT, 'client_key_auth',
                       msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
-        vol.Optional(CONF_TLS_INSECURE): cv.boolean,
+        vol.Inclusive(CONF_CLIENT_KEY, 'client_key_auth',
+                      msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
+        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_BROKER): cv.string,
+        vol.Optional(CONF_CERTIFICATE): cv.isfile,
+        vol.Optional(CONF_CLIENT_ID): cv.string,
+        vol.Optional(CONF_DISCOVERY): valid_subscribe_topic,
+        vol.Optional(CONF_EMBEDDED): _HBMQTT_CONFIG_SCHEMA,
+        vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE):
+            vol.All(vol.Coerce(int), vol.Range(min=15)),
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
-        vol.Optional(CONF_EMBEDDED): _HBMQTT_CONFIG_SCHEMA,
+        vol.Optional(CONF_TLS_INSECURE): cv.boolean,
+        vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
-        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -181,8 +183,8 @@ def async_subscribe(hass, topic, callback, qos=DEFAULT_QOS):
         hass.async_run_job(callback, event.data[ATTR_TOPIC],
                            event.data[ATTR_PAYLOAD], event.data[ATTR_QOS])
 
-    async_remove = hass.bus.async_listen(EVENT_MQTT_MESSAGE_RECEIVED,
-                                         mqtt_topic_subscriber)
+    async_remove = hass.bus.async_listen(
+        EVENT_MQTT_MESSAGE_RECEIVED, mqtt_topic_subscriber)
 
     # Future: track subscriber count and unsubscribe in remove
     MQTT_CLIENT.subscribe(topic, qos)
@@ -213,42 +215,57 @@ def _setup_server(hass, config):
     return success and broker_config
 
 
+def _setup_discovery(hass, config):
+    """Try to start the discovery of MQTT devices."""
+    conf = config.get(DOMAIN, {})
+
+    discovery = prepare_setup_platform(hass, config, DOMAIN, 'discovery')
+
+    if discovery is None:
+        _LOGGER.error("Unable to load MQTT discovery")
+        return None
+
+    success = discovery.start(hass, conf.get(CONF_DISCOVERY))
+
+    return success
+
+
 def setup(hass, config):
     """Start the MQTT protocol service."""
     conf = config.get(DOMAIN, {})
 
     client_id = conf.get(CONF_CLIENT_ID)
     keepalive = conf.get(CONF_KEEPALIVE)
-
     broker_config = _setup_server(hass, config)
 
     broker_in_conf = CONF_BROKER in conf
+    discovery_in_conf = CONF_DISCOVERY in conf
 
     # Only auto config if no server config was passed in
     if broker_config and CONF_EMBEDDED not in conf:
         broker, port, username, password, certificate, protocol = broker_config
-        # Embedded broker doesn't have some ssl variables
+        # Embedded broker doesn't have some SSL variables
         client_key, client_cert, tls_insecure = None, None, None
     elif not broker_config and not broker_in_conf:
         _LOGGER.error("Unable to start broker and auto-configure MQTT")
         return False
 
     if broker_in_conf:
-        broker = conf[CONF_BROKER]
-        port = conf[CONF_PORT]
+        broker = conf.get(CONF_BROKER)
+        port = conf.get(CONF_PORT)
         username = conf.get(CONF_USERNAME)
         password = conf.get(CONF_PASSWORD)
         certificate = conf.get(CONF_CERTIFICATE)
         client_key = conf.get(CONF_CLIENT_KEY)
         client_cert = conf.get(CONF_CLIENT_CERT)
         tls_insecure = conf.get(CONF_TLS_INSECURE)
-        protocol = conf[CONF_PROTOCOL]
+        protocol = conf.get(CONF_PROTOCOL)
 
     # For cloudmqtt.com, secured connection, auto fill in certificate
     if certificate is None and 19999 < port < 30000 and \
        broker.endswith('.cloudmqtt.com'):
-        certificate = os.path.join(os.path.dirname(__file__),
-                                   'addtrustexternalcaroot.crt')
+        certificate = os.path.join(
+            os.path.dirname(__file__), 'addtrustexternalcaroot.crt')
 
     will_message = conf.get(CONF_WILL_MESSAGE)
     birth_message = conf.get(CONF_BIRTH_MESSAGE)
@@ -299,6 +316,9 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_PUBLISH, publish_service,
                            descriptions.get(SERVICE_PUBLISH),
                            schema=MQTT_PUBLISH_SCHEMA)
+
+    if discovery_in_conf:
+        _setup_discovery(hass, config)
 
     return True
 
@@ -423,12 +443,10 @@ class MQTT(object):
         try:
             payload = msg.payload.decode('utf-8')
         except (AttributeError, UnicodeDecodeError):
-            _LOGGER.error("Illegal utf-8 unicode payload from "
-                          "MQTT topic: %s, Payload: %s", msg.topic,
-                          msg.payload)
+            _LOGGER.error("Illegal UTF-8 unicode payload from MQTT topic: %s, "
+                          "Payload: %s", msg.topic, msg.payload)
         else:
-            _LOGGER.debug("Received message on %s: %s",
-                          msg.topic, payload)
+            _LOGGER.debug("Received message on %s: %s", msg.topic, payload)
             self.hass.bus.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
                 ATTR_TOPIC: msg.topic,
                 ATTR_QOS: msg.qos,
