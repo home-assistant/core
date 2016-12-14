@@ -77,7 +77,7 @@ def async_setup(hass, config):
         conf = config[DOMAIN][0] if len(config.get(DOMAIN, [])) > 0 else {}
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
-        time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_LANG)
+        time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
 
         yield from tts.async_init_cache(use_cache, cache_dir, time_memory)
     except (HomeAssistantError, KeyError) as err:
@@ -377,7 +377,7 @@ class Provider(object):
     """Represent a single provider."""
 
     hass = None
-    language = DEFAULT_LANG
+    language = None
 
     def get_tts_audio(self, message):
         """Load tts audio file from provider."""
