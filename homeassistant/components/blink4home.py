@@ -48,9 +48,6 @@ def async_setup(hass, config):
 
     username = blink_config.get(CONF_USERNAME)
     password = blink_config.get(CONF_PASSWORD)
-    name = blink_config.get(CONF_NAME)
-    if name == '':
-        name = DEFAULT_NAME
     network = blink_config.get(CONF_NETWORK_ID)
     version = hass.config.as_dict()['version']
 
@@ -62,7 +59,7 @@ def async_setup(hass, config):
         blink = hass.data[DATA_BLINK]
         blink.disarm()
 
-    blink = Blink4Home(username, password, version, name, network)
+    blink = Blink4Home(username, password, version, network)
     # Store data
     hass.data[DATA_BLINK] = blink
 
@@ -76,14 +73,13 @@ def async_setup(hass, config):
 class Blink4Home(object):
     """Blink4home api."""
 
-    def __init__(self, username, password, version, name, network):
+    def __init__(self, username, password, version, network):
         """Init the Blink4Home api."""
         self._username = username
         self._password = password
         self._version = version
         self._api_key = ""
         self._network_id = ""
-        self._name = name
         self._network = network
         self._armed = False
         self._notifications = 0
@@ -91,11 +87,6 @@ class Blink4Home(object):
 
         # Login
         self._login()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def logged_in(self):
