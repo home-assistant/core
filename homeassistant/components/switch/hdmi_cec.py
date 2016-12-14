@@ -4,7 +4,6 @@ Support for HDMI CEC devices as switches.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/hdmi_cec/
 """
-import asyncio
 import logging
 
 from homeassistant.components.hdmi_cec import CecDevice, CEC_CLIENT, ATTR_NEW, DEVICE_PRESENCE
@@ -18,16 +17,12 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return HDMI devices as switches."""
     if ATTR_NEW in discovery_info:
         _LOGGER.info("Setting up devices %s", discovery_info[ATTR_NEW])
-        devices = [CecSwitch(hass, CEC_CLIENT, device) for device in
-                   filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x], discovery_info[ATTR_NEW])]
-        yield from async_add_devices(devices)
-        for d in devices:
-            yield from d.async_update()
+        add_devices(CecSwitch(hass, CEC_CLIENT, device) for device in
+                    filter(lambda x: x not in DEVICE_PRESENCE or not DEVICE_PRESENCE[x], discovery_info[ATTR_NEW]))
 
 
 class CecSwitch(CecDevice, SwitchDevice):
@@ -38,6 +33,7 @@ class CecSwitch(CecDevice, SwitchDevice):
         self._state = False
         CecDevice.__init__(self, hass, cec_client, logical)
         self.entity_id = "%s.%s_%s" % (DOMAIN, 'hdmi', hex(self._logical_address)[2:])
+        self.update()
 
     def turn_on(self, **kwargs) -> None:
         """Turn device on."""
