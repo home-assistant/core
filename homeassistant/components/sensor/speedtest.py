@@ -139,14 +139,14 @@ class SpeedtestData(object):
         self.data = None
         self._server_id = config.get(CONF_SERVER_ID)
         if config.get(CONF_MANUAL) is False:
-          try:            
-            track_time_change(hass, self.update,
+            try:            
+                track_time_change(hass, self.update,
                           second=config.get(CONF_SECOND),
                           minute=config.get(CONF_MINUTE),
                           hour=config.get(CONF_HOUR),
                           day=config.get(CONF_DAY))
-          except Unknown:
-            return
+            except Unknown:
+                return
 
     def update(self, now):
         """Get the latest data from speedtest.net."""
