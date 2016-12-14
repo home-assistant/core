@@ -10,9 +10,10 @@ import re
 
 import aiohttp
 import async_timeout
+import voluptuous as vol
 import yarl
 
-from homeassistant.components.tts import Provider
+from homeassistant.components.tts import Provider, PLATFORM_SCHEMA, CONF_LANG
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 REQUIREMENTS = ["gTTS-token==1.1.1"]
@@ -21,6 +22,21 @@ _LOGGER = logging.getLogger(__name__)
 
 GOOGLE_SPEECH_URL = "http://translate.google.com/translate_tts"
 MESSAGE_SIZE = 148
+
+SUPPORT_LANGUAGES = [
+    'af', 'sq', 'ar', 'hy', 'bn', 'ca', 'zh', 'zh-cn', 'zh-tw', 'zh-yue',
+    'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi',
+    'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv',
+    'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es',
+    'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy',
+]
+
+DEFAULT_LANG = 'en'
+
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
+})
 
 
 @asyncio.coroutine
