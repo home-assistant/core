@@ -12,6 +12,9 @@ async_timeout==1.1.0
 # homeassistant.components.nuimo_controller
 --only-binary=all http://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
 
+# homeassistant.components.bbb_gpio
+# Adafruit_BBIO==1.0.0
+
 # homeassistant.components.isy994
 PyISY==1.0.7
 
