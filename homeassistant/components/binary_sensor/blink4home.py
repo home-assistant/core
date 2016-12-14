@@ -37,7 +37,7 @@ class Blink4HomeSensor(BinarySensorDevice):
         self._blink = blink_instance
 
     @property
-    def name:
+    def name(self):
         """Return the namee of the sensor."""
         return 'Blink4Home Armed'
 
