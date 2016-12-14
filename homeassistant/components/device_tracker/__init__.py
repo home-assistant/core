@@ -70,6 +70,10 @@ ATTR_GPS = 'gps'
 ATTR_GPS_UPDATED = 'gps_updated'
 ATTR_BATTERY = 'battery'
 ATTR_ATTRIBUTES = 'attributes'
+ATTR_SOURCE_TYPE = 'source_type'
+
+REPORT_SOURCE_GPS = 'gps'
+REPORT_SOURCE_ROUTER = 'router'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,  # seconds
@@ -235,17 +239,19 @@ class DeviceTracker(object):
 
     def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
             location_name: str=None, gps: GPSType=None, gps_accuracy=None,
-            battery: str=None, attributes: dict=None):
+            battery: str=None, attributes: dict=None,
+            source_type: str=REPORT_SOURCE_GPS):
         """Notify the device tracker that you see a device."""
         self.hass.add_job(
             self.async_see(mac, dev_id, host_name, location_name, gps,
-                           gps_accuracy, battery, attributes)
+                           gps_accuracy, battery, attributes, source_type)
         )
 
     @asyncio.coroutine
     def async_see(self, mac: str=None, dev_id: str=None, host_name: str=None,
                   location_name: str=None, gps: GPSType=None,
-                  gps_accuracy=None, battery: str=None, attributes: dict=None):
+                  gps_accuracy=None, battery: str=None, attributes: dict=None,
+                  source_type: str=REPORT_SOURCE_GPS):
         """Notify the device tracker that you see a device.
 
         This method is a coroutine.
@@ -261,9 +267,16 @@ class DeviceTracker(object):
             dev_id = cv.slug(str(dev_id).lower())
             device = self.devices.get(dev_id)
 
+        if source_type == REPORT_SOURCE_ROUTER:
+            zone_home = self.hass.states.get(zone.ENTITY_ID_HOME)
+            gps = [zone_home.attributes[ATTR_LONGITUDE],
+                   zone_home.attributes[ATTR_LATITUDE]]
+            gps_accuracy = 0
+
         if device:
             yield from device.async_seen(host_name, location_name, gps,
-                                         gps_accuracy, battery, attributes)
+                                         gps_accuracy, battery, attributes,
+                                         source_type)
             if device.track:
                 yield from device.async_update_ha_state()
             return
@@ -383,6 +396,9 @@ class Device(Entity):
 
         self.away_hide = hide_if_away
         self.vendor = vendor
+
+        self.source_type = None
+
         self._attributes = {}
 
     @property
@@ -414,6 +430,8 @@ class Device(Entity):
         if self.battery:
             attr[ATTR_BATTERY] = self.battery
 
+        attr[ATTR_SOURCE_TYPE] = self.source_type
+
         return attr
 
     @property
@@ -429,8 +447,9 @@ class Device(Entity):
     @asyncio.coroutine
     def async_seen(self, host_name: str=None, location_name: str=None,
                    gps: GPSType=None, gps_accuracy=0, battery: str=None,
-                   attributes: dict=None):
+                   attributes: dict=None, source_type: str=REPORT_SOURCE_GPS):
         """Mark the device as seen."""
+        self.source_type = source_type
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
@@ -473,7 +492,7 @@ class Device(Entity):
             return
         elif self.location_name:
             self._state = self.location_name
-        elif self.gps is not None and self.last_seen == self.gps_updated:
+        elif self.gps is not None and self.source_type == REPORT_SOURCE_GPS:
             zone_state = zone.async_active_zone(
                 self.hass, self.gps[0], self.gps[1], self.gps_accuracy)
             if zone_state is None:
@@ -482,7 +501,6 @@ class Device(Entity):
                 self._state = STATE_HOME
             else:
                 self._state = zone_state.name
-
         elif self.stale():
             self._state = STATE_NOT_HOME
             self.last_update_home = False
@@ -643,7 +661,9 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
             else:
                 host_name = yield from scanner.async_get_device_name(mac)
                 seen.add(mac)
-            hass.async_add_job(async_see_device(mac=mac, host_name=host_name))
+            hass.async_add_job(async_see_device(mac=mac, host_name=host_name,
+                                                source_type=
+                                                REPORT_SOURCE_ROUTER))
 
     async_track_utc_time_change(
         hass, async_device_tracker_scan, second=range(0, 60, interval))
