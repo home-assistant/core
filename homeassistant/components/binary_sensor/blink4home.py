@@ -33,6 +33,7 @@ class Blink4HomeSensor(BinarySensorDevice):
     """Blink4Home sensor."""
 
     def __init__(self, blink_instance):
+        """Constructor."""
         self._blink = blink_instance
 
     @property
@@ -46,4 +47,5 @@ class Blink4HomeSensor(BinarySensorDevice):
         return self._blink.state
 
     def update(self):
+        """Update the sensor."""
         self._blink.update()
