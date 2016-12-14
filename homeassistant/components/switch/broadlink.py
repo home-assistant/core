@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         except socket.timeout:
             _LOGGER.error("Failed to connect to device.")
             return
-        yield from hass.loop.run_in_executor(None, 
+        yield from hass.loop.run_in_executor(None,
                                              broadlink_device.enter_learning)
 
         _LOGGER.info("Press the key you want HASS to learn")
