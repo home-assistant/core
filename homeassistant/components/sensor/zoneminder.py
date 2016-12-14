@@ -10,8 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-        STATE_UNKNOWN, CONF_MONITORED_VARIABLES)
-import homeassistant.helpers.config_validation as cv
+    STATE_UNKNOWN, CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.zoneminder as zoneminder
 
@@ -20,9 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['zoneminder']
 
 SENSOR_TYPES = {
-        'events',
-        'function',
-        'status'
+    'events',
+    'function',
+    'status'
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -38,7 +37,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     monitors = zoneminder.get_state('api/monitors.json')
     for i in monitors['monitors']:
         for variable in config[CONF_MONITORED_VARIABLES]:
-            sensors.append(ZMSensor(int(i['Monitor']['Id']), i['Monitor']['Name'], variable))
+            sensors.append(ZMSensor(int(i['Monitor']['Id']),
+                                    i['Monitor']['Name'], variable))
 
     add_devices(sensors)
 
@@ -68,7 +68,6 @@ class ZMSensor(Entity):
 
     def update(self):
         """Update the sensor state and status."""
-
         if self._type == "function":
             monitor = zoneminder.get_state(
                 'api/monitors/%i.json' % self._monitor_id
@@ -82,7 +81,7 @@ class ZMSensor(Entity):
             self._state = int(monitor['status'])
         elif self._type == "events":
             event = zoneminder.get_state(
-                    'api/events/index/MonitorId:%i.json' %
-                    (self._monitor_id)
+                'api/events/index/MonitorId:%i.json' %
+                (self._monitor_id)
             )
             self._state = event['pagination']['count']
