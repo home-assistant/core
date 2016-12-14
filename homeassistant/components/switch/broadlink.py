@@ -6,11 +6,13 @@ https://home-assistant.io/components/switch.broadlink/
 """
 from datetime import timedelta
 from base64 import b64encode, b64decode
+import asyncio
 import binascii
 import logging
 import socket
 import voluptuous as vol
 
+import homeassistant.loader as loader
 from homeassistant.util.dt import utcnow
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_SWITCHES,
@@ -56,22 +58,34 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except socket.timeout:
         _LOGGER.error("Failed to connect to device.")
 
+    persistent_notification = loader.get_component('persistent_notification')
+
+    @asyncio.coroutine
     def _learn_command(call):
         try:
-            broadlink_device.auth()
+            yield from hass.loop.run_in_executor(None, broadlink_device.auth)
         except socket.timeout:
             _LOGGER.error("Failed to connect to device.")
             return
-        broadlink_device.enter_learning()
+        yield from hass.loop.run_in_executor(None, broadlink_device.enter_learning)
+
         _LOGGER.info("Press the key you want HASS to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=20):
-            packet = broadlink_device.check_data()
+            packet = yield from hass.loop.run_in_executor(None, broadlink_device.
+                                                                check_data)
             if packet:
-                _LOGGER.info("Recieved packet is: %s",
-                             b64encode(packet).decode('utf8'))
+                log_msg = 'Recieved packet is: {}'.\
+                          format(b64encode(packet).decode('utf8'))
+                _LOGGER.info(log_msg)
+                persistent_notification.async_create(hass, log_msg,
+                                                     title='Broadlink switch')
                 return
-        _LOGGER.error("Did not received any signal.")
+            yield from asyncio.sleep(1, loop=hass.loop)
+        _LOGGER.error('Did not received any signal.')
+        persistent_notification.async_create(hass,
+                                             "Did not received any signal",
+                                             title='Broadlink switch')
     hass.services.register(DOMAIN, SERVICE_LEARN, _learn_command)
 
     for object_id, device_config in devices.items():
@@ -83,10 +97,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 broadlink_device
             )
         )
-
-    if not switches:
-        _LOGGER.error("No switches added.")
-        return False
 
     add_devices(switches)
 
