@@ -298,6 +298,8 @@ class SonosDevice(MediaPlayerDevice):
         self._last_avtransport_event = None
         self._is_playing_line_in = None
         self._is_playing_tv = None
+        self._favorite_sources = None
+        self._source_name = None
         self.soco_snapshot = Snapshot(self._player)
 
     @property
@@ -443,6 +445,8 @@ class SonosDevice(MediaPlayerDevice):
                     else:
                         media_artist = SUPPORT_SOURCE_LINEIN
 
+                    source_name = media_artist
+
                     media_album_name = None
                     media_title = None
                     media_image_url = None
@@ -455,6 +459,16 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = False
                     support_stop = False
                     support_pause = False
+
+                    source_name = 'Radio'
+                    # Check if currently playing radio station is in favorites
+                    favs = self._player.get_sonos_favorites()['favorites']
+                    favc = [
+                        fav for fav in favs if fav['uri'] == current_media_uri
+                        ]
+                    if len(favc) == 1:
+                        src = favc.pop()
+                        source_name = src['title']
 
                     # for radio streams we set the radio station name as the
                     # title.
@@ -592,6 +606,7 @@ class SonosDevice(MediaPlayerDevice):
                 self._support_pause = support_pause
                 self._is_playing_tv = is_playing_tv
                 self._is_playing_line_in = is_playing_line_in
+                self._source_name = source_name
 
                 # update state of the whole group
                 # pylint: disable=protected-access
@@ -601,6 +616,8 @@ class SonosDevice(MediaPlayerDevice):
 
                 if self._queue is None and self.entity_id is not None:
                     self._subscribe_to_player_events()
+            favs = self._player.get_sonos_favorites().get('favorites', [])
+            self._favorite_sources = [fav['title'] for fav in favs]
         else:
             self._player_volume = None
             self._player_volume_muted = None
@@ -624,6 +641,8 @@ class SonosDevice(MediaPlayerDevice):
             self._support_pause = False
             self._is_playing_tv = False
             self._is_playing_line_in = False
+            self._favorite_sources = None
+            self._source_name = None
 
         self._last_avtransport_event = None
 
@@ -771,10 +790,6 @@ class SonosDevice(MediaPlayerDevice):
 
         supported = SUPPORT_SONOS
 
-        if not self.source_list:
-            # some devices do not allow source selection
-            supported = supported ^ SUPPORT_SELECT_SOURCE
-
         if not self._support_previous_track:
             supported = supported ^ SUPPORT_PREVIOUS_TRACK
 
@@ -808,19 +823,31 @@ class SonosDevice(MediaPlayerDevice):
     def select_source(self, source):
         """Select input source."""
         if source == SUPPORT_SOURCE_LINEIN:
+            self._source_name = SUPPORT_SOURCE_LINEIN
             self._player.switch_to_line_in()
         elif source == SUPPORT_SOURCE_TV:
+            self._source_name = SUPPORT_SOURCE_TV
             self._player.switch_to_tv()
+        else:
+            favorites = self._player.get_sonos_favorites()['favorites']
+            fav = [fav for fav in favorites if fav['title'] == source]
+            if len(fav) == 1:
+                src = fav.pop()
+                self._source_name = src['title']
+                self._player.play_uri(src['uri'], src['meta'], src['title'])
 
     @property
     def source_list(self):
         """List of available input sources."""
         model_name = self._speaker_info['model_name']
 
+        sources = self._favorite_sources
+
         if 'PLAY:5' in model_name:
-            return [SUPPORT_SOURCE_LINEIN]
+            sources += [SUPPORT_SOURCE_LINEIN]
         elif 'PLAYBAR' in model_name:
-            return [SUPPORT_SOURCE_LINEIN, SUPPORT_SOURCE_TV]
+            sources += [SUPPORT_SOURCE_LINEIN, SUPPORT_SOURCE_TV]
+        return sources
 
     @property
     def source(self):
@@ -828,12 +855,7 @@ class SonosDevice(MediaPlayerDevice):
         if self._coordinator:
             return self._coordinator.source
         else:
-            if self._is_playing_line_in:
-                return SUPPORT_SOURCE_LINEIN
-            elif self._is_playing_tv:
-                return SUPPORT_SOURCE_TV
-
-        return None
+            return self._source_name
 
     def turn_off(self):
         """Turn off media player."""
