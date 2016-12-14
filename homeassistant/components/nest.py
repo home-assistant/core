@@ -19,8 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = [
     'http://github.com/technicalpickles/python-nest'
-    '/archive/2512973b4b390d3965da43529cd20402ad374bfa.zip'  # nest-cam branch
-    '#python-nest==3.0.0']
+    '/archive/b8391d2b3cb8682f8b0c2bdff477179983609f39.zip'  # nest-cam branch
+    '#python-nest==3.0.2']
 
 DOMAIN = 'nest'
 

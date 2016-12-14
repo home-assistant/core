@@ -76,7 +76,7 @@ colorlog>2.1,<3
 concord232==0.14
 
 # homeassistant.components.media_player.denonavr
-denonavr==0.1.6
+denonavr==0.2.2
 
 # homeassistant.components.media_player.directv
 directpy==0.1
@@ -130,6 +130,9 @@ freesms==0.1.1
 # homeassistant.components.conversation
 fuzzywuzzy==0.14.0
 
+# homeassistant.components.tts.google
+gTTS-token==1.1.1
+
 # homeassistant.components.device_tracker.bluetooth_le_tracker
 # gattlib==0.20150805
 
@@ -167,7 +170,7 @@ hikvision==0.4
 # http://github.com/adafruit/Adafruit_Python_DHT/archive/310c59b0293354d07d94375f1365f7b9b9110c7d.zip#Adafruit_DHT==1.3.0
 
 # homeassistant.components.nest
-http://github.com/technicalpickles/python-nest/archive/2512973b4b390d3965da43529cd20402ad374bfa.zip#python-nest==3.0.0
+http://github.com/technicalpickles/python-nest/archive/b8391d2b3cb8682f8b0c2bdff477179983609f39.zip#python-nest==3.0.2
 
 # homeassistant.components.light.flux_led
 https://github.com/Danielhiversen/flux_led/archive/0.9.zip#flux_led==0.9
@@ -205,7 +208,7 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 # https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
 
 # homeassistant.components.netatmo
-https://github.com/jabesq/netatmo-api-python/archive/v0.7.0.zip#lnetatmo==0.7.0
+https://github.com/jabesq/netatmo-api-python/archive/v0.8.0.zip#lnetatmo==0.8.0
 
 # homeassistant.components.neato
 https://github.com/jabesq/pybotvac/archive/v0.0.1.zip#pybotvac==0.0.1
@@ -240,6 +243,9 @@ https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e22462
 
 # homeassistant.components.scene.hunterdouglas_powerview
 https://github.com/sander76/powerviewApi/archive/246e782d60d5c0addcc98d7899a0186f9d5640b0.zip#powerviewApi==0.3.15
+
+# homeassistant.components.binary_sensor.flic
+https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4
 
 # homeassistant.components.light.osramlightify
 https://github.com/tfriedel/python-lightify/archive/d6eadcf311e6e21746182d1480e97b350dda2b3e.zip#lightify==1.0.4
@@ -296,7 +302,7 @@ mficlient==0.3.0
 miflora==0.1.13
 
 # homeassistant.components.discovery
-netdisco==0.8.0
+netdisco==0.8.1
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
@@ -384,10 +390,11 @@ pycmus==0.1.0
 
 # homeassistant.components.envisalink
 # homeassistant.components.zwave
+# homeassistant.components.binary_sensor.hikvision
 pydispatcher==2.0.5
 
 # homeassistant.components.media_player.emby
-pyemby==0.1
+pyemby==0.2
 
 # homeassistant.components.envisalink
 pyenvisalink==1.9
@@ -397,6 +404,9 @@ pyfttt==0.3
 
 # homeassistant.components.remote.harmony
 pyharmony==1.0.12
+
+# homeassistant.components.binary_sensor.hikvision
+pyhik==0.0.6
 
 # homeassistant.components.homematic
 pyhomematic==0.1.18
@@ -473,8 +483,14 @@ python-telegram-bot==5.2.0
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
 
+# homeassistant.components.media_player.vlc
+python-vlc==1.1.2
+
 # homeassistant.components.wink
 python-wink==0.11.0
+
+# homeassistant.components.device_tracker.unifi
+pyunifi==1.3
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
@@ -512,6 +528,9 @@ scsgate==0.1.0
 # homeassistant.components.notify.sendgrid
 sendgrid==3.6.3
 
+# homeassistant.components.sensor.sensehat
+sense-hat==2.2.0
+
 # homeassistant.components.media_player.aquostv
 sharp-aquos-rc==0.2
 
@@ -548,7 +567,7 @@ steamodd==4.21
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellive-py==0.5.2
+tellduslive==0.1.13
 
 # homeassistant.components.sensor.temper
 temperusb==1.5.1
@@ -565,9 +584,6 @@ twilio==5.4.0
 
 # homeassistant.components.sensor.uber
 uber_rides==0.2.7
-
-# homeassistant.components.device_tracker.unifi
-unifi==1.2.5
 
 # homeassistant.components.device_tracker.unifi
 urllib3

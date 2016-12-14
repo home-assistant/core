@@ -236,7 +236,6 @@ def async_setup(hass, config):
         if color_name is not None:
             params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
 
-        update_tasks = []
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
                 yield from light.async_turn_on(**params)
@@ -245,12 +244,18 @@ def async_setup(hass, config):
             else:
                 yield from light.async_toggle(**params)
 
-            if light.should_poll:
-                update_coro = light.async_update_ha_state(True)
-                if hasattr(light, 'async_update'):
-                    update_tasks.append(hass.loop.create_task(update_coro))
-                else:
-                    yield from update_coro
+        update_tasks = []
+
+        for light in target_lights:
+            if not light.should_poll:
+                continue
+
+            update_coro = hass.loop.create_task(
+                light.async_update_ha_state(True))
+            if hasattr(light, 'async_update'):
+                update_tasks.append(hass.loop.create_task(update_coro))
+            else:
+                yield from update_coro
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)

@@ -86,6 +86,8 @@ class NestThermostat(ClimateDevice):
         self._eco_temperature = None
         self._is_locked = None
         self._locked_temperature = None
+        self._min_temperature = None
+        self._max_temperature = None
 
     @property
     def name(self):
@@ -153,8 +155,8 @@ class NestThermostat(ClimateDevice):
         """Set new target temperature."""
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        if target_temp_low is not None and target_temp_high is not None:
-            if self._mode == STATE_HEAT_COOL:
+        if self._mode == STATE_HEAT_COOL:
+            if target_temp_low is not None and target_temp_high is not None:
                 temp = (target_temp_low, target_temp_high)
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
@@ -204,18 +206,12 @@ class NestThermostat(ClimateDevice):
     @property
     def min_temp(self):
         """Identify min_temp in Nest API or defaults if not available."""
-        if self._is_locked:
-            return self._locked_temperature[0]
-        else:
-            return None
+        return self._min_temperature
 
     @property
     def max_temp(self):
         """Identify max_temp in Nest API or defaults if not available."""
-        if self._is_locked:
-            return self._locked_temperature[1]
-        else:
-            return None
+        return self._max_temperature
 
     def update(self):
         """Cache value from Python-nest."""
@@ -229,6 +225,8 @@ class NestThermostat(ClimateDevice):
         self._away = self.structure.away == 'away'
         self._eco_temperature = self.device.eco_temperature
         self._locked_temperature = self.device.locked_temperature
+        self._min_temperature = self.device.min_temperature
+        self._max_temperature = self.device.max_temperature
         self._is_locked = self.device.is_locked
         if self.device.temperature_scale == 'C':
             self._temperature_scale = TEMP_CELSIUS

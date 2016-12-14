@@ -22,8 +22,8 @@ DEFAULT_PORT = 8080
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
 })
 
 ATTR_DISPLAYTIME = 'displaytime'
@@ -33,7 +33,13 @@ def get_service(hass, config):
     """Return the notify service."""
     url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
 
-    auth = (config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+
+    if username is not None:
+        auth = (username, password)
+    else:
+        auth = None
 
     return KODINotificationService(
         url,
@@ -48,10 +54,14 @@ class KODINotificationService(BaseNotificationService):
         """Initialize the service."""
         import jsonrpc_requests
         self._url = url
+
+        kwargs = {'timeout': 5}
+
+        if auth is not None:
+            kwargs['auth'] = auth
+
         self._server = jsonrpc_requests.Server(
-            '{}/jsonrpc'.format(self._url),
-            auth=auth,
-            timeout=5)
+            '{}/jsonrpc'.format(self._url), **kwargs)
 
     def send_message(self, message="", **kwargs):
         """Send a message to Kodi."""

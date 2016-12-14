@@ -4,6 +4,7 @@ Component to interface with an alarm control panel.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel/
 """
+import asyncio
 import logging
 import os
 
@@ -40,36 +41,6 @@ ALARM_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_CODE): cv.string,
 })
-
-
-def setup(hass, config):
-    """Track states and offer events for sensors."""
-    component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
-
-    component.setup(config)
-
-    def alarm_service_handler(service):
-        """Map services to methods on Alarm."""
-        target_alarms = component.extract_from_service(service)
-
-        code = service.data.get(ATTR_CODE)
-
-        method = SERVICE_TO_METHOD[service.service]
-
-        for alarm in target_alarms:
-            getattr(alarm, method)(code)
-            if alarm.should_poll:
-                alarm.update_ha_state(True)
-
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
-    for service in SERVICE_TO_METHOD:
-        hass.services.register(DOMAIN, service, alarm_service_handler,
-                               descriptions.get(service),
-                               schema=ALARM_SERVICE_SCHEMA)
-    return True
 
 
 def alarm_disarm(hass, code=None, entity_id=None):
@@ -116,6 +87,53 @@ def alarm_trigger(hass, code=None, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_ALARM_TRIGGER, data)
 
 
+@asyncio.coroutine
+def async_setup(hass, config):
+    """Track states and offer events for sensors."""
+    component = EntityComponent(
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+
+    yield from component.async_setup(config)
+
+    @asyncio.coroutine
+    def async_alarm_service_handler(service):
+        """Map services to methods on Alarm."""
+        target_alarms = component.async_extract_from_service(service)
+
+        code = service.data.get(ATTR_CODE)
+
+        method = "async_{}".format(SERVICE_TO_METHOD[service.service])
+
+        for alarm in target_alarms:
+            yield from getattr(alarm, method)(code)
+
+        update_tasks = []
+        for alarm in target_alarms:
+            if not alarm.should_poll:
+                continue
+
+            update_coro = hass.loop.create_task(
+                alarm.async_update_ha_state(True))
+            if hasattr(alarm, 'async_update'):
+                update_tasks.append(hass.loop.create_task(update_coro))
+            else:
+                yield from update_coro
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+
+    for service in SERVICE_TO_METHOD:
+        hass.services.async_register(
+            DOMAIN, service, async_alarm_service_handler,
+            descriptions.get(service), schema=ALARM_SERVICE_SCHEMA)
+
+    return True
+
+
 # pylint: disable=no-self-use
 class AlarmControlPanel(Entity):
     """An abstract class for alarm control devices."""
@@ -134,17 +152,41 @@ class AlarmControlPanel(Entity):
         """Send disarm command."""
         raise NotImplementedError()
 
+    @asyncio.coroutine
+    def async_alarm_disarm(self, code=None):
+        """Send disarm command."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.alarm_disarm, code)
+
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         raise NotImplementedError()
+
+    @asyncio.coroutine
+    def async_alarm_arm_home(self, code=None):
+        """Send arm home command."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.alarm_arm_home, code)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         raise NotImplementedError()
 
+    @asyncio.coroutine
+    def async_alarm_arm_away(self, code=None):
+        """Send arm away command."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.alarm_arm_away, code)
+
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
         raise NotImplementedError()
+
+    @asyncio.coroutine
+    def async_alarm_trigger(self, code=None):
+        """Send alarm trigger command."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.alarm_trigger, code)
 
     @property
     def state_attributes(self):

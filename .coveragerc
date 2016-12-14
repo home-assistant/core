@@ -122,6 +122,8 @@ omit =
     homeassistant/components/alarm_control_panel/simplisafe.py
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/concord232.py
+    homeassistant/components/binary_sensor/flic.py
+    homeassistant/components/binary_sensor/hikvision.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/amcrest.py
@@ -211,6 +213,7 @@ omit =
     homeassistant/components/media_player/snapcast.py
     homeassistant/components/media_player/sonos.py
     homeassistant/components/media_player/squeezebox.py
+    homeassistant/components/media_player/vlc.py
     homeassistant/components/media_player/yamaha.py
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
@@ -294,6 +297,7 @@ omit =
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
+    homeassistant/components/sensor/sensehat.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/sonarr.py
@@ -315,7 +319,7 @@ omit =
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
-    homeassistant/components/sensor/waqi.py
+    homeassistant/components/sensor/zamg.py
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/anel_pwrctrl.py
     homeassistant/components/switch/arest.py

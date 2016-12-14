@@ -421,7 +421,8 @@ class Device(Entity):
         self.host_name = host_name
         self.location_name = location_name
         self.gps_accuracy = gps_accuracy or 0
-
+        if battery:
+            self.battery = battery
         if attributes:
             self._attributes.update(attributes)
 

@@ -264,6 +264,17 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         return self._child_attr(ATTR_ENTITY_PICTURE)
 
     @property
+    def entity_picture(self):
+        """
+        Return image of the media playing.
+
+        The universal media player doesn't use the parent class logic, since
+        the url is coming from child entity pictures which have already been
+        sent through the API proxy.
+        """
+        return self.media_image_url
+
+    @property
     def media_title(self):
         """Title of current playing media."""
         return self._child_attr(ATTR_MEDIA_TITLE)

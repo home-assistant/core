@@ -74,6 +74,7 @@ CACHE-CONTROL: max-age=60
 EXT:
 LOCATION: http://{0}:{1}/description.xml
 SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/0.1
+hue-bridgeid: 1234
 ST: urn:schemas-upnp-org:device:basic:1
 USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
 

@@ -36,10 +36,10 @@ SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TURN_OFF_ACTION, default=None): vol.In(TURN_OFF_ACTION),
-    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
 })
 
 
@@ -51,11 +51,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if jsonrpc_url:
         url = jsonrpc_url.rstrip('/jsonrpc')
 
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+
+    if username is not None:
+        auth = (username, password)
+    else:
+        auth = None
+
     add_devices([
         KodiDevice(
             config.get(CONF_NAME),
             url,
-            auth=(config.get(CONF_USERNAME), config.get(CONF_PASSWORD)),
+            auth=auth,
             turn_off_action=config.get(CONF_TURN_OFF_ACTION)),
     ])
 
@@ -68,10 +76,15 @@ class KodiDevice(MediaPlayerDevice):
         import jsonrpc_requests
         self._name = name
         self._url = url
+
+        kwargs = {'timeout': 5}
+
+        if auth is not None:
+            kwargs['auth'] = auth
+
         self._server = jsonrpc_requests.Server(
-            '{}/jsonrpc'.format(self._url),
-            auth=auth,
-            timeout=5)
+            '{}/jsonrpc'.format(self._url), **kwargs)
+
         self._turn_off_action = turn_off_action
         self._players = list()
         self._properties = None
