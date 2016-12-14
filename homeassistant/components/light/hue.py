@@ -143,10 +143,13 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
 
     lights = {}
     lightgroups = {}
+    skip_groups = False
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_lights():
         """Update the Hue light objects with latest info from the bridge."""
+        nonlocal skip_groups
+
         try:
             api = bridge.get_api()
         except socket.error:
@@ -160,7 +163,10 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
             _LOGGER.error("Got unexpected result from Hue API")
             return
 
-        api_groups = api.get('groups')
+        if skip_groups:
+            api_groups = {}
+        else:
+            api_groups = api.get('groups')
 
         if not isinstance(api_groups, dict):
             _LOGGER.error("Got unexpected result from Hue API")
@@ -185,6 +191,12 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
                 lights[light_id].schedule_update_ha_state()
 
         for lightgroup_id, info in api_groups.items():
+            if 'state' not in info:
+                _LOGGER.warning('Group info does not contain state. '
+                                'Please update your hub.')
+                skip_groups = True
+                break
+
             if lightgroup_id not in lightgroups:
                 lightgroups[lightgroup_id] = HueLight(
                     int(lightgroup_id), info, bridge, update_lights,
