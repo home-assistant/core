@@ -41,7 +41,6 @@ CONF_TIME_MEMORY = 'time_memory'
 
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
-DEFAULT_LANG = 'en'
 DEFAULT_TIME_MEMORY = 300
 
 SERVICE_SAY = 'say'
@@ -53,7 +52,6 @@ ATTR_CACHE = 'cache'
 _RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([a-z]+)\.[a-z0-9]{3,4}")
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG): cv.string,
     vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
     vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
     vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY):
@@ -79,7 +77,7 @@ def async_setup(hass, config):
         conf = config[DOMAIN][0] if len(config.get(DOMAIN, [])) > 0 else {}
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
-        time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_LANG)
+        time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
 
         yield from tts.async_init_cache(use_cache, cache_dir, time_memory)
     except (HomeAssistantError, KeyError) as err:
@@ -379,7 +377,7 @@ class Provider(object):
     """Represent a single provider."""
 
     hass = None
-    language = DEFAULT_LANG
+    language = None
 
     def get_tts_audio(self, message):
         """Load tts audio file from provider."""
