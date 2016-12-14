@@ -13,8 +13,9 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, PLATFORM_SCHEMA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
-    STATE_UNKNOWN, CONF_HOST, CONF_PORT, CONF_NAME, CONF_DEVICE, CONF_DEVICES)
+    STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED,
+    STATE_PLAYING, STATE_STANDBY, STATE_UNKNOWN,
+    CONF_HOST, CONF_PORT, CONF_NAME, CONF_DEVICE, CONF_DEVICES)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,6 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FIRETV = SUPPORT_PAUSE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_SET
+
+SUPPORT_FIRETV_APP = SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 
 DEFAULT_DEVICE = 'default'
 DEFAULT_HOST = 'localhost'
@@ -31,11 +34,17 @@ DEVICE_ACTION_URL = 'http://{0}:{1}/devices/action/{2}/{3}'
 DEVICE_LIST_URL = 'http://{0}:{1}/devices/list'
 DEVICE_STATE_URL = 'http://{0}:{1}/devices/state/{2}'
 
+CONF_APPS = "apps"
+# http://<device>:<port>/devices/<device>/apps/<app_id>/<cmd>
+APPS_BASE_URL = 'http://{0}:{1}/devices/{2}/apps/{3}/{4}'
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    #vol.Optional(CONF_APPS, default=[]): cv.string,
 })
 
 
@@ -46,13 +55,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     device_id = config.get(CONF_DEVICE)
+    apps = config.get(CONF_APPS)
 
     try:
         response = requests.get(DEVICE_LIST_URL.format(host, port)).json()
         if device_id in response[CONF_DEVICES].keys():
-            add_devices([FireTVDevice(host, port, device_id, name)])
+            device = FireTVDevice(host, port, device_id, name)
+            add_devices([device])
             _LOGGER.info('Device %s accessible and ready for control',
                          device_id)
+
+            _LOGGER.error("APPS: %s %s" % (type(apps), apps))
+            for app, config in apps.items():
+                add_devices([FireTVApp(device, app, config)])
+
         else:
             _LOGGER.warning('Device %s is not registered with firetv-server',
                             device_id)
@@ -93,12 +109,68 @@ class FireTV(object):
     def action(self, action_id):
         """Perform an action on the device."""
         try:
-            requests.get(DEVICE_ACTION_URL.format(
-                self.host, self.port, self.device_id, action_id), timeout=10)
+            response = requests.get(DEVICE_ACTION_URL.format(
+                self.host, self.port, self.device_id, action_id),
+                timeout=10).json()
+            return response
         except requests.exceptions.RequestException:
             _LOGGER.error(
                 'Action request for %s was not accepted for device %s',
                 action_id, self.device_id)
+
+    def app(self, app_id, command):
+        try:
+            response = requests.get(
+                APPS_BASE_URL.format(self.host, self.port, self.device_id, app_id, command),
+                timeout=10).json()
+            _LOGGER.debug("response %s", response)
+            return response
+        except requests.exceptions.RequestException:
+            _LOGGER.error(
+                'Unable to execute %s for app %s',
+                command, app_id)
+
+
+class FireTVApp(MediaPlayerDevice):
+    def __init__(self, device, app, config):
+        self._device = device
+        self._name = app
+        self._app_id = config['app_id']
+        _LOGGER.warning("FOO: %s" % config)
+        if "icon" in config:
+            self._icon = config['icon']
+
+        self._state = STATE_UNKNOWN
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def should_poll(self):
+        return True
+
+    @property
+    def supported_media_commands(self):
+        """Flag of media commands that are supported."""
+        return SUPPORT_FIRETV_APP
+
+    def turn_on(self):
+        """Turn on the device."""
+        self._device.app_start(self._app_id)
+
+    def turn_off(self):
+        """Turn off the device."""
+        self._device.app_stop(self._app_id)
+
+    @property
+    def state(self):
+        """Return the state of the player."""
+        return self._state
+
+    def update(self):
+        """Get the latest date and update device state."""
+        self._state = self._device.app_state(self._app_id)["state"]
 
 
 class FireTVDevice(MediaPlayerDevice):
@@ -140,6 +212,15 @@ class FireTVDevice(MediaPlayerDevice):
             'standby': STATE_STANDBY,
             'disconnected': STATE_UNKNOWN,
         }.get(self._firetv.state, STATE_UNKNOWN)
+
+    def app_start(self, app_id):
+        return self._firetv.app(app_id, 'start')
+
+    def app_stop(self, app_id):
+        return self._firetv.app(app_id, 'stop')
+
+    def app_state(self, app_id):
+        return self._firetv.app(app_id, 'state')
 
     def turn_on(self):
         """Turn on the device."""
