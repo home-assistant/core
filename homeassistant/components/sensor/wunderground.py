@@ -196,7 +196,7 @@ class WUndergroundSensor(Entity):
     @property
     def entity_picture(self):
         """Return the entity picture."""
-        if self._condition == 'weather':
+        if self.rest.data and self._condition == 'weather':
             url = self.rest.data['icon_url']
             return re.sub(r'^http://', 'https://', url, flags=re.IGNORECASE)
 
