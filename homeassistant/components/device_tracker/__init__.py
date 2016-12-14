@@ -269,9 +269,10 @@ class DeviceTracker(object):
 
         if source_type == REPORT_SOURCE_ROUTER:
             zone_home = self.hass.states.get(zone.ENTITY_ID_HOME)
-            gps = [zone_home.attributes[ATTR_LONGITUDE],
-                   zone_home.attributes[ATTR_LATITUDE]]
-            gps_accuracy = 0
+            if zone_home:
+                gps = [zone_home.attributes[ATTR_LONGITUDE],
+                       zone_home.attributes[ATTR_LATITUDE]]
+                gps_accuracy = 0
 
         if device:
             yield from device.async_seen(host_name, location_name, gps,
