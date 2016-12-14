@@ -26,6 +26,7 @@ _SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms[\r\n]+'
                               r'Download:\s(\d+\.\d+)\sMbit/s[\r\n]+'
                               r'Upload:\s(\d+\.\d+)\sMbit/s[\r\n]+')
 
+CONF_MANUAL = 'manual'
 CONF_SECOND = 'second'
 CONF_MINUTE = 'minute'
 CONF_HOUR = 'hour'
@@ -50,6 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
     vol.Optional(CONF_DAY):
         vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
+    vol.Optional(CONF_MANUAL, default=[False]):
+        vol.All(cv.boolean),
 })
 
 
@@ -135,11 +138,15 @@ class SpeedtestData(object):
         """Initialize the data object."""
         self.data = None
         self._server_id = config.get(CONF_SERVER_ID)
-        track_time_change(hass, self.update,
+        if config.get(CONF_MANUAL) is False:
+          try:            
+            track_time_change(hass, self.update,
                           second=config.get(CONF_SECOND),
                           minute=config.get(CONF_MINUTE),
                           hour=config.get(CONF_HOUR),
                           day=config.get(CONF_DAY))
+          except Unknown:
+            return
 
     def update(self, now):
         """Get the latest data from speedtest.net."""
