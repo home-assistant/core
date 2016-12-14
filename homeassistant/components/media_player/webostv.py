@@ -58,10 +58,6 @@ WEBOS_APP_BROWSER = 'com.webos.app.browser_default'
 WEBOS_APP_MULTIVIEW = 'com.webos.app.multiview'
 WEBOS_APP_PLEX = 'cdp-30'
 WEBOS_APP_BBCNEWS = 'bbc.news.3.0'
-WEBOS_APP_HDMI1 = 'com.webos.app.hdmi1'
-WEBOS_APP_HDMI2 = 'com.webos.app.hdmi2'
-WEBOS_APP_HDMI3 = 'com.webos.app.hdmi3'
-
 
 WEBOS_APPS_SHORT = {
     'livetv': WEBOS_APP_LIVETV,
@@ -71,7 +67,7 @@ WEBOS_APPS_SHORT = {
     'netflix': WEBOS_APP_NETFLIX,
     'amazonprime': WEBOS_APP_AMAZONPRIME,
     'iplayer': WEBOS_APP_IPLAYER,
-    'itvplayer': WEBOS_APP_ITV,
+    'itv': WEBOS_APP_ITV,
     '4od': WEBOS_APP_4OD,
     'googleplaymovies': WEBOS_APP_GOOGLEPLAY,
     'tvguide': WEBOS_APP_TVGUIDE,
@@ -79,10 +75,7 @@ WEBOS_APPS_SHORT = {
     'browser': WEBOS_APP_BROWSER,
     'multicast': WEBOS_APP_MULTIVIEW,
     'plex': WEBOS_APP_PLEX,
-    'bbcnews': WEBOS_APP_BBCNEWS,
-    'hdmi1': WEBOS_APP_HDMI1,
-    'hdmi2': WEBOS_APP_HDMI2,
-    'hdmi3': WEBOS_APP_HDMI3
+    'bbcnews': WEBOS_APP_BBCNEWS
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema({
