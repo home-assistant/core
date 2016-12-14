@@ -46,19 +46,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([PanasonicVieraTVDevice(name, remote)])
         return True
 
-    # Validate that all required config options are given
-    if not validate_config({DOMAIN: config}, {DOMAIN: [CONF_HOST]}, _LOGGER):
-        return False
-
     host = config.get(CONF_HOST, None)
-
-    remote = RemoteControl(host, port)
-    try:
-        remote.get_mute()
-    except (socket.timeout, TimeoutError, OSError):
-        _LOGGER.error('Panasonic Viera TV is not available at %s:%d',
-                      host, port)
-
+    remote = RemoteControl(host, port)    
+    
     add_devices([PanasonicVieraTVDevice(name, remote)])
     return True
 
