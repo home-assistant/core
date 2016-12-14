@@ -23,7 +23,7 @@ class TestTTSVoiceRSSPlatform(object):
         self.url_param = {
             'key': '1234567xx',
             'hl': 'en-us',
-            'c': 'mp3',
+            'c': 'MP3',
             'f': '8khz_8bit_mono',
         }
 
@@ -55,7 +55,8 @@ class TestTTSVoiceRSSPlatform(object):
             }
         }
 
-        assert not setup_component(self.hass, tts.DOMAIN, config)
+        with assert_setup_component(0, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
 
     def test_service_say(self, aioclient_mock):
         """Test service call say."""
@@ -116,7 +117,7 @@ class TestTTSVoiceRSSPlatform(object):
         """Test service call say with german code."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        self.url_param['hl'] = 'de'
+        self.url_param['hl'] = 'de-de'
         aioclient_mock.post(
             self.url, params=self.url_param, status=200, content=b'test')
 
