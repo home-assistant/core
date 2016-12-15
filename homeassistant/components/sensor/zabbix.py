@@ -64,7 +64,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
             for hostid in hostids:
                 _LOGGER.debug("Creating Zabbix Sensor: " + str(hostid))
-                sensor = ZabbixSingleHostTriggerCountSensor(zApi, [hostid], name)
+                sensor = ZabbixSingleHostTriggerCountSensor(zApi,
+                                                            [hostid],
+                                                            name)
                 sensors.append(sensor)
         else:
             if not hostids:
@@ -73,8 +75,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 sensor = ZabbixTriggerCountSensor(zApi, name)
             else:
                 # Single sensor that sums total issues for all hosts
-                _LOGGER.debug("Creating Zabbix Sensor for group: " + str(hostids))
-                sensor = ZabbixMultipleHostTriggerCountSensor(zApi, hostids, name)
+                _LOGGER.debug("Creating Zabbix Sensor group: " + str(hostids))
+                sensor = ZabbixMultipleHostTriggerCountSensor(zApi,
+                                                              hostids,
+                                                              name)
             sensors.append(sensor)
     else:
         # Single sensor that provides the total count of triggers.
