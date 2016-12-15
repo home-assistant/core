@@ -34,6 +34,9 @@ omit =
     homeassistant/components/insteon_hub.py
     homeassistant/components/*/insteon_hub.py
 
+    homeassistant/components/insteon_local.py
+    homeassistant/components/*/insteon_local.py
+
     homeassistant/components/ios.py
     homeassistant/components/*/ios.py
 
