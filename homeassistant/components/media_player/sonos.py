@@ -427,6 +427,7 @@ class SonosDevice(MediaPlayerDevice):
 
                 media_position = None
                 media_position_updated_at = None
+                source_name = None
 
                 is_radio_stream = \
                     current_media_uri.startswith('x-sonosapi-stream:') or \
