@@ -110,6 +110,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         longitude=hass.config.longitude,
         units=units,
         interval=config.get(CONF_UPDATE_INTERVAL))
+    forecast_data.update()
+    forecast_data.update_currently()
+
+    # If connection failed don't setup platform.
+    if forecast_data.data is None:
+        return False
 
     name = config.get(CONF_NAME)
 
