@@ -17,6 +17,10 @@ if [ "$1" = "--changed" ]; then
   echo "LINT with pylint"
   echo "================"
   pylint $files
+  echo "================"
+  echo "LINT with pydocstyle"
+  echo "================"
+  pydocstyle $files
   echo
 else
   tox -e lint
