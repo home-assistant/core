@@ -5,8 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.zabbix/
 """
 import logging
-from datetime import datetime
-
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
@@ -19,20 +17,29 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['zabbix']
 
-_CONF_TYPE = "type"
+_CONF_TRIGGERS = "triggers"
 _CONF_HOSTIDS = "hostids"
 _CONF_INDIVIDUAL = "individual"
 _CONF_NAME = "name"
 
 _ZABBIX_ID_LIST_SCHEMA = vol.Schema([int])
+_ZABBIX_TRIGGER_SCHEMA = vol.Schema({
+      vol.Optional(_CONF_HOSTIDS, default=[]): _ZABBIX_ID_LIST_SCHEMA,
+      vol.Optional(_CONF_INDIVIDUAL, default=False): cv.boolean(True),
+      vol.Optional(_CONF_NAME, default=None): cv.string,
+})
 
 SCAN_INTERVAL = 30
 
+    # triggers:
+    #   name: Test Name
+    #   hostids: [10051]
+    #   individual: true
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(_CONF_HOSTIDS, default=[]): _ZABBIX_ID_LIST_SCHEMA,
-    vol.Optional(_CONF_INDIVIDUAL, default=False): cv.boolean(True),
-    vol.Optional(_CONF_NAME, default=None): cv.string,
+    vol.Required(_CONF_TRIGGERS, default={}): vol.Any(
+        _ZABBIX_TRIGGER_SCHEMA, None)
 })
+# all(any(None, bool), default_to(True)),
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -50,21 +57,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # Individual sensor per host
         if not hostids:
             # We need hostids
-            _LOGGER.critical("If using 'individual', must specify hostids")
+            _LOGGER.error("If using 'individual', must specify hostids")
             return False
 
         for hostid in hostids:
-            _LOGGER.info("Creating Zabbix Sensor: " + str(hostid))
+            _LOGGER.debug("Creating Zabbix Sensor: " + str(hostid))
             sensor = ZabbixSingleHostTriggerCountSensor([hostid], name)
             sensors.append(sensor)
     else:
         if not hostids:
             # Single sensor that provides the total count of triggers.
-            _LOGGER.info("Creating Zabbix Sensor")
+            _LOGGER.debug("Creating Zabbix Sensor")
             sensor = ZabbixTriggerCountSensor(name)
         else:
             # Single sensor that sums total issues for all hosts
-            _LOGGER.info("Creating Zabbix Sensor for group: " + str(hostids))
+            _LOGGER.debug("Creating Zabbix Sensor for group: " + str(hostids))
             sensor = ZabbixMultipleHostTriggerCountSensor(hostids, name)
         sensors.append(sensor)
 
@@ -103,8 +110,6 @@ class ZabbixTriggerCountSensor(Entity):
         _LOGGER.debug("Updating ZabbixTriggerCountSensor: " + str(self._name))
         triggers = self._call_zabbix_api()
         self._state = len(triggers)
-        self._attributes['Last Update'] \
-            = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     @property
     def device_state_attributes(self):
