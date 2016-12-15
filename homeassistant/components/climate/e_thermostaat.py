@@ -1,7 +1,7 @@
 """
-Adds support for generic thermostat units.
+Adds support for the essent icy e-thermostaat units.
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.generic_thermostat/
+https://home-assistant.io/components/climate.e_thermostaat/
 """
 import logging
 
@@ -15,7 +15,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 import requests
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +35,6 @@ DEFAULT_COMFORT_TEMPERATURE = 19
 HOME = 32
 AWAY = 64
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
@@ -44,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_AWAY_TEMPERATURE, default=DEFAULT_AWAY_TEMPERATURE):
         vol.Coerce(float),
     vol.Optional(CONF_COMFORT_TEMPERATURE,
-        default=DEFAULT_COMFORT_TEMPERATURE): vol.Coerce(float),
+                 default=DEFAULT_COMFORT_TEMPERATURE): vol.Coerce(float),
     vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
 })
 
