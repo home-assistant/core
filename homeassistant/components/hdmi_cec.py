@@ -97,6 +97,28 @@ SERVICE_POWER_SCHEMA = vol.Schema({
 }, extra=vol.REMOVE_EXTRA)
 
 
+def _init_cec(cecconfig=None):
+    import cec
+    lib_cec = cec.ICECAdapter.Create(cecconfig)
+    adapter = None
+    adapters = lib_cec.DetectAdapters()
+    for adapter in adapters:
+        _LOGGER.info("found a CEC adapter:")
+        _LOGGER.info("port:     " + adapter.strComName)
+        _LOGGER.info("product:  " + hex(adapter.iProductId))
+        adapter = adapter.strComName
+    if adapter is None:
+        _LOGGER.warning("No adapters found")
+        return None
+    else:
+        if lib_cec.Open(adapter):
+            _LOGGER.info("connection opened")
+            return lib_cec
+        else:
+            _LOGGER.error("failed to open a connection to the CEC adapter")
+            return lib_cec
+
+
 def setup(hass: HomeAssistant, base_config):
     """Setup CEC capability."""
 
@@ -112,7 +134,7 @@ def setup(hass: HomeAssistant, base_config):
     cecconfig.bMonitorOnly = 0
     cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
     cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
-    network = HdmiNetwork(cecconfig)
+    network = HdmiNetwork(adapter=_init_cec(cecconfig=cecconfig), loop=hass.loop)
 
     exclude = config.get(CONF_EXCLUDE)
 
@@ -131,11 +153,6 @@ def setup(hass: HomeAssistant, base_config):
     def _start_cec(event):
         """Open CEC adapter."""
 
-        _LOGGER.debug("Starting HDMI network")
-        network.start()
-        # network.scan()
-        _LOGGER.debug("started HDMI network")
-
         descriptions = load_yaml_config_file(
             os.path.join(os.path.dirname(__file__), 'services.yaml'))[DOMAIN]
 
@@ -143,6 +160,10 @@ def setup(hass: HomeAssistant, base_config):
         # hass.services.register(DOMAIN, SERVICE_VOLUME, volume, descriptions[SERVICE_VOLUME])
         hass.services.register(DOMAIN, SERVICE_UPDATE_DEVICES, _update_devices)
 
+        _LOGGER.debug("Starting HDMI network")
+        # network.start()
+        network.scan()
+        _LOGGER.debug("started HDMI network")
         hass.services.call(DOMAIN, SERVICE_UPDATE_DEVICES)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_cec)
