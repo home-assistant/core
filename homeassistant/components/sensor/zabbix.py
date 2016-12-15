@@ -111,9 +111,9 @@ class ZabbixTriggerCountSensor(Entity):
 
     def _call_zabbix_api(self):
         return self._zApi.trigger.get(output="extend",
-                                       only_true=1,
-                                       monitored=1,
-                                       filter={"value": 1})
+                                      only_true=1,
+                                      monitored=1,
+                                      filter={"value": 1})
 
     def update(self):
         """Update the sensor."""
@@ -136,16 +136,16 @@ class ZabbixSingleHostTriggerCountSensor(ZabbixTriggerCountSensor):
         self._hostid = hostid
         if not name:
             self._name = self._zApi.host.get(hostids=self._hostid,
-                                              output="extend")[0]["name"]
+                                             output="extend")[0]["name"]
 
         self._attributes["Host ID"] = self._hostid
 
     def _call_zabbix_api(self):
         return self._zApi.trigger.get(hostids=self._hostid,
-                                       output="extend",
-                                       only_true=1,
-                                       monitored=1,
-                                       filter={"value": 1})
+                                      output="extend",
+                                      only_true=1,
+                                      monitored=1,
+                                      filter={"value": 1})
 
 
 class ZabbixMultipleHostTriggerCountSensor(ZabbixTriggerCountSensor):
@@ -157,13 +157,13 @@ class ZabbixMultipleHostTriggerCountSensor(ZabbixTriggerCountSensor):
         self._hostids = hostids
         if not name:
             host_names = self._zApi.host.get(hostids=self._hostids,
-                                              output="extend")
+                                             output="extend")
             self._name = " ".join(name["name"] for name in host_names)
         self._attributes["Host IDs"] = self._hostids
 
     def _call_zabbix_api(self):
         return self._zApi.trigger.get(hostids=self._hostids,
-                                       output="extend",
-                                       only_true=1,
-                                       monitored=1,
-                                       filter={"value": 1})
+                                      output="extend",
+                                      only_true=1,
+                                      monitored=1,
+                                      filter={"value": 1})
