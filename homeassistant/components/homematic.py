@@ -544,19 +544,19 @@ def _hm_event_handler(hass, proxy, device, caller, attribute, value):
 
     # keypress event
     if attribute in HM_PRESS_EVENTS:
-        hass.bus.fire(EVENT_KEYPRESS, {
+        hass.add_job(hass.bus.async_fire(EVENT_KEYPRESS, {
             ATTR_NAME: hmdevice.NAME,
             ATTR_PARAM: attribute,
             ATTR_CHANNEL: channel
-        })
+        }))
         return
 
     # impulse event
     if attribute in HM_IMPULSE_EVENTS:
-        hass.bus.fire(EVENT_KEYPRESS, {
+        hass.add_job(hass.bus.async_fire(EVENT_KEYPRESS, {
             ATTR_NAME: hmdevice.NAME,
             ATTR_CHANNEL: channel
-        })
+        }))
         return
 
     _LOGGER.warning("Event is unknown and not forwarded to HA")

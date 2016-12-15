@@ -32,7 +32,7 @@ from .const import (
     KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
     KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD,
     KEY_DEVELOPMENT, KEY_AUTHENTICATED)
-from .static import GZIP_FILE_SENDER, staticresource_middleware
+from .static import FILE_SENDER, GZIP_FILE_SENDER, staticresource_middleware
 from .util import get_real_ip
 
 DOMAIN = 'http'
@@ -277,15 +277,27 @@ class HomeAssistantWSGI(object):
     @asyncio.coroutine
     def start(self):
         """Start the wsgi server."""
+        cors_added = set()
         if self.cors is not None:
             for route in list(self.app.router.routes()):
+                if hasattr(route, 'resource'):
+                    route = route.resource
+                if route in cors_added:
+                    continue
                 self.cors.add(route)
+                cors_added.add(route)
 
         if self.ssl_certificate:
-            context = ssl.SSLContext(SSL_VERSION)
-            context.options |= SSL_OPTS
-            context.set_ciphers(CIPHERS)
-            context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+            try:
+                context = ssl.SSLContext(SSL_VERSION)
+                context.options |= SSL_OPTS
+                context.set_ciphers(CIPHERS)
+                context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+            except OSError as error:
+                _LOGGER.error("Could not read SSL certificate from %s: %s",
+                              self.ssl_certificate, error)
+                context = None
+                return
         else:
             context = None
 
@@ -299,18 +311,24 @@ class HomeAssistantWSGI(object):
 
         self._handler = self.app.make_handler()
 
-        self.server = yield from self.hass.loop.create_server(
-            self._handler, self.server_host, self.server_port, ssl=context)
+        try:
+            self.server = yield from self.hass.loop.create_server(
+                self._handler, self.server_host, self.server_port, ssl=context)
+        except OSError as error:
+            _LOGGER.error("Failed to create HTTP server at port %d: %s",
+                          self.server_port, error)
 
         self.app._frozen = False  # pylint: disable=protected-access
 
     @asyncio.coroutine
     def stop(self):
         """Stop the wsgi server."""
-        self.server.close()
-        yield from self.server.wait_closed()
+        if self.server:
+            self.server.close()
+            yield from self.server.wait_closed()
         yield from self.app.shutdown()
-        yield from self._handler.finish_connections(60.0)
+        if self._handler:
+            yield from self._handler.finish_connections(60.0)
         yield from self.app.cleanup()
 
 
@@ -338,7 +356,7 @@ class HomeAssistantView(object):
     def file(self, request, fil):
         """Return a file."""
         assert isinstance(fil, str), 'only string paths allowed'
-        response = yield from GZIP_FILE_SENDER.send(request, Path(fil))
+        response = yield from FILE_SENDER.send(request, Path(fil))
         return response
 
     def register(self, router):
