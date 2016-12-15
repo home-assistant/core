@@ -24,9 +24,9 @@ _CONF_NAME = "name"
 
 _ZABBIX_ID_LIST_SCHEMA = vol.Schema([int])
 _ZABBIX_TRIGGER_SCHEMA = vol.Schema({
-      vol.Optional(_CONF_HOSTIDS, default=[]): _ZABBIX_ID_LIST_SCHEMA,
-      vol.Optional(_CONF_INDIVIDUAL, default=False): cv.boolean(True),
-      vol.Optional(_CONF_NAME, default=None): cv.string,
+    vol.Optional(_CONF_HOSTIDS, default=[]): _ZABBIX_ID_LIST_SCHEMA,
+    vol.Optional(_CONF_INDIVIDUAL, default=False): cv.boolean(True),
+    vol.Optional(_CONF_NAME, default=None): cv.string,
 })
 
 SCAN_INTERVAL = 30
@@ -40,13 +40,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Zabbix sensor platform."""
     sensors = []
 
-    zApi = hass.data[zabbix.DOMAIN]
-    if not zApi:
-        _LOGGER.error("zApi is None.  Zabbix component hasn't been loaded?")
+    zapi = hass.data[zabbix.DOMAIN]
+    if not zapi:
+        _LOGGER.error("zapi is None.  Zabbix component hasn't been loaded?")
         return False
 
     _LOGGER.info("Connected to Zabbix API Version %s",
-                 zApi.api_version())
+                 zapi.api_version())
 
     trigger_conf = config.get(_CONF_TRIGGERS)
     # The following code seems overly complex.  Need to think about this...
@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
             for hostid in hostids:
                 _LOGGER.debug("Creating Zabbix Sensor: " + str(hostid))
-                sensor = ZabbixSingleHostTriggerCountSensor(zApi,
+                sensor = ZabbixSingleHostTriggerCountSensor(zapi,
                                                             [hostid],
                                                             name)
                 sensors.append(sensor)
@@ -72,18 +72,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if not hostids:
                 # Single sensor that provides the total count of triggers.
                 _LOGGER.debug("Creating Zabbix Sensor")
-                sensor = ZabbixTriggerCountSensor(zApi, name)
+                sensor = ZabbixTriggerCountSensor(zapi, name)
             else:
                 # Single sensor that sums total issues for all hosts
                 _LOGGER.debug("Creating Zabbix Sensor group: " + str(hostids))
-                sensor = ZabbixMultipleHostTriggerCountSensor(zApi,
+                sensor = ZabbixMultipleHostTriggerCountSensor(zapi,
                                                               hostids,
                                                               name)
             sensors.append(sensor)
     else:
         # Single sensor that provides the total count of triggers.
         _LOGGER.debug("Creating Zabbix Sensor")
-        sensor = ZabbixTriggerCountSensor(zApi)
+        sensor = ZabbixTriggerCountSensor(zapi)
         sensors.append(sensor)
 
     add_devices(sensors)
@@ -95,7 +95,7 @@ class ZabbixTriggerCountSensor(Entity):
     def __init__(self, zApi, name="Zabbix"):
         """Initiate Zabbix sensor."""
         self._name = name
-        self._zApi = zApi
+        self._zapi = zApi
         self._state = None
         self._attributes = {}
 
@@ -110,7 +110,7 @@ class ZabbixTriggerCountSensor(Entity):
         return self._state
 
     def _call_zabbix_api(self):
-        return self._zApi.trigger.get(output="extend",
+        return self._zapi.trigger.get(output="extend",
                                       only_true=1,
                                       monitored=1,
                                       filter={"value": 1})
@@ -135,13 +135,13 @@ class ZabbixSingleHostTriggerCountSensor(ZabbixTriggerCountSensor):
         super().__init__(zApi, name)
         self._hostid = hostid
         if not name:
-            self._name = self._zApi.host.get(hostids=self._hostid,
+            self._name = self._zapi.host.get(hostids=self._hostid,
                                              output="extend")[0]["name"]
 
         self._attributes["Host ID"] = self._hostid
 
     def _call_zabbix_api(self):
-        return self._zApi.trigger.get(hostids=self._hostid,
+        return self._zapi.trigger.get(hostids=self._hostid,
                                       output="extend",
                                       only_true=1,
                                       monitored=1,
@@ -156,13 +156,13 @@ class ZabbixMultipleHostTriggerCountSensor(ZabbixTriggerCountSensor):
         super().__init__(zApi, name)
         self._hostids = hostids
         if not name:
-            host_names = self._zApi.host.get(hostids=self._hostids,
+            host_names = self._zapi.host.get(hostids=self._hostids,
                                              output="extend")
             self._name = " ".join(name["name"] for name in host_names)
         self._attributes["Host IDs"] = self._hostids
 
     def _call_zabbix_api(self):
-        return self._zApi.trigger.get(hostids=self._hostids,
+        return self._zapi.trigger.get(hostids=self._hostids,
                                       output="extend",
                                       only_true=1,
                                       monitored=1,
