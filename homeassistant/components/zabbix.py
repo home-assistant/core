@@ -22,8 +22,6 @@ DEFAULT_PATH = "zabbix"
 
 DOMAIN = 'zabbix'
 
-ZAPI = None
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -38,7 +36,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Zabbix component."""
-    from pyzabbix import ZabbixAPI
+    from pyzabbix import ZabbixAPI, ZabbixAPIException
 
     conf = config[DOMAIN]
     if conf[CONF_SSL]:
@@ -50,9 +48,13 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME, None)
     password = conf.get(CONF_PASSWORD, None)
 
-    global ZAPI
-    ZAPI = ZabbixAPI(url)
-    ZAPI.login(username, password)
-    _LOGGER.info("Connected to Zabbix API Version %s", ZAPI.api_version())
+    zApi = ZabbixAPI(url)
+    try:
+        zApi.login(username, password)
+        _LOGGER.info("Connected to Zabbix API Version %s", zApi.api_version())
+    except ZabbixAPIException:
+        _LOGGER.error("Unable to login to the Zabbix API")
+        return False
 
+    hass.data[DOMAIN] = zApi
     return True
