@@ -44,11 +44,38 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 WEBOS_APP_LIVETV = 'com.webos.app.livetv'
 WEBOS_APP_YOUTUBE = 'youtube.leanback.v4'
 WEBOS_APP_MAKO = 'makotv'
+WEBOS_APP_NOWTV = 'now.tv'
+WEBOS_APP_NETFLIX = 'netflix'
+WEBOS_APP_AMAZONPRIME = 'lovefilm'
+WEBOS_APP_IPLAYER = 'bbc.iplayer.3.0'
+WEBOS_APP_ITV = 'com.fvp.itv'
+WEBOS_APP_4OD = 'com.fvp.ch4'
+WEBOS_APP_GOOGLEPLAY = 'googleplaymovieswebos'
+WEBOS_APP_TVGUIDE = 'com.webos.app.tvguide'
+WEBOS_APP_MIRACAST = 'com.webos.app.miracast'
+WEBOS_APP_TVGUIDE = 'com.webos.app.tvguide'
+WEBOS_APP_BROWSER = 'com.webos.app.browser_default'
+WEBOS_APP_MULTIVIEW = 'com.webos.app.multiview'
+WEBOS_APP_PLEX = 'cdp-30'
+WEBOS_APP_BBCNEWS = 'bbc.news.3.0'
 
 WEBOS_APPS_SHORT = {
     'livetv': WEBOS_APP_LIVETV,
     'youtube': WEBOS_APP_YOUTUBE,
-    'makotv': WEBOS_APP_MAKO
+    'makotv': WEBOS_APP_MAKO,
+    'nowtv': WEBOS_APP_NOWTV,
+    'netflix': WEBOS_APP_NETFLIX,
+    'amazonprime': WEBOS_APP_AMAZONPRIME,
+    'iplayer': WEBOS_APP_IPLAYER,
+    'itv': WEBOS_APP_ITV,
+    '4od': WEBOS_APP_4OD,
+    'googleplaymovies': WEBOS_APP_GOOGLEPLAY,
+    'tvguide': WEBOS_APP_TVGUIDE,
+    'miracast': WEBOS_APP_MIRACAST,
+    'browser': WEBOS_APP_BROWSER,
+    'multicast': WEBOS_APP_MULTIVIEW,
+    'plex': WEBOS_APP_PLEX,
+    'bbcnews': WEBOS_APP_BBCNEWS
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema({
