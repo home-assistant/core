@@ -116,18 +116,6 @@ class NestThermostat(ClimateDevice):
             return STATE_UNKNOWN
 
     @property
-    def current_hvac_state(self):
-        """
-        Return the currently active HVAC state.
-
-        This differs from the current mode in that while the thermostat might
-        be set to Heat it may not currently be blowing heat. The mode indicates
-        it is set to Heat, the state indicates whether or not it is actively
-        heating.
-        """
-        return self._hvac_state
-
-    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         if self._mode != STATE_HEAT_COOL and not self.is_away_mode_on:
