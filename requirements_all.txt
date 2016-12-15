@@ -488,6 +488,9 @@ pywemo==0.4.7
 # homeassistant.components.light.yeelight
 pyyeelight==1.0-beta
 
+# homeassistant.components.zabbix
+pyzabbix==0.7.4
+
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
 
@@ -603,6 +606,3 @@ yahooweather==0.8
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.6
-
-# homeassistant.components.zabbix
-pyzabbix=0.7.4
