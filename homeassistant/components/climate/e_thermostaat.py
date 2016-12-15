@@ -43,8 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_AWAY_TEMPERATURE, default=DEFAULT_AWAY_TEMPERATURE):
         vol.Coerce(float),
-    vol.Optional(CONF_COMFORT_TEMPERATURE, default=DEFAULT_COMFORT_TEMPERATURE):
-        vol.Coerce(float),
+    vol.Optional(CONF_COMFORT_TEMPERATURE,
+        default=DEFAULT_COMFORT_TEMPERATURE): vol.Coerce(float),
     vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
 })
 
@@ -66,7 +66,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EThermostaat(ClimateDevice):
     """Representation of a GenericThermostat device."""
 
-    def __init__(self, name, username, password, away_temp, comfort_temp, target_temp):
+    def __init__(self, name, username, password,
+                 away_temp, comfort_temp, target_temp):
         """Initialize the thermostat."""
         self._name = name
         self._username = username
@@ -109,7 +110,7 @@ class EThermostaat(ClimateDevice):
 
     def _set_temperature(self, temperature, home=True):
         token, uid = self.get_token_and_uid()
-        header = {'Session-token': token}  # , 'content-type': 'application/json'}
+        header = {'Session-token': token}
 
         payload_new = [("uid", uid),
                        ("temperature1", temperature)]
@@ -185,4 +186,3 @@ class EThermostaat(ClimateDevice):
     def update(self):
         """Get the latest data."""
         self._get_data()
-
