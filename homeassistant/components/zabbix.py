@@ -48,13 +48,13 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME, None)
     password = conf.get(CONF_PASSWORD, None)
 
-    zApi = ZabbixAPI(url)
+    zapi = ZabbixAPI(url)
     try:
-        zApi.login(username, password)
-        _LOGGER.info("Connected to Zabbix API Version %s", zApi.api_version())
+        zapi.login(username, password)
+        _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
     except ZabbixAPIException:
         _LOGGER.error("Unable to login to the Zabbix API")
         return False
 
-    hass.data[DOMAIN] = zApi
+    hass.data[DOMAIN] = zapi
     return True
