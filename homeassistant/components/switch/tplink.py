@@ -50,10 +50,8 @@ class SmartPlugSwitch(SwitchDevice):
 
         # Use the name set on the device if not set
         if name is None:
-            _LOGGER.debug("No name set. Using device alias")
             self._name = self.smartplug.alias
         else:
-            _LOGGER.debug("Setting name to " + name)
             self._name = name
 
         self._state = None
