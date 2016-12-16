@@ -35,7 +35,6 @@ class AsyncHandler(object):
         # Delegate from handler
         self.setLevel = handler.setLevel
         self.setFormatter = handler.setFormatter
-        self.setFilter = handler.setFilter
         self.addFilter = handler.addFilter
         self.removeFilter = handler.removeFilter
         self.filter = handler.filter
