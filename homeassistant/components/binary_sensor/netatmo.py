@@ -177,36 +177,35 @@ class NetatmoBinarySensor(BinarySensorDevice):
                                                             self._timeout*60)
             elif self._sensor_name == "Someone unknown":
                 self._state =\
-                  self._data.camera_data.someoneUnknownSeen(self._home,
-                                                            self._camera_name,
-                                                            self._timeout*60)
+                    self._data.camera_data.someoneUnknownSeen(
+                        self._home, self._camera_name, self._timeout*60)
             elif self._sensor_name == "Motion":
                 self._state =\
-                      self._data.camera_data.motionDetected(self._home,
-                                                            self._camera_name,
-                                                            self._timeout*60)
+                    self._data.camera_data.motionDetected(self._home,
+                                                          self._camera_name,
+                                                          self._timeout*60)
             else:
                 return None
         elif self._cameratype == "NOC":
             if self._sensor_name == "Outdoor motion":
                 self._state =\
-                 self._data.camera_data.outdoormotionDetected(
-                     self._home, self._camera_name, self._offset)
+                    self._data.camera_data.outdoormotionDetected(
+                        self._home, self._camera_name, self._offset)
             elif self._sensor_name == "Outdoor human":
                 self._state =\
-                  self._data.camera_data.humanDetected(self._home,
-                                                       self._camera_name,
-                                                       self._offset)
+                    self._data.camera_data.humanDetected(self._home,
+                                                         self._camera_name,
+                                                         self._offset)
             elif self._sensor_name == "Outdoor animal":
                 self._state =\
-                  self._data.camera_data.animalDetected(self._home,
-                                                        self._camera_name,
-                                                        self._offset)
+                    self._data.camera_data.animalDetected(self._home,
+                                                          self._camera_name,
+                                                          self._offset)
             elif self._sensor_name == "Outdoor vehicle":
                 self._state =\
-                  self._data.camera_data.carDetected(self._home,
-                                                     self._camera_name,
-                                                     self._offset)
+                    self._data.camera_data.carDetected(self._home,
+                                                       self._camera_name,
+                                                       self._offset)
             else:
                 return None
         elif self._sensor_name == "Tag Vibration":
