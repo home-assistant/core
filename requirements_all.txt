@@ -270,7 +270,6 @@ influxdb==3.0.0
 # homeassistant.components.insteon_hub
 insteon_hub==0.4.5
 
-# homeassistant.components.media_player.kodi
 # homeassistant.components.notify.kodi
 jsonrpc-requests==0.3
 
@@ -610,6 +609,9 @@ wakeonlan==0.2.2
 
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0
+
+# homeassistant.components.media_player.kodi
+websockets==3.2
 
 # homeassistant.components.zigbee
 xbee-helper==0.0.7
