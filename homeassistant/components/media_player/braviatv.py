@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.loader import get_component
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE, MediaPlayerDevice,
     PLATFORM_SCHEMA)
@@ -40,7 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_BRAVIA = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                  SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                  SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-                 SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+                 SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
+                 SUPPORT_SELECT_SOURCE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -173,7 +174,7 @@ def request_configuration(config, hass, add_devices):
     _CONFIGURING[host] = configurator.request_config(
         hass, name, bravia_configuration_callback,
         description='Enter the Pin shown on your Sony Bravia TV.' +
-        'If no Pin is shown, enter 0000 to let TV show you a Pin.',
+                    'If no Pin is shown, enter 0000 to let TV show you a Pin.',
         description_image="/static/images/smart-tv.png",
         submit_caption="Confirm",
         fields=[{'id': 'pin', 'name': 'Enter the pin', 'type': ''}]
