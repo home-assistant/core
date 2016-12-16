@@ -252,6 +252,7 @@ omit =
     homeassistant/components/sensor/bbox.py
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/bom.py
+    homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/cups.py
@@ -323,6 +324,7 @@ omit =
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/anel_pwrctrl.py
     homeassistant/components/switch/arest.py
+    homeassistant/components/switch/broadlink.py
     homeassistant/components/switch/digitalloggers.py
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py
