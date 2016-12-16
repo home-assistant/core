@@ -22,7 +22,7 @@ from homeassistant.util import Throttle
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 INTERFACES = 2
 
-REQUIREMENTS = ['beautifulsoup4==4.5.1']
+REQUIREMENTS = ['beautifulsoup4==4.5.3']
 
 _LOGGER = logging.getLogger(__name__)
 
