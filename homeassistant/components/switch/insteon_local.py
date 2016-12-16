@@ -82,7 +82,7 @@ class InsteonLocalSwitchDevice(Light):
         else:
             self._value = int(resp['cmd2'], 16)
 
-@property
+    @property
     def is_on(self):
         """Return the boolean response if the node is on."""
         return self._value != 0
