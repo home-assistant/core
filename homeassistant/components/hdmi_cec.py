@@ -127,12 +127,12 @@ def setup(hass: HomeAssistant, base_config):
             if cmd == CMD_UP:
                 for _ in range(att):
                     network.send_command('f5:44:41')
-                network.send_command('f5:45')
+                    network.send_command('f5:45')
                 _LOGGER.info("Volume increased %d times", att)
             elif cmd == CMD_DOWN:
                 for _ in range(att):
                     network.send_command('f5:44:42')
-                network.send_command('f5:45')
+                    network.send_command('f5:45')
                 _LOGGER.info("Volume deceased %d times", att)
             elif cmd == CMD_MUTE:
                 network.send_command('f5:44:43')
