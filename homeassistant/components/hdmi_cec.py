@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from pycec.datastruct import CecCommand
 
-REQUIREMENTS = ['pyCEC>=0.0.6']
+REQUIREMENTS = ['pyCEC>=0.1.0']
 
 DOMAIN = 'hdmi_cec'
 
