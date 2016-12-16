@@ -5,9 +5,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon_local/
 """
 import logging
-
 import voluptuous as vol
 
+from homeassistant.components.discovery import load_platform
 from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_HOST)
 from homeassistant.helpers import discovery
 from time import sleep
