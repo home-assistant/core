@@ -14,8 +14,6 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 
-import requests
-
 _LOGGER = logging.getLogger(__name__)
 
 URL_LOGIN = "https://portal.icy.nl/login"
@@ -48,6 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    import requests
     """Setup the e thermostat."""
     name = config.get(CONF_NAME)
     target_temp = config.get(CONF_TARGET_TEMP)
@@ -62,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class EThermostaat(ClimateDevice):
-    """Representation of a GenericThermostat device."""
+    """Representation of a EThermostaat device."""
 
     def __init__(self, name, username, password,
                  away_temp, comfort_temp, target_temp):
@@ -107,6 +106,7 @@ class EThermostaat(ClimateDevice):
         self._set_temperature(temperature)
 
     def _set_temperature(self, temperature, home=True):
+        """Set new target temperature, via URL commands"""
         token, uid = self.get_token_and_uid()
         header = {'Session-token': token}
 
@@ -129,6 +129,7 @@ class EThermostaat(ClimateDevice):
             return
 
     def get_token_and_uid(self):
+        """Get the Session Token and UID of the Thermostaat"""
         payload = {'username': self._username, 'password': self._password}
 
         with requests.Session() as s:
@@ -140,10 +141,11 @@ class EThermostaat(ClimateDevice):
                 uid = res['serialthermostat1']
             except Exception as e:
                 _LOGGER.error("Could not get token and uid: %s" % e)
-                return None
+                return None, None
         return token, uid
 
     def _get_data(self):
+        """Get the data  of the Thermostaat"""
         token, uid = self.get_token_and_uid()
 
         header = {'Session-token': token}
@@ -171,16 +173,16 @@ class EThermostaat(ClimateDevice):
         return self._away
 
     def turn_away_mode_on(self):
-        """Turn away on.
-        """
+        """Turn away on."""
         self._away = True
         self._set_temperature(self._away_temp, home=False)
 
     def turn_away_mode_off(self):
-        """Turn away off."""
+        """Turn away off and set comfort temp."""
         self._away = False
         self._set_temperature(self._comfort_temp, home=True)
 
     def update(self):
         """Get the latest data."""
         self._get_data()
+
