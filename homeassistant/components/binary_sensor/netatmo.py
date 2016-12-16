@@ -89,7 +89,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for variable in welcome_sensors:
                 add_devices([NetatmoBinarySensor(data, camera_name,
                                                  module_name, home, timeout,
-                                                 offset, camera_type, variable)])
+                                                 offset, camera_type,
+                                                 variable)])
         if camera_type == "NOC":
             if CONF_CAMERAS in config:
                 if config[CONF_CAMERAS] != [] and \
@@ -98,15 +99,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for variable in presence_sensors:
                 add_devices([NetatmoBinarySensor(data, camera_name,
                                                  module_name, home, timeout,
-                                                 offset, camera_type, variable)])
-
-    for module_name in data.get_module_names(camera_name):
-        for variable in welcome_sensors:
-            if variable in ('Tag Vibration', 'Tag Open'):
-                add_devices([NetatmoBinarySensor(data, camera_name,
-                                                 module_name, home,
-                                                 timeout, offset, camera_type,
+                                                 offset, camera_type,
                                                  variable)])
+
+        for module_name in data.get_module_names(camera_name):
+            for variable in welcome_sensors:
+                if variable in ('Tag Vibration', 'Tag Open'):
+                    add_devices([NetatmoBinarySensor(data, camera_name,
+                                                     module_name, home,
+                                                     timeout, offset,
+                                                     camera_type,
+                                                     variable)])
 
 
 class NetatmoBinarySensor(BinarySensorDevice):
