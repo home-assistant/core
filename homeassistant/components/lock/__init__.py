@@ -85,8 +85,11 @@ def setup(hass, config):
             else:
                 item.unlock(code=code)
 
-            if item.should_poll:
-                item.update_ha_state(True)
+        for item in target_locks:
+            if not item.should_poll:
+                continue
+
+            item.update_ha_state(True)
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))

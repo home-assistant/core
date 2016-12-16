@@ -20,7 +20,7 @@ DEFAULT_NAME = 'EnOcean sensor'
 DEPENDENCIES = ['enocean']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ID): cv.string,
+    vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
