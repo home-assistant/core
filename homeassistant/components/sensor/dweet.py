@@ -8,19 +8,31 @@ import json
 import logging
 from datetime import timedelta
 
-from homeassistant.const import CONF_VALUE_TEMPLATE, STATE_UNKNOWN
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers import template
 from homeassistant.util import Throttle
 
-_LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['dweepy==0.2.0']
 
-DEFAULT_NAME = 'Dweet.io Sensor'
+_LOGGER = logging.getLogger(__name__)
+
 CONF_DEVICE = 'device'
 
-# Return cached results if last scan was less then this time ago.
+DEFAULT_NAME = 'Dweet.io Sensor'
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_DEVICE): cv.string,
+    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+})
 
 
 # pylint: disable=unused-variable, too-many-function-args
@@ -28,36 +40,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Dweet sensor."""
     import dweepy
 
-    device = config.get('device')
+    name = config.get(CONF_NAME)
+    device = config.get(CONF_DEVICE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
-
-    if None in (device, value_template):
-        _LOGGER.error('Not all required config keys present: %s',
-                      ', '.join(CONF_DEVICE, CONF_VALUE_TEMPLATE))
-        return False
-
+    unit = config.get(CONF_UNIT_OF_MEASUREMENT)
+    value_template.hass = hass
     try:
         content = json.dumps(dweepy.get_latest_dweet_for(device)[0]['content'])
     except dweepy.DweepyError:
         _LOGGER.error("Device/thing '%s' could not be found", device)
         return False
 
-    if template.render_with_possible_json_value(hass,
-                                                value_template,
-                                                content) is '':
+    if value_template.render_with_possible_json_value(content) == '':
         _LOGGER.error("'%s' was not found", value_template)
         return False
 
     dweet = DweetData(device)
 
-    add_devices([DweetSensor(hass,
-                             dweet,
-                             config.get('name', DEFAULT_NAME),
-                             value_template,
-                             config.get('unit_of_measurement'))])
+    add_devices([DweetSensor(hass, dweet, name, value_template, unit)])
 
 
-# pylint: disable=too-many-arguments
 class DweetSensor(Entity):
     """Representation of a Dweet sensor."""
 
@@ -88,8 +90,8 @@ class DweetSensor(Entity):
             return STATE_UNKNOWN
         else:
             values = json.dumps(self.dweet.data[0]['content'])
-            value = template.render_with_possible_json_value(
-                self.hass, self._value_template, values)
+            value = self._value_template.render_with_possible_json_value(
+                values)
             return value
 
     def update(self):
@@ -97,7 +99,6 @@ class DweetSensor(Entity):
         self.dweet.update()
 
 
-# pylint: disable=too-few-public-methods
 class DweetData(object):
     """The class for handling the data retrieval."""
 

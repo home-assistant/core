@@ -7,6 +7,10 @@ https://home-assistant.io/components/logger/
 import logging
 from collections import OrderedDict
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+
 DOMAIN = 'logger'
 
 LOGSEVERITY = {
@@ -23,11 +27,20 @@ LOGSEVERITY = {
 LOGGER_DEFAULT = 'default'
 LOGGER_LOGS = 'logs'
 
+_VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
+        vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
 
 class HomeAssistantLogFilter(logging.Filter):
     """A log filter."""
 
-    # pylint: disable=no-init,too-few-public-methods
+    # pylint: disable=no-init
     def __init__(self, logfilter):
         """Initialize the filter."""
         super().__init__()
@@ -50,19 +63,19 @@ class HomeAssistantLogFilter(logging.Filter):
 
 def setup(hass, config=None):
     """Setup the logger component."""
-    logfilter = dict()
+    logfilter = {}
 
     # Set default log severity
     logfilter[LOGGER_DEFAULT] = LOGSEVERITY['DEBUG']
     if LOGGER_DEFAULT in config.get(DOMAIN):
         logfilter[LOGGER_DEFAULT] = LOGSEVERITY[
-            config.get(DOMAIN)[LOGGER_DEFAULT].upper()
+            config.get(DOMAIN)[LOGGER_DEFAULT]
         ]
 
     # Compute log severity for components
     if LOGGER_LOGS in config.get(DOMAIN):
         for key, value in config.get(DOMAIN)[LOGGER_LOGS].items():
-            config.get(DOMAIN)[LOGGER_LOGS][key] = LOGSEVERITY[value.upper()]
+            config.get(DOMAIN)[LOGGER_LOGS][key] = LOGSEVERITY[value]
 
         logs = OrderedDict(
             sorted(

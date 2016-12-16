@@ -4,41 +4,52 @@ Support for showing the date and the time.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.time_date/
 """
+from datetime import timedelta
+import asyncio
 import logging
 
-import homeassistant.util.dt as dt_util
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
+
+TIME_STR_FORMAT = '%H:%M'
+
 OPTION_TYPES = {
     'time': 'Time',
     'date': 'Date',
     'date_time': 'Date & Time',
     'time_date': 'Time & Date',
-    'beat': 'Time (beat)',
+    'beat': 'Internet Time',
     'time_utc': 'Time (UTC)',
 }
 
-TIME_STR_FORMAT = "%H:%M"
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DISPLAY_OPTIONS, default=['time']):
+        vol.All(cv.ensure_list, [vol.In(OPTION_TYPES)]),
+})
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Time and Date sensor."""
     if hass.config.time_zone is None:
-        _LOGGER.error("Timezone is not set in Home Assistant config")
+        _LOGGER.error("Timezone is not set in Home Assistant configuration")
         return False
 
-    dev = []
-    for variable in config['display_options']:
-        if variable not in OPTION_TYPES:
-            _LOGGER.error('Option type: "%s" does not exist', variable)
-        else:
-            dev.append(TimeDateSensor(variable))
+    devices = []
+    for variable in config[CONF_DISPLAY_OPTIONS]:
+        devices.append(TimeDateSensor(variable))
 
-    add_devices(dev)
+    yield from async_add_devices(devices, True)
+    return True
 
 
-# pylint: disable=too-few-public-methods
 class TimeDateSensor(Entity):
     """Implementation of a Time and Date sensor."""
 
@@ -47,7 +58,6 @@ class TimeDateSensor(Entity):
         self._name = OPTION_TYPES[option_type]
         self.type = option_type
         self._state = None
-        self.update()
 
     @property
     def name(self):
@@ -62,34 +72,37 @@ class TimeDateSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if "date" in self.type and "time" in self.type:
-            return "mdi:calendar-clock"
-        elif "date" in self.type:
-            return "mdi:calendar"
+        if 'date' in self.type and 'time' in self.type:
+            return 'mdi:calendar-clock'
+        elif 'date' in self.type:
+            return 'mdi:calendar'
         else:
-            return "mdi:clock"
+            return 'mdi:clock'
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data and updates the states."""
         time_date = dt_util.utcnow()
         time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
         time_utc = time_date.strftime(TIME_STR_FORMAT)
         date = dt_util.as_local(time_date).date().isoformat()
 
-        # Calculate the beat (Swatch Internet Time) time without date.
-        hours, minutes, seconds = time_date.strftime('%H:%M:%S').split(':')
-        beat = ((int(seconds) + (int(minutes) * 60) + ((int(hours) + 1) *
-                                                       3600)) / 86.4)
+        # Calculate Swatch Internet Time.
+        time_bmt = time_date + timedelta(hours=1)
+        delta = timedelta(
+            hours=time_bmt.hour, minutes=time_bmt.minute,
+            seconds=time_bmt.second, microseconds=time_bmt.microsecond)
+        beat = int((delta.seconds + delta.microseconds / 1000000.0) / 86.4)
 
         if self.type == 'time':
             self._state = time
         elif self.type == 'date':
             self._state = date
         elif self.type == 'date_time':
-            self._state = date + ', ' + time
+            self._state = '{}, {}'.format(date, time)
         elif self.type == 'time_date':
-            self._state = time + ', ' + date
+            self._state = '{}, {}'.format(time, date)
         elif self.type == 'time_utc':
             self._state = time_utc
         elif self.type == 'beat':
-            self._state = '{0:.2f}'.format(beat)
+            self._state = '@{0:03d}'.format(beat)

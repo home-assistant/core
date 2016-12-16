@@ -4,102 +4,55 @@ Support for Alexa skill service end point.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
 """
+import asyncio
+import copy
 import enum
 import logging
+import uuid
+from datetime import datetime
 
-from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
-from homeassistant.helpers import template, script
+import voluptuous as vol
+
+from homeassistant.core import callback
+from homeassistant.const import HTTP_BAD_REQUEST
+from homeassistant.helpers import template, script, config_validation as cv
+from homeassistant.components.http import HomeAssistantView
+import homeassistant.util.dt as dt_util
+
+_LOGGER = logging.getLogger(__name__)
+
+INTENTS_API_ENDPOINT = '/api/alexa'
+FLASH_BRIEFINGS_API_ENDPOINT = '/api/alexa/flash_briefings/{briefing_id}'
+
+CONF_ACTION = 'action'
+CONF_CARD = 'card'
+CONF_INTENTS = 'intents'
+CONF_SPEECH = 'speech'
+
+CONF_TYPE = 'type'
+CONF_TITLE = 'title'
+CONF_CONTENT = 'content'
+CONF_TEXT = 'text'
+
+CONF_FLASH_BRIEFINGS = 'flash_briefings'
+CONF_UID = 'uid'
+CONF_DATE = 'date'
+CONF_TITLE = 'title'
+CONF_AUDIO = 'audio'
+CONF_TEXT = 'text'
+CONF_DISPLAY_URL = 'display_url'
+
+ATTR_UID = 'uid'
+ATTR_UPDATE_DATE = 'updateDate'
+ATTR_TITLE_TEXT = 'titleText'
+ATTR_STREAM_URL = 'streamUrl'
+ATTR_MAIN_TEXT = 'mainText'
+ATTR_REDIRECTION_URL = 'redirectionURL'
+
+DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.0Z'
 
 DOMAIN = 'alexa'
 DEPENDENCIES = ['http']
-
-_LOGGER = logging.getLogger(__name__)
-_CONFIG = {}
-
-API_ENDPOINT = '/api/alexa'
-
-CONF_INTENTS = 'intents'
-CONF_CARD = 'card'
-CONF_SPEECH = 'speech'
-CONF_ACTION = 'action'
-
-
-def setup(hass, config):
-    """Activate Alexa component."""
-    intents = config[DOMAIN].get(CONF_INTENTS, {})
-
-    for name, intent in intents.items():
-        if CONF_ACTION in intent:
-            intent[CONF_ACTION] = script.Script(hass, intent[CONF_ACTION],
-                                                "Alexa intent {}".format(name))
-
-    _CONFIG.update(intents)
-
-    hass.http.register_path('POST', API_ENDPOINT, _handle_alexa, True)
-
-    return True
-
-
-def _handle_alexa(handler, path_match, data):
-    """Handle Alexa."""
-    _LOGGER.debug('Received Alexa request: %s', data)
-
-    req = data.get('request')
-
-    if req is None:
-        _LOGGER.error('Received invalid data from Alexa: %s', data)
-        handler.write_json_message(
-            "Invalid value received for port", HTTP_UNPROCESSABLE_ENTITY)
-        return
-
-    req_type = req['type']
-
-    if req_type == 'SessionEndedRequest':
-        handler.send_response(HTTP_OK)
-        handler.end_headers()
-        return
-
-    intent = req.get('intent')
-    response = AlexaResponse(handler.server.hass, intent)
-
-    if req_type == 'LaunchRequest':
-        response.add_speech(
-            SpeechType.plaintext,
-            "Hello, and welcome to the future. How may I help?")
-        handler.write_json(response.as_dict())
-        return
-
-    if req_type != 'IntentRequest':
-        _LOGGER.warning('Received unsupported request: %s', req_type)
-        return
-
-    intent_name = intent['name']
-    config = _CONFIG.get(intent_name)
-
-    if config is None:
-        _LOGGER.warning('Received unknown intent %s', intent_name)
-        response.add_speech(
-            SpeechType.plaintext,
-            "This intent is not yet configured within Home Assistant.")
-        handler.write_json(response.as_dict())
-        return
-
-    speech = config.get(CONF_SPEECH)
-    card = config.get(CONF_CARD)
-    action = config.get(CONF_ACTION)
-
-    # pylint: disable=unsubscriptable-object
-    if speech is not None:
-        response.add_speech(SpeechType[speech['type']], speech['text'])
-
-    if card is not None:
-        response.add_card(CardType[card['type']], card['title'],
-                          card['content'])
-
-    if action is not None:
-        action.run(response.variables)
-
-    handler.write_json(response.as_dict())
 
 
 class SpeechType(enum.Enum):
@@ -114,6 +67,129 @@ class CardType(enum.Enum):
 
     simple = "Simple"
     link_account = "LinkAccount"
+
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: {
+        CONF_INTENTS: {
+            cv.string: {
+                vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
+                vol.Optional(CONF_CARD): {
+                    vol.Required(CONF_TYPE): cv.enum(CardType),
+                    vol.Required(CONF_TITLE): cv.template,
+                    vol.Required(CONF_CONTENT): cv.template,
+                },
+                vol.Optional(CONF_SPEECH): {
+                    vol.Required(CONF_TYPE): cv.enum(SpeechType),
+                    vol.Required(CONF_TEXT): cv.template,
+                }
+            }
+        },
+        CONF_FLASH_BRIEFINGS: {
+            cv.string: vol.All(cv.ensure_list, [{
+                vol.Required(CONF_UID, default=str(uuid.uuid4())): cv.string,
+                vol.Optional(CONF_DATE, default=datetime.utcnow()): cv.string,
+                vol.Required(CONF_TITLE): cv.template,
+                vol.Optional(CONF_AUDIO): cv.template,
+                vol.Required(CONF_TEXT, default=""): cv.template,
+                vol.Optional(CONF_DISPLAY_URL): cv.template,
+            }]),
+        }
+    }
+}, extra=vol.ALLOW_EXTRA)
+
+
+def setup(hass, config):
+    """Activate Alexa component."""
+    intents = config[DOMAIN].get(CONF_INTENTS, {})
+    flash_briefings = config[DOMAIN].get(CONF_FLASH_BRIEFINGS, {})
+
+    hass.http.register_view(AlexaIntentsView(hass, intents))
+    hass.http.register_view(AlexaFlashBriefingView(hass, flash_briefings))
+
+    return True
+
+
+class AlexaIntentsView(HomeAssistantView):
+    """Handle Alexa requests."""
+
+    url = INTENTS_API_ENDPOINT
+    name = 'api:alexa'
+
+    def __init__(self, hass, intents):
+        """Initialize Alexa view."""
+        super().__init__()
+
+        intents = copy.deepcopy(intents)
+        template.attach(hass, intents)
+
+        for name, intent in intents.items():
+            if CONF_ACTION in intent:
+                intent[CONF_ACTION] = script.Script(
+                    hass, intent[CONF_ACTION], "Alexa intent {}".format(name))
+
+        self.intents = intents
+
+    @asyncio.coroutine
+    def post(self, request):
+        """Handle Alexa."""
+        data = yield from request.json()
+
+        _LOGGER.debug('Received Alexa request: %s', data)
+
+        req = data.get('request')
+
+        if req is None:
+            _LOGGER.error('Received invalid data from Alexa: %s', data)
+            return self.json_message('Expected request value not received',
+                                     HTTP_BAD_REQUEST)
+
+        req_type = req['type']
+
+        if req_type == 'SessionEndedRequest':
+            return None
+
+        intent = req.get('intent')
+        response = AlexaResponse(request.app['hass'], intent)
+
+        if req_type == 'LaunchRequest':
+            response.add_speech(
+                SpeechType.plaintext,
+                "Hello, and welcome to the future. How may I help?")
+            return self.json(response)
+
+        if req_type != 'IntentRequest':
+            _LOGGER.warning('Received unsupported request: %s', req_type)
+            return self.json_message(
+                'Received unsupported request: {}'.format(req_type),
+                HTTP_BAD_REQUEST)
+
+        intent_name = intent['name']
+        config = self.intents.get(intent_name)
+
+        if config is None:
+            _LOGGER.warning('Received unknown intent %s', intent_name)
+            response.add_speech(
+                SpeechType.plaintext,
+                "This intent is not yet configured within Home Assistant.")
+            return self.json(response)
+
+        speech = config.get(CONF_SPEECH)
+        card = config.get(CONF_CARD)
+        action = config.get(CONF_ACTION)
+
+        if action is not None:
+            yield from action.async_run(response.variables)
+
+        # pylint: disable=unsubscriptable-object
+        if speech is not None:
+            response.add_speech(speech[CONF_TYPE], speech[CONF_TEXT])
+
+        if card is not None:
+            response.add_card(card[CONF_TYPE], card[CONF_TITLE],
+                              card[CONF_CONTENT])
+
+        return self.json(response)
 
 
 class AlexaResponse(object):
@@ -145,8 +221,8 @@ class AlexaResponse(object):
             self.card = card
             return
 
-        card["title"] = self._render(title),
-        card["content"] = self._render(content)
+        card["title"] = title.async_render(self.variables)
+        card["content"] = content.async_render(self.variables)
         self.card = card
 
     def add_speech(self, speech_type, text):
@@ -155,9 +231,12 @@ class AlexaResponse(object):
 
         key = 'ssml' if speech_type == SpeechType.ssml else 'text'
 
+        if isinstance(text, template.Template):
+            text = text.async_render(self.variables)
+
         self.speech = {
             'type': speech_type.value,
-            key: self._render(text)
+            key: text
         }
 
     def add_reprompt(self, speech_type, text):
@@ -168,7 +247,7 @@ class AlexaResponse(object):
 
         self.reprompt = {
             'type': speech_type.value,
-            key: self._render(text)
+            key: text.async_render(self.variables)
         }
 
     def as_dict(self):
@@ -194,6 +273,68 @@ class AlexaResponse(object):
             'response': response,
         }
 
-    def _render(self, template_string):
-        """Render a response, adding data from intent if available."""
-        return template.render(self.hass, template_string, self.variables)
+
+class AlexaFlashBriefingView(HomeAssistantView):
+    """Handle Alexa Flash Briefing skill requests."""
+
+    url = FLASH_BRIEFINGS_API_ENDPOINT
+    name = 'api:alexa:flash_briefings'
+
+    def __init__(self, hass, flash_briefings):
+        """Initialize Alexa view."""
+        super().__init__()
+        self.flash_briefings = copy.deepcopy(flash_briefings)
+        template.attach(hass, self.flash_briefings)
+
+    @callback
+    def get(self, request, briefing_id):
+        """Handle Alexa Flash Briefing request."""
+        _LOGGER.debug('Received Alexa flash briefing request for: %s',
+                      briefing_id)
+
+        if self.flash_briefings.get(briefing_id) is None:
+            err = 'No configured Alexa flash briefing was found for: %s'
+            _LOGGER.error(err, briefing_id)
+            return b'', 404
+
+        briefing = []
+
+        for item in self.flash_briefings.get(briefing_id, []):
+            output = {}
+            if item.get(CONF_TITLE) is not None:
+                if isinstance(item.get(CONF_TITLE), template.Template):
+                    output[ATTR_TITLE_TEXT] = item[CONF_TITLE].async_render()
+                else:
+                    output[ATTR_TITLE_TEXT] = item.get(CONF_TITLE)
+
+            if item.get(CONF_TEXT) is not None:
+                if isinstance(item.get(CONF_TEXT), template.Template):
+                    output[ATTR_MAIN_TEXT] = item[CONF_TEXT].async_render()
+                else:
+                    output[ATTR_MAIN_TEXT] = item.get(CONF_TEXT)
+
+            if item.get(CONF_UID) is not None:
+                output[ATTR_UID] = item.get(CONF_UID)
+
+            if item.get(CONF_AUDIO) is not None:
+                if isinstance(item.get(CONF_AUDIO), template.Template):
+                    output[ATTR_STREAM_URL] = item[CONF_AUDIO].async_render()
+                else:
+                    output[ATTR_STREAM_URL] = item.get(CONF_AUDIO)
+
+            if item.get(CONF_DISPLAY_URL) is not None:
+                if isinstance(item.get(CONF_DISPLAY_URL),
+                              template.Template):
+                    output[ATTR_REDIRECTION_URL] = \
+                        item[CONF_DISPLAY_URL].async_render()
+                else:
+                    output[ATTR_REDIRECTION_URL] = item.get(CONF_DISPLAY_URL)
+
+            if isinstance(item[CONF_DATE], str):
+                item[CONF_DATE] = dt_util.parse_datetime(item[CONF_DATE])
+
+            output[ATTR_UPDATE_DATE] = item[CONF_DATE].strftime(DATE_FORMAT)
+
+            briefing.append(output)
+
+        return self.json(briefing)

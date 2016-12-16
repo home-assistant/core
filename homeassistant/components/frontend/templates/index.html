@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Home Assistant</title>
+
+    <link rel='manifest' href='/manifest.json'>
+    <link rel='icon' href='/static/icons/favicon.ico'>
+    <link rel='apple-touch-icon' sizes='180x180'
+          href='/static/icons/favicon-apple-180x180.png'>
+    {% for panel in panels.values() -%}
+      <link rel='prefetch' href='{{ panel.url }}'>
+    {% endfor -%}
+    <meta name='apple-mobile-web-app-capable' content='yes'>
+    <meta name="msapplication-square70x70logo" content="/static/icons/tile-win-70x70.png"/>
+    <meta name="msapplication-square150x150logo" content="/static/icons/tile-win-150x150.png"/>
+    <meta name="msapplication-wide310x150logo" content="/static/icons/tile-win-310x150.png"/>
+    <meta name="msapplication-square310x310logo" content="/static/icons/tile-win-310x310.png"/>
+    <meta name="msapplication-TileColor" content="#3fbbf4ff"/>
+    <meta name='mobile-web-app-capable' content='yes'>
+    <meta name='viewport' content='width=device-width, user-scalable=no'>
+    <meta name='theme-color' content='#03a9f4'>
+    <style>
+      body {
+        font-family: 'Roboto', 'Noto', sans-serif;
+        font-weight: 300;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      #ha-init-skeleton {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-flex-direction: column;
+        -webkit-justify-content: center;
+        -webkit-align-items: center;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin-bottom: 83px;
+        font-family: Roboto, sans-serif;
+        font-size: 0pt;
+        transition: font-size 2s;
+      }
+
+      #ha-init-skeleton paper-spinner {
+        height: 28px;
+        margin-top: 16px;
+      }
+
+      #ha-init-skeleton a {
+        color: #03A9F4;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      #ha-init-skeleton.error {
+        font-size: 16px;
+      }
+
+      #ha-init-skeleton.error img,
+      #ha-init-skeleton.error paper-spinner {
+        display: none;
+      }
+    </style>
+    <script>
+      function initError() {
+        document
+          .getElementById('ha-init-skeleton')
+          .classList.add('error');
+      };
+      window.noAuth = {{ no_auth }};
+      window.Polymer = {lazyRegister: true, useNativeCSSProperties: true, dom: 'shady'};
+    </script>
+  </head>
+  <body>
+    <div id='ha-init-skeleton'>
+      <img src='/static/icons/favicon-192x192.png' height='192'>
+      <paper-spinner active></paper-spinner>
+      Home Assistant had trouble<br>connecting to the server.<br><br><a href='/'>TRY AGAIN</a>
+    </div>
+    <home-assistant icons='{{ icons }}'></home-assistant>
+    {# <script src='/static/home-assistant-polymer/build/_demo_data_compiled.js'></script> #}
+    <script src='{{ core_url }}'></script>
+    <link rel='import' href='{{ ui_url }}' onerror='initError()'>
+    {% if panel_url -%}
+      <link rel='import' href='{{ panel_url }}' onerror='initError()' async>
+    {% endif -%}
+    <link rel='import' href='{{ icons_url }}' async>
+    <script>
+      var webComponentsSupported = (
+        'registerElement' in document &&
+        'import' in document.createElement('link') &&
+        'content' in document.createElement('template'));
+      if (!webComponentsSupported) {
+        var e = document.createElement('script');
+        e.async = true;
+        e.onerror = initError;
+        e.src = '/static/webcomponents-lite.min.js';
+        document.head.appendChild(e);
+      }
+    </script>
+  </body>
+</html>

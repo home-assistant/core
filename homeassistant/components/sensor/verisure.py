@@ -2,11 +2,13 @@
 Interfaces with Verisure sensors.
 
 For more details about this platform, please refer to the documentation at
-documentation at https://home-assistant.io/components/verisure/
+https://home-assistant.io/components/sensor.verisure/
 """
 import logging
 
 from homeassistant.components.verisure import HUB as hub
+from homeassistant.components.verisure import (
+    CONF_THERMOMETERS, CONF_HYDROMETERS, CONF_MOUSE)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
@@ -17,7 +19,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Verisure platform."""
     sensors = []
 
-    if int(hub.config.get('thermometers', '1')):
+    if int(hub.config.get(CONF_THERMOMETERS, 1)):
         hub.update_climate()
         sensors.extend([
             VerisureThermometer(value.id)
@@ -25,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if hasattr(value, 'temperature') and value.temperature
             ])
 
-    if int(hub.config.get('hygrometers', '1')):
+    if int(hub.config.get(CONF_HYDROMETERS, 1)):
         hub.update_climate()
         sensors.extend([
             VerisureHygrometer(value.id)
@@ -33,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if hasattr(value, 'humidity') and value.humidity
             ])
 
-    if int(hub.config.get('mouse', '1')):
+    if int(hub.config.get(CONF_MOUSE, 1)):
         hub.update_mousedetection()
         sensors.extend([
             VerisureMouseDetection(value.deviceLabel)
@@ -56,8 +58,7 @@ class VerisureThermometer(Entity):
     def name(self):
         """Return the name of the device."""
         return '{} {}'.format(
-            hub.climate_status[self._id].location,
-            "Temperature")
+            hub.climate_status[self._id].location, 'Temperature')
 
     @property
     def state(self):
@@ -91,8 +92,7 @@ class VerisureHygrometer(Entity):
     def name(self):
         """Return the name of the sensor."""
         return '{} {}'.format(
-            hub.climate_status[self._id].location,
-            "Humidity")
+            hub.climate_status[self._id].location, 'Humidity')
 
     @property
     def state(self):
@@ -126,8 +126,7 @@ class VerisureMouseDetection(Entity):
     def name(self):
         """Return the name of the sensor."""
         return '{} {}'.format(
-            hub.mouse_status[self._id].location,
-            "Mouse")
+            hub.mouse_status[self._id].location, 'Mouse')
 
     @property
     def state(self):

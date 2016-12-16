@@ -2,7 +2,7 @@
 Support for scanning a network with nmap.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.nmap_scanner/
+https://home-assistant.io/components/device_tracker.nmap_tracker/
 """
 import logging
 import re
@@ -10,34 +10,45 @@ import subprocess
 from collections import namedtuple
 from datetime import timedelta
 
-import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.const import CONF_HOSTS
-from homeassistant.helpers import validate_config
-from homeassistant.util import Throttle, convert
+import voluptuous as vol
 
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.const import CONF_HOSTS
+from homeassistant.util import Throttle
+
+REQUIREMENTS = ['python-nmap==0.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-# interval in minutes to exclude devices from a scan while they are home
-CONF_HOME_INTERVAL = "home_interval"
+CONF_EXCLUDE = 'exclude'
+# Interval in minutes to exclude devices from a scan while they are home
+CONF_HOME_INTERVAL = 'home_interval'
+CONF_OPTIONS = 'scan_options'
+DEFAULT_OPTIONS = '-F --host-timeout 5s'
 
-REQUIREMENTS = ['python-nmap==0.6.0']
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOSTS): cv.ensure_list,
+    vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
+    vol.Optional(CONF_EXCLUDE, default=[]):
+        vol.All(cv.ensure_list, vol.Length(min=1)),
+    vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTIONS):
+        cv.string
+})
 
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Nmap scanner."""
-    if not validate_config(config, {DOMAIN: [CONF_HOSTS]},
-                           _LOGGER):
-        return None
-
     scanner = NmapDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
-Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
+
+Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
 
 
 def _arp(ip_address):
@@ -48,19 +59,23 @@ def _arp(ip_address):
     match = re.search(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})', str(out))
     if match:
         return match.group(0)
-    _LOGGER.info("No MAC address found for %s", ip_address)
+    _LOGGER.info('No MAC address found for %s', ip_address)
     return None
 
 
 class NmapDeviceScanner(object):
     """This class scans for devices using nmap."""
 
+    exclude = []
+
     def __init__(self, config):
         """Initialize the scanner."""
         self.last_results = []
 
         self.hosts = config[CONF_HOSTS]
-        minutes = convert(config.get(CONF_HOME_INTERVAL), int, 0)
+        self.exclude = config[CONF_EXCLUDE]
+        minutes = config[CONF_HOME_INTERVAL]
+        self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(minutes=minutes)
 
         self.success_init = self._update_info()
@@ -88,27 +103,31 @@ class NmapDeviceScanner(object):
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.info("Scanning")
+        _LOGGER.info("Scanning...")
 
         from nmap import PortScanner, PortScannerError
         scanner = PortScanner()
 
-        options = "-F --host-timeout 5s"
+        options = self._options
 
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval
             last_results = [device for device in self.last_results
                             if device.last_update > boundary]
             if last_results:
-                # Pylint is confused here.
-                # pylint: disable=no-member
-                options += " --exclude {}".format(",".join(device.ip for device
-                                                           in last_results))
+                exclude_hosts = self.exclude + [device.ip for device
+                                                in last_results]
+            else:
+                exclude_hosts = self.exclude
         else:
             last_results = []
+            exclude_hosts = self.exclude
+        if exclude_hosts:
+            options += ' --exclude {}'.format(','.join(exclude_hosts))
 
         try:
-            result = scanner.scan(hosts=self.hosts, arguments=options)
+            result = scanner.scan(hosts=' '.join(self.hosts),
+                                  arguments=options)
         except PortScannerError:
             return False
 

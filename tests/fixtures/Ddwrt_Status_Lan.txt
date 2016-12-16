@@ -1,0 +1,18 @@
+{lan_mac::AA:BB:CC:DD:EE:F0}
+{lan_ip::192.168.1.1}
+{lan_ip_prefix::192.168.1.}
+{lan_netmask::255.255.255.0}
+{lan_gateway::0.0.0.0}
+{lan_dns::8.8.8.8}
+{lan_proto::dhcp}
+{dhcp_daemon::DNSMasq}
+{dhcp_start::100}
+{dhcp_num::50}
+{dhcp_lease_time::1440}
+{dhcp_leases:: 'device_1','192.168.1.113','AA:BB:CC:DD:EE:00','1 day 00:00:00','113','device_2','192.168.1.201','AA:BB:CC:DD:EE:01','Static','201'}
+{pptp_leases::}
+{pppoe_leases::}
+{arp_table:: 'device_1','192.168.1.113','AA:BB:CC:DD:EE:00','13','device_2','192.168.1.201','AA:BB:CC:DD:EE:01','1'}
+{uptime:: 12:28:48 up 132 days, 18:02,  load average: 0.15, 0.19, 0.21}
+{ipinfo::&nbsp;IP: 192.168.0.108}
+

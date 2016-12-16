@@ -3,77 +3,94 @@ import unittest
 from unittest import mock
 import urllib
 
-from homeassistant.components.device_tracker import unifi as unifi
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
-from unifi import controller
+from pyunifi import controller
+import voluptuous as vol
+
+from tests.common import get_test_home_assistant
+from homeassistant.components.device_tracker import DOMAIN, unifi as unifi
+from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
+                                 CONF_PLATFORM)
 
 
 class TestUnifiScanner(unittest.TestCase):
     """Test the Unifiy platform."""
+
+    def setUp(self):
+        """Initialize values for this testcase class."""
+        self.hass = get_test_home_assistant()
+
+    def tearDown(self):
+        """Stop everything that was started."""
+        self.hass.stop()
 
     @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
     @mock.patch.object(controller, 'Controller')
     def test_config_minimal(self, mock_ctrl, mock_scanner):
         """Test the setup with minimal configuration."""
         config = {
-            'device_tracker': {
+            DOMAIN: unifi.PLATFORM_SCHEMA({
+                CONF_PLATFORM: unifi.DOMAIN,
                 CONF_USERNAME: 'foo',
                 CONF_PASSWORD: 'password',
-            }
+            })
         }
-        result = unifi.get_scanner(None, config)
-        self.assertEqual(unifi.UnifiScanner.return_value, result)
-        mock_ctrl.assert_called_once_with('localhost', 'foo', 'password',
-                                          8443, 'v4')
-        mock_scanner.assert_called_once_with(mock_ctrl.return_value)
+        result = unifi.get_scanner(self.hass, config)
+        self.assertEqual(mock_scanner.return_value, result)
+        self.assertEqual(mock_ctrl.call_count, 1)
+        self.assertEqual(
+            mock_ctrl.call_args,
+            mock.call('localhost', 'foo', 'password', 8443, 'v4', 'default')
+        )
+        self.assertEqual(mock_scanner.call_count, 1)
+        self.assertEqual(
+            mock_scanner.call_args,
+            mock.call(mock_ctrl.return_value)
+        )
 
     @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
     @mock.patch.object(controller, 'Controller')
     def test_config_full(self, mock_ctrl, mock_scanner):
         """Test the setup with full configuration."""
         config = {
-            'device_tracker': {
+            DOMAIN: unifi.PLATFORM_SCHEMA({
+                CONF_PLATFORM: unifi.DOMAIN,
                 CONF_USERNAME: 'foo',
                 CONF_PASSWORD: 'password',
                 CONF_HOST: 'myhost',
                 'port': 123,
-            }
+                'site_id': 'abcdef01',
+            })
         }
-        result = unifi.get_scanner(None, config)
-        self.assertEqual(unifi.UnifiScanner.return_value, result)
-        mock_ctrl.assert_called_once_with('myhost', 'foo', 'password',
-                                          123, 'v4')
-        mock_scanner.assert_called_once_with(mock_ctrl.return_value)
+        result = unifi.get_scanner(self.hass, config)
+        self.assertEqual(mock_scanner.return_value, result)
+        self.assertEqual(mock_ctrl.call_count, 1)
+        self.assertEqual(
+            mock_ctrl.call_args,
+            mock.call('myhost', 'foo', 'password', 123, 'v4', 'abcdef01')
+        )
+        self.assertEqual(mock_scanner.call_count, 1)
+        self.assertEqual(
+            mock_scanner.call_args,
+            mock.call(mock_ctrl.return_value)
+        )
 
-    @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
-    @mock.patch.object(controller, 'Controller')
-    def test_config_error(self, mock_ctrl, mock_scanner):
+    def test_config_error(self):
         """Test for configuration errors."""
-        config = {
-            'device_tracker': {
+        with self.assertRaises(vol.Invalid):
+            unifi.PLATFORM_SCHEMA({
+                # no username
+                CONF_PLATFORM: unifi.DOMAIN,
                 CONF_HOST: 'myhost',
                 'port': 123,
-            }
-        }
-        result = unifi.get_scanner(None, config)
-        self.assertFalse(result)
-        self.assertFalse(mock_ctrl.called)
-
-    @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
-    @mock.patch.object(controller, 'Controller')
-    def test_config_badport(self, mock_ctrl, mock_scanner):
-        """Test the setup with a bad port."""
-        config = {
-            'device_tracker': {
+            })
+        with self.assertRaises(vol.Invalid):
+            unifi.PLATFORM_SCHEMA({
+                CONF_PLATFORM: unifi.DOMAIN,
                 CONF_USERNAME: 'foo',
                 CONF_PASSWORD: 'password',
                 CONF_HOST: 'myhost',
-                'port': 'foo',
-            }
-        }
-        result = unifi.get_scanner(None, config)
-        self.assertFalse(result)
-        self.assertFalse(mock_ctrl.called)
+                'port': 'foo',  # bad port!
+            })
 
     @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
     @mock.patch.object(controller, 'Controller')
@@ -81,16 +98,17 @@ class TestUnifiScanner(unittest.TestCase):
         """Test for controller failure."""
         config = {
             'device_tracker': {
+                CONF_PLATFORM: unifi.DOMAIN,
                 CONF_USERNAME: 'foo',
                 CONF_PASSWORD: 'password',
             }
         }
         mock_ctrl.side_effect = urllib.error.HTTPError(
             '/', 500, 'foo', {}, None)
-        result = unifi.get_scanner(None, config)
+        result = unifi.get_scanner(self.hass, config)
         self.assertFalse(result)
 
-    def test_scanner_update(self):
+    def test_scanner_update(self):  # pylint: disable=no-self-use
         """Test the scanner update."""
         ctrl = mock.MagicMock()
         fake_clients = [
@@ -99,9 +117,10 @@ class TestUnifiScanner(unittest.TestCase):
         ]
         ctrl.get_clients.return_value = fake_clients
         unifi.UnifiScanner(ctrl)
-        ctrl.get_clients.assert_called_once_with()
+        self.assertEqual(ctrl.get_clients.call_count, 1)
+        self.assertEqual(ctrl.get_clients.call_args, mock.call())
 
-    def test_scanner_update_error(self):
+    def test_scanner_update_error(self):  # pylint: disable=no-self-use
         """Test the scanner update for error."""
         ctrl = mock.MagicMock()
         ctrl.get_clients.side_effect = urllib.error.HTTPError(

@@ -2,19 +2,20 @@
 Support for Verisure Smartplugs.
 
 For more details about this platform, please refer to the documentation at
-documentation at https://home-assistant.io/components/verisure/
+https://home-assistant.io/components/switch.verisure/
 """
 import logging
 
 from homeassistant.components.verisure import HUB as hub
+from homeassistant.components.verisure import CONF_SMARTPLUGS
 from homeassistant.components.switch import SwitchDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Verisure platform."""
-    if not int(hub.config.get('smartplugs', '1')):
+    """Setup the Verisure switch platform."""
+    if not int(hub.config.get(CONF_SMARTPLUGS, 1)):
         return False
 
     hub.update_smartplugs()

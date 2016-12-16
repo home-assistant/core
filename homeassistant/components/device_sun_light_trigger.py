@@ -7,26 +7,41 @@ https://home-assistant.io/components/device_sun_light_trigger/
 import logging
 from datetime import timedelta
 
+import voluptuous as vol
+
+from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.event_decorators import track_state_change
 from homeassistant.loader import get_component
+import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "device_sun_light_trigger"
+DOMAIN = 'device_sun_light_trigger'
 DEPENDENCIES = ['light', 'device_tracker', 'group', 'sun']
+
+CONF_DEVICE_GROUP = 'device_group'
+CONF_DISABLE_TURN_OFF = 'disable_turn_off'
+CONF_LIGHT_GROUP = 'light_group'
+CONF_LIGHT_PROFILE = 'light_profile'
+
+DEFAULT_DISABLE_TURN_OFF = False
+DEFAULT_LIGHT_PROFILE = 'relax'
 
 LIGHT_TRANSITION_TIME = timedelta(minutes=15)
 
-# Light profile to be used if none given
-LIGHT_PROFILE = 'relax'
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_DEVICE_GROUP): cv.entity_id,
+        vol.Optional(CONF_DISABLE_TURN_OFF, default=DEFAULT_DISABLE_TURN_OFF):
+            cv.boolean,
+        vol.Optional(CONF_LIGHT_GROUP): cv.string,
+        vol.Optional(CONF_LIGHT_PROFILE, default=DEFAULT_LIGHT_PROFILE):
+            cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
-CONF_LIGHT_PROFILE = 'light_profile'
-CONF_LIGHT_GROUP = 'light_group'
-CONF_DEVICE_GROUP = 'device_group'
 
-
-# pylint: disable=too-many-locals
 def setup(hass, config):
     """The triggers to turn lights on or off based on device presence."""
     logger = logging.getLogger(__name__)
@@ -35,10 +50,10 @@ def setup(hass, config):
     light = get_component('light')
     sun = get_component('sun')
 
-    disable_turn_off = 'disable_turn_off' in config[DOMAIN]
+    disable_turn_off = config[DOMAIN].get(CONF_DISABLE_TURN_OFF)
     light_group = config[DOMAIN].get(CONF_LIGHT_GROUP,
                                      light.ENTITY_ID_ALL_LIGHTS)
-    light_profile = config[DOMAIN].get(CONF_LIGHT_PROFILE, LIGHT_PROFILE)
+    light_profile = config[DOMAIN].get(CONF_LIGHT_PROFILE)
     device_group = config[DOMAIN].get(CONF_DEVICE_GROUP,
                                       device_tracker.ENTITY_ID_ALL_DEVICES)
     device_entity_ids = group.get_entity_ids(hass, device_group,
@@ -52,7 +67,7 @@ def setup(hass, config):
     light_ids = group.get_entity_ids(hass, light_group, light.DOMAIN)
 
     if not light_ids:
-        logger.error("No lights found to turn on ")
+        logger.error("No lights found to turn on")
         return False
 
     def calc_time_for_light_when_sunset():
@@ -65,21 +80,22 @@ def setup(hass, config):
             return None
         return next_setting - LIGHT_TRANSITION_TIME * len(light_ids)
 
-    def turn_light_on_before_sunset(light_id):
+    def async_turn_on_before_sunset(light_id):
         """Helper function to turn on lights.
 
         Speed is slow if there are devices home and the light is not on yet.
         """
         if not device_tracker.is_on(hass) or light.is_on(hass, light_id):
             return
-        light.turn_on(hass, light_id,
-                      transition=LIGHT_TRANSITION_TIME.seconds,
-                      profile=light_profile)
+        light.async_turn_on(hass, light_id,
+                            transition=LIGHT_TRANSITION_TIME.seconds,
+                            profile=light_profile)
 
     # Track every time sun rises so we can schedule a time-based
     # pre-sun set event
     @track_state_change(sun.ENTITY_ID, sun.STATE_BELOW_HORIZON,
                         sun.STATE_ABOVE_HORIZON)
+    @callback
     def schedule_lights_at_sun_set(hass, entity, old_state, new_state):
         """The moment sun sets we want to have all the lights on.
 
@@ -90,16 +106,21 @@ def setup(hass, config):
         if not start_point:
             return
 
-        def turn_on(light_id):
+        def async_turn_on_factory(light_id):
             """Lambda can keep track of function parameters.
 
             No local parameters. If we put the lambda directly in the below
             statement only the last light will be turned on.
             """
-            return lambda now: turn_light_on_before_sunset(light_id)
+            @callback
+            def async_turn_on_light(now):
+                """Turn on specific light."""
+                async_turn_on_before_sunset(light_id)
+
+            return async_turn_on_light
 
         for index, light_id in enumerate(light_ids):
-            track_point_in_time(hass, turn_on(light_id),
+            track_point_in_time(hass, async_turn_on_factory(light_id),
                                 start_point + index * LIGHT_TRANSITION_TIME)
 
     # If the sun is already above horizon schedule the time-based pre-sun set
@@ -108,6 +129,7 @@ def setup(hass, config):
         schedule_lights_at_sun_set(hass, None, None, None)
 
     @track_state_change(device_entity_ids, STATE_NOT_HOME, STATE_HOME)
+    @callback
     def check_light_on_dev_state_change(hass, entity, old_state, new_state):
         """Handle tracked device state changes."""
         # pylint: disable=unused-variable
@@ -122,7 +144,7 @@ def setup(hass, config):
         # Do we need lights?
         if light_needed:
             logger.info("Home coming event for %s. Turning lights on", entity)
-            light.turn_on(hass, light_ids, profile=light_profile)
+            light.async_turn_on(hass, light_ids, profile=light_profile)
 
         # Are we in the time span were we would turn on the lights
         # if someone would be home?
@@ -135,7 +157,7 @@ def setup(hass, config):
             # when the fading in started and turn it on if so
             for index, light_id in enumerate(light_ids):
                 if now > start_point + index * LIGHT_TRANSITION_TIME:
-                    light.turn_on(hass, light_id)
+                    light.async_turn_on(hass, light_id)
 
                 else:
                     # If this light didn't happen to be turned on yet so
@@ -144,6 +166,7 @@ def setup(hass, config):
 
     if not disable_turn_off:
         @track_state_change(device_group, STATE_HOME, STATE_NOT_HOME)
+        @callback
         def turn_off_lights_when_all_leave(hass, entity, old_state, new_state):
             """Handle device group state change."""
             # pylint: disable=unused-variable
@@ -152,6 +175,6 @@ def setup(hass, config):
 
             logger.info(
                 "Everyone has left but there are lights on. Turning them off")
-            light.turn_off(hass, light_ids)
+            light.async_turn_off(hass, light_ids)
 
     return True

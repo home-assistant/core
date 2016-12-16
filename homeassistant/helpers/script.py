@@ -1,13 +1,20 @@
 """Helpers to execute scripts."""
+import asyncio
 import logging
-import threading
 from itertools import islice
+from typing import Optional, Sequence
 
+import voluptuous as vol
+
+from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_CONDITION
+from homeassistant.helpers import (
+    service, condition, template, config_validation as cv)
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as date_util
-from homeassistant.const import EVENT_TIME_CHANGED, CONF_CONDITION
-from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers import service, condition
-import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async import (
+    run_coroutine_threadsafe, run_callback_threadsafe)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,114 +27,148 @@ CONF_EVENT_DATA = "event_data"
 CONF_DELAY = "delay"
 
 
-def call_from_config(hass, config, variables=None):
+def call_from_config(hass: HomeAssistant, config: ConfigType,
+                     variables: Optional[Sequence]=None) -> None:
     """Call a script based on a config entry."""
-    Script(hass, config).run(variables)
+    Script(hass, cv.SCRIPT_SCHEMA(config)).run(variables)
 
 
 class Script():
     """Representation of a script."""
 
-    # pylint: disable=too-many-instance-attributes
-    def __init__(self, hass, sequence, name=None, change_listener=None):
+    def __init__(self, hass: HomeAssistant, sequence, name: str=None,
+                 change_listener=None) -> None:
         """Initialize the script."""
         self.hass = hass
-        self.sequence = cv.SCRIPT_SCHEMA(sequence)
+        self.sequence = sequence
+        template.attach(hass, self.sequence)
         self.name = name
         self._change_listener = change_listener
         self._cur = -1
         self.last_action = None
         self.can_cancel = any(CONF_DELAY in action for action
                               in self.sequence)
-        self._lock = threading.Lock()
-        self._delay_listener = None
+        self._async_unsub_delay_listener = None
+        self._template_cache = {}
+        self._config_cache = {}
 
     @property
-    def is_running(self):
+    def is_running(self) -> bool:
         """Return true if script is on."""
         return self._cur != -1
 
     def run(self, variables=None):
         """Run script."""
-        with self._lock:
-            if self._cur == -1:
-                self._log('Running script')
-                self._cur = 0
+        run_coroutine_threadsafe(
+            self.async_run(variables), self.hass.loop).result()
 
-            # Unregister callback if we were in a delay but turn on is called
-            # again. In that case we just continue execution.
-            self._remove_listener()
+    @asyncio.coroutine
+    def async_run(self, variables: Optional[Sequence]=None) -> None:
+        """Run script.
 
-            for cur, action in islice(enumerate(self.sequence), self._cur,
-                                      None):
+        This method is a coroutine.
+        """
+        if self._cur == -1:
+            self._log('Running script')
+            self._cur = 0
 
-                if CONF_DELAY in action:
-                    # Call ourselves in the future to continue work
-                    def script_delay(now):
-                        """Called after delay is done."""
-                        self._delay_listener = None
-                        self.run(variables)
+        # Unregister callback if we were in a delay but turn on is called
+        # again. In that case we just continue execution.
+        self._async_remove_listener()
 
-                    self._delay_listener = track_point_in_utc_time(
+        for cur, action in islice(enumerate(self.sequence), self._cur,
+                                  None):
+
+            if CONF_DELAY in action:
+                # Call ourselves in the future to continue work
+                @asyncio.coroutine
+                def script_delay(now):
+                    """Called after delay is done."""
+                    self._async_unsub_delay_listener = None
+                    self.hass.async_add_job(self.async_run(variables))
+
+                delay = action[CONF_DELAY]
+
+                if isinstance(delay, template.Template):
+                    delay = vol.All(
+                        cv.time_period,
+                        cv.positive_timedelta)(
+                            delay.async_render(variables))
+
+                self._async_unsub_delay_listener = \
+                    async_track_point_in_utc_time(
                         self.hass, script_delay,
-                        date_util.utcnow() + action[CONF_DELAY])
-                    self._cur = cur + 1
-                    if self._change_listener:
-                        self._change_listener()
-                    return
-
-                elif CONF_CONDITION in action:
-                    if not self._check_condition(action, variables):
-                        break
-
-                elif CONF_EVENT in action:
-                    self._fire_event(action)
-
-                else:
-                    self._call_service(action, variables)
-
-            self._cur = -1
-            self.last_action = None
-            if self._change_listener:
-                self._change_listener()
-
-    def stop(self):
-        """Stop running script."""
-        with self._lock:
-            if self._cur == -1:
+                        date_util.utcnow() + delay)
+                self._cur = cur + 1
+                if self._change_listener:
+                    self.hass.async_add_job(self._change_listener)
                 return
 
-            self._cur = -1
-            self._remove_listener()
-            if self._change_listener:
-                self._change_listener()
+            elif CONF_CONDITION in action:
+                if not self._async_check_condition(action, variables):
+                    break
 
-    def _call_service(self, action, variables):
-        """Call the service specified in the action."""
+            elif CONF_EVENT in action:
+                self._async_fire_event(action)
+
+            else:
+                yield from self._async_call_service(action, variables)
+
+        self._cur = -1
+        self.last_action = None
+        if self._change_listener:
+            self.hass.async_add_job(self._change_listener)
+
+    def stop(self) -> None:
+        """Stop running script."""
+        run_callback_threadsafe(self.hass.loop, self.async_stop).result()
+
+    def async_stop(self) -> None:
+        """Stop running script."""
+        if self._cur == -1:
+            return
+
+        self._cur = -1
+        self._async_remove_listener()
+        if self._change_listener:
+            self.hass.async_add_job(self._change_listener)
+
+    @asyncio.coroutine
+    def _async_call_service(self, action, variables):
+        """Call the service specified in the action.
+
+        This method is a coroutine.
+        """
         self.last_action = action.get(CONF_ALIAS, 'call service')
         self._log("Executing step %s" % self.last_action)
-        service.call_from_config(self.hass, action, True, variables,
-                                 validate_config=False)
+        yield from service.async_call_from_config(
+            self.hass, action, True, variables, validate_config=False)
 
-    def _fire_event(self, action):
+    def _async_fire_event(self, action):
         """Fire an event."""
         self.last_action = action.get(CONF_ALIAS, action[CONF_EVENT])
         self._log("Executing step %s" % self.last_action)
-        self.hass.bus.fire(action[CONF_EVENT], action.get(CONF_EVENT_DATA))
+        self.hass.bus.async_fire(action[CONF_EVENT],
+                                 action.get(CONF_EVENT_DATA))
 
-    def _check_condition(self, action, variables):
+    def _async_check_condition(self, action, variables):
         """Test if condition is matching."""
+        config_cache_key = frozenset((k, str(v)) for k, v in action.items())
+        config = self._config_cache.get(config_cache_key)
+        if not config:
+            config = condition.async_from_config(action, False)
+            self._config_cache[config_cache_key] = config
+
         self.last_action = action.get(CONF_ALIAS, action[CONF_CONDITION])
-        check = condition.from_config(action)(self.hass, variables)
+        check = config(self.hass, variables)
         self._log("Test condition {}: {}".format(self.last_action, check))
         return check
 
-    def _remove_listener(self):
+    def _async_remove_listener(self):
         """Remove point in time listener, if any."""
-        if self._delay_listener:
-            self.hass.bus.remove_listener(EVENT_TIME_CHANGED,
-                                          self._delay_listener)
-            self._delay_listener = None
+        if self._async_unsub_delay_listener:
+            self._async_unsub_delay_listener()
+            self._async_unsub_delay_listener = None
 
     def _log(self, msg):
         """Logger helper."""

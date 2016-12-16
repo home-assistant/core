@@ -16,22 +16,34 @@ import os
 import pkgutil
 import sys
 
+from types import ModuleType
+# pylint: disable=unused-import
+from typing import Optional, Sequence, Set, Dict  # NOQA
+
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
+
+# Typing imports
+# pylint: disable=using-constant-test,unused-import
+if False:
+    from homeassistant.core import HomeAssistant  # NOQA
 
 PREPARED = False
 
 # List of available components
-AVAILABLE_COMPONENTS = []
+AVAILABLE_COMPONENTS = []  # type: List[str]
 
 # Dict of loaded components mapped name => module
-_COMPONENT_CACHE = {}
+_COMPONENT_CACHE = {}  # type: Dict[str, ModuleType]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def prepare(hass):
-    """Prepare the loading of components."""
+def prepare(hass: 'HomeAssistant'):
+    """Prepare the loading of components.
+
+    This method needs to run in an executor.
+    """
     global PREPARED  # pylint: disable=global-statement
 
     # Load the built-in components
@@ -71,23 +83,31 @@ def prepare(hass):
     PREPARED = True
 
 
-def set_component(comp_name, component):
-    """Set a component in the cache."""
+def set_component(comp_name: str, component: ModuleType) -> None:
+    """Set a component in the cache.
+
+    Async friendly.
+    """
     _check_prepared()
 
     _COMPONENT_CACHE[comp_name] = component
 
 
-def get_platform(domain, platform):
-    """Try to load specified platform."""
+def get_platform(domain: str, platform: str) -> Optional[ModuleType]:
+    """Try to load specified platform.
+
+    Async friendly.
+    """
     return get_component(PLATFORM_FORMAT.format(domain, platform))
 
 
-def get_component(comp_name):
+def get_component(comp_name) -> Optional[ModuleType]:
     """Try to load specified component.
 
     Looks in config dir first, then built-in components.
     Only returns it if also found to be valid.
+
+    Async friendly.
     """
     if comp_name in _COMPONENT_CACHE:
         return _COMPONENT_CACHE[comp_name]
@@ -148,7 +168,7 @@ def get_component(comp_name):
     return None
 
 
-def load_order_components(components):
+def load_order_components(components: Sequence[str]) -> OrderedSet:
     """Take in a list of components we want to load.
 
     - filters out components we cannot load
@@ -157,6 +177,8 @@ def load_order_components(components):
     - Will ensure that all components that do not directly depend on
       the group component will be loaded before the group component.
     - returns an OrderedSet load order.
+
+    Async friendly.
     """
     _check_prepared()
 
@@ -178,17 +200,23 @@ def load_order_components(components):
     return load_order
 
 
-def load_order_component(comp_name):
+def load_order_component(comp_name: str) -> OrderedSet:
     """Return an OrderedSet of components in the correct order of loading.
 
     Raises HomeAssistantError if a circular dependency is detected.
     Returns an empty list if component could not be loaded.
+
+    Async friendly.
     """
     return _load_order_component(comp_name, OrderedSet(), set())
 
 
-def _load_order_component(comp_name, load_order, loading):
-    """Recursive function to get load order of components."""
+def _load_order_component(comp_name: str, load_order: OrderedSet,
+                          loading: Set) -> OrderedSet:
+    """Recursive function to get load order of components.
+
+    Async friendly.
+    """
     component = get_component(comp_name)
 
     # If None it does not exist, error already thrown by get_component.
@@ -224,8 +252,11 @@ def _load_order_component(comp_name, load_order, loading):
     return load_order
 
 
-def _check_prepared():
-    """Issue a warning if loader.prepare() has never been called."""
+def _check_prepared() -> None:
+    """Issue a warning if loader.prepare() has never been called.
+
+    Async friendly.
+    """
     if not PREPARED:
         _LOGGER.warning((
             "You did not call loader.prepare() yet. "

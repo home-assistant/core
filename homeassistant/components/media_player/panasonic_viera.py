@@ -5,35 +5,43 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.panasonic_viera/
 """
 import logging
-import socket
+
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    DOMAIN, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
-from homeassistant.helpers import validate_config
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
+import homeassistant.helpers.config_validation as cv
 
-CONF_PORT = "port"
+REQUIREMENTS = ['panasonic_viera==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['panasonic_viera==0.2']
+DEFAULT_NAME = 'Panasonic Viera TV'
+DEFAULT_PORT = 55000
 
 SUPPORT_VIERATV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_TURN_OFF
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+})
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Panasonic Viera TV platform."""
-    from panasonic_viera import DEFAULT_PORT, RemoteControl
+    from panasonic_viera import RemoteControl
 
-    name = config.get(CONF_NAME, 'Panasonic Viera TV')
-    port = config.get(CONF_PORT, DEFAULT_PORT)
+    name = config.get(CONF_NAME)
+    port = config.get(CONF_PORT)
 
     if discovery_info:
         _LOGGER.debug('%s', discovery_info)
@@ -47,42 +55,40 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return True
 
     host = config.get(CONF_HOST, None)
-    remote = RemoteControl(host, port)    
-    
+    host = config.get(CONF_HOST)
+
     add_devices([PanasonicVieraTVDevice(name, remote)])
     return True
 
 
-# pylint: disable=abstract-method
 class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self, name, remote):
-        """Initialize the samsung device."""
+        """Initialize the Panasonic device."""
         # Save a reference to the imported class
         self._name = name
         self._muted = False
         self._playing = True
         self._state = STATE_UNKNOWN
         self._remote = remote
+        self._volume = 0
 
     def update(self):
         """Retrieve the latest data."""
         try:
             self._muted = self._remote.get_mute()
+            self._volume = self._remote.get_volume() / 100
             self._state = STATE_ON
-        except (socket.timeout, TimeoutError, OSError):
+        except OSError:
             self._state = STATE_OFF
-            return False
-        return True
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
         try:
             self._remote.send_key(key)
             self._state = STATE_ON
-        except (socket.timeout, TimeoutError, OSError):
+        except OSError:
             self._state = STATE_OFF
             return False
         return True
@@ -100,13 +106,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        volume = 0
-        try:
-            volume = self._remote.get_volume() / 100
-            self._state = STATE_ON
-        except (socket.timeout, TimeoutError, OSError):
-            self._state = STATE_OFF
-        return volume
+        return self._volume
 
     @property
     def is_volume_muted(self):
@@ -140,7 +140,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         try:
             self._remote.set_volume(volume)
             self._state = STATE_ON
-        except (socket.timeout, TimeoutError, OSError):
+        except OSError:
             self._state = STATE_OFF
 
     def media_play_pause(self):

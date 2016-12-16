@@ -7,12 +7,17 @@ HomeAssistantError will be raised.
 For more details about the Python API, please refer to the documentation at
 https://home-assistant.io/developers/python_api/
 """
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import enum
 import json
 import logging
+import time
 import threading
 import urllib.parse
+
+from typing import Optional
 
 import requests
 
@@ -20,8 +25,9 @@ import homeassistant.bootstrap as bootstrap
 import homeassistant.core as ha
 from homeassistant.const import (
     HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API, URL_API_EVENT_FORWARD,
-    URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES,
-    URL_API_SERVICES_SERVICE, URL_API_STATES, URL_API_STATES_ENTITY)
+    URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES, URL_API_CONFIG,
+    URL_API_SERVICES_SERVICE, URL_API_STATES, URL_API_STATES_ENTITY,
+    HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
 from homeassistant.exceptions import HomeAssistantError
 
 METHOD_GET = "get"
@@ -34,13 +40,13 @@ _LOGGER = logging.getLogger(__name__)
 class APIStatus(enum.Enum):
     """Represent API status."""
 
-    # pylint: disable=no-init,invalid-name,too-few-public-methods
+    # pylint: disable=no-init, invalid-name
     OK = "ok"
     INVALID_PASSWORD = "invalid_password"
     CANNOT_CONNECT = "cannot_connect"
     UNKNOWN = "unknown"
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return the state."""
         return self.value
 
@@ -48,8 +54,8 @@ class APIStatus(enum.Enum):
 class API(object):
     """Object to pass around Home Assistant API location and credentials."""
 
-    # pylint: disable=too-few-public-methods
-    def __init__(self, host, api_password=None, port=None, use_ssl=False):
+    def __init__(self, host: str, api_password: Optional[str]=None,
+                 port: Optional[int]=None, use_ssl: bool=False) -> None:
         """Initalize the API."""
         self.host = host
         self.port = port or SERVER_PORT
@@ -59,19 +65,21 @@ class API(object):
         else:
             self.base_url = "http://{}:{}".format(host, self.port)
         self.status = None
-        self._headers = {}
+        self._headers = {
+            HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON,
+        }
 
         if api_password is not None:
             self._headers[HTTP_HEADER_HA_AUTH] = api_password
 
-    def validate_api(self, force_validate=False):
+    def validate_api(self, force_validate: bool=False) -> bool:
         """Test if we can communicate with the API."""
         if self.status is None or force_validate:
             self.status = validate_api(self)
 
         return self.status == APIStatus.OK
 
-    def __call__(self, method, path, data=None):
+    def __call__(self, method, path, data=None, timeout=5):
         """Make a call to the Home Assistant API."""
         if data is not None:
             data = json.dumps(data, cls=JSONEncoder)
@@ -81,10 +89,11 @@ class API(object):
         try:
             if method == METHOD_GET:
                 return requests.get(
-                    url, params=data, timeout=5, headers=self._headers)
+                    url, params=data, timeout=timeout, headers=self._headers)
             else:
                 return requests.request(
-                    method, url, data=data, timeout=5, headers=self._headers)
+                    method, url, data=data, timeout=timeout,
+                    headers=self._headers)
 
         except requests.exceptions.ConnectionError:
             _LOGGER.exception("Error connecting to server")
@@ -95,7 +104,7 @@ class API(object):
             _LOGGER.exception(error)
             raise HomeAssistantError(error)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return the representation of the API."""
         return "API({}, {}, {})".format(
             self.host, self.api_password, self.port)
@@ -104,8 +113,8 @@ class API(object):
 class HomeAssistant(ha.HomeAssistant):
     """Home Assistant that forwards work."""
 
-    # pylint: disable=super-init-not-called,too-many-instance-attributes
-    def __init__(self, remote_api, local_api=None):
+    # pylint: disable=super-init-not-called
+    def __init__(self, remote_api, local_api=None, loop=None):
         """Initalize the forward instance."""
         if not remote_api.validate_api():
             raise HomeAssistantError(
@@ -114,30 +123,46 @@ class HomeAssistant(ha.HomeAssistant):
 
         self.remote_api = remote_api
 
-        self.pool = pool = ha.create_worker_pool()
+        self.loop = loop or asyncio.get_event_loop()
+        self.executor = ThreadPoolExecutor(max_workers=5)
+        self.loop.set_default_executor(self.executor)
+        self.loop.set_exception_handler(self._async_exception_handler)
+        self._pending_tasks = []
+        self._pending_sheduler = None
 
-        self.bus = EventBus(remote_api, pool)
-        self.services = ha.ServiceRegistry(self.bus, pool)
-        self.states = StateMachine(self.bus, self.remote_api)
+        self.bus = EventBus(remote_api, self)
+        self.services = ha.ServiceRegistry(self)
+        self.states = StateMachine(self.bus, self.loop, self.remote_api)
         self.config = ha.Config()
-
+        # This is a dictionary that any component can store any data on.
+        self.data = {}
+        self.state = ha.CoreState.not_running
+        self.exit_code = None
         self.config.api = local_api
 
     def start(self):
         """Start the instance."""
         # Ensure a local API exists to connect with remote
-        if self.config.api is None:
+        if 'api' not in self.config.components:
             if not bootstrap.setup_component(self, 'api'):
                 raise HomeAssistantError(
                     'Unable to setup local API to receive events')
 
-        ha.create_timer(self)
+        self.state = ha.CoreState.starting
+        # pylint: disable=protected-access
+        ha._async_create_timer(self)
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
                       origin=ha.EventOrigin.remote)
 
+        # Ensure local HTTP is started
+        self.block_till_done()
+        self.state = ha.CoreState.running
+        time.sleep(0.05)
+
         # Setup that events from remote_api get forwarded to local_api
-        # Do this after we fire START, otherwise HTTP is not started
+        # Do this after we are running, otherwise HTTP is not started
+        # or requests are blocked
         if not connect_remote_events(self.remote_api, self.config.api):
             raise HomeAssistantError((
                 'Could not setup event forwarding from api {} to '
@@ -146,23 +171,22 @@ class HomeAssistant(ha.HomeAssistant):
     def stop(self):
         """Stop Home Assistant and shuts down all threads."""
         _LOGGER.info("Stopping")
+        self.state = ha.CoreState.stopping
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_STOP,
                       origin=ha.EventOrigin.remote)
 
-        self.pool.stop()
-
         # Disconnect master event forwarding
         disconnect_remote_events(self.remote_api, self.config.api)
+        self.state = ha.CoreState.not_running
 
 
 class EventBus(ha.EventBus):
     """EventBus implementation that forwards fire_event to remote API."""
 
-    # pylint: disable=too-few-public-methods
-    def __init__(self, api, pool=None):
+    def __init__(self, api, hass):
         """Initalize the eventbus."""
-        super().__init__(pool)
+        super().__init__(hass)
         self._api = api
 
     def fire(self, event_type, event_data=None, origin=ha.EventOrigin.local):
@@ -193,34 +217,35 @@ class EventForwarder(object):
         self._targets = {}
 
         self._lock = threading.Lock()
+        self._async_unsub_listener = None
 
-    def connect(self, api):
+    @ha.callback
+    def async_connect(self, api):
         """Attach to a Home Assistant instance and forward events.
 
         Will overwrite old target if one exists with same host/port.
         """
-        with self._lock:
-            if len(self._targets) == 0:
-                # First target we get, setup listener for events
-                self.hass.bus.listen(ha.MATCH_ALL, self._event_listener)
+        if self._async_unsub_listener is None:
+            self._async_unsub_listener = self.hass.bus.async_listen(
+                ha.MATCH_ALL, self._event_listener)
 
-            key = (api.host, api.port)
+        key = (api.host, api.port)
 
-            self._targets[key] = api
+        self._targets[key] = api
 
-    def disconnect(self, api):
+    @ha.callback
+    def async_disconnect(self, api):
         """Remove target from being forwarded to."""
-        with self._lock:
-            key = (api.host, api.port)
+        key = (api.host, api.port)
 
-            did_remove = self._targets.pop(key, None) is None
+        did_remove = self._targets.pop(key, None) is None
 
-            if len(self._targets) == 0:
-                # Remove event listener if no forwarding targets present
-                self.hass.bus.remove_listener(ha.MATCH_ALL,
-                                              self._event_listener)
+        if len(self._targets) == 0:
+            # Remove event listener if no forwarding targets present
+            self._async_unsub_listener()
+            self._async_unsub_listener = None
 
-            return did_remove
+        return did_remove
 
     def _event_listener(self, event):
         """Listen and forward all events."""
@@ -237,9 +262,9 @@ class EventForwarder(object):
 class StateMachine(ha.StateMachine):
     """Fire set events to an API. Uses state_change events to track states."""
 
-    def __init__(self, bus, api):
+    def __init__(self, bus, loop, api):
         """Initalize the statemachine."""
-        super().__init__(None)
+        super().__init__(bus, loop)
         self._api = api
         self.mirror()
 
@@ -252,9 +277,9 @@ class StateMachine(ha.StateMachine):
         """
         return remove_state(self._api, entity_id)
 
-    def set(self, entity_id, new_state, attributes=None):
+    def set(self, entity_id, new_state, attributes=None, force_update=False):
         """Call set_state on remote API."""
-        set_state(self._api, entity_id, new_state, attributes)
+        set_state(self._api, entity_id, new_state, attributes, force_update)
 
     def mirror(self):
         """Discard current data and mirrors the remote state machine."""
@@ -272,7 +297,7 @@ class StateMachine(ha.StateMachine):
 class JSONEncoder(json.JSONEncoder):
     """JSONEncoder that supports Home Assistant objects."""
 
-    # pylint: disable=too-few-public-methods,method-hidden
+    # pylint: disable=method-hidden
     def default(self, obj):
         """Convert Home Assistant objects.
 
@@ -383,7 +408,7 @@ def fire_event(api, event_type, data=None):
         req = api(METHOD_POST, URL_API_EVENTS_EVENT.format(event_type), data)
 
         if req.status_code != 200:
-            _LOGGER.error("Error firing event: %d - %d",
+            _LOGGER.error("Error firing event: %d - %s",
                           req.status_code, req.text)
 
     except HomeAssistantError:
@@ -443,7 +468,7 @@ def remove_state(api, entity_id):
         return False
 
 
-def set_state(api, entity_id, new_state, attributes=None):
+def set_state(api, entity_id, new_state, attributes=None, force_update=False):
     """Tell API to update state for entity_id.
 
     Return True if success.
@@ -451,7 +476,8 @@ def set_state(api, entity_id, new_state, attributes=None):
     attributes = attributes or {}
 
     data = {'state': new_state,
-            'attributes': attributes}
+            'attributes': attributes,
+            'force_update': force_update}
 
     try:
         req = api(METHOD_POST,
@@ -495,12 +521,12 @@ def get_services(api):
         return {}
 
 
-def call_service(api, domain, service, service_data=None):
+def call_service(api, domain, service, service_data=None, timeout=5):
     """Call a service at the remote API."""
     try:
         req = api(METHOD_POST,
                   URL_API_SERVICES_SERVICE.format(domain, service),
-                  service_data)
+                  service_data, timeout=timeout)
 
         if req.status_code != 200:
             _LOGGER.error("Error calling service: %d - %s",
@@ -508,3 +534,17 @@ def call_service(api, domain, service, service_data=None):
 
     except HomeAssistantError:
         _LOGGER.exception("Error calling service")
+
+
+def get_config(api):
+    """Return configuration."""
+    try:
+        req = api(METHOD_GET, URL_API_CONFIG)
+
+        return req.json() if req.status_code == 200 else {}
+
+    except (HomeAssistantError, ValueError):
+        # ValueError if req.json() can't parse the JSON
+        _LOGGER.exception("Got unexpected configuration results")
+
+        return {}

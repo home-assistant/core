@@ -5,47 +5,41 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/octoprint/
 """
 import logging
-
 import time
+
 import requests
+import voluptuous as vol
 
-from homeassistant.components import discovery
-from homeassistant.const import CONF_API_KEY, CONF_HOST
-from homeassistant.helpers import validate_config
-
-DOMAIN = "octoprint"
-OCTOPRINT = None
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DISCOVER_SENSORS = 'octoprint.sensors'
-DISCOVER_BINARY_SENSORS = 'octoprint.binary_sensor'
+DOMAIN = 'octoprint'
+
+OCTOPRINT = None
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Set up OctoPrint API."""
-    if not validate_config(config, {DOMAIN: [CONF_API_KEY],
-                                    DOMAIN: [CONF_HOST]},
-                           _LOGGER):
-        return False
-
-    base_url = config[DOMAIN][CONF_HOST] + "/api/"
+    base_url = 'http://{}/api/'.format(config[DOMAIN][CONF_HOST])
     api_key = config[DOMAIN][CONF_API_KEY]
 
     global OCTOPRINT
     try:
         OCTOPRINT = OctoPrintAPI(base_url, api_key)
-        OCTOPRINT.get("printer")
-        OCTOPRINT.get("job")
+        OCTOPRINT.get('printer')
+        OCTOPRINT.get('job')
     except requests.exceptions.RequestException as conn_err:
         _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
         return False
-
-    for component, discovery_service in (
-            ('sensor', DISCOVER_SENSORS),
-            ('binary_sensor', DISCOVER_BINARY_SENSORS)):
-        discovery.discover(hass, discovery_service, component=component,
-                           hass_config=config)
 
     return True
 
@@ -56,7 +50,7 @@ class OctoPrintAPI(object):
     def __init__(self, api_url, key):
         """Initialize OctoPrint API and set headers needed later."""
         self.api_url = api_url
-        self.headers = {'content-type': 'application/json',
+        self.headers = {'content-type': CONTENT_TYPE_JSON,
                         'X-Api-Key': key}
         self.printer_last_reading = [{}, None]
         self.job_last_reading = [{}, None]

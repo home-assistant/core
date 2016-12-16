@@ -1,57 +1,228 @@
 """Color util methods."""
+import logging
 import math
+
+from typing import Tuple
+
+_LOGGER = logging.getLogger(__name__)
 
 HASS_COLOR_MAX = 500  # mireds (inverted)
 HASS_COLOR_MIN = 154
 
+# Official CSS3 colors from w3.org:
+# https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
+# names do not have spaces in them so that we can compare against
+# reuqests more easily (by removing spaces from the requests as well).
+# This lets "dark seagreen" and "dark sea green" both match the same
+# color "darkseagreen".
+COLORS = {
+    'aliceblue': (240, 248, 255),
+    'antiquewhite': (250, 235, 215),
+    'aqua': (0, 255, 255),
+    'aquamarine': (127, 255, 212),
+    'azure': (240, 255, 255),
+    'beige': (245, 245, 220),
+    'bisque': (255, 228, 196),
+    'black': (0, 0, 0),
+    'blanchedalmond': (255, 235, 205),
+    'blue': (0, 0, 255),
+    'blueviolet': (138, 43, 226),
+    'brown': (165, 42, 42),
+    'burlywood': (222, 184, 135),
+    'cadetblue': (95, 158, 160),
+    'chartreuse': (127, 255, 0),
+    'chocolate': (210, 105, 30),
+    'coral': (255, 127, 80),
+    'cornflowerblue': (100, 149, 237),
+    'cornsilk': (255, 248, 220),
+    'crimson': (220, 20, 60),
+    'cyan': (0, 255, 255),
+    'darkblue': (0, 0, 139),
+    'darkcyan': (0, 139, 139),
+    'darkgoldenrod': (184, 134, 11),
+    'darkgray': (169, 169, 169),
+    'darkgreen': (0, 100, 0),
+    'darkgrey': (169, 169, 169),
+    'darkkhaki': (189, 183, 107),
+    'darkmagenta': (139, 0, 139),
+    'darkolivegreen': (85, 107, 47),
+    'darkorange': (255, 140, 0),
+    'darkorchid': (153, 50, 204),
+    'darkred': (139, 0, 0),
+    'darksalmon': (233, 150, 122),
+    'darkseagreen': (143, 188, 143),
+    'darkslateblue': (72, 61, 139),
+    'darkslategray': (47, 79, 79),
+    'darkslategrey': (47, 79, 79),
+    'darkturquoise': (0, 206, 209),
+    'darkviolet': (148, 0, 211),
+    'deeppink': (255, 20, 147),
+    'deepskyblue': (0, 191, 255),
+    'dimgray': (105, 105, 105),
+    'dimgrey': (105, 105, 105),
+    'dodgerblue': (30, 144, 255),
+    'firebrick': (178, 34, 34),
+    'floralwhite': (255, 250, 240),
+    'forestgreen': (34, 139, 34),
+    'fuchsia': (255, 0, 255),
+    'gainsboro': (220, 220, 220),
+    'ghostwhite': (248, 248, 255),
+    'gold': (255, 215, 0),
+    'goldenrod': (218, 165, 32),
+    'gray': (128, 128, 128),
+    'green': (0, 128, 0),
+    'greenyellow': (173, 255, 47),
+    'grey': (128, 128, 128),
+    'honeydew': (240, 255, 240),
+    'hotpink': (255, 105, 180),
+    'indianred': (205, 92, 92),
+    'indigo': (75, 0, 130),
+    'ivory': (255, 255, 240),
+    'khaki': (240, 230, 140),
+    'lavender': (230, 230, 250),
+    'lavenderblush': (255, 240, 245),
+    'lawngreen': (124, 252, 0),
+    'lemonchiffon': (255, 250, 205),
+    'lightblue': (173, 216, 230),
+    'lightcoral': (240, 128, 128),
+    'lightcyan': (224, 255, 255),
+    'lightgoldenrodyellow': (250, 250, 210),
+    'lightgray': (211, 211, 211),
+    'lightgreen': (144, 238, 144),
+    'lightgrey': (211, 211, 211),
+    'lightpink': (255, 182, 193),
+    'lightsalmon': (255, 160, 122),
+    'lightseagreen': (32, 178, 170),
+    'lightskyblue': (135, 206, 250),
+    'lightslategray': (119, 136, 153),
+    'lightslategrey': (119, 136, 153),
+    'lightsteelblue': (176, 196, 222),
+    'lightyellow': (255, 255, 224),
+    'lime': (0, 255, 0),
+    'limegreen': (50, 205, 50),
+    'linen': (250, 240, 230),
+    'magenta': (255, 0, 255),
+    'maroon': (128, 0, 0),
+    'mediumaquamarine': (102, 205, 170),
+    'mediumblue': (0, 0, 205),
+    'mediumorchid': (186, 85, 211),
+    'mediumpurple': (147, 112, 219),
+    'mediumseagreen': (60, 179, 113),
+    'mediumslateblue': (123, 104, 238),
+    'mediumspringgreen': (0, 250, 154),
+    'mediumturquoise': (72, 209, 204),
+    'mediumvioletredred': (199, 21, 133),
+    'midnightblue': (25, 25, 112),
+    'mintcream': (245, 255, 250),
+    'mistyrose': (255, 228, 225),
+    'moccasin': (255, 228, 181),
+    'navajowhite': (255, 222, 173),
+    'navy': (0, 0, 128),
+    'navyblue': (0, 0, 128),
+    'oldlace': (253, 245, 230),
+    'olive': (128, 128, 0),
+    'olivedrab': (107, 142, 35),
+    'orange': (255, 165, 0),
+    'orangered': (255, 69, 0),
+    'orchid': (218, 112, 214),
+    'palegoldenrod': (238, 232, 170),
+    'palegreen': (152, 251, 152),
+    'paleturquoise': (175, 238, 238),
+    'palevioletred': (219, 112, 147),
+    'papayawhip': (255, 239, 213),
+    'peachpuff': (255, 218, 185),
+    'peru': (205, 133, 63),
+    'pink': (255, 192, 203),
+    'plum': (221, 160, 221),
+    'powderblue': (176, 224, 230),
+    'purple': (128, 0, 128),
+    'red': (255, 0, 0),
+    'rosybrown': (188, 143, 143),
+    'royalblue': (65, 105, 225),
+    'saddlebrown': (139, 69, 19),
+    'salmon': (250, 128, 114),
+    'sandybrown': (244, 164, 96),
+    'seagreen': (46, 139, 87),
+    'seashell': (255, 245, 238),
+    'sienna': (160, 82, 45),
+    'silver': (192, 192, 192),
+    'skyblue': (135, 206, 235),
+    'slateblue': (106, 90, 205),
+    'slategray': (112, 128, 144),
+    'slategrey': (112, 128, 144),
+    'snow': (255, 250, 250),
+    'springgreen': (0, 255, 127),
+    'steelblue': (70, 130, 180),
+    'tan': (210, 180, 140),
+    'teal': (0, 128, 128),
+    'thistle': (216, 191, 216),
+    'tomato': (255, 99, 71),
+    'turquoise': (64, 224, 208),
+    'violet': (238, 130, 238),
+    'wheat': (245, 222, 179),
+    'white': (255, 255, 255),
+    'whitesmoke': (245, 245, 245),
+    'yellow': (255, 255, 0),
+    'yellowgreen': (154, 205, 50),
+}
 
-# Taken from: http://www.cse.unr.edu/~quiroz/inc/colortransforms.py
+
+def color_name_to_rgb(color_name):
+    """Convert color name to RGB hex value."""
+    # COLORS map has no spaces in it, so make the color_name have no
+    # spaces in it as well for matching purposes
+    hex_value = COLORS.get(color_name.replace(' ', '').lower())
+    if not hex_value:
+        _LOGGER.error('unknown color supplied %s default to white', color_name)
+        hex_value = COLORS['white']
+
+    return hex_value
+
+
+# Taken from:
+# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 # License: Code is given as is. Use at your own risk and discretion.
 # pylint: disable=invalid-name
-def color_RGB_to_xy(R, G, B):
+def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
     """Convert from RGB color to XY color."""
-    if R + G + B == 0:
-        return 0, 0
+    if iR + iG + iB == 0:
+        return 0.0, 0.0, 0
 
-    var_R = (R / 255.)
-    var_G = (G / 255.)
-    var_B = (B / 255.)
+    R = iR / 255
+    B = iB / 255
+    G = iG / 255
 
-    if var_R > 0.04045:
-        var_R = ((var_R + 0.055) / 1.055) ** 2.4
-    else:
-        var_R /= 12.92
+    # Gamma correction
+    R = pow((R + 0.055) / (1.0 + 0.055),
+            2.4) if (R > 0.04045) else (R / 12.92)
+    G = pow((G + 0.055) / (1.0 + 0.055),
+            2.4) if (G > 0.04045) else (G / 12.92)
+    B = pow((B + 0.055) / (1.0 + 0.055),
+            2.4) if (B > 0.04045) else (B / 12.92)
 
-    if var_G > 0.04045:
-        var_G = ((var_G + 0.055) / 1.055) ** 2.4
-    else:
-        var_G /= 12.92
+    # Wide RGB D65 conversion formula
+    X = R * 0.664511 + G * 0.154324 + B * 0.162028
+    Y = R * 0.313881 + G * 0.668433 + B * 0.047685
+    Z = R * 0.000088 + G * 0.072310 + B * 0.986039
 
-    if var_B > 0.04045:
-        var_B = ((var_B + 0.055) / 1.055) ** 2.4
-    else:
-        var_B /= 12.92
+    # Convert XYZ to xy
+    x = X / (X + Y + Z)
+    y = Y / (X + Y + Z)
 
-    var_R *= 100
-    var_G *= 100
-    var_B *= 100
+    # Brightness
+    Y = 1 if Y > 1 else Y
+    brightness = round(Y * 255)
 
-    # Observer. = 2 deg, Illuminant = D65
-    X = var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805
-    Y = var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722
-    Z = var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505
-
-    # Convert XYZ to xy, see CIE 1931 color space on wikipedia
-    return X / (X + Y + Z), Y / (X + Y + Z)
+    return round(x, 3), round(y, 3), brightness
 
 
 # taken from
 # https://github.com/benknight/hue-python-rgb-converter/blob/master/rgb_cie.py
 # Copyright (c) 2014 Benjamin Knight / MIT License.
-# pylint: disable=bad-builtin
-def color_xy_brightness_to_RGB(vX, vY, brightness):
+def color_xy_brightness_to_RGB(vX: float, vY: float,
+                               ibrightness: int) -> Tuple[int, int, int]:
     """Convert from XYZ to RGB."""
-    brightness /= 255.
+    brightness = ibrightness / 255.
     if brightness == 0:
         return (0, 0, 0)
 
@@ -83,9 +254,43 @@ def color_xy_brightness_to_RGB(vX, vY, brightness):
     if max_component > 1:
         r, g, b = map(lambda x: x / max_component, [r, g, b])
 
-    r, g, b = map(lambda x: int(x * 255), [r, g, b])
+    ir, ig, ib = map(lambda x: int(x * 255), [r, g, b])
 
-    return (r, g, b)
+    return (ir, ig, ib)
+
+
+def _match_max_scale(input_colors: Tuple[int, ...],
+                     output_colors: Tuple[int, ...]) -> Tuple[int, ...]:
+    """Match the maximum value of the output to the input."""
+    max_in = max(input_colors)
+    max_out = max(output_colors)
+    if max_out == 0:
+        factor = 0.0
+    else:
+        factor = max_in / max_out
+    return tuple(int(round(i * factor)) for i in output_colors)
+
+
+def color_rgb_to_rgbw(r, g, b):
+    """Convert an rgb color to an rgbw representation."""
+    # Calculate the white channel as the minimum of input rgb channels.
+    # Subtract the white portion from the remaining rgb channels.
+    w = min(r, g, b)
+    rgbw = (r - w, g - w, b - w, w)
+
+    # Match the output maximum value to the input. This ensures the full
+    # channel range is used.
+    return _match_max_scale((r, g, b), rgbw)
+
+
+def color_rgbw_to_rgb(r, g, b, w):
+    """Convert an rgbw color to an rgb representation."""
+    # Add the white channel back into the rgb channels.
+    rgb = (r + w, g + w, b + w)
+
+    # Match the output maximum value to the input. This ensures the the
+    # output doesn't overflow.
+    return _match_max_scale((r, g, b, w), rgb)
 
 
 def rgb_hex_to_rgb_list(hex_string):
@@ -120,7 +325,8 @@ def color_temperature_to_rgb(color_temperature_kelvin):
     return (red, green, blue)
 
 
-def _bound(color_component, minimum=0, maximum=255):
+def _bound(color_component: float, minimum: float=0,
+           maximum: float=255) -> float:
     """
     Bound the given color component value between the given min and max values.
 
@@ -132,7 +338,7 @@ def _bound(color_component, minimum=0, maximum=255):
     return min(color_component_out, maximum)
 
 
-def _get_red(temperature):
+def _get_red(temperature: float) -> float:
     """Get the red component of the temperature in RGB space."""
     if temperature <= 66:
         return 255
@@ -140,7 +346,7 @@ def _get_red(temperature):
     return _bound(tmp_red)
 
 
-def _get_green(temperature):
+def _get_green(temperature: float) -> float:
     """Get the green component of the given color temp in RGB space."""
     if temperature <= 66:
         green = 99.4708025861 * math.log(temperature) - 161.1195681661
@@ -149,13 +355,13 @@ def _get_green(temperature):
     return _bound(green)
 
 
-def _get_blue(tmp_internal):
+def _get_blue(temperature: float) -> float:
     """Get the blue component of the given color temperature in RGB space."""
-    if tmp_internal >= 66:
+    if temperature >= 66:
         return 255
-    if tmp_internal <= 19:
+    if temperature <= 19:
         return 0
-    blue = 138.5177312231 * math.log(tmp_internal - 10) - 305.0447927307
+    blue = 138.5177312231 * math.log(temperature - 10) - 305.0447927307
     return _bound(blue)
 
 

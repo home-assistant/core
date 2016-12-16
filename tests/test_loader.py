@@ -1,5 +1,5 @@
 """Test to verify that we can load components."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 import unittest
 
 import homeassistant.loader as loader
@@ -11,11 +11,13 @@ from tests.common import get_test_home_assistant, MockModule
 class TestLoader(unittest.TestCase):
     """Test the loader module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup tests."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

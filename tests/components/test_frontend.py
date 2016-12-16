@@ -1,12 +1,12 @@
 """The tests for Home Assistant frontend."""
-# pylint: disable=protected-access,too-many-public-methods
+# pylint: disable=protected-access
 import re
 import unittest
 
 import requests
 
 import homeassistant.bootstrap as bootstrap
-import homeassistant.components.http as http
+from homeassistant.components import http
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 
 from tests.common import get_test_instance_port, get_test_home_assistant
@@ -24,26 +24,25 @@ def _url(path=""):
     return HTTP_BASE_URL + path
 
 
-def setUpModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def setUpModule():
     """Initialize a Home Assistant server."""
     global hass
 
     hass = get_test_home_assistant()
 
-    hass.bus.listen('test_event', lambda _: _)
-    hass.states.set('test.test', 'a_state')
-
-    bootstrap.setup_component(
+    assert bootstrap.setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
                        http.CONF_SERVER_PORT: SERVER_PORT}})
 
-    bootstrap.setup_component(hass, 'frontend')
+    assert bootstrap.setup_component(hass, 'frontend')
 
     hass.start()
 
 
-def tearDownModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def tearDownModule():
     """Stop everything that was started."""
     hass.stop()
 
@@ -53,12 +52,11 @@ class TestFrontend(unittest.TestCase):
 
     def tearDown(self):
         """Stop everything that was started."""
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
     def test_frontend_and_static(self):
         """Test if we can get the frontend."""
         req = requests.get(_url(""))
-
         self.assertEqual(200, req.status_code)
 
         # Test we can retrieve frontend.js
@@ -67,21 +65,8 @@ class TestFrontend(unittest.TestCase):
             req.text)
 
         self.assertIsNotNone(frontendjs)
-
-        req = requests.head(_url(frontendjs.groups(0)[0]))
-
+        req = requests.get(_url(frontendjs.groups(0)[0]))
         self.assertEqual(200, req.status_code)
-
-    def test_auto_filling_in_api_password(self):
-        """Test for auto filling of API password."""
-        req = requests.get(
-            _url("?{}={}".format(http.DATA_API_PASSWORD, API_PASSWORD)))
-
-        self.assertEqual(200, req.status_code)
-
-        auth_text = re.search(r"auth='{}'".format(API_PASSWORD), req.text)
-
-        self.assertIsNotNone(auth_text)
 
     def test_404(self):
         """Test for HTTP 404 error."""
@@ -90,3 +75,15 @@ class TestFrontend(unittest.TestCase):
     def test_we_cannot_POST_to_root(self):
         """Test that POST is not allow to root."""
         self.assertEqual(405, requests.post(_url("")).status_code)
+
+    def test_states_routes(self):
+        """All served by index."""
+        req = requests.get(_url("/states"))
+        self.assertEqual(200, req.status_code)
+
+        req = requests.get(_url("/states/group.non_existing"))
+        self.assertEqual(404, req.status_code)
+
+        hass.states.set('group.existing', 'on', {'view': True})
+        req = requests.get(_url("/states/group.existing"))
+        self.assertEqual(200, req.status_code)

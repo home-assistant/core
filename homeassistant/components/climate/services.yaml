@@ -1,0 +1,96 @@
+set_aux_heat:
+  description: Turn auxillary heater on/off for climate device
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'climate.kitchen'
+
+    aux_heat:
+      description: New value of axillary heater
+      example: true
+
+set_away_mode:
+  description: Turn away mode on/off for climate device
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'climate.kitchen'
+
+    away_mode:
+      description: New value of away mode
+      example: true
+
+set_temperature:
+  description: Set target temperature of climate device
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'climate.kitchen'
+
+    temperature:
+      description: New target temperature for hvac
+      example: 25
+
+    target_temp_high:
+      description: New target high tempereature for hvac
+      example: 26
+ 
+    target_temp_low:
+      description: New target low temperature for hvac
+      example: 20
+
+    operation_mode:
+      description: Operation mode to set temperature to. This defaults to current_operation mode if not set, or set incorrectly.
+      example: 'Heat'
+
+set_humidity:
+  description: Set target humidity of climate device
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'climate.kitchen'
+
+    humidity:
+      description: New target humidity for climate device
+      example: 60
+
+set_fan_mode:
+  description: Set fan operation for climate device
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'climate.nest'
+
+    fan:
+      description: New value of fan mode
+      example: On Low
+
+set_operation_mode:
+  description: Set operation mode for climate device
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'climet.nest'
+
+    operation_mode:
+      description: New value of operation mode
+      example: Heat
+
+
+set_swing_mode:
+  description: Set swing operation for climate device
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: '.nest'
+
+    swing_mode:
+    description: New value of swing mode
+    example: 1

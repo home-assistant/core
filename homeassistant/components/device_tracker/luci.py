@@ -11,10 +11,11 @@ import threading
 from datetime import timedelta
 
 import requests
+import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago.
@@ -22,20 +23,20 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string
+})
+
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Luci scanner."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-        return None
-
     scanner = LuciDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
-# pylint: disable=too-many-instance-attributes
 class LuciDeviceScanner(object):
     """This class queries a wireless router running OpenWrt firmware.
 
@@ -93,7 +94,7 @@ class LuciDeviceScanner(object):
             return False
 
         with self.lock:
-            _LOGGER.info("Checking ARP")
+            _LOGGER.info('Checking ARP')
 
             url = 'http://{}/cgi-bin/luci/rpc/sys'.format(self.host)
             result = _req_json_rpc(url, 'net.arptable',
@@ -117,19 +118,19 @@ def _req_json_rpc(url, method, *args, **kwargs):
     try:
         res = requests.post(url, data=data, timeout=5, **kwargs)
     except requests.exceptions.Timeout:
-        _LOGGER.exception("Connection to the router timed out")
+        _LOGGER.exception('Connection to the router timed out')
         return
     if res.status_code == 200:
         try:
             result = res.json()
         except ValueError:
             # If json decoder could not parse the response
-            _LOGGER.exception("Failed to parse response from luci")
+            _LOGGER.exception('Failed to parse response from luci')
             return
         try:
             return result['result']
         except KeyError:
-            _LOGGER.exception("No result in response from luci")
+            _LOGGER.exception('No result in response from luci')
             return
     elif res.status_code == 401:
         # Authentication error
@@ -138,7 +139,7 @@ def _req_json_rpc(url, method, *args, **kwargs):
             "please check your username and password")
         return
     else:
-        _LOGGER.error("Invalid response from luci: %s", res)
+        _LOGGER.error('Invalid response from luci: %s', res)
 
 
 def _get_token(host, username, password):

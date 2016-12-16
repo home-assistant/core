@@ -11,10 +11,11 @@ import threading
 from datetime import timedelta
 
 import requests
+import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago.
@@ -22,20 +23,20 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
+})
+
 
 def get_scanner(hass, config):
     """Validate the configuration and return an ubus scanner."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-        return None
-
     scanner = UbusDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
-# pylint: disable=too-many-instance-attributes
 class UbusDeviceScanner(object):
     """
     This class queries a wireless router running OpenWrt firmware.

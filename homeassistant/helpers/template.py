@@ -1,65 +1,169 @@
 """Template helper methods for rendering strings with HA data."""
-# pylint: disable=too-few-public-methods
+from datetime import datetime
 import json
 import logging
+import re
 
 import jinja2
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
-from homeassistant.components import group
-from homeassistant.const import STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import (
+    STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL)
 from homeassistant.core import State
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
+from homeassistant.loader import get_component
 from homeassistant.util import convert, dt as dt_util, location as loc_util
+from homeassistant.util.async import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
+DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+_RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
+_RE_GET_ENTITIES = re.compile(
+    r"(?:(?:states\.|(?:is_state|is_state_attr|states)\(.)([\w]+\.[\w]+))",
+    re.I | re.M
+)
 
 
-def render_with_possible_json_value(hass, template, value,
-                                    error_value=_SENTINEL):
-    """Render template with value exposed.
-
-    If valid JSON will expose value_json too.
-    """
-    variables = {
-        'value': value
-    }
-    try:
-        variables['value_json'] = json.loads(value)
-    except ValueError:
-        pass
-
-    try:
-        return render(hass, template, variables)
-    except TemplateError as ex:
-        _LOGGER.error('Error parsing value: %s', ex)
-        return value if error_value is _SENTINEL else error_value
+def attach(hass, obj):
+    """Recursively attach hass to all template instances in list and dict."""
+    if isinstance(obj, list):
+        for child in obj:
+            attach(hass, child)
+    elif isinstance(obj, dict):
+        for child in obj.values():
+            attach(hass, child)
+    elif isinstance(obj, Template):
+        obj.hass = hass
 
 
-def render(hass, template, variables=None, **kwargs):
-    """Render given template."""
-    if variables is not None:
-        kwargs.update(variables)
+def extract_entities(template):
+    """Extract all entities for state_changed listener from template string."""
+    if template is None or _RE_NONE_ENTITIES.search(template):
+        return MATCH_ALL
 
-    location_methods = LocationMethods(hass)
-    utcnow = dt_util.utcnow()
+    extraction = _RE_GET_ENTITIES.findall(template)
+    if len(extraction) > 0:
+        return list(set(extraction))
+    return MATCH_ALL
 
-    try:
-        return ENV.from_string(template, {
+
+class Template(object):
+    """Class to hold a template and manage caching and rendering."""
+
+    def __init__(self, template, hass=None):
+        """Instantiate a Template."""
+        if not isinstance(template, str):
+            raise TypeError('Expected template to be a string')
+
+        self.template = template
+        self._compiled_code = None
+        self._compiled = None
+        self.hass = hass
+
+    def ensure_valid(self):
+        """Return if template is valid."""
+        if self._compiled_code is not None:
+            return
+
+        try:
+            self._compiled_code = ENV.compile(self.template)
+        except jinja2.exceptions.TemplateSyntaxError as err:
+            raise TemplateError(err)
+
+    def extract_entities(self):
+        """Extract all entities for state_changed listener."""
+        return extract_entities(self.template)
+
+    def render(self, variables=None, **kwargs):
+        """Render given template."""
+        if variables is not None:
+            kwargs.update(variables)
+
+        return run_callback_threadsafe(
+            self.hass.loop, self.async_render, kwargs).result()
+
+    def async_render(self, variables=None, **kwargs):
+        """Render given template.
+
+        This method must be run in the event loop.
+        """
+        self._ensure_compiled()
+
+        if variables is not None:
+            kwargs.update(variables)
+
+        try:
+            return self._compiled.render(kwargs).strip()
+        except jinja2.TemplateError as err:
+            raise TemplateError(err)
+
+    def render_with_possible_json_value(self, value, error_value=_SENTINEL):
+        """Render template with value exposed.
+
+        If valid JSON will expose value_json too.
+        """
+        return run_callback_threadsafe(
+            self.hass.loop, self.async_render_with_possible_json_value, value,
+            error_value).result()
+
+    # pylint: disable=invalid-name
+    def async_render_with_possible_json_value(self, value,
+                                              error_value=_SENTINEL):
+        """Render template with value exposed.
+
+        If valid JSON will expose value_json too.
+
+        This method must be run in the event loop.
+        """
+        self._ensure_compiled()
+
+        variables = {
+            'value': value
+        }
+        try:
+            variables['value_json'] = json.loads(value)
+        except ValueError:
+            pass
+
+        try:
+            return self._compiled.render(variables).strip()
+        except jinja2.TemplateError as ex:
+            _LOGGER.error('Error parsing value: %s (value: %s, template: %s)',
+                          ex, value, self.template)
+            return value if error_value is _SENTINEL else error_value
+
+    def _ensure_compiled(self):
+        """Bind a template to a specific hass instance."""
+        if self._compiled is not None:
+            return
+
+        self.ensure_valid()
+
+        assert self.hass is not None, 'hass variable not set on template'
+
+        location_methods = LocationMethods(self.hass)
+
+        global_vars = ENV.make_globals({
             'closest': location_methods.closest,
             'distance': location_methods.distance,
-            'float': forgiving_float,
-            'is_state': hass.states.is_state,
-            'is_state_attr': hass.states.is_state_attr,
-            'now': dt_util.as_local(utcnow),
-            'states': AllStates(hass),
-            'utcnow': utcnow,
-            'as_timestamp': dt_util.as_timestamp,
-        }).render(kwargs).strip()
-    except jinja2.TemplateError as err:
-        raise TemplateError(err)
+            'is_state': self.hass.states.is_state,
+            'is_state_attr': self.hass.states.is_state_attr,
+            'states': AllStates(self.hass),
+        })
+
+        self._compiled = jinja2.Template.from_code(
+            ENV, self._compiled_code, global_vars, None)
+
+        return self._compiled
+
+    def __eq__(self, other):
+        """Compare template with another."""
+        return (self.__class__ == other.__class__ and
+                self.template == other.template and
+                self.hass == other.hass)
 
 
 class AllStates(object):
@@ -75,7 +179,7 @@ class AllStates(object):
 
     def __iter__(self):
         """Return all states."""
-        return iter(sorted(self._hass.states.all(),
+        return iter(sorted(self._hass.states.async_all(),
                            key=lambda state: state.entity_id))
 
     def __call__(self, entity_id):
@@ -99,7 +203,7 @@ class DomainStates(object):
     def __iter__(self):
         """Return the iteration over all the states."""
         return iter(sorted(
-            (state for state in self._hass.states.all()
+            (state for state in self._hass.states.async_all()
              if state.domain == self._domain),
             key=lambda state: state.entity_id))
 
@@ -167,6 +271,8 @@ class LocationMethods(object):
             else:
                 gr_entity_id = str(entities)
 
+            group = get_component('group')
+
             states = [self._hass.states.get(entity_id) for entity_id
                       in group.expand_entity_ids(self._hass, [gr_entity_id])]
 
@@ -217,7 +323,8 @@ class LocationMethods(object):
         if len(locations) == 1:
             return self._hass.config.distance(*locations[0])
 
-        return loc_util.distance(*locations[0] + locations[1])
+        return self._hass.config.units.length(
+            loc_util.distance(*locations[0] + locations[1]), 'm')
 
     def _resolve_state(self, entity_id_or_state):
         """Return state or entity_id if given."""
@@ -247,6 +354,54 @@ def multiply(value, amount):
         return value
 
 
+def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True):
+    """Filter to convert given timestamp to format."""
+    try:
+        date = dt_util.utc_from_timestamp(value)
+
+        if local:
+            date = dt_util.as_local(date)
+
+        return date.strftime(date_format)
+    except (ValueError, TypeError):
+        # If timestamp can't be converted
+        return value
+
+
+def timestamp_local(value):
+    """Filter to convert given timestamp to local date/time."""
+    try:
+        return dt_util.as_local(
+            dt_util.utc_from_timestamp(value)).strftime(DATE_STR_FORMAT)
+    except (ValueError, TypeError):
+        # If timestamp can't be converted
+        return value
+
+
+def timestamp_utc(value):
+    """Filter to convert given timestamp to UTC date/time."""
+    try:
+        return dt_util.utc_from_timestamp(value).strftime(DATE_STR_FORMAT)
+    except (ValueError, TypeError):
+        # If timestamp can't be converted
+        return value
+
+
+def strptime(string, fmt):
+    """Parse a time string to datetime."""
+    try:
+        return datetime.strptime(string, fmt)
+    except (ValueError, AttributeError):
+        return string
+
+
+def fail_when_undefined(value):
+    """Filter to force a failure when the value is undefined."""
+    if isinstance(value, jinja2.Undefined):
+        value()
+    return value
+
+
 def forgiving_float(value):
     """Try to convert value to a float."""
     try:
@@ -262,6 +417,17 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         """Test if callback is safe."""
         return isinstance(obj, AllStates) or super().is_safe_callable(obj)
 
+
 ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
+ENV.filters['timestamp_custom'] = timestamp_custom
+ENV.filters['timestamp_local'] = timestamp_local
+ENV.filters['timestamp_utc'] = timestamp_utc
+ENV.filters['is_defined'] = fail_when_undefined
+ENV.globals['float'] = forgiving_float
+ENV.globals['now'] = dt_util.now
+ENV.globals['utcnow'] = dt_util.utcnow
+ENV.globals['as_timestamp'] = dt_util.as_timestamp
+ENV.globals['relative_time'] = dt_util.get_age
+ENV.globals['strptime'] = strptime

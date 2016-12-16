@@ -8,24 +8,23 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.mqtt as mqtt
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
+from homeassistant.core import callback
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import (
+    CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
+    CONF_PAYLOAD_ON)
+import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-CONF_PAYLOAD_ON = 'payload_on'
-CONF_PAYLOAD_OFF = 'payload_off'
-
-DEFAULT_NAME = "MQTT Switch"
-DEFAULT_PAYLOAD_ON = "ON"
-DEFAULT_PAYLOAD_OFF = "OFF"
+DEFAULT_NAME = 'MQTT Switch'
+DEFAULT_PAYLOAD_ON = 'ON'
+DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_OPTIMISTIC = False
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
@@ -37,22 +36,25 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Add MQTT switch."""
-    add_devices_callback([MqttSwitch(
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the MQTT switch."""
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+    if value_template is not None:
+        value_template.hass = hass
+    add_devices([MqttSwitch(
         hass,
-        config[CONF_NAME],
+        config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
-        config[CONF_COMMAND_TOPIC],
-        config[CONF_QOS],
-        config[CONF_RETAIN],
-        config[CONF_PAYLOAD_ON],
-        config[CONF_PAYLOAD_OFF],
-        config[CONF_OPTIMISTIC],
-        config.get(CONF_VALUE_TEMPLATE))])
+        config.get(CONF_COMMAND_TOPIC),
+        config.get(CONF_QOS),
+        config.get(CONF_RETAIN),
+        config.get(CONF_PAYLOAD_ON),
+        config.get(CONF_PAYLOAD_OFF),
+        config.get(CONF_OPTIMISTIC),
+        value_template,
+    )])
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using MQTT."""
 
@@ -70,24 +72,25 @@ class MqttSwitch(SwitchDevice):
         self._payload_off = payload_off
         self._optimistic = optimistic
 
+        @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
             if value_template is not None:
-                payload = template.render_with_possible_json_value(
-                    hass, value_template, payload)
+                payload = value_template.async_render_with_possible_json_value(
+                    payload)
             if payload == self._payload_on:
                 self._state = True
-                self.update_ha_state()
+                hass.async_add_job(self.async_update_ha_state())
             elif payload == self._payload_off:
                 self._state = False
-                self.update_ha_state()
+                hass.async_add_job(self.async_update_ha_state())
 
         if self._state_topic is None:
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            mqtt.subscribe(hass, self._state_topic, message_received,
-                           self._qos)
+            mqtt.subscribe(
+                hass, self._state_topic, message_received, self._qos)
 
     @property
     def should_poll(self):

@@ -5,97 +5,38 @@ Component to interface with cameras.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/camera/
 """
+import asyncio
 import logging
-import re
-import time
 
-import requests
+from aiohttp import web
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.components import bloomsky
-from homeassistant.const import HTTP_OK, HTTP_NOT_FOUND, ATTR_ENTITY_ID
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-
+from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
 SCAN_INTERVAL = 30
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-# Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {
-    bloomsky.DISCOVER_CAMERAS: 'bloomsky',
-}
-
 STATE_RECORDING = 'recording'
 STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
 
-ENTITY_IMAGE_URL = '/api/camera_proxy/{0}'
-
-MULTIPART_BOUNDARY = '--jpgboundary'
-MJPEG_START_HEADER = 'Content-type: {0}\r\n\r\n'
+ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 
 
-# pylint: disable=too-many-branches
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Setup the camera component."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
-        DISCOVERY_PLATFORMS)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
-    component.setup(config)
+    hass.http.register_view(CameraImageView(component.entities))
+    hass.http.register_view(CameraMjpegStream(component.entities))
 
-    def _proxy_camera_image(handler, path_match, data):
-        """Serve the camera image via the HA server."""
-        entity_id = path_match.group(ATTR_ENTITY_ID)
-        camera = component.entities.get(entity_id)
-
-        if camera is None:
-            handler.send_response(HTTP_NOT_FOUND)
-            handler.end_headers()
-            return
-
-        response = camera.camera_image()
-
-        if response is None:
-            handler.send_response(HTTP_NOT_FOUND)
-            handler.end_headers()
-            return
-
-        handler.send_response(HTTP_OK)
-        handler.write_content(response)
-
-    hass.http.register_path(
-        'GET',
-        re.compile(r'/api/camera_proxy/(?P<entity_id>[a-zA-Z\._0-9]+)'),
-        _proxy_camera_image)
-
-    def _proxy_camera_mjpeg_stream(handler, path_match, data):
-        """Proxy the camera image as an mjpeg stream via the HA server."""
-        entity_id = path_match.group(ATTR_ENTITY_ID)
-        camera = component.entities.get(entity_id)
-
-        if camera is None:
-            handler.send_response(HTTP_NOT_FOUND)
-            handler.end_headers()
-            return
-
-        try:
-            camera.is_streaming = True
-            camera.update_ha_state()
-            camera.mjpeg_stream(handler)
-
-        except (requests.RequestException, IOError):
-            camera.is_streaming = False
-            camera.update_ha_state()
-
-    hass.http.register_path(
-        'GET',
-        re.compile(r'/api/camera_proxy_stream/(?P<entity_id>[a-zA-Z\._0-9]+)'),
-        _proxy_camera_mjpeg_stream)
-
+    yield from component.async_setup(config)
     return True
 
 
@@ -107,6 +48,11 @@ class Camera(Entity):
         self.is_streaming = False
 
     @property
+    def access_token(self):
+        """Access token for this camera."""
+        return str(id(self))
+
+    @property
     def should_poll(self):
         """No need to poll cameras."""
         return False
@@ -114,7 +60,7 @@ class Camera(Entity):
     @property
     def entity_picture(self):
         """Return a link to the camera feed as entity picture."""
-        return ENTITY_IMAGE_URL.format(self.entity_id)
+        return ENTITY_IMAGE_URL.format(self.entity_id, self.access_token)
 
     @property
     def is_recording(self):
@@ -135,32 +81,58 @@ class Camera(Entity):
         """Return bytes of camera image."""
         raise NotImplementedError()
 
-    def mjpeg_stream(self, handler):
-        """Generate an HTTP MJPEG stream from camera images."""
-        def write_string(text):
-            """Helper method to write a string to the stream."""
-            handler.request.sendall(bytes(text + '\r\n', 'utf-8'))
+    @asyncio.coroutine
+    def async_camera_image(self):
+        """Return bytes of camera image.
 
-        write_string('HTTP/1.1 200 OK')
-        write_string('Content-type: multipart/x-mixed-replace; '
-                     'boundary={}'.format(MULTIPART_BOUNDARY))
-        write_string('')
-        write_string(MULTIPART_BOUNDARY)
+        This method must be run in the event loop.
+        """
+        image = yield from self.hass.loop.run_in_executor(
+            None, self.camera_image)
+        return image
 
-        while True:
-            img_bytes = self.camera_image()
+    @asyncio.coroutine
+    def handle_async_mjpeg_stream(self, request):
+        """Generate an HTTP MJPEG stream from camera images.
 
-            if img_bytes is None:
-                continue
+        This method must be run in the event loop.
+        """
+        response = web.StreamResponse()
 
-            write_string('Content-length: {}'.format(len(img_bytes)))
-            write_string('Content-type: image/jpeg')
-            write_string('')
-            handler.request.sendall(img_bytes)
-            write_string('')
-            write_string(MULTIPART_BOUNDARY)
+        response.content_type = ('multipart/x-mixed-replace; '
+                                 'boundary=--jpegboundary')
+        yield from response.prepare(request)
 
-            time.sleep(0.5)
+        def write(img_bytes):
+            """Write image to stream."""
+            response.write(bytes(
+                '--jpegboundary\r\n'
+                'Content-Type: image/jpeg\r\n'
+                'Content-Length: {}\r\n\r\n'.format(
+                    len(img_bytes)), 'utf-8') + img_bytes + b'\r\n')
+
+        last_image = None
+
+        try:
+            while True:
+                img_bytes = yield from self.async_camera_image()
+                if not img_bytes:
+                    break
+
+                if img_bytes is not None and img_bytes != last_image:
+                    write(img_bytes)
+
+                    # Chrome seems to always ignore first picture,
+                    # print it twice.
+                    if last_image is None:
+                        write(img_bytes)
+
+                    last_image = img_bytes
+                    yield from response.drain()
+
+                yield from asyncio.sleep(.5)
+        finally:
+            yield from response.write_eof()
 
     @property
     def state(self):
@@ -175,7 +147,9 @@ class Camera(Entity):
     @property
     def state_attributes(self):
         """Camera state attributes."""
-        attr = {}
+        attr = {
+            'access_token': self.access_token,
+        }
 
         if self.model:
             attr['model_name'] = self.model
@@ -184,3 +158,64 @@ class Camera(Entity):
             attr['brand'] = self.brand
 
         return attr
+
+
+class CameraView(HomeAssistantView):
+    """Base CameraView."""
+
+    requires_auth = False
+
+    def __init__(self, entities):
+        """Initialize a basic camera view."""
+        self.entities = entities
+
+    @asyncio.coroutine
+    def get(self, request, entity_id):
+        """Start a get request."""
+        camera = self.entities.get(entity_id)
+
+        if camera is None:
+            return web.Response(status=404)
+
+        authenticated = (request[KEY_AUTHENTICATED] or
+                         request.GET.get('token') == camera.access_token)
+
+        if not authenticated:
+            return web.Response(status=401)
+
+        response = yield from self.handle(request, camera)
+        return response
+
+    @asyncio.coroutine
+    def handle(self, request, camera):
+        """Hanlde the camera request."""
+        raise NotImplementedError()
+
+
+class CameraImageView(CameraView):
+    """Camera view to serve an image."""
+
+    url = "/api/camera_proxy/{entity_id}"
+    name = "api:camera:image"
+
+    @asyncio.coroutine
+    def handle(self, request, camera):
+        """Serve camera image."""
+        image = yield from camera.async_camera_image()
+
+        if image is None:
+            return web.Response(status=500)
+
+        return web.Response(body=image)
+
+
+class CameraMjpegStream(CameraView):
+    """Camera View to serve an MJPEG stream."""
+
+    url = "/api/camera_proxy_stream/{entity_id}"
+    name = "api:camera:stream"
+
+    @asyncio.coroutine
+    def handle(self, request, camera):
+        """Serve camera image."""
+        yield from camera.handle_async_mjpeg_stream(request)

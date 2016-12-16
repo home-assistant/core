@@ -1,5 +1,5 @@
 """
-Support for exposed aREST RESTful API of a device.
+Support for an exposed aREST RESTful API of a device.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.arest/
@@ -8,34 +8,32 @@ import logging
 from datetime import timedelta
 
 import requests
+import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (BinarySensorDevice,
-                                                    SENSOR_CLASSES)
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA, SENSOR_CLASSES_SCHEMA)
+from homeassistant.const import (
+    CONF_RESOURCE, CONF_PIN, CONF_NAME, CONF_SENSOR_CLASS)
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-# Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
-CONF_RESOURCE = 'resource'
-CONF_PIN = 'pin'
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_PIN): cv.string,
+    vol.Optional(CONF_SENSOR_CLASS): SENSOR_CLASSES_SCHEMA,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the aREST binary sensor."""
     resource = config.get(CONF_RESOURCE)
     pin = config.get(CONF_PIN)
-
-    sensor_class = config.get('sensor_class')
-    if sensor_class not in SENSOR_CLASSES:
-        _LOGGER.warning('Unknown sensor class: %s', sensor_class)
-        sensor_class = None
-
-    if None in (resource, pin):
-        _LOGGER.error('Not all required config keys present: %s',
-                      ', '.join((CONF_RESOURCE, CONF_PIN)))
-        return False
+    sensor_class = config.get(CONF_SENSOR_CLASS)
 
     try:
         response = requests.get(resource, timeout=10).json()
@@ -52,14 +50,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     arest = ArestData(resource, pin)
 
     add_devices([ArestBinarySensor(
-        arest,
-        resource,
-        config.get('name', response['name']),
-        sensor_class,
-        pin)])
+        arest, resource, config.get(CONF_NAME, response[CONF_NAME]),
+        sensor_class, pin)])
 
 
-# pylint: disable=too-many-instance-attributes, too-many-arguments
 class ArestBinarySensor(BinarySensorDevice):
     """Implement an aREST binary sensor for a pin."""
 
@@ -98,7 +92,6 @@ class ArestBinarySensor(BinarySensorDevice):
         self.arest.update()
 
 
-# pylint: disable=too-few-public-methods
 class ArestData(object):
     """Class for handling the data retrieval for pins."""
 

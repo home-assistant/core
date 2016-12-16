@@ -7,23 +7,26 @@ import requests
 from homeassistant import bootstrap, const
 import homeassistant.components.device_tracker as device_tracker
 import homeassistant.components.http as http
+from homeassistant.const import CONF_PLATFORM
 
 from tests.common import get_test_home_assistant, get_test_instance_port
 
 SERVER_PORT = get_test_instance_port()
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
 
-hass = None
+hass = None  # pylint: disable=invalid-name
 
 
-def _url(data={}):
+def _url(data=None):
     """Helper method to generate URLs."""
+    data = data or {}
     data = "&".join(["{}={}".format(name, value) for
                      name, value in data.items()])
     return "{}{}locative?{}".format(HTTP_BASE_URL, const.URL_API, data)
 
 
-def setUpModule():   # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+def setUpModule():
     """Initalize a Home Assistant server."""
     global hass
 
@@ -31,16 +34,13 @@ def setUpModule():   # pylint: disable=invalid-name
     bootstrap.setup_component(hass, http.DOMAIN, {
         http.DOMAIN: {
             http.CONF_SERVER_PORT: SERVER_PORT
-        }
+        },
     })
-
-    # Set up API
-    bootstrap.setup_component(hass, 'api')
 
     # Set up device tracker
     bootstrap.setup_component(hass, device_tracker.DOMAIN, {
         device_tracker.DOMAIN: {
-            'platform': 'locative'
+            CONF_PLATFORM: 'locative'
         }
     })
 
@@ -59,7 +59,7 @@ class TestLocative(unittest.TestCase):
 
     def tearDown(self):
         """Stop everything that was started."""
-        hass.pool.block_till_done()
+        hass.block_till_done()
 
     def test_missing_data(self, update_config):
         """Test missing data."""

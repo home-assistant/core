@@ -1,7 +1,7 @@
 """The tests for the MQTT lock platform."""
 import unittest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import setup_component
 from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED,
                                  ATTR_ASSUMED_STATE)
 import homeassistant.components.lock as lock
@@ -24,7 +24,7 @@ class TestLockMQTT(unittest.TestCase):
     def test_controlling_state_via_topic(self):
         """Test the controlling state via topic."""
         self.hass.config.components = ['mqtt']
-        assert _setup_component(self.hass, lock.DOMAIN, {
+        assert setup_component(self.hass, lock.DOMAIN, {
             lock.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
@@ -40,13 +40,13 @@ class TestLockMQTT(unittest.TestCase):
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'state-topic', 'LOCK')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_LOCKED, state.state)
 
         fire_mqtt_message(self.hass, 'state-topic', 'UNLOCK')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_UNLOCKED, state.state)
@@ -54,7 +54,7 @@ class TestLockMQTT(unittest.TestCase):
     def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending MQTT commands in optimistic mode."""
         self.hass.config.components = ['mqtt']
-        assert _setup_component(self.hass, lock.DOMAIN, {
+        assert setup_component(self.hass, lock.DOMAIN, {
             lock.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
@@ -70,7 +70,7 @@ class TestLockMQTT(unittest.TestCase):
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         lock.lock(self.hass, 'lock.test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'LOCK', 2, False),
                          self.mock_publish.mock_calls[-1][1])
@@ -78,7 +78,7 @@ class TestLockMQTT(unittest.TestCase):
         self.assertEqual(STATE_LOCKED, state.state)
 
         lock.unlock(self.hass, 'lock.test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'UNLOCK', 2, False),
                          self.mock_publish.mock_calls[-1][1])
@@ -88,7 +88,7 @@ class TestLockMQTT(unittest.TestCase):
     def test_controlling_state_via_topic_and_json_message(self):
         """Test the controlling state via topic and JSON message."""
         self.hass.config.components = ['mqtt']
-        assert _setup_component(self.hass, lock.DOMAIN, {
+        assert setup_component(self.hass, lock.DOMAIN, {
             lock.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
@@ -104,13 +104,13 @@ class TestLockMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNLOCKED, state.state)
 
         fire_mqtt_message(self.hass, 'state-topic', '{"val":"LOCK"}')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_LOCKED, state.state)
 
         fire_mqtt_message(self.hass, 'state-topic', '{"val":"UNLOCK"}')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_UNLOCKED, state.state)

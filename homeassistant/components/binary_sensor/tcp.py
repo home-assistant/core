@@ -7,21 +7,20 @@ https://home-assistant.io/components/binary_sensor.tcp/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.sensor.tcp import Sensor, CONF_VALUE_ON
-
+from homeassistant.components.sensor.tcp import (
+    TcpSensor, CONF_VALUE_ON, PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Create the binary sensor."""
-    if not BinarySensor.validate_config(config):
-        return False
-
-    add_entities((BinarySensor(hass, config),))
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 
 
-class BinarySensor(BinarySensorDevice, Sensor):
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the TCP binary sensor."""
+    add_devices([TcpBinarySensor(hass, config)])
+
+
+class TcpBinarySensor(BinarySensorDevice, TcpSensor):
     """A binary sensor which is on when its state == CONF_VALUE_ON."""
 
     required = (CONF_VALUE_ON,)

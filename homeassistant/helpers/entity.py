@@ -1,43 +1,70 @@
 """An abstract class for entities."""
-import re
-from collections import defaultdict
+import asyncio
+import logging
+import functools as ft
+from timeit import default_timer as timer
+
+from typing import Any, Optional, List, Dict
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_ENTITY_PICTURE)
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
+from homeassistant.util.async import (
+    run_coroutine_threadsafe, run_callback_threadsafe)
 
-# Dict mapping entity_id to a boolean that overwrites the hidden property
-_OVERWRITE = defaultdict(dict)
+# Entity attributes that we will overwrite
+_OVERWRITE = {}  # type: Dict[str, Any]
 
-# Pattern for validating entity IDs (format: <domain>.<entity>)
-ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
+_LOGGER = logging.getLogger(__name__)
 
 
-def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
+def generate_entity_id(entity_id_format: str, name: Optional[str],
+                       current_ids: Optional[List[str]]=None,
+                       hass: Optional[HomeAssistant]=None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-    name = (name or DEVICE_DEFAULT_NAME).lower()
     if current_ids is None:
         if hass is None:
-            raise RuntimeError("Missing required parameter currentids or hass")
+            raise ValueError("Missing required parameter currentids or hass")
+        else:
+            return run_callback_threadsafe(
+                hass.loop, async_generate_entity_id, entity_id_format, name,
+                current_ids, hass
+            ).result()
 
-        current_ids = hass.states.entity_ids()
+    name = (name or DEVICE_DEFAULT_NAME).lower()
 
     return ensure_unique_string(
         entity_id_format.format(slugify(name)), current_ids)
 
 
-def split_entity_id(entity_id):
-    """Split a state entity_id into domain, object_id."""
-    return entity_id.split(".", 1)
+def async_generate_entity_id(entity_id_format: str, name: Optional[str],
+                             current_ids: Optional[List[str]]=None,
+                             hass: Optional[HomeAssistant]=None) -> str:
+    """Generate a unique entity ID based on given entity IDs or used IDs."""
+    if current_ids is None:
+        if hass is None:
+            raise ValueError("Missing required parameter currentids or hass")
+
+        current_ids = hass.states.async_entity_ids()
+    name = (name or DEVICE_DEFAULT_NAME).lower()
+
+    return ensure_unique_string(
+        entity_id_format.format(slugify(name)), current_ids)
 
 
-def valid_entity_id(entity_id):
-    """Test if an entity ID is a valid format."""
-    return ENTITY_ID_PATTERN.match(entity_id) is not None
+def set_customize(customize: Dict[str, Any]) -> None:
+    """Overwrite all current customize settings.
+
+    Async friendly.
+    """
+    global _OVERWRITE
+
+    _OVERWRITE = {key.lower(): val for key, val in customize.items()}
 
 
 class Entity(object):
@@ -47,8 +74,13 @@ class Entity(object):
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inheriting
     # this class. These may be used to customize the behavior of the entity.
+    entity_id = None  # type: str
+
+    # Owning hass instance. Will be set by EntityComponent
+    hass = None  # type: Optional[HomeAssistant]
+
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
 
         False if entity pushes its state to HA.
@@ -56,17 +88,17 @@ class Entity(object):
         return True
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return an unique ID."""
         return "{}.{}".format(self.__class__, id(self))
 
     @property
-    def name(self):
+    def name(self) -> Optional[str]:
         """Return the name of the entity."""
         return None
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the entity."""
         return STATE_UNKNOWN
 
@@ -102,37 +134,67 @@ class Entity(object):
         return None
 
     @property
-    def hidden(self):
+    def hidden(self) -> bool:
         """Return True if the entity should be hidden from UIs."""
         return False
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return True
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return False
 
-    def update(self):
-        """Retrieve latest state."""
-        pass
+    @property
+    def force_update(self) -> bool:
+        """Return True if state updates should be forced.
 
-    entity_id = None
+        If True, a state change will be triggered anytime the state property is
+        updated, not just when the value changes.
+        """
+        return False
+
+    def update(self):
+        """Retrieve latest state.
+
+        When not implemented, will forward call to async version if available.
+        """
+        async_update = getattr(self, 'async_update', None)
+
+        if async_update is None:
+            return
+
+        run_coroutine_threadsafe(async_update(), self.hass.loop).result()
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
 
-    hass = None
-
     def update_ha_state(self, force_refresh=False):
         """Update Home Assistant with current state of entity.
 
         If force_refresh == True will update entity before setting state.
+        """
+        # We're already in a thread, do the force refresh here.
+        if force_refresh and not hasattr(self, 'async_update'):
+            self.update()
+            force_refresh = False
+
+        run_coroutine_threadsafe(
+            self.async_update_ha_state(force_refresh), self.hass.loop
+        ).result()
+
+    @asyncio.coroutine
+    def async_update_ha_state(self, force_refresh=False):
+        """Update Home Assistant with current state of entity.
+
+        If force_refresh == True will update entity before setting state.
+
+        This method must be run in the event loop.
         """
         if self.hass is None:
             raise RuntimeError("Attribute hass is None for {}".format(self))
@@ -142,9 +204,23 @@ class Entity(object):
                 "No entity id specified for entity {}".format(self.name))
 
         if force_refresh:
-            self.update()
+            if hasattr(self, 'async_update'):
+                # pylint: disable=no-member
+                yield from self.async_update()
+            else:
+                # PS: Run this in our own thread pool once we have
+                #     future support?
+                yield from self.hass.loop.run_in_executor(None, self.update)
 
-        state = STATE_UNKNOWN if self.state is None else str(self.state)
+        start = timer()
+
+        state = self.state
+
+        if state is None:
+            state = STATE_UNKNOWN
+        else:
+            state = str(state)
+
         attr = self.state_attributes or {}
 
         device_attr = self.device_state_attributes
@@ -165,6 +241,14 @@ class Entity(object):
         self._attr_setter('hidden', bool, ATTR_HIDDEN, attr)
         self._attr_setter('assumed_state', bool, ATTR_ASSUMED_STATE, attr)
 
+        end = timer()
+
+        if end - start > 0.4:
+            _LOGGER.warning('Updating state for %s took %.3f seconds. '
+                            'Please report platform to the developers at '
+                            'https://goo.gl/Nvioub', self.entity_id,
+                            end - start)
+
         # Overwrite properties that have been set in the config file.
         attr.update(_OVERWRITE.get(self.entity_id, {}))
 
@@ -173,15 +257,47 @@ class Entity(object):
             attr.pop(ATTR_HIDDEN)
 
         # Convert temperature if we detect one
-        if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_CELSIUS,
-                                                  TEMP_FAHRENHEIT):
+        try:
+            unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
+            units = self.hass.config.units
+            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
+                    unit_of_measure != units.temperature_unit):
+                prec = len(state) - state.index('.') - 1 if '.' in state else 0
+                temp = units.temperature(float(state), unit_of_measure)
+                state = str(round(temp) if prec == 0 else round(temp, prec))
+                attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
+        except ValueError:
+            # Could not convert state to float
+            pass
 
-            state, attr[ATTR_UNIT_OF_MEASUREMENT] = \
-                self.hass.config.temperature(
-                    state, attr[ATTR_UNIT_OF_MEASUREMENT])
-            state = str(state)
+        self.hass.states.async_set(
+            self.entity_id, state, attr, self.force_update)
 
-        return self.hass.states.set(self.entity_id, state, attr)
+    def schedule_update_ha_state(self, force_refresh=False):
+        """Shedule a update ha state change task.
+
+        That is only needed on executor to not block.
+        """
+        # We're already in a thread, do the force refresh here.
+        if force_refresh and not hasattr(self, 'async_update'):
+            self.update()
+            force_refresh = False
+
+        self.hass.add_job(self.async_update_ha_state(force_refresh))
+
+    def remove(self) -> None:
+        """Remove entitiy from HASS."""
+        run_coroutine_threadsafe(
+            self.async_remove(), self.hass.loop
+        ).result()
+
+    @asyncio.coroutine
+    def async_remove(self) -> None:
+        """Remove entitiy from async HASS.
+
+        This method must be run in the event loop.
+        """
+        self.hass.states.async_remove(self.entity_id)
 
     def _attr_setter(self, name, typ, attr, attrs):
         """Helper method to populate attributes based on properties."""
@@ -207,46 +323,52 @@ class Entity(object):
         """Return the representation."""
         return "<Entity {}: {}>".format(self.name, self.state)
 
-    @staticmethod
-    def overwrite_attribute(entity_id, attrs, vals):
-        """Overwrite any attribute of an entity.
-
-        This function should receive a list of attributes and a
-        list of values. Set attribute to None to remove any overwritten
-        value in place.
-        """
-        for attr, val in zip(attrs, vals):
-            if val is None:
-                _OVERWRITE[entity_id.lower()].pop(attr, None)
-            else:
-                _OVERWRITE[entity_id.lower()][attr] = val
-
 
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
     # pylint: disable=no-self-use
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state."""
         return STATE_ON if self.is_on else STATE_OFF
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if entity is on."""
-        return False
+        raise NotImplementedError()
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
-        pass
+        raise NotImplementedError()
 
-    def turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        yield from self.hass.loop.run_in_executor(
+            None, ft.partial(self.turn_on, **kwargs))
+
+    def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        pass
+        raise NotImplementedError()
 
-    def toggle(self, **kwargs):
-        """Toggle the entity off."""
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        yield from self.hass.loop.run_in_executor(
+            None, ft.partial(self.turn_off, **kwargs))
+
+    def toggle(self) -> None:
+        """Toggle the entity."""
         if self.is_on:
-            self.turn_off(**kwargs)
+            self.turn_off()
         else:
-            self.turn_on(**kwargs)
+            self.turn_on()
+
+    @asyncio.coroutine
+    def async_toggle(self):
+        """Toggle the entity."""
+        if self.is_on:
+            yield from self.async_turn_off()
+        else:
+            yield from self.async_turn_on()

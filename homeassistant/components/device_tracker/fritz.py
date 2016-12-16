@@ -7,9 +7,11 @@ https://home-assistant.io/components/device_tracker.fritz/
 import logging
 from datetime import timedelta
 
-from homeassistant.components.device_tracker import DOMAIN
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['https://github.com/deisi/fritzconnection/archive/'
@@ -21,40 +23,34 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_DEFAULT_IP = '169.254.1.1'  # This IP is valid for all FRITZ!Box routers.
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
+    vol.Optional(CONF_PASSWORD, default='admin'): cv.string,
+    vol.Optional(CONF_USERNAME, default=''): cv.string
+})
+
 
 def get_scanner(hass, config):
     """Validate the configuration and return FritzBoxScanner."""
-    if not validate_config(config,
-                           {DOMAIN: []},
-                           _LOGGER):
-        return None
-
     scanner = FritzBoxScanner(config[DOMAIN])
     return scanner if scanner.success_init else None
 
 
-# pylint: disable=too-many-instance-attributes
 class FritzBoxScanner(object):
     """This class queries a FRITZ!Box router."""
 
     def __init__(self, config):
         """Initialize the scanner."""
         self.last_results = []
-        self.host = '169.254.1.1'  # This IP is valid for all FRITZ!Box router.
-        self.username = 'admin'
-        self.password = ''
+        self.host = config[CONF_HOST]
+        self.username = config[CONF_USERNAME]
+        self.password = config[CONF_PASSWORD]
         self.success_init = True
 
         # pylint: disable=import-error
         import fritzconnection as fc
-
-        # Check for user specific configuration
-        if CONF_HOST in config.keys():
-            self.host = config[CONF_HOST]
-        if CONF_USERNAME in config.keys():
-            self.username = config[CONF_USERNAME]
-        if CONF_PASSWORD in config.keys():
-            self.password = config[CONF_PASSWORD]
 
         # Establish a connection to the FRITZ!Box.
         try:
@@ -70,25 +66,27 @@ class FritzBoxScanner(object):
             self.success_init = False
 
         if self.success_init:
-            _LOGGER.info("Successfully connected to %s",
+            _LOGGER.info('Successfully connected to %s',
                          self.fritz_box.modelname)
             self._update_info()
         else:
-            _LOGGER.error("Failed to establish connection to FRITZ!Box "
-                          "with IP: %s", self.host)
+            _LOGGER.error('Failed to establish connection to FRITZ!Box '
+                          'with IP: %s', self.host)
 
     def scan_devices(self):
         """Scan for new devices and return a list of found device ids."""
         self._update_info()
         active_hosts = []
         for known_host in self.last_results:
-            if known_host["status"] == "1":
-                active_hosts.append(known_host["mac"])
+            if known_host['status'] == '1' and known_host.get('mac'):
+                active_hosts.append(known_host['mac'])
         return active_hosts
 
     def get_device_name(self, mac):
         """Return the name of the given device or None if is not known."""
-        ret = self.fritz_box.get_specific_host_entry(mac)["NewHostName"]
+        ret = self.fritz_box.get_specific_host_entry(mac).get(
+            'NewHostName'
+        )
         if ret == {}:
             return None
         return ret
@@ -99,6 +97,6 @@ class FritzBoxScanner(object):
         if not self.success_init:
             return False
 
-        _LOGGER.info("Scanning")
+        _LOGGER.info('Scanning')
         self.last_results = self.fritz_box.get_hosts_info()
         return True

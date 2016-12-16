@@ -6,40 +6,44 @@ https://home-assistant.io/components/sensor.command_line/
 """
 import logging
 import subprocess
-from datetime import timedelta
 
-from homeassistant.const import CONF_VALUE_TEMPLATE
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND,
+    STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers import template
-from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Command Sensor"
+DEFAULT_NAME = 'Command Sensor'
 
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+SCAN_INTERVAL = 60
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_COMMAND): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+})
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Command Sensor."""
-    if config.get('command') is None:
-        _LOGGER.error('Missing required variable: "command"')
-        return False
+    name = config.get(CONF_NAME)
+    command = config.get(CONF_COMMAND)
+    unit = config.get(CONF_UNIT_OF_MEASUREMENT)
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+    if value_template is not None:
+        value_template.hass = hass
+    data = CommandSensorData(command)
 
-    data = CommandSensorData(config.get('command'))
-
-    add_devices_callback([CommandSensor(
-        hass,
-        data,
-        config.get('name', DEFAULT_NAME),
-        config.get('unit_of_measurement'),
-        config.get(CONF_VALUE_TEMPLATE)
-    )])
+    add_devices([CommandSensor(hass, data, name, unit, value_template)])
 
 
-# pylint: disable=too-many-arguments
 class CommandSensor(Entity):
     """Representation of a sensor that is using shell commands."""
 
@@ -48,7 +52,7 @@ class CommandSensor(Entity):
         self._hass = hass
         self.data = data
         self._name = name
-        self._state = False
+        self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
         self.update()
@@ -73,14 +77,15 @@ class CommandSensor(Entity):
         self.data.update()
         value = self.data.value
 
-        if self._value_template is not None:
-            self._state = template.render_with_possible_json_value(
-                self._hass, self._value_template, value, 'N/A')
+        if value is None:
+            value = STATE_UNKNOWN
+        elif self._value_template is not None:
+            self._state = self._value_template.render_with_possible_json_value(
+                value, STATE_UNKNOWN)
         else:
             self._state = value
 
 
-# pylint: disable=too-few-public-methods
 class CommandSensorData(object):
     """The class for handling the data retrieval."""
 
@@ -89,13 +94,15 @@ class CommandSensorData(object):
         self.command = command
         self.value = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data with a shell command."""
         _LOGGER.info('Running command: %s', self.command)
 
         try:
-            return_value = subprocess.check_output(self.command, shell=True)
+            return_value = subprocess.check_output(self.command, shell=True,
+                                                   timeout=15)
             self.value = return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
             _LOGGER.error('Command failed: %s', self.command)
+        except subprocess.TimeoutExpired:
+            _LOGGER.error('Timeout for command: %s', self.command)

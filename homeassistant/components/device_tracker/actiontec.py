@@ -10,11 +10,12 @@ import telnetlib
 import threading
 from collections import namedtuple
 from datetime import timedelta
+import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago.
@@ -28,16 +29,19 @@ _LEASES_REGEX = re.compile(
     r'\svalid\sfor:\s(?P<timevalid>(-?\d+))' +
     r'\ssec')
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
+})
+
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return an Actiontec scanner."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-        return None
     scanner = ActiontecDeviceScanner(config[DOMAIN])
     return scanner if scanner.success_init else None
+
 
 Device = namedtuple("Device", ["mac", "ip", "last_update"])
 

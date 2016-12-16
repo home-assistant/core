@@ -4,8 +4,6 @@ Support for Ecobee sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ecobee/
 """
-import logging
-
 from homeassistant.components import ecobee
 from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
@@ -13,11 +11,9 @@ from homeassistant.helpers.entity import Entity
 DEPENDENCIES = ['ecobee']
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_FAHRENHEIT],
-    'humidity': ['Humidity', '%'],
-    'occupancy': ['Occupancy', None]
+    'humidity': ['Humidity', '%']
 }
 
-_LOGGER = logging.getLogger(__name__)
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
 
@@ -30,8 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for index in range(len(data.ecobee.thermostats)):
         for sensor in data.ecobee.get_remote_sensors(index):
             for item in sensor['capability']:
-                if item['type'] not in ('temperature',
-                                        'humidity', 'occupancy'):
+                if item['type'] not in ('temperature', 'humidity'):
                     continue
 
                 dev.append(EcobeeSensor(sensor['name'], item['type'], index))

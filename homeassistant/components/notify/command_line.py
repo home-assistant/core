@@ -6,26 +6,29 @@ https://home-assistant.io/components/notify.command_line/
 """
 import logging
 import subprocess
-from homeassistant.helpers import validate_config
+
+import voluptuous as vol
+
+from homeassistant.const import (CONF_COMMAND, CONF_NAME)
 from homeassistant.components.notify import (
-    DOMAIN, BaseNotificationService)
+    BaseNotificationService, PLATFORM_SCHEMA)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_COMMAND): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+})
 
 
 def get_service(hass, config):
     """Get the Command Line notification service."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['command']},
-                           _LOGGER):
-        return None
-
-    command = config['command']
+    command = config[CONF_COMMAND]
 
     return CommandLineNotificationService(command)
 
 
-# pylint: disable=too-few-public-methods
 class CommandLineNotificationService(BaseNotificationService):
     """Implement the notification service for the Command Line service."""
 

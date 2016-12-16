@@ -4,7 +4,6 @@ Combination of multiple media players into one for a universal controller.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.universal/
 """
-
 import logging
 # pylint: disable=import-error
 from copy import copy
@@ -15,11 +14,12 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_DURATION, ATTR_MEDIA_EPISODE,
     ATTR_MEDIA_PLAYLIST, ATTR_MEDIA_SEASON, ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK,
-    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, ATTR_INPUT_SOURCE_LIST,
     ATTR_SUPPORTED_MEDIA_COMMANDS, DOMAIN, SERVICE_PLAY_MEDIA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, ATTR_INPUT_SOURCE,
-    SERVICE_SELECT_SOURCE, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
+    ATTR_INPUT_SOURCE, SERVICE_SELECT_SOURCE, SERVICE_CLEAR_PLAYLIST,
+    MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, CONF_NAME, SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE,
@@ -38,6 +38,7 @@ CONF_COMMANDS = 'commands'
 CONF_PLATFORM = 'platform'
 CONF_SERVICE = 'service'
 CONF_SERVICE_DATA = 'service_data'
+ATTR_DATA = 'data'
 CONF_STATE = 'state'
 
 OFF_STATES = [STATE_IDLE, STATE_OFF]
@@ -132,10 +133,8 @@ def validate_attributes(config):
 class UniversalMediaPlayer(MediaPlayerDevice):
     """Representation of an universal media player."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self, hass, name, children, commands, attributes):
         """Initialize the Universal media device."""
-        # pylint: disable=too-many-arguments
         self.hass = hass
         self._name = name
         self._children = children
@@ -180,13 +179,14 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def _call_service(self, service_name, service_data=None,
                       allow_override=False):
         """Call either a specified or active child's service."""
-        if allow_override and service_name in self._cmds:
-            call_from_config(
-                self.hass, self._cmds[service_name], blocking=True)
-            return
-
         if service_data is None:
             service_data = {}
+
+        if allow_override and service_name in self._cmds:
+            call_from_config(
+                self.hass, self._cmds[service_name],
+                variables=service_data, blocking=True)
+            return
 
         active_child = self._child_state
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
@@ -235,7 +235,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of entity specified in attributes or active child."""
-        return self._child_attr(ATTR_MEDIA_VOLUME_LEVEL)
+        return self._override_or_child_attr(ATTR_MEDIA_VOLUME_LEVEL)
 
     @property
     def is_volume_muted(self):
@@ -262,6 +262,17 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def media_image_url(self):
         """Image url of current playing media."""
         return self._child_attr(ATTR_ENTITY_PICTURE)
+
+    @property
+    def entity_picture(self):
+        """
+        Return image of the media playing.
+
+        The universal media player doesn't use the parent class logic, since
+        the url is coming from child entity pictures which have already been
+        sent through the API proxy.
+        """
+        return self.media_image_url
 
     @property
     def media_title(self):
@@ -324,9 +335,14 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         return self._child_attr(ATTR_APP_NAME)
 
     @property
-    def current_source(self):
+    def source(self):
         """"Return the current input source of the device."""
-        return self._child_attr(ATTR_INPUT_SOURCE)
+        return self._override_or_child_attr(ATTR_INPUT_SOURCE)
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return self._override_or_child_attr(ATTR_INPUT_SOURCE_LIST)
 
     @property
     def supported_media_commands(self):
@@ -342,13 +358,18 @@ class UniversalMediaPlayer(MediaPlayerDevice):
                                               SERVICE_VOLUME_DOWN]]):
             flags |= SUPPORT_VOLUME_STEP
             flags &= ~SUPPORT_VOLUME_SET
+        elif SERVICE_VOLUME_SET in self._cmds:
+            flags |= SUPPORT_VOLUME_SET
 
         if SERVICE_VOLUME_MUTE in self._cmds and \
                 ATTR_MEDIA_VOLUME_MUTED in self._attrs:
             flags |= SUPPORT_VOLUME_MUTE
 
-        if SUPPORT_SELECT_SOURCE in self._cmds:
+        if SERVICE_SELECT_SOURCE in self._cmds:
             flags |= SUPPORT_SELECT_SOURCE
+
+        if SERVICE_CLEAR_PLAYLIST in self._cmds:
+            flags |= SUPPORT_CLEAR_PLAYLIST
 
         return flags
 
@@ -375,7 +396,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def set_volume_level(self, volume_level):
         """Set volume level, range 0..1."""
         data = {ATTR_MEDIA_VOLUME_LEVEL: volume_level}
-        self._call_service(SERVICE_VOLUME_SET, data)
+        self._call_service(SERVICE_VOLUME_SET, data, allow_override=True)
 
     def media_play(self):
         """Send play commmand."""
@@ -402,7 +423,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         data = {ATTR_MEDIA_SEEK_POSITION: position}
         self._call_service(SERVICE_MEDIA_SEEK, data)
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
                 ATTR_MEDIA_CONTENT_ID: media_id}
@@ -423,7 +444,11 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def select_source(self, source):
         """Set the input source."""
         data = {ATTR_INPUT_SOURCE: source}
-        self._call_service(SERVICE_SELECT_SOURCE, data)
+        self._call_service(SERVICE_SELECT_SOURCE, data, allow_override=True)
+
+    def clear_playlist(self):
+        """Clear players playlist."""
+        self._call_service(SERVICE_CLEAR_PLAYLIST)
 
     def update(self):
         """Update state in HA."""

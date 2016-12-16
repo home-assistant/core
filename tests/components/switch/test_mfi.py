@@ -2,6 +2,7 @@
 import unittest
 import unittest.mock as mock
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.switch as switch
 import homeassistant.components.switch.mfi as mfi
 from tests.components.sensor import test_mfi as test_mfi_sensor
@@ -22,6 +23,8 @@ class TestMfiSwitchSetup(test_mfi_sensor.TestMfiSensorSetup):
             'port': 6123,
             'username': 'user',
             'password': 'pass',
+            'ssl': True,
+            'verify_ssl': True,
         }
     }
 
@@ -35,7 +38,7 @@ class TestMfiSwitchSetup(test_mfi_sensor.TestMfiSensorSetup):
         print(ports['bad'].model)
         mock_client.return_value.get_devices.return_value = \
             [mock.MagicMock(ports=ports)]
-        assert self.COMPONENT.setup(self.hass, self.GOOD_CONFIG)
+        assert setup_component(self.hass, switch.DOMAIN, self.GOOD_CONFIG)
         for ident, port in ports.items():
             if ident != 'bad':
                 mock_switch.assert_any_call(port)
@@ -48,8 +51,6 @@ class TestMfiSwitch(unittest.TestCase):
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.latitude = 32.87336
-        self.hass.config.longitude = 117.22743
         self.port = mock.MagicMock()
         self.switch = mfi.MfiSwitch(self.port)
 
@@ -64,7 +65,8 @@ class TestMfiSwitch(unittest.TestCase):
     def test_update(self):
         """Test update."""
         self.switch.update()
-        self.port.refresh.assert_called_once_with()
+        self.assertEqual(self.port.refresh.call_count, 1)
+        self.assertEqual(self.port.refresh.call_args, mock.call())
 
     def test_update_with_target_state(self):
         """Test update with target state."""
@@ -81,13 +83,15 @@ class TestMfiSwitch(unittest.TestCase):
     def test_turn_on(self):
         """Test turn_on."""
         self.switch.turn_on()
-        self.port.control.assert_called_once_with(True)
+        self.assertEqual(self.port.control.call_count, 1)
+        self.assertEqual(self.port.control.call_args, mock.call(True))
         self.assertTrue(self.switch._target_state)
 
     def test_turn_off(self):
         """Test turn_off."""
         self.switch.turn_off()
-        self.port.control.assert_called_once_with(False)
+        self.assertEqual(self.port.control.call_count, 1)
+        self.assertEqual(self.port.control.call_args, mock.call(False))
         self.assertFalse(self.switch._target_state)
 
     def test_current_power_mwh(self):

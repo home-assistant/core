@@ -11,25 +11,24 @@ import homeassistant.core as ha
 import homeassistant.loader as loader
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 
-DOMAIN = "demo"
-
 DEPENDENCIES = ['conversation', 'introduction', 'zone']
+DOMAIN = 'demo'
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     'alarm_control_panel',
     'binary_sensor',
+    'calendar',
     'camera',
+    'climate',
+    'cover',
     'device_tracker',
-    'garage_door',
-    'hvac',
+    'fan',
     'light',
     'lock',
     'media_player',
     'notify',
-    'rollershutter',
     'sensor',
     'switch',
-    'thermostat',
 ]
 
 
@@ -37,6 +36,7 @@ def setup(hass, config):
     """Setup a demo environment."""
     group = loader.get_component('group')
     configurator = loader.get_component('configurator')
+    persistent_notification = loader.get_component('persistent_notification')
 
     config.setdefault(ha.DOMAIN, {})
     config.setdefault(DOMAIN, {})
@@ -59,34 +59,38 @@ def setup(hass, config):
         demo_config[component] = {CONF_PLATFORM: 'demo'}
         bootstrap.setup_component(hass, component, demo_config)
 
+    # Setup example persistent notification
+    persistent_notification.create(
+        hass, 'This is an example of a persistent notification.',
+        title='Example Notification')
+
     # Setup room groups
     lights = sorted(hass.states.entity_ids('light'))
     switches = sorted(hass.states.entity_ids('switch'))
     media_players = sorted(hass.states.entity_ids('media_player'))
-    group.Group(hass, 'living room', [
+
+    group.Group.create_group(hass, 'living room', [
         lights[1], switches[0], 'input_select.living_room_preset',
         'rollershutter.living_room_window', media_players[1],
         'scene.romantic_lights'])
-    group.Group(hass, 'bedroom', [lights[0], switches[1], media_players[0]])
-    group.Group(hass, 'kitchen', [
+    group.Group.create_group(hass, 'bedroom', [
+        lights[0], switches[1], media_players[0],
+        'input_slider.noise_allowance'])
+    group.Group.create_group(hass, 'kitchen', [
         lights[2], 'rollershutter.kitchen_window', 'lock.kitchen_door'])
-    group.Group(hass, 'doors', [
+    group.Group.create_group(hass, 'doors', [
         'lock.front_door', 'lock.kitchen_door',
         'garage_door.right_garage_door', 'garage_door.left_garage_door'])
-    group.Group(hass, 'automations', [
+    group.Group.create_group(hass, 'automations', [
         'input_select.who_cooks', 'input_boolean.notify', ])
-    group.Group(hass, 'people', [
+    group.Group.create_group(hass, 'people', [
         'device_tracker.demo_anne_therese', 'device_tracker.demo_home_boy',
         'device_tracker.demo_paulus'])
-    group.Group(hass, 'thermostats', [
-        'thermostat.nest', 'thermostat.thermostat'])
-    group.Group(hass, 'downstairs', [
+    group.Group.create_group(hass, 'downstairs', [
         'group.living_room', 'group.kitchen',
         'scene.romantic_lights', 'rollershutter.kitchen_window',
-        'rollershutter.living_room_window', 'group.doors', 'thermostat.nest',
-    ], view=True)
-    group.Group(hass, 'Upstairs', [
-        'thermostat.thermostat', 'group.bedroom',
+        'rollershutter.living_room_window', 'group.doors',
+        'thermostat.ecobee',
     ], view=True)
 
     # Setup scripts
@@ -145,6 +149,17 @@ def setup(hass, config):
         {'input_boolean': {'notify': {'icon': 'mdi:car',
                                       'initial': False,
                                       'name': 'Notify Anne Therese is home'}}})
+
+    # Set up input boolean
+    bootstrap.setup_component(
+        hass, 'input_slider',
+        {'input_slider': {
+            'noise_allowance': {'icon': 'mdi:bell-ring',
+                                'min': 0,
+                                'max': 10,
+                                'name': 'Allowed Noise',
+                                'unit_of_measurement': 'dB'}}})
+
     # Set up weblink
     bootstrap.setup_component(
         hass, 'weblink',

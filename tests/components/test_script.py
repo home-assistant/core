@@ -1,8 +1,9 @@
 """The tests for the Script component."""
-# pylint: disable=too-many-public-methods,protected-access
+# pylint: disable=protected-access
 import unittest
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.core import callback
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import script
 
 from tests.common import get_test_home_assistant
@@ -14,12 +15,14 @@ ENTITY_ID = 'script.test'
 class TestScriptComponent(unittest.TestCase):
     """Test the Script component."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -41,7 +44,7 @@ class TestScriptComponent(unittest.TestCase):
                 }
             },
         ):
-            assert not _setup_component(self.hass, 'script', {
+            assert not setup_component(self.hass, 'script', {
                 'script': value
             }), 'Script loaded with wrong config {}'.format(value)
 
@@ -52,13 +55,14 @@ class TestScriptComponent(unittest.TestCase):
         event = 'test_event'
         events = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             events.append(event)
 
         self.hass.bus.listen(event, record_event)
 
-        assert _setup_component(self.hass, 'script', {
+        assert setup_component(self.hass, 'script', {
             'script': {
                 'test': {
                     'sequence': [{
@@ -73,27 +77,37 @@ class TestScriptComponent(unittest.TestCase):
         })
 
         script.turn_on(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
 
         # Calling turn_on a second time should not advance the script
         script.turn_on(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(events))
+
+        script.turn_off(self.hass, ENTITY_ID)
+        self.hass.block_till_done()
+        self.assertFalse(script.is_on(self.hass, ENTITY_ID))
+        self.assertEqual(0, len(events))
+
+        state = self.hass.states.get('group.all_scripts')
+        assert state is not None
+        assert state.attributes.get('entity_id') == (ENTITY_ID,)
 
     def test_toggle_service(self):
         """Test the toggling of a service."""
         event = 'test_event'
         events = []
 
+        @callback
         def record_event(event):
             """Add recorded event to set."""
             events.append(event)
 
         self.hass.bus.listen(event, record_event)
 
-        assert _setup_component(self.hass, 'script', {
+        assert setup_component(self.hass, 'script', {
             'script': {
                 'test': {
                     'sequence': [{
@@ -108,12 +122,12 @@ class TestScriptComponent(unittest.TestCase):
         })
 
         script.toggle(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
 
         script.toggle(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertFalse(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(events))
 
@@ -121,13 +135,14 @@ class TestScriptComponent(unittest.TestCase):
         """Test different ways of passing in variables."""
         calls = []
 
+        @callback
         def record_call(service):
             """Add recorded event to set."""
             calls.append(service)
 
         self.hass.services.register('test', 'script', record_call)
 
-        assert _setup_component(self.hass, 'script', {
+        assert setup_component(self.hass, 'script', {
             'script': {
                 'test': {
                     'sequence': {
@@ -144,7 +159,7 @@ class TestScriptComponent(unittest.TestCase):
             'greeting': 'world'
         })
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[-1].data['hello'] == 'world'
@@ -153,7 +168,7 @@ class TestScriptComponent(unittest.TestCase):
             'greeting': 'universe',
         })
 
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         assert len(calls) == 2
         assert calls[-1].data['hello'] == 'universe'

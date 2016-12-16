@@ -4,53 +4,51 @@ Support for exposing a templated binary sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.template/
 """
+import asyncio
 import logging
 
-from homeassistant.components.binary_sensor import (BinarySensorDevice,
-                                                    ENTITY_ID_FORMAT,
-                                                    SENSOR_CLASSES)
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE
-from homeassistant.core import EVENT_STATE_CHANGED
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers import template
-from homeassistant.util import slugify
+import voluptuous as vol
 
-CONF_SENSORS = 'sensors'
+from homeassistant.core import callback
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA,
+    SENSOR_CLASSES_SCHEMA)
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_VALUE_TEMPLATE,
+    CONF_SENSOR_CLASS, CONF_SENSORS)
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.event import async_track_state_change
+import homeassistant.helpers.config_validation as cv
+
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_SCHEMA = vol.Schema({
+    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(CONF_SENSOR_CLASS, default=None): SENSOR_CLASSES_SCHEMA
+})
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: SENSOR_SCHEMA}),
+})
+
+
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup template binary sensors."""
     sensors = []
-    if config.get(CONF_SENSORS) is None:
-        _LOGGER.error('Missing configuration data for binary_sensor platform')
-        return False
 
     for device, device_config in config[CONF_SENSORS].items():
-
-        if device != slugify(device):
-            _LOGGER.error('Found invalid key for binary_sensor.template: %s. '
-                          'Use %s instead', device, slugify(device))
-            continue
-
-        if not isinstance(device_config, dict):
-            _LOGGER.error('Missing configuration data for binary_sensor %s',
-                          device)
-            continue
-
+        value_template = device_config[CONF_VALUE_TEMPLATE]
+        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
+                      value_template.extract_entities())
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        sensor_class = device_config.get('sensor_class')
-        value_template = device_config.get(CONF_VALUE_TEMPLATE)
+        sensor_class = device_config.get(CONF_SENSOR_CLASS)
 
-        if sensor_class not in SENSOR_CLASSES:
-            _LOGGER.error('Sensor class is not valid')
-            continue
-
-        if value_template is None:
-            _LOGGER.error(
-                'Missing %s for sensor %s', CONF_VALUE_TEMPLATE, device)
-            continue
+        if value_template is not None:
+            value_template.hass = hass
 
         sensors.append(
             BinarySensorTemplate(
@@ -58,39 +56,38 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device,
                 friendly_name,
                 sensor_class,
-                value_template)
+                value_template,
+                entity_ids)
             )
     if not sensors:
         _LOGGER.error('No sensors added')
         return False
-    add_devices(sensors)
 
+    yield from async_add_devices(sensors, True)
     return True
 
 
 class BinarySensorTemplate(BinarySensorDevice):
     """A virtual binary sensor that triggers from another sensor."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, device, friendly_name, sensor_class,
-                 value_template):
+                 value_template, entity_ids):
         """Initialize the Template binary sensor."""
         self.hass = hass
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device,
-                                            hass=hass)
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device,
+                                                  hass=hass)
         self._name = friendly_name
         self._sensor_class = sensor_class
         self._template = value_template
         self._state = None
 
-        self.update()
-
-        def template_bsensor_event_listener(event):
+        @callback
+        def template_bsensor_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
-            self.update_ha_state(True)
+            hass.async_add_job(self.async_update_ha_state, True)
 
-        hass.bus.listen(EVENT_STATE_CHANGED,
-                        template_bsensor_event_listener)
+        async_track_state_change(
+            hass, entity_ids, template_bsensor_state_listener)
 
     @property
     def name(self):
@@ -112,11 +109,11 @@ class BinarySensorTemplate(BinarySensorDevice):
         """No polling needed."""
         return False
 
-    def update(self):
-        """Get the latest data and update the state."""
+    @asyncio.coroutine
+    def async_update(self):
+        """Update the state from the template."""
         try:
-            self._state = template.render(self.hass,
-                                          self._template).lower() == 'true'
+            self._state = self._template.async_render().lower() == 'true'
         except TemplateError as ex:
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):

@@ -6,39 +6,40 @@ https://home-assistant.io/components/switch.edimax/
 """
 import logging
 
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+import voluptuous as vol
+
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
-from homeassistant.helpers import validate_config
+import homeassistant.helpers.config_validation as cv
 
-# constants
-DEFAULT_USERNAME = 'admin'
-DEFAULT_PASSWORD = '1234'
-DEVICE_DEFAULT_NAME = 'Edimax Smart Plug'
 REQUIREMENTS = ['https://github.com/rkabadi/pyedimax/archive/'
                 '365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_NAME = 'Edimax Smart Plug'
+DEFAULT_PASSWORD = '1234'
+DEFAULT_USERNAME = 'admin'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+})
+
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Edimax Smart Plugs."""
     from pyedimax.smartplug import SmartPlug
 
-    # pylint: disable=global-statement
-    # check for required values in configuration file
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: [CONF_HOST]},
-                           _LOGGER):
-        return False
-
     host = config.get(CONF_HOST)
-    auth = (config.get(CONF_USERNAME, DEFAULT_USERNAME),
-            config.get(CONF_PASSWORD, DEFAULT_PASSWORD))
-    name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
+    auth = (config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
+    name = config.get(CONF_NAME)
 
-    add_devices_callback([SmartPlugSwitch(SmartPlug(host, auth), name)])
+    add_devices([SmartPlugSwitch(SmartPlug(host, auth), name)])
 
 
 class SmartPlugSwitch(SwitchDevice):
@@ -48,6 +49,9 @@ class SmartPlugSwitch(SwitchDevice):
         """Initialize the switch."""
         self.smartplug = smartplug
         self._name = name
+        self._now_power = None
+        self._now_energy_day = None
+        self._state = False
 
     @property
     def name(self):
@@ -57,23 +61,17 @@ class SmartPlugSwitch(SwitchDevice):
     @property
     def current_power_mwh(self):
         """Return the current power usage in mWh."""
-        try:
-            return float(self.smartplug.now_power) / 1000000.0
-        except ValueError:
-            return None
+        return self._now_power
 
     @property
     def today_power_mw(self):
         """Return the today total power usage in mW."""
-        try:
-            return float(self.smartplug.now_energy_day) / 1000.0
-        except ValueError:
-            return None
+        return self._now_energy_day
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.smartplug.state == 'ON'
+        return self._state
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -82,3 +80,18 @@ class SmartPlugSwitch(SwitchDevice):
     def turn_off(self):
         """Turn the switch off."""
         self.smartplug.state = 'OFF'
+
+    def update(self):
+        """Update edimax switch."""
+        try:
+            self._now_power = float(self.smartplug.now_power) / 1000000.0
+        except (TypeError, ValueError):
+            self._now_power = None
+
+        try:
+            self._now_energy_day = (float(self.smartplug.now_energy_day) /
+                                    1000.0)
+        except (TypeError, ValueError):
+            self._now_energy_day = None
+
+        self._state = self.smartplug.state == 'ON'

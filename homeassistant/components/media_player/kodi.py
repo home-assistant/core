@@ -7,51 +7,91 @@ https://home-assistant.io/components/media_player.kodi/
 import logging
 import urllib
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
-    MediaPlayerDevice)
+    SUPPORT_TURN_OFF, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
+    CONF_PORT, CONF_USERNAME, CONF_PASSWORD)
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['jsonrpc-requests==0.3']
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['jsonrpc-requests==0.2']
+
+CONF_TURN_OFF_ACTION = 'turn_off_action'
+
+DEFAULT_NAME = 'Kodi'
+DEFAULT_PORT = 8080
+
+TURN_OFF_ACTION = [None, 'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
     SUPPORT_PLAY_MEDIA | SUPPORT_STOP
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_TURN_OFF_ACTION, default=None): vol.In(TURN_OFF_ACTION),
+    vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Kodi platform."""
-    url = '{}:{}'.format(config.get('host'), config.get('port', '8080'))
+    url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
 
     jsonrpc_url = config.get('url')  # deprecated
     if jsonrpc_url:
         url = jsonrpc_url.rstrip('/jsonrpc')
 
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+
+    if username is not None:
+        auth = (username, password)
+    else:
+        auth = None
+
     add_devices([
         KodiDevice(
-            config.get('name', 'Kodi'),
+            config.get(CONF_NAME),
             url,
-            auth=(
-                config.get('user', ''),
-                config.get('password', ''))),
+            auth=auth,
+            turn_off_action=config.get(CONF_TURN_OFF_ACTION)),
     ])
 
 
 class KodiDevice(MediaPlayerDevice):
     """Representation of a XBMC/Kodi device."""
 
-    # pylint: disable=too-many-public-methods, abstract-method
-    def __init__(self, name, url, auth=None):
+    def __init__(self, name, url, auth=None, turn_off_action=None):
         """Initialize the Kodi device."""
         import jsonrpc_requests
         self._name = name
         self._url = url
+        self._basic_auth_url = None
+
+        kwargs = {'timeout': 5}
+
+        if auth is not None:
+            kwargs['auth'] = auth
+            scheme, netloc, path, query, fragment = urllib.parse.urlsplit(url)
+            self._basic_auth_url = \
+                urllib.parse.urlunsplit((scheme, '{}:{}@{}'.format
+                                         (auth[0], auth[1], netloc),
+                                         path, query, fragment))
+
         self._server = jsonrpc_requests.Server(
-            '{}/jsonrpc'.format(self._url),
-            auth=auth)
+            '{}/jsonrpc'.format(self._url), **kwargs)
+
+        self._turn_off_action = turn_off_action
         self._players = list()
         self._properties = None
         self._item = None
@@ -83,7 +123,7 @@ class KodiDevice(MediaPlayerDevice):
         if len(self._players) == 0:
             return STATE_IDLE
 
-        if self._properties['speed'] == 0:
+        if self._properties['speed'] == 0 and not self._properties['live']:
             return STATE_PAUSED
         else:
             return STATE_PLAYING
@@ -99,7 +139,7 @@ class KodiDevice(MediaPlayerDevice):
 
             self._properties = self._server.Player.GetProperties(
                 player_id,
-                ['time', 'totaltime', 'speed']
+                ['time', 'totaltime', 'speed', 'live']
             )
 
             self._item = self._server.Player.GetItem(
@@ -142,7 +182,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        if self._properties is not None:
+        if self._properties is not None and not self._properties['live']:
             total_time = self._properties['totaltime']
 
             return (
@@ -161,6 +201,11 @@ class KodiDevice(MediaPlayerDevice):
         url_components = urllib.parse.urlparse(self._item['thumbnail'])
 
         if url_components.scheme == 'image':
+            if self._basic_auth_url is not None:
+                return '{}/image/{}'.format(
+                    self._basic_auth_url,
+                    urllib.parse.quote_plus(self._item['thumbnail']))
+
             return '{}/image/{}'.format(
                 self._url,
                 urllib.parse.quote_plus(self._item['thumbnail']))
@@ -172,20 +217,33 @@ class KodiDevice(MediaPlayerDevice):
         if self._item is not None:
             return self._item.get(
                 'title',
-                self._item.get(
-                    'label',
-                    self._item.get(
-                        'file',
-                        'unknown')))
+                self._item.get('label', self._item.get('file', 'unknown')))
 
     @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
-        return SUPPORT_KODI
+        supported_media_commands = SUPPORT_KODI
+
+        if self._turn_off_action in TURN_OFF_ACTION:
+            supported_media_commands |= SUPPORT_TURN_OFF
+
+        return supported_media_commands
 
     def turn_off(self):
-        """Turn off media player."""
-        self._server.System.Shutdown()
+        """Execute turn_off_action to turn off media player."""
+        if self._turn_off_action == 'quit':
+            self._server.Application.Quit()
+        elif self._turn_off_action == 'hibernate':
+            self._server.System.Hibernate()
+        elif self._turn_off_action == 'suspend':
+            self._server.System.Suspend()
+        elif self._turn_off_action == 'reboot':
+            self._server.System.Reboot()
+        elif self._turn_off_action == 'shutdown':
+            self._server.System.Shutdown()
+        else:
+            _LOGGER.warning('turn_off requested but turn_off_action is none')
+
         self.update_ha_state()
 
     def volume_up(self):
@@ -278,6 +336,9 @@ class KodiDevice(MediaPlayerDevice):
 
         self.update_ha_state()
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        self._server.Player.Open({media_type: media_id}, {})
+        if media_type == "CHANNEL":
+            self._server.Player.Open({"item": {"channelid": int(media_id)}})
+        else:
+            self._server.Player.Open({"item": {"file": str(media_id)}})

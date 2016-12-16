@@ -1,0 +1,3441 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Unit_Description Version="1.2" Unit_Name="RX-V675">
+  <Language Code="en">Title_1</Language>
+  <Menu Func="Unit" Title_1="System" YNC_Tag="System">
+    <Menu Func="Event" Title_1="Event">
+      <Put_1 Func="Event_On" ID="P1">On</Put_1>
+      <Put_1 Func="Event_Off" ID="P1">Off</Put_1>
+      <Get>
+        <Cmd ID="G1">Param_1</Cmd>
+        <Param_1>
+          <Direct Func="Event_On">On</Direct>
+          <Direct Func="Event_Off">Off</Direct>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Network_Update" Title_1="Network Update">
+      <Menu Func="Update_Status" Title_1="Status">
+        <Get>
+          <Cmd ID="G4">Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Update_Status_Ready">Available</Direct>
+            <Direct Func="Update_Status_Not_Ready">Unavailable</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="Rename" Title_1="Name" List_Type="Text_Input">
+      <Put_2>
+        <Cmd ID="P3">Param_1</Cmd>
+        <Param_1>
+          <Text>1,15,UTF-8</Text>
+        </Param_1>
+      </Put_2>
+      <Get>
+        <Cmd ID="G2">Param_1</Cmd>
+        <Param_1>
+          <Text>1,15,UTF-8</Text>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Power_Control" Title_1="Power Control">
+      <Menu Func="Power" Title_1="Power">
+        <Put_1 Func="Power_On" ID="P2">On</Put_1>
+        <Put_1 Func="Power_Standby" ID="P2">Standby</Put_1>
+      </Menu>
+      <Menu Func="Net_Standby" Title_1="Network Standby">
+        <Put_1 Func="Net_Standby_On" ID="P4">On</Put_1>
+        <Put_1 Func="Net_Standby_Off" ID="P4">Off</Put_1>
+        <Get>
+          <Cmd ID="G3">Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Net_Standby_On">On</Direct>
+            <Direct Func="Net_Standby_Off">Off</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func_Ex="DMR" Title_1="DMC Control">
+      <Put_1 Func_Ex="DMR_Off" ID="P5">Disable</Put_1>
+      <Put_1 Func_Ex="DMR_On" ID="P5">Enable</Put_1>
+      <Get>
+        <Cmd ID="G5">Param_1</Cmd>
+        <Param_1>
+          <Direct Func_Ex="DMR_Off">Disable</Direct>
+          <Direct Func_Ex="DMR_On">Enable</Direct>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P1">System,Misc,Event,Notice</Define>
+      <Define ID="P2">System,Power_Control,Power</Define>
+      <Define ID="P3">System,Misc,Network,Network_Name</Define>
+      <Define ID="P4">System,Misc,Network,Network_Standby</Define>
+      <Define ID="P5">System,Misc,Network,DMC_Control</Define>
+      <Define ID="G1">System,Misc,Event,Notice</Define>
+      <Define ID="G2">System,Misc,Network,Network_Name</Define>
+      <Define ID="G3">System,Misc,Network,Network_Standby</Define>
+      <Define ID="G4">System,Misc,Update,Yamaha_Network_Site,Status</Define>
+      <Define ID="G5">System,Misc,Network,DMC_Control</Define>
+    </Cmd_List>
+  </Menu>
+  <Menu Func="Subunit" Title_1="Main Zone" YNC_Tag="Main_Zone">
+    <Menu Func="Rename" Title_1="Name" List_Type="Text_Input">
+      <Put_2>
+        <Cmd ID="P5">Param_1</Cmd>
+        <Param_1>
+          <Text>1,9,Latin-1</Text>
+        </Param_1>
+      </Put_2>
+      <Get>
+        <Cmd ID="G3">Name,Zone=Param_1</Cmd>
+        <Param_1>
+          <Text>1,9,Latin-1</Text>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Title_1="Input/Scene" List_Type="Icon">
+      <Menu Func="Input" Func_Ex="Input" Title_1="Input" List_Type="Icon" Icon_on="/YamahaRemoteControl/Icons/icon000.png">
+        <Put_2>
+          <Cmd ID="P4">Param_1</Cmd>
+          <Param_1>
+            <Indirect ID="G2"/>
+          </Param_1>
+        </Put_2>
+        <Get>
+          <Cmd ID="G1">Input,Input_Sel=Param_1</Cmd>
+          <Param_1>
+            <Indirect ID="G2"/>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Input" Func_Ex="Scene" Title_1="Scene" List_Type="Icon" Icon_on="/YamahaRemoteControl/Icons/icon001.png">
+        <Put_2>
+          <Cmd ID="P6">Param_1</Cmd>
+          <Param_1>
+            <Indirect ID="G4"/>
+          </Param_1>
+        </Put_2>
+        <Get>
+          <Cmd ID="G1">Input,Input_Sel=Param_1</Cmd>
+          <Param_1>
+            <Indirect ID="G2"/>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="Vol" Title_1="Volume">
+      <Menu Func="Vol_Lvl" List_Type="Slider" Title_1="Level">
+        <Put_2>
+          <Cmd Type="Number" ID="P2">Val=Param_1:Exp=Param_2:Unit=Param_3</Cmd>
+          <Param_1>
+            <Range>-805,165,5</Range>
+          </Param_1>
+          <Param_2>
+            <Direct>1</Direct>
+          </Param_2>
+          <Param_3>
+            <Direct>dB</Direct>
+          </Param_3>
+        </Put_2>
+        <Get>
+          <Cmd Type="Number" ID="G1">Volume,Lvl,Val=Param_1:Volume,Lvl,Exp=Param_2:Volume,Lvl,Unit=Param_3</Cmd>
+          <Param_1>
+            <Range>-805,165,5</Range>
+          </Param_1>
+          <Param_2>
+            <Direct>1</Direct>
+          </Param_2>
+          <Param_3>
+            <Direct>dB</Direct>
+          </Param_3>
+        </Get>
+      </Menu>
+      <Menu Func="Vol_Mute" Title_1="Mute">
+        <Put_1 Func="Vol_Mute_On" ID="P3">On</Put_1>
+        <Put_1 Func="Vol_Mute_Off" ID="P3">Off</Put_1>
+        <Get>
+          <Cmd ID="G1">Volume,Mute=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Vol_Mute_On">On</Direct>
+            <Direct Func="Vol_Mute_Off">Off</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="Power_Control" Title_1="Power Control">
+      <Menu Func="Power" Title_1="Power">
+        <Put_1 Func="Power_On" ID="P1">On</Put_1>
+        <Put_1 Func="Power_Standby" ID="P1">Standby</Put_1>
+        <Get>
+          <Cmd ID="G1">Power_Control,Power=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Power_On">On</Direct>
+            <Direct Func="Power_Standby">Standby</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Sleep" Title_1="Sleep">
+        <Put_1 Func="Sleep_Last" ID="P23">Last</Put_1>
+        <Put_1 Func="Sleep_1" ID="P23">120 min</Put_1>
+        <Put_1 Func="Sleep_2" ID="P23">90 min</Put_1>
+        <Put_1 Func="Sleep_3" ID="P23">60 min</Put_1>
+        <Put_1 Func="Sleep_4" ID="P23">30 min</Put_1>
+        <Put_1 Func="Sleep_Off" ID="P23">Off</Put_1>
+        <Get>
+          <Cmd ID="G1">Power_Control,Sleep=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Sleep_1">120 min</Direct>
+            <Direct Func="Sleep_2">90 min</Direct>
+            <Direct Func="Sleep_3">60 min</Direct>
+            <Direct Func="Sleep_4">30 min</Direct>
+            <Direct Func="Sleep_Off">Off</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="Play_Control" Title_1="Play Control">
+      <Menu Func="Playback" Title_1="Play">
+        <Put_1 ID="P24" Layout="24" Func="Play">Play</Put_1>
+        <Put_1 ID="P24" Layout="23" Func="Pause">Pause</Put_1>
+        <Put_1 ID="P24" Layout="22" Func="Stop">Stop</Put_1>
+      </Menu>
+      <Menu Func="Plus_Minus" Title_1="Skip">
+        <Put_1 ID="P24" Layout="28" Func="Plus_1">Skip Fwd</Put_1>
+        <Put_1 ID="P24" Layout="27" Func="Minus_1">Skip Rev</Put_1>
+      </Menu>
+    </Menu>
+    <Menu Func="List_Control" Title_1="List Control">
+      <Menu Func="Cursor" List_Type="Cursor" Title_1="Cursor">
+        <Put_1 ID="P18" Layout="5" Func="Cursor_Up">Up</Put_1>
+        <Put_1 ID="P18" Layout="9" Func="Cursor_Down">Down</Put_1>
+        <Put_1 ID="P18" Layout="6" Func="Cursor_Left">Left</Put_1>
+        <Put_1 ID="P18" Layout="8" Func="Cursor_Right">Right</Put_1>
+        <Put_1 ID="P18" Layout="10" Func="Cursor_Return">Return</Put_1>
+        <Put_1 ID="P18" Layout="7" Func="Cursor_Sel">Sel</Put_1>
+        <Put_1 ID="P18" Func="Cursor_Home">Return to Home</Put_1>
+        <Put_1 ID="P19" Layout="3" Func="Cursor_On_Screen">On Screen</Put_1>
+        <Put_1 ID="P19" Layout="1" Func="Cursor_Top_Menu">Top Menu</Put_1>
+        <Put_1 ID="P19" Layout="2" Func="Cursor_Menu">Menu</Put_1>
+        <Put_1 ID="P19" Layout="4" Func="Cursor_Option">Option</Put_1>
+        <Put_1 ID="P19" Layout="11" Func="Cursor_Display">Display</Put_1>
+      </Menu>
+    </Menu>
+    <Menu Title_1="Setup">
+      <Menu Func_Ex="Surround" Title_1="Surround">
+        <Menu Func_Ex="Program" Title_1="Program" List_Type="Icon">
+          <Put_2>
+            <Cmd ID="P9">Param_1</Cmd>
+            <Param_1>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon018.png">Hall in Munich</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon019.png">Hall in Vienna</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon014.png">Chamber</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon013.png">Cellar Club</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon020.png">The Roxy Theatre</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon021.png">The Bottom Line</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon037.png">Sports</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon027.png">Action Game</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon032.png">Roleplaying Game</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon030.png">Music Video</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon033.png">Standard</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon036.png">Spectacle</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon029.png">Sci-Fi</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon028.png">Adventure</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon034.png">Drama</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon035.png">Mono Movie</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon039.png">Surround Decoder</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon024.png">2ch Stereo</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon025.png">7ch Stereo</Direct>
+            </Param_1>
+          </Put_2>
+          <Get>
+            <Cmd ID="G1">Surround,Program_Sel,Current,Sound_Program=Param_1</Cmd>
+            <Param_1>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon018.png">Hall in Munich</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon019.png">Hall in Vienna</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon014.png">Chamber</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon013.png">Cellar Club</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon020.png">The Roxy Theatre</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon021.png">The Bottom Line</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon037.png">Sports</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon027.png">Action Game</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon032.png">Roleplaying Game</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon030.png">Music Video</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon033.png">Standard</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon036.png">Spectacle</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon029.png">Sci-Fi</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon028.png">Adventure</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon034.png">Drama</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon035.png">Mono Movie</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon039.png">Surround Decoder</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon024.png">2ch Stereo</Direct>
+              <Direct Icon_on="/YamahaRemoteControl/Icons/icon025.png">7ch Stereo</Direct>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func_Ex="Straight" Title_1="Straight">
+          <Put_1 Func_Ex="Straight_On" ID="P10">On</Put_1>
+          <Put_1 Func_Ex="Straight_Off" ID="P10">Off</Put_1>
+          <Get>
+            <Cmd ID="G1">Surround,Program_Sel,Current,Straight=Param_1</Cmd>
+            <Param_1>
+              <Direct Func_Ex="Straight_On">On</Direct>
+              <Direct Func_Ex="Straight_Off">Off</Direct>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func_Ex="Enhancer" Title_1="Enhancer">
+          <Put_1 Func_Ex="Enhancer_On" ID="P11">On</Put_1>
+          <Put_1 Func_Ex="Enhancer_Off" ID="P11">Off</Put_1>
+          <Get>
+            <Cmd ID="G1">Surround,Program_Sel,Current,Enhancer=Param_1</Cmd>
+            <Param_1>
+              <Direct Func_Ex="Enhancer_On">On</Direct>
+              <Direct Func_Ex="Enhancer_Off">Off</Direct>
+            </Param_1>
+          </Get>
+        </Menu>
+      </Menu>
+      <Menu Func="Tone" Title_1="Tone">
+        <Menu Func="Bass" List_Type="Slider" Title_1="Bass">
+          <Put_2>
+            <Cmd Type="Number" ID="P7">Val=Param_1:Exp=Param_2:Unit=Param_3</Cmd>
+            <Param_1>
+              <Range>-60,60,5</Range>
+            </Param_1>
+            <Param_2>
+              <Direct>1</Direct>
+            </Param_2>
+            <Param_3>
+              <Direct>dB</Direct>
+            </Param_3>
+          </Put_2>
+          <Get>
+            <Cmd Type="Number" ID="G1">Sound_Video,Tone,Bass,Val=Param_1:Sound_Video,Tone,Bass,Exp=Param_2:Sound_Video,Tone,Bass,Unit=Param_3</Cmd>
+            <Param_1>
+              <Range>-60,60,5</Range>
+            </Param_1>
+            <Param_2>
+              <Direct>1</Direct>
+            </Param_2>
+            <Param_3>
+              <Direct>dB</Direct>
+            </Param_3>
+          </Get>
+        </Menu>
+        <Menu Func="Treble" List_Type="Slider" Title_1="Treble">
+          <Put_2>
+            <Cmd Type="Number" ID="P8">Val=Param_1:Exp=Param_2:Unit=Param_3</Cmd>
+            <Param_1>
+              <Range>-60,60,5</Range>
+            </Param_1>
+            <Param_2>
+              <Direct>1</Direct>
+            </Param_2>
+            <Param_3>
+              <Direct>dB</Direct>
+            </Param_3>
+          </Put_2>
+          <Get>
+            <Cmd Type="Number" ID="G1">Sound_Video,Tone,Treble,Val=Param_1:Sound_Video,Tone,Treble,Exp=Param_2:Sound_Video,Tone,Treble,Unit=Param_3</Cmd>
+            <Param_1>
+              <Range>-60,60,5</Range>
+            </Param_1>
+            <Param_2>
+              <Direct>1</Direct>
+            </Param_2>
+            <Param_3>
+              <Direct>dB</Direct>
+            </Param_3>
+          </Get>
+        </Menu>
+      </Menu>
+      <Menu Func_Ex="SW_Trim" List_Type="Slider" Title_1="Subwoofer Trim">
+        <Put_2>
+          <Cmd Type="Number" ID="P22">Val=Param_1:Exp=Param_2:Unit=Param_3</Cmd>
+          <Param_1>
+            <Range>-60,60,5</Range>
+          </Param_1>
+          <Param_2>
+            <Direct>1</Direct>
+          </Param_2>
+          <Param_3>
+            <Direct>dB</Direct>
+          </Param_3>
+        </Put_2>
+        <Get>
+          <Cmd Type="Number" ID="G1">Volume,Subwoofer_Trim,Val=Param_1:Volume,Subwoofer_Trim,Exp=Param_2:Volume,Subwoofer_Trim,Unit=Param_3</Cmd>
+          <Param_1>
+            <Range>-60,60,5</Range>
+          </Param_1>
+          <Param_2>
+            <Direct>1</Direct>
+          </Param_2>
+          <Param_3>
+            <Direct>dB</Direct>
+          </Param_3>
+        </Get>
+      </Menu>
+      <Menu Func_Ex="Adaptive_DRC" Title_1="Adaptive DRC">
+        <Put_1 Func_Ex="Adaptive_DRC_Auto" ID="P12">Auto</Put_1>
+        <Put_1 Func_Ex="Adaptive_DRC_Off" ID="P12">Off</Put_1>
+        <Get>
+          <Cmd ID="G1">Sound_Video,Adaptive_DRC=Param_1</Cmd>
+          <Param_1>
+            <Direct Func_Ex="Adaptive_DRC_Auto">Auto</Direct>
+            <Direct Func_Ex="Adaptive_DRC_Off">Off</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func_Ex="CINEMA_DSP_3D" Title_1="CINEMA DSP 3D">
+        <Put_1 Func_Ex="CINEMA_DSP_3D_Auto" ID="P13">Auto</Put_1>
+        <Put_1 Func_Ex="CINEMA_DSP_3D_Off" ID="P13">Off</Put_1>
+        <Get>
+          <Cmd ID="G1">Surround,_3D_Cinema_DSP=Param_1</Cmd>
+          <Param_1>
+            <Direct Func_Ex="CINEMA_DSP_3D_Auto">Auto</Direct>
+            <Direct Func_Ex="CINEMA_DSP_3D_Off">Off</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Numeric" Func_Ex="Dialogue_Lift" List_Type="Slider" Title_1="Dialogue Lift">
+        <Put_2>
+          <Cmd ID="P14">Param_1</Cmd>
+          <Param_1>
+            <Range>0,5,1</Range>
+          </Param_1>
+        </Put_2>
+        <Get>
+          <Cmd ID="G1">Sound_Video,Dialogue_Adjust,Dialogue_Lift=Param_1</Cmd>
+          <Param_1>
+            <Range>0,5,1</Range>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Numeric" Func_Ex="Dialogue_Lvl" List_Type="Slider" Title_1="Dialogue Level">
+        <Put_2>
+          <Cmd ID="P21">Param_1</Cmd>
+          <Param_1>
+            <Range>0,3,1</Range>
+          </Param_1>
+        </Put_2>
+        <Get>
+          <Cmd ID="G1">Sound_Video,Dialogue_Adjust,Dialogue_Lvl=Param_1</Cmd>
+          <Param_1>
+            <Range>0,3,1</Range>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func_Ex="Pure_Direct" Title_1="Pure Direct">
+        <Put_1 Func_Ex="Pure_Direct_On" ID="P16">On</Put_1>
+        <Put_1 Func_Ex="Pure_Direct_Off" ID="P16">Off</Put_1>
+        <Get>
+          <Cmd ID="G1">Sound_Video,Pure_Direct,Mode=Param_1</Cmd>
+          <Param_1>
+            <Direct Func_Ex="Pure_Direct_On">On</Direct>
+            <Direct Func_Ex="Pure_Direct_Off">Off</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func_Ex="HDMI_Standby_Through" Title_1="HDMI Standby Through">
+        <Get>
+          <Cmd ID="G1">Sound_Video,HDMI,Standby_Through_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func_Ex="HDMI_Standby_Through_On">On</Direct>
+            <Direct Func_Ex="HDMI_Standby_Through_Off">Off</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P1">Main_Zone,Power_Control,Power</Define>
+      <Define ID="P2">Main_Zone,Volume,Lvl</Define>
+      <Define ID="P3">Main_Zone,Volume,Mute</Define>
+      <Define ID="P4">Main_Zone,Input,Input_Sel</Define>
+      <Define ID="P5">Main_Zone,Config,Name,Zone</Define>
+      <Define ID="P6">Main_Zone,Scene,Scene_Sel</Define>
+      <Define ID="P7">Main_Zone,Sound_Video,Tone,Bass</Define>
+      <Define ID="P8">Main_Zone,Sound_Video,Tone,Treble</Define>
+      <Define ID="P9">Main_Zone,Surround,Program_Sel,Current,Sound_Program</Define>
+      <Define ID="P10">Main_Zone,Surround,Program_Sel,Current,Straight</Define>
+      <Define ID="P11">Main_Zone,Surround,Program_Sel,Current,Enhancer</Define>
+      <Define ID="P12">Main_Zone,Sound_Video,Adaptive_DRC</Define>
+      <Define ID="P13">Main_Zone,Surround,_3D_Cinema_DSP</Define>
+      <Define ID="P14">Main_Zone,Sound_Video,Dialogue_Adjust,Dialogue_Lift</Define>
+      <Define ID="P15">System,Sound_Video,HDMI,Video,Preset_Sel,Current</Define>
+      <Define ID="P16">Main_Zone,Sound_Video,Pure_Direct,Mode</Define>
+      <Define ID="P18">Main_Zone,Cursor_Control,Cursor</Define>
+      <Define ID="P19">Main_Zone,Cursor_Control,Menu_Control</Define>
+      <Define ID="P20">Main_Zone,Surround,Enhancer_Type</Define>
+      <Define ID="P21">Main_Zone,Sound_Video,Dialogue_Adjust,Dialogue_Lvl</Define>
+      <Define ID="P22">Main_Zone,Volume,Subwoofer_Trim</Define>
+      <Define ID="P23">Main_Zone,Power_Control,Sleep</Define>
+      <Define ID="P24">Main_Zone,Play_Control,Playback</Define>
+      <Define ID="G1">Main_Zone,Basic_Status</Define>
+      <Define ID="G2">Main_Zone,Input,Input_Sel_Item</Define>
+      <Define ID="G3">Main_Zone,Config</Define>
+      <Define ID="G4">Main_Zone,Scene,Scene_Sel_Item</Define>
+    </Cmd_List>
+  </Menu>
+  <Menu Func="Subunit" Title_1="Zone 2" YNC_Tag="Zone_2">
+    <Menu Func="Rename" Title_1="Name" List_Type="Text_Input">
+      <Put_2>
+        <Cmd ID="P5">Param_1</Cmd>
+        <Param_1>
+          <Text>1,9,Latin-1</Text>
+        </Param_1>
+      </Put_2>
+      <Get>
+        <Cmd ID="G3">Name,Zone=Param_1</Cmd>
+        <Param_1>
+          <Text>1,9,Latin-1</Text>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Input" Func_Ex="Input" Title_1="Input" List_Type="Icon">
+      <Put_2>
+        <Cmd ID="P4">Param_1</Cmd>
+        <Param_1>
+          <Indirect ID="G2"/>
+        </Param_1>
+      </Put_2>
+      <Get>
+        <Cmd ID="G1">Input,Input_Sel=Param_1</Cmd>
+        <Param_1>
+          <Indirect ID="G2"/>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Vol" Title_1="Volume">
+      <Menu Func="Vol_Lvl" List_Type="Slider" Title_1="Level">
+        <Put_2>
+          <Cmd Type="Number" ID="P2">Val=Param_1:Exp=Param_2:Unit=Param_3</Cmd>
+          <Param_1>
+            <Range>-805,165,5</Range>
+          </Param_1>
+          <Param_2>
+            <Direct>1</Direct>
+          </Param_2>
+          <Param_3>
+            <Direct>dB</Direct>
+          </Param_3>
+        </Put_2>
+        <Get>
+          <Cmd Type="Number" ID="G1">Volume,Lvl,Val=Param_1:Volume,Lvl,Exp=Param_2:Volume,Lvl,Unit=Param_3</Cmd>
+          <Param_1>
+            <Range>-805,165,5</Range>
+          </Param_1>
+          <Param_2>
+            <Direct>1</Direct>
+          </Param_2>
+          <Param_3>
+            <Direct>dB</Direct>
+          </Param_3>
+        </Get>
+      </Menu>
+      <Menu Func="Vol_Mute" Title_1="Mute">
+        <Put_1 Func="Vol_Mute_On" ID="P3">On</Put_1>
+        <Put_1 Func="Vol_Mute_Off" ID="P3">Off</Put_1>
+        <Get>
+          <Cmd ID="G1">Volume,Mute=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Vol_Mute_On">On</Direct>
+            <Direct Func="Vol_Mute_Off">Off</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Vol_Lvl_Mode" Title_1="Mode">
+        <Get>
+          <Cmd ID="G1">Volume,Output_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Vol_Lvl_Fixed">Fixed</Direct>
+            <Direct Func="Vol_Lvl_Variable">Variable</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="Power_Control" Title_1="Power Control">
+      <Menu Func="Power" Title_1="Power">
+        <Put_1 Func="Power_On" ID="P1">On</Put_1>
+        <Put_1 Func="Power_Standby" ID="P1">Standby</Put_1>
+        <Get>
+          <Cmd ID="G1">Power_Control,Power=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Power_On">On</Direct>
+            <Direct Func="Power_Standby">Standby</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Sleep" Title_1="Sleep">
+        <Put_1 Func="Sleep_Last" ID="P23">Last</Put_1>
+        <Put_1 Func="Sleep_1" ID="P23">120 min</Put_1>
+        <Put_1 Func="Sleep_2" ID="P23">90 min</Put_1>
+        <Put_1 Func="Sleep_3" ID="P23">60 min</Put_1>
+        <Put_1 Func="Sleep_4" ID="P23">30 min</Put_1>
+        <Put_1 Func="Sleep_Off" ID="P23">Off</Put_1>
+        <Get>
+          <Cmd ID="G1">Power_Control,Sleep=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Sleep_1">120 min</Direct>
+            <Direct Func="Sleep_2">90 min</Direct>
+            <Direct Func="Sleep_3">60 min</Direct>
+            <Direct Func="Sleep_4">30 min</Direct>
+            <Direct Func="Sleep_Off">Off</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="Play_Control" Title_1="Play Control">
+      <Menu Func="Playback" Title_1="Play">
+        <Put_1 ID="P24" Layout="24" Func="Play">Play</Put_1>
+        <Put_1 ID="P24" Layout="23" Func="Pause">Pause</Put_1>
+        <Put_1 ID="P24" Layout="22" Func="Stop">Stop</Put_1>
+      </Menu>
+      <Menu Func="Plus_Minus" Title_1="Skip">
+        <Put_1 ID="P24" Layout="28" Func="Plus_1">Skip Fwd</Put_1>
+        <Put_1 ID="P24" Layout="27" Func="Minus_1">Skip Rev</Put_1>
+      </Menu>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P1">Zone_2,Power_Control,Power</Define>
+      <Define ID="P2">Zone_2,Volume,Lvl</Define>
+      <Define ID="P3">Zone_2,Volume,Mute</Define>
+      <Define ID="P4">Zone_2,Input,Input_Sel</Define>
+      <Define ID="P5">Zone_2,Config,Name,Zone</Define>
+      <Define ID="P6">Zone_2,Scene,Scene_Sel</Define>
+      <Define ID="P7">Zone_2,Sound_Video,Tone,Bass</Define>
+      <Define ID="P8">Zone_2,Sound_Video,Tone,Treble</Define>
+      <Define ID="P18">Zone_2,Cursor_Control,Cursor</Define>
+      <Define ID="P19">Zone_2,Cursor_Control,Menu_Control</Define>
+      <Define ID="P20">Zone_2,Volume,Output</Define>
+      <Define ID="P23">Zone_2,Power_Control,Sleep</Define>
+      <Define ID="P24">Zone_2,Play_Control,Playback</Define>
+      <Define ID="G1">Zone_2,Basic_Status</Define>
+      <Define ID="G2">Zone_2,Input,Input_Sel_Item</Define>
+      <Define ID="G3">Zone_2,Config</Define>
+      <Define ID="G4">Zone_2,Scene,Scene_Sel_Item</Define>
+    </Cmd_List>
+  </Menu>
+  <Menu Func="Source_Device" Func_Ex="SD_Tuner" YNC_Tag="Tuner">
+    <Menu Func="Status" Title_1="Device">
+      <Get>
+        <Cmd ID="G2">Feature_Availability=Param_1</Cmd>
+        <Param_1>
+          <Direct Func="Status_Ready">Ready</Direct>
+          <Direct Func="Status_Not_Ready">Not Ready</Direct>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Play_Control" Title_1="Play Control">
+      <Menu Title_1="Up / Down">
+        <Menu Func="Plus_Minus" Func_Ex="Freq_AM" Title_1="AM Freq">
+          <Put_1 ID="P11" Func="Plus_1">Auto Up</Put_1>
+          <Put_1 ID="P11" Func="Minus_1">Auto Down</Put_1>
+          <Put_1 ID="P11" Func_Ex="Freq_Auto_Cancel">Cancel</Put_1>
+          <Get>
+            <Cmd Type="Number_Ex" ID="G1">Tuning,Freq,AM,Val=Param_1:Tuning,Freq,AM,Exp=Param_2:Tuning,Freq,AM,Unit=Param_3</Cmd>
+            <Param_1>
+              <Range>530,1710,10</Range>
+              <Direct Func_Ex="Freq_Auto_Up">Auto Up</Direct>
+              <Direct Func_Ex="Freq_Auto_Down">Auto Down</Direct>
+            </Param_1>
+            <Param_2>
+              <Direct>0</Direct>
+              <Direct/>
+              <Direct/>
+            </Param_2>
+            <Param_3>
+              <Direct>kHz</Direct>
+              <Direct/>
+              <Direct/>
+            </Param_3>
+          </Get>
+        </Menu>
+        <Menu Func="Plus_Minus" Func_Ex="Freq_FM" Title_1="FM Freq">
+          <Put_1 ID="P10" Func="Plus_1">Auto Up</Put_1>
+          <Put_1 ID="P10" Func="Minus_1">Auto Down</Put_1>
+          <Put_1 ID="P10" Func_Ex="Freq_Auto_Cancel">Cancel</Put_1>
+          <Get>
+            <Cmd Type="Number_Ex" ID="G1">Tuning,Freq,FM,Val=Param_1:Tuning,Freq,FM,Exp=Param_2:Tuning,Freq,FM,Unit=Param_3</Cmd>
+            <Param_1>
+              <Range>8750,10790,20</Range>
+              <Direct Func_Ex="Freq_Auto_Up">Auto Up</Direct>
+              <Direct Func_Ex="Freq_Auto_Down">Auto Down</Direct>
+            </Param_1>
+            <Param_2>
+              <Direct>2</Direct>
+              <Direct/>
+              <Direct/>
+            </Param_2>
+            <Param_3>
+              <Direct>MHz</Direct>
+              <Direct/>
+              <Direct/>
+            </Param_3>
+          </Get>
+        </Menu>
+        <Menu Func="Plus_Minus" Func_Ex="Preset" Title_1="Preset">
+          <Put_1 ID="P2" Func="Plus_1">Up</Put_1>
+          <Put_1 ID="P2" Func="Minus_1">Down</Put_1>
+          <Get>
+            <Cmd ID="G1">Preset,Preset_Sel=Param_1</Cmd>
+            <Param_1>
+              <Indirect ID="G3"/>
+            </Param_1>
+          </Get>
+        </Menu>
+      </Menu>
+      <Menu Func="Band" Title_1="Band">
+        <Put_1 Func="Band_AM" ID="P3">AM</Put_1>
+        <Put_1 Func="Band_FM" ID="P3">FM</Put_1>
+        <Get>
+          <Cmd ID="G1">Tuning,Band=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Band_AM">AM</Direct>
+            <Direct Func="Band_FM">FM</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Title_1="Frequency">
+        <Menu Func="Freq" Func_Ex="Freq_AM" Title_1="AM" List_Type="Slider">
+          <Put_2>
+            <Cmd Type="Number_Ex" ID="P9">Val=Param_1:Exp=Param_2:Unit=Param_3</Cmd>
+            <Param_1>
+              <Range>530,1710,10</Range>
+            </Param_1>
+            <Param_2>
+              <Direct>0</Direct>
+            </Param_2>
+            <Param_3>
+              <Direct>kHz</Direct>
+            </Param_3>
+          </Put_2>
+          <Get>
+            <Cmd Type="Number_Ex" ID="G1">Tuning,Freq,AM,Val=Param_1:Tuning,Freq,AM,Exp=Param_2:Tuning,Freq,AM,Unit=Param_3</Cmd>
+            <Param_1>
+              <Range>530,1710,10</Range>
+              <Direct Func_Ex="Freq_Auto_Up">Auto Up</Direct>
+              <Direct Func_Ex="Freq_Auto_Down">Auto Down</Direct>
+            </Param_1>
+            <Param_2>
+              <Direct>0</Direct>
+              <Direct/>
+              <Direct/>
+            </Param_2>
+            <Param_3>
+              <Direct>kHz</Direct>
+              <Direct/>
+              <Direct/>
+            </Param_3>
+          </Get>
+        </Menu>
+        <Menu Func="Freq" Func_Ex="Freq_FM" Title_1="FM" List_Type="Slider">
+          <Put_2>
+            <Cmd Type="Number_Ex" ID="P8">Val=Param_1:Exp=Param_2:Unit=Param_3</Cmd>
+            <Param_1>
+              <Range>8750,10790,20</Range>
+            </Param_1>
+            <Param_2>
+              <Direct>2</Direct>
+            </Param_2>
+            <Param_3>
+              <Direct>MHz</Direct>
+            </Param_3>
+          </Put_2>
+          <Get>
+            <Cmd Type="Number_Ex" ID="G1">Tuning,Freq,FM,Val=Param_1:Tuning,Freq,FM,Exp=Param_2:Tuning,Freq,FM,Unit=Param_3</Cmd>
+            <Param_1>
+              <Range>8750,10790,20</Range>
+              <Direct Func_Ex="Freq_Auto_Up">Auto Up</Direct>
+              <Direct Func_Ex="Freq_Auto_Down">Auto Down</Direct>
+            </Param_1>
+            <Param_2>
+              <Direct>2</Direct>
+              <Direct/>
+              <Direct/>
+            </Param_2>
+            <Param_3>
+              <Direct>MHz</Direct>
+              <Direct/>
+              <Direct/>
+            </Param_3>
+          </Get>
+        </Menu>
+      </Menu>
+      <Menu Func="Preset" Title_1="Preset" List_Type="Slider">
+        <Put_2>
+          <Cmd ID="P2">Param_1</Cmd>
+          <Param_1>
+            <Indirect ID="G3"/>
+          </Param_1>
+        </Put_2>
+        <Get>
+          <Cmd ID="G1">Preset,Preset_Sel=Param_1</Cmd>
+          <Param_1>
+            <Indirect ID="G3"/>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="Play_Info" List_Type="No_Pic" Title_1="Play Info.">
+      <Menu Func="Band" Title_1="Band">
+        <Get>
+          <Cmd ID="G1">Tuning,Band=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Band_AM">AM</Direct>
+            <Direct Func="Band_FM">FM</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Freq" Func_Ex="Freq_AM_FM" Title_1="Frequency">
+        <Get>
+          <Cmd Type="Number_Ex" ID="G1">Tuning,Freq,Current,Val=Param_1:Tuning,Freq,Current,Exp=Param_2:Tuning,Freq,Current,Unit=Param_3</Cmd>
+          <Param_1>
+            <Range>530,1710,10</Range>
+            <Range>8750,10790,20</Range>
+            <Direct Func_Ex="Freq_Auto_Up">Auto Up</Direct>
+            <Direct Func_Ex="Freq_Auto_Down">Auto Down</Direct>
+          </Param_1>
+          <Param_2>
+            <Direct>0</Direct>
+            <Direct>2</Direct>
+            <Direct/>
+            <Direct/>
+          </Param_2>
+          <Param_3>
+            <Direct>kHz</Direct>
+            <Direct>MHz</Direct>
+            <Direct/>
+            <Direct/>
+          </Param_3>
+        </Get>
+      </Menu>
+      <Menu Title_1="Status">
+        <Menu Func_Ex="Tuned" Title_1="Tuned">
+          <Get>
+            <Cmd ID="G1">Signal_Info,Tuned=Param_1</Cmd>
+            <Param_1>
+              <Direct Func_Ex="Tuned_Off" Title_1="Not Tuned">Negate</Direct>
+              <Direct Func_Ex="Tuned_On" Title_1="Tuned">Assert</Direct>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func_Ex="Stereo" Title_1="Stereo">
+          <Get>
+            <Cmd ID="G1">Signal_Info,Stereo=Param_1</Cmd>
+            <Param_1>
+              <Direct Func_Ex="Stereo_Off" Title_1="Mono">Negate</Direct>
+              <Direct Func_Ex="Stereo_On" Title_1="Stereo">Assert</Direct>
+            </Param_1>
+          </Get>
+        </Menu>
+      </Menu>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P1">Tuner,Play_Control,Search_Mode</Define>
+      <Define ID="P2">Tuner,Play_Control,Preset,Preset_Sel</Define>
+      <Define ID="P3">Tuner,Play_Control,Tuning,Band</Define>
+      <Define ID="P8">Tuner,Play_Control,Tuning,Freq,FM</Define>
+      <Define ID="P9">Tuner,Play_Control,Tuning,Freq,AM</Define>
+      <Define ID="P10">Tuner,Play_Control,Tuning,Freq,FM,Val</Define>
+      <Define ID="P11">Tuner,Play_Control,Tuning,Freq,AM,Val</Define>
+      <Define ID="G1">Tuner,Play_Info</Define>
+      <Define ID="G2">Tuner,Config</Define>
+      <Define ID="G3">Tuner,Play_Control,Preset,Preset_Sel_Item</Define>
+    </Cmd_List>
+  </Menu>
+  <Menu Func="Source_Device" Func_Ex="SD_AirPlay" YNC_Tag="AirPlay">
+    <Menu Func="Status" Title_1="Device">
+      <Get>
+        <Cmd ID="G3">Feature_Availability=Param_1</Cmd>
+        <Param_1>
+          <Direct Func="Status_Ready">Ready</Direct>
+          <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Play_Control" Title_1="Play Control">
+      <Menu Func="Playback" Title_1="Play">
+        <Put_1 Func="Play" ID="P1">Play</Put_1>
+        <Put_1 Func="Pause" ID="P1">Pause</Put_1>
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Plus_Minus" Func_Ex="Song" Title_1="Skip">
+        <Put_1 Func="Plus_1" ID="P1">Skip Fwd</Put_1>
+        <Put_1 Func="Minus_1" ID="P1">Skip Rev</Put_1>
+      </Menu>
+    </Menu>
+    <Menu Func="Play_Info" List_Type="With_Pic" Title_1="Play Info.">
+      <Menu Func="Artist" Title_1="Artist">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Artist=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album" Title_1="Album">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Album=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Song" Title_1="Song">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Song=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Status" Title_1="Device">
+        <Get>
+          <Cmd ID="G3">Feature_Availability=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Status_Ready">Ready</Direct>
+            <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Status">
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_URL" Title_1="AlbumART URL">
+        <Get>
+          <Cmd ID="G1">Album_ART,URL=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_ID" Title_1="AlbumART ID">
+        <Get>
+          <Cmd ID="G1">Album_ART,ID=Param_1</Cmd>
+          <Param_1>
+            <Range>0,255,1</Range>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_Format" Title_1="AlbumART Format">
+        <Get>
+          <Cmd ID="G1">Album_ART,Format=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="BMP">BMP</Direct>
+            <Direct Func="YMF">YMF</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Input_Logo_URL_S" Title_1="Input Logo S URL">
+        <Get>
+          <Cmd ID="G1">Input_Logo,URL_S=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P1">AirPlay,Play_Control,Playback</Define>
+      <Define ID="G1">AirPlay,Play_Info</Define>
+      <Define ID="G3">AirPlay,Config</Define>
+    </Cmd_List>
+  </Menu>
+  <Menu Func="Source_Device" Func_Ex="SD_Spotify" YNC_Tag="Spotify">
+    <Menu Func="Status" Title_1="Device">
+      <Get>
+        <Cmd ID="G3">Feature_Availability=Param_1</Cmd>
+        <Param_1>
+          <Direct Func="Status_Ready">Ready</Direct>
+          <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Play_Control" Title_1="Play Control">
+      <Menu Func="Playback" Title_1="Play">
+        <Put_1 Func="Play" ID="P1">Play</Put_1>
+        <Put_1 Func="Pause" ID="P1">Pause</Put_1>
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Pause</Direct>
+            <Direct Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Plus_Minus" Func_Ex="Song" Title_1="Skip">
+        <Put_1 Func="Plus_1" ID="P1">Skip Fwd</Put_1>
+        <Put_1 Func="Minus_1" ID="P1">Skip Rev</Put_1>
+      </Menu>
+    </Menu>
+    <Menu Func="Play_Info" List_Type="With_Pic" Title_1="Play Info.">
+      <Menu Func="Artist" Title_1="Artist">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Artist=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album" Title_1="Album">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Album=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Song" Title_1="Track">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Track=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Status" Title_1="Device">
+        <Get>
+          <Cmd ID="G3">Feature_Availability=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Status_Ready">Ready</Direct>
+            <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Status">
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Pause</Direct>
+            <Direct Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Input_Logo_URL_S" Title_1="Input Logo S URL">
+        <Get>
+          <Cmd ID="G1">Input_Logo,URL_S=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P1">Spotify,Play_Control,Playback</Define>
+      <Define ID="P3">Spotify,Play_Control,Play_Mode,Repeat</Define>
+      <Define ID="P4">Spotify,Play_Control,Play_Mode,Shuffle</Define>
+      <Define ID="G1">Spotify,Play_Info</Define>
+      <Define ID="G3">Spotify,Config</Define>
+    </Cmd_List>
+  </Menu>
+  <Menu Func="Source_Device" Func_Ex="SD_iPod_USB" YNC_Tag="iPod_USB">
+    <Menu Func="Init" Title_1="Initialize">
+      <Put_1 Title_1="Browse Mode" ID="P10">Extended</Put_1>
+    </Menu>
+    <Menu Func="Status" Title_1="Device">
+      <Get>
+        <Cmd ID="G3">Feature_Availability=Param_1</Cmd>
+        <Param_1>
+          <Direct Func="Status_Ready">Ready</Direct>
+          <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Play_Control" Title_1="Play Control">
+      <Menu Func="Rep" Title_1="Repeat">
+        <Put_1 Func="Rep_Off" ID="P8">Off</Put_1>
+        <Put_1 Func="Rep_1" ID="P8">One</Put_1>
+        <Put_1 Func="Rep_2" ID="P8">All</Put_1>
+        <Get>
+          <Cmd ID="G1">Play_Mode,Repeat=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rep_Off">Off</Direct>
+            <Direct Func="Rep_1">One</Direct>
+            <Direct Func="Rep_2">All</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Rnd" Title_1="Shuffle">
+        <Put_1 Func="Rnd_Off" ID="P9">Off</Put_1>
+        <Put_1 Func="Rnd_1" ID="P9">Songs</Put_1>
+        <Put_1 Func="Rnd_2" ID="P9">Albums</Put_1>
+        <Get>
+          <Cmd ID="G1">Play_Mode,Shuffle=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rnd_Off">Off</Direct>
+            <Direct Func="Rnd_1">Songs</Direct>
+            <Direct Func="Rnd_2">Albums</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Play">
+        <Put_1 Func="Play" ID="P1">Play</Put_1>
+        <Put_1 Func="Pause" ID="P1">Pause</Put_1>
+        <Put_1 Func="Stop" Playable="No" ID="P1">Stop</Put_1>
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Pause</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Plus_Minus" Func_Ex="Song" Playable="No" Title_1="Skip">
+        <Put_1 Func="Plus_1" ID="P1">Skip Fwd</Put_1>
+        <Put_1 Func="Minus_1" ID="P1">Skip Rev</Put_1>
+      </Menu>
+    </Menu>
+    <Menu Func="Play_Info" List_Type="With_Pic" Title_1="Play Info.">
+      <Menu Func="Artist" Title_1="Artist">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Artist=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album" Title_1="Album">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Album=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Song" Title_1="Song">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Song=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Status" Title_1="Device">
+        <Get>
+          <Cmd ID="G3">Feature_Availability=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Status_Ready">Ready</Direct>
+            <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Status">
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Pause</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Rep" Title_1="Repeat">
+        <Get>
+          <Cmd ID="G1">Play_Mode,Repeat=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rep_Off">Off</Direct>
+            <Direct Func="Rep_1">One</Direct>
+            <Direct Func="Rep_2">All</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Rnd" Title_1="Shuffle">
+        <Get>
+          <Cmd ID="G1">Play_Mode,Shuffle=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rnd_Off">Off</Direct>
+            <Direct Func="Rnd_1">Songs</Direct>
+            <Direct Func="Rnd_2">Albums</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_URL" Title_1="AlbumART URL">
+        <Get>
+          <Cmd ID="G1">Album_ART,URL=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_ID" Title_1="AlbumART ID">
+        <Get>
+          <Cmd ID="G1">Album_ART,ID=Param_1</Cmd>
+          <Param_1>
+            <Range>0,255,1</Range>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_Format" Title_1="AlbumART Format">
+        <Get>
+          <Cmd ID="G1">Album_ART,Format=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="BMP">BMP</Direct>
+            <Direct Func="YMF">YMF</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="List_Browse" Title_1="List Browse">
+      <Menu Func="List_Control" Title_1="List Control">
+        <Menu Func="Direct_Sel" Title_1="Direct Cursor Select">
+          <Put_2>
+            <Cmd ID="P2">Param_1</Cmd>
+            <Param_1>
+              <Range>1,8,1,Line_%</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Cursor" List_Type="Cursor" Title_1="Cursor">
+          <Put_1 ID="P5" Func="Cursor_Up">Up</Put_1>
+          <Put_1 ID="P5" Func="Cursor_Down">Down</Put_1>
+          <Put_1 ID="P5" Func="Cursor_Left">Return</Put_1>
+          <Put_1 ID="P5" Func="Cursor_Sel">Sel</Put_1>
+          <Put_1 ID="P5" Func="Cursor_Home">Return to Home</Put_1>
+        </Menu>
+        <Menu Func="Jump_Line" Title_1="Jump Page">
+          <Put_2>
+            <Cmd ID="P4">Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Page_Up_Down" Title_1="Page">
+          <Put_1 ID="P6" Func="Page_Up_1">Up</Put_1>
+          <Put_1 ID="P6" Func="Page_Down_1">Down</Put_1>
+        </Menu>
+      </Menu>
+      <Menu Func="List_Info" Title_1="List Info.">
+        <Menu Func="Menu_Status" Title_1="Menu Status">
+          <Get>
+            <Cmd ID="G2">Menu_Status=Param_1</Cmd>
+            <Param_1>
+              <Direct Func="Menu_Status_Ready">Ready</Direct>
+              <Direct Func="Menu_Status_Busy">Busy</Direct>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Layer" Title_1="Menu Layer">
+          <Get>
+            <Cmd ID="G2">Menu_Layer=Param_1</Cmd>
+            <Param_1>
+              <Range>1,16,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Name" Title_1="Menu Name">
+          <Get>
+            <Cmd ID="G2">Menu_Name=Param_1</Cmd>
+            <Param_1>
+              <Text>0,128,UTF-8</Text>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_List" Title_1="Menu List">
+          <Menu Func="Menu_Line" Title_1="Line 1">
+            <Put_1 ID="P2">Line_1</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_1,Txt=Param_1:Current_List,Line_1,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 2">
+            <Put_1 ID="P2">Line_2</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_2,Txt=Param_1:Current_List,Line_2,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 3">
+            <Put_1 ID="P2">Line_3</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_3,Txt=Param_1:Current_List,Line_3,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 4">
+            <Put_1 ID="P2">Line_4</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_4,Txt=Param_1:Current_List,Line_4,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 5">
+            <Put_1 ID="P2">Line_5</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_5,Txt=Param_1:Current_List,Line_5,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 6">
+            <Put_1 ID="P2">Line_6</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_6,Txt=Param_1:Current_List,Line_6,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 7">
+            <Put_1 ID="P2">Line_7</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_7,Txt=Param_1:Current_List,Line_7,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 8">
+            <Put_1 ID="P2">Line_8</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_8,Txt=Param_1:Current_List,Line_8,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+        </Menu>
+        <Menu Func="Current_Line" Title_1="Cursor Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Current_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Max_Line" Title_1="Max. Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Max_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>0,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+      </Menu>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P1">iPod_USB,Play_Control,Playback</Define>
+      <Define ID="P2">iPod_USB,List_Control,Direct_Sel</Define>
+      <Define ID="P4">iPod_USB,List_Control,Jump_Line</Define>
+      <Define ID="P5">iPod_USB,List_Control,Cursor</Define>
+      <Define ID="P6">iPod_USB,List_Control,Page</Define>
+      <Define ID="P8">iPod_USB,Play_Control,Play_Mode,Repeat</Define>
+      <Define ID="P9">iPod_USB,Play_Control,Play_Mode,Shuffle</Define>
+      <Define ID="P10">iPod_USB,Play_Control,iPod_Mode</Define>
+      <Define ID="G1">iPod_USB,Play_Info</Define>
+      <Define ID="G2">iPod_USB,List_Info</Define>
+      <Define ID="G3">iPod_USB,Config</Define>
+    </Cmd_List>
+  </Menu>
+  <Menu Func="Source_Device" Func_Ex="SD_USB" YNC_Tag="USB">
+    <Menu Func="Status" Title_1="Device">
+      <Get>
+        <Cmd ID="G3">Feature_Availability=Param_1</Cmd>
+        <Param_1>
+          <Direct Func="Status_Ready">Ready</Direct>
+          <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Play_Control" Title_1="Play Control">
+      <Menu Func="Rep" Title_1="Repeat">
+        <Put_1 Func="Rep_Off" ID="P1">Off</Put_1>
+        <Put_1 Func="Rep_1" ID="P1">One</Put_1>
+        <Put_1 Func="Rep_2" ID="P1">All</Put_1>
+        <Get>
+          <Cmd ID="G1">Play_Mode,Repeat=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rep_Off">Off</Direct>
+            <Direct Func="Rep_1">One</Direct>
+            <Direct Func="Rep_2">All</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Rnd" Title_1="Shuffle">
+        <Put_1 Func="Rnd_Off" ID="P2">Off</Put_1>
+        <Put_1 Func="Rnd_1" ID="P2">On</Put_1>
+        <Get>
+          <Cmd ID="G1">Play_Mode,Shuffle=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rnd_Off">Off</Direct>
+            <Direct Func="Rnd_1">On</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Play">
+        <Put_1 ID="P3" Func="Play">Play</Put_1>
+        <Put_1 ID="P3" Func="Pause">Pause</Put_1>
+        <Put_1 ID="P3" Playable="No" Func="Stop">Stop</Put_1>
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Pause</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Plus_Minus" Func_Ex="Song" Playable="No" Title_1="Skip">
+        <Put_1 ID="P3" Func="Plus_1">Skip Fwd</Put_1>
+        <Put_1 ID="P3" Func="Minus_1">Skip Rev</Put_1>
+      </Menu>
+    </Menu>
+    <Menu Func="Play_Info" List_Type="With_Pic" Title_1="Play Info.">
+      <Menu Func="Artist" Title_1="Artist">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Artist=Param_1</Cmd>
+          <Param_1>
+            <Text>0,64,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album" Title_1="Album">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Album=Param_1</Cmd>
+          <Param_1>
+            <Text>0,64,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Song" Title_1="Song">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Song=Param_1</Cmd>
+          <Param_1>
+            <Text>0,64,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Status" Title_1="Device">
+        <Get>
+          <Cmd ID="G1">Feature_Availability=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Status_Ready">Ready</Direct>
+            <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Status">
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Pause</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Rep" Title_1="Repeat">
+        <Get>
+          <Cmd ID="G1">Play_Mode,Repeat=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rep_Off">Off</Direct>
+            <Direct Func="Rep_1">One</Direct>
+            <Direct Func="Rep_2">All</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Rnd" Title_1="Shuffle">
+        <Get>
+          <Cmd ID="G1">Play_Mode,Shuffle=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rnd_Off">Off</Direct>
+            <Direct Func="Rnd_1">On</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_URL" Title_1="AlbumART URL">
+        <Get>
+          <Cmd ID="G1">Album_ART,URL=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_ID" Title_1="AlbumART ID">
+        <Get>
+          <Cmd ID="G1">Album_ART,ID=Param_1</Cmd>
+          <Param_1>
+            <Range>0,255,1</Range>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_Format" Title_1="AlbumART Format">
+        <Get>
+          <Cmd ID="G1">Album_ART,Format=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="BMP">BMP</Direct>
+            <Direct Func="YMF">YMF</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="List_Browse" Title_1="List Browse">
+      <Menu Func="List_Control" Title_1="List Control">
+        <Menu Func="Direct_Sel" Title_1="Direct Cursor Select">
+          <Put_2>
+            <Cmd ID="P5">Param_1</Cmd>
+            <Param_1>
+              <Range>1,8,1,Line_%</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Cursor" List_Type="Cursor" Title_1="Cursor">
+          <Put_1 ID="P7" Func="Cursor_Up">Up</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Down">Down</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Left">Return</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Sel">Sel</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Home">Return to Home</Put_1>
+        </Menu>
+        <Menu Func="Jump_Line" Title_1="Jump Page">
+          <Put_2>
+            <Cmd ID="P6">Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Page_Up_Down" Title_1="Page">
+          <Put_1 ID="P8" Func="Page_Up_1">Up</Put_1>
+          <Put_1 ID="P8" Func="Page_Down_1">Down</Put_1>
+        </Menu>
+      </Menu>
+      <Menu Func="List_Info" Title_1="List Info.">
+        <Menu Func="Menu_Status" Title_1="Menu Status">
+          <Get>
+            <Cmd ID="G2">Menu_Status=Param_1</Cmd>
+            <Param_1>
+              <Direct Func="Menu_Status_Ready">Ready</Direct>
+              <Direct Func="Menu_Status_Busy">Busy</Direct>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Layer" Title_1="Menu Layer">
+          <Get>
+            <Cmd ID="G2">Menu_Layer=Param_1</Cmd>
+            <Param_1>
+              <Range>1,16,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Name" Title_1="Menu Name">
+          <Get>
+            <Cmd ID="G2">Menu_Name=Param_1</Cmd>
+            <Param_1>
+              <Text>0,128,UTF-8</Text>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_List" Title_1="Menu List">
+          <Menu Func="Menu_Line" Title_1="Line 1">
+            <Put_1 ID="P5">Line_1</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_1,Txt=Param_1:Current_List,Line_1,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 2">
+            <Put_1 ID="P5">Line_2</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_2,Txt=Param_1:Current_List,Line_2,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 3">
+            <Put_1 ID="P5">Line_3</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_3,Txt=Param_1:Current_List,Line_3,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 4">
+            <Put_1 ID="P5">Line_4</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_4,Txt=Param_1:Current_List,Line_4,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 5">
+            <Put_1 ID="P5">Line_5</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_5,Txt=Param_1:Current_List,Line_5,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 6">
+            <Put_1 ID="P5">Line_6</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_6,Txt=Param_1:Current_List,Line_6,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 7">
+            <Put_1 ID="P5">Line_7</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_7,Txt=Param_1:Current_List,Line_7,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 8">
+            <Put_1 ID="P5">Line_8</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_8,Txt=Param_1:Current_List,Line_8,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+        </Menu>
+        <Menu Func="Current_Line" Title_1="Cursor Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Current_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Max_Line" Title_1="Max. Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Max_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>0,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+      </Menu>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P1">USB,Play_Control,Play_Mode,Repeat</Define>
+      <Define ID="P2">USB,Play_Control,Play_Mode,Shuffle</Define>
+      <Define ID="P3">USB,Play_Control,Playback</Define>
+      <Define ID="P4">USB,Play_Control,Preset,Preset_Sel</Define>
+      <Define ID="P5">USB,List_Control,Direct_Sel</Define>
+      <Define ID="P6">USB,List_Control,Jump_Line</Define>
+      <Define ID="P7">USB,List_Control,Cursor</Define>
+      <Define ID="P8">USB,List_Control,Page</Define>
+      <Define ID="G1">USB,Play_Info</Define>
+      <Define ID="G2">USB,List_Info</Define>
+      <Define ID="G3">USB,Config</Define>
+      <Define ID="G4">USB,Play_Control,Preset,Preset_Sel_Item</Define>
+    </Cmd_List>
+  </Menu>
+  <Menu Func="Source_Device" Func_Ex="SD_vTuner" YNC_Tag="NET_RADIO">
+    <Menu Func="Status" Title_1="Device">
+      <Get>
+        <Cmd ID="G3">Feature_Availability=Param_1</Cmd>
+        <Param_1>
+          <Direct Func="Status_Ready">Ready</Direct>
+          <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Play_Control" Title_1="Play Control">
+      <Menu Func="Playback" Title_1="Play">
+        <Put_1 ID="P1" Visible="No" Func="Play">Play</Put_1>
+        <Put_1 ID="P1" Playable="No" Func="Stop">Stop</Put_1>
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="Play_Info" List_Type="With_Pic" Title_1="Play Info.">
+      <Menu Func="Station" Title_1="Station">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Station=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album" Title_1="Album">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Album=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Song" Title_1="Song">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Song=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Status" Title_1="Device">
+        <Get>
+          <Cmd ID="G1">Feature_Availability=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Status_Ready">Ready</Direct>
+            <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Status">
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_URL" Title_1="AlbumART URL">
+        <Get>
+          <Cmd ID="G1">Album_ART,URL=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_ID" Title_1="AlbumART ID">
+        <Get>
+          <Cmd ID="G1">Album_ART,ID=Param_1</Cmd>
+          <Param_1>
+            <Range>0,255,1</Range>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_Format" Title_1="AlbumART Format">
+        <Get>
+          <Cmd ID="G1">Album_ART,Format=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="BMP">BMP</Direct>
+            <Direct Func="YMF">YMF</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="List_Browse" Title_1="List Browse">
+      <Menu Func="List_Control" Title_1="List Control">
+        <Menu Func="Direct_Sel" Title_1="Direct Cursor Select">
+          <Put_2>
+            <Cmd ID="P2">Param_1</Cmd>
+            <Param_1>
+              <Range>1,8,1,Line_%</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Cursor" List_Type="Cursor" Title_1="Cursor">
+          <Put_1 ID="P4" Func="Cursor_Up">Up</Put_1>
+          <Put_1 ID="P4" Func="Cursor_Down">Down</Put_1>
+          <Put_1 ID="P4" Func="Cursor_Left">Return</Put_1>
+          <Put_1 ID="P4" Func="Cursor_Sel">Sel</Put_1>
+          <Put_1 ID="P4" Func="Cursor_Home">Return to Home</Put_1>
+        </Menu>
+        <Menu Func="Jump_Line" Title_1="Jump Page">
+          <Put_2>
+            <Cmd ID="P3">Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Page_Up_Down" Title_1="Page">
+          <Put_1 ID="P5" Func="Page_Up_1">Up</Put_1>
+          <Put_1 ID="P5" Func="Page_Down_1">Down</Put_1>
+        </Menu>
+      </Menu>
+      <Menu Func="List_Info" Title_1="List Info.">
+        <Menu Func="Menu_Status" Title_1="Menu Status">
+          <Get>
+            <Cmd ID="G2">Menu_Status=Param_1</Cmd>
+            <Param_1>
+              <Direct Func="Menu_Status_Ready">Ready</Direct>
+              <Direct Func="Menu_Status_Busy">Busy</Direct>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Layer" Title_1="Menu Layer">
+          <Get>
+            <Cmd ID="G2">Menu_Layer=Param_1</Cmd>
+            <Param_1>
+              <Range>1,16,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Name" Title_1="Menu Name">
+          <Get>
+            <Cmd ID="G2">Menu_Name=Param_1</Cmd>
+            <Param_1>
+              <Text>0,128,UTF-8</Text>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_List" Title_1="Menu List">
+          <Menu Func="Menu_Line" Title_1="Line 1">
+            <Put_1 ID="P2">Line_1</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_1,Txt=Param_1:Current_List,Line_1,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 2">
+            <Put_1 ID="P2">Line_2</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_2,Txt=Param_1:Current_List,Line_2,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 3">
+            <Put_1 ID="P2">Line_3</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_3,Txt=Param_1:Current_List,Line_3,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 4">
+            <Put_1 ID="P2">Line_4</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_4,Txt=Param_1:Current_List,Line_4,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 5">
+            <Put_1 ID="P2">Line_5</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_5,Txt=Param_1:Current_List,Line_5,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 6">
+            <Put_1 ID="P2">Line_6</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_6,Txt=Param_1:Current_List,Line_6,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 7">
+            <Put_1 ID="P2">Line_7</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_7,Txt=Param_1:Current_List,Line_7,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 8">
+            <Put_1 ID="P2">Line_8</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_8,Txt=Param_1:Current_List,Line_8,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+        </Menu>
+        <Menu Func="Current_Line" Title_1="Cursor Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Current_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Max_Line" Title_1="Max. Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Max_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>0,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+      </Menu>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P1">NET_RADIO,Play_Control,Playback</Define>
+      <Define ID="P2">NET_RADIO,List_Control,Direct_Sel</Define>
+      <Define ID="P3">NET_RADIO,List_Control,Jump_Line</Define>
+      <Define ID="P4">NET_RADIO,List_Control,Cursor</Define>
+      <Define ID="P5">NET_RADIO,List_Control,Page</Define>
+      <Define ID="P6">NET_RADIO,Play_Control,Preset,Preset_Sel</Define>
+      <Define ID="P7">NET_RADIO,List_Control,Bookmark</Define>
+      <Define ID="G1">NET_RADIO,Play_Info</Define>
+      <Define ID="G2">NET_RADIO,List_Info</Define>
+      <Define ID="G3">NET_RADIO,Config</Define>
+      <Define ID="G4">NET_RADIO,Play_Control,Preset,Preset_Sel_Item</Define>
+    </Cmd_List>
+  </Menu>
+  <Menu Func="Source_Device" Func_Ex="SD_DLNA" YNC_Tag="SERVER">
+    <Menu Func="Status" Title_1="Device">
+      <Get>
+        <Cmd ID="G3">Feature_Availability=Param_1</Cmd>
+        <Param_1>
+          <Direct Func="Status_Ready">Ready</Direct>
+          <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Play_Control" Title_1="Play Control">
+      <Menu Func="Rep" Title_1="Repeat">
+        <Put_1 Func="Rep_Off" ID="P1">Off</Put_1>
+        <Put_1 Func="Rep_1" ID="P1">One</Put_1>
+        <Put_1 Func="Rep_2" ID="P1">All</Put_1>
+        <Get>
+          <Cmd ID="G1">Play_Mode,Repeat=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rep_Off">Off</Direct>
+            <Direct Func="Rep_1">One</Direct>
+            <Direct Func="Rep_2">All</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Rnd" Title_1="Shuffle">
+        <Put_1 Func="Rnd_Off" ID="P2">Off</Put_1>
+        <Put_1 Func="Rnd_1" ID="P2">On</Put_1>
+        <Get>
+          <Cmd ID="G1">Play_Mode,Shuffle=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rnd_Off">Off</Direct>
+            <Direct Func="Rnd_1">On</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Play">
+        <Put_1 ID="P3" Func="Play">Play</Put_1>
+        <Put_1 ID="P3" Func="Pause">Pause</Put_1>
+        <Put_1 ID="P3" Playable="No" Func="Stop">Stop</Put_1>
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Pause</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Plus_Minus" Func_Ex="Song" Playable="No" Title_1="Skip">
+        <Put_1 ID="P3" Func="Plus_1">Skip Fwd</Put_1>
+        <Put_1 ID="P3" Func="Minus_1">Skip Rev</Put_1>
+      </Menu>
+    </Menu>
+    <Menu Func="Play_Info" List_Type="With_Pic" Title_1="Play Info.">
+      <Menu Func="Artist" Title_1="Artist">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Artist=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album" Title_1="Album">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Album=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Song" Title_1="Song">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Song=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Status" Title_1="Device">
+        <Get>
+          <Cmd ID="G1">Feature_Availability=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Status_Ready">Ready</Direct>
+            <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Status">
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Pause</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Rep" Title_1="Repeat">
+        <Get>
+          <Cmd ID="G1">Play_Mode,Repeat=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rep_Off">Off</Direct>
+            <Direct Func="Rep_1">One</Direct>
+            <Direct Func="Rep_2">All</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Rnd" Title_1="Shuffle">
+        <Get>
+          <Cmd ID="G1">Play_Mode,Shuffle=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rnd_Off">Off</Direct>
+            <Direct Func="Rnd_1">On</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_URL" Title_1="AlbumART URL">
+        <Get>
+          <Cmd ID="G1">Album_ART,URL=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_ID" Title_1="AlbumART ID">
+        <Get>
+          <Cmd ID="G1">Album_ART,ID=Param_1</Cmd>
+          <Param_1>
+            <Range>0,255,1</Range>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_Format" Title_1="AlbumART Format">
+        <Get>
+          <Cmd ID="G1">Album_ART,Format=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="BMP">BMP</Direct>
+            <Direct Func="YMF">YMF</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="List_Browse" Title_1="List Browse">
+      <Menu Func="List_Control" Title_1="List Control">
+        <Menu Func="Direct_Sel" Title_1="Direct Cursor Select">
+          <Put_2>
+            <Cmd ID="P5">Param_1</Cmd>
+            <Param_1>
+              <Range>1,8,1,Line_%</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Cursor" List_Type="Cursor" Title_1="Cursor">
+          <Put_1 ID="P7" Func="Cursor_Up">Up</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Down">Down</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Left">Return</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Sel">Sel</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Home">Return to Home</Put_1>
+        </Menu>
+        <Menu Func="Jump_Line" Title_1="Jump Page">
+          <Put_2>
+            <Cmd ID="P6">Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Page_Up_Down" Title_1="Page">
+          <Put_1 ID="P8" Func="Page_Up_1">Up</Put_1>
+          <Put_1 ID="P8" Func="Page_Down_1">Down</Put_1>
+        </Menu>
+      </Menu>
+      <Menu Func="List_Info" Title_1="List Info.">
+        <Menu Func="Menu_Status" Title_1="Menu Status">
+          <Get>
+            <Cmd ID="G2">Menu_Status=Param_1</Cmd>
+            <Param_1>
+              <Direct Func="Menu_Status_Ready">Ready</Direct>
+              <Direct Func="Menu_Status_Busy">Busy</Direct>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Layer" Title_1="Menu Layer">
+          <Get>
+            <Cmd ID="G2">Menu_Layer=Param_1</Cmd>
+            <Param_1>
+              <Range>1,16,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Name" Title_1="Menu Name">
+          <Get>
+            <Cmd ID="G2">Menu_Name=Param_1</Cmd>
+            <Param_1>
+              <Text>0,128,UTF-8</Text>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_List" Title_1="Menu List">
+          <Menu Func="Menu_Line" Title_1="Line 1">
+            <Put_1 ID="P5">Line_1</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_1,Txt=Param_1:Current_List,Line_1,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 2">
+            <Put_1 ID="P5">Line_2</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_2,Txt=Param_1:Current_List,Line_2,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 3">
+            <Put_1 ID="P5">Line_3</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_3,Txt=Param_1:Current_List,Line_3,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 4">
+            <Put_1 ID="P5">Line_4</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_4,Txt=Param_1:Current_List,Line_4,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 5">
+            <Put_1 ID="P5">Line_5</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_5,Txt=Param_1:Current_List,Line_5,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 6">
+            <Put_1 ID="P5">Line_6</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_6,Txt=Param_1:Current_List,Line_6,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 7">
+            <Put_1 ID="P5">Line_7</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_7,Txt=Param_1:Current_List,Line_7,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 8">
+            <Put_1 ID="P5">Line_8</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_8,Txt=Param_1:Current_List,Line_8,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+        </Menu>
+        <Menu Func="Current_Line" Title_1="Cursor Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Current_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Max_Line" Title_1="Max. Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Max_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>0,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+      </Menu>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P1">SERVER,Play_Control,Play_Mode,Repeat</Define>
+      <Define ID="P2">SERVER,Play_Control,Play_Mode,Shuffle</Define>
+      <Define ID="P3">SERVER,Play_Control,Playback</Define>
+      <Define ID="P4">SERVER,Play_Control,Preset,Preset_Sel</Define>
+      <Define ID="P5">SERVER,List_Control,Direct_Sel</Define>
+      <Define ID="P6">SERVER,List_Control,Jump_Line</Define>
+      <Define ID="P7">SERVER,List_Control,Cursor</Define>
+      <Define ID="P8">SERVER,List_Control,Page</Define>
+      <Define ID="P9">SERVER,Play_Control,Play_URI</Define>
+      <Define ID="G1">SERVER,Play_Info</Define>
+      <Define ID="G2">SERVER,List_Info</Define>
+      <Define ID="G3">SERVER,Config</Define>
+      <Define ID="G4">SERVER,Play_Control,Preset,Preset_Sel_Item</Define>
+    </Cmd_List>
+  </Menu>
+  <Menu Func="Source_Device" Func_Ex="SD_Rhapsody" YNC_Tag="Rhapsody">
+    <Menu Func="Status" Title_1="Device">
+      <Get>
+        <Cmd ID="G3">Feature_Availability=Param_1</Cmd>
+        <Param_1>
+          <Direct Func="Status_Ready">Ready</Direct>
+          <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Play_Control" Title_1="Play Control">
+      <Menu Func="Rep" Title_1="Repeat">
+        <Put_1 Func="Rep_Off" ID="P1">Off</Put_1>
+        <Put_1 Func="Rep_1" ID="P1">One</Put_1>
+        <Put_1 Func="Rep_2" ID="P1">All</Put_1>
+        <Get>
+          <Cmd ID="G1">Play_Mode,Repeat=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rep_Off">Off</Direct>
+            <Direct Func="Rep_1">One</Direct>
+            <Direct Func="Rep_2">All</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Rnd" Title_1="Shuffle">
+        <Put_1 Func="Rnd_Off" ID="P2">Off</Put_1>
+        <Put_1 Func="Rnd_1" ID="P2">On</Put_1>
+        <Get>
+          <Cmd ID="G1">Play_Mode,Shuffle=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rnd_Off">Off</Direct>
+            <Direct Func="Rnd_1">On</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Play">
+        <Put_1 ID="P3" Func="Play">Play</Put_1>
+        <Put_1 ID="P3" Func="Pause">Pause</Put_1>
+        <Put_1 ID="P3" Playable="No" Func="Stop">Stop</Put_1>
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Pause</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Plus_Minus" Func_Ex="Song" Playable="No" Title_1="Skip">
+        <Put_1 ID="P3" Func="Plus_1">Skip Fwd</Put_1>
+        <Put_1 ID="P3" Func="Minus_1">Skip Rev</Put_1>
+      </Menu>
+    </Menu>
+    <Menu Func="Play_Info" List_Type="With_Pic" Title_1="Play Info.">
+      <Menu Func="Artist" Title_1="Artist">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Artist=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album" Title_1="Album">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Album=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Song" Title_1="Song">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Song=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Status" Title_1="Device">
+        <Get>
+          <Cmd ID="G1">Feature_Availability=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Status_Ready">Ready</Direct>
+            <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Status">
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Pause</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Rep" Title_1="Repeat">
+        <Get>
+          <Cmd ID="G1">Play_Mode,Repeat=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rep_Off">Off</Direct>
+            <Direct Func="Rep_1">One</Direct>
+            <Direct Func="Rep_2">All</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Rnd" Title_1="Shuffle">
+        <Get>
+          <Cmd ID="G1">Play_Mode,Shuffle=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Rnd_Off">Off</Direct>
+            <Direct Func="Rnd_1">On</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_URL" Title_1="AlbumART URL">
+        <Get>
+          <Cmd ID="G1">Album_ART,URL=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_ID" Title_1="AlbumART ID">
+        <Get>
+          <Cmd ID="G1">Album_ART,ID=Param_1</Cmd>
+          <Param_1>
+            <Range>0,255,1</Range>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_Format" Title_1="AlbumART Format">
+        <Get>
+          <Cmd ID="G1">Album_ART,Format=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="BMP">BMP</Direct>
+            <Direct Func="YMF">YMF</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Input_Logo_URL_S" Title_1="Input Logo S URL">
+        <Get>
+          <Cmd ID="G1">Input_Logo,URL_S=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="List_Browse" Title_1="List Browse">
+      <Menu Func="List_Control" Title_1="List Control">
+        <Menu Func="Direct_Sel" Title_1="Direct Cursor Select">
+          <Put_2>
+            <Cmd ID="P5">Param_1</Cmd>
+            <Param_1>
+              <Range>1,8,1,Line_%</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Direct_Sel_Keyword" Title_1="Direct Cursor Select with Keyword">
+          <Put_2>
+            <Cmd Type="Line_Keyword" ID="P9">Line=Param_1:Keyword=Param_2</Cmd>
+            <Param_1 Func="Keyword_Line">
+              <Range>1,8,1,Line_%</Range>
+            </Param_1>
+            <Param_2 Func="Keyword_Txt">
+              <Text>0,30,Ascii</Text>
+            </Param_2>
+          </Put_2>
+        </Menu>
+        <Menu Func="Cursor" List_Type="Cursor" Title_1="Cursor">
+          <Put_1 ID="P7" Func="Cursor_Up">Up</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Down">Down</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Left">Return</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Sel">Sel</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Home">Return to Home</Put_1>
+        </Menu>
+        <Menu Func="Jump_Line" Title_1="Jump Page">
+          <Put_2>
+            <Cmd ID="P6">Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Page_Up_Down" Title_1="Page">
+          <Put_1 ID="P8" Func="Page_Up_1">Up</Put_1>
+          <Put_1 ID="P8" Func="Page_Down_1">Down</Put_1>
+        </Menu>
+      </Menu>
+      <Menu Func="List_Info" Title_1="List Info.">
+        <Menu Func="Menu_Status" Title_1="Menu Status">
+          <Get>
+            <Cmd ID="G2">Menu_Status=Param_1</Cmd>
+            <Param_1>
+              <Direct Func="Menu_Status_Ready">Ready</Direct>
+              <Direct Func="Menu_Status_Busy">Busy</Direct>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Layer" Title_1="Menu Layer">
+          <Get>
+            <Cmd ID="G2">Menu_Layer=Param_1</Cmd>
+            <Param_1>
+              <Range>1,16,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Name" Title_1="Menu Name">
+          <Get>
+            <Cmd ID="G2">Menu_Name=Param_1</Cmd>
+            <Param_1>
+              <Text>0,128,UTF-8</Text>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_List" Title_1="Menu List">
+          <Menu Func="Menu_Line" Title_1="Line 1">
+            <Put_1 ID="P5">Line_1</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_1,Txt=Param_1:Current_List,Line_1,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+                <Direct Func="Menu_Keyword">Keyword</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 2">
+            <Put_1 ID="P5">Line_2</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_2,Txt=Param_1:Current_List,Line_2,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+                <Direct Func="Menu_Keyword">Keyword</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 3">
+            <Put_1 ID="P5">Line_3</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_3,Txt=Param_1:Current_List,Line_3,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+                <Direct Func="Menu_Keyword">Keyword</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 4">
+            <Put_1 ID="P5">Line_4</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_4,Txt=Param_1:Current_List,Line_4,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+                <Direct Func="Menu_Keyword">Keyword</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 5">
+            <Put_1 ID="P5">Line_5</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_5,Txt=Param_1:Current_List,Line_5,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+                <Direct Func="Menu_Keyword">Keyword</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 6">
+            <Put_1 ID="P5">Line_6</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_6,Txt=Param_1:Current_List,Line_6,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+                <Direct Func="Menu_Keyword">Keyword</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 7">
+            <Put_1 ID="P5">Line_7</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_7,Txt=Param_1:Current_List,Line_7,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+                <Direct Func="Menu_Keyword">Keyword</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 8">
+            <Put_1 ID="P5">Line_8</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_8,Txt=Param_1:Current_List,Line_8,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+                <Direct Func="Menu_Keyword">Keyword</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+        </Menu>
+        <Menu Func="Current_Line" Title_1="Cursor Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Current_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Max_Line" Title_1="Max. Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Max_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>0,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+      </Menu>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P1">Rhapsody,Play_Control,Play_Mode,Repeat</Define>
+      <Define ID="P2">Rhapsody,Play_Control,Play_Mode,Shuffle</Define>
+      <Define ID="P3">Rhapsody,Play_Control,Playback</Define>
+      <Define ID="P4">Rhapsody,Play_Control,Preset,Preset_Sel</Define>
+      <Define ID="P5">Rhapsody,List_Control,Direct_Sel</Define>
+      <Define ID="P6">Rhapsody,List_Control,Jump_Line</Define>
+      <Define ID="P7">Rhapsody,List_Control,Cursor</Define>
+      <Define ID="P8">Rhapsody,List_Control,Page</Define>
+      <Define ID="P9">Rhapsody,List_Control,Direct_Sel_with_Keyword</Define>
+      <Define ID="G1">Rhapsody,Play_Info</Define>
+      <Define ID="G2">Rhapsody,List_Info</Define>
+      <Define ID="G3">Rhapsody,Config</Define>
+      <Define ID="G4">Rhapsody,Play_Control,Preset,Preset_Sel_Item</Define>
+    </Cmd_List>
+  </Menu>
+  <Menu Func="Source_Device" Func_Ex="SD_SIRIUS_IR" YNC_Tag="SiriusXM">
+    <Menu Func="Status" Title_1="Device">
+      <Get>
+        <Cmd ID="G3">Feature_Availability=Param_1</Cmd>
+        <Param_1>
+          <Direct Func="Status_Ready">Ready</Direct>
+          <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Play_Control" Title_1="Play Control">
+      <Menu Func="Playback" Title_1="Play">
+        <Put_1 ID="P2" Visible="No" Func="Play">Play</Put_1>
+        <Put_1 ID="P2" Playable="No" Func="Stop">Stop</Put_1>
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="Play_Info" List_Type="With_Pic" Title_1="Play Info.">
+      <Menu Func="Station" Title_1="Ch Name">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Ch_Name=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Artist" Title_1="Artist">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Artist=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Song" Title_1="Song">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Song=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Status" Title_1="Device">
+        <Get>
+          <Cmd ID="G1">Feature_Availability=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Status_Ready">Ready</Direct>
+            <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Status">
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_URL" Title_1="AlbumART URL">
+        <Get>
+          <Cmd ID="G1">Album_ART,URL=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_ID" Title_1="AlbumART ID">
+        <Get>
+          <Cmd ID="G1">Album_ART,ID=Param_1</Cmd>
+          <Param_1>
+            <Range>0,255,1</Range>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_Format" Title_1="AlbumART Format">
+        <Get>
+          <Cmd ID="G1">Album_ART,Format=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="BMP">BMP</Direct>
+            <Direct Func="YMF">YMF</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Input_Logo_URL_S" Title_1="Input Logo S URL">
+        <Get>
+          <Cmd ID="G1">Input_Logo,URL_S=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="List_Browse" Title_1="List Browse">
+      <Menu Func="List_Control" Title_1="List Control">
+        <Menu Func="Direct_Sel" Title_1="Direct Cursor Select">
+          <Put_2>
+            <Cmd ID="P5">Param_1</Cmd>
+            <Param_1>
+              <Range>1,8,1,Line_%</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Cursor" List_Type="Cursor" Title_1="Cursor">
+          <Put_1 ID="P7" Func="Cursor_Up">Up</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Down">Down</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Left">Return</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Sel">Sel</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Home">Return to Home</Put_1>
+        </Menu>
+        <Menu Func="Jump_Line" Title_1="Jump Page">
+          <Put_2>
+            <Cmd ID="P6">Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Page_Up_Down" Title_1="Page">
+          <Put_1 ID="P8" Func="Page_Up_1">Up</Put_1>
+          <Put_1 ID="P8" Func="Page_Down_1">Down</Put_1>
+        </Menu>
+      </Menu>
+      <Menu Func="List_Info" Title_1="List Info.">
+        <Menu Func="Menu_Status" Title_1="Menu Status">
+          <Get>
+            <Cmd ID="G2">Menu_Status=Param_1</Cmd>
+            <Param_1>
+              <Direct Func="Menu_Status_Ready">Ready</Direct>
+              <Direct Func="Menu_Status_Busy">Busy</Direct>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Layer" Title_1="Menu Layer">
+          <Get>
+            <Cmd ID="G2">Menu_Layer=Param_1</Cmd>
+            <Param_1>
+              <Range>1,16,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Name" Title_1="Menu Name">
+          <Get>
+            <Cmd ID="G2">Menu_Name=Param_1</Cmd>
+            <Param_1>
+              <Text>0,128,UTF-8</Text>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_List" Title_1="Menu List">
+          <Menu Func="Menu_Line" Title_1="Line 1">
+            <Put_1 ID="P5">Line_1</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_1,Txt=Param_1:Current_List,Line_1,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 2">
+            <Put_1 ID="P5">Line_2</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_2,Txt=Param_1:Current_List,Line_2,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 3">
+            <Put_1 ID="P5">Line_3</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_3,Txt=Param_1:Current_List,Line_3,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 4">
+            <Put_1 ID="P5">Line_4</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_4,Txt=Param_1:Current_List,Line_4,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 5">
+            <Put_1 ID="P5">Line_5</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_5,Txt=Param_1:Current_List,Line_5,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 6">
+            <Put_1 ID="P5">Line_6</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_6,Txt=Param_1:Current_List,Line_6,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 7">
+            <Put_1 ID="P5">Line_7</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_7,Txt=Param_1:Current_List,Line_7,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 8">
+            <Put_1 ID="P5">Line_8</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_8,Txt=Param_1:Current_List,Line_8,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+        </Menu>
+        <Menu Func="Current_Line" Title_1="Cursor Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Current_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Max_Line" Title_1="Max. Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Max_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>0,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+      </Menu>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P2">SiriusXM,Play_Control,Playback</Define>
+      <Define ID="P4">SiriusXM,Play_Control,Preset,Preset_Sel</Define>
+      <Define ID="P5">SiriusXM,List_Control,Direct_Sel</Define>
+      <Define ID="P6">SiriusXM,List_Control,Jump_Line</Define>
+      <Define ID="P7">SiriusXM,List_Control,Cursor</Define>
+      <Define ID="P8">SiriusXM,List_Control,Page</Define>
+      <Define ID="G1">SiriusXM,Play_Info</Define>
+      <Define ID="G2">SiriusXM,List_Info</Define>
+      <Define ID="G3">SiriusXM,Config</Define>
+      <Define ID="G4">SiriusXM,Play_Control,Preset,Preset_Sel_Item</Define>
+    </Cmd_List>
+  </Menu>
+  <Menu Func="Source_Device" Func_Ex="SD_Pandora" YNC_Tag="Pandora">
+    <Menu Func="Status" Title_1="Device">
+      <Get>
+        <Cmd ID="G3">Feature_Availability=Param_1</Cmd>
+        <Param_1>
+          <Direct Func="Status_Ready">Ready</Direct>
+          <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+        </Param_1>
+      </Get>
+    </Menu>
+    <Menu Func="Play_Control" Title_1="Play Control">
+      <Menu Func="Playback" Title_1="Play">
+        <Put_1 ID="P3" Func="Play">Play</Put_1>
+        <Put_1 ID="P3" Func="Pause">Pause</Put_1>
+        <Put_1 ID="P3" Playable="No" Func="Stop">Stop</Put_1>
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Pause</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Plus_Minus" Func_Ex="Song" Playable="No" Title_1="Skip">
+        <Put_1 ID="P3" Func="Plus_1">Skip Fwd</Put_1>
+      </Menu>
+      <Menu Func_Ex="Feedback" Playable="No" Title_1="Your Rating">
+        <Put_1 ID="P2" Func_Ex="Thumb_Up">Thumb Up</Put_1>
+        <Put_1 ID="P2" Func_Ex="Thumb_Down">Thumb Down</Put_1>
+        <Get>
+          <Cmd ID="G1">Feedback=Param_1</Cmd>
+          <Param_1>
+            <Direct Func_Ex="Thumb_None">---</Direct>
+            <Direct Func_Ex="Thumb_Up">Thumb Up</Direct>
+            <Direct Func_Ex="Thumb_Down">Thumb Down</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="Play_Info" List_Type="With_Pic" Title_1="Play Info.">
+      <Menu Func="Station" Title_1="Station">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Station=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album" Title_1="Album">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Album=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Song" Title_1="Track">
+        <Get>
+          <Cmd ID="G1">Meta_Info,Track=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func_Ex="Feedback" Title_1="Your Rating">
+        <Get>
+          <Cmd ID="G1">Feedback=Param_1</Cmd>
+          <Param_1>
+            <Direct Func_Ex="Thumb_None">---</Direct>
+            <Direct Func_Ex="Thumb_Up">Thumb Up</Direct>
+            <Direct Func_Ex="Thumb_Down">Thumb Down</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Status" Title_1="Device">
+        <Get>
+          <Cmd ID="G1">Feature_Availability=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Status_Ready">Ready</Direct>
+            <Direct Func="Status_Not_Ready" Title_1="Not Ready">Not Ready</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Playback" Title_1="Status">
+        <Get>
+          <Cmd ID="G1">Playback_Info=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="Play">Play</Direct>
+            <Direct Func="Pause">Pause</Direct>
+            <Direct Playable="No" Func="Stop">Stop</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_URL" Title_1="AlbumART URL">
+        <Get>
+          <Cmd ID="G1">Album_ART,URL=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_ID" Title_1="AlbumART ID">
+        <Get>
+          <Cmd ID="G1">Album_ART,ID=Param_1</Cmd>
+          <Param_1>
+            <Range>0,255,1</Range>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Album_ART_Format" Title_1="AlbumART Format">
+        <Get>
+          <Cmd ID="G1">Album_ART,Format=Param_1</Cmd>
+          <Param_1>
+            <Direct Func="BMP">BMP</Direct>
+            <Direct Func="YMF">YMF</Direct>
+          </Param_1>
+        </Get>
+      </Menu>
+      <Menu Func="Input_Logo_URL_S" Title_1="Input Logo S URL">
+        <Get>
+          <Cmd ID="G1">Input_Logo,URL_S=Param_1</Cmd>
+          <Param_1>
+            <Text>0,128,UTF-8</Text>
+          </Param_1>
+        </Get>
+      </Menu>
+    </Menu>
+    <Menu Func="List_Browse" Title_1="List Browse">
+      <Menu Func="List_Control" Title_1="List Control">
+        <Menu Func="Direct_Sel" Title_1="Direct Cursor Select">
+          <Put_2>
+            <Cmd ID="P5">Param_1</Cmd>
+            <Param_1>
+              <Range>1,8,1,Line_%</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Cursor" List_Type="Cursor" Title_1="Cursor">
+          <Put_1 ID="P7" Func="Cursor_Up">Up</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Down">Down</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Left">Return</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Sel">Sel</Put_1>
+          <Put_1 ID="P7" Func="Cursor_Home">Return to Home</Put_1>
+        </Menu>
+        <Menu Func="Jump_Line" Title_1="Jump Page">
+          <Put_2>
+            <Cmd ID="P6">Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Put_2>
+        </Menu>
+        <Menu Func="Page_Up_Down" Title_1="Page">
+          <Put_1 ID="P8" Func="Page_Up_1">Up</Put_1>
+          <Put_1 ID="P8" Func="Page_Down_1">Down</Put_1>
+        </Menu>
+      </Menu>
+      <Menu Func="List_Info" Title_1="List Info.">
+        <Menu Func="Menu_Status" Title_1="Menu Status">
+          <Get>
+            <Cmd ID="G2">Menu_Status=Param_1</Cmd>
+            <Param_1>
+              <Direct Func="Menu_Status_Ready">Ready</Direct>
+              <Direct Func="Menu_Status_Busy">Busy</Direct>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Layer" Title_1="Menu Layer">
+          <Get>
+            <Cmd ID="G2">Menu_Layer=Param_1</Cmd>
+            <Param_1>
+              <Range>1,16,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_Name" Title_1="Menu Name">
+          <Get>
+            <Cmd ID="G2">Menu_Name=Param_1</Cmd>
+            <Param_1>
+              <Text>0,128,UTF-8</Text>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Menu_List" Title_1="Menu List">
+          <Menu Func="Menu_Line" Title_1="Line 1">
+            <Put_1 ID="P5">Line_1</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_1,Txt=Param_1:Current_List,Line_1,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 2">
+            <Put_1 ID="P5">Line_2</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_2,Txt=Param_1:Current_List,Line_2,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 3">
+            <Put_1 ID="P5">Line_3</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_3,Txt=Param_1:Current_List,Line_3,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 4">
+            <Put_1 ID="P5">Line_4</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_4,Txt=Param_1:Current_List,Line_4,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 5">
+            <Put_1 ID="P5">Line_5</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_5,Txt=Param_1:Current_List,Line_5,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 6">
+            <Put_1 ID="P5">Line_6</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_6,Txt=Param_1:Current_List,Line_6,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 7">
+            <Put_1 ID="P5">Line_7</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_7,Txt=Param_1:Current_List,Line_7,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+          <Menu Func="Menu_Line" Title_1="Line 8">
+            <Put_1 ID="P5">Line_8</Put_1>
+            <Get>
+              <Cmd Type="Container" ID="G2">Current_List,Line_8,Txt=Param_1:Current_List,Line_8,Attribute=Param_2</Cmd>
+              <Param_1 Func="Menu_Txt">
+                <Text>0,128,UTF-8</Text>
+              </Param_1>
+              <Param_2 Func="Menu_Type">
+                <Direct Func="Menu_Next">Container</Direct>
+                <Direct Func="Menu_Stay">Unplayable Item</Direct>
+                <Direct Func="Menu_Play">Item</Direct>
+                <Direct Func="Menu_Prohibit">Unselectable</Direct>
+              </Param_2>
+            </Get>
+          </Menu>
+        </Menu>
+        <Menu Func="Current_Line" Title_1="Cursor Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Current_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>1,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+        <Menu Func="Max_Line" Title_1="Max. Line">
+          <Get>
+            <Cmd ID="G2">Cursor_Position,Max_Line=Param_1</Cmd>
+            <Param_1>
+              <Range>0,65536,1</Range>
+            </Param_1>
+          </Get>
+        </Menu>
+      </Menu>
+    </Menu>
+    <Cmd_List>
+      <Define ID="P2">Pandora,Play_Control,Feedback</Define>
+      <Define ID="P3">Pandora,Play_Control,Playback</Define>
+      <Define ID="P4">Pandora,Play_Control,Preset,Preset_Sel</Define>
+      <Define ID="P5">Pandora,List_Control,Direct_Sel</Define>
+      <Define ID="P6">Pandora,List_Control,Jump_Line</Define>
+      <Define ID="P7">Pandora,List_Control,Cursor</Define>
+      <Define ID="P8">Pandora,List_Control,Page</Define>
+      <Define ID="G1">Pandora,Play_Info</Define>
+      <Define ID="G2">Pandora,List_Info</Define>
+      <Define ID="G3">Pandora,Config</Define>
+      <Define ID="G4">Pandora,Play_Control,Preset,Preset_Sel_Item</Define>
+    </Cmd_List>
+  </Menu>
+</Unit_Description>

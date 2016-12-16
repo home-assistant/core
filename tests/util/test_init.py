@@ -1,5 +1,4 @@
 """Test Home Assistant util methods."""
-# pylint: disable=too-many-public-methods
 import unittest
 from unittest.mock import patch
 from datetime import datetime, timedelta
@@ -31,6 +30,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual("test", util.slugify("T-!@#$!#@$!$est"))
         self.assertEqual("test_more", util.slugify("Test More"))
         self.assertEqual("test_more", util.slugify("Test_(More)"))
+        self.assertEqual("test_more", util.slugify("Tèst_Mörê"))
 
     def test_repr_helper(self):
         """Test repr_helper."""

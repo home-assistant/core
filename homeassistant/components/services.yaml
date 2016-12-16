@@ -1,0 +1,155 @@
+foursquare:
+  checkin:
+    description: Check a user into a Foursquare venue
+
+    fields:
+      venueId:
+        description: The Foursquare venue where the user is checking in. [Required]
+        example: IHR8THISVNU
+
+      eventId:
+        description: The event the user is checking in to. [Optional]
+        example: UHR8THISVNT
+
+      shout:
+        description: A message about your check-in. The maximum length of this field is 140 characters. [Optional]
+        example: There are crayons! Crayons!
+
+      mentions:
+        description: Mentions in your check-in. This parameter is a semicolon-delimited list of mentions. A single mention is of the form "start,end,userid", where start is the index of the first character in the shout representing the mention, end is the index of the first character in the shout after the mention, and userid is the userid of the user being mentioned. If userid is prefixed with "fbu-", this indicates a Facebook userid that is being mention. Character indices in shouts are 0-based. [Optional]
+        example: 5,10,HZXXY3Y;15,20,GZYYZ3Z;25,30,fbu-GZXY13Y
+
+      broadcast:
+        description: "Who to broadcast this check-in to. Accepts a comma-delimited list of values: private (off the grid) or public (share with friends), facebook share on facebook, twitter share on twitter, followers share with followers (celebrity mode users only), If no valid value is found, the default is public. [Optional]"
+        example: public,twitter
+
+      ll:
+        description: Latitude and longitude of the user's location. Only specify this field if you have a GPS or other device reported location for the user at the time of check-in. [Optional]
+        example: 33.7,44.2
+
+      llAcc:
+        description: Accuracy of the user's latitude and longitude, in meters. [Optional]
+        example: 1
+
+      alt:
+        description: Altitude of the user's location, in meters. [Optional]
+        example: 0
+
+      altAcc:
+        description: Vertical accuracy of the user's location, in meters.
+        example: 1
+
+group:
+  reload:
+    description: "Reload group configuration."
+    fields:
+
+  set_visibility:
+    description: Hide or show a group
+
+    fields:
+      entity_id:
+        description: Name(s) of entities to set value
+        example: 'group.travel'
+
+      visible:
+        description: True if group should be shown or False if it should be hidden.
+        example: True
+
+persistent_notification:
+  create:
+    description: Show a notification in the frontend
+
+    fields:
+      message:
+        description: Message body of the notification. [Templates accepted]
+        example: Please check your configuration.yaml.
+
+      title:
+        description: Optional title for your notification. [Optional, Templates accepted]
+        example: Test notification
+
+      notification_id:
+        description: Target ID of the notification, will replace a notification with the same Id. [Optional]
+        example: 1234
+
+homematic:
+  virtualkey:
+    description: Press a virtual key from CCU/Homegear or simulate keypress
+
+    fields:
+      address:
+        description: Address of homematic device or BidCoS-RF for virtual remote
+        example: BidCoS-RF
+
+      channel:
+        description: Channel for calling a keypress
+        example: 1
+
+      param:
+        description: Event to send i.e. PRESS_LONG, PRESS_SHORT
+        example: PRESS_LONG
+
+      proxy:
+        description: (Optional) for set a hosts value
+        example: Hosts name from config
+
+  set_var_value:
+    description: Set the name of a node.
+
+    fields:
+      entity_id:
+        description: Name(s) of entities to set value
+        example: 'homematic.my_variable'
+
+      value:
+        description: New value
+        example: 1
+
+  set_dev_value:
+    description: Set a device property on RPC XML inteface.
+
+    fields:
+      address:
+        description: Address of homematic device or BidCoS-RF for virtual remote
+        example: BidCoS-RF
+
+      channel:
+        description: Channel for calling a keypress
+        example: 1
+
+      param:
+        description: Event to send i.e. PRESS_LONG, PRESS_SHORT
+        example: PRESS_LONG
+
+      proxy:
+        description: (Optional) for set a hosts value
+        example: Hosts name from config
+
+      value:
+        description: New value
+        example: 1
+
+  reconnect:
+    description: Reconnect to all Homematic Hubs.
+
+openalpr:
+  scan:
+    description: Scan immediately a device.
+
+    fields:
+      entity_id:
+        description: Name(s) of entities to scan
+        example: 'openalpr.garage'
+
+  restart:
+    description: Restart ffmpeg process of device.
+
+verisure:
+  capture_smartcam:
+    description: Capture a new image from a smartcam.
+
+    fields:
+      device_serial:
+        description: The serial number of the smartcam you want to capture an image from.
+        example: '2DEU AT5Z'

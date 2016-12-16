@@ -5,38 +5,74 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.temper/
 """
 import logging
+import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/'
-                '3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip'
-                '#temperusb==1.2.3']
+REQUIREMENTS = ['temperusb==1.5.1']
+
+CONF_SCALE = 'scale'
+CONF_OFFSET = 'offset'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
+    vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
+    vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float)
+})
+
+TEMPER_SENSORS = []
+
+
+def get_temper_devices():
+    """Scan the Temper devices from temperusb."""
+    from temperusb.temper import TemperHandler
+    return TemperHandler().get_devices()
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Temper sensors."""
-    from temperusb.temper import TemperHandler
+    temp_unit = hass.config.units.temperature_unit
+    name = config.get(CONF_NAME)
+    scaling = {
+        'scale': config.get(CONF_SCALE),
+        'offset': config.get(CONF_OFFSET)
+    }
+    temper_devices = get_temper_devices()
 
-    temp_unit = hass.config.temperature_unit
-    name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
-    temper_devices = TemperHandler().get_devices()
-    add_devices_callback([TemperSensor(dev, temp_unit, name + '_' + str(idx))
-                          for idx, dev in enumerate(temper_devices)])
+    for idx, dev in enumerate(temper_devices):
+        if idx != 0:
+            name = name + '_' + str(idx)
+        TEMPER_SENSORS.append(TemperSensor(dev, temp_unit, name, scaling))
+    add_devices(TEMPER_SENSORS)
+
+
+def reset_devices():
+    """
+    Re-scan for underlying Temper sensors and assign them to our devices.
+
+    This assumes the same sensor devices are present in the same order.
+    """
+    temper_devices = get_temper_devices()
+    for sensor, device in zip(TEMPER_SENSORS, temper_devices):
+        sensor.set_temper_device(device)
 
 
 class TemperSensor(Entity):
     """Representation of a Temper temperature sensor."""
 
-    def __init__(self, temper_device, temp_unit, name):
+    def __init__(self, temper_device, temp_unit, name, scaling):
         """Initialize the sensor."""
-        self.temper_device = temper_device
         self.temp_unit = temp_unit
+        self.scale = scaling['scale']
+        self.offset = scaling['offset']
         self.current_value = None
         self._name = name
+        self.set_temper_device(temper_device)
 
     @property
     def name(self):
@@ -53,12 +89,24 @@ class TemperSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self.temp_unit
 
+    def set_temper_device(self, temper_device):
+        """Assign the underlying device for this sensor."""
+        self.temper_device = temper_device
+
+        # set calibration data
+        self.temper_device.set_calibration_data(
+            scale=self.scale,
+            offset=self.offset
+        )
+
     def update(self):
         """Retrieve latest state."""
         try:
             format_str = ('fahrenheit' if self.temp_unit == TEMP_FAHRENHEIT
                           else 'celsius')
-            self.current_value = self.temper_device.get_temperature(format_str)
+            sensor_value = self.temper_device.get_temperature(format_str)
+            self.current_value = round(sensor_value, 1)
         except IOError:
-            _LOGGER.error('Failed to get temperature due to insufficient '
-                          'permissions. Try running with "sudo"')
+            _LOGGER.error('Failed to get temperature. The device address may'
+                          'have changed - attempting to reset device')
+            reset_devices()

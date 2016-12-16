@@ -6,70 +6,81 @@ https://home-assistant.io/components/notify.syslog/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.notify import (
-    ATTR_TITLE, DOMAIN, BaseNotificationService)
-from homeassistant.helpers import validate_config
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
+
+
+CONF_FACILITY = 'facility'
+CONF_OPTION = 'option'
+CONF_PRIORITY = 'priority'
+
+SYSLOG_FACILITY = {
+    'kernel': 'LOG_KERN',
+    'user': 'LOG_USER',
+    'mail': 'LOG_MAIL',
+    'daemon': 'LOG_DAEMON',
+    'auth': 'LOG_KERN',
+    'LPR': 'LOG_LPR',
+    'news': 'LOG_NEWS',
+    'uucp': 'LOG_UUCP',
+    'cron': 'LOG_CRON',
+    'syslog': 'LOG_SYSLOG',
+    'local0': 'LOG_LOCAL0',
+    'local1': 'LOG_LOCAL1',
+    'local2': 'LOG_LOCAL2',
+    'local3': 'LOG_LOCAL3',
+    'local4': 'LOG_LOCAL4',
+    'local5': 'LOG_LOCAL5',
+    'local6': 'LOG_LOCAL6',
+    'local7': 'LOG_LOCAL7',
+}
+
+SYSLOG_OPTION = {
+    'pid': 'LOG_PID',
+    'cons': 'LOG_CONS',
+    'ndelay': 'LOG_NDELAY',
+    'nowait': 'LOG_NOWAIT',
+    'perror': 'LOG_PERROR',
+}
+
+SYSLOG_PRIORITY = {
+    5: 'LOG_EMERG',
+    4: 'LOG_ALERT',
+    3: 'LOG_CRIT',
+    2: 'LOG_ERR',
+    1: 'LOG_WARNING',
+    0: 'LOG_NOTICE',
+    -1: 'LOG_INFO',
+    -2: 'LOG_DEBUG',
+}
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_FACILITY, default='syslog'):
+        vol.In(SYSLOG_FACILITY.keys()),
+    vol.Optional(CONF_OPTION, default='pid'): vol.In(SYSLOG_OPTION.keys()),
+    vol.Optional(CONF_PRIORITY, default=-1): vol.In(SYSLOG_PRIORITY.keys()),
+})
+
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config):
     """Get the syslog notification service."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['facility', 'option', 'priority']},
-                           _LOGGER):
-        return None
-
     import syslog
 
-    _facility = {
-        'kernel': syslog.LOG_KERN,
-        'user': syslog.LOG_USER,
-        'mail': syslog.LOG_MAIL,
-        'daemon': syslog.LOG_DAEMON,
-        'auth': syslog.LOG_KERN,
-        'LPR': syslog.LOG_LPR,
-        'news': syslog.LOG_NEWS,
-        'uucp': syslog.LOG_UUCP,
-        'cron': syslog.LOG_CRON,
-        'syslog': syslog.LOG_SYSLOG,
-        'local0': syslog.LOG_LOCAL0,
-        'local1': syslog.LOG_LOCAL1,
-        'local2': syslog.LOG_LOCAL2,
-        'local3': syslog.LOG_LOCAL3,
-        'local4': syslog.LOG_LOCAL4,
-        'local5': syslog.LOG_LOCAL5,
-        'local6': syslog.LOG_LOCAL6,
-        'local7': syslog.LOG_LOCAL7,
-    }.get(config['facility'], 40)
+    facility = getattr(syslog, SYSLOG_FACILITY[config.get(CONF_FACILITY)])
+    option = getattr(syslog, SYSLOG_OPTION[config.get(CONF_OPTION)])
+    priority = getattr(syslog, SYSLOG_PRIORITY[config.get(CONF_PRIORITY)])
 
-    _option = {
-        'pid': syslog.LOG_PID,
-        'cons': syslog.LOG_CONS,
-        'ndelay': syslog.LOG_NDELAY,
-        'nowait': syslog.LOG_NOWAIT,
-        'perror': syslog.LOG_PERROR
-    }.get(config['option'], 10)
-
-    _priority = {
-        5: syslog.LOG_EMERG,
-        4: syslog.LOG_ALERT,
-        3: syslog.LOG_CRIT,
-        2: syslog.LOG_ERR,
-        1: syslog.LOG_WARNING,
-        0: syslog.LOG_NOTICE,
-        -1: syslog.LOG_INFO,
-        -2: syslog.LOG_DEBUG
-    }.get(config['priority'], -1)
-
-    return SyslogNotificationService(_facility, _option, _priority)
+    return SyslogNotificationService(facility, option, priority)
 
 
-# pylint: disable=too-few-public-methods
 class SyslogNotificationService(BaseNotificationService):
     """Implement the syslog notification service."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, facility, option, priority):
         """Initialize the service."""
         self._facility = facility
@@ -80,7 +91,7 @@ class SyslogNotificationService(BaseNotificationService):
         """Send a message to a user."""
         import syslog
 
-        title = kwargs.get(ATTR_TITLE)
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         syslog.openlog(title, self._option, self._facility)
         syslog.syslog(self._priority, message)

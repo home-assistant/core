@@ -8,35 +8,55 @@ import json
 import logging
 import socket
 
-from homeassistant.components.light import ATTR_RGB_COLOR, Light
-from homeassistant.const import CONF_HOST
+import voluptuous as vol
+
+from homeassistant.components.light import (
+    ATTR_RGB_COLOR, SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = []
+
+CONF_DEFAULT_COLOR = 'default_color'
+
+DEFAULT_COLOR = [255, 255, 255]
+DEFAULT_NAME = 'Hyperion'
+DEFAULT_PORT = 19444
+
+SUPPORT_HYPERION = SUPPORT_RGB_COLOR
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a Hyperion server remote."""
-    host = config.get(CONF_HOST, None)
-    port = config.get("port", 19444)
-    device = Hyperion(config.get('name', host), host, port)
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
+    default_color = config.get(CONF_DEFAULT_COLOR)
+
+    device = Hyperion(config.get(CONF_NAME), host, port, default_color)
+
     if device.setup():
-        add_devices_callback([device])
+        add_devices([device])
         return True
-    else:
-        return False
+    return False
 
 
 class Hyperion(Light):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, name, host, port):
+    def __init__(self, name, host, port, default_color):
         """Initialize the light."""
         self._host = host
         self._port = port
         self._name = name
-        self._is_available = True
-        self._rgb_color = [255, 255, 255]
+        self._default_color = default_color
+        self._rgb_color = [0, 0, 0]
 
     @property
     def name(self):
@@ -50,38 +70,53 @@ class Hyperion(Light):
 
     @property
     def is_on(self):
-        """Return true if the device is online."""
-        return self._is_available
+        """Return true if not black."""
+        return self._rgb_color != [0, 0, 0]
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_HYPERION
 
     def turn_on(self, **kwargs):
         """Turn the lights on."""
-        if self._is_available:
-            if ATTR_RGB_COLOR in kwargs:
-                self._rgb_color = kwargs[ATTR_RGB_COLOR]
+        if ATTR_RGB_COLOR in kwargs:
+            self._rgb_color = kwargs[ATTR_RGB_COLOR]
+        else:
+            self._rgb_color = self._default_color
 
-            self.json_request({"command": "color", "priority": 128,
-                               "color": self._rgb_color})
+        self.json_request(
+            {'command': 'color', 'priority': 128, 'color': self._rgb_color})
 
     def turn_off(self, **kwargs):
-        """Disconnect the remote."""
-        self.json_request({"command": "clearall"})
+        """Disconnect all remotes."""
+        self.json_request({'command': 'clearall'})
+        self._rgb_color = [0, 0, 0]
 
     def update(self):
-        """Ping the remote."""
-        # just see if the remote port is open
-        self._is_available = self.json_request()
+        """Get the remote's active color."""
+        response = self.json_request({'command': 'serverinfo'})
+        if response:
+            # workaround for outdated Hyperion
+            if 'activeLedColor' not in response['info']:
+                self._rgb_color = self._default_color
+                return
+
+            if response['info']['activeLedColor'] == []:
+                self._rgb_color = [0, 0, 0]
+            else:
+                self._rgb_color =\
+                    response['info']['activeLedColor'][0]['RGB Value']
 
     def setup(self):
         """Get the hostname of the remote."""
-        response = self.json_request({"command": "serverinfo"})
+        response = self.json_request({'command': 'serverinfo'})
         if response:
-            if self._name == self._host:
-                self._name = response["info"]["hostname"]
+            self._name = response['info']['hostname']
             return True
-
         return False
 
-    def json_request(self, request=None, wait_for_response=False):
+    def json_request(self, request, wait_for_response=False):
         """Communicate with the JSON server."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(5)
@@ -92,12 +127,7 @@ class Hyperion(Light):
             sock.close()
             return False
 
-        if not request:
-            # No communication needed, simple presence detection returns True
-            sock.close()
-            return True
-
-        sock.send(bytearray(json.dumps(request) + "\n", "utf-8"))
+        sock.send(bytearray(json.dumps(request) + '\n', 'utf-8'))
         try:
             buf = sock.recv(4096)
         except socket.timeout:
@@ -108,8 +138,8 @@ class Hyperion(Light):
         # Read until a newline or timeout
         buffering = True
         while buffering:
-            if "\n" in str(buf, "utf-8"):
-                response = str(buf, "utf-8").split("\n")[0]
+            if '\n' in str(buf, 'utf-8'):
+                response = str(buf, 'utf-8').split('\n')[0]
                 buffering = False
             else:
                 try:
@@ -118,7 +148,7 @@ class Hyperion(Light):
                     more = None
                 if not more:
                     buffering = False
-                    response = str(buf, "utf-8")
+                    response = str(buf, 'utf-8')
                 else:
                     buf += more
 

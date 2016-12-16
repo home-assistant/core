@@ -4,6 +4,7 @@ import unittest.mock as mock
 
 import requests
 
+from homeassistant.bootstrap import setup_component
 import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.mfi as mfi
 from homeassistant.const import TEMP_CELSIUS
@@ -24,16 +25,14 @@ class TestMfiSensorSetup(unittest.TestCase):
             'port': 6123,
             'username': 'user',
             'password': 'pass',
-            'use_tls': True,
-            'verify_tls': True,
+            'ssl': True,
+            'verify_ssl': True,
         }
     }
 
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.latitude = 32.87336
-        self.hass.config.longitude = 117.22743
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -54,9 +53,8 @@ class TestMfiSensorSetup(unittest.TestCase):
         mock_client.FailedToLogin = Exception()
         mock_client.MFiClient.side_effect = mock_client.FailedToLogin
         self.assertFalse(
-            self.PLATFORM.setup_platform(self.hass,
-                                         dict(self.GOOD_CONFIG),
-                                         None))
+            self.PLATFORM.setup_platform(
+                self.hass, dict(self.GOOD_CONFIG), None))
 
     @mock.patch('mficlient.client')
     def test_setup_failed_connect(self, mock_client):
@@ -64,41 +62,52 @@ class TestMfiSensorSetup(unittest.TestCase):
         mock_client.FailedToLogin = Exception()
         mock_client.MFiClient.side_effect = requests.exceptions.ConnectionError
         self.assertFalse(
-            self.PLATFORM.setup_platform(self.hass,
-                                         dict(self.GOOD_CONFIG),
-                                         None))
+            self.PLATFORM.setup_platform(
+                self.hass, dict(self.GOOD_CONFIG), None))
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_minimum(self, mock_client):
         """Test setup with minimum configuration."""
         config = dict(self.GOOD_CONFIG)
         del config[self.THING]['port']
-        assert self.COMPONENT.setup(self.hass, config)
-        mock_client.assert_called_once_with('foo', 'user', 'pass',
-                                            port=6443, use_tls=True,
-                                            verify=True)
+        assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.assertEqual(mock_client.call_count, 1)
+        self.assertEqual(
+            mock_client.call_args,
+            mock.call(
+                'foo', 'user', 'pass', port=6443, use_tls=True, verify=True
+            )
+        )
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_with_port(self, mock_client):
         """Test setup with port."""
         config = dict(self.GOOD_CONFIG)
         config[self.THING]['port'] = 6123
-        assert self.COMPONENT.setup(self.hass, config)
-        mock_client.assert_called_once_with('foo', 'user', 'pass',
-                                            port=6123, use_tls=True,
-                                            verify=True)
+        assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.assertEqual(mock_client.call_count, 1)
+        self.assertEqual(
+            mock_client.call_args,
+            mock.call(
+                'foo', 'user', 'pass', port=6123, use_tls=True, verify=True
+            )
+        )
 
     @mock.patch('mficlient.client.MFiClient')
     def test_setup_with_tls_disabled(self, mock_client):
         """Test setup without TLS."""
         config = dict(self.GOOD_CONFIG)
         del config[self.THING]['port']
-        config[self.THING]['use_tls'] = False
-        config[self.THING]['verify_tls'] = False
-        assert self.COMPONENT.setup(self.hass, config)
-        mock_client.assert_called_once_with('foo', 'user', 'pass',
-                                            port=6080, use_tls=False,
-                                            verify=False)
+        config[self.THING]['ssl'] = False
+        config[self.THING]['verify_ssl'] = False
+        assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.assertEqual(mock_client.call_count, 1)
+        self.assertEqual(
+            mock_client.call_args,
+            mock.call(
+                'foo', 'user', 'pass', port=6080, use_tls=False, verify=False
+            )
+        )
 
     @mock.patch('mficlient.client.MFiClient')
     @mock.patch('homeassistant.components.sensor.mfi.MfiSensor')
@@ -110,7 +119,7 @@ class TestMfiSensorSetup(unittest.TestCase):
         print(ports['bad'].model)
         mock_client.return_value.get_devices.return_value = \
             [mock.MagicMock(ports=ports)]
-        assert sensor.setup(self.hass, self.GOOD_CONFIG)
+        assert setup_component(self.hass, sensor.DOMAIN, self.GOOD_CONFIG)
         for ident, port in ports.items():
             if ident != 'bad':
                 mock_sensor.assert_any_call(port, self.hass)
@@ -123,8 +132,6 @@ class TestMfiSensor(unittest.TestCase):
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.latitude = 32.87336
-        self.hass.config.longitude = 117.22743
         self.port = mock.MagicMock()
         self.sensor = mfi.MfiSensor(self.port, self.hass)
 
@@ -156,6 +163,11 @@ class TestMfiSensor(unittest.TestCase):
         self.port.tag = 'balloons'
         self.assertEqual('balloons', self.sensor.unit_of_measurement)
 
+    def test_uom_uninitialized(self):
+        """Test that the UOM defaults if not initialized."""
+        type(self.port).tag = mock.PropertyMock(side_effect=ValueError)
+        self.assertEqual('State', self.sensor.unit_of_measurement)
+
     def test_state_digital(self):
         """Test the digital input."""
         self.port.model = 'Input Digital'
@@ -175,7 +187,13 @@ class TestMfiSensor(unittest.TestCase):
         with mock.patch.dict(mfi.DIGITS, {}):
             self.assertEqual(1.0, self.sensor.state)
 
+    def test_state_uninitialized(self):
+        """Test the state of uninitialized sensors."""
+        type(self.port).tag = mock.PropertyMock(side_effect=ValueError)
+        self.assertEqual(mfi.STATE_OFF, self.sensor.state)
+
     def test_update(self):
         """Test the update."""
         self.sensor.update()
-        self.port.refresh.assert_called_once_with()
+        self.assertEqual(self.port.refresh.call_count, 1)
+        self.assertEqual(self.port.refresh.call_args, mock.call())

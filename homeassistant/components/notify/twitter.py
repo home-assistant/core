@@ -6,36 +6,39 @@ https://home-assistant.io/components/notify.twitter/
 """
 import logging
 
-from homeassistant.components.notify import DOMAIN, BaseNotificationService
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.helpers import validate_config
+
+REQUIREMENTS = ['TwitterAPI==2.4.2']
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['TwitterAPI==2.4.1']
 
-CONF_CONSUMER_KEY = "consumer_key"
-CONF_CONSUMER_SECRET = "consumer_secret"
-CONF_ACCESS_TOKEN_SECRET = "access_token_secret"
+CONF_CONSUMER_KEY = 'consumer_key'
+CONF_CONSUMER_SECRET = 'consumer_secret'
+CONF_ACCESS_TOKEN_SECRET = 'access_token_secret'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_CONSUMER_KEY): cv.string,
+    vol.Required(CONF_CONSUMER_SECRET): cv.string,
+    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+    vol.Required(CONF_ACCESS_TOKEN_SECRET): cv.string,
+})
 
 
 def get_service(hass, config):
     """Get the Twitter notification service."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: [CONF_CONSUMER_KEY, CONF_CONSUMER_SECRET,
-                                     CONF_ACCESS_TOKEN,
-                                     CONF_ACCESS_TOKEN_SECRET]},
-                           _LOGGER):
-        return None
-
-    return TwitterNotificationService(config[CONF_CONSUMER_KEY],
-                                      config[CONF_CONSUMER_SECRET],
-                                      config[CONF_ACCESS_TOKEN],
-                                      config[CONF_ACCESS_TOKEN_SECRET])
+    return TwitterNotificationService(
+        config[CONF_CONSUMER_KEY], config[CONF_CONSUMER_SECRET],
+        config[CONF_ACCESS_TOKEN], config[CONF_ACCESS_TOKEN_SECRET]
+    )
 
 
-# pylint: disable=too-few-public-methods
 class TwitterNotificationService(BaseNotificationService):
-    """Implement notification service for the Twitter service."""
+    """Implementation of a notification service for the Twitter service."""
 
     def __init__(self, consumer_key, consumer_secret, access_token_key,
                  access_token_secret):

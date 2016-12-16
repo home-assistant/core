@@ -4,23 +4,32 @@ Support for tracking the online status of a UPS.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.apcupsd/
 """
-from homeassistant.components import apcupsd
-from homeassistant.components.binary_sensor import BinarySensorDevice
+import voluptuous as vol
 
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components import apcupsd
+
+DEFAULT_NAME = 'UPS Online Status'
 DEPENDENCIES = [apcupsd.DOMAIN]
-DEFAULT_NAME = "UPS Online Status"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Instantiate an OnlineStatus binary sensor entity."""
+    """Setup an Online Status binary sensor."""
     add_entities((OnlineStatus(config, apcupsd.DATA),))
 
 
 class OnlineStatus(BinarySensorDevice):
-    """Represent UPS online status."""
+    """Representation of an UPS online status."""
 
     def __init__(self, config, data):
-        """Initialize the APCUPSd device."""
+        """Initialize the APCUPSd binary device."""
         self._config = config
         self._data = data
         self._state = None
@@ -29,7 +38,7 @@ class OnlineStatus(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the UPS online status sensor."""
-        return self._config.get("name", DEFAULT_NAME)
+        return self._config.get(CONF_NAME)
 
     @property
     def is_on(self):

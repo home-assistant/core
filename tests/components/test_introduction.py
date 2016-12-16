@@ -1,6 +1,7 @@
 """The tests for the Introduction component."""
 import unittest
 
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import introduction
 
 from tests.common import get_test_home_assistant
@@ -19,4 +20,4 @@ class TestIntroduction(unittest.TestCase):
 
     def test_setup(self):
         """Test introduction setup."""
-        self.assertTrue(introduction.setup(self.hass, {}))
+        self.assertTrue(setup_component(self.hass, introduction.DOMAIN, {}))

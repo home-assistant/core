@@ -6,32 +6,39 @@ https://home-assistant.io/components/binary_sensor.bloomsky/
 """
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.loader import get_component
+import voluptuous as vol
 
-DEPENDENCIES = ["bloomsky"]
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.loader import get_component
+import homeassistant.helpers.config_validation as cv
+
+_LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['bloomsky']
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
-    "Rain": "moisture",
-    "Night": None,
+    'Rain': 'moisture',
+    'Night': None,
 }
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the available BloomSky weather binary sensors."""
-    logger = logging.getLogger(__name__)
     bloomsky = get_component('bloomsky')
-    sensors = config.get('monitored_conditions', SENSOR_TYPES)
+    # Default needed in case of discovery
+    sensors = config.get(CONF_MONITORED_CONDITIONS, SENSOR_TYPES)
 
     for device in bloomsky.BLOOMSKY.devices.values():
         for variable in sensors:
-            if variable in SENSOR_TYPES:
-                add_devices([BloomSkySensor(bloomsky.BLOOMSKY,
-                                            device,
-                                            variable)])
-            else:
-                logger.error("Cannot find definition for device: %s", variable)
+            add_devices([BloomSkySensor(bloomsky.BLOOMSKY, device, variable)])
 
 
 class BloomSkySensor(BinarySensorDevice):
@@ -40,10 +47,10 @@ class BloomSkySensor(BinarySensorDevice):
     def __init__(self, bs, device, sensor_name):
         """Initialize a BloomSky binary sensor."""
         self._bloomsky = bs
-        self._device_id = device["DeviceID"]
+        self._device_id = device['DeviceID']
         self._sensor_name = sensor_name
-        self._name = "{} {}".format(device["DeviceName"], sensor_name)
-        self._unique_id = "bloomsky_binary_sensor {}".format(self._name)
+        self._name = '{} {}'.format(device['DeviceName'], sensor_name)
+        self._unique_id = 'bloomsky_binary_sensor {}'.format(self._name)
         self.update()
 
     @property
@@ -71,4 +78,4 @@ class BloomSkySensor(BinarySensorDevice):
         self._bloomsky.refresh_devices()
 
         self._state = \
-            self._bloomsky.devices[self._device_id]["Data"][self._sensor_name]
+            self._bloomsky.devices[self._device_id]['Data'][self._sensor_name]

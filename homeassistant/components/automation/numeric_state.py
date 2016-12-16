@@ -8,15 +8,16 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_VALUE_TEMPLATE, CONF_PLATFORM, CONF_ENTITY_ID,
     CONF_BELOW, CONF_ABOVE)
-from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers import condition, config_validation as cv
 
 TRIGGER_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_PLATFORM): 'numeric_state',
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     CONF_BELOW: vol.Coerce(float),
     CONF_ABOVE: vol.Coerce(float),
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -25,14 +26,16 @@ TRIGGER_SCHEMA = vol.All(vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
-def trigger(hass, config, action):
+def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
+    if value_template is not None:
+        value_template.hass = hass
 
-    # pylint: disable=unused-argument
+    @callback
     def state_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
         if to_s is None:
@@ -41,29 +44,26 @@ def trigger(hass, config, action):
         variables = {
             'trigger': {
                 'platform': 'numeric_state',
-                'entity_id': entity_id,
+                'entity_id': entity,
                 'below': below,
                 'above': above,
             }
         }
 
         # If new one doesn't match, nothing to do
-        if not condition.numeric_state(
+        if not condition.async_numeric_state(
                 hass, to_s, below, above, value_template, variables):
             return
 
         # Only match if old didn't exist or existed but didn't match
         # Written as: skip if old one did exist and matched
-        if from_s is not None and condition.numeric_state(
+        if from_s is not None and condition.async_numeric_state(
                 hass, from_s, below, above, value_template, variables):
             return
 
         variables['trigger']['from_state'] = from_s
         variables['trigger']['to_state'] = to_s
 
-        action(variables)
+        hass.async_run_job(action, variables)
 
-    track_state_change(
-        hass, entity_id, state_automation_listener)
-
-    return True
+    return async_track_state_change(hass, entity_id, state_automation_listener)

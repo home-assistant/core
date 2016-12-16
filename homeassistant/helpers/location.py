@@ -1,19 +1,28 @@
 """Location helpers for Home Assistant."""
 
+from typing import Sequence
+
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import State
 from homeassistant.util import location as loc_util
 
 
-def has_location(state):
-    """Test if state contains a valid location."""
+def has_location(state: State) -> bool:
+    """Test if state contains a valid location.
+
+    Async friendly.
+    """
     return (isinstance(state, State) and
             isinstance(state.attributes.get(ATTR_LATITUDE), float) and
             isinstance(state.attributes.get(ATTR_LONGITUDE), float))
 
 
-def closest(latitude, longitude, states):
-    """Return closest state to point."""
+def closest(latitude: float, longitude: float,
+            states: Sequence[State]) -> State:
+    """Return closest state to point.
+
+    Async friendly.
+    """
     with_location = [state for state in states if has_location(state)]
 
     if not with_location:

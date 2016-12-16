@@ -8,48 +8,68 @@ import logging
 import telnetlib
 import urllib.parse
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
-    DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    ATTR_MEDIA_ENQUEUE, SUPPORT_PLAY_MEDIA,
+    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_IDLE, STATE_OFF,
-    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONF_PORT)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
-    SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+DEFAULT_PORT = 9090
 
 KNOWN_DEVICES = []
+
+SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
+    SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+    SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_USERNAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the squeezebox platform."""
+    import socket
+
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+
     if discovery_info is not None:
         host = discovery_info[0]
-        port = 9090
+        port = DEFAULT_PORT
     else:
         host = config.get(CONF_HOST)
-        port = int(config.get('port', 9090))
+        port = config.get(CONF_PORT)
 
-    if not host:
-        _LOGGER.error(
-            "Missing required configuration items in %s: %s",
-            DOMAIN,
-            CONF_HOST)
+    # Get IP of host, to prevent duplication of same host (different DNS names)
+    try:
+        ipaddr = socket.gethostbyname(host)
+    except (OSError) as error:
+        _LOGGER.error("Could not communicate with %s:%d: %s",
+                      host, port, error)
         return False
+
+    # Combine it with port to allow multiple servers at the same host
+    key = "{}:{}".format(ipaddr, port)
 
     # Only add a media server once
-    if host in KNOWN_DEVICES:
+    if key in KNOWN_DEVICES:
         return False
-    KNOWN_DEVICES.append(host)
+    KNOWN_DEVICES.append(key)
 
-    lms = LogitechMediaServer(
-        host, port,
-        config.get(CONF_USERNAME),
-        config.get(CONF_PASSWORD))
+    _LOGGER.debug("Creating LMS object for %s", key)
+    lms = LogitechMediaServer(host, port, username, password)
 
     if not lms.init_success:
         return False
@@ -73,23 +93,11 @@ class LogitechMediaServer(object):
 
     def _get_http_port(self):
         """Get http port from media server, it is used to get cover art."""
-        http_port = None
-        try:
-            http_port = self.query('pref', 'httpport', '?')
-            if not http_port:
-                _LOGGER.error(
-                    "Unable to read data from server %s:%s",
-                    self.host,
-                    self.port)
-                return
-            return http_port
-        except ConnectionError as ex:
-            _LOGGER.error(
-                "Failed to connect to server %s:%s - %s",
-                self.host,
-                self.port,
-                ex)
-            return
+        http_port = self.query('pref', 'httpport', '?')
+        if not http_port:
+            _LOGGER.error("Failed to connect to server %s:%s",
+                          self.host, self.port)
+        return http_port
 
     def create_players(self):
         """Create a list of SqueezeBoxDevices connected to the LMS."""
@@ -103,51 +111,71 @@ class LogitechMediaServer(object):
 
     def query(self, *parameters):
         """Send request and await response from server."""
-        telnet = telnetlib.Telnet(self.host, self.port)
-        if self._username and self._password:
-            telnet.write('login {username} {password}\n'.format(
-                username=self._username,
-                password=self._password).encode('UTF-8'))
-            telnet.read_until(b'\n', timeout=3)
-        message = '{}\n'.format(' '.join(parameters))
-        telnet.write(message.encode('UTF-8'))
-        response = telnet.read_until(b'\n', timeout=3)\
-            .decode('UTF-8')\
-            .split(' ')[-1]\
-            .strip()
-        telnet.write(b'exit\n')
-        return urllib.parse.unquote(response)
+        response = self.get(' '.join(parameters))
+        response = response.split(' ')[-1].strip()
+        response = urllib.parse.unquote(response)
+
+        return response
 
     def get_player_status(self, player):
-        """Get ithe status of a player."""
+        """Get the status of a player."""
         #   (title) : Song title
         # Requested Information
         # a (artist): Artist name 'artist'
         # d (duration): Song duration in seconds 'duration'
         # K (artwork_url): URL to remote artwork
-        tags = 'adK'
+        # l (album): Album, including the server's  "(N of M)"
+        tags = 'adKl'
         new_status = {}
-        telnet = telnetlib.Telnet(self.host, self.port)
-        telnet.write('{player} status - 1 tags:{tags}\n'.format(
-            player=player,
-            tags=tags
-            ).encode('UTF-8'))
-        response = telnet.read_until(b'\n', timeout=3)\
-            .decode('UTF-8')\
-            .split(' ')
-        telnet.write(b'exit\n')
+        response = self.get('{player} status - 1 tags:{tags}\n'
+                            .format(player=player, tags=tags))
+
+        if not response:
+            return {}
+
+        response = response.split(' ')
+
         for item in response:
             parts = urllib.parse.unquote(item).partition(':')
             new_status[parts[0]] = parts[2]
         return new_status
 
+    def get(self, command):
+        """Abstract out the telnet connection."""
+        try:
+            telnet = telnetlib.Telnet(self.host, self.port)
 
-# pylint: disable=too-many-instance-attributes
-# pylint: disable=too-many-public-methods
+            if self._username and self._password:
+                _LOGGER.debug("Logging in")
+
+                telnet.write('login {username} {password}\n'.format(
+                    username=self._username,
+                    password=self._password).encode('UTF-8'))
+                telnet.read_until(b'\n', timeout=3)
+
+            _LOGGER.debug("About to send message: %s", command)
+            message = '{}\n'.format(command)
+            telnet.write(message.encode('UTF-8'))
+
+            response = telnet.read_until(b'\n', timeout=3)\
+                             .decode('UTF-8')\
+
+            telnet.write(b'exit\n')
+            _LOGGER.debug("Response: %s", response)
+
+            return response
+
+        except (OSError, EOFError) as error:
+            _LOGGER.error("Could not communicate with %s:%d: %s",
+                          self.host,
+                          self.port,
+                          error)
+            return None
+
+
 class SqueezeBoxDevice(MediaPlayerDevice):
     """Representation of a SqueezeBox device."""
 
-    # pylint: disable=too-many-arguments, abstract-method
     def __init__(self, lms, player_id):
         """Initialize the SqeezeBox device."""
         super(SqueezeBoxDevice, self).__init__()
@@ -220,22 +248,43 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             media_url = ('/music/current/cover.jpg?player={player}').format(
                 player=self._id)
 
-        base_url = 'http://{server}:{port}/'.format(
-            server=self._lms.host,
-            port=self._lms.http_port)
+        # pylint: disable=protected-access
+        if self._lms._username:
+            base_url = 'http://{username}:{password}@{server}:{port}/'.format(
+                username=self._lms._username,
+                password=self._lms._password,
+                server=self._lms.host,
+                port=self._lms.http_port)
+        else:
+            base_url = 'http://{server}:{port}/'.format(
+                server=self._lms.host,
+                port=self._lms.http_port)
 
-        return urllib.parse.urljoin(base_url, media_url)
+        url = urllib.parse.urljoin(base_url, media_url)
+
+        _LOGGER.debug("Media image url: %s", url)
+        return url
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        if 'artist' in self._status and 'title' in self._status:
-            return '{artist} - {title}'.format(
-                artist=self._status['artist'],
-                title=self._status['title']
-                )
+        if 'title' in self._status:
+            return self._status['title']
+
         if 'current_title' in self._status:
             return self._status['current_title']
+
+    @property
+    def media_artist(self):
+        """Artist of current playing media."""
+        if 'artist' in self._status:
+            return self._status['artist']
+
+    @property
+    def media_album_name(self):
+        """Album of current playing media."""
+        if 'album' in self._status:
+            return self._status['album'].rstrip()
 
     @property
     def supported_media_commands(self):
@@ -302,4 +351,65 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self._lms.query(self._id, 'power', '1')
+        self.update_ha_state()
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """
+        Send the play_media command to the media player.
+
+        If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the current playlist.
+        """
+        if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            self._add_uri_to_playlist(media_id)
+        else:
+            self._play_uri(media_id)
+
+    def _play_uri(self, media_id):
+        """
+        Replace the current play list with the uri.
+
+        Telnet Command Structure:
+        <playerid> playlist play <item> <title> <fadeInSecs>
+
+        The "playlist play" command puts the specified song URL,
+        playlist or directory contents into the current playlist
+        and plays starting at the first item. Any songs previously
+        in the playlist are discarded. An optional title value may be
+        passed to set a title. This can be useful for remote URLs.
+        The "fadeInSecs" parameter may be passed to specify fade-in period.
+
+        Examples:
+        Request: "04:20:00:12:23:45 playlist play
+                    /music/abba/01_Voulez_Vous.mp3<LF>"
+        Response: "04:20:00:12:23:45 playlist play
+            /music/abba/01_Voulez_Vous.mp3<LF>"
+
+        """
+        self._lms.query(self._id, 'playlist', 'play', media_id)
+        self.update_ha_state()
+
+    def _add_uri_to_playlist(self, media_id):
+        """
+        Add a items to the existing playlist.
+
+        Telnet Command Structure:
+        <playerid> playlist add <item>
+
+        The "playlist add" command adds the specified song URL, playlist or
+        directory contents to the end of the current playlist. Songs
+        currently playing or already on the playlist are not affected.
+
+        Examples:
+        Request: "04:20:00:12:23:45 playlist add
+            /music/abba/01_Voulez_Vous.mp3<LF>"
+        Response: "04:20:00:12:23:45 playlist add
+            /music/abba/01_Voulez_Vous.mp3<LF>"
+
+        Request: "04:20:00:12:23:45 playlist add
+            /playlists/abba.m3u<LF>"
+        Response: "04:20:00:12:23:45 playlist add
+            /playlists/abba.m3u<LF>"
+
+        """
+        self._lms.query(self._id, 'playlist', 'add', media_id)
         self.update_ha_state()

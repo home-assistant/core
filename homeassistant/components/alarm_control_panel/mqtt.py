@@ -13,33 +13,31 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN,
-    CONF_NAME)
+    CONF_NAME, CONF_CODE)
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mqtt']
-
 CONF_PAYLOAD_DISARM = 'payload_disarm'
 CONF_PAYLOAD_ARM_HOME = 'payload_arm_home'
 CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
-CONF_CODE = 'code'
 
-DEFAULT_NAME = "MQTT Alarm"
-DEFAULT_DISARM = "DISARM"
-DEFAULT_ARM_HOME = "ARM_HOME"
-DEFAULT_ARM_AWAY = "ARM_AWAY"
+DEFAULT_ARM_AWAY = 'ARM_AWAY'
+DEFAULT_ARM_HOME = 'ARM_HOME'
+DEFAULT_DISARM = 'DISARM'
+DEFAULT_NAME = 'MQTT Alarm'
+DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
-    vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
-    vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
+    vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_CODE): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
+    vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
+    vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
 })
 
 
@@ -47,20 +45,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MQTT platform."""
     add_devices([MqttAlarm(
         hass,
-        config[CONF_NAME],
-        config[CONF_STATE_TOPIC],
-        config[CONF_COMMAND_TOPIC],
-        config[CONF_QOS],
-        config[CONF_PAYLOAD_DISARM],
-        config[CONF_PAYLOAD_ARM_HOME],
-        config[CONF_PAYLOAD_ARM_AWAY],
+        config.get(CONF_NAME),
+        config.get(CONF_STATE_TOPIC),
+        config.get(CONF_COMMAND_TOPIC),
+        config.get(CONF_QOS),
+        config.get(CONF_PAYLOAD_DISARM),
+        config.get(CONF_PAYLOAD_ARM_HOME),
+        config.get(CONF_PAYLOAD_ARM_AWAY),
         config.get(CONF_CODE))])
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
-# pylint: disable=abstract-method
 class MqttAlarm(alarm.AlarmControlPanel):
-    """Represent a MQTT alarm status."""
+    """Representation of a MQTT alarm status."""
 
     def __init__(self, hass, name, state_topic, command_topic, qos,
                  payload_disarm, payload_arm_home, payload_arm_away, code):

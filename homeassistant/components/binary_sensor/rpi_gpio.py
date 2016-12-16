@@ -6,16 +6,37 @@ https://home-assistant.io/components/binary_sensor.rpi_gpio/
 """
 import logging
 
-import homeassistant.components.rpi_gpio as rpi_gpio
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import DEVICE_DEFAULT_NAME
+import voluptuous as vol
 
-DEFAULT_PULL_MODE = "UP"
+import homeassistant.components.rpi_gpio as rpi_gpio
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.const import DEVICE_DEFAULT_NAME
+import homeassistant.helpers.config_validation as cv
+
+_LOGGER = logging.getLogger(__name__)
+
+CONF_BOUNCETIME = 'bouncetime'
+CONF_INVERT_LOGIC = 'invert_logic'
+CONF_PORTS = 'ports'
+CONF_PULL_MODE = 'pull_mode'
+
 DEFAULT_BOUNCETIME = 50
 DEFAULT_INVERT_LOGIC = False
+DEFAULT_PULL_MODE = 'UP'
 
 DEPENDENCIES = ['rpi_gpio']
-_LOGGER = logging.getLogger(__name__)
+
+_SENSORS_SCHEMA = vol.Schema({
+    cv.positive_int: cv.string,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_PORTS): _SENSORS_SCHEMA,
+    vol.Optional(CONF_BOUNCETIME, default=DEFAULT_BOUNCETIME): cv.positive_int,
+    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+    vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE): cv.string,
+})
 
 
 # pylint: disable=unused-argument
@@ -33,7 +54,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(binary_sensors)
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
 class RPiGPIOBinarySensor(BinarySensorDevice):
     """Represent a binary sensor that uses Raspberry Pi GPIO."""
 
@@ -52,7 +72,7 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
         def read_gpio(port):
             """Read state from GPIO."""
             self._state = rpi_gpio.read_input(self._port)
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
         rpi_gpio.edge_detect(self._port, read_gpio, self._bouncetime)
 

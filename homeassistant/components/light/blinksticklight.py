@@ -6,22 +6,40 @@ https://home-assistant.io/components/light.blinksticklight/
 """
 import logging
 
-from homeassistant.components.light import ATTR_RGB_COLOR, Light
+import voluptuous as vol
+
+from homeassistant.components.light import (
+    ATTR_RGB_COLOR, SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['blinkstick==1.1.8']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_SERIAL = 'serial'
 
-REQUIREMENTS = ["blinkstick==1.1.7"]
+DEFAULT_NAME = 'Blinkstick'
+
+SUPPORT_BLINKSTICK = SUPPORT_RGB_COLOR
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_SERIAL): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Add device specified by serial number."""
     from blinkstick import blinkstick
 
-    stick = blinkstick.find_by_serial(config['serial'])
+    name = config.get(CONF_NAME)
+    serial = config.get(CONF_SERIAL)
 
-    add_devices_callback([BlinkStickLight(stick, config['name'])])
+    stick = blinkstick.find_by_serial(serial)
+
+    add_devices([BlinkStickLight(stick, name)])
 
 
 class BlinkStickLight(Light):
@@ -53,6 +71,11 @@ class BlinkStickLight(Light):
     def is_on(self):
         """Check whether any of the LEDs colors are non-zero."""
         return sum(self._rgb_color) > 0
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_BLINKSTICK
 
     def update(self):
         """Read back the device state."""

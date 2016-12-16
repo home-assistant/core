@@ -6,40 +6,60 @@ https://home-assistant.io/components/switch.orvibo/
 """
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+import voluptuous as vol
 
-DEFAULT_NAME = "Orvibo S20 Switch"
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_SWITCHES, CONF_MAC, CONF_DISCOVERY)
+import homeassistant.helpers.config_validation as cv
+
 REQUIREMENTS = ['orvibo==1.1.1']
+
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_NAME = 'Orvibo S20 Switch'
+DEFAULT_DISCOVERY = True
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_SWITCHES, default=[]):
+        vol.All(cv.ensure_list, [{
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_MAC): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+        }]),
+    vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+})
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Find and return S20 switches."""
-    from orvibo.s20 import S20, S20Exception
+    """Setup S20 switches."""
+    from orvibo.s20 import discover, S20, S20Exception
 
+    switch_data = {}
     switches = []
-    switch_conf = config.get('switches', [config])
+    switch_conf = config.get(CONF_SWITCHES, [config])
+
+    if config.get(CONF_DISCOVERY):
+        _LOGGER.info("Discovering S20 switches ...")
+        switch_data.update(discover())
 
     for switch in switch_conf:
-        if switch.get('host') is None:
-            _LOGGER.error("Missing required variable: host")
-            continue
-        host = switch.get('host')
-        mac = switch.get('mac')
+        switch_data[switch.get(CONF_HOST)] = switch
+
+    for host, data in switch_data.items():
         try:
-            switches.append(S20Switch(switch.get('name', DEFAULT_NAME),
-                                      S20(host, mac=mac)))
+            switches.append(S20Switch(data.get(CONF_NAME),
+                                      S20(host, mac=data.get(CONF_MAC))))
             _LOGGER.info("Initialized S20 at %s", host)
         except S20Exception:
-            _LOGGER.exception("S20 at %s couldn't be initialized",
-                              host)
+            _LOGGER.error("S20 at %s couldn't be initialized", host)
 
     add_devices_callback(switches)
 
 
 class S20Switch(SwitchDevice):
-    """Representsation of an S20 switch."""
+    """Representation of an S20 switch."""
 
     def __init__(self, name, s20):
         """Initialize the S20 device."""

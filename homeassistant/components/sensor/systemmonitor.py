@@ -1,16 +1,24 @@
 """
-Support for monitoring the local system..
+Support for monitoring the local system.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.systemmonitor/
 """
 import logging
 
-import homeassistant.util.dt as dt_util
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers.entity import Entity
+import voluptuous as vol
 
-REQUIREMENTS = ['psutil==4.1.0']
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_RESOURCES, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_TYPE)
+from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
+
+REQUIREMENTS = ['psutil==5.0.0']
+
+_LOGGER = logging.getLogger(__name__)
+
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
     'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
@@ -19,34 +27,49 @@ SENSOR_TYPES = {
     'memory_use': ['RAM Use', 'MiB', 'mdi:memory'],
     'memory_free': ['RAM Free', 'MiB', 'mdi:memory'],
     'processor_use': ['CPU Use', '%', 'mdi:memory'],
-    'process': ['Process', '', 'mdi:memory'],
+    'process': ['Process', ' ', 'mdi:memory'],
     'swap_use_percent': ['Swap Use', '%', 'mdi:harddisk'],
     'swap_use': ['Swap Use', 'GiB', 'mdi:harddisk'],
     'swap_free': ['Swap Free', 'GiB', 'mdi:harddisk'],
     'network_out': ['Sent', 'MiB', 'mdi:server-network'],
-    'network_in': ['Recieved', 'MiB', 'mdi:server-network'],
-    'packets_out': ['Packets sent', '', 'mdi:server-network'],
-    'packets_in': ['Packets recieved', '', 'mdi:server-network'],
+    'network_in': ['Received', 'MiB', 'mdi:server-network'],
+    'packets_out': ['Packets sent', ' ', 'mdi:server-network'],
+    'packets_in': ['Packets received', ' ', 'mdi:server-network'],
     'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
     'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
     'last_boot': ['Last Boot', '', 'mdi:clock'],
     'since_last_boot': ['Since Last Boot', '', 'mdi:clock']
 }
 
-_LOGGER = logging.getLogger(__name__)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_RESOURCES, default=['disk_use']):
+        vol.All(cv.ensure_list, [vol.Schema({
+            vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
+            vol.Optional('arg'): cv.string,
+        })])
+})
+
+IO_COUNTER = {
+    'network_out': 0,
+    'network_in': 1,
+    'packets_out': 2,
+    'packets_in': 3,
+}
+
+IF_ADDRS = {
+    'ipv4_address': 0,
+    'ipv6_address': 1,
+}
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the System sensors."""
+    """Set up the system monitor sensors."""
     dev = []
-    for resource in config['resources']:
+    for resource in config[CONF_RESOURCES]:
         if 'arg' not in resource:
             resource['arg'] = ''
-        if resource['type'] not in SENSOR_TYPES:
-            _LOGGER.error('Sensor type: "%s" does not exist', resource['type'])
-        else:
-            dev.append(SystemMonitorSensor(resource['type'], resource['arg']))
+        dev.append(SystemMonitorSensor(resource[CONF_TYPE], resource['arg']))
 
     add_devices(dev)
 
@@ -56,7 +79,7 @@ class SystemMonitorSensor(Entity):
 
     def __init__(self, sensor_type, argument=''):
         """Initialize the sensor."""
-        self._name = SENSOR_TYPES[sensor_type][0] + ' ' + argument
+        self._name = '{} {}'.format(SENSOR_TYPES[sensor_type][0], argument)
         self.argument = argument
         self.type = sensor_type
         self._state = None
@@ -83,7 +106,6 @@ class SystemMonitorSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest system information."""
         import psutil
@@ -116,20 +138,25 @@ class SystemMonitorSensor(Entity):
                 self._state = STATE_ON
             else:
                 self._state = STATE_OFF
-        elif self.type == 'network_out':
-            self._state = round(psutil.net_io_counters(pernic=True)
-                                [self.argument][0] / 1024**2, 1)
-        elif self.type == 'network_in':
-            self._state = round(psutil.net_io_counters(pernic=True)
-                                [self.argument][1] / 1024**2, 1)
-        elif self.type == 'packets_out':
-            self._state = psutil.net_io_counters(pernic=True)[self.argument][2]
-        elif self.type == 'packets_in':
-            self._state = psutil.net_io_counters(pernic=True)[self.argument][3]
-        elif self.type == 'ipv4_address':
-            self._state = psutil.net_if_addrs()[self.argument][0][1]
-        elif self.type == 'ipv6_address':
-            self._state = psutil.net_if_addrs()[self.argument][1][1]
+        elif self.type == 'network_out' or self.type == 'network_in':
+            counters = psutil.net_io_counters(pernic=True)
+            if self.argument in counters:
+                counter = counters[self.argument][IO_COUNTER[self.type]]
+                self._state = round(counter / 1024**2, 1)
+            else:
+                self._state = STATE_UNKNOWN
+        elif self.type == 'packets_out' or self.type == 'packets_in':
+            counters = psutil.net_io_counters(pernic=True)
+            if self.argument in counters:
+                self._state = counters[self.argument][IO_COUNTER[self.type]]
+            else:
+                self._state = STATE_UNKNOWN
+        elif self.type == 'ipv4_address' or self.type == 'ipv6_address':
+            addresses = psutil.net_if_addrs()
+            if self.argument in addresses:
+                self._state = addresses[self.argument][IF_ADDRS[self.type]][1]
+            else:
+                self._state = STATE_UNKNOWN
         elif self.type == 'last_boot':
             self._state = dt_util.as_local(
                 dt_util.utc_from_timestamp(psutil.boot_time())

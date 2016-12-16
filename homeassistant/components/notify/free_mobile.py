@@ -6,27 +6,29 @@ https://home-assistant.io/components/notify.free_mobile/
 """
 import logging
 
-from homeassistant.components.notify import DOMAIN, BaseNotificationService
+import voluptuous as vol
+
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
-from homeassistant.helpers import validate_config
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['freesms==0.1.0']
+REQUIREMENTS = ['freesms==0.1.1']
+
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+})
 
 
 def get_service(hass, config):
     """Get the Free Mobile SMS notification service."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: [CONF_USERNAME,
-                                     CONF_ACCESS_TOKEN]},
-                           _LOGGER):
-        return None
-
     return FreeSMSNotificationService(config[CONF_USERNAME],
                                       config[CONF_ACCESS_TOKEN])
 
 
-# pylint: disable=too-few-public-methods
 class FreeSMSNotificationService(BaseNotificationService):
     """Implement a notification service for the Free Mobile SMS service."""
 

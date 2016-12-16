@@ -7,24 +7,35 @@ https://home-assistant.io/components/camera.foscam/
 import logging
 
 import requests
+import voluptuous as vol
 
-from homeassistant.components.camera import DOMAIN, Camera
-from homeassistant.helpers import validate_config
+from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
+from homeassistant.const import (
+    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_IP = 'ip'
+
+DEFAULT_NAME = 'Foscam Camera'
+DEFAULT_PORT = 88
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_IP): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+})
+
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a Foscam IP Camera."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['username', 'password', 'ip']}, _LOGGER):
-        return None
-
-    add_devices_callback([FoscamCamera(config)])
+    add_devices([FoscamCamera(config)])
 
 
-# pylint: disable=too-many-instance-attributes
 class FoscamCamera(Camera):
     """An implementation of a Foscam IP camera."""
 
@@ -32,16 +43,16 @@ class FoscamCamera(Camera):
         """Initialize a Foscam camera."""
         super(FoscamCamera, self).__init__()
 
-        ip_address = device_info.get('ip')
-        port = device_info.get('port', 88)
+        ip_address = device_info.get(CONF_IP)
+        port = device_info.get(CONF_PORT)
 
-        self._base_url = 'http://' + ip_address + ':' + str(port) + '/'
-        self._username = device_info.get('username')
-        self._password = device_info.get('password')
+        self._base_url = 'http://{}:{}/'.format(ip_address, port)
+        self._username = device_info.get(CONF_USERNAME)
+        self._password = device_info.get(CONF_PASSWORD)
         self._snap_picture_url = self._base_url \
             + 'cgi-bin/CGIProxy.fcgi?cmd=snapPicture2&usr=' \
             + self._username + '&pwd=' + self._password
-        self._name = device_info.get('name', 'Foscam Camera')
+        self._name = device_info.get(CONF_NAME)
 
         _LOGGER.info('Using the following URL for %s: %s',
                      self._name, self._snap_picture_url)
@@ -49,7 +60,7 @@ class FoscamCamera(Camera):
     def camera_image(self):
         """Return a still image reponse from the camera."""
         # Send the request to snap a picture and return raw jpg data
-        response = requests.get(self._snap_picture_url)
+        response = requests.get(self._snap_picture_url, timeout=10)
 
         return response.content
 

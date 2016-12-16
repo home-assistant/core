@@ -1,5 +1,5 @@
 """
-Support gahtering system information of hosts which are running glances.
+Support gathering system information of hosts which are running glances.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.glances/
@@ -8,17 +8,24 @@ import logging
 from datetime import timedelta
 
 import requests
+import voluptuous as vol
 
-from homeassistant.const import STATE_UNKNOWN
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
+_RESOURCE = 'api/2/all'
 
-_RESOURCE = '/api/2/all'
-CONF_HOST = 'host'
-CONF_PORT = '61208'
-CONF_RESOURCES = 'resources'
+DEFAULT_HOST = 'localhost'
+DEFAULT_NAME = 'Glances'
+DEFAULT_PORT = '61208'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%'],
     'disk_use': ['Disk Use', 'GiB'],
@@ -29,40 +36,36 @@ SENSOR_TYPES = {
     'swap_use_percent': ['Swap Use', '%'],
     'swap_use': ['Swap Use', 'GiB'],
     'swap_free': ['Swap Free', 'GiB'],
-    'processor_load': ['CPU Load', None],
-    'process_running': ['Running', None],
-    'process_total': ['Total', None],
-    'process_thread': ['Thread', None],
-    'process_sleeping': ['Sleeping', None]
+    'processor_load': ['CPU Load', '15 min'],
+    'process_running': ['Running', 'Count'],
+    'process_total': ['Total', 'Count'],
+    'process_thread': ['Thread', 'Count'],
+    'process_sleeping': ['Sleeping', 'Count']
 }
 
-_LOGGER = logging.getLogger(__name__)
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_RESOURCES, default=['disk_use']):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+})
 
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Glances sensor."""
+    """Set up the Glances sensor."""
+    name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
-    port = config.get('port', CONF_PORT)
-    url = 'http://{}:{}{}'.format(host, port, _RESOURCE)
+    port = config.get(CONF_PORT)
+    url = 'http://{}:{}/{}'.format(host, port, _RESOURCE)
     var_conf = config.get(CONF_RESOURCES)
-
-    if None in (host, var_conf):
-        _LOGGER.error('Not all required config keys present: %s',
-                      ', '.join((CONF_HOST, CONF_RESOURCES)))
-        return False
 
     try:
         response = requests.get(url, timeout=10)
         if not response.ok:
-            _LOGGER.error('Response status is "%s"', response.status_code)
+            _LOGGER.error("Response status is '%s'", response.status_code)
             return False
-    except requests.exceptions.MissingSchema:
-        _LOGGER.error("Missing resource or schema in configuration. "
-                      "Please check the details in the configuration file")
-        return False
     except requests.exceptions.ConnectionError:
         _LOGGER.error("No route to resource/endpoint: %s", url)
         return False
@@ -71,10 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     for resource in var_conf:
-        if resource not in SENSOR_TYPES:
-            _LOGGER.error('Sensor type: "%s" does not exist', resource)
-        else:
-            dev.append(GlancesSensor(rest, config.get('name'), resource))
+        dev.append(GlancesSensor(rest, name, resource))
 
     add_devices(dev)
 
@@ -104,7 +104,6 @@ class GlancesSensor(Entity):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
-    # pylint: disable=too-many-branches, too-many-return-statements
     @property
     def state(self):
         """Return the state of the resources."""
@@ -149,7 +148,6 @@ class GlancesSensor(Entity):
         self.rest.update()
 
 
-# pylint: disable=too-few-public-methods
 class GlancesData(object):
     """The class for handling the data retrieval."""
 

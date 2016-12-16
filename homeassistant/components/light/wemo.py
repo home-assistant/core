@@ -11,7 +11,8 @@ import homeassistant.util as util
 import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
-    ATTR_XY_COLOR)
+    ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
+    SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
 
 DEPENDENCIES = ['wemo']
 
@@ -20,8 +21,11 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
+                SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup WeMo bridges and register connected lights."""
     import pywemo.discovery as discovery
 
@@ -31,10 +35,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         device = discovery.device_from_description(location, mac)
 
         if device:
-            setup_bridge(device, add_devices_callback)
+            setup_bridge(device, add_devices)
 
 
-def setup_bridge(bridge, add_devices_callback):
+def setup_bridge(bridge, add_devices):
     """Setup a WeMo link."""
     lights = {}
 
@@ -51,7 +55,7 @@ def setup_bridge(bridge, add_devices_callback):
                 new_lights.append(lights[light_id])
 
         if new_lights:
-            add_devices_callback(new_lights)
+            add_devices(new_lights)
 
     update_lights()
 
@@ -69,7 +73,7 @@ class WemoLight(Light):
     def unique_id(self):
         """Return the ID of this light."""
         deviceid = self.device.uniqueID
-        return "{}.{}".format(self.__class__, deviceid)
+        return '{}.{}'.format(self.__class__, deviceid)
 
     @property
     def name(self):
@@ -96,6 +100,11 @@ class WemoLight(Light):
         """True if device is on."""
         return self.device.state['onoff'] != 0
 
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_WEMO
+
     def turn_on(self, **kwargs):
         """Turn the light on."""
         transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
@@ -105,6 +114,7 @@ class WemoLight(Light):
         elif ATTR_RGB_COLOR in kwargs:
             xycolor = color_util.color_RGB_to_xy(
                 *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
+            kwargs.setdefault(ATTR_BRIGHTNESS, xycolor[2])
         else:
             xycolor = None
 

@@ -1,7 +1,13 @@
-from datetime import timedelta
+"""Test config validators."""
+from collections import OrderedDict
+from datetime import timedelta, datetime, date
+import enum
+import os
+from socket import _GLOBAL_DEFAULT_TIMEOUT
 
 import pytest
 import voluptuous as vol
+from unittest.mock import Mock, patch
 
 import homeassistant.helpers.config_validation as cv
 
@@ -45,6 +51,51 @@ def test_longitude():
 
     for value in ('-179', 179, '12.34'):
         schema(value)
+
+
+def test_port():
+    """Test TCP/UDP network port."""
+    schema = vol.Schema(cv.port)
+
+    for value in ('invalid', None, -1, 0, 80000, '81000'):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ('1000', 21, 24574):
+        schema(value)
+
+
+def test_isfile():
+    """Validate that the value is an existing file."""
+    schema = vol.Schema(cv.isfile)
+
+    fake_file = 'this-file-does-not.exist'
+    assert not os.path.isfile(fake_file)
+
+    for value in ('invalid', None, -1, 0, 80000, fake_file):
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    # patching methods that allow us to fake a file existing
+    # with write access
+    with patch('os.path.isfile', Mock(return_value=True)), \
+            patch('os.access', Mock(return_value=True)):
+        schema('test.txt')
+
+
+def test_url():
+    """Test URL."""
+    schema = vol.Schema(cv.url)
+
+    for value in ('invalid', None, 100, 'htp://ha.io', 'http//ha.io',
+                  'http://??,**', 'https://??,**'):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ('http://localhost', 'https://localhost/test/index.html',
+                  'http://home-assistant.io', 'http://home-assistant.io/test/',
+                  'https://community.home-assistant.io/'):
+        assert schema(value)
 
 
 def test_platform_config():
@@ -150,17 +201,18 @@ def test_time_period():
     schema = vol.Schema(cv.time_period)
 
     for value in (
-        None, '', 1234, 'hello:world', '12:', '12:34:56:78',
+        None, '', 'hello:world', '12:', '12:34:56:78',
         {}, {'wrong_key': -10}
     ):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
     for value in (
-        '8:20', '23:59', '-8:20', '-23:59:59', '-48:00', {'minutes': 5}
+        '8:20', '23:59', '-8:20', '-23:59:59', '-48:00', {'minutes': 5}, 1, '5'
     ):
         schema(value)
 
+    assert timedelta(seconds=180) == schema('180')
     assert timedelta(hours=23, minutes=59) == schema('23:59')
     assert -1 * timedelta(hours=1, minutes=15) == schema('-1:15')
 
@@ -248,13 +300,40 @@ def test_temperature_unit():
     schema('F')
 
 
+def test_x10_address():
+    """Test x10 addr validator."""
+    schema = vol.Schema(cv.x10_address)
+    with pytest.raises(vol.Invalid):
+        schema('Q1')
+        schema('q55')
+        schema('garbage_addr')
+
+    schema('a1')
+    schema('C11')
+
+
 def test_template():
     """Test template validator."""
     schema = vol.Schema(cv.template)
 
+    for value in (None, '{{ partial_print }', '{% if True %}Hello', ['test']):
+        with pytest.raises(vol.Invalid,
+                           message='{} not considered invalid'.format(value)):
+            schema(value)
+
     for value in (
-        None, '{{ partial_print }', '{% if True %}Hello'
+        1, 'Hello',
+        '{{ beer }}',
+        '{% if 1 == 1 %}Hello{% else %}World{% endif %}',
     ):
+        schema(value)
+
+
+def test_template_complex():
+    """Test template_complex validator."""
+    schema = vol.Schema(cv.template_complex)
+
+    for value in (None, '{{ partial_print }', '{% if True %}Hello'):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
@@ -262,6 +341,8 @@ def test_template():
         1, 'Hello',
         '{{ beer }}',
         '{% if 1 == 1 %}Hello{% else %}World{% endif %}',
+        {'test': 1, 'test2': '{{ beer }}'},
+        ['{{ beer }}', 1]
     ):
         schema(value)
 
@@ -275,6 +356,17 @@ def test_time_zone():
 
     schema('America/Los_Angeles')
     schema('UTC')
+
+
+def test_datetime():
+    """Test date time validation."""
+    schema = vol.Schema(cv.datetime)
+    for value in [date.today(), 'Wrong DateTime', '2016-11-23']:
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    schema(datetime.now())
+    schema('2016-11-23T18:59:08')
 
 
 def test_key_dependency():
@@ -304,3 +396,86 @@ def test_has_at_least_one_key():
 
     for value in ({'beer': None}, {'soda': None}):
         schema(value)
+
+
+def test_ordered_dict_order():
+    """Test ordered_dict validator."""
+    schema = vol.Schema(cv.ordered_dict(int, cv.string))
+
+    val = OrderedDict()
+    val['first'] = 1
+    val['second'] = 2
+
+    validated = schema(val)
+
+    assert isinstance(validated, OrderedDict)
+    assert ['first', 'second'] == list(validated.keys())
+
+
+def test_ordered_dict_key_validator():
+    """Test ordered_dict key validator."""
+    schema = vol.Schema(cv.ordered_dict(cv.match_all, cv.string))
+
+    with pytest.raises(vol.Invalid):
+        schema({None: 1})
+
+    schema({'hello': 'world'})
+
+    schema = vol.Schema(cv.ordered_dict(cv.match_all, int))
+
+    with pytest.raises(vol.Invalid):
+        schema({'hello': 1})
+
+    schema({1: 'works'})
+
+
+def test_ordered_dict_value_validator():
+    """Test ordered_dict validator."""
+    schema = vol.Schema(cv.ordered_dict(cv.string))
+
+    with pytest.raises(vol.Invalid):
+        schema({'hello': None})
+
+    schema({'hello': 'world'})
+
+    schema = vol.Schema(cv.ordered_dict(int))
+
+    with pytest.raises(vol.Invalid):
+        schema({'hello': 'world'})
+
+    schema({'hello': 5})
+
+
+def test_enum():
+    """Test enum validator."""
+    class TestEnum(enum.Enum):
+        """Test enum."""
+
+        value1 = "Value 1"
+        value2 = "Value 2"
+
+    schema = vol.Schema(cv.enum(TestEnum))
+
+    with pytest.raises(vol.Invalid):
+        schema('value3')
+
+    TestEnum['value1']
+
+
+def test_socket_timeout():
+    """Test socket timeout validator."""
+    TEST_CONF_TIMEOUT = 'timeout'
+
+    schema = vol.Schema(
+        {vol.Required(TEST_CONF_TIMEOUT, default=None): cv.socket_timeout})
+
+    with pytest.raises(vol.Invalid):
+        schema({TEST_CONF_TIMEOUT: 0.0})
+
+    with pytest.raises(vol.Invalid):
+        schema({TEST_CONF_TIMEOUT: -1})
+
+    assert _GLOBAL_DEFAULT_TIMEOUT == schema({TEST_CONF_TIMEOUT:
+                                              None})[TEST_CONF_TIMEOUT]
+
+    assert 1.0 == schema({TEST_CONF_TIMEOUT: 1})[TEST_CONF_TIMEOUT]

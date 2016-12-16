@@ -7,56 +7,84 @@ https://home-assistant.io/components/verisure/
 import logging
 import threading
 import time
+import os.path
 from datetime import timedelta
 
-from homeassistant import bootstrap
-from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, CONF_PASSWORD, CONF_USERNAME,
-    EVENT_PLATFORM_DISCOVERED)
-from homeassistant.helpers import validate_config
-from homeassistant.loader import get_component
+import voluptuous as vol
+
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
+import homeassistant.config as conf_util
+import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "verisure"
-DISCOVER_SENSORS = 'verisure.sensors'
-DISCOVER_SWITCHES = 'verisure.switches'
-DISCOVER_ALARMS = 'verisure.alarm_control_panel'
-DISCOVER_LOCKS = 'verisure.lock'
-
-REQUIREMENTS = ['vsure==0.8.1']
+REQUIREMENTS = ['vsure==0.11.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_DEVICE_SERIAL = 'device_serial'
+CONF_ALARM = 'alarm'
+CONF_CODE_DIGITS = 'code_digits'
+CONF_HYDROMETERS = 'hygrometers'
+CONF_LOCKS = 'locks'
+CONF_MOUSE = 'mouse'
+CONF_SMARTPLUGS = 'smartplugs'
+CONF_THERMOMETERS = 'thermometers'
+CONF_SMARTCAM = 'smartcam'
+DOMAIN = 'verisure'
+SERVICE_CAPTURE_SMARTCAM = 'capture_smartcam'
+
 HUB = None
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_ALARM, default=True): cv.boolean,
+        vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
+        vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
+        vol.Optional(CONF_LOCKS, default=True): cv.boolean,
+        vol.Optional(CONF_MOUSE, default=True): cv.boolean,
+        vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
+        vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
+        vol.Optional(CONF_SMARTCAM, default=True): cv.boolean,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+CAPTURE_IMAGE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_DEVICE_SERIAL): cv.string
+})
 
 
 def setup(hass, config):
     """Setup the Verisure component."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
-        return False
-
     import verisure
     global HUB
     HUB = VerisureHub(config[DOMAIN], verisure)
     if not HUB.login():
         return False
 
-    for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
-                                  ('switch', DISCOVER_SWITCHES),
-                                  ('alarm_control_panel', DISCOVER_ALARMS),
-                                  ('lock', DISCOVER_LOCKS))):
-        component = get_component(comp_name)
-        bootstrap.setup_component(hass, component.DOMAIN, config)
-        hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
-                      {ATTR_SERVICE: discovery,
-                       ATTR_DISCOVERED: {}})
+    for component in ('sensor', 'switch', 'alarm_control_panel', 'lock',
+                      'camera'):
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
+
+    descriptions = conf_util.load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    def capture_smartcam(service):
+        """Capture a new picture from a smartcam."""
+        device_id = service.data.get(ATTR_DEVICE_SERIAL)
+        HUB.smartcam_capture(device_id)
+        _LOGGER.debug('Capturing new image from %s', ATTR_DEVICE_SERIAL)
+
+    hass.services.register(DOMAIN, SERVICE_CAPTURE_SMARTCAM,
+                           capture_smartcam,
+                           descriptions[DOMAIN][SERVICE_CAPTURE_SMARTCAM],
+                           schema=CAPTURE_IMAGE_SCHEMA)
 
     return True
 
 
-# pylint: disable=too-many-instance-attributes
 class VerisureHub(object):
     """A Verisure hub wrapper class."""
 
@@ -67,6 +95,8 @@ class VerisureHub(object):
         self.climate_status = {}
         self.mouse_status = {}
         self.smartplug_status = {}
+        self.smartcam_status = {}
+        self.smartcam_dict = {}
 
         self.config = domain_config
         self._verisure = verisure
@@ -128,6 +158,25 @@ class VerisureHub(object):
             self.my_pages.smartplug.get,
             self.smartplug_status)
 
+    @Throttle(timedelta(seconds=30))
+    def update_smartcam(self):
+        """Update the status of the smartcam."""
+        self.update_component(
+            self.my_pages.smartcam.get,
+            self.smartcam_status)
+
+    @Throttle(timedelta(seconds=30))
+    def update_smartcam_imagelist(self):
+        """Update the imagelist for the camera."""
+        _LOGGER.debug('Running update imagelist')
+        self.smartcam_dict = self.my_pages.smartcam.get_imagelist()
+        _LOGGER.debug('New dict: %s', self.smartcam_dict)
+
+    @Throttle(timedelta(seconds=30))
+    def smartcam_capture(self, device_id):
+        """Capture a new image from a smartcam."""
+        self.my_pages.smartcam.capture(device_id)
+
     @property
     def available(self):
         """Return True if hub is available."""
@@ -142,7 +191,7 @@ class VerisureHub(object):
                 except AttributeError:
                     status[overview.deviceLabel] = overview
         except self._verisure.Error as ex:
-            _LOGGER.error('Caught connection error %s, tries to reconnect', ex)
+            _LOGGER.info('Caught connection error %s, tries to reconnect', ex)
             self.reconnect()
 
     def reconnect(self):

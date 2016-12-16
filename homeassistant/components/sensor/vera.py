@@ -6,9 +6,7 @@ https://home-assistant.io/components/sensor.vera/
 """
 import logging
 
-import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.vera import (
@@ -19,9 +17,9 @@ DEPENDENCIES = ['vera']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for Vera controller devices."""
-    add_devices_callback(
+    add_devices(
         VeraSensor(device, VERA_CONTROLLER)
         for device in VERA_DEVICES['sensor'])
 
@@ -50,34 +48,11 @@ class VeraSensor(VeraDevice, Entity):
         elif self.vera_device.category == "Humidity Sensor":
             return '%'
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attr = {}
-        if self.vera_device.has_battery:
-            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
-
-        if self.vera_device.is_armable:
-            armed = self.vera_device.is_armed
-            attr[ATTR_ARMED] = 'True' if armed else 'False'
-
-        if self.vera_device.is_trippable:
-            last_tripped = self.vera_device.last_trip
-            if last_tripped is not None:
-                utc_time = dt_util.utc_from_timestamp(int(last_tripped))
-                attr[ATTR_LAST_TRIP_TIME] = utc_time.isoformat()
-            else:
-                attr[ATTR_LAST_TRIP_TIME] = None
-            tripped = self.vera_device.is_tripped
-            attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
-
-        attr['Vera Device Id'] = self.vera_device.vera_device_id
-        return attr
-
     def update(self):
         """Update the state."""
         if self.vera_device.category == "Temperature Sensor":
-            current_temp = self.vera_device.temperature
+            self.current_value = self.vera_device.temperature
+
             vera_temp_units = (
                 self.vera_device.vera_controller.temperature_units)
 
@@ -86,14 +61,6 @@ class VeraSensor(VeraDevice, Entity):
             else:
                 self._temperature_units = TEMP_CELSIUS
 
-            if self.hass:
-                temp = self.hass.config.temperature(
-                    current_temp,
-                    self._temperature_units)
-
-                current_temp, self._temperature_units = temp
-
-            self.current_value = current_temp
         elif self.vera_device.category == "Light Sensor":
             self.current_value = self.vera_device.light
         elif self.vera_device.category == "Humidity Sensor":

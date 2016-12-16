@@ -7,32 +7,44 @@ https://home-assistant.io/components/sensor.zigbee/
 import logging
 from binascii import hexlify
 
+import voluptuous as vol
+
 from homeassistant.components import zigbee
+from homeassistant.components.zigbee import PLATFORM_SCHEMA
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.core import JobPriority
 from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = ["zigbee"]
 _LOGGER = logging.getLogger(__name__)
 
+CONF_TYPE = 'type'
+CONF_MAX_VOLTS = 'max_volts'
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup the Z-Wave platform.
+DEFAULT_VOLTS = 1.2
+DEPENDENCIES = ['zigbee']
+
+TYPES = ['analog', 'temperature']
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_TYPE): vol.In(TYPES),
+    vol.Optional(CONF_MAX_VOLTS, default=DEFAULT_VOLTS): vol.Coerce(float),
+})
+
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the ZigBee platform.
 
     Uses the 'type' config value to work out which type of ZigBee sensor we're
     dealing with and instantiates the relevant classes to handle it.
     """
-    typ = config.get("type", "").lower()
-    if not typ:
-        _LOGGER.exception(
-            "Must include 'type' when configuring a ZigBee sensor.")
-        return
+    typ = config.get(CONF_TYPE)
+
     try:
         sensor_class, config_class = TYPE_CLASSES[typ]
     except KeyError:
         _LOGGER.exception("Unknown ZigBee sensor type: %s", typ)
         return
-    add_entities([sensor_class(hass, config_class(config))])
+
+    add_devices([sensor_class(hass, config_class(config))])
 
 
 class ZigBeeTemperatureSensor(Entity):
@@ -43,8 +55,7 @@ class ZigBeeTemperatureSensor(Entity):
         self._config = config
         self._temp = None
         # Get initial state
-        hass.pool.add_job(
-            JobPriority.EVENT_STATE, (self.update_ha_state, True))
+        hass.add_job(self.async_update_ha_state, True)
 
     @property
     def name(self):

@@ -1,18 +1,21 @@
 """The tests for the Rfxtrx light platform."""
 import unittest
 
-from homeassistant.bootstrap import _setup_component
+import pytest
+
+from homeassistant.bootstrap import setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
 
 from tests.common import get_test_home_assistant
 
 
+@pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
 class TestLightRfxtrx(unittest.TestCase):
     """Test the Rfxtrx light platform."""
 
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant(0)
+        self.hass = get_test_home_assistant()
         self.hass.config.components = ['rfxtrx']
 
     def tearDown(self):
@@ -25,7 +28,7 @@ class TestLightRfxtrx(unittest.TestCase):
 
     def test_valid_config(self):
         """Test configuration."""
-        self.assertTrue(_setup_component(self.hass, 'light', {
+        self.assertTrue(setup_component(self.hass, 'light', {
             'light': {'platform': 'rfxtrx',
                       'automatic_add': True,
                       'devices':
@@ -33,7 +36,7 @@ class TestLightRfxtrx(unittest.TestCase):
                                'name': 'Test',
                                rfxtrx_core.ATTR_FIREEVENT: True}}}}))
 
-        self.assertTrue(_setup_component(self.hass, 'light', {
+        self.assertTrue(setup_component(self.hass, 'light', {
             'light': {'platform': 'rfxtrx',
                       'automatic_add': True,
                       'devices':
@@ -44,7 +47,7 @@ class TestLightRfxtrx(unittest.TestCase):
 
     def test_invalid_config(self):
         """Test configuration."""
-        self.assertFalse(_setup_component(self.hass, 'light', {
+        self.assertFalse(setup_component(self.hass, 'light', {
             'light': {'platform': 'rfxtrx',
                       'automatic_add': True,
                       'invalid_key': 'afda',
@@ -56,14 +59,14 @@ class TestLightRfxtrx(unittest.TestCase):
 
     def test_default_config(self):
         """Test with 0 switches."""
-        self.assertTrue(_setup_component(self.hass, 'light', {
+        self.assertTrue(setup_component(self.hass, 'light', {
             'light': {'platform': 'rfxtrx',
                       'devices': {}}}))
         self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))
 
     def test_old_config(self):
         """Test with 1 light."""
-        self.assertTrue(_setup_component(self.hass, 'light', {
+        self.assertTrue(setup_component(self.hass, 'light', {
             'light': {'platform': 'rfxtrx',
                       'devices':
                       {'123efab1': {
@@ -107,7 +110,7 @@ class TestLightRfxtrx(unittest.TestCase):
 
     def test_one_light(self):
         """Test with 1 light."""
-        self.assertTrue(_setup_component(self.hass, 'light', {
+        self.assertTrue(setup_component(self.hass, 'light', {
             'light': {'platform': 'rfxtrx',
                       'devices':
                       {'0b1100cd0213c7f210010f51': {
@@ -148,9 +151,35 @@ class TestLightRfxtrx(unittest.TestCase):
         self.assertTrue(entity.is_on)
         self.assertEqual(entity.brightness, 255)
 
+        entity.turn_off()
+        entity_id = rfxtrx_core.RFX_DEVICES['213c7f216'].entity_id
+        entity_hass = self.hass.states.get(entity_id)
+        self.assertEqual('Test', entity_hass.name)
+        self.assertEqual('off', entity_hass.state)
+
+        entity.turn_on()
+        entity_hass = self.hass.states.get(entity_id)
+        self.assertEqual('on', entity_hass.state)
+
+        entity.turn_off()
+        entity_hass = self.hass.states.get(entity_id)
+        self.assertEqual('off', entity_hass.state)
+
+        entity.turn_on(brightness=100)
+        entity_hass = self.hass.states.get(entity_id)
+        self.assertEqual('on', entity_hass.state)
+
+        entity.turn_on(brightness=10)
+        entity_hass = self.hass.states.get(entity_id)
+        self.assertEqual('on', entity_hass.state)
+
+        entity.turn_on(brightness=255)
+        entity_hass = self.hass.states.get(entity_id)
+        self.assertEqual('on', entity_hass.state)
+
     def test_several_lights(self):
         """Test with 3 lights."""
-        self.assertTrue(_setup_component(self.hass, 'light', {
+        self.assertTrue(setup_component(self.hass, 'light', {
             'light': {'platform': 'rfxtrx',
                       'signal_repetitions': 3,
                       'devices':
@@ -183,7 +212,7 @@ class TestLightRfxtrx(unittest.TestCase):
 
     def test_discover_light(self):
         """Test with discovery of lights."""
-        self.assertTrue(_setup_component(self.hass, 'light', {
+        self.assertTrue(setup_component(self.hass, 'light', {
             'light': {'platform': 'rfxtrx',
                       'automatic_add': True,
                       'devices': {}}}))
@@ -227,9 +256,16 @@ class TestLightRfxtrx(unittest.TestCase):
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         self.assertEqual(2, len(rfxtrx_core.RFX_DEVICES))
 
+        # Trying to add a rollershutter
+        event = rfxtrx_core.get_rfx_object('0a1400adf394ab020e0060')
+        event.data = bytearray([0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94,
+                                0xAB, 0x02, 0x0E, 0x00, 0x60])
+        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
+        self.assertEqual(2, len(rfxtrx_core.RFX_DEVICES))
+
     def test_discover_light_noautoadd(self):
         """Test with discover of light when auto add is False."""
-        self.assertTrue(_setup_component(self.hass, 'light', {
+        self.assertTrue(setup_component(self.hass, 'light', {
             'light': {'platform': 'rfxtrx',
                       'automatic_add': False,
                       'devices': {}}}))
@@ -265,6 +301,12 @@ class TestLightRfxtrx(unittest.TestCase):
         event = rfxtrx_core.get_rfx_object('0b1100100118cdea02010f70')
         event.data = bytearray([0x0b, 0x11, 0x00, 0x10, 0x01, 0x18,
                                 0xcd, 0xea, 0x01, 0x01, 0x0f, 0x70])
+        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
+        self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))
 
+        # Trying to add a rollershutter
+        event = rfxtrx_core.get_rfx_object('0a1400adf394ab020e0060')
+        event.data = bytearray([0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94,
+                                0xAB, 0x02, 0x0E, 0x00, 0x60])
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))

@@ -10,10 +10,11 @@ import threading
 from datetime import timedelta
 
 import requests
+import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago.
@@ -24,21 +25,22 @@ _LOGGER = logging.getLogger(__name__)
 _DDWRT_DATA_REGEX = re.compile(r'\{(\w+)::([^\}]*)\}')
 _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string
+})
+
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return a DD-WRT scanner."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
+    try:
+        return DdWrtDeviceScanner(config[DOMAIN])
+    except ConnectionError:
         return None
 
-    scanner = DdWrtDeviceScanner(config[DOMAIN])
 
-    return scanner if scanner.success_init else None
-
-
-# pylint: disable=too-many-instance-attributes
 class DdWrtDeviceScanner(object):
     """This class queries a wireless router running DD-WRT firmware."""
 
@@ -51,13 +53,13 @@ class DdWrtDeviceScanner(object):
         self.lock = threading.Lock()
 
         self.last_results = {}
-
         self.mac2name = {}
 
         # Test the router is accessible
         url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
         data = self.get_ddwrt_data(url)
-        self.success_init = data is not None
+        if not data:
+            raise ConnectionError('Cannot connect to DD-Wrt router')
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -81,14 +83,15 @@ class DdWrtDeviceScanner(object):
                 if not dhcp_leases:
                     return None
 
-                # Remove leading and trailing single quotes.
-                cleaned_str = dhcp_leases.strip().strip('"')
-                elements = cleaned_str.split('","')
-                num_clients = int(len(elements)/5)
+                # Remove leading and trailing quotes and spaces
+                cleaned_str = dhcp_leases.replace(
+                    "\"", "").replace("\'", "").replace(" ", "")
+                elements = cleaned_str.split(',')
+                num_clients = int(len(elements) / 5)
                 self.mac2name = {}
                 for idx in range(0, num_clients):
-                    # This is stupid but the data is a single array
-                    # every 5 elements represents one hosts, the MAC
+                    # The data is a single array
+                    # every 5 elements represents one host, the MAC
                     # is the third element and the name is the first.
                     mac_index = (idx * 5) + 2
                     if mac_index < len(elements):
@@ -103,11 +106,8 @@ class DdWrtDeviceScanner(object):
 
         Return boolean if scanning successful.
         """
-        if not self.success_init:
-            return False
-
         with self.lock:
-            _LOGGER.info("Checking ARP")
+            _LOGGER.info('Checking ARP')
 
             url = 'http://{}/Status_Wireless.live.asp'.format(self.host)
             data = self.get_ddwrt_data(url)
@@ -121,11 +121,8 @@ class DdWrtDeviceScanner(object):
             if not active_clients:
                 return False
 
-            # This is really lame, instead of using JSON the DD-WRT UI
-            # uses its own data format for some reason and then
-            # regex's out values so I guess I have to do the same,
-            # LAME!!!
-
+            # The DD-WRT UI uses its own data format and then
+            # regex's out values so this is done here too
             # Remove leading and trailing single quotes.
             clean_str = active_clients.strip().strip("'")
             elements = clean_str.split("','")
@@ -143,18 +140,18 @@ class DdWrtDeviceScanner(object):
                 auth=(self.username, self.password),
                 timeout=4)
         except requests.exceptions.Timeout:
-            _LOGGER.exception("Connection to the router timed out")
+            _LOGGER.exception('Connection to the router timed out')
             return
         if response.status_code == 200:
             return _parse_ddwrt_response(response.text)
         elif response.status_code == 401:
             # Authentication error
             _LOGGER.exception(
-                "Failed to authenticate, "
-                "please check your username and password")
+                'Failed to authenticate, '
+                'please check your username and password')
             return
         else:
-            _LOGGER.error("Invalid response from ddwrt: %s", response)
+            _LOGGER.error('Invalid response from ddwrt: %s', response)
 
 
 def _parse_ddwrt_response(data_str):

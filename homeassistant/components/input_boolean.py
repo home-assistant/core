@@ -4,16 +4,17 @@ Component to keep track of user controlled booleans for within automation.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/input_boolean/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
+    ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_TOGGLE, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.util import slugify
 
 DOMAIN = 'input_boolean'
 
@@ -21,13 +22,24 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NAME = "name"
-CONF_INITIAL = "initial"
-CONF_ICON = "icon"
+CONF_INITIAL = 'initial'
+DEFAULT_INITIAL = False
 
-TOGGLE_SERVICE_SCHEMA = vol.Schema({
+SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
+
+DEFAULT_CONFIG = {CONF_INITIAL: DEFAULT_INITIAL}
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        cv.slug: vol.Any({
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.boolean,
+            vol.Optional(CONF_ICON): cv.icon,
+        }, None)
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 
 def is_on(hass, entity_id):
@@ -45,26 +57,24 @@ def turn_off(hass, entity_id):
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
 
 
-def setup(hass, config):
-    """Set up input boolean."""
-    if not isinstance(config.get(DOMAIN), dict):
-        _LOGGER.error('Expected %s config to be a dictionary', DOMAIN)
-        return False
+def toggle(hass, entity_id):
+    """Set input_boolean to False."""
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
 
+
+@asyncio.coroutine
+def async_setup(hass, config):
+    """Set up input boolean."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
-        if object_id != slugify(object_id):
-            _LOGGER.warning("Found invalid key for boolean input: %s. "
-                            "Use %s instead", object_id, slugify(object_id))
-            continue
         if not cfg:
-            cfg = {}
+            cfg = DEFAULT_CONFIG
 
         name = cfg.get(CONF_NAME)
-        state = cfg.get(CONF_INITIAL, False)
+        state = cfg.get(CONF_INITIAL)
         icon = cfg.get(CONF_ICON)
 
         entities.append(InputBoolean(object_id, name, state, icon))
@@ -72,23 +82,29 @@ def setup(hass, config):
     if not entities:
         return False
 
-    def toggle_service(service):
+    @asyncio.coroutine
+    def async_handler_service(service):
         """Handle a calls to the input boolean services."""
-        target_inputs = component.extract_from_service(service)
+        target_inputs = component.async_extract_from_service(service)
 
-        for input_b in target_inputs:
-            if service.service == SERVICE_TURN_ON:
-                input_b.turn_on()
-            else:
-                input_b.turn_off()
+        if service.service == SERVICE_TURN_ON:
+            attr = 'async_turn_on'
+        elif service.service == SERVICE_TURN_OFF:
+            attr = 'async_turn_off'
+        else:
+            attr = 'async_toggle'
 
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF, toggle_service,
-                           schema=TOGGLE_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, toggle_service,
-                           schema=TOGGLE_SERVICE_SCHEMA)
+        tasks = [getattr(input_b, attr)() for input_b in target_inputs]
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
-    component.add_entities(entities)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_OFF, async_handler_service, schema=SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_ON, async_handler_service, schema=SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TOGGLE, async_handler_service, schema=SERVICE_SCHEMA)
 
+    yield from component.async_add_entities(entities)
     return True
 
 
@@ -122,12 +138,14 @@ class InputBoolean(ToggleEntity):
         """Return true if entity is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         self._state = True
-        self.update_ha_state()
+        yield from self.async_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         self._state = False
-        self.update_ha_state()
+        yield from self.async_update_ha_state()

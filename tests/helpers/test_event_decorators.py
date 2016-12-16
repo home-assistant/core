@@ -1,6 +1,5 @@
 """Test event decorator helpers."""
-# pylint: disable=protected-access,too-many-public-methods
-# pylint: disable=too-few-public-methods
+# pylint: disable=protected-access
 import unittest
 from datetime import datetime, timedelta
 
@@ -20,7 +19,8 @@ from tests.common import get_test_home_assistant
 class TestEventDecoratorHelpers(unittest.TestCase):
     """Test the Home Assistant event helpers."""
 
-    def setUp(self):     # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.states.set("light.Bowl", "on")
@@ -28,7 +28,8 @@ class TestEventDecoratorHelpers(unittest.TestCase):
 
         event_decorators.HASS = self.hass
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
         event_decorators.HASS = None
@@ -67,17 +68,17 @@ class TestEventDecoratorHelpers(unittest.TestCase):
 
         # Run tests
         self._send_time_changed(next_rising - offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(runs))
         self.assertEqual(0, len(offset_runs))
 
         self._send_time_changed(next_rising)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(runs))
         self.assertEqual(0, len(offset_runs))
 
         self._send_time_changed(next_rising + offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(runs))
         self.assertEqual(1, len(offset_runs))
 
@@ -115,17 +116,17 @@ class TestEventDecoratorHelpers(unittest.TestCase):
 
         # run tests
         self._send_time_changed(next_setting - offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(runs))
         self.assertEqual(0, len(offset_runs))
 
         self._send_time_changed(next_setting)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(runs))
         self.assertEqual(0, len(offset_runs))
 
         self._send_time_changed(next_setting + offset)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(runs))
         self.assertEqual(1, len(offset_runs))
 
@@ -141,17 +142,17 @@ class TestEventDecoratorHelpers(unittest.TestCase):
         decor(lambda x, y: specific_runs.append(1))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(1, len(wildcard_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 15))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(2, len(wildcard_runs))
 
         self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(2, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
 
@@ -169,25 +170,25 @@ class TestEventDecoratorHelpers(unittest.TestCase):
 
         # Set same state should not trigger a state change/listener
         self.hass.states.set('light.Bowl', 'on')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(0, len(specific_runs))
         self.assertEqual(0, len(wildcard_runs))
 
         # State change off -> on
         self.hass.states.set('light.Bowl', 'off')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(1, len(wildcard_runs))
 
         # State change off -> off
         self.hass.states.set('light.Bowl', 'off', {"some_attr": 1})
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(2, len(wildcard_runs))
 
         # State change off -> on
         self.hass.states.set('light.Bowl', 'on')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
 

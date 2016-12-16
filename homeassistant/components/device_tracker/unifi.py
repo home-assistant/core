@@ -6,43 +6,54 @@ https://home-assistant.io/components/device_tracker.unifi/
 """
 import logging
 import urllib
+import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN
+import homeassistant.helpers.config_validation as cv
+import homeassistant.loader as loader
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
-from homeassistant.helpers import validate_config
 
 # Unifi package doesn't list urllib3 as a requirement
-REQUIREMENTS = ['urllib3', 'unifi==1.2.5']
+REQUIREMENTS = ['urllib3', 'pyunifi==1.3']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
+CONF_SITE_ID = 'site_id'
+
+NOTIFICATION_ID = 'unifi_notification'
+NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST, default='localhost'): cv.string,
+    vol.Optional(CONF_SITE_ID, default='default'): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PORT, default=8443): cv.port
+})
 
 
 def get_scanner(hass, config):
     """Setup Unifi device_tracker."""
-    from unifi.controller import Controller
+    from pyunifi.controller import Controller
 
-    if not validate_config(config, {DOMAIN: [CONF_USERNAME,
-                                             CONF_PASSWORD]},
-                           _LOGGER):
-        _LOGGER.error('Invalid configuration')
-        return False
+    host = config[DOMAIN].get(CONF_HOST)
+    username = config[DOMAIN].get(CONF_USERNAME)
+    password = config[DOMAIN].get(CONF_PASSWORD)
+    site_id = config[DOMAIN].get(CONF_SITE_ID)
+    port = config[DOMAIN].get(CONF_PORT)
 
-    this_config = config[DOMAIN]
-    host = this_config.get(CONF_HOST, 'localhost')
-    username = this_config.get(CONF_USERNAME)
-    password = this_config.get(CONF_PASSWORD)
-
+    persistent_notification = loader.get_component('persistent_notification')
     try:
-        port = int(this_config.get(CONF_PORT, 8443))
-    except ValueError:
-        _LOGGER.error('Invalid port (must be numeric like 8443)')
-        return False
-
-    try:
-        ctrl = Controller(host, username, password, port, 'v4')
+        ctrl = Controller(host, username, password, port, 'v4', site_id)
     except urllib.error.HTTPError as ex:
-        _LOGGER.error('Failed to connect to unifi: %s', ex)
+        _LOGGER.error('Failed to connect to Unifi: %s', ex)
+        persistent_notification.create(
+            hass, 'Failed to connect to Unifi. '
+            'Error: {}<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(ex),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
         return False
 
     return UnifiScanner(ctrl)

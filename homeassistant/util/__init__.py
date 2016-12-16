@@ -1,8 +1,7 @@
 """Helper methods for various modules."""
-import collections
+from collections.abc import MutableSet
 from itertools import chain
 import threading
-import queue
 from datetime import datetime
 import re
 import enum
@@ -11,32 +10,38 @@ import random
 import string
 from functools import wraps
 from types import MappingProxyType
+from unicodedata import normalize
+
+from typing import Any, Optional, TypeVar, Callable, Sequence, KeysView, Union
 
 from .dt import as_local, utcnow
+
+T = TypeVar('T')
+U = TypeVar('U')
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
 RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
 
 
-def sanitize_filename(filename):
+def sanitize_filename(filename: str) -> str:
     r"""Sanitize a filename by removing .. / and \\."""
     return RE_SANITIZE_FILENAME.sub("", filename)
 
 
-def sanitize_path(path):
+def sanitize_path(path: str) -> str:
     """Sanitize a path by removing ~ and .."""
     return RE_SANITIZE_PATH.sub("", path)
 
 
-def slugify(text):
+def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = text.lower().replace(" ", "_")
+    text = normalize('NFKD', text).lower().replace(" ", "_")
 
     return RE_SLUGIFY.sub("", text)
 
 
-def repr_helper(inp):
+def repr_helper(inp: Any) -> str:
     """Help creating a more readable string representation of objects."""
     if isinstance(inp, (dict, MappingProxyType)):
         return ", ".join(
@@ -48,7 +53,8 @@ def repr_helper(inp):
         return str(inp)
 
 
-def convert(value, to_type, default=None):
+def convert(value: T, to_type: Callable[[T], U],
+            default: Optional[U]=None) -> Optional[U]:
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
@@ -57,17 +63,18 @@ def convert(value, to_type, default=None):
         return default
 
 
-def ensure_unique_string(preferred_string, current_strings):
+def ensure_unique_string(preferred_string: str, current_strings:
+                         Union[Sequence[str], KeysView[str]]) -> str:
     """Return a string that is not present in current_strings.
 
     If preferred string exists will append _2, _3, ..
     """
     test_string = preferred_string
-    current_strings = set(current_strings)
+    current_strings_set = set(current_strings)
 
     tries = 1
 
-    while test_string in current_strings:
+    while test_string in current_strings_set:
         tries += 1
         test_string = "{}_{}".format(preferred_string, tries)
 
@@ -102,7 +109,7 @@ def get_random_string(length=10):
 class OrderedEnum(enum.Enum):
     """Taken from Python 3.4.0 docs."""
 
-    # pylint: disable=no-init, too-few-public-methods
+    # pylint: disable=no-init
     def __ge__(self, other):
         """Return the greater than element."""
         if self.__class__ is other.__class__:
@@ -128,7 +135,7 @@ class OrderedEnum(enum.Enum):
         return NotImplemented
 
 
-class OrderedSet(collections.MutableSet):
+class OrderedSet(MutableSet):
     """Ordered set taken from http://code.activestate.com/recipes/576694/."""
 
     def __init__(self, iterable=None):
@@ -186,7 +193,8 @@ class OrderedSet(collections.MutableSet):
             yield curr[0]
             curr = curr[1]
 
-    def pop(self, last=True):  # pylint: disable=arguments-differ
+    # pylint: disable=arguments-differ
+    def pop(self, last=True):
         """Pop element of the end of the set.
 
         Set last=False to pop from the beginning.
@@ -233,7 +241,6 @@ class Throttle(object):
     Adds a datetime attribute `last_call` to the method.
     """
 
-    # pylint: disable=too-few-public-methods
     def __init__(self, min_time, limit_no_throttle=None):
         """Initialize the throttle."""
         self.min_time = min_time
@@ -295,137 +302,3 @@ class Throttle(object):
                 throttle[0].release()
 
         return wrapper
-
-
-class ThreadPool(object):
-    """A priority queue-based thread pool."""
-
-    # pylint: disable=too-many-instance-attributes
-    def __init__(self, job_handler, worker_count=0, busy_callback=None):
-        """Initialize the pool.
-
-        job_handler: method to be called from worker thread to handle job
-        worker_count: number of threads to run that handle jobs
-        busy_callback: method to be called when queue gets too big.
-                       Parameters: worker_count, list of current_jobs,
-                                   pending_jobs_count
-        """
-        self._job_handler = job_handler
-        self._busy_callback = busy_callback
-
-        self.worker_count = 0
-        self.busy_warning_limit = 0
-        self._work_queue = queue.PriorityQueue()
-        self.current_jobs = []
-        self._lock = threading.RLock()
-        self._quit_task = object()
-
-        self.running = True
-
-        for _ in range(worker_count):
-            self.add_worker()
-
-    def add_worker(self):
-        """Add worker to the thread pool and reset warning limit."""
-        with self._lock:
-            if not self.running:
-                raise RuntimeError("ThreadPool not running")
-
-            worker = threading.Thread(
-                target=self._worker,
-                name='ThreadPool Worker {}'.format(self.worker_count))
-            worker.daemon = True
-            worker.start()
-
-            self.worker_count += 1
-            self.busy_warning_limit = self.worker_count * 3
-
-    def remove_worker(self):
-        """Remove worker from the thread pool and reset warning limit."""
-        with self._lock:
-            if not self.running:
-                raise RuntimeError("ThreadPool not running")
-
-            self._work_queue.put(PriorityQueueItem(0, self._quit_task))
-
-            self.worker_count -= 1
-            self.busy_warning_limit = self.worker_count * 3
-
-    def add_job(self, priority, job):
-        """Add a job to the queue."""
-        with self._lock:
-            if not self.running:
-                raise RuntimeError("ThreadPool not running")
-
-            self._work_queue.put(PriorityQueueItem(priority, job))
-
-            # Check if our queue is getting too big.
-            if self._work_queue.qsize() > self.busy_warning_limit \
-               and self._busy_callback is not None:
-
-                # Increase limit we will issue next warning.
-                self.busy_warning_limit *= 2
-
-                self._busy_callback(
-                    self.worker_count, self.current_jobs,
-                    self._work_queue.qsize())
-
-    def block_till_done(self):
-        """Block till current work is done."""
-        self._work_queue.join()
-        # import traceback
-        # traceback.print_stack()
-
-    def stop(self):
-        """Finish all the jobs and stops all the threads."""
-        self.block_till_done()
-
-        with self._lock:
-            if not self.running:
-                return
-
-            # Tell the workers to quit
-            for _ in range(self.worker_count):
-                self.remove_worker()
-
-            self.running = False
-
-            # Wait till all workers have quit
-            self.block_till_done()
-
-    def _worker(self):
-        """Handle jobs for the thread pool."""
-        while True:
-            # Get new item from work_queue
-            job = self._work_queue.get().item
-
-            if job == self._quit_task:
-                self._work_queue.task_done()
-                return
-
-            # Add to current running jobs
-            job_log = (utcnow(), job)
-            self.current_jobs.append(job_log)
-
-            # Do the job
-            self._job_handler(job)
-
-            # Remove from current running job
-            self.current_jobs.remove(job_log)
-
-            # Tell work_queue the task is done
-            self._work_queue.task_done()
-
-
-class PriorityQueueItem(object):
-    """Holds a priority and a value. Used within PriorityQueue."""
-
-    # pylint: disable=too-few-public-methods
-    def __init__(self, priority, item):
-        """Initialize the queue."""
-        self.priority = priority
-        self.item = item
-
-    def __lt__(self, other):
-        """Return the ordering."""
-        return self.priority < other.priority

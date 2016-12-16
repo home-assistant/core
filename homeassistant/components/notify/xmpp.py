@@ -6,33 +6,39 @@ https://home-assistant.io/components/notify.xmpp/
 """
 import logging
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    ATTR_TITLE, DOMAIN, BaseNotificationService)
-from homeassistant.helpers import validate_config
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT
 
 REQUIREMENTS = ['sleekxmpp==1.3.1',
-                'dnspython3==1.12.0',
+                'dnspython3==1.15.0',
                 'pyasn1==0.1.9',
                 'pyasn1-modules==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_TLS = 'tls'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_SENDER): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_RECIPIENT): cv.string,
+    vol.Optional(CONF_TLS, default=True): cv.boolean,
+})
+
 
 def get_service(hass, config):
     """Get the Jabber (XMPP) notification service."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['sender', 'password', 'recipient']},
-                           _LOGGER):
-        return None
-
     return XmppNotificationService(
         config.get('sender'),
         config.get('password'),
         config.get('recipient'),
-        config.get('tls', True))
+        config.get('tls'))
 
 
-# pylint: disable=too-few-public-methods
 class XmppNotificationService(BaseNotificationService):
     """Implement the notification service for Jabber (XMPP)."""
 
@@ -45,8 +51,8 @@ class XmppNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        title = kwargs.get(ATTR_TITLE)
-        data = "{}: {}".format(title, message) if title else message
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        data = '{}: {}'.format(title, message) if title else message
 
         send_message(self._sender + '/home-assistant', self._password,
                      self._recipient, self._tls, data)

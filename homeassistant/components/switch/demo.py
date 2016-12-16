@@ -18,10 +18,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class DemoSwitch(SwitchDevice):
-    """represenation of a demo switch."""
+    """Representation of a demo switch."""
 
     def __init__(self, name, state, icon, assumed):
-        """Initialize the Deom switch."""
+        """Initialize the Demo switch."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self._icon = icon
@@ -66,9 +66,9 @@ class DemoSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._state = True
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self._state = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()

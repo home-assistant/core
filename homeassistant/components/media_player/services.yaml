@@ -40,25 +40,25 @@ volume_down:
       description: Name(s) of entities to turn volume down on
       example: 'media_player.living_room_sonos'
 
-mute_volume:
+volume_mute:
   description: Mute a media player's volume
 
   fields:
     entity_id:
       description: Name(s) of entities to mute
       example: 'media_player.living_room_sonos'
-    mute:
+    is_volume_muted:
       description: True/false for mute/unmute
       example: true
 
-set_volume_level:
+volume_set:
   description: Set a media player's volume level
 
   fields:
     entity_id:
       description: Name(s) of entities to set volume level on
       example: 'media_player.living_room_sonos'
-    volume:
+    volume_level:
       description: Volume level to set
       example: 60
 
@@ -117,7 +117,7 @@ media_seek:
     entity_id:
       description: Name(s) of entities to seek media on
       example: 'media_player.living_room_chromecast'
-    position:
+    seek_position:
       description: Position to seek to. The format is platform dependent.
       example: 100
 
@@ -145,3 +145,95 @@ select_source:
     source:
       description: Name of the source to switch to. Platform dependent.
       example: 'video1'
+
+clear_playlist:
+  description: Send the media player the command to clear players playlist.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites to change source on
+      example: 'media_player.living_room_chromecast'
+
+sonos_group_players:
+  description: Send Sonos media player the command for grouping all players into one (party mode).
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will coordinate the grouping. Platform dependent.
+      example: 'media_player.living_room_sonos'
+
+sonos_unjoin:
+  description: Unjoin the player from a group.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will be unjoined from their group. Platform dependent.
+      example: 'media_player.living_room_sonos'
+
+sonos_snapshot:
+  description: Take a snapshot of the media player.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will be snapshot. Platform dependent.
+      example: 'media_player.living_room_sonos'
+
+sonos_restore:
+  description: Restore a snapshot of the media player.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will be restored. Platform dependent.
+      example: 'media_player.living_room_sonos'
+
+sonos_set_sleep_timer:
+  description: Set a Sonos timer
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will have a timer set.
+      example: 'media_player.living_room_sonos'
+    sleep_time:
+      description: Number of seconds to set the timer
+      example: '900'
+
+sonos_clear_sleep_timer:
+  description: Clear a Sonos timer
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will have the timer cleared.
+      example: 'media_player.living_room_sonos'
+
+
+soundtouch_play_everywhere:
+  description: Play on all Bose Soundtouch devices
+
+  fields:
+    entity_id:
+      description: Name of entites that will coordinate the grouping. Platform dependent. It is a shortcut for creating a multi-room zone with all devices
+      example: 'media_player.soundtouch_home'
+
+soundtouch_create_zone:
+  description: Create a multi-room zone
+
+  fields:
+    entity_id:
+      description: Name of entites that will coordinate the multi-room zone. Platform dependent.
+      example: 'media_player.soundtouch_home'
+
+soundtouch_add_zone_slave:
+  description: Add a slave to a multi-room zone
+
+  fields:
+    entity_id:
+      description: Name of entites that will be added to the multi-room zone. Platform dependent.
+      example: 'media_player.soundtouch_home'
+
+soundtouch_remove_zone_slave:
+  description: Remove a slave from the multi-room zone
+
+  fields:
+    entity_id:
+      description: Name of entites that will be remove from the multi-room zone. Platform dependent.
+      example: 'media_player.soundtouch_home'

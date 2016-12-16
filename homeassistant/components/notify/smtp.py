@@ -6,74 +6,68 @@ https://home-assistant.io/components/notify.smtp/
 """
 import logging
 import smtplib
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+import email.utils
+
+import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, DOMAIN, BaseNotificationService)
-from homeassistant.helpers import validate_config
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
+    BaseNotificationService)
+from homeassistant.const import (
+    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_RECIPIENT)
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_IMAGES = 'images'  # optional embedded image file attachments
+
+CONF_STARTTLS = 'starttls'
+CONF_DEBUG = 'debug'
+CONF_SERVER = 'server'
+
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 25
+DEFAULT_DEBUG = False
+DEFAULT_STARTTLS = False
+
+# pylint: disable=no-value-for-parameter
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_RECIPIENT): vol.Email(),
+    vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SENDER): vol.Email(),
+    vol.Optional(CONF_STARTTLS, default=DEFAULT_STARTTLS): cv.boolean,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
+})
 
 
 def get_service(hass, config):
     """Get the mail notification service."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['recipient']},
-                           _LOGGER):
+    mail_service = MailNotificationService(
+        config.get(CONF_SERVER),
+        config.get(CONF_PORT),
+        config.get(CONF_SENDER),
+        config.get(CONF_STARTTLS),
+        config.get(CONF_USERNAME),
+        config.get(CONF_PASSWORD),
+        config.get(CONF_RECIPIENT),
+        config.get(CONF_DEBUG))
+
+    if mail_service.connection_is_valid():
+        return mail_service
+    else:
         return None
 
-    smtp_server = config.get('server', 'localhost')
-    port = int(config.get('port', '25'))
-    username = config.get('username', None)
-    password = config.get('password', None)
-    starttls = int(config.get('starttls', 0))
-    debug = config.get('debug', 0)
 
-    server = None
-    try:
-        server = smtplib.SMTP(smtp_server, port, timeout=5)
-        server.set_debuglevel(debug)
-        server.ehlo()
-        if starttls == 1:
-            server.starttls()
-            server.ehlo()
-        if username and password:
-            try:
-                server.login(username, password)
-
-            except (smtplib.SMTPException, smtplib.SMTPSenderRefused):
-                _LOGGER.exception("Please check your settings.")
-                return None
-
-    except smtplib.socket.gaierror:
-        _LOGGER.exception(
-            "SMTP server not found (%s:%s). "
-            "Please check the IP address or hostname of your SMTP server.",
-            smtp_server, port)
-
-        return None
-
-    except smtplib.SMTPAuthenticationError:
-        _LOGGER.exception(
-            "Login not possible. "
-            "Please check your setting and/or your credentials.")
-
-        return None
-
-    finally:
-        if server:
-            server.quit()
-
-    return MailNotificationService(
-        smtp_server, port, config['sender'], starttls, username, password,
-        config['recipient'], debug)
-
-
-# pylint: disable=too-few-public-methods, too-many-instance-attributes
 class MailNotificationService(BaseNotificationService):
     """Implement the notification service for E-Mail messages."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, server, port, sender, starttls, username,
                  password, recipient, debug):
         """Initialize the service."""
@@ -92,24 +86,64 @@ class MailNotificationService(BaseNotificationService):
         mail = smtplib.SMTP(self._server, self._port, timeout=5)
         mail.set_debuglevel(self.debug)
         mail.ehlo_or_helo_if_needed()
-        if self.starttls == 1:
+        if self.starttls:
             mail.starttls()
             mail.ehlo()
         if self.username and self.password:
             mail.login(self.username, self.password)
         return mail
 
-    def send_message(self, message="", **kwargs):
-        """Send a message to a user."""
-        mail = self.connect()
-        subject = kwargs.get(ATTR_TITLE)
+    def connection_is_valid(self):
+        """Check for valid config, verify connectivity."""
+        server = None
+        try:
+            server = self.connect()
+        except smtplib.socket.gaierror:
+            _LOGGER.exception(
+                "SMTP server not found (%s:%s). "
+                "Please check the IP address or hostname of your SMTP server",
+                self._server, self._port)
+            return False
 
-        msg = MIMEText(message)
+        except (smtplib.SMTPAuthenticationError, ConnectionRefusedError):
+            _LOGGER.exception(
+                "Login not possible. "
+                "Please check your setting and/or your credentials")
+            return False
+
+        finally:
+            if server:
+                server.quit()
+
+        return True
+
+    def send_message(self, message="", **kwargs):
+        """
+        Build and send a message to a user.
+
+        Will send plain text normally, or will build a multipart HTML message
+        with inline image attachments if images config is defined.
+        """
+        subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        data = kwargs.get(ATTR_DATA)
+
+        if data:
+            msg = _build_multipart_msg(message, images=data.get(ATTR_IMAGES))
+        else:
+            msg = _build_text_msg(message)
+
         msg['Subject'] = subject
         msg['To'] = self.recipient
         msg['From'] = self._sender
         msg['X-Mailer'] = 'HomeAssistant'
+        msg['Date'] = email.utils.format_datetime(dt_util.now())
+        msg['Message-Id'] = email.utils.make_msgid()
 
+        return self._send_email(msg)
+
+    def _send_email(self, msg):
+        """Send the message."""
+        mail = self.connect()
         for _ in range(self.tries):
             try:
                 mail.sendmail(self._sender, self.recipient,
@@ -122,3 +156,36 @@ class MailNotificationService(BaseNotificationService):
                 mail = self.connect()
 
         mail.quit()
+
+
+def _build_text_msg(message):
+    """Build plaintext email."""
+    _LOGGER.debug('Building plain text email')
+    return MIMEText(message)
+
+
+def _build_multipart_msg(message, images):
+    """Build Multipart message with in-line images."""
+    _LOGGER.debug('Building multipart email with embedded attachment(s)')
+    msg = MIMEMultipart('related')
+    msg_alt = MIMEMultipart('alternative')
+    msg.attach(msg_alt)
+    body_txt = MIMEText(message)
+    msg_alt.attach(body_txt)
+    body_text = ['<p>{}</p><br>'.format(message)]
+
+    for atch_num, atch_name in enumerate(images):
+        cid = 'image{}'.format(atch_num)
+        body_text.append('<img src="cid:{}"><br>'.format(cid))
+        try:
+            with open(atch_name, 'rb') as attachment_file:
+                attachment = MIMEImage(attachment_file.read())
+                msg.attach(attachment)
+                attachment.add_header('Content-ID', '<{}>'.format(cid))
+        except FileNotFoundError:
+            _LOGGER.warning('Attachment %s not found. Skipping',
+                            atch_name)
+
+    body_html = MIMEText(''.join(body_text), 'html')
+    msg_alt.attach(body_html)
+    return msg

@@ -4,12 +4,24 @@ Sensor for Steam account status.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.steam_online/
 """
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_API_KEY
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['steamodd==4.21']
+
+CONF_ACCOUNTS = 'accounts'
 
 ICON = 'mdi:steam'
 
-REQUIREMENTS = ['steamodd==4.21']
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_ACCOUNTS, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+})
 
 
 # pylint: disable=unused-argument
@@ -19,13 +31,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     steamod.api.key.set(config.get(CONF_API_KEY))
     add_devices(
         [SteamSensor(account,
-                     steamod) for account in config.get('accounts', [])])
+                     steamod) for account in config.get(CONF_ACCOUNTS)])
 
 
 class SteamSensor(Entity):
     """A class for the Steam account."""
 
-    # pylint: disable=abstract-method
     def __init__(self, account, steamod):
         """Initialize the sensor."""
         self._steamod = steamod

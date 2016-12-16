@@ -1,8 +1,9 @@
 """The tests for the Command line sensor platform."""
 import unittest
 
+from homeassistant.helpers.template import Template
 from homeassistant.components.sensor import command_line
-
+from homeassistant import bootstrap
 from tests.common import get_test_home_assistant
 
 
@@ -21,7 +22,8 @@ class TestCommandSensorSensor(unittest.TestCase):
         """Test sensor setup."""
         config = {'name': 'Test',
                   'unit_of_measurement': 'in',
-                  'command': 'echo 5'}
+                  'command': 'echo 5'
+                  }
         devices = []
 
         def add_dev_callback(devs):
@@ -29,8 +31,7 @@ class TestCommandSensorSensor(unittest.TestCase):
             for dev in devs:
                 devices.append(dev)
 
-        command_line.setup_platform(
-            self.hass, config, add_dev_callback)
+        command_line.setup_platform(self.hass, config, add_dev_callback)
 
         self.assertEqual(1, len(devices))
         entity = devices[0]
@@ -40,26 +41,21 @@ class TestCommandSensorSensor(unittest.TestCase):
 
     def test_setup_bad_config(self):
         """Test setup with a bad configuration."""
-        config = {}
+        config = {'name': 'test',
+                  'platform': 'not_command_line',
+                  }
 
-        devices = []
-
-        def add_dev_callback(devs):
-            """Add a callback to add devices."""
-            for dev in devs:
-                devices.append(dev)
-
-        self.assertFalse(command_line.setup_platform(
-            self.hass, config, add_dev_callback))
-
-        self.assertEqual(0, len(devices))
+        self.assertFalse(bootstrap.setup_component(self.hass, 'test', {
+            'command_line': config,
+        }))
 
     def test_template(self):
         """Test command sensor with template."""
         data = command_line.CommandSensorData('echo 50')
 
         entity = command_line.CommandSensor(
-            self.hass, data, 'test', 'in', '{{ value | multiply(0.1) }}')
+            self.hass, data, 'test', 'in',
+            Template('{{ value | multiply(0.1) }}', self.hass))
 
         self.assertEqual(5, float(entity.state))
 

@@ -4,17 +4,23 @@ Component to interface with various media players.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/media_player/
 """
+import asyncio
+import hashlib
 import logging
 import os
 
+from aiohttp import web
+import async_timeout
 import voluptuous as vol
 
-from homeassistant.components import discovery
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.const import (
     STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
@@ -26,20 +32,26 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'media_player'
+DEPENDENCIES = ['http']
 SCAN_INTERVAL = 10
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-DISCOVERY_PLATFORMS = {
-    discovery.SERVICE_CAST: 'cast',
-    discovery.SERVICE_SONOS: 'sonos',
-    discovery.SERVICE_PLEX: 'plex',
-    discovery.SERVICE_SQUEEZEBOX: 'squeezebox',
-    discovery.SERVICE_PANASONIC_VIERA: 'panasonic_viera',
+ENTITY_IMAGE_URL = '/api/media_player_proxy/{0}?token={1}&cache={2}'
+ATTR_CACHE_IMAGES = 'images'
+ATTR_CACHE_URLS = 'urls'
+ATTR_CACHE_MAXSIZE = 'maxsize'
+ENTITY_IMAGE_CACHE = {
+    ATTR_CACHE_IMAGES: {},
+    ATTR_CACHE_URLS: [],
+    ATTR_CACHE_MAXSIZE: 16
 }
+
+CONTENT_TYPE_HEADER = 'Content-Type'
 
 SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
+SERVICE_CLEAR_PLAYLIST = 'clear_playlist'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -47,6 +59,8 @@ ATTR_MEDIA_SEEK_POSITION = 'seek_position'
 ATTR_MEDIA_CONTENT_ID = 'media_content_id'
 ATTR_MEDIA_CONTENT_TYPE = 'media_content_type'
 ATTR_MEDIA_DURATION = 'media_duration'
+ATTR_MEDIA_POSITION = 'media_position'
+ATTR_MEDIA_POSITION_UPDATED_AT = 'media_position_updated_at'
 ATTR_MEDIA_TITLE = 'media_title'
 ATTR_MEDIA_ARTIST = 'media_artist'
 ATTR_MEDIA_ALBUM_NAME = 'media_album_name'
@@ -62,6 +76,7 @@ ATTR_APP_NAME = 'app_name'
 ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
 ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
+ATTR_MEDIA_ENQUEUE = 'enqueue'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -83,6 +98,7 @@ SUPPORT_PLAY_MEDIA = 512
 SUPPORT_VOLUME_STEP = 1024
 SUPPORT_SELECT_SOURCE = 2048
 SUPPORT_STOP = 4096
+SUPPORT_CLEAR_PLAYLIST = 8192
 
 # simple services that only take entity_id(s) as optional argument
 SERVICE_TO_METHOD = {
@@ -97,7 +113,7 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_STOP: 'media_stop',
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
-    SERVICE_SELECT_SOURCE: 'select_source'
+    SERVICE_CLEAR_PLAYLIST: 'clear_playlist'
 }
 
 ATTR_TO_PROPERTY = [
@@ -106,6 +122,8 @@ ATTR_TO_PROPERTY = [
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
@@ -144,6 +162,7 @@ MEDIA_PLAYER_MEDIA_SEEK_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
 })
 
 MEDIA_PLAYER_SELECT_SOURCE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
@@ -255,13 +274,16 @@ def media_seek(hass, position, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_MEDIA_SEEK, data)
 
 
-def play_media(hass, media_type, media_id, entity_id=None):
+def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
     """Send the media player the command for playing media."""
     data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
             ATTR_MEDIA_CONTENT_ID: media_id}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
+
+    if enqueue:
+        data[ATTR_MEDIA_ENQUEUE] = enqueue
 
     hass.services.call(DOMAIN, SERVICE_PLAY_MEDIA, data)
 
@@ -276,11 +298,18 @@ def select_source(hass, source, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SELECT_SOURCE, data)
 
 
+def clear_playlist(hass, entity_id=None):
+    """Send the media player the command for clear playlist."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
+
+
 def setup(hass, config):
     """Track states and offer events for media_players."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
-        DISCOVERY_PLATFORMS)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+
+    hass.http.register_view(MediaPlayerImageView(component.entities))
 
     component.setup(config)
 
@@ -363,9 +392,14 @@ def setup(hass, config):
         """Play specified media_id on the media player."""
         media_type = service.data.get(ATTR_MEDIA_CONTENT_TYPE)
         media_id = service.data.get(ATTR_MEDIA_CONTENT_ID)
+        enqueue = service.data.get(ATTR_MEDIA_ENQUEUE)
+
+        kwargs = {
+            ATTR_MEDIA_ENQUEUE: enqueue,
+        }
 
         for player in component.extract_from_service(service):
-            player.play_media(media_type, media_id)
+            player.play_media(media_type, media_id, **kwargs)
 
             if player.should_poll:
                 player.update_ha_state(True)
@@ -380,14 +414,17 @@ def setup(hass, config):
 class MediaPlayerDevice(Entity):
     """ABC for media player devices."""
 
-    # pylint: disable=too-many-public-methods,no-self-use
-
+    # pylint: disable=no-self-use
     # Implement these for your media player
-
     @property
     def state(self):
         """State of the player."""
         return STATE_UNKNOWN
+
+    @property
+    def access_token(self):
+        """Access token for this media player."""
+        return str(id(self))
 
     @property
     def volume_level(self):
@@ -412,6 +449,19 @@ class MediaPlayerDevice(Entity):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
+        return None
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        return None
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
         return None
 
     @property
@@ -542,6 +592,10 @@ class MediaPlayerDevice(Entity):
         """Select input source."""
         raise NotImplementedError()
 
+    def clear_playlist(self):
+        """Clear players playlist."""
+        raise NotImplementedError()
+
     # No need to overwrite these.
     @property
     def support_pause(self):
@@ -588,6 +642,11 @@ class MediaPlayerDevice(Entity):
         """Boolean if select source command supported."""
         return bool(self.supported_media_commands & SUPPORT_SELECT_SOURCE)
 
+    @property
+    def support_clear_playlist(self):
+        """Boolean if clear playlist command supported."""
+        return bool(self.supported_media_commands & SUPPORT_CLEAR_PLAYLIST)
+
     def toggle(self):
         """Toggle the power on the media player."""
         if self.state in [STATE_OFF, STATE_IDLE]:
@@ -615,7 +674,17 @@ class MediaPlayerDevice(Entity):
     @property
     def entity_picture(self):
         """Return image of the media playing."""
-        return None if self.state == STATE_OFF else self.media_image_url
+        if self.state == STATE_OFF:
+            return None
+
+        url = self.media_image_url
+
+        if url is None:
+            return None
+
+        return ENTITY_IMAGE_URL.format(
+            self.entity_id, self.access_token,
+            hashlib.md5(url.encode('utf-8')).hexdigest()[:5])
 
     @property
     def state_attributes(self):
@@ -631,3 +700,89 @@ class MediaPlayerDevice(Entity):
             }
 
         return state_attr
+
+    def preload_media_image_url(self, url):
+        """Preload and cache a media image for future use."""
+        run_coroutine_threadsafe(
+            _async_fetch_image(self.hass, url), self.hass.loop
+        ).result()
+
+
+@asyncio.coroutine
+def _async_fetch_image(hass, url):
+    """Helper method to fetch image.
+
+    Images are cached in memory (the images are typically 10-100kB in size).
+    """
+    cache_images = ENTITY_IMAGE_CACHE[ATTR_CACHE_IMAGES]
+    cache_urls = ENTITY_IMAGE_CACHE[ATTR_CACHE_URLS]
+    cache_maxsize = ENTITY_IMAGE_CACHE[ATTR_CACHE_MAXSIZE]
+
+    if url in cache_images:
+        return cache_images[url]
+
+    content, content_type = (None, None)
+    websession = async_get_clientsession(hass)
+    response = None
+    try:
+        with async_timeout.timeout(10, loop=hass.loop):
+            response = yield from websession.get(url)
+        if response.status == 200:
+            content = yield from response.read()
+            content_type = response.headers.get(CONTENT_TYPE_HEADER)
+
+    except asyncio.TimeoutError:
+        pass
+
+    finally:
+        if response is not None:
+            yield from response.release()
+
+    if not content:
+        return (None, None)
+
+    cache_images[url] = (content, content_type)
+    cache_urls.append(url)
+
+    while len(cache_urls) > cache_maxsize:
+        # remove oldest item from cache
+        oldest_url = cache_urls[0]
+        if oldest_url in cache_images:
+            del cache_images[oldest_url]
+
+        cache_urls = cache_urls[1:]
+
+    return content, content_type
+
+
+class MediaPlayerImageView(HomeAssistantView):
+    """Media player view to serve an image."""
+
+    requires_auth = False
+    url = "/api/media_player_proxy/{entity_id}"
+    name = "api:media_player:image"
+
+    def __init__(self, entities):
+        """Initialize a media player view."""
+        self.entities = entities
+
+    @asyncio.coroutine
+    def get(self, request, entity_id):
+        """Start a get request."""
+        player = self.entities.get(entity_id)
+        if player is None:
+            return web.Response(status=404)
+
+        authenticated = (request[KEY_AUTHENTICATED] or
+                         request.GET.get('token') == player.access_token)
+
+        if not authenticated:
+            return web.Response(status=401)
+
+        data, content_type = yield from _async_fetch_image(
+            request.app['hass'], player.media_image_url)
+
+        if data is None:
+            return web.Response(status=500)
+
+        return web.Response(body=data, content_type=content_type)

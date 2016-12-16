@@ -6,30 +6,40 @@ https://home-assistant.io/components/weblink/
 """
 import logging
 
+import voluptuous as vol
+
+from homeassistant.const import (CONF_NAME, CONF_ICON, CONF_URL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
-
-DOMAIN = "weblink"
-DEPENDENCIES = []
-
-ATTR_NAME = 'name'
-ATTR_URL = 'url'
-ATTR_ICON = 'icon'
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_ENTITIES = 'entities'
+
+DOMAIN = 'weblink'
+
+ENTITIES_SCHEMA = vol.Schema({
+    # pylint: disable=no-value-for-parameter
+    vol.Required(CONF_URL): vol.Url(),
+    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
+})
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_ENTITIES): [ENTITIES_SCHEMA],
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Setup weblink component."""
     links = config.get(DOMAIN)
 
-    for link in links.get('entities'):
-        if ATTR_NAME not in link or ATTR_URL not in link:
-            _LOGGER.error("You need to set both %s and %s to add a %s",
-                          ATTR_NAME, ATTR_URL, DOMAIN)
-            continue
-        Link(hass, link.get(ATTR_NAME), link.get(ATTR_URL),
-             link.get(ATTR_ICON))
+    for link in links.get(CONF_ENTITIES):
+        Link(hass, link.get(CONF_NAME), link.get(CONF_URL),
+             link.get(CONF_ICON))
 
     return True
 

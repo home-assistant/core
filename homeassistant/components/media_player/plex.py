@@ -12,15 +12,16 @@ from urllib.parse import urlparse
 
 import homeassistant.util as util
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PREVIOUS_TRACK, MediaPlayerDevice)
+    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_UNKNOWN)
 from homeassistant.loader import get_component
 from homeassistant.helpers.event import (track_utc_time_change)
 
-REQUIREMENTS = ['plexapi==1.1.0']
+REQUIREMENTS = ['plexapi==2.0.2']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
@@ -30,7 +31,8 @@ PLEX_CONFIG_FILE = 'plex.conf'
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+    SUPPORT_STOP | SUPPORT_VOLUME_SET
 
 
 def config_from_file(filename, config=None):
@@ -58,7 +60,6 @@ def config_from_file(filename, config=None):
             return {}
 
 
-# pylint: disable=abstract-method
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Plex platform."""
     config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))
@@ -81,7 +82,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     setup_plexserver(host, token, hass, add_devices_callback)
 
 
-# pylint: disable=too-many-branches
 def setup_plexserver(host, token, hass, add_devices_callback):
     """Setup a plexserver based on host parameter."""
     import plexapi.server
@@ -122,7 +122,11 @@ def setup_plexserver(host, token, hass, add_devices_callback):
         try:
             devices = plexserver.clients()
         except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error listing plex devices")
+            _LOGGER.exception('Error listing plex devices')
+            return
+        except OSError:
+            _LOGGER.error(
+                'Could not connect to plex server at http://%s', host)
             return
 
         new_plex_clients = []
@@ -148,7 +152,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
         try:
             sessions = plexserver.sessions()
         except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error listing plex sessions")
+            _LOGGER.exception('Error listing plex sessions')
             return
 
         plex_sessions.clear()
@@ -166,7 +170,7 @@ def request_configuration(host, hass, add_devices_callback):
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(
-            _CONFIGURING[host], "Failed to register, please try again.")
+            _CONFIGURING[host], 'Failed to register, please try again.')
 
         return
 
@@ -175,10 +179,10 @@ def request_configuration(host, hass, add_devices_callback):
         setup_plexserver(host, data.get('token'), hass, add_devices_callback)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass, "Plex Media Server", plex_configuration_callback,
+        hass, 'Plex Media Server', plex_configuration_callback,
         description=('Enter the X-Plex-Token'),
-        description_image="/static/images/config_plex_mediaserver.png",
-        submit_caption="Confirm",
+        entity_picture='/static/images/logo_plex_mediaserver.png',
+        submit_caption='Confirm',
         fields=[{'id': 'token', 'name': 'X-Plex-Token', 'type': ''}]
     )
 
@@ -186,13 +190,17 @@ def request_configuration(host, hass, add_devices_callback):
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    # pylint: disable=too-many-public-methods, attribute-defined-outside-init
+    # pylint: disable=attribute-defined-outside-init
     def __init__(self, device, plex_sessions, update_devices, update_sessions):
         """Initialize the Plex device."""
+        from plexapi.utils import NA
+
+        self.na_type = NA
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
         self.update_sessions = update_sessions
         self.set_device(device)
+        self._season = None
 
     def set_device(self, device):
         """Set the device property."""
@@ -201,26 +209,23 @@ class PlexClient(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return the id of this plex client."""
-        return "{}.{}".format(
+        return '{}.{}'.format(
             self.__class__, self.device.machineIdentifier or self.device.name)
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self.device.name or DEVICE_DEFAULT_NAME
+        return self.device.title or DEVICE_DEFAULT_NAME
 
     @property
     def session(self):
         """Return the session, if any."""
-        if self.device.machineIdentifier not in self.plex_sessions:
-            return None
-
-        return self.plex_sessions[self.device.machineIdentifier]
+        return self.plex_sessions.get(self.device.machineIdentifier, None)
 
     @property
     def state(self):
         """Return the state of the device."""
-        if self.session:
+        if self.session and self.session.player:
             state = self.session.player.state
             if state == 'playing':
                 return STATE_PLAYING
@@ -236,14 +241,39 @@ class PlexClient(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details."""
+        from plexapi.video import Show
+
         self.update_devices(no_throttle=True)
         self.update_sessions(no_throttle=True)
+
+        if isinstance(self.session, Show):
+            self._season = self._convert_na_to_none(
+                self.session.seasons()[0].index)
+
+    # pylint: disable=no-self-use, singleton-comparison
+    def _convert_na_to_none(self, value):
+        """Convert PlexAPI _NA() instances to None."""
+        # PlexAPI will return a "__NA__" object which can be compared to
+        # None, but isn't actually None - this converts it to a real None
+        # type so that lower layers don't think it's a URL and choke on it
+        if value is self.na_type:
+            return None
+        else:
+            return value
+
+    @property
+    def _active_media_plexapi_type(self):
+        """Get the active media type required by PlexAPI commands."""
+        if self.media_content_type is MEDIA_TYPE_MUSIC:
+            return 'music'
+        else:
+            return 'video'
 
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
         if self.session is not None:
-            return self.session.ratingKey
+            return self._convert_na_to_none(self.session.ratingKey)
 
     @property
     def media_content_type(self):
@@ -255,65 +285,80 @@ class PlexClient(MediaPlayerDevice):
             return MEDIA_TYPE_TVSHOW
         elif media_type == 'movie':
             return MEDIA_TYPE_VIDEO
+        elif media_type == 'track':
+            return MEDIA_TYPE_MUSIC
         return None
 
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
         if self.session is not None:
-            return self.session.duration
+            return self._convert_na_to_none(self.session.duration)
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
         if self.session is not None:
-            return self.session.thumbUrl
+            thumb_url = self._convert_na_to_none(self.session.thumbUrl)
+            if str(self.na_type) in thumb_url:
+                # Audio tracks build their thumb urls internally before passing
+                # back a URL with the PlexAPI _NA type already converted to a
+                # string and embedded into a malformed URL
+                thumb_url = None
+            return thumb_url
 
     @property
     def media_title(self):
         """Title of current playing media."""
         # find a string we can use as a title
         if self.session is not None:
-            return self.session.title
+            return self._convert_na_to_none(self.session.title)
 
     @property
     def media_season(self):
         """Season of curent playing media (TV Show only)."""
-        from plexapi.video import Show
-        if isinstance(self.session, Show):
-            return self.session.seasons()[0].index
+        return self._season
 
     @property
     def media_series_title(self):
         """The title of the series of current playing media (TV Show only)."""
         from plexapi.video import Show
         if isinstance(self.session, Show):
-            return self.session.grandparentTitle
+            return self._convert_na_to_none(self.session.grandparentTitle)
 
     @property
     def media_episode(self):
         """Episode of current playing media (TV Show only)."""
         from plexapi.video import Show
         if isinstance(self.session, Show):
-            return self.session.index
+            return self._convert_na_to_none(self.session.index)
 
     @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
         return SUPPORT_PLEX
 
+    def set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        self.device.setVolume(int(volume * 100),
+                              self._active_media_plexapi_type)
+
     def media_play(self):
         """Send play command."""
-        self.device.play()
+        self.device.play(self._active_media_plexapi_type)
 
     def media_pause(self):
         """Send pause command."""
-        self.device.pause()
+        self.device.pause(self._active_media_plexapi_type)
+
+    def media_stop(self):
+        """Send stop command."""
+        self.device.stop(self._active_media_plexapi_type)
 
     def media_next_track(self):
         """Send next track command."""
-        self.device.skipNext()
+        self.device.skipNext(self._active_media_plexapi_type)
 
     def media_previous_track(self):
         """Send previous track command."""
-        self.device.skipPrevious()
+        self.device.skipPrevious(self._active_media_plexapi_type)

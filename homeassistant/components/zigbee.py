@@ -9,19 +9,25 @@ import pickle
 from binascii import hexlify, unhexlify
 from base64 import b64encode, b64decode
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import JobPriority
+import voluptuous as vol
+
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_NAME, CONF_PIN)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import config_validation as cv
 
-DOMAIN = "zigbee"
-REQUIREMENTS = ("xbee-helper==0.0.7",)
+REQUIREMENTS = ['xbee-helper==0.0.7']
 
-EVENT_ZIGBEE_FRAME_RECEIVED = "zigbee_frame_received"
+_LOGGER = logging.getLogger(__name__)
 
-CONF_DEVICE = "device"
-CONF_BAUD = "baud"
+DOMAIN = 'zigbee'
 
-DEFAULT_DEVICE = "/dev/ttyUSB0"
+EVENT_ZIGBEE_FRAME_RECEIVED = 'zigbee_frame_received'
+
+CONF_ADDRESS = 'address'
+CONF_BAUD = 'baud'
+
+DEFAULT_DEVICE = '/dev/ttyUSB0'
 DEFAULT_BAUD = 9600
 DEFAULT_ADC_MAX_VOLTS = 1.2
 
@@ -35,11 +41,22 @@ CONVERT_ADC = None
 ZIGBEE_EXCEPTION = None
 ZIGBEE_TX_FAILURE = None
 
-ATTR_FRAME = "frame"
+ATTR_FRAME = 'frame'
 
 DEVICE = None
 
-_LOGGER = logging.getLogger(__name__)
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.string,
+        vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_PIN): cv.positive_int,
+    vol.Optional(CONF_ADDRESS): cv.string,
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -101,9 +118,9 @@ def close_serial_port(*args):
 
 def frame_is_relevant(entity, frame):
     """Test whether the frame is relevant to the entity."""
-    if frame.get("source_addr_long") != entity.config.address:
+    if frame.get('source_addr_long') != entity.config.address:
         return False
-    if "samples" not in frame:
+    if 'samples' not in frame:
         return False
     return True
 
@@ -279,7 +296,7 @@ class ZigBeeDigitalIn(Entity):
             """
             if not frame_is_relevant(self, frame):
                 return
-            sample = frame["samples"].pop()
+            sample = frame['samples'].pop()
             pin_name = DIGITAL_PINS[self._config.pin]
             if pin_name not in sample:
                 # Doesn't contain information about our pin
@@ -290,8 +307,7 @@ class ZigBeeDigitalIn(Entity):
         subscribe(hass, handle_frame)
 
         # Get initial state
-        hass.pool.add_job(
-            JobPriority.EVENT_STATE, (self.update_ha_state, True))
+        hass.add_job(self.async_update_ha_state, True)
 
     @property
     def name(self):
@@ -402,7 +418,7 @@ class ZigBeeAnalogIn(Entity):
             """
             if not frame_is_relevant(self, frame):
                 return
-            sample = frame["samples"].pop()
+            sample = frame['samples'].pop()
             pin_name = ANALOG_PINS[self._config.pin]
             if pin_name not in sample:
                 # Doesn't contain information about our pin
@@ -417,8 +433,7 @@ class ZigBeeAnalogIn(Entity):
         subscribe(hass, handle_frame)
 
         # Get initial state
-        hass.pool.add_job(
-            JobPriority.EVENT_STATE, (self.update_ha_state, True))
+        hass.add_job(self.async_update_ha_state, True)
 
     @property
     def name(self):

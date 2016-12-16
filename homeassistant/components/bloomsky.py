@@ -8,35 +8,34 @@ import logging
 from datetime import timedelta
 
 import requests
+import voluptuous as vol
 
-from homeassistant.components import discovery
 from homeassistant.const import CONF_API_KEY
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
-
-DOMAIN = "bloomsky"
-BLOOMSKY = None
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+BLOOMSKY = None
+BLOOMSKY_TYPE = ['camera', 'binary_sensor', 'sensor']
+
+DOMAIN = 'bloomsky'
 
 # The BloomSky only updates every 5-8 minutes as per the API spec so there's
 # no point in polling the API more frequently
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
-DISCOVER_SENSORS = 'bloomsky.sensors'
-DISCOVER_BINARY_SENSORS = 'bloomsky.binary_sensor'
-DISCOVER_CAMERAS = 'bloomsky.camera'
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_API_KEY): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=unused-argument,too-few-public-methods
+# pylint: disable=unused-argument
 def setup(hass, config):
     """Setup BloomSky component."""
-    if not validate_config(
-            config,
-            {DOMAIN: [CONF_API_KEY]},
-            _LOGGER):
-        return False
-
     api_key = config[DOMAIN][CONF_API_KEY]
 
     global BLOOMSKY
@@ -45,11 +44,8 @@ def setup(hass, config):
     except RuntimeError:
         return False
 
-    for component, discovery_service in (
-            ('camera', DISCOVER_CAMERAS), ('sensor', DISCOVER_SENSORS),
-            ('binary_sensor', DISCOVER_BINARY_SENSORS)):
-        discovery.discover(hass, discovery_service, component=component,
-                           hass_config=config)
+    for component in BLOOMSKY_TYPE:
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 
@@ -58,19 +54,19 @@ class BloomSky(object):
     """Handle all communication with the BloomSky API."""
 
     # API documentation at http://weatherlution.com/bloomsky-api/
-    API_URL = "https://api.bloomsky.com/api/skydata"
+    API_URL = 'https://api.bloomsky.com/api/skydata'
 
     def __init__(self, api_key):
         """Initialize the BookSky."""
         self._api_key = api_key
         self.devices = {}
-        _LOGGER.debug("Initial bloomsky device load...")
+        _LOGGER.debug("Initial BloomSky device load...")
         self.refresh_devices()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def refresh_devices(self):
-        """Use the API to retreive a list of devices."""
-        _LOGGER.debug("Fetching bloomsky update")
+        """Use the API to retrieve a list of devices."""
+        _LOGGER.debug("Fetching BloomSky update")
         response = requests.get(self.API_URL,
                                 headers={"Authorization": self._api_key},
                                 timeout=10)
@@ -81,5 +77,5 @@ class BloomSky(object):
             return
         # Create dictionary keyed off of the device unique id
         self.devices.update({
-            device["DeviceID"]: device for device in response.json()
+            device['DeviceID']: device for device in response.json()
         })

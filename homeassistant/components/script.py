@@ -7,6 +7,7 @@ by the user or automatically based upon automation events, etc.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/script/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -14,7 +15,8 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_TOGGLE, STATE_ON, CONF_ALIAS)
-from homeassistant.helpers.entity import ToggleEntity, split_entity_id
+from homeassistant.core import split_entity_id
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
 
@@ -22,6 +24,7 @@ from homeassistant.helpers.script import Script
 
 DOMAIN = "script"
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+GROUP_NAME_ALL_SCRIPTS = 'all scripts'
 DEPENDENCIES = ["group"]
 
 CONF_SEQUENCE = "sequence"
@@ -38,7 +41,7 @@ _SCRIPT_ENTRY_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    vol.Required(DOMAIN): {cv.slug: _SCRIPT_ENTRY_SCHEMA}
+    vol.Required(DOMAIN): vol.Schema({cv.slug: _SCRIPT_ENTRY_SCHEMA})
 }, extra=vol.ALLOW_EXTRA)
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
@@ -49,7 +52,7 @@ SCRIPT_TURN_ONOFF_SCHEMA = vol.Schema({
 
 
 def is_on(hass, entity_id):
-    """Return if the switch is on based on the statemachine."""
+    """Return if the script is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
 
 
@@ -70,10 +73,13 @@ def toggle(hass, entity_id):
     hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Load the scripts from the configuration."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass,
+                                group_name=GROUP_NAME_ALL_SCRIPTS)
 
+    @asyncio.coroutine
     def service_handler(service):
         """Execute a service call to script.<script name>."""
         entity_id = ENTITY_ID_FORMAT.format(service.service)
@@ -81,49 +87,59 @@ def setup(hass, config):
         if script.is_on:
             _LOGGER.warning("Script %s already running.", entity_id)
             return
-        script.turn_on(variables=service.data)
+        yield from script.async_turn_on(variables=service.data)
+
+    scripts = []
 
     for object_id, cfg in config[DOMAIN].items():
         alias = cfg.get(CONF_ALIAS, object_id)
         script = ScriptEntity(hass, object_id, alias, cfg[CONF_SEQUENCE])
-        component.add_entities((script,))
-        hass.services.register(DOMAIN, object_id, service_handler,
-                               schema=SCRIPT_SERVICE_SCHEMA)
+        scripts.append(script)
+        hass.services.async_register(DOMAIN, object_id, service_handler,
+                                     schema=SCRIPT_SERVICE_SCHEMA)
 
+    yield from component.async_add_entities(scripts)
+
+    @asyncio.coroutine
     def turn_on_service(service):
         """Call a service to turn script on."""
         # We could turn on script directly here, but we only want to offer
         # one way to do it. Otherwise no easy way to detect invocations.
-        for script in component.extract_from_service(service):
-            turn_on(hass, script.entity_id, service.data.get(ATTR_VARIABLES))
+        var = service.data.get(ATTR_VARIABLES)
+        for script in component.async_extract_from_service(service):
+            yield from hass.services.async_call(DOMAIN, script.object_id, var)
 
+    @asyncio.coroutine
     def turn_off_service(service):
         """Cancel a script."""
-        for script in component.extract_from_service(service):
-            script.turn_off()
+        # Stopping a script is ok to be done in parallel
+        yield from asyncio.wait(
+            [script.async_turn_off() for script
+             in component.async_extract_from_service(service)], loop=hass.loop)
 
+    @asyncio.coroutine
     def toggle_service(service):
         """Toggle a script."""
-        for script in component.extract_from_service(service):
-            script.toggle()
+        for script in component.async_extract_from_service(service):
+            yield from script.async_toggle()
 
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, turn_on_service,
-                           schema=SCRIPT_TURN_ONOFF_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF, turn_off_service,
-                           schema=SCRIPT_TURN_ONOFF_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_TOGGLE, toggle_service,
-                           schema=SCRIPT_TURN_ONOFF_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_TURN_ON, turn_on_service,
+                                 schema=SCRIPT_TURN_ONOFF_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_TURN_OFF, turn_off_service,
+                                 schema=SCRIPT_TURN_ONOFF_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_TOGGLE, toggle_service,
+                                 schema=SCRIPT_TURN_ONOFF_SCHEMA)
     return True
 
 
 class ScriptEntity(ToggleEntity):
     """Representation of a script entity."""
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, hass, object_id, name, sequence):
         """Initialize the script."""
+        self.object_id = object_id
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self.script = Script(hass, sequence, name, self.update_ha_state)
+        self.script = Script(hass, sequence, name, self.async_update_ha_state)
 
     @property
     def should_poll(self):
@@ -150,10 +166,12 @@ class ScriptEntity(ToggleEntity):
         """Return true if script is on."""
         return self.script.is_running
 
-    def turn_on(self, **kwargs):
-        """Turn the entity on."""
-        self.script.run(kwargs.get(ATTR_VARIABLES))
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the script on."""
+        yield from self.script.async_run(kwargs.get(ATTR_VARIABLES))
 
-    def turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn script off."""
-        self.script.stop()
+        self.script.async_stop()

@@ -6,23 +6,23 @@ https://home-assistant.io/components/light.vera/
 """
 import logging
 
-import homeassistant.util.dt as dt_util
-from homeassistant.components.light import ATTR_BRIGHTNESS, Light
-from homeassistant.const import (
-    ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
-    STATE_OFF, STATE_ON)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.const import (STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
     VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
 
+_LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = ['vera']
 
-_LOGGER = logging.getLogger(__name__)
+SUPPORT_VERA = SUPPORT_BRIGHTNESS
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Vera lights."""
-    add_devices_callback(
+    add_devices(
         VeraLight(device, VERA_CONTROLLER) for device in VERA_DEVICES['light'])
 
 
@@ -40,6 +40,11 @@ class VeraLight(VeraDevice, Light):
         if self.vera_device.is_dimmable:
             return self.vera_device.get_brightness()
 
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_VERA
+
     def turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs and self.vera_device.is_dimmable:
@@ -48,38 +53,13 @@ class VeraLight(VeraDevice, Light):
             self.vera_device.switch_on()
 
         self._state = STATE_ON
-        self.update_ha_state(True)
+        self.schedule_update_ha_state(True)
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self.vera_device.switch_off()
         self._state = STATE_OFF
-        self.update_ha_state()
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attr = {}
-
-        if self.vera_device.has_battery:
-            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
-
-        if self.vera_device.is_armable:
-            armed = self.vera_device.is_armed
-            attr[ATTR_ARMED] = 'True' if armed else 'False'
-
-        if self.vera_device.is_trippable:
-            last_tripped = self.vera_device.last_trip
-            if last_tripped is not None:
-                utc_time = dt_util.utc_from_timestamp(int(last_tripped))
-                attr[ATTR_LAST_TRIP_TIME] = utc_time.isoformat()
-            else:
-                attr[ATTR_LAST_TRIP_TIME] = None
-            tripped = self.vera_device.is_tripped
-            attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
-
-        attr['Vera Device Id'] = self.vera_device.vera_device_id
-        return attr
+        self.schedule_update_ha_state()
 
     @property
     def is_on(self):

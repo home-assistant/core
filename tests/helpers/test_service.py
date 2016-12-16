@@ -1,4 +1,5 @@
 """Test service helpers."""
+from copy import deepcopy
 import unittest
 from unittest.mock import patch
 
@@ -6,7 +7,8 @@ from unittest.mock import patch
 import homeassistant.components  # noqa
 from homeassistant import core as ha, loader
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
-from homeassistant.helpers import service
+from homeassistant.helpers import service, template
+import homeassistant.helpers.config_validation as cv
 
 from tests.common import get_test_home_assistant, mock_service
 
@@ -33,7 +35,7 @@ class TestServiceHelpers(unittest.TestCase):
         decor(lambda x, y: runs.append(1))
 
         self.hass.services.call('test', 'test')
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(1, len(runs))
 
     def test_template_service_call(self):
@@ -43,6 +45,11 @@ class TestServiceHelpers(unittest.TestCase):
             'entity_id': 'hello.world',
             'data_template': {
                 'hello': '{{ \'goodbye\' }}',
+                'data': {
+                    'value': '{{ \'complex\' }}',
+                    'simple': 'simple'
+                },
+                'list': ['{{ \'list\' }}', '2'],
             },
         }
         runs = []
@@ -51,9 +58,12 @@ class TestServiceHelpers(unittest.TestCase):
         decor(lambda x, y: runs.append(y))
 
         service.call_from_config(self.hass, config)
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual('goodbye', runs[0].data['hello'])
+        self.assertEqual('complex', runs[0].data['data']['value'])
+        self.assertEqual('simple', runs[0].data['data']['simple'])
+        self.assertEqual('list', runs[0].data['list'][0])
 
     def test_passing_variables_to_templates(self):
         """Test passing variables to templates."""
@@ -73,7 +83,7 @@ class TestServiceHelpers(unittest.TestCase):
             'var_service': 'test_domain.test_service',
             'var_data': 'goodbye',
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
 
         self.assertEqual('goodbye', runs[0].data['hello'])
 
@@ -83,28 +93,31 @@ class TestServiceHelpers(unittest.TestCase):
             'service': 'test_domain.test_service',
             'entity_id': 'hello.world, sensor.beer'
         })
-        self.hass.pool.block_till_done()
+        self.hass.block_till_done()
         self.assertEqual(['hello.world', 'sensor.beer'],
                          self.calls[-1].data.get('entity_id'))
 
     def test_not_mutate_input(self):
         """Test for immutable input."""
-        orig = {
+        config = cv.SERVICE_SCHEMA({
             'service': 'test_domain.test_service',
             'entity_id': 'hello.world, sensor.beer',
             'data': {
                 'hello': 1,
             },
-        }
-        service.call_from_config(self.hass, orig)
-        self.hass.pool.block_till_done()
-        self.assertEqual({
-            'service': 'test_domain.test_service',
-            'entity_id': 'hello.world, sensor.beer',
-            'data': {
-                'hello': 1,
-            },
-        }, orig)
+            'data_template': {
+                'nested': {
+                    'value': '{{ 1 + 1 }}'
+                }
+            }
+        })
+        orig = deepcopy(config)
+
+        # Only change after call is each template getting hass attached
+        template.attach(self.hass, orig)
+
+        service.call_from_config(self.hass, config, validate_config=False)
+        assert orig == config
 
     @patch('homeassistant.helpers.service._LOGGER.error')
     def test_fail_silently_if_no_service(self, mock_log):
@@ -126,7 +139,7 @@ class TestServiceHelpers(unittest.TestCase):
         self.hass.states.set('light.Ceiling', STATE_OFF)
         self.hass.states.set('light.Kitchen', STATE_OFF)
 
-        loader.get_component('group').Group(
+        loader.get_component('group').Group.create_group(
             self.hass, 'test', ['light.Ceiling', 'light.Kitchen'])
 
         call = ha.ServiceCall('light', 'turn_on',
@@ -140,3 +153,6 @@ class TestServiceHelpers(unittest.TestCase):
 
         self.assertEqual(['light.ceiling', 'light.kitchen'],
                          service.extract_entity_ids(self.hass, call))
+
+        self.assertEqual(['group.test'], service.extract_entity_ids(
+            self.hass, call, expand_group=False))

@@ -7,26 +7,38 @@ https://home-assistant.io/components/sun/
 import logging
 from datetime import timedelta
 
-import homeassistant.util as util
+import voluptuous as vol
+
+from homeassistant.const import CONF_ELEVATION
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     track_point_in_utc_time, track_utc_time_change)
 from homeassistant.util import dt as dt_util
-from homeassistant.util import location as location_util
-from homeassistant.const import CONF_ELEVATION
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util as util
 
-REQUIREMENTS = ['astral==1.0']
-DOMAIN = "sun"
-ENTITY_ID = "sun.sun"
 
-STATE_ABOVE_HORIZON = "above_horizon"
-STATE_BELOW_HORIZON = "below_horizon"
-
-STATE_ATTR_NEXT_RISING = "next_rising"
-STATE_ATTR_NEXT_SETTING = "next_setting"
-STATE_ATTR_ELEVATION = "elevation"
+REQUIREMENTS = ['astral==1.3.2']
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'sun'
+
+ENTITY_ID = 'sun.sun'
+
+STATE_ABOVE_HORIZON = 'above_horizon'
+STATE_BELOW_HORIZON = 'below_horizon'
+
+STATE_ATTR_AZIMUTH = 'azimuth'
+STATE_ATTR_ELEVATION = 'elevation'
+STATE_ATTR_NEXT_RISING = 'next_rising'
+STATE_ATTR_NEXT_SETTING = 'next_setting'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_ELEVATION): cv.positive_int,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def is_on(hass, entity_id=None):
@@ -37,14 +49,20 @@ def is_on(hass, entity_id=None):
 
 
 def next_setting(hass, entity_id=None):
-    """Local datetime object of the next sun setting."""
+    """Local datetime object of the next sun setting.
+
+    Async friendly.
+    """
     utc_next = next_setting_utc(hass, entity_id)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
 def next_setting_utc(hass, entity_id=None):
-    """UTC datetime object of the next sun setting."""
+    """UTC datetime object of the next sun setting.
+
+    Async friendly.
+    """
     entity_id = entity_id or ENTITY_ID
 
     state = hass.states.get(ENTITY_ID)
@@ -59,14 +77,20 @@ def next_setting_utc(hass, entity_id=None):
 
 
 def next_rising(hass, entity_id=None):
-    """Local datetime object of the next sun rising."""
+    """Local datetime object of the next sun rising.
+
+    Async friendly.
+    """
     utc_next = next_rising_utc(hass, entity_id)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
 def next_rising_utc(hass, entity_id=None):
-    """UTC datetime object of the next sun rising."""
+    """UTC datetime object of the next sun rising.
+
+    Async friendly.
+    """
     entity_id = entity_id or ENTITY_ID
 
     state = hass.states.get(ENTITY_ID)
@@ -80,7 +104,7 @@ def next_rising_utc(hass, entity_id=None):
 
 
 def setup(hass, config):
-    """Track the state of the sun in HA."""
+    """Track the state of the sun."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
@@ -107,7 +131,7 @@ def setup(hass, config):
 
     elevation = platform_config.get(CONF_ELEVATION)
     if elevation is None:
-        elevation = location_util.elevation(latitude, longitude)
+        elevation = hass.config.elevation or 0
 
     from astral import Location
 
@@ -126,10 +150,12 @@ class Sun(Entity):
     entity_id = ENTITY_ID
 
     def __init__(self, hass, location):
-        """Initialize the Sun."""
+        """Initialize the sun."""
         self.hass = hass
         self.location = location
         self._state = self.next_rising = self.next_setting = None
+        self.solar_elevation = self.solar_azimuth = 0
+
         track_utc_time_change(hass, self.timer_update, second=30)
 
     @property
@@ -151,7 +177,8 @@ class Sun(Entity):
         return {
             STATE_ATTR_NEXT_RISING: self.next_rising.isoformat(),
             STATE_ATTR_NEXT_SETTING: self.next_setting.isoformat(),
-            STATE_ATTR_ELEVATION: round(self.solar_elevation, 2)
+            STATE_ATTR_ELEVATION: round(self.solar_elevation, 2),
+            STATE_ATTR_AZIMUTH: round(self.solar_azimuth, 2)
         }
 
     @property
@@ -159,35 +186,48 @@ class Sun(Entity):
         """Datetime when the next change to the state is."""
         return min(self.next_rising, self.next_setting)
 
-    @property
-    def solar_elevation(self):
-        """Angle the sun is above the horizon."""
-        from astral import Astral
-        return Astral().solar_elevation(
-            dt_util.utcnow(),
-            self.location.latitude,
-            self.location.longitude)
-
     def update_as_of(self, utc_point_in_time):
         """Calculate sun state at a point in UTC time."""
+        import astral
+
         mod = -1
         while True:
-            next_rising_dt = self.location.sunrise(
-                utc_point_in_time + timedelta(days=mod), local=False)
-            if next_rising_dt > utc_point_in_time:
-                break
+            try:
+                next_rising_dt = self.location.sunrise(
+                    utc_point_in_time + timedelta(days=mod), local=False)
+                if next_rising_dt > utc_point_in_time:
+                    break
+            except astral.AstralError:
+                pass
             mod += 1
 
         mod = -1
         while True:
-            next_setting_dt = (self.location.sunset(
-                utc_point_in_time + timedelta(days=mod), local=False))
-            if next_setting_dt > utc_point_in_time:
-                break
+            try:
+                next_setting_dt = (self.location.sunset(
+                    utc_point_in_time + timedelta(days=mod), local=False))
+                if next_setting_dt > utc_point_in_time:
+                    break
+            except astral.AstralError:
+                pass
             mod += 1
 
         self.next_rising = next_rising_dt
         self.next_setting = next_setting_dt
+
+    def update_sun_position(self, utc_point_in_time):
+        """Calculate the position of the sun."""
+        from astral import Astral
+
+        self.solar_azimuth = Astral().solar_azimuth(
+            utc_point_in_time,
+            self.location.latitude,
+            self.location.longitude)
+
+        self.solar_elevation = Astral().solar_elevation(
+            utc_point_in_time,
+            self.location.latitude,
+            self.location.longitude)
 
     def point_in_time_listener(self, now):
         """Called when the state of the sun has changed."""
@@ -200,5 +240,6 @@ class Sun(Entity):
             self.next_change + timedelta(seconds=1))
 
     def timer_update(self, time):
-        """Needed to update solar elevation."""
+        """Needed to update solar elevation and azimuth."""
+        self.update_sun_position(time)
         self.update_ha_state()

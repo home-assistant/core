@@ -22,7 +22,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    for gateway in mysensors.GATEWAYS.values():
+    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
+    if not gateways:
+        return
+
+    for gateway in gateways:
         # Define the S_TYPES and V_TYPES that the platform should handle as
         # states. Map them in a dict of lists.
         pres = gateway.const.Presentation
@@ -32,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             pres.S_MOTION: [set_req.V_TRIPPED],
             pres.S_SMOKE: [set_req.V_TRIPPED],
         }
-        if float(gateway.version) >= 1.5:
+        if float(gateway.protocol_version) >= 1.5:
             map_sv_types.update({
                 pres.S_SPRINKLER: [set_req.V_TRIPPED],
                 pres.S_WATER_LEAK: [set_req.V_TRIPPED],
@@ -66,7 +70,7 @@ class MySensorsBinarySensor(
             pres.S_MOTION: 'motion',
             pres.S_SMOKE: 'smoke',
         }
-        if float(self.gateway.version) >= 1.5:
+        if float(self.gateway.protocol_version) >= 1.5:
             class_map.update({
                 pres.S_SPRINKLER: 'sprinkler',
                 pres.S_WATER_LEAK: 'leak',

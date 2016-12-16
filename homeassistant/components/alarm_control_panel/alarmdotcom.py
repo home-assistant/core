@@ -6,38 +6,42 @@ https://home-assistant.io/components/alarm_control_panel.alarmdotcom/
 """
 import logging
 
+import voluptuous as vol
+
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN)
-
-_LOGGER = logging.getLogger(__name__)
-
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN, CONF_CODE,
+    CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/Xorso/pyalarmdotcom'
                 '/archive/0.1.1.zip'
                 '#pyalarmdotcom==0.1.1']
+
+_LOGGER = logging.getLogger(__name__)
+
 DEFAULT_NAME = 'Alarm.com'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_CODE): cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup an Alarm.com control panel."""
+    name = config.get(CONF_NAME)
+    code = config.get(CONF_CODE)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    if username is None or password is None:
-        _LOGGER.error('Must specify username and password!')
-        return False
-
-    add_devices([AlarmDotCom(hass,
-                             config.get('name', DEFAULT_NAME),
-                             config.get('code'),
-                             username,
-                             password)])
+    add_devices([AlarmDotCom(hass, name, code, username, password)], True)
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
-# pylint: disable=abstract-method
 class AlarmDotCom(alarm.AlarmControlPanel):
     """Represent an Alarm.com status."""
 
@@ -50,11 +54,11 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         self._code = str(code) if code else None
         self._username = username
         self._password = password
+        self._state = STATE_UNKNOWN
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return True
+    def update(self):
+        """Fetch the latest state."""
+        self._state = self._alarm.state
 
     @property
     def name(self):
@@ -69,18 +73,18 @@ class AlarmDotCom(alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._alarm.state == 'Disarmed':
+        if self._state == 'Disarmed':
             return STATE_ALARM_DISARMED
-        elif self._alarm.state == 'Armed Stay':
+        elif self._state == 'Armed Stay':
             return STATE_ALARM_ARMED_HOME
-        elif self._alarm.state == 'Armed Away':
+        elif self._state == 'Armed Away':
             return STATE_ALARM_ARMED_AWAY
         else:
             return STATE_UNKNOWN
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        if not self._validate_code(code, 'arming home'):
+        if not self._validate_code(code, 'disarming home'):
             return
         from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
         # Open another session to alarm.com to fire off the command

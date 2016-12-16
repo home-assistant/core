@@ -1,0 +1,54 @@
+alarm_disarm:
+  description: Send the alarm the command for disarm
+
+  fields:
+    entity_id:
+      description: Name of alarm control panel to disarm
+      example: 'alarm_control_panel.downstairs'
+    code:
+      description: An optional code to disarm the alarm control panel with
+      example: 1234
+
+alarm_arm_home:
+  description: Send the alarm the command for arm home
+
+  fields:
+    entity_id:
+      description: Name of alarm control panel to arm home
+      example: 'alarm_control_panel.downstairs'
+    code:
+      description: An optional code to arm home the alarm control panel with
+      example: 1234
+
+alarm_arm_away:
+  description: Send the alarm the command for arm away
+
+  fields:
+    entity_id:
+      description: Name of alarm control panel to arm away
+      example: 'alarm_control_panel.downstairs'
+    code:
+      description: An optional code to arm away the alarm control panel with
+      example: 1234
+
+alarm_trigger:
+  description: Send the alarm the command for trigger
+
+  fields:
+    entity_id:
+      description: Name of alarm control panel to trigger
+      example: 'alarm_control_panel.downstairs'
+    code:
+      description: An optional code to trigger the alarm control panel with
+      example: 1234
+
+envisalink_alarm_keypress:
+  description: Send custom keypresses to the alarm
+
+  fields:
+    entity_id:
+      description: Name of the alarm control panel to trigger
+      example: 'alarm_control_panel.downstairs'
+    keypress:
+      description: 'String to send to the alarm panel (1-6 characters)'
+      example: '*71'

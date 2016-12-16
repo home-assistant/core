@@ -6,7 +6,6 @@ https://home-assistant.io/components/switch.rfxtrx/
 """
 import logging
 
-
 import homeassistant.components.rfxtrx as rfxtrx
 from homeassistant.components.switch import SwitchDevice
 
@@ -28,7 +27,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     def switch_update(event):
         """Callback for sensor updates from the RFXtrx gateway."""
         if not isinstance(event.device, rfxtrxmod.LightingDevice) or \
-                event.device.known_to_be_dimmable:
+                event.device.known_to_be_dimmable or \
+                event.device.known_to_be_rollershutter:
             return
 
         new_device = rfxtrx.get_new_device(event, config, RfxtrxSwitch)

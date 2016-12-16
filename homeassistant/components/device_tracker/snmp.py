@@ -9,29 +9,38 @@ import logging
 import threading
 from datetime import timedelta
 
-from homeassistant.components.device_tracker import DOMAIN
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pysnmp==4.2.5']
+REQUIREMENTS = ['pysnmp==4.3.2']
 
 CONF_COMMUNITY = "community"
+CONF_AUTHKEY = "authkey"
+CONF_PRIVKEY = "privkey"
 CONF_BASEOID = "baseoid"
+
+DEFAULT_COMMUNITY = "public"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+    vol.Inclusive(CONF_AUTHKEY, "keys"): cv.string,
+    vol.Inclusive(CONF_PRIVKEY, "keys"): cv.string,
+    vol.Required(CONF_BASEOID): cv.string
+})
 
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return an snmp scanner."""
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_COMMUNITY, CONF_BASEOID]},
-                           _LOGGER):
-        return None
-
     scanner = SnmpScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
@@ -43,10 +52,20 @@ class SnmpScanner(object):
     def __init__(self, config):
         """Initialize the scanner."""
         from pysnmp.entity.rfc3413.oneliner import cmdgen
+        from pysnmp.entity import config as cfg
         self.snmp = cmdgen.CommandGenerator()
 
         self.host = cmdgen.UdpTransportTarget((config[CONF_HOST], 161))
-        self.community = cmdgen.CommunityData(config[CONF_COMMUNITY])
+        if CONF_AUTHKEY not in config or CONF_PRIVKEY not in config:
+            self.auth = cmdgen.CommunityData(config[CONF_COMMUNITY])
+        else:
+            self.auth = cmdgen.UsmUserData(
+                config[CONF_COMMUNITY],
+                config[CONF_AUTHKEY],
+                config[CONF_PRIVKEY],
+                authProtocol=cfg.usmHMACSHAAuthProtocol,
+                privProtocol=cfg.usmAesCfb128Protocol
+            )
         self.baseoid = cmdgen.MibVariable(config[CONF_BASEOID])
 
         self.lock = threading.Lock()
@@ -72,7 +91,7 @@ class SnmpScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """Ensure the information from the WAP is up to date.
+        """Ensure the information from the device is up to date.
 
         Return boolean if scanning successful.
         """
@@ -88,18 +107,19 @@ class SnmpScanner(object):
             return True
 
     def get_snmp_data(self):
-        """Fetch MAC addresses from WAP via SNMP."""
+        """Fetch MAC addresses from access point via SNMP."""
         devices = []
 
         errindication, errstatus, errindex, restable = self.snmp.nextCmd(
-            self.community, self.host, self.baseoid)
+            self.auth, self.host, self.baseoid)
 
         if errindication:
             _LOGGER.error("SNMPLIB error: %s", errindication)
             return
+        # pylint: disable=no-member
         if errstatus:
             _LOGGER.error('SNMP error: %s at %s', errstatus.prettyPrint(),
-                          errindex and restable[-1][int(errindex)-1] or '?')
+                          errindex and restable[int(errindex) - 1][0] or '?')
             return
 
         for resrow in restable:

@@ -4,18 +4,24 @@ Support for MySensors lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mysensors/
 """
+
 import logging
 
 from homeassistant.components import mysensors
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-                                            Light)
+                                            ATTR_WHITE_VALUE,
+                                            SUPPORT_BRIGHTNESS,
+                                            SUPPORT_RGB_COLOR,
+                                            SUPPORT_WHITE_VALUE, Light)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
 _LOGGER = logging.getLogger(__name__)
-ATTR_RGB_WHITE = 'rgb_white'
 ATTR_VALUE = 'value'
 ATTR_VALUE_TYPE = 'value_type'
+
+SUPPORT_MYSENSORS = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR |
+                     SUPPORT_WHITE_VALUE)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -25,7 +31,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    for gateway in mysensors.GATEWAYS.values():
+    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
+    if not gateways:
+        return
+
+    for gateway in gateways:
         # Define the S_TYPES and V_TYPES that the platform should handle as
         # states. Map them in a dict of lists.
         pres = gateway.const.Presentation
@@ -36,14 +46,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device_class_map = {
             pres.S_DIMMER: MySensorsLightDimmer,
         }
-        if float(gateway.version) >= 1.5:
-            # Add V_RGBW when rgb_white is implemented in the frontend
+        if float(gateway.protocol_version) >= 1.5:
             map_sv_types.update({
                 pres.S_RGB_LIGHT: [set_req.V_RGB],
+                pres.S_RGBW_LIGHT: [set_req.V_RGBW],
             })
             map_sv_types[pres.S_DIMMER].append(set_req.V_PERCENTAGE)
             device_class_map.update({
                 pres.S_RGB_LIGHT: MySensorsLightRGB,
+                pres.S_RGBW_LIGHT: MySensorsLightRGBW,
             })
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
@@ -72,8 +83,8 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         return self._rgb
 
     @property
-    def rgb_white(self):  # not implemented in the frontend yet
-        """Return the white value in RGBW, value between 0..255."""
+    def white_value(self):
+        """Return the white value of this light between 0..255."""
         return self._white
 
     @property
@@ -86,59 +97,75 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         """Return true if device is on."""
         return self._state
 
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_MYSENSORS
+
     def _turn_on_light(self):
         """Turn on light child device."""
         set_req = self.gateway.const.SetReq
 
-        if not self._state and set_req.V_LIGHT in self._values:
-            self.gateway.set_child_value(
-                self.node_id, self.child_id, set_req.V_LIGHT, 1)
+        if self._state or set_req.V_LIGHT not in self._values:
+            return
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_LIGHT, 1)
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
             self._state = True
-            self.update_ha_state()
+            self._values[set_req.V_LIGHT] = STATE_ON
+            self.schedule_update_ha_state()
 
     def _turn_on_dimmer(self, **kwargs):
         """Turn on dimmer child device."""
         set_req = self.gateway.const.SetReq
         brightness = self._brightness
 
-        if ATTR_BRIGHTNESS in kwargs and \
-                kwargs[ATTR_BRIGHTNESS] != self._brightness:
-            brightness = kwargs[ATTR_BRIGHTNESS]
-            percent = round(100 * brightness / 255)
-            self.gateway.set_child_value(
-                self.node_id, self.child_id, set_req.V_DIMMER, percent)
+        if ATTR_BRIGHTNESS not in kwargs or \
+                kwargs[ATTR_BRIGHTNESS] == self._brightness or \
+                set_req.V_DIMMER not in self._values:
+            return
+        brightness = kwargs[ATTR_BRIGHTNESS]
+        percent = round(100 * brightness / 255)
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_DIMMER, percent)
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
             self._brightness = brightness
-            self.update_ha_state()
+            self._values[set_req.V_DIMMER] = percent
+            self.schedule_update_ha_state()
 
     def _turn_on_rgb_and_w(self, hex_template, **kwargs):
         """Turn on RGB or RGBW child device."""
         rgb = self._rgb
         white = self._white
+        hex_color = self._values.get(self.value_type)
+        new_rgb = kwargs.get(ATTR_RGB_COLOR)
+        new_white = kwargs.get(ATTR_WHITE_VALUE)
 
-        if ATTR_RGB_WHITE in kwargs and \
-                kwargs[ATTR_RGB_WHITE] != self._white:
-            white = kwargs[ATTR_RGB_WHITE]
-
-        if ATTR_RGB_COLOR in kwargs and \
-                kwargs[ATTR_RGB_COLOR] != self._rgb:
-            rgb = kwargs[ATTR_RGB_COLOR]
-            if white is not None and hex_template == '%02x%02x%02x%02x':
-                rgb.append(white)
-            hex_color = hex_template % tuple(rgb)
-            self.gateway.set_child_value(
-                self.node_id, self.child_id, self.value_type, hex_color)
+        if new_rgb is None and new_white is None:
+            return
+        if new_rgb is not None:
+            rgb = list(new_rgb)
+        if rgb is None:
+            return
+        if new_white is not None and hex_template == '%02x%02x%02x%02x':
+            rgb.append(new_white)
+        hex_color = hex_template % tuple(rgb)
+        if len(rgb) > 3:
+            white = rgb.pop()
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, self.value_type, hex_color)
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
             self._rgb = rgb
             self._white = white
-            self.update_ha_state()
+            if hex_color:
+                self._values[self.value_type] = hex_color
+            self.schedule_update_ha_state()
 
     def _turn_off_light(self, value_type=None, value=None):
         """Turn off light child device."""
@@ -160,7 +187,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
 
     def _turn_off_rgb_or_w(self, value_type=None, value=None):
         """Turn off RGB or RGBW child device."""
-        if float(self.gateway.version) >= 1.5:
+        if float(self.gateway.protocol_version) >= 1.5:
             set_req = self.gateway.const.SetReq
             if self.value_type == set_req.V_RGB:
                 value = '000000'
@@ -170,6 +197,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
 
     def _turn_off_main(self, value_type=None, value=None):
         """Turn the device off."""
+        set_req = self.gateway.const.SetReq
         if value_type is None or value is None:
             _LOGGER.warning(
                 '%s: value_type %s, value = %s, '
@@ -181,7 +209,9 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
             self._state = False
-            self.update_ha_state()
+            self._values[value_type] = (
+                STATE_OFF if set_req.V_LIGHT in self._values else value)
+            self.schedule_update_ha_state()
 
     def _update_light(self):
         """Update the controller with values from light child."""
@@ -218,7 +248,6 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
-        self.battery_level = node.battery_level
         for value_type, value in child.values.items():
             _LOGGER.debug(
                 '%s: value_type %s, value = %s', self._name, value_type, value)
