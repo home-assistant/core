@@ -14,6 +14,8 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 
+import requests
+
 _LOGGER = logging.getLogger(__name__)
 
 URL_LOGIN = "https://portal.icy.nl/login"
@@ -46,7 +48,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    import requests
     """Setup the e thermostat."""
     name = config.get(CONF_NAME)
     target_temp = config.get(CONF_TARGET_TEMP)
@@ -62,7 +63,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class EThermostaat(ClimateDevice):
     """Representation of a EThermostaat device."""
-
     def __init__(self, name, username, password,
                  away_temp, comfort_temp, target_temp):
         """Initialize the thermostat."""
