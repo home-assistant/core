@@ -77,7 +77,7 @@ class CoinMarketCapSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return round(self._ticker.get('price_usd'), 2)
+        return round(float(self._ticker.get('price_usd')), 2)
 
     @property
     def unit_of_measurement(self):
