@@ -29,7 +29,7 @@ light:
 """
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.insteon_local import INSTEON_LOCAL
+import homeassistant.components.insteon_local as INSTEON_LOCAL
 
 DEPENDENCIES = ['insteon_local']
 
