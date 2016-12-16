@@ -84,35 +84,6 @@ class TestTTSVoiceRSSPlatform(object):
         assert len(aioclient_mock.mock_calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
 
-    def test_service_say_no_ssl(self, aioclient_mock):
-        """Test service call say without ssl."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        aioclient_mock.post(
-            "http://api.voicerss.org/", params=self.url_param, status=200,
-            content=b'test'
-        )
-
-        config = {
-            tts.DOMAIN: {
-                'platform': 'voicerss',
-                'api_key': '1234567xx',
-                'ssl': False,
-            }
-        }
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-        self.hass.services.call(tts.DOMAIN, 'voicerss_say', {
-            tts.ATTR_MESSAGE: "I person is on front of your door.",
-        })
-        self.hass.block_till_done()
-
-        assert len(calls) == 1
-        assert len(aioclient_mock.mock_calls) == 1
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
-
     def test_service_say_german(self, aioclient_mock):
         """Test service call say with german code."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)

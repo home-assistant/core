@@ -11,7 +11,7 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_SSL
+from homeassistant.const import CONF_API_KEY
 from homeassistant.components.tts import Provider, PLATFORM_SCHEMA, CONF_LANG
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-VOICERSS_API_URL = "{}://api.voicerss.org/"
+VOICERSS_API_URL = "https://api.voicerss.org/"
 
 SUPPORT_LANGUAGES = [
     'ca-es', 'zh-cn', 'zh-hk', 'zh-tw', 'da-dk', 'nl-nl', 'en-au', 'en-ca',
@@ -63,7 +63,6 @@ DEFAULT_FORMAT = '8khz_8bit_mono'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_SSL, default=True): cv.boolean,
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
     vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODECS),
     vol.Optional(CONF_FORMAT, default=DEFAULT_FORMAT): vol.In(SUPPORT_FORMATS),
@@ -91,11 +90,6 @@ class VoiceRSSProvider(Provider):
             'f': conf.get(CONF_FORMAT),
         }
 
-        if conf.get(CONF_SSL):
-            self.url = VOICERSS_API_URL.format('https')
-        else:
-            self.url = VOICERSS_API_URL.format('http')
-
     @asyncio.coroutine
     def async_get_tts_audio(self, message):
         """Load TTS from voicerss."""
@@ -105,7 +99,8 @@ class VoiceRSSProvider(Provider):
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
                 request = yield from websession.post(
-                    self.url, params=self.params, data=bytes(message, 'utf-8')
+                    VOICERSS_API_URL, params=self.params,
+                    data=bytes(message, 'utf-8')
                 )
 
                 if request.status != 200:
