@@ -63,13 +63,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     remote = RemoteControl(host, port)
 
-    try:
-        remote.get_mute()
-    except OSError as error:
-        _LOGGER.error('Panasonic Viera TV is not available at %s:%d: %s',
-                      host, port, error)
-        return False
-
     add_devices([PanasonicVieraTVDevice(mac, name, remote)])
     return True
 
