@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from pycec.datastruct import CecCommand
 
-REQUIREMENTS = ['pyCEC>=0.0.4']
+REQUIREMENTS = ['pyCEC>=0.0.6']
 
 DOMAIN = 'hdmi_cec'
 
@@ -126,17 +126,17 @@ def setup(hass: HomeAssistant, base_config):
             att = 1 if att < 1 else att
             if cmd == CMD_UP:
                 for _ in range(att):
-                    hass.loop.create_task(network.async_send_command('f5:44:41'))
-                hass.loop.create_task(network.async_send_command('f5:45'))
+                    network.send_command('f5:44:41')
+                network.send_command('f5:45')
                 _LOGGER.info("Volume increased %d times", att)
             elif cmd == CMD_DOWN:
                 for _ in range(att):
-                    hass.loop.create_task(network.async_send_command('f5:44:42'))
-                hass.loop.create_task(network.async_send_command('f5:45'))
+                    network.send_command('f5:44:42')
+                network.send_command('f5:45')
                 _LOGGER.info("Volume deceased %d times", att)
             elif cmd == CMD_MUTE:
-                hass.loop.create_task(network.async_send_command('f5:44:43'))
-                hass.loop.create_task(network.async_send_command('f5:45'))
+                network.send_command('f5:44:43')
+                network.send_command('f5:45')
                 _LOGGER.info("Audio muted")
             else:
                 _LOGGER.warning("Unknown command %s", cmd)
@@ -166,20 +166,16 @@ def setup(hass: HomeAssistant, base_config):
             else:
                 att = ""
             command = CecCommand(cmd, dst, src, att)
-        hass.loop.create_task(network.async_send_command(command))
+        network.send_command(command)
 
     @callback
     def _update(call):
-        hass.loop.create_task(network.async_scan())
+        network.scan()
 
     def _new_device(device):
         _LOGGER.debug("New devices callback: %s", device)
         discovery.load_platform(hass, "switch", DOMAIN, discovered={ATTR_NEW: [device]},
                                 hass_config=base_config)
-
-    def _on_init(network):
-        _LOGGER.debug("Network initialized. Scanning")
-        hass.loop.create_task(network.async_scan())
 
     def _start_cec(event):
         """Open CEC adapter."""
@@ -197,9 +193,8 @@ def setup(hass: HomeAssistant, base_config):
 
         _LOGGER.debug("Setting update callback")
         network.set_new_device_callback(_new_device)
-        network.set_initialized_callback(_on_init)
         _LOGGER.debug("INIT")
-        hass.loop.create_task(network.async_init())
+        network.start()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_cec)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, network.stop)

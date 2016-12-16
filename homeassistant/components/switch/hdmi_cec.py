@@ -45,7 +45,7 @@ class CecSwitch(CecDevice, SwitchDevice):
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
         self._device.turn_off()
-        self._state = STATE_STANDBY
+        self._state = STATE_OFF
         self.update()
         self.schedule_update_ha_state()
 
