@@ -118,6 +118,10 @@ def setup(hass: HomeAssistant, base_config):
 
     active_devices = set()
 
+    def tx():
+        network.async_send_command()
+        pass
+
     def _new_device(device):
         _LOGGER.debug("New devices callback: %s", device)
         discovery.load_platform(hass, "switch", DOMAIN, discovered={ATTR_NEW: [device]},
@@ -131,8 +135,8 @@ def setup(hass: HomeAssistant, base_config):
         descriptions = load_yaml_config_file(
             os.path.join(os.path.dirname(__file__), 'services.yaml'))[DOMAIN]
 
-        # hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, tx, descriptions[SERVICE_SEND_COMMAND])
-        # hass.services.register(DOMAIN, SERVICE_VOLUME, volume, descriptions[SERVICE_VOLUME])
+        hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, tx, descriptions[SERVICE_SEND_COMMAND])
+        hass.services.register(DOMAIN, SERVICE_VOLUME, volume, descriptions[SERVICE_VOLUME])
 
 
         _LOGGER.debug("Setting update callback")
