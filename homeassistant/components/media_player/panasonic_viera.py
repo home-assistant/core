@@ -54,7 +54,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([PanasonicVieraTVDevice(name, remote)])
         return True
 
-    host = config.get(CONF_HOST, None)
     host = config.get(CONF_HOST)
 
     add_devices([PanasonicVieraTVDevice(name, remote)])
