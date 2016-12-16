@@ -48,9 +48,7 @@ def setup(hass, config):
         _LOGGER.error("Could not connect to Insteon service")
         return False
 
-    # sleep(5)
-   # load_platform(hass, 'light',DOMAIN)
-   # load_platform(hass, 'switch', DOMAIN)
-    #discovery.load_platform(hass, 'light', DOMAIN, {}, config)
-    #discovery.load_platform(hass, 'switch', DOMAIN, {}, config)
+  # sleep(5)
+    discovery.load_platform(hass, 'light', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'switch', DOMAIN, {}, config)
     return True
