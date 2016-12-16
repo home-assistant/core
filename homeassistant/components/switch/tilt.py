@@ -4,16 +4,21 @@ Tilt switch.
 Jerry Workman <jerry.workman@gmail.com>
 License: MIT
 5 Nov 2016
+Last Revised: 15 Dec 2016
 
-Combines a tilt sensor and a relay switch to control a garage door opener or motorized gate.
-When this switch is turned on it will toggle the relay to activate the garage door if it is
-not already open. The reverse will happen when it is turned off.
+Combines a tilt sensor and a relay switch to control a garage door opener or
+motorized gate. When this switch is turned on it will toggle the relay to
+activate the garage door if it is not already open. The reverse will happen
+when it is turned off.
 
-The status is not reported while the door is opening or closing based on the run_time parameter.
+The status is not reported while the door is opening or closing based on the
+run_time parameter.
 
 My Hardware:
-Ecolink Intelligent Technology Z-Wave Garage Door Tilt Sensor: http://amzn.to/2ebYPgU
-GoControl Z-Wave Isolated Contact Fixture Module - FS20Z-1: http://amzn.to/2ec29bK
+Ecolink Intelligent Technology Z-Wave Garage Door Tilt Sensor:
+    http://amzn.to/2ebYPgU
+GoControl Z-Wave Isolated Contact Fixture Module - FS20Z-1:
+    http://amzn.to/2ec29bK
 
 Copy this file to <config_dir>/switch/tilt.py
 Add the following to your configuration.yaml:
@@ -24,21 +29,24 @@ switch tilt:
     front_garage_door:
       tilt_sensor:   binary_sensor.my_tilt_switch
       switch:        switch.my_relay_switch
-      contact_delay: 1  #optional on time for switch to simulate button press. default: 1 second
-      run_time:      10 #optional run time for the opener. default: 10 seconds
+      #optional on time for switch to simulate button press. default 1 second
+      contact_delay: 1
+      #optional run time for the opener. default: 10 seconds
+      run_time:      10
 """
 
 import time
 from threading import Timer
 import logging
 from homeassistant.components.switch import SwitchDevice
-#from homeassistant.components import is_on, turn_on, turn_off
+# from homeassistant.components import is_on, turn_on, turn_off
 import homeassistant.components as core
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'tilt'
-DEFAULT_CONTACT_DELAY = 1  #relay switch on time in seconds
-DEFAULT_RUN_TIME = 10      #seconds required for door to open or close
+DEFAULT_CONTACT_DELAY = 1  # relay switch on time in seconds
+DEFAULT_RUN_TIME = 10      # seconds required for door to open or close
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -64,9 +72,9 @@ class TiltSwitch(SwitchDevice):
     """Tilt sensor and (toggle) switch to control a garage door opener or motorized gate."""
 
     # pylint: disable=too-many-instance-attributes,too-many-arguments
-
     def __init__(self, hass, dev_name, tilt_sensor, switch,
                  contact_delay=DEFAULT_CONTACT_DELAY, run_time=DEFAULT_RUN_TIME):
+        """init the class"""
         self._name = dev_name
         self._hass = hass
         self._tilt_sensor = tilt_sensor
@@ -99,7 +107,7 @@ class TiltSwitch(SwitchDevice):
         if self._running:
             _LOGGER.debug('tilt switch %s running, assumed state is %s', self._name, self._state)
             return self._state
-        tilt = self._get_state() #on or off
+        tilt = self._get_state()  # on or off
         _LOGGER.debug('tilt switch %s is %s', self._name, tilt)
         if tilt:
             return tilt.lower() == 'on'
@@ -108,6 +116,7 @@ class TiltSwitch(SwitchDevice):
 
     @property
     def is_on(self):
+        """@:returns True if on"""
         return self._is_on()
 
     def toggle(self):
@@ -140,4 +149,5 @@ class TiltSwitch(SwitchDevice):
         self.update_ha_state()
 
     def update(self):
+        """Update state"""
         self._state = self._is_on()
