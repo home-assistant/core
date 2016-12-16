@@ -604,6 +604,7 @@ vsure==0.11.1
 # homeassistant.components.sensor.vasttrafik
 vtjp==0.1.11
 
+# homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.switch.wake_on_lan
 wakeonlan==0.2.2
 
