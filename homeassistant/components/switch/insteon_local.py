@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices(devs)
 
 
-class InsteonLocalSwitchDevice(Light):
+class InsteonLocalSwitchDevice(switch):
     """An abstract Class for an Insteon node."""
     
     def __init__(self, node, name):
