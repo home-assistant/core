@@ -41,19 +41,9 @@ SUPPORT_WEBOSTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
-WEBOS_APP_LIVETV = 'com.webos.app.livetv'
-WEBOS_APP_YOUTUBE = 'youtube.leanback.v4'
-WEBOS_APP_MAKO = 'makotv'
-
-WEBOS_APPS_SHORT = {
-    'livetv': WEBOS_APP_LIVETV,
-    'youtube': WEBOS_APP_YOUTUBE,
-    'makotv': WEBOS_APP_MAKO
-}
-
 CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_SOURCES):
-        vol.All(cv.ensure_list, [vol.In(WEBOS_APPS_SHORT)]),
+        vol.All(cv.ensure_list, [cv.string]),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -175,20 +165,16 @@ class LgWebOSDevice(MediaPlayerDevice):
             self._source_list = {}
             self._app_list = {}
 
-            custom_sources = []
-            for source in self._customize.get(CONF_SOURCES, []):
-                app_id = WEBOS_APPS_SHORT.get(source, None)
-                if app_id:
-                    custom_sources.append(app_id)
-                else:
-                    custom_sources.append(source)
+            custom_sources = self._customize.get(CONF_SOURCES, [])
 
             for app in self._client.get_apps():
                 self._app_list[app['id']] = app
                 if app['id'] == self._current_source_id:
                     self._current_source = app['title']
                     self._source_list[app['title']] = app
-                if app['id'] in custom_sources:
+                elif (app['id'] in custom_sources or
+                      any(word in app['title'] for word in custom_sources) or
+                      any(word in app['id'] for word in custom_sources)):
                     self._source_list[app['title']] = app
 
             for source in self._client.get_inputs():
