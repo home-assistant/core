@@ -14,7 +14,7 @@ from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['eliqonline==1.0.12']
+REQUIREMENTS = ['eliqonline==1.0.13']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,4 +94,4 @@ class EliqSensor(Entity):
             self._state = int(response.power)
             _LOGGER.debug("Updated power from server %d W", self._state)
         except URLError:
-            _LOGGER.error("Could not connect to the ELIQ Online API")
+            _LOGGER.warning("Could not connect to the ELIQ Online API")

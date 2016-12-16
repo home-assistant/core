@@ -105,7 +105,7 @@ dsmr_parser==0.4
 dweepy==0.2.0
 
 # homeassistant.components.sensor.eliqonline
-eliqonline==1.0.12
+eliqonline==1.0.13
 
 # homeassistant.components.enocean
 enocean==0.31
