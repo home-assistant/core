@@ -120,11 +120,12 @@ class NestActivityZoneSensor(NestBinarySensor):
         """Initialize the sensor."""
         super(NestActivityZoneSensor, self).__init__(structure, device, "")
         self.zone = zone
+        self._name = "{} {} activity".format(self._name, self.zone.name)
 
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        return "{} {} activity".format(self._name, self.zone.name)
+        return self._name
 
     def update(self):
         """Retrieve latest state."""
