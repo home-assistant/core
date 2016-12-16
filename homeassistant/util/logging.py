@@ -32,6 +32,18 @@ class AsyncHandler(object):
         self._queue = asyncio.Queue(loop=loop)
         self._thread = threading.Thread(target=self._process)
 
+        # Delegate from handler
+        self.setLevel = handler.setLevel
+        self.setFormatter = handler.setFormatter
+        self.setFilter = handler.setFilter
+        self.addFilter = handler.addFilter
+        self.removeFilter = handler.removeFilter
+        self.filter = handler.filter
+        self.flush = handler.flush
+        self.handle = handler.handle
+        self.handleError = handler.handleError
+        self.format = handler.format
+
     def close(self):
         """Wrap close to handler."""
         self.emit(None)
@@ -80,46 +92,6 @@ class AsyncHandler(object):
         """Ignore lock stuff."""
         pass
 
-    def setLevel(self, lvl):
-        """Wrap setLevel to handler."""
-        return self.handler.setLevel(lvl)
-
-    def setFormatter(self, form):
-        """Wrap setFormatter to handler."""
-        return self.handler.setFormatter(form)
-
-    def setFilter(self, filt):
-        """Wrap setFilter to handler."""
-        return self.handler.setFilter(filt)
-
-    def addFilter(self, filt):
-        """Wrap addFilter to handler."""
-        return self.handler.addFilter(filt)
-
-    def removeFilter(self, filt):
-        """Wrap removeFilter to handler."""
-        return self.handler.removeFilter(filt)
-
-    def filter(self, record):
-        """Wrap filter to handler."""
-        return self.handler.filter(record)
-
-    def flush(self):
-        """Wrap flush to handler."""
-        return self.handler.flush()
-
-    def handle(self, record):
-        """Wrap handle to handler."""
-        return self.handler.handle(record)
-
-    def handleError(self, record):
-        """Wrap handleError to handler."""
-        return self.handler.handleError(record)
-
-    def format(self, record):
-        """Wrap format to handler."""
-        return self.handler.format(record)
-
     @property
     def level(self):
         """Wrap property level to handler."""
@@ -130,12 +102,12 @@ class AsyncHandler(object):
         """Wrap property formatter to handler."""
         return self.handler.formatter
 
-    def get_name(self):
+    @property
+    def name(self):
         """Wrap property set_name to handler."""
         return self.handler.get_name()
 
+    @name.setter
     def set_name(self, name):
         """Wrap property get_name to handler."""
-        return self.handler.get_name(name)
-
-    name = property(get_name, set_name)
+        self.handler.name = name

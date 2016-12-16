@@ -549,8 +549,11 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
         err_handler.setFormatter(
             logging.Formatter('%(asctime)s %(name)s: %(message)s',
                               datefmt='%y-%m-%d %H:%M:%S'))
+
+        async_handler = AsyncHandler(hass.loop, err_handler)
+
         logger = logging.getLogger('')
-        logger.addHandler(AsyncHandler(hass.loop, err_handler))
+        logger.addHandler(async_handler)
         logger.setLevel(logging.INFO)
 
     else:

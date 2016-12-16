@@ -68,8 +68,7 @@ def get_test_home_assistant():
         orig_start()
         hass.block_till_done()
 
-    @patch('logging.shutdown')
-    def stop_hass(*mocks):
+    def stop_hass():
         """Stop hass."""
         orig_stop()
         stop_event.wait()
