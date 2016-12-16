@@ -118,7 +118,7 @@ class NestActivityZoneSensor(NestBinarySensor):
 
     def __init__(self, structure, device, zone):
         """Initialize the sensor."""
-        super(NestActivityZoneSensor, self).__init__(structure, device, None)
+        super(NestActivityZoneSensor, self).__init__(structure, device, "")
         self.zone = zone
 
     @property
