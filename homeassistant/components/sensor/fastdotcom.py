@@ -22,6 +22,7 @@ CONF_SECOND = 'second'
 CONF_MINUTE = 'minute'
 CONF_HOUR = 'hour'
 CONF_DAY = 'day'
+CONF_MANUAL = 'manual'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SECOND, default=[0]):
@@ -32,6 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
     vol.Optional(CONF_DAY):
         vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
+    vol.Optional(CONF_MANUAL, default=False): cv.boolean,
 })
 
 
@@ -104,11 +106,12 @@ class SpeedtestData(object):
     def __init__(self, hass, config):
         """Initialize the data object."""
         self.data = None
-        track_time_change(hass, self.update,
-                          second=config.get(CONF_SECOND),
-                          minute=config.get(CONF_MINUTE),
-                          hour=config.get(CONF_HOUR),
-                          day=config.get(CONF_DAY))
+        if not config.get(CONF_MANUAL):
+            track_time_change(hass, self.update,
+                              second=config.get(CONF_SECOND),
+                              minute=config.get(CONF_MINUTE),
+                              hour=config.get(CONF_HOUR),
+                              day=config.get(CONF_DAY))
 
     def update(self, now):
         """Get the latest data from fast.com."""
