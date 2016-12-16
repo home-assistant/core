@@ -50,5 +50,5 @@ def setup(hass, config):
 
     # sleep(5)
     discovery.load_platform(hass, 'light', DOMAIN, {}, config)
-
+    discovery.load_platform(hass, 'switch', DOMAIN, {}, config)
     return True
