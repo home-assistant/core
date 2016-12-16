@@ -1,45 +1,14 @@
 """
-Tilt switch.
-
+Tilt Switch
+custom component for Home Assistant https://home-assistant.io/
+Documentation: https://home-assistant.io/components/switch.tilt/
 Jerry Workman <jerry.workman@gmail.com>
-License: MIT
-5 Nov 2016
-Last Revised: 15 Dec 2016
-
-Combines a tilt sensor and a relay switch to control a garage door opener or
-motorized gate. When this switch is turned on it will toggle the relay to
-activate the garage door if it is not already open. The reverse will happen
-when it is turned off.
-
-The status is not reported while the door is opening or closing based on the
-run_time parameter.
-
-My Hardware:
-Ecolink Intelligent Technology Z-Wave Garage Door Tilt Sensor:
-    http://amzn.to/2ebYPgU
-GoControl Z-Wave Isolated Contact Fixture Module - FS20Z-1:
-    http://amzn.to/2ec29bK
-
-Copy this file to <config_dir>/switch/tilt.py
-Add the following to your configuration.yaml:
-
-switch tilt:
-  platform: tilt
-  switches:
-    front_garage_door:
-      tilt_sensor:   binary_sensor.my_tilt_switch
-      switch:        switch.my_relay_switch
-      #optional on time for switch to simulate button press. default 1 second
-      contact_delay: 1
-      #optional run time for the opener. default: 10 seconds
-      run_time:      10
 """
 
 import time
 from threading import Timer
 import logging
 from homeassistant.components.switch import SwitchDevice
-# from homeassistant.components import is_on, turn_on, turn_off
 import homeassistant.components as core
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,11 +38,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class TiltSwitch(SwitchDevice):
-    """Tilt sensor and (toggle) switch to control a garage door opener or motorized gate."""
+    """
+    Tilt sensor and (toggle) switch to control a garage door opener or
+    motorized gate.
+    """
 
     # pylint: disable=too-many-instance-attributes,too-many-arguments
     def __init__(self, hass, dev_name, tilt_sensor, switch,
-                 contact_delay=DEFAULT_CONTACT_DELAY, 
+                 contact_delay=DEFAULT_CONTACT_DELAY,
                  run_time=DEFAULT_RUN_TIME):
         """init the class"""
         self._name = dev_name
@@ -83,7 +55,7 @@ class TiltSwitch(SwitchDevice):
         self._contact_delay = contact_delay
         self._run_time = run_time
         self._state = None
-        self._running = False    # is door / gate in the process of opening or closing
+        self._running = False  # is door in the process of opening or closing
         self._timer = None
         self.update()
 
@@ -103,22 +75,19 @@ class TiltSwitch(SwitchDevice):
         else:
             return None
 
-    def _is_on(self):
-        """tilt = True then garage door is open."""
+    def update(self):
+        """Update state of device."""
         if self._running:
-            _LOGGER.debug('tilt switch %s running, assumed state is %s', self._name, self._state)
+            _LOGGER.debug('tilt switch %s running, assumed state is %s',
+                          self._name, self._state)
             return self._state
         tilt = self._get_state()  # on or off
         _LOGGER.debug('tilt switch %s is %s', self._name, tilt)
-        if tilt:
-            return tilt.lower() == 'on'
-        else:
-            return None
 
     @property
     def is_on(self):
         """@:returns True if on"""
-        return self._is_on()
+        return self._state
 
     def toggle(self):
         """Simulate a momentary contact button press."""
@@ -135,7 +104,7 @@ class TiltSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Open garage door."""
-        if not self._is_on():
+        if not self.is_on:
             _LOGGER.debug('tilt opening %s', self._name)
             self.toggle()
         self._state = True
@@ -143,12 +112,8 @@ class TiltSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Close garage door."""
-        if self._is_on():
+        if self.is_on:
             _LOGGER.debug('closing %s', self._name)
             self.toggle()
-        self._state = False
+        self._state = not False
         self.update_ha_state()
-
-    def update(self):
-        """Update state"""
-        self._state = self._is_on()
