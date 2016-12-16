@@ -58,6 +58,7 @@ class TiltSwitch(SwitchDevice):
         self._state = None
         self._running = False  # is door in the process of opening or closing
         self._timer = None
+        self._insure_relay_is_off()
         self.update()
 
     @property
@@ -76,6 +77,10 @@ class TiltSwitch(SwitchDevice):
             return tilt.state
         else:
             return None
+
+    def _insure_relay_is_off(self):
+        """in case that the relay is stuck on turn it off"""
+        core.turn_off(self._hass, self._switch) #just in case that it's stuck on
 
     def update(self):
         """Update state of device."""
@@ -99,6 +104,7 @@ class TiltSwitch(SwitchDevice):
             """The door should be open/closed by now so update state"""
             _LOGGER.debug('tilt switch %s stopping timer', self._name)
             self._running = False
+            self._insure_relay_is_off()
             self._state = self._get_state()
 
         core.turn_on(self._hass, self._switch)
