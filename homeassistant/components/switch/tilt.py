@@ -9,6 +9,7 @@ import time
 from threading import Timer
 import logging
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import (STATE_ON, STATE_OFF)
 import homeassistant.components as core
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,6 +66,7 @@ class TiltSwitch(SwitchDevice):
         return self._name
 
     def _get_state(self):
+        """@:returns HA state for binary_sensor (On or Off)"""
         tilt = self._hass.states.get(self._tilt_sensor)
         try:
             _LOGGER.debug('tilt _get_state %s is %s', self._name, tilt.state)
@@ -81,19 +83,23 @@ class TiltSwitch(SwitchDevice):
             _LOGGER.debug('tilt switch %s running, assumed state is %s',
                           self._name, self._state)
             return self._state
-        tilt = self._get_state()  # on or off
-        _LOGGER.debug('tilt switch %s is %s', self._name, tilt)
+        else:
+            tilt = self._get_state()  # on or off
+            _LOGGER.debug('tilt switch %s is %s', self._name, tilt)
 
     @property
     def is_on(self):
         """@:returns True if on"""
-        return self._state
+        return True if self._state == STATE_ON else False
 
     def toggle(self):
         """Simulate a momentary contact button press."""
+
         def _stop_timer():
+            """The door should be open/closed by now so update state"""
             _LOGGER.debug('tilt switch %s stopping timer', self._name)
             self._running = False
+            self._state = self._get_state()
 
         core.turn_on(self._hass, self._switch)
         self._running = True
@@ -107,7 +113,7 @@ class TiltSwitch(SwitchDevice):
         if not self.is_on:
             _LOGGER.debug('tilt opening %s', self._name)
             self.toggle()
-        self._state = True
+        self._state = STATE_ON
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
@@ -115,5 +121,5 @@ class TiltSwitch(SwitchDevice):
         if self.is_on:
             _LOGGER.debug('closing %s', self._name)
             self.toggle()
-        self._state = not False
+        self._state = STATE_OFF
         self.update_ha_state()
