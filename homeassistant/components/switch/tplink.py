@@ -19,8 +19,6 @@ REQUIREMENTS = ['https://github.com/GadgetReactor/pyHS100/archive/'
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'TPLink Switch HS100'
-
 ATTR_CURRENT_CONSUMPTION = 'Current consumption'
 ATTR_TOTAL_CONSUMPTION = 'Total consumption'
 ATTR_DAILY_CONSUMPTION = 'Daily consumption'
@@ -29,7 +27,7 @@ ATTR_CURRENT = 'Current'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 
@@ -49,11 +47,14 @@ class SmartPlugSwitch(SwitchDevice):
     def __init__(self, smartplug, name):
         """Initialize the switch."""
         self.smartplug = smartplug
-        self._name = name
 
         # Use the name set on the device if not set
         if name is None:
-            name = self.smartplug.alias()
+            _LOGGER.debug("No name set. Using device alias")
+            self._name = self.smartplug.alias
+        else:
+            _LOGGER.debug("Setting name to " + name)
+            self._name = name
 
         self._state = None
         _LOGGER.debug("Setting up TP-Link Smart Plug")
