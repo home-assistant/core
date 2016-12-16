@@ -28,7 +28,7 @@
     
     """
 from homeassistant.components.switch import SwitchDevice
-import homeassistant.components.insteon_local as INSTEON_LOCAL
+from homeassistant.components.insteon_local import INSTEON_LOCAL
 
 DEPENDENCIES = ['insteon_local']
 
