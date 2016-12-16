@@ -102,15 +102,6 @@ class NetatmoCamera(Camera):
             return None
         return response
 
-    # def mjpeg_steam(self, response):
-    #     """Generate an HTTP MJPEG Stream from the camera."""
-    #     stream = self.camera_stream()
-    #     return response(
-    #         stream.iter_content(chunk_size=1024),
-    #         mimetype=stream.headers['CONTENT_TYPE_HEADER'],
-    #         direct_passthrough=True
-    #         )
-
     @property
     def name(self):
         """Return the name of this Netatmo camera device."""
