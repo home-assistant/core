@@ -92,8 +92,8 @@ class GoogleProvider(Provider):
                     )
 
                     if request.status != 200:
-                        _LOGGER.error("Error %d on load url %s", request.code,
-                                      request.url)
+                        _LOGGER.error("Error %d on load url %s",
+                                      request.status, request.url)
                         return (None, None)
                     data += yield from request.read()
 
