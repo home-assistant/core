@@ -113,7 +113,8 @@ def async_setup(hass, config):
 
         tasks = [input_select.async_select_option(call.data[ATTR_OPTION])
                  for input_select in target_inputs]
-        yield from asyncio.wait(tasks, loop=hass.loop)
+        if tasks:
+            yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_OPTION, async_select_option_service,
@@ -126,7 +127,8 @@ def async_setup(hass, config):
 
         tasks = [input_select.async_offset_index(1)
                  for input_select in target_inputs]
-        yield from asyncio.wait(tasks, loop=hass.loop)
+        if tasks:
+            yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_NEXT, async_select_next_service,
@@ -139,7 +141,8 @@ def async_setup(hass, config):
 
         tasks = [input_select.async_offset_index(-1)
                  for input_select in target_inputs]
-        yield from asyncio.wait(tasks, loop=hass.loop)
+        if tasks:
+            yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_PREVIOUS, async_select_previous_service,
