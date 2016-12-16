@@ -174,7 +174,7 @@ def request_configuration(config, hass, add_devices):
     _CONFIGURING[host] = configurator.request_config(
         hass, name, bravia_configuration_callback,
         description='Enter the Pin shown on your Sony Bravia TV.' +
-                    'If no Pin is shown, enter 0000 to let TV show you a Pin.',
+        'If no Pin is shown, enter 0000 to let TV show you a Pin.',
         description_image="/static/images/smart-tv.png",
         submit_caption="Confirm",
         fields=[{'id': 'pin', 'name': 'Enter the pin', 'type': ''}]
