@@ -9,12 +9,14 @@ import logging
 import os
 import voluptuous as vol
 from collections import defaultdict
+from functools import reduce
 
 from homeassistant.components import discovery
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
+from pycec.datastruct import CecCommand
 
 REQUIREMENTS = ['pyCEC>=0.0.4']
 
@@ -116,16 +118,68 @@ def setup(hass: HomeAssistant, base_config):
 
     exclude = config.get(CONF_EXCLUDE)
 
-    active_devices = set()
+    @callback
+    def _volume(call):
+        """Increase/decrease volume and mute/unmute system"""
+        for cmd, att in call.data.items():
+            att = int(att)
+            att = 1 if att < 1 else att
+            if cmd == CMD_UP:
+                for _ in range(att):
+                    hass.loop.create_task(network.async_send_command('f5:44:41'))
+                hass.loop.create_task(network.async_send_command('f5:45'))
+                _LOGGER.info("Volume increased %d times", att)
+            elif cmd == CMD_DOWN:
+                for _ in range(att):
+                    hass.loop.create_task(network.async_send_command('f5:44:42'))
+                hass.loop.create_task(network.async_send_command('f5:45'))
+                _LOGGER.info("Volume deceased %d times", att)
+            elif cmd == CMD_MUTE:
+                hass.loop.create_task(network.async_send_command('f5:44:43'))
+                hass.loop.create_task(network.async_send_command('f5:45'))
+                _LOGGER.info("Audio muted")
+            else:
+                _LOGGER.warning("Unknown command %s", cmd)
 
-    def tx():
-        network.async_send_command()
-        pass
+    @callback
+    def _tx(call):
+        """Send CEC command."""
+        d = call.data
+        if ATTR_RAW in d:
+            command = CecCommand(d[ATTR_RAW])
+        else:
+            if ATTR_SRC in d:
+                src = d[ATTR_SRC]
+            else:
+                src = 0xf
+            if ATTR_DST in d:
+                dst = d[ATTR_DST]
+            else:
+                dst = cec.CECDEVICE_BROADCAST
+            if ATTR_CMD in d:
+                cmd = d[ATTR_CMD]
+            else:
+                _LOGGER.error("Attribute 'cmd' is missing")
+                return False
+            if ATTR_ATT in d:
+                att = reduce(lambda x, y: "%s:%x" % (x, y), d[ATTR_ATT])
+            else:
+                att = ""
+            command = CecCommand(cmd, dst, src, att)
+        hass.loop.create_task(network.async_send_command(command))
+
+    @callback
+    def _update(call):
+        hass.loop.create_task(network.async_scan())
 
     def _new_device(device):
         _LOGGER.debug("New devices callback: %s", device)
         discovery.load_platform(hass, "switch", DOMAIN, discovered={ATTR_NEW: [device]},
                                 hass_config=base_config)
+
+    def _on_init(network):
+        _LOGGER.debug("Network initialized. Scanning")
+        hass.loop.create_task(network.async_scan())
 
     def _start_cec(event):
         """Open CEC adapter."""
@@ -135,17 +189,17 @@ def setup(hass: HomeAssistant, base_config):
         descriptions = load_yaml_config_file(
             os.path.join(os.path.dirname(__file__), 'services.yaml'))[DOMAIN]
 
-        hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, tx, descriptions[SERVICE_SEND_COMMAND])
-        hass.services.register(DOMAIN, SERVICE_VOLUME, volume, descriptions[SERVICE_VOLUME])
-
+        _LOGGER.debug("Registering services")
+        hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, _tx, descriptions[SERVICE_SEND_COMMAND])
+        hass.services.register(DOMAIN, SERVICE_VOLUME, _volume, descriptions[SERVICE_VOLUME])
+        _LOGGER.debug("Registering update service")
+        hass.services.register(DOMAIN, SERVICE_UPDATE_DEVICES, _update)
 
         _LOGGER.debug("Setting update callback")
         network.set_new_device_callback(_new_device)
+        network.set_initialized_callback(_on_init)
         _LOGGER.debug("INIT")
-        network.async_init()
-        _LOGGER.debug("Starting HDMI network")
-        network.scan()
-        _LOGGER.debug("started HDMI network")
+        hass.loop.create_task(network.async_init())
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_cec)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, network.stop)
@@ -180,6 +234,8 @@ class CecDevice(Entity):
                 self._state = 'on'
             elif device.power_status == 1:
                 self._state = 'off'
+            else:
+                _LOGGER.warning("Unknown state: %d", device.power_status)
         self.schedule_update_ha_state()
 
     @property
