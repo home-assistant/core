@@ -97,28 +97,6 @@ SERVICE_POWER_SCHEMA = vol.Schema({
 }, extra=vol.REMOVE_EXTRA)
 
 
-def _init_cec(cecconfig=None):
-    import cec
-    lib_cec = cec.ICECAdapter.Create(cecconfig)
-    adapter = None
-    adapters = lib_cec.DetectAdapters()
-    for adapter in adapters:
-        _LOGGER.info("found a CEC adapter:")
-        _LOGGER.info("port:     " + adapter.strComName)
-        _LOGGER.info("product:  " + hex(adapter.iProductId))
-        adapter = adapter.strComName
-    if adapter is None:
-        _LOGGER.warning("No adapters found")
-        return None
-    else:
-        if lib_cec.Open(adapter):
-            _LOGGER.info("connection opened")
-            return lib_cec
-        else:
-            _LOGGER.error("failed to open a connection to the CEC adapter")
-            return lib_cec
-
-
 def setup(hass: HomeAssistant, base_config):
     """Setup CEC capability."""
 
@@ -134,37 +112,36 @@ def setup(hass: HomeAssistant, base_config):
     cecconfig.bMonitorOnly = 0
     cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
     cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
-    network = HdmiNetwork(adapter=_init_cec(cecconfig=cecconfig), loop=hass.loop)
+    network = HdmiNetwork(config=cecconfig, loop=hass.loop)
 
     exclude = config.get(CONF_EXCLUDE)
 
     active_devices = set()
 
-    def _update_devices():
-        new_devices = set()
-        _LOGGER.debug("HA starting device update")
-        for d in network.devices:
-            if d.logical_address not in active_devices:
-                new_devices.add(d)
-        if new_devices:
-            discovery.load_platform(hass, "switch", DOMAIN, discovered={ATTR_NEW: new_devices},
-                                    hass_config=base_config)
+    def _new_device(device):
+        _LOGGER.debug("New devices callback: %s", device)
+        discovery.load_platform(hass, "switch", DOMAIN, discovered={ATTR_NEW: [device]},
+                                hass_config=base_config)
 
     def _start_cec(event):
         """Open CEC adapter."""
+
+        _LOGGER.debug("Starting CEC")
 
         descriptions = load_yaml_config_file(
             os.path.join(os.path.dirname(__file__), 'services.yaml'))[DOMAIN]
 
         # hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, tx, descriptions[SERVICE_SEND_COMMAND])
         # hass.services.register(DOMAIN, SERVICE_VOLUME, volume, descriptions[SERVICE_VOLUME])
-        hass.services.register(DOMAIN, SERVICE_UPDATE_DEVICES, _update_devices)
 
+
+        _LOGGER.debug("Setting update callback")
+        network.set_new_device_callback(_new_device)
+        _LOGGER.debug("INIT")
+        network.async_init()
         _LOGGER.debug("Starting HDMI network")
-        # network.start()
         network.scan()
         _LOGGER.debug("started HDMI network")
-        hass.services.call(DOMAIN, SERVICE_UPDATE_DEVICES)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_cec)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, network.stop)
@@ -191,9 +168,15 @@ class CecDevice(Entity):
         self._state = STATE_UNKNOWN
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
+        device.set_update_callback(self.update)
 
-    def update(self):
-        self._device.update_power()
+    def update(self, device=None):
+        if device:
+            if device.power_status == 0:
+                self._state = 'on'
+            elif device.power_status == 1:
+                self._state = 'off'
+        self.schedule_update_ha_state()
 
     @property
     def name(self):
@@ -220,7 +203,7 @@ class CecDevice(Entity):
 
     @property
     def physical_address(self):
-        return self._device.physical_address
+        return str(self._device.physical_address)
 
     @property
     def type(self):
