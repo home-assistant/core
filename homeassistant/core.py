@@ -294,6 +294,7 @@ class HomeAssistant(object):
         yield from self.async_block_till_done()
         self.executor.shutdown()
         self.state = CoreState.not_running
+        logging.shutdown()
         self.loop.stop()
 
     # pylint: disable=no-self-use
