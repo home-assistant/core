@@ -18,7 +18,8 @@ from homeassistant.const import (
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
-                'operation_mode']
+                'operation_mode',
+                'hvac_state']
 
 SENSOR_TYPES_DEPRECATED = ['last_ip',
                            'local_ip',
