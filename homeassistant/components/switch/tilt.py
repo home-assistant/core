@@ -73,7 +73,8 @@ class TiltSwitch(SwitchDevice):
 
     # pylint: disable=too-many-instance-attributes,too-many-arguments
     def __init__(self, hass, dev_name, tilt_sensor, switch,
-                 contact_delay=DEFAULT_CONTACT_DELAY, run_time=DEFAULT_RUN_TIME):
+                 contact_delay=DEFAULT_CONTACT_DELAY, 
+                 run_time=DEFAULT_RUN_TIME):
         """init the class"""
         self._name = dev_name
         self._hass = hass
