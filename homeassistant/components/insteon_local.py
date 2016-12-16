@@ -49,8 +49,8 @@ def setup(hass, config):
         return False
 
     # sleep(5)
-    load_platform(hass, 'light',DOMAIN)
-    load_platform(hass, 'switch', DOMAIN)
+   # load_platform(hass, 'light',DOMAIN)
+   # load_platform(hass, 'switch', DOMAIN)
     #discovery.load_platform(hass, 'light', DOMAIN, {}, config)
     #discovery.load_platform(hass, 'switch', DOMAIN, {}, config)
     return True
