@@ -80,7 +80,7 @@ class TiltSwitch(SwitchDevice):
 
     def _insure_relay_is_off(self):
         """in case that the relay is stuck on turn it off"""
-        core.turn_off(self._hass, self._switch) #just in case that it's stuck on
+        core.turn_off(self._hass, self._switch)
 
     def update(self):
         """Update state of device."""
