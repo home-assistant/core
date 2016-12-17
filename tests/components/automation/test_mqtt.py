@@ -42,16 +42,17 @@ class TestAutomationMQTT(unittest.TestCase):
                     'service': 'test.automation',
                     'data_template': {
                         'some': '{{ trigger.platform }} - {{ trigger.topic }}'
-                                ' - {{ trigger.payload }}'
+                                ' - {{ trigger.payload }} - '
+                                '{{ trigger.payload_json.hello }}'
                     },
                 }
             }
         })
 
-        fire_mqtt_message(self.hass, 'test-topic', 'test_payload')
+        fire_mqtt_message(self.hass, 'test-topic', '{ "hello": "world" }')
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
-        self.assertEqual('mqtt - test-topic - test_payload',
+        self.assertEqual('mqtt - test-topic - { "hello": "world" } - world',
                          self.calls[0].data['some'])
 
         automation.turn_off(self.hass)
