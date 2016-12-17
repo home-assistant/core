@@ -107,7 +107,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         # Handle all Volumes
         volumes = config['volumes']
         if volumes is None:
-            volumes = api.storage().volumes
+            volumes = api.storage.volumes
 
         for volume in volumes:
             sensors += [SynoNasStorageSensor(api, variable,
@@ -119,7 +119,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         # Handle all Disks
         disks = config['disks']
         if disks is None:
-            disks = api.storage().disks
+            disks = api.storage.disks
 
         for disk in disks:
             sensors += [SynoNasStorageSensor(api, variable,
