@@ -424,6 +424,7 @@ class SonosDevice(MediaPlayerDevice):
                 media_artist = track_info.get('artist')
                 media_album_name = track_info.get('album')
                 media_title = track_info.get('title')
+                media_image_url = track_info.get('album_art', None)
 
                 media_position = None
                 media_position_updated_at = None
@@ -453,9 +454,10 @@ class SonosDevice(MediaPlayerDevice):
                     media_image_url = None
 
                 elif is_radio_stream:
-                    media_image_url = self._format_media_image_url(
-                        current_media_uri
-                    )
+                    if media_image_url in ('', 'NOT_IMPLEMENTED', None):
+                        media_image_url = self._format_media_image_url(
+                            current_media_uri
+                        )
                     support_previous_track = False
                     support_next_track = False
                     support_stop = False
@@ -520,9 +522,10 @@ class SonosDevice(MediaPlayerDevice):
 
                 else:
                     # not a radio stream
-                    media_image_url = self._format_media_image_url(
-                        track_info['uri']
-                    )
+                    if media_image_url in ('', 'NOT_IMPLEMENTED', None):
+                        media_image_url = self._format_media_image_url(
+                            track_info['uri']
+                        )
                     support_previous_track = True
                     support_next_track = True
                     support_stop = True
