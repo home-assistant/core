@@ -11,6 +11,7 @@ import urllib
 import uuid
 
 import aiohttp
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -22,16 +23,15 @@ from homeassistant.const import (
     CONF_PORT, CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['websockets==3.2']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_WEBSOCKET_PORT = 'websocket_port'
+CONF_TCP_PORT = 'tcp_port'
 CONF_TURN_OFF_ACTION = 'turn_off_action'
 
 DEFAULT_NAME = 'Kodi'
 DEFAULT_PORT = 8080
-DEFAULT_WEBSOCKET_PORT = 9090
+DEFAULT_TCP_PORT = 9090
+DEFAULT_TIMEOUT = 5
 
 TURN_OFF_ACTION = [None, 'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']
 
@@ -70,7 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_WEBSOCKET_PORT, default=DEFAULT_WEBSOCKET_PORT): cv.port,
+    vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
     vol.Optional(CONF_TURN_OFF_ACTION, default=None): vol.In(TURN_OFF_ACTION),
     vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
@@ -83,7 +83,7 @@ def async_setup_platform(hass, config, async_add_entities,
     """Setup the Kodi platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    websocket_port = config.get(CONF_WEBSOCKET_PORT)
+    tcp_port = config.get(CONF_TCP_PORT)
 
     if host.startswith('http://') or host.startswith('https://'):
         host = host.lstrip('http://').lstrip('https://')
@@ -95,7 +95,7 @@ def async_setup_platform(hass, config, async_add_entities,
     entity = KodiEntity(
         hass,
         name=config.get(CONF_NAME),
-        host=host, port=port, websocket_port=websocket_port,
+        host=host, port=port, tcp_port=tcp_port,
         username=config.get(CONF_USERNAME),
         password=config.get(CONF_PASSWORD),
         turn_off_action=config.get(CONF_TURN_OFF_ACTION))
@@ -106,7 +106,7 @@ def async_setup_platform(hass, config, async_add_entities,
 class KodiEntity(MediaPlayerDevice):
     """Representation of a XBMC/Kodi device."""
 
-    def __init__(self, hass, name, host, port, websocket_port, username=None,
+    def __init__(self, hass, name, host, port, tcp_port, username=None,
                  password=None, turn_off_action=None):
         """Initialize the Kodi device."""
         self.hass = hass
@@ -114,19 +114,19 @@ class KodiEntity(MediaPlayerDevice):
         self._turn_off_action = turn_off_action
 
         if username:
-            auth = aiohttp.BasicAuth(username, password)
+            self._auth = aiohttp.BasicAuth(username, password)
             image_auth_string = "{}:{}@".format(username, password)
         else:
-            auth = None
+            self._auth = None
             image_auth_string = ""
 
         self._http_url = 'http://{}:{}/jsonrpc'.format(host, port)
         self._image_url = 'http://{}{}:{}/image'.format(
             image_auth_string, host, port)
-        self._ws_url = 'ws://{}:{}/jsonrpc'.format(host, websocket_port)
+        self._ws_url = 'ws://{}:{}/jsonrpc'.format(host, tcp_port)
 
         self._session = aiohttp.ClientSession(
-            auth=auth, headers=JSON_HEADERS, loop=hass.loop)
+            auth=self._auth, headers=JSON_HEADERS, loop=hass.loop)
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, self._close_session)
         self._websocket = None
@@ -138,9 +138,15 @@ class KodiEntity(MediaPlayerDevice):
 
     @asyncio.coroutine
     def _close_session(self, event):
-        yield from self._session.close()
-        if self._websocket:
-            yield from self._websocket.close()
+        try:
+            with async_timeout.timeout(DEFAULT_TIMEOUT, loop=self.hass.loop):
+                if self._websocket:
+                    yield from self._websocket.close()
+                yield from self._session.close()
+        except (aiohttp.errors.ClientError,
+                asyncio.TimeoutError,
+                ConnectionRefusedError):
+            pass
 
     @property
     def name(self):
@@ -163,8 +169,9 @@ class KodiEntity(MediaPlayerDevice):
 
         response = None
         try:
-            response = yield from self._session.post(
-                self._http_url, data=json.dumps(data), timeout=5)
+            with async_timeout.timeout(DEFAULT_TIMEOUT, loop=self.hass.loop):
+                response = yield from self._session.post(
+                    self._http_url, data=json.dumps(data))
 
             if response.status == 401:
                 _LOGGER.error(
@@ -184,8 +191,8 @@ class KodiEntity(MediaPlayerDevice):
                     response_json['error']['message'])
                 return None
             return response_json['result']
-        except (aiohttp.errors.ClientOSError,
-                aiohttp.errors.ClientTimeoutError,
+        except (aiohttp.errors.ClientError,
+                asyncio.TimeoutError,
                 ConnectionRefusedError):
             return None
         finally:
@@ -195,15 +202,12 @@ class KodiEntity(MediaPlayerDevice):
     @asyncio.coroutine
     def async_websocket_loop(self):
         """Check websocket for push events from Kodi."""
-        import websockets
-
         while True:
             try:
-                msg = yield from self._websocket.recv()
+                data = yield from self._websocket.receive_json()
             except websockets.exceptions.ConnectionClosed:
                 break
 
-            data = json.loads(msg)
             if data[ATTR_METHOD] in EXIT_NOTIFICATIONS:
                 self._players = None
                 yield from self.async_update_ha_state()
@@ -267,7 +271,13 @@ class KodiEntity(MediaPlayerDevice):
             yield from self.async_update_ha_state()
 
         # Exiting websocket loop
-        yield from self._websocket.close()
+        try:
+            with async_timeout.timeout(DEFAULT_TIMEOUT, loop=self.hass.loop):
+                yield from self._websocket.close()
+        except (aiohttp.errors.ClientError,
+                asyncio.TimeoutError,
+                ConnectionRefusedError):
+            pass
         self._websocket = None
 
     @property
@@ -287,8 +297,6 @@ class KodiEntity(MediaPlayerDevice):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
-        import websockets
-
         self._app_properties = (yield from self.async_json_request(
             "Application.GetProperties",
             ['volume', 'muted']
@@ -322,11 +330,15 @@ class KodiEntity(MediaPlayerDevice):
             return
 
         try:
-            self._websocket = yield from websockets.connect(
-                self._ws_url)
+            with async_timeout.timeout(DEFAULT_TIMEOUT, loop=self.hass.loop):
+                self._websocket = yield from self._session.ws_connect(
+                    self._ws_url, auth=self._auth)
             self.hass.loop.create_task(self.async_websocket_loop())
-        except ConnectionRefusedError:
+        except (aiohttp.errors.ClientError,
+                asyncio.TimeoutError,
+                ConnectionRefusedError):
             self._websocket = None
+            _LOGGER.warning("Timeout connecting to websocket.")
 
     @property
     def volume_level(self):
