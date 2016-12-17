@@ -30,7 +30,7 @@
 DEPENDENCIES = ['insteon_local']
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.insteon_local import INSTEON_LOCAL
+from homeassistant.components import insteon_local
 from time import sleep
 
 DOMAIN = "switch"
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # todo: use getLinked instead? We'd still need to include name and deviceid in config, and it takes a while to execute because of the sleeps when hitting the buffer though, so maybe it's not a priority
         for key, switch in items:
             # todo: get device type and determine whether to use a dimmer or switch
-            device = INSTEON_LOCAL.switch(switch['device_id'])
+            device = insteon_local.INSTEON_LOCAL.switch(switch['device_id'])
             device.beep()
             devs.append(InsteonLocalSwitchDevice(device, switch['name']))
         add_devices(devs)
