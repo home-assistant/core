@@ -203,7 +203,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
                      state.attributes.get('supported_media_commands'))
 
     @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.'
-           'media_seek')
+           'media_seek', autospec=True)
     def test_play_media(self, mock_seek):
         """Test play_media ."""
         assert setup_component(

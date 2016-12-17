@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/media_player/
 """
 import asyncio
+import functools as ft
 import hashlib
 import logging
 import os
@@ -331,15 +332,15 @@ def async_setup(hass, config):
         update_tasks = []
         for player in target_players:
             kwargs = {}
-            if service == SERVICE_VOLUME_SET:
+            if service.service == SERVICE_VOLUME_SET:
                 kwargs['volume'] = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
-            elif service == SERVICE_VOLUME_MUTE:
+            elif service.service == SERVICE_VOLUME_MUTE:
                 kwargs['mute'] = service.data.get(ATTR_MEDIA_VOLUME_MUTED)
-            elif service == SERVICE_MEDIA_SEEK:
+            elif service.service == SERVICE_MEDIA_SEEK:
                 kwargs['position'] = service.data.get(ATTR_MEDIA_SEEK_POSITION)
-            elif service == SERVICE_SELECT_SOURCE:
+            elif service.service == SERVICE_SELECT_SOURCE:
                 kwargs['source'] = service.data.get(ATTR_INPUT_SOURCE)
-            elif service == SERVICE_PLAY_MEDIA:
+            elif service.service == SERVICE_PLAY_MEDIA:
                 kwargs['media_type'] = \
                     service.data.get(ATTR_MEDIA_CONTENT_TYPE)
                 kwargs['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
@@ -615,15 +616,15 @@ class MediaPlayerDevice(Entity):
         yield from self.hass.loop.run_in_executor(
             None, self.media_seek, position)
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         raise NotImplementedError()
 
     @asyncio.coroutine
-    def async_play_media(self, media_type, media_id):
+    def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         yield from self.hass.loop.run_in_executor(
-            None, self.play_media, media_type, media_id)
+            None, ft.partial(self.play_media, media_type, media_id, **kwargs))
 
     def select_source(self, source):
         """Select input source."""
@@ -702,6 +703,13 @@ class MediaPlayerDevice(Entity):
             self.turn_on()
         else:
             self.turn_off()
+
+    def async_toggle(self):
+        """Toggle the power on the media player."""
+        if self.state in [STATE_OFF, STATE_IDLE]:
+            return self.async_turn_on()
+        else:
+            return self.async_turn_off()
 
     def volume_up(self):
         """Turn volume up for media player."""
