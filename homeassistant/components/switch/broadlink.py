@@ -236,6 +236,6 @@ class BroadlinkSP2Switch(SwitchDevice, BroadlinkSP1Switch):
             except socket.timeout:
                 pass
             return self._update(max(0, retry-1))
-          if state is None and retry > 0:
-              return self._update(max(0, retry-1))
-          self._state = state
+        if state is None and retry > 0:
+            return self._update(max(0, retry-1))
+        self._state = state
