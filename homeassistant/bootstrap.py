@@ -386,7 +386,7 @@ def async_from_config_dict(config: Dict[str, Any],
         None, conf_util.process_ha_config_upgrade, hass)
 
     if enable_log:
-        async_enable_logging(hass, verbose, log_rotate_days)
+        enable_logging(hass, verbose, log_rotate_days)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
@@ -483,7 +483,7 @@ def async_from_config_file(config_path: str,
     yield from hass.loop.run_in_executor(
         None, mount_local_lib_path, config_dir)
 
-    async_enable_logging(hass, verbose, log_rotate_days)
+    enable_logging(hass, verbose, log_rotate_days)
 
     try:
         config_dict = yield from hass.loop.run_in_executor(
@@ -498,12 +498,11 @@ def async_from_config_file(config_path: str,
     return hass
 
 
-@core.callback
-def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
-                         log_rotate_days=None) -> None:
+def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
+                   log_rotate_days=None) -> None:
     """Setup the logging.
 
-    This method must be run in the event loop.
+    Async friendly.
     """
     logging.basicConfig(level=logging.INFO)
     fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
@@ -531,6 +530,10 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     except ImportError:
         pass
 
+    # AsyncHandler allready exists?
+    if hass.data.get(core.DATA_ASYNCHANDLER):
+        return
+
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path(ERROR_LOG_FILENAME)
     err_path_exists = os.path.isfile(err_log_path)
@@ -553,14 +556,7 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
                               datefmt='%y-%m-%d %H:%M:%S'))
 
         async_handler = AsyncHandler(hass.loop, err_handler)
-
-        @core.callback
-        def _async_close_handler(event):
-            """Close async handler on stop."""
-            async_handler.close()
-
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_close_handler)
+        hass.data[core.DATA_ASYNCHANDLER] = async_handler
 
         logger = logging.getLogger('')
         logger.addHandler(async_handler)
