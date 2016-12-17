@@ -22,8 +22,7 @@ from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.yaml import clear_secret_cache
-from homeassistant.const import (
-    EVENT_COMPONENT_LOADED, PLATFORM_FORMAT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     event_decorators, service, config_per_platform, extract_domain_configs)
