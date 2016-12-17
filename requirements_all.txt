@@ -10,7 +10,7 @@ aiohttp==1.1.6
 async_timeout==1.1.0
 
 # homeassistant.components.nuimo_controller
-#--only-binary=all http://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
+--only-binary=all http://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
 
 # homeassistant.components.isy994
 PyISY==1.0.7
@@ -227,7 +227,7 @@ https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
 https://github.com/laf/russound/archive/0.1.6.zip#russound==0.1.6
 
 # homeassistant.components.switch.anel_pwrctrl
-#https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
+https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
 
 # homeassistant.components.ecobee
 https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6

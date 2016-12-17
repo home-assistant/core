@@ -1,2 +1,0 @@
-# homeassistant.components.media_player.sonos
-SoCo==0.12
