@@ -178,12 +178,12 @@ class BroadlinkRMSwitch(SwitchDevice):
         return True
 
 
-class BroadlinkSP1Switch(SwitchDevice, BroadlinkRMSwitch):
+class BroadlinkSP1Switch(BroadlinkRMSwitch):
     """Representation of an Broadlink switch."""
 
     def __init__(self, friendly_name, command_on, command_off, device):
         """Initialize the switch."""
-        BroadlinkRMSwitch.__init__(friendly_name, command_on, command_off, device)
+        super().__init__(friendly_name, command_on, command_off, device)
         self._command_on = 1
         self._command_off = 0
 
@@ -203,12 +203,12 @@ class BroadlinkSP1Switch(SwitchDevice, BroadlinkRMSwitch):
         return True
 
 
-class BroadlinkSP2Switch(SwitchDevice, BroadlinkSP1Switch):
+class BroadlinkSP2Switch(BroadlinkSP1Switch):
     """Representation of an Broadlink switch."""
 
     def __init__(self, friendly_name, command_on, command_off, device):
         """Initialize the switch."""
-        BroadlinkSP1Switch.__init__(friendly_name, command_on, command_off, device)
+        super().__init__(friendly_name, command_on, command_off, device)
 
     @property
     def assumed_state(self):
