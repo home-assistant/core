@@ -27,11 +27,12 @@ light:
         name: Living Room
 
 """
+DEPENDENCIES = ['insteon_local']
+
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.insteon_local import INSTEON_LOCAL
 
-DEPENDENCIES = ['insteon_local']
 
 SUPPORT_INSTEON_LOCAL = SUPPORT_BRIGHTNESS
 
@@ -97,9 +98,9 @@ class InsteonLocalDimmerDevice(Light):
 
     def turn_on(self, **kwargs):
         """Turn device on."""
-        self.node.on(100)
+        self._value = self.node.on(100)
 
     def turn_off(self, **kwargs):
         """Turn device off."""
-        self.node.offInstant()
+        self._value = self.node.offInstant()
 
