@@ -76,10 +76,14 @@ class InsteonLocalSwitchDevice(SwitchDevice):
     
     def update(self):
         """Update state of the sensor."""
-        resp = self.node.status()
-        if resp is None:
-            self._value = 0
-        else:
+        id = self.node.deviceId.upper()
+        INSTEON_LOCAL.directCommand(id, '19', '00')
+        resp = INSTEON_LOCAL.getBufferStatus(id)
+        if 'cmd2' not in resp:
+            sleep(2)
+            resp = INSTEON_LOCAL.getBufferStatus(id)
+
+        if resp is not None:
             self._value = int(resp['cmd2'], 16)
 
     @property
