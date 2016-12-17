@@ -82,11 +82,11 @@ class InsteonLocalDimmerDevice(Light):
     def update(self):
         """Update state of the sensor."""
         id = self.node.deviceId.upper()
-        INSTEON_LOCAL.directCommand(id, '19', '00')
-        resp = INSTEON_LOCAL.getBufferStatus(id)
+        insteon_local.INSTEON_LOCAL.directCommand(id, '19', '00')
+        resp = insteon_local.INSTEON_LOCAL.getBufferStatus(id)
         if 'cmd2' not in resp:
             sleep(2)
-            resp = INSTEON_LOCAL.getBufferStatus(id)
+            resp = insteon_local.INSTEON_LOCAL.getBufferStatus(id)
 
         if resp is not None:
             self._value = int(resp['cmd2'], 16)
