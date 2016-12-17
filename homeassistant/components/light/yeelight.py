@@ -10,8 +10,8 @@ import socket
 import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-                                            SUPPORT_BRIGHTNESS,
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION,
+                                            SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION,
                                             SUPPORT_RGB_COLOR, Light,
                                             PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'yeelight'
 
-SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
+SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
+                    SUPPORT_RGB_COLOR |
+                    SUPPORT_TRANSITION)
 
 DEVICE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string, })
 
@@ -45,21 +47,13 @@ class YeelightLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        import pyyeelight
-
         self._name = device['name']
         self._ipaddr = device['ipaddr']
-        self.is_valid = True
+        self.is_valid = False
         self._bulb = None
         self._state = None
         self._bright = None
         self._rgb = None
-        try:
-            self._bulb = pyyeelight.YeelightBulb(self._ipaddr)
-        except socket.error:
-            self.is_valid = False
-            _LOGGER.error("Failed to connect to bulb %s, %s", self._ipaddr,
-                          self._name)
 
     @property
     def unique_id(self):
@@ -74,7 +68,13 @@ class YeelightLight(Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state == self._bulb.POWER_ON
+        if not self.connect_if_needed():
+            return False
+
+        if self.is_valid:
+            return self._state == self._bulb.POWER_ON
+        else:
+            return False
 
     @property
     def brightness(self):
@@ -91,27 +91,71 @@ class YeelightLight(Light):
         """Flag supported features."""
         return SUPPORT_YEELIGHT
 
+    def get_extras(self, kwargs):
+        """Returns a dict of transition settings."""
+        EFFECT_SMOOTH = "smooth"  # c&p from yeelight.py
+        if ATTR_TRANSITION in kwargs:
+            extra = {"effect": EFFECT_SMOOTH,
+                     "transition_time": kwargs[ATTR_TRANSITION] * 100}
+            _LOGGER.error("extra: %s", extra)
+            return extra
+        # this can be used for testing it with webui
+        #return {"effect": EFFECT_SMOOTH, "transition_time": 500}
+        return {}
+
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
+        if not self.connect_if_needed():
+            _LOGGER.error("Can't turn on, unable to connect!")
+            return
+
         if not self.is_on:
-            self._bulb.turn_on()
+            self._bulb.turn_on(**self.get_extras(kwargs))
 
         if ATTR_RGB_COLOR in kwargs:
             rgb = kwargs[ATTR_RGB_COLOR]
-            self._bulb.set_rgb_color(rgb[0], rgb[1], rgb[2])
+            self._bulb.set_rgb_color(rgb[0], rgb[1], rgb[2], **self.get_extras(kwargs))
             self._rgb = [rgb[0], rgb[1], rgb[2]]
 
         if ATTR_BRIGHTNESS in kwargs:
             bright = int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
-            self._bulb.set_brightness(bright)
+            self._bulb.set_brightness(bright, **self.get_extras(kwargs))
             self._bright = kwargs[ATTR_BRIGHTNESS]
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
-        self._bulb.turn_off()
+        if not self.connect_if_needed():
+            _LOGGER.error("Can't turn off, unable to connect!")
+            return
+
+        self._bulb.turn_off(**self.get_extras(kwargs))
+
+    def connect_if_needed(self):
+        """Tries to connect to the device if there's no active connection already.
+
+        :return: True on success, False otherwise
+        """
+        if self.is_valid:
+            return True
+
+        import pyyeelight
+
+        try:
+            self._bulb = pyyeelight.YeelightBulb(self._ipaddr)
+            self.is_valid = True
+        except socket.error:
+            self.is_valid = False
+            _LOGGER.error("Failed to connect to bulb %s, %s", self._ipaddr,
+                          self._name)
+
+        return self.is_valid
 
     def update(self):
         """Synchronize state with bulb."""
+        if not self.connect_if_needed():
+            _LOGGER.error("Can't update status, unable to connect!")
+            return
+
         self._bulb.refresh_property()
 
         # Update power state
