@@ -76,7 +76,7 @@ class InsteonLocalSwitchDevice(SwitchDevice):
         """Return the brightness of this light between 0..255."""
         return self._value / 100 * 255
     
-     def update(self):
+    def update(self):
         """Update state of the sensor."""
         id = self.node.deviceId.upper()
         self.node.hub.directCommand(id, '19', '00')
