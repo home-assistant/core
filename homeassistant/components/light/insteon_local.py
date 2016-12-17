@@ -84,7 +84,7 @@ class InsteonLocalDimmerDevice(Light):
         id = self.node.deviceId.upper()
         INSTEON_LOCAL.directCommand(id, '19', '00')
         resp = INSTEON_LOCAL.getBufferStatus(id)
-        while 'cmd2' not in resp:
+        if 'cmd2' not in resp:
             sleep(2)
             resp = INSTEON_LOCAL.getBufferStatus(id)
 
