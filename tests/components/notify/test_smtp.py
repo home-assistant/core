@@ -34,16 +34,18 @@ class TestNotifySmtp(unittest.TestCase):
     def test_text_email(self):
         """Test build of default text email behavior."""
         msg = self.mailer.send_message('Test msg')
-        expected = ('Content-Type: text/plain; charset="us-ascii"\n'
+        expected = ('^Content-Type: text/plain; charset="us-ascii"\n'
                     'MIME-Version: 1.0\n'
                     'Content-Transfer-Encoding: 7bit\n'
                     'Subject: Home Assistant\n'
                     'To: testrecip@test.com\n'
                     'From: test@test.com\n'
                     'X-Mailer: HomeAssistant\n'
+                    'Date: [^\n]+\n'
+                    'Message-Id: <[^@]+@[^>]+>\n'
                     '\n'
-                    'Test msg')
-        self.assertEqual(msg, expected)
+                    'Test msg$')
+        self.assertRegex(msg, expected)
 
     def test_mixed_email(self):
         """Test build of mixed text email behavior."""

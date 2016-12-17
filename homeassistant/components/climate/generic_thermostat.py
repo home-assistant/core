@@ -198,24 +198,30 @@ class GenericThermostat(ClimateDevice):
                 return
 
         if self.ac_mode:
-            too_hot = self._cur_temp - self._target_temp > self._tolerance
             is_cooling = self._is_device_active
-            if too_hot and not is_cooling:
-                _LOGGER.info('Turning on AC %s', self.heater_entity_id)
-                switch.turn_on(self.hass, self.heater_entity_id)
-            elif not too_hot and is_cooling:
-                _LOGGER.info('Turning off AC %s', self.heater_entity_id)
-                switch.turn_off(self.hass, self.heater_entity_id)
+            if is_cooling:
+                too_cold = self._target_temp - self._cur_temp > self._tolerance
+                if too_cold:
+                    _LOGGER.info('Turning off AC %s', self.heater_entity_id)
+                    switch.turn_off(self.hass, self.heater_entity_id)
+            else:
+                too_hot = self._cur_temp - self._target_temp > self._tolerance
+                if too_hot:
+                    _LOGGER.info('Turning on AC %s', self.heater_entity_id)
+                    switch.turn_on(self.hass, self.heater_entity_id)
         else:
-            too_cold = self._target_temp - self._cur_temp > self._tolerance
             is_heating = self._is_device_active
-
-            if too_cold and not is_heating:
-                _LOGGER.info('Turning on heater %s', self.heater_entity_id)
-                switch.turn_on(self.hass, self.heater_entity_id)
-            elif not too_cold and is_heating:
-                _LOGGER.info('Turning off heater %s', self.heater_entity_id)
-                switch.turn_off(self.hass, self.heater_entity_id)
+            if is_heating:
+                too_hot = self._cur_temp - self._target_temp > self._tolerance
+                if too_hot:
+                    _LOGGER.info('Turning off heater %s',
+                                 self.heater_entity_id)
+                    switch.turn_off(self.hass, self.heater_entity_id)
+            else:
+                too_cold = self._target_temp - self._cur_temp > self._tolerance
+                if too_cold:
+                    _LOGGER.info('Turning on heater %s', self.heater_entity_id)
+                    switch.turn_on(self.hass, self.heater_entity_id)
 
     @property
     def _is_device_active(self):
