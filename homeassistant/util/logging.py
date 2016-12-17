@@ -43,14 +43,11 @@ class AsyncHandler(object):
         self.handleError = handler.handleError
         self.format = handler.format
 
+        self._thread.start()
+
     def close(self):
         """Wrap close to handler."""
         self.emit(None)
-
-    def open(self):
-        """Wrap open to handler."""
-        self._thread.start()
-        self.handler.open()
 
     def emit(self, record):
         """Process a record."""
