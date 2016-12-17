@@ -43,7 +43,7 @@ apcaccess==0.0.4
 apns2==0.1.1
 
 # homeassistant.components.sun
-astral==1.3.2
+astral==1.3.3
 
 # homeassistant.components.sensor.linux_battery
 batinfo==0.4.2
