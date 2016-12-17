@@ -57,13 +57,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_MAC).encode().replace(b':', b''))
     sensor_type = config.get(CONF_TYPE)
 
-    if sensor_type == "rm"
+    if sensor_type == "rm":
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
         switch = BroadlinkRMSwitch
-    elif sensor_type == "sp1"
+    elif sensor_type == "sp1":
         broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr)
         switch = BroadlinkSP1Switch
-    elif sensor_type == "sp2"
+    elif sensor_type == "sp2":
         broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr)
         switch = BroadlinkSP2Switch
 
@@ -236,6 +236,6 @@ class BroadlinkSP2Switch(SwitchDevice, BroadlinkSP1Switch):
             except socket.timeout:
                 pass
             return self._update(max(0, retry-1))
-          if state is None:
+          if state is None and retry > 0:
               return self._update(max(0, retry-1))
           self._state = state
