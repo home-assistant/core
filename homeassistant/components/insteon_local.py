@@ -41,14 +41,13 @@ def setup(hass, config):
     password = config[DOMAIN][CONF_PASSWORD]
     host = config[DOMAIN][CONF_HOST]
 
-    global INSTEON_LOCAL
     INSTEON_LOCAL = Hub(host, username, password)
 
     if INSTEON_LOCAL is None:
         _LOGGER.error("Could not connect to Insteon service")
         return False
 
-  # sleep(5)
+    hass.data['insteon_local'] = INSTEON_LOCAL
     discovery.load_platform(hass, 'light', DOMAIN, {}, config)
     discovery.load_platform(hass, 'switch', DOMAIN, {}, config)
     return True
