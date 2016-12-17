@@ -8,29 +8,29 @@
     --
     
     insteon_local:
-    host: YOUR HUB IP
-    username: YOUR HUB USERNAME
-    password: YOUR HUB PASSWORD
+      host: YOUR HUB IP
+      username: YOUR HUB USERNAME
+      password: YOUR HUB PASSWORD
     
     --
     Example platform config
     --
     
     switch:
-    - platform: insteon_local
-    switches:
-    dining_room:
-    device_id: 30DA8A
-    name: Dining Room
-    living_room:
-    device_id: 30D927
-    name: Living Room
+       - platform: insteon_local
+         switches:
+           dining_room:
+              device_id: 30DA8A
+              name: Dining Room
+           living_room:
+           device_id: 30D927
+           name: Living Room
     
     """
+DEPENDENCIES = ['insteon_local']
+
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.insteon_local import INSTEON_LOCAL
-
-DEPENDENCIES = ['insteon_local']
 
 DOMAIN = "switch"
 
