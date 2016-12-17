@@ -79,6 +79,9 @@ class Entity(object):
     # Owning hass instance. Will be set by EntityComponent
     hass = None  # type: Optional[HomeAssistant]
 
+    # If we reported if this entity was slow
+    _slow_reported = False
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -243,7 +246,8 @@ class Entity(object):
 
         end = timer()
 
-        if end - start > 0.4:
+        if not self._slow_reported and end - start > 0.4:
+            self._slow_reported = True
             _LOGGER.warning('Updating state for %s took %.3f seconds. '
                             'Please report platform to the developers at '
                             'https://goo.gl/Nvioub', self.entity_id,
