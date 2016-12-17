@@ -30,13 +30,14 @@
 DEPENDENCIES = ['insteon_local']
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components import insteon_local
+
 from time import sleep
 
 DOMAIN = "switch"
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon local switch platform."""
+    INSTEON_LOCAL = hass.data['insteon_local']
     devs = []
     if len(config) > 0:
         items = config['switches'].items()
@@ -44,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # todo: use getLinked instead? We'd still need to include name and deviceid in config, and it takes a while to execute because of the sleeps when hitting the buffer though, so maybe it's not a priority
         for key, switch in items:
             # todo: get device type and determine whether to use a dimmer or switch
-            device = insteon_local.INSTEON_LOCAL.switch(switch['device_id'])
+            device = INSTEON_LOCAL.switch(switch['device_id'])
             device.beep()
             devs.append(InsteonLocalSwitchDevice(device, switch['name']))
         add_devices(devs)
@@ -75,17 +76,23 @@ class InsteonLocalSwitchDevice(SwitchDevice):
         """Return the brightness of this light between 0..255."""
         return self._value / 100 * 255
     
-    def update(self):
+     def update(self):
         """Update state of the sensor."""
         id = self.node.deviceId.upper()
-        insteon_local.INSTEON_LOCAL.directCommand(id, '19', '00')
-        resp = insteon_local.INSTEON_LOCAL.getBufferStatus(id)
-        if 'cmd2' not in resp:
+        self.node.hub.directCommand(id, '19', '00')
+        resp = self.node.hub.getBufferStatus(id)
+        attempts = 1
+        while 'cmd2' not in resp and attempts > 9:
+            if attempts % 3 == 0:
+                self.node.hub.directCommand(id, '19', '00')
             sleep(2)
-            resp = insteon_local.INSTEON_LOCAL.getBufferStatus(id)
+            resp = self.node.hub.getBufferStatus(id)
+            attempts += 1
 
         if resp is not None:
             self._value = int(resp['cmd2'], 16)
+        else:
+            self._value = 0
 
     @property
     def is_on(self):
