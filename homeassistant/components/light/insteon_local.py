@@ -31,6 +31,7 @@ light:
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.insteon_local import INSTEON_LOCAL
+from time import sleep
 
 DEPENDENCIES = ['insteon_local']
 
@@ -83,6 +84,10 @@ class InsteonLocalDimmerDevice(Light):
         id = self.node.deviceId.upper()
         INSTEON_LOCAL.directCommand(id, '19', '00')
         resp = INSTEON_LOCAL.getBufferStatus(id)
+        while 'cmd2' not in resp:
+            sleep(2)
+            resp = INSTEON_LOCAL.getBufferStatus(id)
+
         if resp is not None:
             self._value = int(resp['cmd2'], 16)
 
