@@ -31,6 +31,7 @@ DEPENDENCIES = ['insteon_local']
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.insteon_local import INSTEON_LOCAL
+from time import sleep
 
 DOMAIN = "switch"
 
