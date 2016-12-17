@@ -22,7 +22,8 @@ from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.yaml import clear_secret_cache
-from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
+from homeassistant.const import (
+    EVENT_COMPONENT_LOADED, PLATFORM_FORMAT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     event_decorators, service, config_per_platform, extract_domain_configs)
@@ -385,7 +386,7 @@ def async_from_config_dict(config: Dict[str, Any],
         None, conf_util.process_ha_config_upgrade, hass)
 
     if enable_log:
-        enable_logging(hass, verbose, log_rotate_days)
+        async_enable_logging(hass, verbose, log_rotate_days)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
@@ -482,7 +483,7 @@ def async_from_config_file(config_path: str,
     yield from hass.loop.run_in_executor(
         None, mount_local_lib_path, config_dir)
 
-    enable_logging(hass, verbose, log_rotate_days)
+    async_enable_logging(hass, verbose, log_rotate_days)
 
     try:
         config_dict = yield from hass.loop.run_in_executor(
@@ -497,11 +498,12 @@ def async_from_config_file(config_path: str,
     return hass
 
 
-def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
-                   log_rotate_days=None) -> None:
+@core.callback
+def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
+                         log_rotate_days=None) -> None:
     """Setup the logging.
 
-    Async friendly.
+    This method must be run in the event loop.
     """
     logging.basicConfig(level=logging.INFO)
     fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
@@ -551,6 +553,14 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
                               datefmt='%y-%m-%d %H:%M:%S'))
 
         async_handler = AsyncHandler(hass.loop, err_handler)
+
+        @core.callback
+        def _async_close_handler(event):
+            """Close async handler on stop."""
+            async_handler.close()
+
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_close_handler)
 
         logger = logging.getLogger('')
         logger.addHandler(async_handler)
