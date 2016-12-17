@@ -86,7 +86,7 @@ class InsteonLocalDimmerDevice(Light):
         self.node.hub.directCommand(id, '19', '00')
         resp = self.node.hub.getBufferStatus(id)
         attempts = 1
-        while 'cmd2' not in resp or attempts > 9:
+        while 'cmd2' not in resp and attempts > 9:
             if attempts % 3 == 0:
                 self.node.hub.directCommand(id, '19', '00')
             sleep(2)
