@@ -38,6 +38,7 @@ CONF_LANG = 'language'
 CONF_CACHE = 'cache'
 CONF_CACHE_DIR = 'cache_dir'
 CONF_TIME_MEMORY = 'time_memory'
+CONF_BASE_URL = 'base_url'
 
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
@@ -56,6 +57,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
     vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY):
         vol.All(vol.Coerce(int), vol.Range(min=60, max=57600)),
+    vol.Optional(CONF_BASE_URL): vol.Url(),
 })
 
 
@@ -78,6 +80,10 @@ def async_setup(hass, config):
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
+        base_url = conf.get(CONF_BASE_URL)
+
+        if base_url:
+            tts.base_url = base_url
 
         yield from tts.async_init_cache(use_cache, cache_dir, time_memory)
     except (HomeAssistantError, KeyError) as err:
@@ -157,7 +163,8 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_CLEAR_CACHE, async_clear_cache_handle,
-        descriptions.get(SERVICE_CLEAR_CACHE), schema=SERVICE_CLEAR_CACHE)
+        descriptions.get(SERVICE_CLEAR_CACHE),
+        schema=SCHEMA_SERVICE_CLEAR_CACHE)
 
     return True
 
@@ -170,9 +177,10 @@ class SpeechManager(object):
         self.hass = hass
         self.providers = {}
 
-        self.use_cache = True
-        self.cache_dir = None
-        self.time_memory = None
+        self.use_cache = DEFAULT_CACHE
+        self.cache_dir = DEFAULT_CACHE_DIR
+        self.time_memory = DEFAULT_TIME_MEMORY
+        self.base_url = hass.config.api.base_url
         self.file_cache = {}
         self.mem_cache = {}
 
@@ -229,7 +237,7 @@ class SpeechManager(object):
             """Remove files from filesystem."""
             for _, filename in self.file_cache.items():
                 try:
-                    os.remove(os.path.join(self.cache_dir), filename)
+                    os.remove(os.path.join(self.cache_dir, filename))
                 except OSError:
                     pass
 
@@ -265,8 +273,7 @@ class SpeechManager(object):
             filename = yield from self.async_get_tts_audio(
                 engine, key, message, use_cache)
 
-        return "{}/api/tts_proxy/{}".format(
-            self.hass.config.api.base_url, filename)
+        return "{}/api/tts_proxy/{}".format(self.base_url, filename)
 
     @asyncio.coroutine
     def async_get_tts_audio(self, engine, key, message, cache):
