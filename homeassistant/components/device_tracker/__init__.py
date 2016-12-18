@@ -454,14 +454,14 @@ class Device(Entity):
         self.gps = None
 
         if gps is not None:
-            try:
-                self.gps = float(gps[0]), float(gps[1])
-                self.gps_accuracy = gps_accuracy or 0
-            except (ValueError, TypeError, IndexError):
-                self.gps = None
-                self.gps_accuracy = 0
-                _LOGGER.warning('Could not parse gps value for %s: %s',
-                                self.dev_id, gps)
+        try:
+            self.gps = float(gps[0]), float(gps[1])
+            self.gps_accuracy = gps_accuracy or 0
+        except (ValueError, TypeError, IndexError):
+            self.gps = None
+            self.gps_accuracy = 0
+            _LOGGER.warning('Could not parse gps value for %s: %s',
+                            self.dev_id, gps)
 
         # pylint: disable=not-an-iterable
         yield from self.async_update()
@@ -663,7 +663,7 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
             zone_home = hass.states.get(zone.ENTITY_ID_HOME)
             if zone_home:
                 kwargs['gps'] = [zone_home.attributes[ATTR_LONGITUDE],
-                       zone_home.attributes[ATTR_LATITUDE]]
+                                 zone_home.attributes[ATTR_LATITUDE]]
                 kwargs['gps_accuracy'] = 0
 
             hass.async_add_job(async_see_device(**kwargs))
