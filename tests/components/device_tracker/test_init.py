@@ -611,7 +611,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(STATE_HOME,
                          self.hass.states.get('device_tracker.dev').state)
 
-
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
     def test_see_failures(self, mock_warning):
         """Test that the device tracker see failures."""
