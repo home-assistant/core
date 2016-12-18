@@ -124,6 +124,16 @@ class Thermostat(ClimateDevice):
         return int(self.thermostat['runtime']['desiredCool'] / 10)
 
     @property
+    def target_temperature(self):
+        """Return the temperature we try to reach."""
+        if self.current_operation == STATE_HEAT:
+            return self.target_temperature_low
+        elif self.current_operation == STATE_COOL:
+            return self.target_temperature_high
+        else:
+            return None
+
+    @property
     def desired_fan_mode(self):
         """Return the desired fan mode of operation."""
         return self.thermostat['runtime']['desiredFanMode']
@@ -192,7 +202,7 @@ class Thermostat(ClimateDevice):
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
-        mode = self.mode
+        mode = ''
         events = self.thermostat['events']
         for event in events:
             if event['holdClimateRef'] == 'away' or \
@@ -212,6 +222,32 @@ class Thermostat(ClimateDevice):
 
     def turn_away_mode_off(self):
         """Turn away off."""
+        self.data.ecobee.resume_program(self.thermostat_index)
+        self.update_without_throttle = True
+
+    @property
+    def is_home_mode_on(self):
+        """Return true if home mode is on."""
+        mode = ''
+        events = self.thermostat['events']
+        for event in events:
+            if event['holdClimateRef'] == 'home' or \
+               event['type'] == 'autoHome':
+                mode = "home"
+                break
+        return 'home' in mode
+
+    def turn_home_mode_on(self):
+        """Turn home on."""
+        if self.hold_temp:
+            self.data.ecobee.set_climate_hold(self.thermostat_index,
+                                              "home", "indefinite")
+        else:
+            self.data.ecobee.set_climate_hold(self.thermostat_index, "home")
+        self.update_without_throttle = True
+
+    def turn_home_mode_off(self):
+        """Turn home off."""
         self.data.ecobee.resume_program(self.thermostat_index)
         self.update_without_throttle = True
 
@@ -249,15 +285,7 @@ class Thermostat(ClimateDevice):
                                              fan_min_on_time)
         self.update_without_throttle = True
 
-    # Home and Sleep mode aren't used in UI yet:
-
-    # def turn_home_mode_on(self):
-    #     """ Turns home mode on. """
-    #     self.data.ecobee.set_climate_hold(self.thermostat_index, "home")
-
-    # def turn_home_mode_off(self):
-    #     """ Turns home mode off. """
-    #     self.data.ecobee.resume_program(self.thermostat_index)
+    # Sleep mode isn't used in UI yet:
 
     # def turn_sleep_mode_on(self):
     #     """ Turns sleep mode on. """

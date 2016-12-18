@@ -26,6 +26,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = 60
 
 SERVICE_SET_AWAY_MODE = "set_away_mode"
+SERVICE_SET_HOME_MODE = "set_home_mode"
 SERVICE_SET_AUX_HEAT = "set_aux_heat"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 SERVICE_SET_FAN_MODE = "set_fan_mode"
@@ -46,6 +47,7 @@ ATTR_MIN_TEMP = "min_temp"
 ATTR_TARGET_TEMP_HIGH = "target_temp_high"
 ATTR_TARGET_TEMP_LOW = "target_temp_low"
 ATTR_AWAY_MODE = "away_mode"
+ATTR_HOME_MODE = "home_mode"
 ATTR_AUX_HEAT = "aux_heat"
 ATTR_FAN_MODE = "fan_mode"
 ATTR_FAN_LIST = "fan_list"
@@ -74,6 +76,10 @@ _LOGGER = logging.getLogger(__name__)
 SET_AWAY_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_AWAY_MODE): cv.boolean,
+})
+SET_HOME_MODE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_HOME_MODE): cv.boolean,
 })
 SET_AUX_HEAT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -114,6 +120,18 @@ def set_away_mode(hass, away_mode, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
+
+
+def set_home_mode(hass, home_mode, entity_id=None):
+    """Turn all or specified climate devices home mode on."""
+    data = {
+        ATTR_HOME_MODE: home_mode
+    }
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_HOME_MODE, data)
 
 
 def set_aux_heat(hass, aux_heat, entity_id=None):
@@ -218,6 +236,32 @@ def setup(hass, config):
         DOMAIN, SERVICE_SET_AWAY_MODE, away_mode_set_service,
         descriptions.get(SERVICE_SET_AWAY_MODE),
         schema=SET_AWAY_MODE_SCHEMA)
+
+    def home_mode_set_service(service):
+        """Set home mode on target climate devices."""
+        target_climate = component.extract_from_service(service)
+
+        home_mode = service.data.get(ATTR_HOME_MODE)
+
+        if home_mode is None:
+            _LOGGER.error(
+                "Received call to %s without attribute %s",
+                SERVICE_SET_HOME_MODE, ATTR_HOME_MODE)
+            return
+
+        for climate in target_climate:
+            if home_mode:
+                climate.turn_home_mode_on()
+            else:
+                climate.turn_home_mode_off()
+
+            if climate.should_poll:
+                climate.update_ha_state(True)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_HOME_MODE, home_mode_set_service,
+        descriptions.get(SERVICE_SET_HOME_MODE),
+        schema=SET_HOME_MODE_SCHEMA)
 
     def aux_heat_set_service(service):
         """Set auxillary heater on target climate devices."""
@@ -431,6 +475,10 @@ class ClimateDevice(Entity):
         if is_away is not None:
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 
+        is_home = self.is_home_mode_on
+        if is_home is not None:
+            data[ATTR_HOME_MODE] = STATE_ON if is_home else STATE_OFF
+
         is_aux_heat = self.is_aux_heat_on
         if is_aux_heat is not None:
             data[ATTR_AUX_HEAT] = STATE_ON if is_aux_heat else STATE_OFF
@@ -493,6 +541,11 @@ class ClimateDevice(Entity):
         return None
 
     @property
+    def is_home_mode_on(self):
+        """Return true if home mode is on."""
+        return None
+
+    @property
     def is_aux_heat_on(self):
         """Return true if aux heater."""
         return None
@@ -541,8 +594,16 @@ class ClimateDevice(Entity):
         """Turn away mode on."""
         raise NotImplementedError()
 
+    def turn_home_mode_on(self):
+        """Turn home mode on."""
+        raise NotImplementedError()
+
     def turn_away_mode_off(self):
         """Turn away mode off."""
+        raise NotImplementedError()
+
+    def turn_home_mode_off(self):
+        """Turn home mode off."""
         raise NotImplementedError()
 
     def turn_aux_heat_on(self):
