@@ -104,5 +104,5 @@ class InsteonLocalSwitchDevice(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn device off."""
-        if self.node.offInstant():
+        if self.node.off():
             self._state = False
