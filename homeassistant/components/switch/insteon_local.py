@@ -1,32 +1,32 @@
 """
-    Support for Insteon local Switches.
+Support for Insteon local Switches.
 
-    For more details about this platform, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 
-    --
-    Example platform config
-    --
+--
+Example platform config
+--
 
-    insteon_local:
-      host: YOUR HUB IP
-      username: YOUR HUB USERNAME
-      password: YOUR HUB PASSWORD
+insteon_local:
+  host: YOUR HUB IP
+  username: YOUR HUB USERNAME
+  password: YOUR HUB PASSWORD
 
-    --
-    Example platform config
-    --
+--
+Example platform config
+--
 
-    switch:
-       - platform: insteon_local
-         switches:
-           dining_room:
-              device_id: 30DA8A
-              name: Dining Room
-           living_room:
-           device_id: 30D927
-           name: Living Room
+switch:
+   - platform: insteon_local
+     switches:
+       dining_room:
+          device_id: 30DA8A
+          name: Dining Room
+       living_room:
+       device_id: 30D927
+       name: Living Room
 
-    """
+"""
 from homeassistant.components.switch import SwitchDevice
 import homeassistant.util as util
 from time import sleep
@@ -67,7 +67,6 @@ class InsteonLocalSwitchDevice(SwitchDevice):
     @property
     def name(self):
         """Return the the name of the node."""
-
         return self.node.deviceName
 
     @property

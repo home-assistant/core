@@ -47,7 +47,6 @@ DOMAIN = "light"
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon local light platform."""
-
     INSTEON_LOCAL = hass.data['insteon_local']
     devs = []
     if len(config) > 0:
@@ -73,7 +72,6 @@ class InsteonLocalDimmerDevice(Light):
     @property
     def name(self):
         """Return the the name of the node."""
-
         return self.node.deviceName
 
     @property
@@ -115,8 +113,8 @@ class InsteonLocalDimmerDevice(Light):
         return SUPPORT_INSTEON_LOCAL
 
     def turn_on(self, **kwargs):
-        brightness = 100
         """Turn device on."""
+        brightness = 100
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS] / 255 * 100
 

@@ -32,7 +32,6 @@ def setup(hass, config):
 
     This will automatically import associated lights.
     """
-
     from insteonlocal.Hub import Hub
 
     username = config[DOMAIN][CONF_USERNAME]
