@@ -23,9 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DAYS = 'days'
 CONF_INCLUDED = 'include_paths'
 CONF_UNIT = 'unit'
+CONF_URLBASE = 'urlbase'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8989
+DEFAULT_URLBASE = ''
 DEFAULT_DAYS = '1'
 DEFAULT_UNIT = 'GB'
 
@@ -39,12 +41,12 @@ SENSOR_TYPES = {
 }
 
 ENDPOINTS = {
-    'diskspace': 'http{0}://{1}:{2}/api/diskspace?apikey={3}',
-    'queue': 'http{0}://{1}:{2}/api/queue?apikey={3}',
-    'upcoming': 'http{0}://{1}:{2}/api/calendar?apikey={3}&start={4}&end={5}',
-    'wanted': 'http{0}://{1}:{2}/api/wanted/missing?apikey={3}',
-    'series': 'http{0}://{1}:{2}/api/series?apikey={3}',
-    'commands': 'http{0}://{1}:{2}/api/command?apikey={3}'
+    'diskspace': 'http{0}://{1}:{2}/{3}api/diskspace?apikey={4}',
+    'queue': 'http{0}://{1}:{2}/{3}api/queue?apikey={4}',
+    'upcoming': 'http{0}://{1}:{2}/{3}api/calendar?apikey={4}&start={5}&end={6}',
+    'wanted': 'http{0}://{1}:{2}/{3}api/wanted/missing?apikey={4}',
+    'series': 'http{0}://{1}:{2}/{3}api/series?apikey={4}',
+    'commands': 'http{0}://{1}:{2}/{3}api/command?apikey={4}'
 }
 
 # Support to Yottabytes for the future, why not
@@ -57,6 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
     vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
     vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES)
 })
@@ -80,6 +83,9 @@ class SonarrSensor(Entity):
         self.conf = conf
         self.host = conf.get(CONF_HOST)
         self.port = conf.get(CONF_PORT)
+        self.urlbase = conf.get(CONF_URLBASE)
+        if len(self.urlbase):
+            self.urlbase = "%s/" % self.urlbase.strip('/')
         self.apikey = conf.get(CONF_API_KEY)
         self.included = conf.get(CONF_INCLUDED)
         self.days = int(conf.get(CONF_DAYS))
@@ -107,7 +113,7 @@ class SonarrSensor(Entity):
         try:
             res = requests.get(
                 ENDPOINTS[self.type].format(
-                    self.ssl, self.host, self.port, self.apikey, start, end),
+                    self.ssl, self.host, self.port, self.urlbase, self.apikey, start, end),
                 timeout=5)
         except OSError:
             _LOGGER.error('Host %s is not available', self.host)
@@ -133,7 +139,7 @@ class SonarrSensor(Entity):
                 data = res.json()
                 res = requests.get('{}&pageSize={}'.format(
                     ENDPOINTS[self.type].format(
-                        self.ssl, self.host, self.port, self.apikey),
+                        self.ssl, self.host, self.port, self.urlbase, self.apikey),
                     data['totalRecords']), timeout=5)
                 self.data = res.json()['records']
                 self._state = len(self.data)
