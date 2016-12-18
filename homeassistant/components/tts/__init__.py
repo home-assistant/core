@@ -157,7 +157,8 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_CLEAR_CACHE, async_clear_cache_handle,
-        descriptions.get(SERVICE_CLEAR_CACHE), schema=SERVICE_CLEAR_CACHE)
+        descriptions.get(SERVICE_CLEAR_CACHE),
+        schema=SCHEMA_SERVICE_CLEAR_CACHE)
 
     return True
 
@@ -170,9 +171,9 @@ class SpeechManager(object):
         self.hass = hass
         self.providers = {}
 
-        self.use_cache = True
-        self.cache_dir = None
-        self.time_memory = None
+        self.use_cache = DEFAULT_CACHE
+        self.cache_dir = DEFAULT_CACHE_DIR
+        self.time_memory = DEFAULT_TIME_MEMORY
         self.file_cache = {}
         self.mem_cache = {}
 
@@ -229,7 +230,7 @@ class SpeechManager(object):
             """Remove files from filesystem."""
             for _, filename in self.file_cache.items():
                 try:
-                    os.remove(os.path.join(self.cache_dir), filename)
+                    os.remove(os.path.join(self.cache_dir, filename))
                 except OSError:
                     pass
 
