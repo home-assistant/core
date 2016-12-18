@@ -4,7 +4,7 @@ Support for Blink4home cameras.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/blink4home/
 """
-# pylint: disable=line too long
+# pylint: disable=E501
 
 import asyncio
 import logging
