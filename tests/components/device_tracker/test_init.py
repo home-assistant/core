@@ -8,6 +8,8 @@ from unittest.mock import call, patch
 from datetime import datetime, timedelta
 import os
 
+from homeassistant import bootstrap
+from homeassistant.components import zone
 from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 from homeassistant.loader import get_component
@@ -541,7 +543,74 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(attrs['longitude'], 0.8)
         self.assertEqual(attrs['test'], 'test')
         self.assertEqual(attrs['gps_accuracy'], 1)
+        self.assertEqual(attrs['source_type'], 'gps')
         self.assertEqual(attrs['number'], 1)
+
+    def test_see_passive_zone_state(self):
+        """Test that the device tracker sets gps for passive trackers."""
+        zone_info = {
+            'name': 'Home',
+            'latitude': 32.880837,
+            'longitude': -117.237561,
+            'radius': 250,
+            'passive': False
+        }
+
+        assert bootstrap.setup_component(self.hass, zone.DOMAIN, {
+            'zone': zone_info
+        })
+
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
+                                        TEST_PLATFORM))
+
+        params = {
+            'mac': 'AA:BB:CC:DD:EE:FF',
+            'dev_id': 'some_device',
+            'host_name': 'dev',
+            'location_name': 'Work',
+            'gps': [.3, .8],
+            'gps_accuracy': 1,
+            'battery': 100,
+            'attributes': {
+                'test': 'test',
+                'number': 1,
+            },
+        }
+
+        device_tracker.see(self.hass, **params)
+        self.hass.block_till_done()
+
+        config = device_tracker.load_config(self.yaml_devices, self.hass,
+                                            timedelta(seconds=0))
+        assert len(config) == 1
+
+        state = self.hass.states.get('device_tracker.dev')
+        attrs = state.attributes
+        self.assertEqual(state.state, 'Work')
+        self.assertEqual(state.object_id, 'dev')
+        self.assertEqual(state.name, 'dev')
+        self.assertEqual(attrs['friendly_name'], 'dev')
+        self.assertEqual(attrs['battery'], 100)
+        self.assertEqual(attrs['latitude'], 0.3)
+        self.assertEqual(attrs['longitude'], 0.8)
+        self.assertEqual(attrs['test'], 'test')
+        self.assertEqual(attrs['gps_accuracy'], 1)
+        self.assertEqual(attrs['source_type'], 'gps')
+        self.assertEqual(attrs['number'], 1)
+
+        scanner = get_component('device_tracker.test').SCANNER
+        scanner.reset()
+        scanner.come_home('dev')
+
+        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'test',
+                device_tracker.CONF_CONSIDER_HOME: 59,
+            }}))
+
+        self.assertEqual(STATE_HOME,
+                         self.hass.states.get('device_tracker.dev').state)
+
 
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
     def test_see_failures(self, mock_warning):

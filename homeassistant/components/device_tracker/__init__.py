@@ -67,7 +67,6 @@ ATTR_DEV_ID = 'dev_id'
 ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
-ATTR_GPS_UPDATED = 'gps_updated'
 ATTR_BATTERY = 'battery'
 ATTR_ATTRIBUTES = 'attributes'
 ATTR_SOURCE_TYPE = 'source_type'
@@ -267,13 +266,6 @@ class DeviceTracker(object):
             dev_id = cv.slug(str(dev_id).lower())
             device = self.devices.get(dev_id)
 
-        if source_type == REPORT_SOURCE_ROUTER:
-            zone_home = self.hass.states.get(zone.ENTITY_ID_HOME)
-            if zone_home:
-                gps = [zone_home.attributes[ATTR_LONGITUDE],
-                       zone_home.attributes[ATTR_LATITUDE]]
-                gps_accuracy = 0
-
         if device:
             yield from device.async_seen(host_name, location_name, gps,
                                          gps_accuracy, battery, attributes,
@@ -292,7 +284,8 @@ class DeviceTracker(object):
             self.mac_to_dev[mac] = device
 
         yield from device.async_seen(host_name, location_name, gps,
-                                     gps_accuracy, battery, attributes)
+                                     gps_accuracy, battery, attributes,
+                                     source_type)
 
         if device.track:
             yield from device.async_update_ha_state()
@@ -356,7 +349,6 @@ class Device(Entity):
     host_name = None  # type: str
     location_name = None  # type: str
     gps = None  # type: GPSType
-    gps_updated = None  # type: dt_util.dt.datetime
     gps_accuracy = 0
     last_seen = None  # type: dt_util.dt.datetime
     battery = None  # type: str
@@ -425,7 +417,6 @@ class Device(Entity):
         if self.gps:
             attr[ATTR_LATITUDE] = self.gps[0]
             attr[ATTR_LONGITUDE] = self.gps[1]
-            attr[ATTR_GPS_UPDATED] = self.gps_updated
             attr[ATTR_GPS_ACCURACY] = self.gps_accuracy
 
         if self.battery:
@@ -460,14 +451,14 @@ class Device(Entity):
         if attributes:
             self._attributes.update(attributes)
 
+        self.gps = None
+
         if gps is not None:
             try:
                 self.gps = float(gps[0]), float(gps[1])
                 self.gps_accuracy = gps_accuracy or 0
-                self.gps_updated = self.last_seen
             except (ValueError, TypeError, IndexError):
                 self.gps = None
-                self.gps_updated = None
                 self.gps_accuracy = 0
                 _LOGGER.warning('Could not parse gps value for %s: %s',
                                 self.dev_id, gps)
@@ -662,9 +653,20 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
             else:
                 host_name = yield from scanner.async_get_device_name(mac)
                 seen.add(mac)
-            hass.async_add_job(async_see_device(mac=mac, host_name=host_name,
-                                                source_type=
-                                                REPORT_SOURCE_ROUTER))
+
+            kwargs = {
+                'mac': mac,
+                'host_name': host_name,
+                'source_type': REPORT_SOURCE_ROUTER
+            }
+
+            zone_home = hass.states.get(zone.ENTITY_ID_HOME)
+            if zone_home:
+                kwargs['gps'] = [zone_home.attributes[ATTR_LONGITUDE],
+                       zone_home.attributes[ATTR_LATITUDE]]
+                kwargs['gps_accuracy'] = 0
+
+            hass.async_add_job(async_see_device(**kwargs))
 
     async_track_utc_time_change(
         hass, async_device_tracker_scan, second=range(0, 60, interval))
