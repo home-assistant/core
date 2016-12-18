@@ -88,32 +88,6 @@ class TestTTS(object):
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
 
-    def test_setup_component_and_test_base_url(self):
-        """Setup the demo platform and call service with base url."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        config = {
-            tts.DOMAIN: {
-                'platform': 'demo',
-                'base_url': 'http://test.com'
-            }
-        }
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-        self.hass.services.call(tts.DOMAIN, 'demo_say', {
-            tts.ATTR_MESSAGE: "I person is on front of your door.",
-        })
-        self.hass.block_till_done()
-
-        assert len(calls) == 1
-        assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID] == (
-            "http://test.com/api/tts_proxy/"
-            "265944c108cbb00b2a621be5930513e03a0bb2cd"
-            "_demo.mp3")
-
     def test_setup_component_and_test_service_clear_cache(self):
         """Setup the demo platform and call service clear cache."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
