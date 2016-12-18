@@ -1,21 +1,21 @@
 """
     Support for Insteon local Switches.
-    
+
     For more details about this platform, please refer to the documentation at
-    
+
     --
     Example platform config
     --
-    
+
     insteon_local:
       host: YOUR HUB IP
       username: YOUR HUB USERNAME
       password: YOUR HUB PASSWORD
-    
+
     --
     Example platform config
     --
-    
+
     switch:
        - platform: insteon_local
          switches:
@@ -25,7 +25,7 @@
            living_room:
            device_id: 30D927
            name: Living Room
-    
+
     """
 from homeassistant.components.switch import SwitchDevice
 import homeassistant.util as util

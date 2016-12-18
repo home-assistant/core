@@ -44,6 +44,7 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 DOMAIN = "light"
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon local light platform."""
 
@@ -52,9 +53,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if len(config) > 0:
         items = config['lights'].items()
 
-        # todo: use getLinked instead? We'd still need to include name and deviceid in config, and it takes a while to execute because of the sleeps when hitting the buffer though, so maybe it's not a priority
+        # todo: use getLinked instead
         for key, light in items:
-            # todo: get device type and determine whether to use a dimmer or switch
             device = INSTEON_LOCAL.dimmer(light['device_id'])
             device.beep()
             devs.append(InsteonLocalDimmerDevice(device, light['name']))
@@ -103,7 +103,6 @@ class InsteonLocalDimmerDevice(Light):
 
         if 'cmd2' in resp:
             self._value = int(resp['cmd2'], 16)
-
 
     @property
     def is_on(self):
