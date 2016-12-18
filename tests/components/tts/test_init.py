@@ -88,35 +88,35 @@ class TestTTS(object):
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
 
-        def test_setup_component_and_test_service_clear_cache(self):
-            """Setup the demo platform and call service clear cache."""
-            calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    def test_setup_component_and_test_service_clear_cache(self):
+        """Setup the demo platform and call service clear cache."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-            config = {
-                tts.DOMAIN: {
-                    'platform': 'demo',
-                }
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
             }
+        }
 
-            with assert_setup_component(1, tts.DOMAIN):
-                setup_component(self.hass, tts.DOMAIN, config)
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
 
-            self.hass.services.call(tts.DOMAIN, 'demo_say', {
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
-            })
-            self.hass.block_till_done()
+        self.hass.services.call(tts.DOMAIN, 'demo_say', {
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+        })
+        self.hass.block_till_done()
 
-            assert len(calls) == 1
-            assert os.path.isfile(os.path.join(
-                self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
+        assert len(calls) == 1
+        assert os.path.isfile(os.path.join(
+            self.default_tts_cache,
+            "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
 
-            self.hass.services.call(tts.DOMAIN, tts.SERVICE_CLEAR_CACHE, {})
-            self.hass.block_till_done()
+        self.hass.services.call(tts.DOMAIN, tts.SERVICE_CLEAR_CACHE, {})
+        self.hass.block_till_done()
 
-            assert not os.path.isfile(os.path.join(
-                self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
+        assert not os.path.isfile(os.path.join(
+            self.default_tts_cache,
+            "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3"))
 
     def test_setup_component_and_test_service_with_receive_voice(self):
         """Setup the demo platform and call service and receive voice."""
