@@ -43,7 +43,7 @@ SENSOR_TYPES = {
 ENDPOINTS = {
     'diskspace': 'http{0}://{1}:{2}/{3}api/diskspace?apikey={4}',
     'queue': 'http{0}://{1}:{2}/{3}api/queue?apikey={4}',
-    'upcoming': 
+    'upcoming':
         'http{0}://{1}:{2}/{3}api/calendar?apikey={4}&start={5}&end={6}',
     'wanted': 'http{0}://{1}:{2}/{3}api/wanted/missing?apikey={4}',
     'series': 'http{0}://{1}:{2}/{3}api/series?apikey={4}',
@@ -114,7 +114,7 @@ class SonarrSensor(Entity):
         try:
             res = requests.get(
                 ENDPOINTS[self.type].format(
-                    self.ssl, self.host, self.port, 
+                    self.ssl, self.host, self.port,
                     self.urlbase, self.apikey, start, end),
                 timeout=5)
         except OSError:
@@ -141,7 +141,7 @@ class SonarrSensor(Entity):
                 data = res.json()
                 res = requests.get('{}&pageSize={}'.format(
                     ENDPOINTS[self.type].format(
-                        self.ssl, self.host, self.port, 
+                        self.ssl, self.host, self.port,
                         self.urlbase, self.apikey),
                     data['totalRecords']), timeout=5)
                 self.data = res.json()['records']
