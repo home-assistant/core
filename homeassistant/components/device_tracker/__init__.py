@@ -454,14 +454,14 @@ class Device(Entity):
         self.gps = None
 
         if gps is not None:
-        try:
-            self.gps = float(gps[0]), float(gps[1])
-            self.gps_accuracy = gps_accuracy or 0
-        except (ValueError, TypeError, IndexError):
-            self.gps = None
-            self.gps_accuracy = 0
-            _LOGGER.warning('Could not parse gps value for %s: %s',
-                            self.dev_id, gps)
+            try:
+                self.gps = float(gps[0]), float(gps[1])
+                self.gps_accuracy = gps_accuracy or 0
+            except (ValueError, TypeError, IndexError):
+                self.gps = None
+                self.gps_accuracy = 0
+                _LOGGER.warning('Could not parse gps value for %s: %s',
+                                self.dev_id, gps)
 
         # pylint: disable=not-an-iterable
         yield from self.async_update()
