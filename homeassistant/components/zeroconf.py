@@ -40,16 +40,9 @@ def setup(hass, config):
         'requires_api_password': requires_api_password,
     }
 
-    try:
-        info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name,
-                           socket.inet_pton(
-                               socket.AF_INET, hass.config.api.host),
-                           hass.config.api.port, 0, 0, params)
-    except socket.error:
-        info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name,
-                           socket.inet_pton(
-                               socket.AF_INET6, hass.config.api.host),
-                           hass.config.api.port, 0, 0, params)
+    info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name,
+                       socket.inet_aton(hass.config.api.host),
+                       hass.config.api.port, 0, 0, params)
 
     zeroconf.register_service(info)
 

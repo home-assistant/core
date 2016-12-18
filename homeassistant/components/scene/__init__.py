@@ -4,7 +4,6 @@ Allow users to set and activate scenes.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene/
 """
-import asyncio
 import logging
 from collections import namedtuple
 
@@ -40,8 +39,7 @@ def activate(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+def setup(hass, config):
     """Setup scenes."""
     logger = logging.getLogger(__name__)
 
@@ -61,20 +59,17 @@ def async_setup(hass, config):
 
     component = EntityComponent(logger, DOMAIN, hass)
 
-    yield from component.async_setup(config)
+    component.setup(config)
 
-    @asyncio.coroutine
-    def async_handle_scene_service(service):
+    def handle_scene_service(service):
         """Handle calls to the switch services."""
-        target_scenes = component.async_extract_from_service(service)
+        target_scenes = component.extract_from_service(service)
 
-        tasks = [scene.async_activate() for scene in target_scenes]
-        if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
+        for scene in target_scenes:
+            scene.activate()
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_scene_service,
-        schema=SCENE_SERVICE_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_scene_service,
+                           schema=SCENE_SERVICE_SCHEMA)
 
     return True
 
@@ -94,12 +89,4 @@ class Scene(Entity):
 
     def activate(self):
         """Activate scene. Try to get entities into requested state."""
-        raise NotImplementedError()
-
-    @asyncio.coroutine
-    def async_activate(self):
-        """Activate scene. Try to get entities into requested state.
-
-        This method is a coroutine.
-        """
-        yield from self.hass.loop.run_in_executor(None, self.activate)
+        raise NotImplementedError

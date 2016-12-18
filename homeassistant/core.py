@@ -236,12 +236,6 @@ class HomeAssistant(object):
         """Track tasks so you can wait for all tasks to be done."""
         self.async_add_job = self._async_add_job_tracking
 
-    @asyncio.coroutine
-    def async_stop_track_tasks(self):
-        """Track tasks so you can wait for all tasks to be done."""
-        yield from self.async_block_till_done()
-        self.async_add_job = self._async_add_job
-
     @callback
     def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
         """Run a job from within the event loop.

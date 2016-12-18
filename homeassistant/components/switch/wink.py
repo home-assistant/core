@@ -15,20 +15,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink platform."""
     import pywink
 
-    for switch in pywink.get_switches():
-        add_devices([WinkToggleDevice(switch, hass)])
-    for switch in pywink.get_powerstrip_outlets():
-        add_devices([WinkToggleDevice(switch, hass)])
-    for switch in pywink.get_sirens():
-        add_devices([WinkToggleDevice(switch, hass)])
+    add_devices(WinkToggleDevice(switch) for switch in pywink.get_switches())
+    add_devices(WinkToggleDevice(switch) for switch in
+                pywink.get_powerstrip_outlets())
+    add_devices(WinkToggleDevice(switch) for switch in pywink.get_sirens())
 
 
 class WinkToggleDevice(WinkDevice, ToggleEntity):
     """Representation of a Wink toggle device."""
 
-    def __init__(self, wink, hass):
+    def __init__(self, wink):
         """Initialize the Wink device."""
-        WinkDevice.__init__(self, wink, hass)
+        WinkDevice.__init__(self, wink)
 
     @property
     def is_on(self):

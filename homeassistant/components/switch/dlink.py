@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
 REQUIREMENTS = ['https://github.com/LinuxChristian/pyW215/archive/'
-                'v0.3.7.zip#pyW215==0.3.7']
+                'v0.3.6.zip#pyW215==0.3.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ class SmartPlugSwitch(SwitchDevice):
                                              TEMP_CELSIUS)
             temperature = "%i %s" % \
                           (ui_temp, self.units.temperature_unit)
-        except (ValueError, TypeError):
+        except ValueError:
             temperature = STATE_UNKNOWN
 
         try:

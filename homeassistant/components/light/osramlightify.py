@@ -189,7 +189,7 @@ class OsramLightifyLight(Light):
                               " %s with transition %s ",
                               self._name, transition)
 
-        self.schedule_update_ha_state()
+        self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -209,7 +209,7 @@ class OsramLightifyLight(Light):
             self._light.set_onoff(0)
             self._state = self._light.on()
 
-        self.schedule_update_ha_state()
+        self.update_ha_state()
 
     def update(self):
         """Synchronize state with bridge."""

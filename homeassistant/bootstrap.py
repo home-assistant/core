@@ -365,7 +365,6 @@ def async_from_config_dict(config: Dict[str, Any],
     Dynamically loads required components and its dependencies.
     This method is a coroutine.
     """
-    hass.async_track_tasks()
     setup_lock = hass.data.get('setup_lock')
     if setup_lock is None:
         setup_lock = hass.data['setup_lock'] = asyncio.Lock(loop=hass.loop)
@@ -427,8 +426,6 @@ def async_from_config_dict(config: Dict[str, Any],
         yield from _async_setup_component(hass, domain, config)
 
     setup_lock.release()
-
-    yield from hass.async_stop_track_tasks()
 
     return hass
 

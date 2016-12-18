@@ -263,7 +263,7 @@ class MqttTemplate(Light):
         )
 
         if self._optimistic:
-            self.schedule_update_ha_state()
+            self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the entity off."""
@@ -283,4 +283,4 @@ class MqttTemplate(Light):
         )
 
         if self._optimistic:
-            self.schedule_update_ha_state()
+            self.update_ha_state()

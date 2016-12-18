@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink thermostat."""
     import pywink
     temp_unit = hass.config.units.temperature_unit
-    add_devices(WinkThermostat(thermostat, hass, temp_unit)
+    add_devices(WinkThermostat(thermostat, temp_unit)
                 for thermostat in pywink.get_thermostats())
 
 
@@ -38,9 +38,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class WinkThermostat(WinkDevice, ClimateDevice):
     """Representation of a Wink thermostat."""
 
-    def __init__(self, wink, hass, temp_unit):
+    def __init__(self, wink, temp_unit):
         """Initialize the Wink device."""
-        super().__init__(wink, hass)
+        super().__init__(wink)
         wink = get_component('wink')
         self._config_temp_unit = temp_unit
 

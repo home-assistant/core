@@ -117,11 +117,11 @@ class NX584Alarm(alarm.AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._alarm.arm('stay')
+        self._alarm.arm('home')
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._alarm.arm('exit')
+        self._alarm.arm('auto')
 
     def alarm_trigger(self, code=None):
         """Alarm trigger command."""

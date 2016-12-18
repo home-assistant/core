@@ -1,6 +1,5 @@
 """The tests for the sun automation."""
 from datetime import datetime
-
 import unittest
 from unittest.mock import patch
 
@@ -13,11 +12,10 @@ import homeassistant.util.dt as dt_util
 from tests.common import fire_time_changed, get_test_home_assistant
 
 
-# pylint: disable=invalid-name
 class TestAutomationSun(unittest.TestCase):
     """Test the sun automation."""
 
-    def setUp(self):
+    def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
@@ -27,12 +25,11 @@ class TestAutomationSun(unittest.TestCase):
 
         @callback
         def record_call(service):
-            """Call recorder."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):
+    def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
 

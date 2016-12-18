@@ -120,7 +120,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self.update_playing_status()
 
         self._player_state = STATE_IDLE
-        self.schedule_update_ha_state()
+        self.update_ha_state()
 
     def turn_off(self):
         """Turn the media player off."""
@@ -138,24 +138,24 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             _LOGGER.info('Killed Pianobar subprocess')
         self._pianobar = None
         self._player_state = STATE_OFF
-        self.schedule_update_ha_state()
+        self.update_ha_state()
 
     def media_play(self):
         """Send play command."""
         self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
         self._player_state = STATE_PLAYING
-        self.schedule_update_ha_state()
+        self.update_ha_state()
 
     def media_pause(self):
         """Send pause command."""
         self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
         self._player_state = STATE_PAUSED
-        self.schedule_update_ha_state()
+        self.update_ha_state()
 
     def media_next_track(self):
         """Go to next track."""
         self._send_pianobar_command(SERVICE_MEDIA_NEXT_TRACK)
-        self.schedule_update_ha_state()
+        self.update_ha_state()
 
     @property
     def supported_media_commands(self):
@@ -349,8 +349,6 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             while not self._pianobar.expect('.+', timeout=0.1):
                 pass
         except pexpect.exceptions.TIMEOUT:
-            pass
-        except pexpect.exceptions.EOF:
             pass
 
 

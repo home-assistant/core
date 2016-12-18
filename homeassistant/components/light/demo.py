@@ -129,9 +129,9 @@ class DemoLight(Light):
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT]
 
-        self.schedule_update_ha_state()
+        self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self._state = False
-        self.schedule_update_ha_state()
+        self.update_ha_state()

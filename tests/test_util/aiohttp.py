@@ -5,7 +5,6 @@ import functools
 import json as _json
 from unittest import mock
 from urllib.parse import urlparse, parse_qs
-import yarl
 
 
 class AiohttpClientMocker:
@@ -21,9 +20,7 @@ class AiohttpClientMocker:
                 status=200,
                 text=None,
                 content=None,
-                json=None,
-                params=None,
-                exc=None):
+                json=None):
         """Mock a request."""
         if json:
             text = _json.dumps(json)
@@ -31,10 +28,6 @@ class AiohttpClientMocker:
             content = text.encode('utf-8')
         if content is None:
             content = b''
-        if params:
-            url = str(yarl.URL(url).with_query(params))
-
-        self.exc = exc
 
         self._mocks.append(AiohttpClientMockResponse(
             method, url, status, content))
@@ -65,15 +58,12 @@ class AiohttpClientMocker:
         return len(self.mock_calls)
 
     @asyncio.coroutine
-    def match_request(self, method, url, *, auth=None, params=None): \
+    def match_request(self, method, url, *, auth=None): \
             # pylint: disable=unused-variable
         """Match a request against pre-registered requests."""
         for response in self._mocks:
-            if response.match_request(method, url, params):
+            if response.match_request(method, url):
                 self.mock_calls.append((method, url))
-
-                if self.exc:
-                    raise self.exc
                 return response
 
         assert False, "No mock registered for {} {}".format(method.upper(),
@@ -92,13 +82,10 @@ class AiohttpClientMockResponse:
         self.status = status
         self.response = response
 
-    def match_request(self, method, url, params=None):
+    def match_request(self, method, url):
         """Test if response answers request."""
         if method.lower() != self.method.lower():
             return False
-
-        if params:
-            url = str(yarl.URL(url).with_query(params))
 
         # regular expression matching
         if self._url_parts is None:

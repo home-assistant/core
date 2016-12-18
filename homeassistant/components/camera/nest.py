@@ -4,26 +4,25 @@ Support for Nest Cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.nest/
 """
+
 import logging
 from datetime import timedelta
-
 import requests
-
-import homeassistant.components.nest as nest
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
+import homeassistant.components.nest as nest
 from homeassistant.util.dt import utcnow
 
-_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['nest']
-
-NEST_BRAND = 'Nest'
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 
+NEST_BRAND = "Nest"
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up a Nest Cam."""
+    """Setup a Nest Cam."""
     if discovery_info is None:
         return
 
@@ -41,12 +40,14 @@ class NestCamera(Camera):
         super(NestCamera, self).__init__()
         self.structure = structure
         self.device = device
+
+        # data attributes
         self._location = None
         self._name = None
         self._is_online = None
         self._is_streaming = None
         self._is_video_history_enabled = False
-        # Default to non-NestAware subscribed, but will be fixed during update
+        # default to non-NestAware subscribed, but will be fixed during update
         self._time_between_snapshots = timedelta(seconds=30)
         self._last_image = None
         self._next_snapshot_at = None
@@ -68,10 +69,10 @@ class NestCamera(Camera):
 
     @property
     def brand(self):
-        """Return the brand of the camera."""
+        """Camera Brand."""
         return NEST_BRAND
 
-    # This doesn't seem to be getting called regularly, for some reason
+    # this doesn't seem to be getting called regularly, for some reason
     def update(self):
         """Cache value from Python-nest."""
         self._location = self.device.where
@@ -84,7 +85,7 @@ class NestCamera(Camera):
             # NestAware allowed 10/min
             self._time_between_snapshots = timedelta(seconds=6)
         else:
-            # Otherwise, 2/min
+            # otherwise, 2/min
             self._time_between_snapshots = timedelta(seconds=30)
 
     def _ready_for_snapshot(self, now):
@@ -100,7 +101,7 @@ class NestCamera(Camera):
             try:
                 response = requests.get(url)
             except requests.exceptions.RequestException as error:
-                _LOGGER.error("Error getting camera image: %s", error)
+                _LOGGER.error('Error getting camera image: %s', error)
                 return None
 
             self._next_snapshot_at = now + self._time_between_snapshots

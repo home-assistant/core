@@ -103,32 +103,29 @@ class MjpegCamera(Camera):
 
         # connect to stream
         websession = async_get_clientsession(self.hass)
-        stream = None
-        response = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                stream = yield from websession.get(self._mjpeg_url,
-                                                   auth=self._auth)
+                stream = yield from websession.get(
+                    self._mjpeg_url,
+                    auth=self._auth
+                )
+        except asyncio.TimeoutError:
+            raise HTTPGatewayTimeout()
 
-            response = web.StreamResponse()
-            response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
+        response = web.StreamResponse()
+        response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
 
-            yield from response.prepare(request)
+        yield from response.prepare(request)
 
+        try:
             while True:
                 data = yield from stream.content.read(102400)
                 if not data:
                     break
                 response.write(data)
-
-        except asyncio.TimeoutError:
-            raise HTTPGatewayTimeout()
-
         finally:
-            if stream is not None:
-                self.hass.async_add_job(stream.release())
-            if response is not None:
-                yield from response.write_eof()
+            self.hass.async_add_job(stream.release())
+            yield from response.write_eof()
 
     @property
     def name(self):

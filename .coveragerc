@@ -125,7 +125,6 @@ omit =
     homeassistant/components/binary_sensor/flic.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
-    homeassistant/components/camera/amcrest.py
     homeassistant/components/camera/bloomsky.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
@@ -184,7 +183,6 @@ omit =
     homeassistant/components/light/x10.py
     homeassistant/components/light/yeelight.py
     homeassistant/components/lirc.py
-    homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/braviatv.py
     homeassistant/components/media_player/cast.py
     homeassistant/components/media_player/cmus.py
@@ -243,7 +241,6 @@ omit =
     homeassistant/components/notify/xmpp.py
     homeassistant/components/nuimo_controller.py
     homeassistant/components/openalpr.py
-    homeassistant/components/remote/harmony.py
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/arwn.py
@@ -284,7 +281,6 @@ omit =
     homeassistant/components/sensor/mqtt_room.py
     homeassistant/components/sensor/netdata.py
     homeassistant/components/sensor/neurio_energy.py
-    homeassistant/components/sensor/nut.py
     homeassistant/components/sensor/nzbget.py
     homeassistant/components/sensor/ohmconnect.py
     homeassistant/components/sensor/onewire.py
@@ -320,7 +316,6 @@ omit =
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/anel_pwrctrl.py
     homeassistant/components/switch/arest.py
-    homeassistant/components/switch/digitalloggers.py
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py

@@ -6,9 +6,8 @@ https://home-assistant.io/components/switch.homematic/
 """
 import logging
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.homematic import HMDevice
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.loader import get_component
+import homeassistant.components.homematic as homematic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,16 +19,14 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    homematic = get_component("homematic")
     return homematic.setup_hmdevice_discovery_helper(
-        hass,
         HMSwitch,
         discovery_info,
         add_callback_devices
     )
 
 
-class HMSwitch(HMDevice, SwitchDevice):
+class HMSwitch(homematic.HMDevice, SwitchDevice):
     """Representation of a Homematic switch."""
 
     @property

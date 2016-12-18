@@ -62,7 +62,6 @@ pip-log.txt
 .coverage
 .tox
 nosetests.xml
-htmlcov/
 
 # Translations
 *.mo
@@ -104,3 +103,25 @@ docs/build
 
 # Windows Explorer
 desktop.ini
+
+.coveragerc
+
+homeassistant/bootstrap.py
+
+homeassistant/components/alarm_control_panel/nx584.py
+
+homeassistant/components/binary_sensor/homematic.py
+
+homeassistant/components/binary_sensor/wink.py
+
+homeassistant/components/camera/generic.py
+
+homeassistant/components/device_tracker/__init__.py
+
+*.py
+
+*.py
+
+homeassistant/components/demo.py
+
+homeassistant/components/emulated_hue.py

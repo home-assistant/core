@@ -37,37 +37,3 @@ def test_api_streams(hass):
 
     state = hass.states.get('sensor.connected_clients')
     assert state.state == '1'
-
-
-@asyncio.coroutine
-def test_websocket_api(hass):
-    """Test API streams."""
-    log = logging.getLogger('homeassistant.components.websocket_api')
-
-    with assert_setup_component(1):
-        yield from async_setup_component(hass, 'sensor', {
-            'sensor': {
-                'platform': 'api_streams',
-            }
-        })
-
-    state = hass.states.get('sensor.connected_clients')
-    assert state.state == '0'
-
-    log.debug('WS %s: %s', id(log), 'Connected')
-    yield from hass.async_block_till_done()
-
-    state = hass.states.get('sensor.connected_clients')
-    assert state.state == '1'
-
-    log.debug('WS %s: %s', id(log), 'Connected')
-    yield from hass.async_block_till_done()
-
-    state = hass.states.get('sensor.connected_clients')
-    assert state.state == '2'
-
-    log.debug('WS %s: %s', id(log), 'Closed connection')
-    yield from hass.async_block_till_done()
-
-    state = hass.states.get('sensor.connected_clients')
-    assert state.state == '1'

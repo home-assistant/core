@@ -86,11 +86,16 @@ def setup(hass, config):
     group.Group.create_group(hass, 'people', [
         'device_tracker.demo_anne_therese', 'device_tracker.demo_home_boy',
         'device_tracker.demo_paulus'])
+    group.Group.create_group(hass, 'thermostats', [
+        'thermostat.nest', 'thermostat.thermostat'])
     group.Group.create_group(hass, 'downstairs', [
         'group.living_room', 'group.kitchen',
         'scene.romantic_lights', 'rollershutter.kitchen_window',
         'rollershutter.living_room_window', 'group.doors',
-        'thermostat.ecobee',
+        'thermostat.nest',
+    ], view=True)
+    group.Group.create_group(hass, 'Upstairs', [
+        'thermostat.thermostat', 'group.bedroom',
     ], view=True)
 
     # Setup scripts

@@ -8,11 +8,10 @@ import homeassistant.components.automation as automation
 from tests.common import get_test_home_assistant
 
 
-# pylint: disable=invalid-name
 class TestAutomationEvent(unittest.TestCase):
     """Test the event automation."""
 
-    def setUp(self):
+    def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
@@ -25,7 +24,7 @@ class TestAutomationEvent(unittest.TestCase):
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):
+    def tearDown(self):  # pylint: disable=invalid-name
         """"Stop everything that was started."""
         self.hass.stop()
 

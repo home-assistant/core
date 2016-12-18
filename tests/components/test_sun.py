@@ -12,14 +12,15 @@ import homeassistant.components.sun as sun
 from tests.common import get_test_home_assistant
 
 
-# pylint: disable=invalid-name
 class TestSun(unittest.TestCase):
     """Test the sun module."""
 
+    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
+    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()

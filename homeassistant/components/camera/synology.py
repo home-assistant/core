@@ -73,27 +73,24 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         'version': '1',
         'query': 'SYNO.'
     }
-    query_req = None
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
             query_req = yield from websession_init.get(
                 syno_api_url,
                 params=query_payload
             )
-
-        query_resp = yield from query_req.json()
-        auth_path = query_resp['data'][AUTH_API]['path']
-        camera_api = query_resp['data'][CAMERA_API]['path']
-        camera_path = query_resp['data'][CAMERA_API]['path']
-        streaming_path = query_resp['data'][STREAMING_API]['path']
-
     except (asyncio.TimeoutError, aiohttp.errors.ClientError):
         _LOGGER.exception("Error on %s", syno_api_url)
         return False
 
-    finally:
-        if query_req is not None:
-            yield from query_req.release()
+    query_resp = yield from query_req.json()
+    auth_path = query_resp['data'][AUTH_API]['path']
+    camera_api = query_resp['data'][CAMERA_API]['path']
+    camera_path = query_resp['data'][CAMERA_API]['path']
+    streaming_path = query_resp['data'][STREAMING_API]['path']
+
+    # cleanup
+    yield from query_req.release()
 
     # Authticate to NAS to get a session id
     syno_auth_url = SYNO_API_URL.format(
@@ -169,23 +166,20 @@ def get_session_id(hass, websession, username, password, login_url):
         'session': 'SurveillanceStation',
         'format': 'sid'
     }
-    auth_req = None
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
             auth_req = yield from websession.get(
                 login_url,
                 params=auth_payload
             )
-        auth_resp = yield from auth_req.json()
-        return auth_resp['data']['sid']
-
     except (asyncio.TimeoutError, aiohttp.errors.ClientError):
         _LOGGER.exception("Error on %s", login_url)
         return False
 
-    finally:
-        if auth_req is not None:
-            yield from auth_req.release()
+    auth_resp = yield from auth_req.json()
+    yield from auth_req.release()
+
+    return auth_resp['data']['sid']
 
 
 class SynologyCamera(Camera):
@@ -253,34 +247,30 @@ class SynologyCamera(Camera):
             'cameraId': self._camera_id,
             'format': 'mjpeg'
         }
-        stream = None
-        response = None
         try:
             with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
                 stream = yield from self._websession.get(
                     streaming_url,
                     params=streaming_payload
                 )
-            response = web.StreamResponse()
-            response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
+        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+            _LOGGER.exception("Error on %s", streaming_url)
+            raise HTTPGatewayTimeout()
 
-            yield from response.prepare(request)
+        response = web.StreamResponse()
+        response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
 
+        yield from response.prepare(request)
+
+        try:
             while True:
                 data = yield from stream.content.read(102400)
                 if not data:
                     break
                 response.write(data)
-
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
-            _LOGGER.exception("Error on %s", streaming_url)
-            raise HTTPGatewayTimeout()
-
         finally:
-            if stream is not None:
-                self.hass.async_add_job(stream.release())
-            if response is not None:
-                yield from response.write_eof()
+            self.hass.async_add_job(stream.release())
+            yield from response.write_eof()
 
     @property
     def name(self):

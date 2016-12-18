@@ -1,7 +1,6 @@
 """The test for state automation."""
-from datetime import timedelta
-
 import unittest
+from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.core import callback
@@ -13,11 +12,10 @@ from tests.common import (
     fire_time_changed, get_test_home_assistant, assert_setup_component)
 
 
-# pylint: disable=invalid-name
 class TestAutomationState(unittest.TestCase):
     """Test the event automation."""
 
-    def setUp(self):
+    def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
@@ -26,12 +24,11 @@ class TestAutomationState(unittest.TestCase):
 
         @callback
         def record_call(service):
-            """Call recorder."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):
+    def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -50,9 +47,9 @@ class TestAutomationState(unittest.TestCase):
                     'service': 'test.automation',
                     'data_template': {
                         'some': '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
-                            'platform', 'entity_id',
-                            'from_state.state', 'to_state.state',
-                            'for'))
+                                    'platform', 'entity_id',
+                                    'from_state.state', 'to_state.state',
+                                    'for'))
                     },
                 }
             }

@@ -2,23 +2,23 @@
 DuneHD implementation of the media player.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/media_player.dunehd/
+https://home-assistant.io/components/dunehd/
 """
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
-    SUPPORT_PAUSE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA,
-    MediaPlayerDevice)
+    SUPPORT_PAUSE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED, STATE_ON, STATE_PLAYING)
 
+import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
+
 REQUIREMENTS = ['pdunehd==1.3']
 
-DEFAULT_NAME = 'DuneHD'
+DEFAULT_NAME = "DuneHD"
 
-CONF_SOURCES = 'sources'
+CONF_SOURCES = "sources"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -33,7 +33,7 @@ DUNEHD_PLAYER_SUPPORT = \
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the media player demo platform."""
+    """Setup the media player demo platform."""
     sources = config.get(CONF_SOURCES, {})
 
     from pdunehd import DuneHDPlayer

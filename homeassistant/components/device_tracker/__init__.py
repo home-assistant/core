@@ -10,8 +10,6 @@ import logging
 import os
 from typing import Any, Sequence, Callable
 
-import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.bootstrap import (
@@ -21,7 +19,6 @@ from homeassistant.components import group, zone
 from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
@@ -281,9 +278,12 @@ class DeviceTracker(object):
             yield from self.group.async_update_tracked_entity_ids(
                 list(self.group.tracking) + [device.entity_id])
 
+<<<<<<< HEAD
         # lookup mac vendor string to be stored in config
         yield from device.set_vendor_for_mac()
 
+=======
+>>>>>>> parent of cfa6616... Merge remote-tracking branch 'home-assistant/dev' into netatmo-presence
         # update known_devices.yaml
         self.hass.async_add_job(
             self.async_update_config(self.hass.config.path(YAML_DEVICES),
@@ -297,7 +297,7 @@ class DeviceTracker(object):
         This method is a coroutine.
         """
         with (yield from self._is_updating):
-            yield from self.hass.loop.run_in_executor(
+            self.hass.loop.run_in_executor(
                 None, update_config, self.hass.config.path(YAML_DEVICES),
                 dev_id, device)
 
@@ -334,7 +334,6 @@ class Device(Entity):
     last_seen = None  # type: dt_util.dt.datetime
     battery = None  # type: str
     attributes = None  # type: dict
-    vendor = None  # type: str
 
     # Track if the last update of this device was HOME.
     last_update_home = False
@@ -343,7 +342,7 @@ class Device(Entity):
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
                  track: bool, dev_id: str, mac: str, name: str=None,
                  picture: str=None, gravatar: str=None,
-                 hide_if_away: bool=False, vendor: str=None) -> None:
+                 hide_if_away: bool=False) -> None:
         """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
@@ -369,8 +368,11 @@ class Device(Entity):
             self.config_picture = picture
 
         self.away_hide = hide_if_away
+<<<<<<< HEAD
         self.vendor = vendor
         self._attributes = {}
+=======
+>>>>>>> parent of cfa6616... Merge remote-tracking branch 'home-assistant/dev' into netatmo-presence
 
     @property
     def name(self):
@@ -473,53 +475,6 @@ class Device(Entity):
             self._state = STATE_HOME
             self.last_update_home = True
 
-    @asyncio.coroutine
-    def set_vendor_for_mac(self):
-        """Set vendor string using api.macvendors.com."""
-        self.vendor = yield from self.get_vendor_for_mac()
-
-    @asyncio.coroutine
-    def get_vendor_for_mac(self):
-        """Try to find the vendor string for a given MAC address."""
-        # can't continue without a mac
-        if not self.mac:
-            return None
-
-        # prevent lookup of invalid macs
-        if not len(self.mac.split(':')) == 6:
-            return 'unknown'
-
-        # we only need the first 3 bytes of the mac for a lookup
-        # this improves somewhat on privacy
-        oui_bytes = self.mac.split(':')[0:3]
-        # bytes like 00 get truncates to 0, API needs full bytes
-        oui = '{:02x}:{:02x}:{:02x}'.format(*[int(b, 16) for b in oui_bytes])
-        url = 'http://api.macvendors.com/' + oui
-        resp = None
-        try:
-            websession = async_get_clientsession(self.hass)
-
-            with async_timeout.timeout(5, loop=self.hass.loop):
-                resp = yield from websession.get(url)
-            # mac vendor found, response is the string
-            if resp.status == 200:
-                vendor_string = yield from resp.text()
-                return vendor_string
-            # if vendor is not known to the API (404) or there
-            # was a failure during the lookup (500); set vendor
-            # to something other then None to prevent retry
-            # as the value is only relevant when it is to be stored
-            # in the 'known_devices.yaml' file which only happens
-            # the first time the device is seen.
-            return 'unknown'
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError):
-            # same as above
-            return 'unknown'
-        finally:
-            if resp is not None:
-                yield from resp.release()
-
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     """Load devices from YAML configuration file."""
@@ -543,8 +498,7 @@ def async_load_config(path: str, hass: HomeAssistantType,
         vol.Optional('gravatar', default=None): vol.Any(None, cv.string),
         vol.Optional('picture', default=None): vol.Any(None, cv.string),
         vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
-            cv.time_period, cv.positive_timedelta),
-        vol.Optional('vendor', default=None): vol.Any(None, cv.string),
+            cv.time_period, cv.positive_timedelta)
     })
     try:
         result = []
@@ -607,8 +561,7 @@ def update_config(path: str, dev_id: str, device: Device):
             'mac': device.mac,
             'picture': device.config_picture,
             'track': device.track,
-            CONF_AWAY_HIDE: device.away_hide,
-            'vendor': device.vendor,
+            CONF_AWAY_HIDE: device.away_hide
         }}
         out.write('\n')
         out.write(dump(device))

@@ -12,11 +12,10 @@ from tests.common import (
     fire_time_changed, get_test_home_assistant, assert_setup_component)
 
 
-# pylint: disable=invalid-name
 class TestAutomationTime(unittest.TestCase):
     """Test the event automation."""
 
-    def setUp(self):
+    def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components.append('group')
@@ -24,12 +23,11 @@ class TestAutomationTime(unittest.TestCase):
 
         @callback
         def record_call(service):
-            """Helper to record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):
+    def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
 

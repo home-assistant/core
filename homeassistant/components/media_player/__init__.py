@@ -722,35 +722,28 @@ def _async_fetch_image(hass, url):
         return cache_images[url]
 
     content, content_type = (None, None)
-    websession = async_get_clientsession(hass)
-    response = None
     try:
+        websession = async_get_clientsession(hass)
         with async_timeout.timeout(10, loop=hass.loop):
             response = yield from websession.get(url)
-        if response.status == 200:
-            content = yield from response.read()
-            content_type = response.headers.get(CONTENT_TYPE_HEADER)
-
+            if response.status == 200:
+                content = yield from response.read()
+                content_type = response.headers.get(CONTENT_TYPE_HEADER)
+            yield from response.release()
     except asyncio.TimeoutError:
         pass
 
-    finally:
-        if response is not None:
-            yield from response.release()
+    if content:
+        cache_images[url] = (content, content_type)
+        cache_urls.append(url)
 
-    if not content:
-        return (None, None)
+        while len(cache_urls) > cache_maxsize:
+            # remove oldest item from cache
+            oldest_url = cache_urls[0]
+            if oldest_url in cache_images:
+                del cache_images[oldest_url]
 
-    cache_images[url] = (content, content_type)
-    cache_urls.append(url)
-
-    while len(cache_urls) > cache_maxsize:
-        # remove oldest item from cache
-        oldest_url = cache_urls[0]
-        if oldest_url in cache_images:
-            del cache_images[oldest_url]
-
-        cache_urls = cache_urls[1:]
+            cache_urls = cache_urls[1:]
 
     return content, content_type
 

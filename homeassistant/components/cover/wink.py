@@ -15,18 +15,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink cover platform."""
     import pywink
 
-    add_devices(WinkCoverDevice(shade, hass) for shade in
+    add_devices(WinkCoverDevice(shade) for shade in
                 pywink.get_shades())
-    add_devices(WinkCoverDevice(door, hass) for door in
+    add_devices(WinkCoverDevice(door) for door in
                 pywink.get_garage_doors())
 
 
 class WinkCoverDevice(WinkDevice, CoverDevice):
     """Representation of a Wink cover device."""
 
-    def __init__(self, wink, hass):
+    def __init__(self, wink):
         """Initialize the cover."""
-        WinkDevice.__init__(self, wink, hass)
+        WinkDevice.__init__(self, wink)
 
     def close_cover(self):
         """Close the shade."""

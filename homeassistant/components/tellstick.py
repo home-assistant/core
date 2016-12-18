@@ -62,6 +62,8 @@ def setup(hass, config):
     from tellcore.library import DirectCallbackDispatcher
     from tellcore.telldus import TelldusCore
 
+    global TELLCORE_REGISTRY
+
     try:
         tellcore_lib = TelldusCore(
             callback_dispatcher=DirectCallbackDispatcher())
@@ -73,9 +75,8 @@ def setup(hass, config):
     all_tellcore_devices = tellcore_lib.devices()
 
     # Register devices
-    tellcore_registry = TellstickRegistry(hass, tellcore_lib)
-    tellcore_registry.register_tellcore_devices(all_tellcore_devices)
-    hass.data['tellcore_registry'] = tellcore_registry
+    TELLCORE_REGISTRY = TellstickRegistry(hass, tellcore_lib)
+    TELLCORE_REGISTRY.register_tellcore_devices(all_tellcore_devices)
 
     # Discover the switches
     _discover(hass, config, 'switch',
@@ -152,17 +153,17 @@ class TellstickDevice(Entity):
     Contains the common logic for all Tellstick devices.
     """
 
-    def __init__(self, tellcore_id, tellcore_registry, signal_repetitions):
+    def __init__(self, tellcore_id, signal_repetitions):
         """Initalize the Tellstick device."""
         self._signal_repetitions = signal_repetitions
         self._state = None
         # Look up our corresponding tellcore device
-        self._tellcore_device = tellcore_registry.get_tellcore_device(
+        self._tellcore_device = TELLCORE_REGISTRY.get_tellcore_device(
             tellcore_id)
         # Query tellcore for the current state
         self.update()
         # Add ourselves to the mapping
-        tellcore_registry.register_ha_device(tellcore_id, self)
+        TELLCORE_REGISTRY.register_ha_device(tellcore_id, self)
 
     @property
     def should_poll(self):

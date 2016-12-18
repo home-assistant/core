@@ -7,9 +7,8 @@ https://home-assistant.io/components/light.homematic/
 import logging
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.homematic import HMDevice
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.loader import get_component
+import homeassistant.components.homematic as homematic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,16 +22,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    homematic = get_component("homematic")
     return homematic.setup_hmdevice_discovery_helper(
-        hass,
         HMLight,
         discovery_info,
         add_devices
     )
 
 
-class HMLight(HMDevice, Light):
+class HMLight(homematic.HMDevice, Light):
     """Representation of a Homematic light."""
 
     @property

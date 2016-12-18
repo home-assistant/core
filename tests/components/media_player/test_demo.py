@@ -34,6 +34,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
 
     def test_source_select(self):
         """Test the input source service."""
+
         entity_id = 'media_player.lounge_room'
 
         assert setup_component(

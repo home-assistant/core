@@ -4,37 +4,35 @@ Provides functionality to notify people.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/notify/
 """
+from functools import partial
 import logging
 import os
-from functools import partial
 
 import voluptuous as vol
 
 import homeassistant.bootstrap as bootstrap
-import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import config_per_platform
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.util import slugify
 
-_LOGGER = logging.getLogger(__name__)
+DOMAIN = "notify"
 
-# Platform specific data
-ATTR_DATA = 'data'
-
-# Text to notify user of
-ATTR_MESSAGE = 'message'
+# Title of notification
+ATTR_TITLE = "title"
+ATTR_TITLE_DEFAULT = "Home Assistant"
 
 # Target of the notification (user, device, etc)
 ATTR_TARGET = 'target'
 
-# Title of notification
-ATTR_TITLE = 'title'
-ATTR_TITLE_DEFAULT = "Home Assistant"
+# Text to notify user of
+ATTR_MESSAGE = "message"
 
-DOMAIN = 'notify'
+# Platform specific data
+ATTR_DATA = 'data'
 
-SERVICE_NOTIFY = 'notify'
+SERVICE_NOTIFY = "notify"
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): cv.string,
@@ -47,6 +45,8 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_DATA): dict,
 })
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def send_message(hass, message, title=None, data=None):
@@ -78,7 +78,7 @@ def setup(hass, config):
             hass, config, DOMAIN, platform)
 
         if notify_implementation is None:
-            _LOGGER.error("Unknown notification service specified")
+            _LOGGER.error("Unknown notification service specified.")
             continue
 
         notify_service = notify_implementation.get_service(hass, p_config)
@@ -114,7 +114,7 @@ def setup(hass, config):
         if hasattr(notify_service, 'targets'):
             platform_name = (p_config.get(CONF_NAME) or platform)
             for name, target in notify_service.targets.items():
-                target_name = slugify('{}_{}'.format(platform_name, name))
+                target_name = slugify("{}_{}".format(platform_name, name))
                 targets[target_name] = target
                 hass.services.register(DOMAIN, target_name,
                                        service_call_handler,
@@ -124,9 +124,10 @@ def setup(hass, config):
         platform_name = (p_config.get(CONF_NAME) or SERVICE_NOTIFY)
         platform_name_slug = slugify(platform_name)
 
-        hass.services.register(
-            DOMAIN, platform_name_slug, service_call_handler,
-            descriptions.get(SERVICE_NOTIFY), schema=NOTIFY_SERVICE_SCHEMA)
+        hass.services.register(DOMAIN, platform_name_slug,
+                               service_call_handler,
+                               descriptions.get(SERVICE_NOTIFY),
+                               schema=NOTIFY_SERVICE_SCHEMA)
         success = True
 
     return success

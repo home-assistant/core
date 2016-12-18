@@ -70,9 +70,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    coordinates = {'lat': str(latitude),
-                   'lon': str(longitude),
-                   'msl': str(elevation)}
+    coordinates = dict(lat=latitude, lon=longitude, msl=elevation)
 
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
@@ -137,8 +135,8 @@ class YrData(object):
 
     def __init__(self, hass, coordinates, devices):
         """Initialize the data object."""
-        self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/'
-        self._urlparams = coordinates
+        self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/?' \
+            'lat={lat};lon={lon};msl={msl}'.format(**coordinates)
         self._nextrun = None
         self.devices = devices
         self.data = {}
@@ -157,25 +155,19 @@ class YrData(object):
                                               nxt)
 
         if self._nextrun is None or dt_util.utcnow() >= self._nextrun:
-            resp = None
             try:
                 websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
-                    resp = yield from websession.get(self._url,
-                                                     params=self._urlparams)
+                    resp = yield from websession.get(self._url)
                 if resp.status != 200:
-                    try_again('{} returned {}'.format(resp.url, resp.status))
+                    try_again('{} returned {}'.format(self._url, resp.status))
                     return
                 text = yield from resp.text()
-
+                self.hass.async_add_job(resp.release())
             except (asyncio.TimeoutError, aiohttp.errors.ClientError,
                     aiohttp.errors.ClientDisconnectedError) as err:
                 try_again(err)
                 return
-
-            finally:
-                if resp is not None:
-                    self.hass.async_add_job(resp.release())
 
             try:
                 import xmltodict

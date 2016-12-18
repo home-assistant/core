@@ -216,7 +216,7 @@ class MqttJson(Light):
             should_update = True
 
         if should_update:
-            self.schedule_update_ha_state()
+            self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -231,4 +231,4 @@ class MqttJson(Light):
         if self._optimistic:
             # Optimistically assume that the light has changed state.
             self._state = False
-            self.schedule_update_ha_state()
+            self.update_ha_state()

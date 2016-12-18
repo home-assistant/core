@@ -62,14 +62,7 @@ class DenonDevice(MediaPlayerDevice):
     def telnet_request(cls, telnet, command):
         """Execute `command` and return the response."""
         telnet.write(command.encode('ASCII') + b'\r')
-        lines = []
-        while True:
-            line = telnet.read_until(b'\r', timeout=0.2)
-            if not line:
-                break
-            lines.append(line.decode('ASCII').strip())
-
-        return lines[0]
+        return telnet.read_until(b'\r', timeout=0.2).decode('ASCII').strip()
 
     def telnet_command(self, command):
         """Establish a telnet connection and sends `command`."""
@@ -86,6 +79,9 @@ class DenonDevice(MediaPlayerDevice):
             return False
 
         self._pwstate = self.telnet_request(telnet, 'PW?')
+        # PW? sends also SISTATUS, which is not interesting
+        telnet.read_until(b"\r", timeout=0.2)
+
         volume_str = self.telnet_request(telnet, 'MV?')[len('MV'):]
         self._volume = int(volume_str) / 60
         self._muted = (self.telnet_request(telnet, 'MU?') == 'MUON')

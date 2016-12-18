@@ -3,7 +3,6 @@ import os
 import unittest
 from unittest import mock
 import logging
-import re
 import requests
 import requests_mock
 
@@ -18,8 +17,6 @@ from homeassistant.util import slugify
 from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture)
 
-from ...test_util.aiohttp import mock_aiohttp_client
-
 TEST_HOST = '127.0.0.1'
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,13 +25,6 @@ class TestDdwrt(unittest.TestCase):
     """Tests for the Ddwrt device tracker platform."""
 
     hass = None
-
-    def run(self, result=None):
-        """Mock out http calls to macvendor API for whole test suite."""
-        with mock_aiohttp_client() as aioclient_mock:
-            macvendor_re = re.compile('http://api.macvendors.com/.*')
-            aioclient_mock.get(macvendor_re, text='')
-            super().run(result)
 
     def setup_method(self, _):
         """Setup things to be run when tests are started."""
@@ -146,7 +136,6 @@ class TestDdwrt(unittest.TestCase):
                         CONF_USERNAME: 'fake_user',
                         CONF_PASSWORD: '0'
                     }})
-                self.hass.block_till_done()
 
             path = self.hass.config.path(device_tracker.YAML_DEVICES)
             devices = config.load_yaml_config_file(path)
@@ -175,7 +164,6 @@ class TestDdwrt(unittest.TestCase):
                         CONF_USERNAME: 'fake_user',
                         CONF_PASSWORD: '0'
                     }})
-                self.hass.block_till_done()
 
             path = self.hass.config.path(device_tracker.YAML_DEVICES)
             devices = config.load_yaml_config_file(path)
@@ -204,7 +192,6 @@ class TestDdwrt(unittest.TestCase):
                         CONF_USERNAME: 'fake_user',
                         CONF_PASSWORD: '0'
                     }})
-                self.hass.block_till_done()
 
             path = self.hass.config.path(device_tracker.YAML_DEVICES)
             devices = config.load_yaml_config_file(path)

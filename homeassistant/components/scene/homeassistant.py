@@ -4,14 +4,13 @@ Allow users to set and activate scenes.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene/
 """
-import asyncio
 from collections import namedtuple
 
 from homeassistant.components.scene import Scene
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_OFF, STATE_ON)
 from homeassistant.core import State
-from homeassistant.helpers.state import async_reproduce_state
+from homeassistant.helpers.state import reproduce_state
 
 DEPENDENCIES = ['group']
 STATE = 'scening'
@@ -21,24 +20,21 @@ CONF_ENTITIES = "entities"
 SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup home assistant scene entries."""
     scene_config = config.get("states")
 
     if not isinstance(scene_config, list):
         scene_config = [scene_config]
 
-    yield from async_add_devices(HomeAssistantScene(
-        hass, _process_config(scene)) for scene in scene_config)
+    add_devices(HomeAssistantScene(hass, _process_config(scene))
+                for scene in scene_config)
+
     return True
 
 
 def _process_config(scene_config):
-    """Process passed in config into a format to work with.
-
-    Async friendly.
-    """
+    """Process passed in config into a format to work with."""
     name = scene_config.get('name')
 
     states = {}
@@ -85,8 +81,6 @@ class HomeAssistantScene(Scene):
             ATTR_ENTITY_ID: list(self.scene_config.states.keys()),
         }
 
-    @asyncio.coroutine
-    def async_activate(self):
+    def activate(self):
         """Activate scene. Try to get entities into requested state."""
-        yield from async_reproduce_state(
-            self.hass, self.scene_config.states.values(), True)
+        reproduce_state(self.hass, self.scene_config.states.values(), True)

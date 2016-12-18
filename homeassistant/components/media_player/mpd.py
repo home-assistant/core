@@ -100,7 +100,7 @@ class MpdDevice(MediaPlayerDevice):
         try:
             self.status = self.client.status()
             self.currentsong = self.client.currentsong()
-        except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError):
+        except (mpd.ConnectionError, BrokenPipeError, ValueError):
             # Cleanly disconnect in case connection is not in valid state
             try:
                 self.client.disconnect()
@@ -133,7 +133,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
-        return self.currentsong.get('file')
+        return self.currentsong['id']
 
     @property
     def media_content_type(self):
