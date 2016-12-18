@@ -4,7 +4,6 @@ Support for Blink4home cameras.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/blink4home/
 """
-# pylint: disable=E501
 
 import asyncio
 import logging
@@ -135,8 +134,8 @@ class Blink4Home(object):
                                   key, value)
                     # choose network from config or
                     # the first one (maybe the only one)
-                    if not found and (self._network == 0 or
-                                    str(self._network) == key):
+                    if not found and \
+                            (self._network == 0 or str(self._network) == key):
                         self._network_id = key
                         found = True
 
