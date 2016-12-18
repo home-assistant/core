@@ -27,12 +27,15 @@ switch:
        name: Living Room
 
 """
+import logging
 from time import sleep
 from datetime import timedelta
 from homeassistant.components.switch import SwitchDevice
 import homeassistant.util as util
 
 DEPENDENCIES = ['insteon_local']
+
+_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -90,7 +93,8 @@ class InsteonLocalSwitchDevice(SwitchDevice):
             attempts += 1
 
         if 'cmd2' in resp:
-            self._value = int(resp['cmd2'], 16)
+            _LOGGER.info("cmd2 value = " + resp['cmd2'])
+            self._state = int(resp['cmd2'], 16) > 0
 
     @property
     def is_on(self):
