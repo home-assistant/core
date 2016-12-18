@@ -30,11 +30,17 @@ light:
 
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light)
+import homeassistant.util as util
 from time import sleep
+from datetime import timedelta
+
 
 DEPENDENCIES = ['insteon_local']
 
 SUPPORT_INSTEON_LOCAL = SUPPORT_BRIGHTNESS
+
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=25)
+MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 DOMAIN = "light"
 
@@ -78,25 +84,26 @@ class InsteonLocalDimmerDevice(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._value / 100 * 255
+        return self._value
 
+    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Update state of the sensor."""
         id = self.node.deviceId.upper()
         self.node.hub.directCommand(id, '19', '00')
         resp = self.node.hub.getBufferStatus(id)
         attempts = 1
-        while 'cmd2' not in resp and attempts > 9:
+        while 'cmd2' not in resp and attempts < 9:
             if attempts % 3 == 0:
                 self.node.hub.directCommand(id, '19', '00')
-            sleep(2)
+            else:
+                sleep(1)
             resp = self.node.hub.getBufferStatus(id)
             attempts += 1
 
-        if resp is not None:
+        if 'cmd2' in resp:
             self._value = int(resp['cmd2'], 16)
-        else:
-            self._value = 0
+
 
     @property
     def is_on(self):
@@ -110,8 +117,8 @@ class InsteonLocalDimmerDevice(Light):
 
     def turn_on(self, **kwargs):
         """Turn device on."""
-        self._value = self.node.on(100)
+        self.node.on(100)
 
     def turn_off(self, **kwargs):
         """Turn device off."""
-        self._value = self.node.offInstant()
+        self.node.offInstant()

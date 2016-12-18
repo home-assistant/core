@@ -32,6 +32,10 @@ DEPENDENCIES = ['insteon_local']
 from homeassistant.components.switch import SwitchDevice
 
 from time import sleep
+from datetime import timedelta
+
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=25)
+MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 DOMAIN = "switch"
 
@@ -75,34 +79,29 @@ class InsteonLocalSwitchDevice(SwitchDevice):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._value / 100 * 255
-    
+
+    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Update state of the sensor."""
         id = self.node.deviceId.upper()
         self.node.hub.directCommand(id, '19', '00')
         resp = self.node.hub.getBufferStatus(id)
         attempts = 1
-        while 'cmd2' not in resp and attempts > 9:
+        while 'cmd2' not in resp and attempts < 9:
             if attempts % 3 == 0:
                 self.node.hub.directCommand(id, '19', '00')
-            sleep(2)
+            else:
+                sleep(2)
             resp = self.node.hub.getBufferStatus(id)
             attempts += 1
 
-        if resp is not None:
+        if 'cmd2' in resp:
             self._value = int(resp['cmd2'], 16)
-        else:
-            self._value = 0
 
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
         return self._value != 0
-    
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_INSTEON_LOCAL
     
     def turn_on(self, **kwargs):
         """Turn device on."""
