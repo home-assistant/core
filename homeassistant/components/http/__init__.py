@@ -288,16 +288,10 @@ class HomeAssistantWSGI(object):
                 cors_added.add(route)
 
         if self.ssl_certificate:
-            try:
-                context = ssl.SSLContext(SSL_VERSION)
-                context.options |= SSL_OPTS
-                context.set_ciphers(CIPHERS)
-                context.load_cert_chain(self.ssl_certificate, self.ssl_key)
-            except OSError as error:
-                _LOGGER.error("Could not read SSL certificate from %s: %s",
-                              self.ssl_certificate, error)
-                context = None
-                return
+            context = ssl.SSLContext(SSL_VERSION)
+            context.options |= SSL_OPTS
+            context.set_ciphers(CIPHERS)
+            context.load_cert_chain(self.ssl_certificate, self.ssl_key)
         else:
             context = None
 
@@ -311,24 +305,18 @@ class HomeAssistantWSGI(object):
 
         self._handler = self.app.make_handler()
 
-        try:
-            self.server = yield from self.hass.loop.create_server(
-                self._handler, self.server_host, self.server_port, ssl=context)
-        except OSError as error:
-            _LOGGER.error("Failed to create HTTP server at port %d: %s",
-                          self.server_port, error)
+        self.server = yield from self.hass.loop.create_server(
+            self._handler, self.server_host, self.server_port, ssl=context)
 
         self.app._frozen = False  # pylint: disable=protected-access
 
     @asyncio.coroutine
     def stop(self):
         """Stop the wsgi server."""
-        if self.server:
-            self.server.close()
-            yield from self.server.wait_closed()
+        self.server.close()
+        yield from self.server.wait_closed()
         yield from self.app.shutdown()
-        if self._handler:
-            yield from self._handler.finish_connections(60.0)
+        yield from self._handler.finish_connections(60.0)
         yield from self.app.cleanup()
 
 

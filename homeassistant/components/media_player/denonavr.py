@@ -13,27 +13,26 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
     MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_TURN_ON,
-    MEDIA_TYPE_MUSIC, SUPPORT_VOLUME_SET)
+    MEDIA_TYPE_MUSIC)
 from homeassistant.const import (
     CONF_HOST, STATE_OFF, STATE_PLAYING, STATE_PAUSED,
     CONF_NAME, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.2.2']
+REQUIREMENTS = ['denonavr==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = None
-KEY_DENON_CACHE = 'denonavr_hosts'
 
 SUPPORT_DENON = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_SELECT_SOURCE | SUPPORT_PLAY_MEDIA | \
     SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_SET
+    SUPPORT_NEXT_TRACK
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
+    vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -42,53 +41,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Denon platform."""
     import denonavr
 
-    # Initialize list with receivers to be started
-    receivers = []
+    receiver = denonavr.DenonAVR(config.get(CONF_HOST), config.get(CONF_NAME))
 
-    cache = hass.data.get(KEY_DENON_CACHE)
-    if cache is None:
-        cache = hass.data[KEY_DENON_CACHE] = set()
-
-    # Start assignment of host and name
-    # 1. option: manual setting
-    if config.get(CONF_HOST) is not None:
-        host = config.get(CONF_HOST)
-        name = config.get(CONF_NAME)
-        # Check if host not in cache, append it and save for later starting
-        if host not in cache:
-            cache.add(host)
-            receivers.append(
-                DenonDevice(denonavr.DenonAVR(host, name)))
-            _LOGGER.info("Denon receiver at host %s initialized", host)
-    # 2. option: discovery using netdisco
-    if discovery_info is not None:
-        host = discovery_info[0]
-        name = discovery_info[1]
-        # Check if host not in cache, append it and save for later starting
-        if host not in cache:
-            cache.add(host)
-            receivers.append(
-                DenonDevice(denonavr.DenonAVR(host, name)))
-            _LOGGER.info("Denon receiver at host %s initialized", host)
-    # 3. option: discovery using denonavr library
-    if config.get(CONF_HOST) is None and discovery_info is None:
-        d_receivers = denonavr.discover()
-        # More than one receiver could be discovered by that method
-        if d_receivers is not None:
-            for d_receiver in d_receivers:
-                host = d_receiver["host"]
-                name = d_receiver["friendlyName"]
-                # Check if host not in cache, append it and save for later
-                # starting
-                if host not in cache:
-                    cache.add(host)
-                    receivers.append(
-                        DenonDevice(denonavr.DenonAVR(host, name)))
-                    _LOGGER.info("Denon receiver at host %s initialized", host)
-
-    # Add all freshly discovered receivers
-    if receivers:
-        add_devices(receivers)
+    add_devices([DenonDevice(receiver)])
+    _LOGGER.info("Denon receiver at host %s initialized",
+                 config.get(CONF_HOST))
 
 
 class DenonDevice(MediaPlayerDevice):
@@ -150,8 +107,7 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        # Volume is sent in a format like -50.0. Minimum is -80.0,
-        # maximum is 18.0
+        # Volume is send in a format like -50.0. Minimum is around -80.0
         return (float(self._volume) + 80) / 100
 
     @property
@@ -283,22 +239,6 @@ class DenonDevice(MediaPlayerDevice):
     def volume_down(self):
         """Volume down media player."""
         return self._receiver.volume_down()
-
-    def set_volume_level(self, volume):
-        """Set volume level, range 0..1."""
-        # Volume has to be sent in a format like -50.0. Minimum is -80.0,
-        # maximum is 18.0
-        volume_denon = float((volume * 100) - 80)
-        if volume_denon > 18:
-            volume_denon = float(18)
-        try:
-            if self._receiver.set_volume(volume_denon):
-                self._volume = volume_denon
-                return True
-            else:
-                return False
-        except ValueError:
-            return False
 
     def mute_volume(self, mute):
         """Send mute command."""

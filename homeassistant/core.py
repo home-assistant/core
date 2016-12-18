@@ -184,8 +184,6 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-        if target is None:
-            raise ValueError("Don't call add_job with None.")
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     @callback

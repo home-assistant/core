@@ -7,9 +7,7 @@ import requests
 
 from homeassistant import bootstrap, const, core
 import homeassistant.components as core_components
-from homeassistant.components import (
-    emulated_hue, http, light, script, media_player
-)
+from homeassistant.components import emulated_hue, http, light, script
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_ON, HUE_API_STATE_BRI)
@@ -75,14 +73,6 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             }
         })
 
-        bootstrap.setup_component(cls.hass, media_player.DOMAIN, {
-            'media_player': [
-                {
-                    'platform': 'demo',
-                }
-            ]
-        })
-
         cls.hass.start()
 
         # Kitchen light is explicitly excluded from being exposed
@@ -121,10 +111,6 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertTrue('light.bed_light' in result_json)
         self.assertTrue('script.set_kitchen_light' in result_json)
         self.assertTrue('light.kitchen_lights' not in result_json)
-        self.assertTrue('media_player.living_room' in result_json)
-        self.assertTrue('media_player.bedroom' in result_json)
-        self.assertTrue('media_player.walkman' in result_json)
-        self.assertTrue('media_player.lounge_room' in result_json)
 
     def test_get_light_state(self):
         """Test the getting of light state."""
@@ -141,21 +127,6 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         self.assertEqual(office_json['state'][HUE_API_STATE_ON], True)
         self.assertEqual(office_json['state'][HUE_API_STATE_BRI], 127)
-
-        # Check all lights view
-        result = requests.get(
-            BRIDGE_URL_BASE.format('/api/username/lights'), timeout=5)
-
-        self.assertEqual(result.status_code, 200)
-        self.assertTrue('application/json' in result.headers['content-type'])
-
-        result_json = result.json()
-
-        self.assertTrue('light.ceiling_lights' in result_json)
-        self.assertEqual(
-            result_json['light.ceiling_lights']['state'][HUE_API_STATE_BRI],
-            127,
-        )
 
         # Turn bedroom light off
         self.hass.services.call(
@@ -233,36 +204,13 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(script_result.status_code, 200)
         self.assertEqual(len(script_result_json), 2)
 
+        # Wait until script is complete before continuing
+        self.hass.block_till_done()
+
         kitchen_light = self.hass.states.get('light.kitchen_lights')
         self.assertEqual(kitchen_light.state, 'on')
         self.assertEqual(
             kitchen_light.attributes[light.ATTR_BRIGHTNESS],
-            level)
-
-    def test_put_light_state_media_player(self):
-        """Test turning on media player and setting volume."""
-        # Turn the music player off first
-        self.hass.services.call(
-            media_player.DOMAIN, const.SERVICE_TURN_OFF,
-            {const.ATTR_ENTITY_ID: 'media_player.walkman'},
-            blocking=True)
-
-        # Emulated hue converts 0.0-1.0 to 0-255.
-        level = 0.25
-        brightness = round(level * 255)
-
-        mp_result = self.perform_put_light_state(
-            'media_player.walkman', True, brightness)
-
-        mp_result_json = mp_result.json()
-
-        self.assertEqual(mp_result.status_code, 200)
-        self.assertEqual(len(mp_result_json), 2)
-
-        walkman = self.hass.states.get('media_player.walkman')
-        self.assertEqual(walkman.state, 'playing')
-        self.assertEqual(
-            walkman.attributes[media_player.ATTR_MEDIA_VOLUME_LEVEL],
             level)
 
     # pylint: disable=invalid-name
@@ -403,8 +351,5 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         result = requests.put(
             url, data=json.dumps(data), timeout=5, headers=req_headers)
-
-        # Wait until state change is complete before continuing
-        self.hass.block_till_done()
 
         return result

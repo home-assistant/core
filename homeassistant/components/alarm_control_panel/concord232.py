@@ -72,6 +72,11 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         self.update()
 
     @property
+    def should_poll(self):
+        """Polling needed."""
+        return True
+
+    @property
     def name(self):
         """Return the name of the device."""
         return self._name
@@ -121,3 +126,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._alarm.arm('auto')
+
+    def alarm_trigger(self, code=None):
+        """Alarm trigger command."""
+        raise NotImplementedError()

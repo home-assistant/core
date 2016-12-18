@@ -76,17 +76,11 @@ class KodiDevice(MediaPlayerDevice):
         import jsonrpc_requests
         self._name = name
         self._url = url
-        self._basic_auth_url = None
 
         kwargs = {'timeout': 5}
 
         if auth is not None:
             kwargs['auth'] = auth
-            scheme, netloc, path, query, fragment = urllib.parse.urlsplit(url)
-            self._basic_auth_url = \
-                urllib.parse.urlunsplit((scheme, '{}:{}@{}'.format
-                                         (auth[0], auth[1], netloc),
-                                         path, query, fragment))
 
         self._server = jsonrpc_requests.Server(
             '{}/jsonrpc'.format(self._url), **kwargs)
@@ -201,11 +195,6 @@ class KodiDevice(MediaPlayerDevice):
         url_components = urllib.parse.urlparse(self._item['thumbnail'])
 
         if url_components.scheme == 'image':
-            if self._basic_auth_url is not None:
-                return '{}/image/{}'.format(
-                    self._basic_auth_url,
-                    urllib.parse.quote_plus(self._item['thumbnail']))
-
             return '{}/image/{}'.format(
                 self._url,
                 urllib.parse.quote_plus(self._item['thumbnail']))

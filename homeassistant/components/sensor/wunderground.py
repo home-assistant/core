@@ -19,15 +19,12 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-_RESOURCE = 'http://api.wunderground.com/api/{}/conditions/{}/q/'
-_ALERTS = 'http://api.wunderground.com/api/{}/alerts/{}/q/'
+_RESOURCE = 'http://api.wunderground.com/api/{}/conditions/q/'
+_ALERTS = 'http://api.wunderground.com/api/{}/alerts/q/'
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by the WUnderground weather service"
 CONF_PWS_ID = 'pws_id'
-CONF_LANG = 'lang'
-
-DEFAULT_LANG = 'EN'
 
 MIN_TIME_BETWEEN_UPDATES_ALERTS = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES_OBSERVATION = timedelta(minutes=5)
@@ -83,29 +80,9 @@ ALERTS_ATTRS = [
     'message',
 ]
 
-# Language Supported Codes
-LANG_CODES = [
-    'AF', 'AL', 'AR', 'HY', 'AZ', 'EU',
-    'BY', 'BU', 'LI', 'MY', 'CA', 'CN',
-    'TW', 'CR', 'CZ', 'DK', 'DV', 'NL',
-    'EN', 'EO', 'ET', 'FA', 'FI', 'FR',
-    'FC', 'GZ', 'DL', 'KA', 'GR', 'GU',
-    'HT', 'IL', 'HI', 'HU', 'IS', 'IO',
-    'ID', 'IR', 'IT', 'JP', 'JW', 'KM',
-    'KR', 'KU', 'LA', 'LV', 'LT', 'ND',
-    'MK', 'MT', 'GM', 'MI', 'MR', 'MN',
-    'NO', 'OC', 'PS', 'GN', 'PL', 'BR',
-    'PA', 'PU', 'RO', 'RU', 'SR', 'SK',
-    'SL', 'SP', 'SI', 'SW', 'CH', 'TL',
-    'TT', 'TH', 'UA', 'UZ', 'VU', 'CY',
-    'SN', 'JI', 'YI',
-]
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_PWS_ID): cv.string,
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG):
-        vol.All(vol.In(LANG_CODES)),
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
@@ -115,8 +92,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the WUnderground sensor."""
     rest = WUndergroundData(hass,
                             config.get(CONF_API_KEY),
-                            config.get(CONF_PWS_ID),
-                            config.get(CONF_LANG))
+                            config.get(CONF_PWS_ID, None))
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(WUndergroundSensor(rest, variable))
@@ -196,7 +172,7 @@ class WUndergroundSensor(Entity):
     @property
     def entity_picture(self):
         """Return the entity picture."""
-        if self.rest.data and self._condition == 'weather':
+        if self._condition == 'weather':
             url = self.rest.data['icon_url']
             return re.sub(r'^http://', 'https://', url, flags=re.IGNORECASE)
 
@@ -216,19 +192,18 @@ class WUndergroundSensor(Entity):
 class WUndergroundData(object):
     """Get data from WUnderground."""
 
-    def __init__(self, hass, api_key, pws_id, lang):
+    def __init__(self, hass, api_key, pws_id=None):
         """Initialize the data object."""
         self._hass = hass
         self._api_key = api_key
         self._pws_id = pws_id
-        self._lang = 'lang:{}'.format(lang)
         self._latitude = hass.config.latitude
         self._longitude = hass.config.longitude
         self.data = None
         self.alerts = None
 
     def _build_url(self, baseurl=_RESOURCE):
-        url = baseurl.format(self._api_key, self._lang)
+        url = baseurl.format(self._api_key)
         if self._pws_id:
             url = url + 'pws:{}'.format(self._pws_id)
         else:

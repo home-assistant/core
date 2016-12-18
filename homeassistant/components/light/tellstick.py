@@ -72,11 +72,7 @@ class TellstickLight(TellstickDevice, Light):
             if brightness is not None:
                 self._brightness = brightness
 
-            # _brightness is not defined when called from super
-            try:
-                self._state = (self._brightness > 0)
-            except AttributeError:
-                self._state = True
+            self._state = (self._brightness > 0)
         else:
             self._state = False
 

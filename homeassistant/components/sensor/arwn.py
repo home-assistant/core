@@ -1,25 +1,23 @@
-"""
-Support for collecting data from the ARWN project.
+"""Support for collecting data from the ARWN project.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.arwn/
+For more details about this platform, please refer to the
+documentation at https://home-assistant.io/components/sensor.arwn/
+
 """
 import json
 import logging
-
+from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELSIUS)
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-_LOGGER = logging.getLogger(__name__)
-
 DEPENDENCIES = ['mqtt']
-DOMAIN = 'arwn'
 
+DOMAIN = "arwn"
+TOPIC = 'arwn/#'
 SENSORS = {}
 
-TOPIC = 'arwn/#'
+_LOGGER = logging.getLogger(__name__)
 
 
 def discover_sensors(topic, payload):
@@ -27,23 +25,23 @@ def discover_sensors(topic, payload):
     parts = topic.split('/')
     unit = payload.get('units', '')
     domain = parts[1]
-    if domain == 'temperature':
+    if domain == "temperature":
         name = parts[2]
-        if unit == 'F':
+        if unit == "F":
             unit = TEMP_FAHRENHEIT
         else:
             unit = TEMP_CELSIUS
-        return ArwnSensor(name, 'temp', unit)
-    if domain == 'barometer':
-        return ArwnSensor('Barometer', 'pressure', unit)
-    if domain == 'wind':
-        return (ArwnSensor('Wind Speed', 'speed', unit),
-                ArwnSensor('Wind Gust', 'gust', unit),
-                ArwnSensor('Wind Direction', 'direction', '°'))
+        return (ArwnSensor(name, 'temp', unit),)
+    if domain == "barometer":
+        return (ArwnSensor("Barometer", 'pressure', unit),)
+    if domain == "wind":
+        return (ArwnSensor("Wind Speed", 'speed', unit),
+                ArwnSensor("Wind Gust", 'gust', unit),
+                ArwnSensor("Wind Direction", 'direction', '°'))
 
 
 def _slug(name):
-    return 'sensor.arwn_{}'.format(slugify(name))
+    return "sensor.arwn_%s" % slugify(name)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -86,7 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ArwnSensor(Entity):
-    """Representation of an ARWN sensor."""
+    """Represents an ARWN sensor."""
 
     def __init__(self, name, state_key, units):
         """Initialize the sensor."""

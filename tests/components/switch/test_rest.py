@@ -1,83 +1,76 @@
 """The tests for the REST switch platform."""
-import asyncio
+import unittest
+from unittest.mock import patch
 
-import aiohttp
+import pytest
+import requests
+from requests.exceptions import Timeout
+import requests_mock
 
 import homeassistant.components.switch.rest as rest
 from homeassistant.bootstrap import setup_component
-from homeassistant.util.async import run_coroutine_threadsafe
-from homeassistant.helpers.template import Template
 from tests.common import get_test_home_assistant, assert_setup_component
 
 
-class TestRestSwitchSetup:
+class TestRestSwitchSetup(unittest.TestCase):
     """Tests for setting up the REST switch platform."""
 
-    def setup_method(self):
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def teardown_method(self):
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
     def test_setup_missing_config(self):
         """Test setup with configuration missing required entries."""
-        assert not run_coroutine_threadsafe(
-            rest.async_setup_platform(self.hass, {
-                'platform': 'rest'
-            }, None),
-            self.hass.loop
-        ).result()
+        self.assertFalse(rest.setup_platform(self.hass, {
+            'platform': 'rest'
+        }, None))
 
     def test_setup_missing_schema(self):
         """Test setup with resource missing schema."""
-        assert not run_coroutine_threadsafe(
-            rest.async_setup_platform(self.hass, {
-                'platform': 'rest',
-                'resource': 'localhost'
-            }, None),
-            self.hass.loop
-        ).result()
+        self.assertFalse(rest.setup_platform(self.hass, {
+            'platform': 'rest',
+            'resource': 'localhost'
+        }, None))
 
-    def test_setup_failed_connect(self, aioclient_mock):
+    @patch('requests.get', side_effect=requests.exceptions.ConnectionError())
+    def test_setup_failed_connect(self, mock_req):
         """Test setup when connection error occurs."""
-        aioclient_mock.get('http://localhost', exc=aiohttp.errors.ClientError)
-        assert not run_coroutine_threadsafe(
-            rest.async_setup_platform(self.hass, {
-                'platform': 'rest',
-                'resource': 'http://localhost',
-            }, None),
-            self.hass.loop
-        ).result()
+        self.assertFalse(rest.setup_platform(self.hass, {
+            'platform': 'rest',
+            'resource': 'http://localhost',
+        }, None))
 
-    def test_setup_timeout(self, aioclient_mock):
+    @patch('requests.get', side_effect=Timeout())
+    def test_setup_timeout(self, mock_req):
         """Test setup when connection timeout occurs."""
-        aioclient_mock.get('http://localhost', exc=asyncio.TimeoutError())
-        assert not run_coroutine_threadsafe(
-            rest.async_setup_platform(self.hass, {
+        with self.assertRaises(Timeout):
+            rest.setup_platform(self.hass, {
                 'platform': 'rest',
                 'resource': 'http://localhost',
-            }, None),
-            self.hass.loop
-        ).result()
+            }, None)
 
-    def test_setup_minimum(self, aioclient_mock):
+    @requests_mock.Mocker()
+    def test_setup_minimum(self, mock_req):
         """Test setup with minimum configuration."""
-        aioclient_mock.get('http://localhost', status=200)
-        with assert_setup_component(1, 'switch'):
-            assert setup_component(self.hass, 'switch', {
-                'switch': {
-                    'platform': 'rest',
-                    'resource': 'http://localhost'
-                }
-            })
-        assert aioclient_mock.call_count == 1
+        mock_req.get('http://localhost', status_code=200)
+        self.assertTrue(setup_component(self.hass, 'switch', {
+            'switch': {
+                'platform': 'rest',
+                'resource': 'http://localhost'
+            }
+        }))
+        self.assertEqual(1, mock_req.call_count)
+        assert_setup_component(1, 'switch')
 
-    def test_setup(self, aioclient_mock):
+    @requests_mock.Mocker()
+    def test_setup(self, mock_req):
         """Test setup with valid configuration."""
-        aioclient_mock.get('http://localhost', status=200)
-        assert setup_component(self.hass, 'switch', {
+        mock_req.get('localhost', status_code=200)
+        self.assertTrue(setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'rest',
                 'name': 'foo',
@@ -85,120 +78,111 @@ class TestRestSwitchSetup:
                 'body_on': 'custom on text',
                 'body_off': 'custom off text',
             }
-        })
-        assert aioclient_mock.call_count == 1
+        }))
+        self.assertEqual(1, mock_req.call_count)
         assert_setup_component(1, 'switch')
 
 
-class TestRestSwitch:
+@pytest.mark.skip
+class TestRestSwitch(unittest.TestCase):
     """Tests for REST switch platform."""
 
-    def setup_method(self):
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.name = 'foo'
         self.resource = 'http://localhost/'
-        self.body_on = Template('on', self.hass)
-        self.body_off = Template('off', self.hass)
+        self.body_on = 'on'
+        self.body_off = 'off'
         self.switch = rest.RestSwitch(self.hass, self.name, self.resource,
-                                      self.body_on, self.body_off, None, 10)
+                                      self.body_on, self.body_off)
 
-    def teardown_method(self):
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
     def test_name(self):
         """Test the name."""
-        assert self.name == self.switch.name
+        self.assertEqual(self.name, self.switch.name)
 
     def test_is_on_before_update(self):
         """Test is_on in initial state."""
-        assert self.switch.is_on is None
+        self.assertEqual(None, self.switch.is_on)
 
-    def test_turn_on_success(self, aioclient_mock):
+    @requests_mock.Mocker()
+    def test_turn_on_success(self, mock_req):
         """Test turn_on."""
-        aioclient_mock.post(self.resource, status=200)
-        run_coroutine_threadsafe(
-            self.switch.async_turn_on(), self.hass.loop).result()
+        mock_req.post(self.resource, status_code=200)
+        self.switch.turn_on()
 
-        assert self.body_on.template == \
-            aioclient_mock.mock_calls[-1][2].decode()
-        assert self.switch.is_on
+        self.assertEqual(self.body_on, mock_req.last_request.text)
+        self.assertEqual(True, self.switch.is_on)
 
-    def test_turn_on_status_not_ok(self, aioclient_mock):
+    @requests_mock.Mocker()
+    def test_turn_on_status_not_ok(self, mock_req):
         """Test turn_on when error status returned."""
-        aioclient_mock.post(self.resource, status=500)
-        run_coroutine_threadsafe(
-            self.switch.async_turn_on(), self.hass.loop).result()
+        mock_req.post(self.resource, status_code=500)
+        self.switch.turn_on()
 
-        assert self.body_on.template == \
-            aioclient_mock.mock_calls[-1][2].decode()
-        assert self.switch.is_on is None
+        self.assertEqual(self.body_on, mock_req.last_request.text)
+        self.assertEqual(None, self.switch.is_on)
 
-    def test_turn_on_timeout(self, aioclient_mock):
+    @patch('requests.post', side_effect=Timeout())
+    def test_turn_on_timeout(self, mock_req):
         """Test turn_on when timeout occurs."""
-        aioclient_mock.post(self.resource, status=500)
-        run_coroutine_threadsafe(
-            self.switch.async_turn_on(), self.hass.loop).result()
+        with self.assertRaises(Timeout):
+            self.switch.turn_on()
 
-        assert self.switch.is_on is None
-
-    def test_turn_off_success(self, aioclient_mock):
+    @requests_mock.Mocker()
+    def test_turn_off_success(self, mock_req):
         """Test turn_off."""
-        aioclient_mock.post(self.resource, status=200)
-        run_coroutine_threadsafe(
-            self.switch.async_turn_off(), self.hass.loop).result()
+        mock_req.post(self.resource, status_code=200)
+        self.switch.turn_off()
 
-        assert self.body_off.template == \
-            aioclient_mock.mock_calls[-1][2].decode()
-        assert not self.switch.is_on
+        self.assertEqual(self.body_off, mock_req.last_request.text)
+        self.assertEqual(False, self.switch.is_on)
 
-    def test_turn_off_status_not_ok(self, aioclient_mock):
+    @requests_mock.Mocker()
+    def test_turn_off_status_not_ok(self, mock_req):
         """Test turn_off when error status returned."""
-        aioclient_mock.post(self.resource, status=500)
-        run_coroutine_threadsafe(
-            self.switch.async_turn_off(), self.hass.loop).result()
+        mock_req.post(self.resource, status_code=500)
+        self.switch.turn_off()
 
-        assert self.body_off.template == \
-            aioclient_mock.mock_calls[-1][2].decode()
-        assert self.switch.is_on is None
+        self.assertEqual(self.body_off, mock_req.last_request.text)
+        self.assertEqual(None, self.switch.is_on)
 
-    def test_turn_off_timeout(self, aioclient_mock):
+    @patch('requests.post', side_effect=Timeout())
+    def test_turn_off_timeout(self, mock_req):
         """Test turn_off when timeout occurs."""
-        aioclient_mock.post(self.resource, exc=asyncio.TimeoutError())
-        run_coroutine_threadsafe(
-            self.switch.async_turn_on(), self.hass.loop).result()
+        with self.assertRaises(Timeout):
+            self.switch.turn_on()
 
-        assert self.switch.is_on is None
-
-    def test_update_when_on(self, aioclient_mock):
+    @requests_mock.Mocker()
+    def test_update_when_on(self, mock_req):
         """Test update when switch is on."""
-        aioclient_mock.get(self.resource, text=self.body_on.template)
-        run_coroutine_threadsafe(
-            self.switch.async_update(), self.hass.loop).result()
+        mock_req.get(self.resource, text=self.body_on)
+        self.switch.update()
 
-        assert self.switch.is_on
+        self.assertEqual(True, self.switch.is_on)
 
-    def test_update_when_off(self, aioclient_mock):
+    @requests_mock.Mocker()
+    def test_update_when_off(self, mock_req):
         """Test update when switch is off."""
-        aioclient_mock.get(self.resource, text=self.body_off.template)
-        run_coroutine_threadsafe(
-            self.switch.async_update(), self.hass.loop).result()
+        mock_req.get(self.resource, text=self.body_off)
+        self.switch.update()
 
-        assert not self.switch.is_on
+        self.assertEqual(False, self.switch.is_on)
 
-    def test_update_when_unknown(self, aioclient_mock):
+    @requests_mock.Mocker()
+    def test_update_when_unknown(self, mock_req):
         """Test update when unknown status returned."""
-        aioclient_mock.get(self.resource, text='unknown status')
-        run_coroutine_threadsafe(
-            self.switch.async_update(), self.hass.loop).result()
+        mock_req.get(self.resource, text='unknown status')
+        self.switch.update()
 
-        assert self.switch.is_on is None
+        self.assertEqual(None, self.switch.is_on)
 
-    def test_update_timeout(self, aioclient_mock):
+    @patch('requests.get', side_effect=Timeout())
+    def test_update_timeout(self, mock_req):
         """Test update when timeout occurs."""
-        aioclient_mock.get(self.resource, exc=asyncio.TimeoutError())
-        run_coroutine_threadsafe(
-            self.switch.async_update(), self.hass.loop).result()
-
-        assert self.switch.is_on is None
+        with self.assertRaises(Timeout):
+            self.switch.update()

@@ -31,7 +31,6 @@ CONF_MINUTE = 'minute'
 CONF_HOUR = 'hour'
 CONF_DAY = 'day'
 CONF_SERVER_ID = 'server_id'
-CONF_MANUAL = 'manual'
 
 SENSOR_TYPES = {
     'ping': ['Ping', 'ms'],
@@ -51,7 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
     vol.Optional(CONF_DAY):
         vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
-    vol.Optional(CONF_MANUAL, default=False): cv.boolean,
 })
 
 
@@ -137,12 +135,11 @@ class SpeedtestData(object):
         """Initialize the data object."""
         self.data = None
         self._server_id = config.get(CONF_SERVER_ID)
-        if not config.get(CONF_MANUAL):
-            track_time_change(hass, self.update,
-                              second=config.get(CONF_SECOND),
-                              minute=config.get(CONF_MINUTE),
-                              hour=config.get(CONF_HOUR),
-                              day=config.get(CONF_DAY))
+        track_time_change(hass, self.update,
+                          second=config.get(CONF_SECOND),
+                          minute=config.get(CONF_MINUTE),
+                          hour=config.get(CONF_HOUR),
+                          day=config.get(CONF_DAY))
 
     def update(self, now):
         """Get the latest data from speedtest.net."""

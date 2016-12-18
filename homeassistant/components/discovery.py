@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.helpers.discovery import load_platform, discover
 
-REQUIREMENTS = ['netdisco==0.8.1']
+REQUIREMENTS = ['netdisco==0.8.0']
 
 DOMAIN = 'discovery'
 
@@ -36,8 +36,6 @@ SERVICE_HANDLERS = {
     'yamaha': ('media_player', 'yamaha'),
     'logitech_mediaserver': ('media_player', 'squeezebox'),
     'directv': ('media_player', 'directv'),
-    'denonavr': ('media_player', 'denonavr'),
-    'samsung_tv': ('media_player', 'samsungtv'),
 }
 
 CONFIG_SCHEMA = vol.Schema({

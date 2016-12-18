@@ -18,8 +18,7 @@ from homeassistant.const import (
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
-                'operation_mode',
-                'hvac_state']
+                'operation_mode']
 
 SENSOR_TYPES_DEPRECATED = ['last_ip',
                            'local_ip',
@@ -129,20 +128,13 @@ class NestSensor(Entity):
 
         # device specific
         self._location = self.device.where
-        self._name = "{} {}".format(self.device.name_long,
-                                    self.variable.replace("_", " "))
+        self._name = self.device.name_long
         self._state = None
-        self._unit = None
 
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
+        return "{} {}".format(self._name, self.variable.replace("_", " "))
 
 
 class NestBasicSensor(NestSensor):
@@ -153,10 +145,13 @@ class NestBasicSensor(NestSensor):
         """Return the state of the sensor."""
         return self._state
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_UNITS.get(self.variable, None)
+
     def update(self):
         """Retrieve latest state."""
-        self._unit = SENSOR_UNITS.get(self.variable, None)
-
         if self.variable == 'operation_mode':
             self._state = getattr(self.device, "mode")
         else:
@@ -167,17 +162,20 @@ class NestTempSensor(NestSensor):
     """Representation of a Nest Temperature sensor."""
 
     @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        if self.device.temperature_scale == 'C':
+            return TEMP_CELSIUS
+        else:
+            return TEMP_FAHRENHEIT
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
 
     def update(self):
         """Retrieve latest state."""
-        if self.device.temperature_scale == 'C':
-            self._unit = TEMP_CELSIUS
-        else:
-            self._unit = TEMP_FAHRENHEIT
-
         temp = getattr(self.device, self.variable)
         if temp is None:
             self._state = None

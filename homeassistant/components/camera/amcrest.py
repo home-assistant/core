@@ -18,26 +18,16 @@ REQUIREMENTS = ['amcrest==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_RESOLUTION = 'resolution'
-
-DEFAULT_NAME = 'Amcrest Camera'
 DEFAULT_PORT = 80
-DEFAULT_RESOLUTION = 'high'
+DEFAULT_NAME = 'Amcrest Camera'
 
 NOTIFICATION_ID = 'amcrest_notification'
 NOTIFICATION_TITLE = 'Amcrest Camera Setup'
-
-RESOLUTION_LIST = {
-    'high': 0,
-    'low': 1,
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION):
-        vol.All(vol.In(RESOLUTION_LIST)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
@@ -74,14 +64,13 @@ class AmcrestCam(Camera):
     def __init__(self, device_info, data):
         """Initialize an Amcrest camera."""
         super(AmcrestCam, self).__init__()
-        self._data = data
         self._name = device_info.get(CONF_NAME)
-        self._resolution = RESOLUTION_LIST[device_info.get(CONF_RESOLUTION)]
+        self._data = data
 
     def camera_image(self):
         """Return a still image reponse from the camera."""
         # Send the request to snap a picture and return raw jpg data
-        response = self._data.camera.snapshot(channel=self._resolution)
+        response = self._data.camera.snapshot()
         return response.data
 
     @property

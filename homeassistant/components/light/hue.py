@@ -90,10 +90,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
-
-        if "HASS Bridge" in discovery_info[0]:
-            _LOGGER.info('Emulated hue found, will not add')
-            return False
     else:
         host = config.get(CONF_HOST, None)
 
@@ -142,14 +138,10 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
         configurator.request_done(request_id)
 
     lights = {}
-    lightgroups = {}
-    skip_groups = False
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_lights():
         """Update the Hue light objects with latest info from the bridge."""
-        nonlocal skip_groups
-
         try:
             api = bridge.get_api()
         except socket.error:
@@ -157,18 +149,9 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
             _LOGGER.exception("Cannot reach the bridge")
             return
 
-        api_lights = api.get('lights')
+        api_states = api.get('lights')
 
-        if not isinstance(api_lights, dict):
-            _LOGGER.error("Got unexpected result from Hue API")
-            return
-
-        if skip_groups:
-            api_groups = {}
-        else:
-            api_groups = api.get('groups')
-
-        if not isinstance(api_groups, dict):
+        if not isinstance(api_states, dict):
             _LOGGER.error("Got unexpected result from Hue API")
             return
 
@@ -180,7 +163,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
         else:
             bridge_type = 'hue'
 
-        for light_id, info in api_lights.items():
+        for light_id, info in api_states.items():
             if light_id not in lights:
                 lights[light_id] = HueLight(int(light_id), info,
                                             bridge, update_lights,
@@ -188,23 +171,6 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable):
                 new_lights.append(lights[light_id])
             else:
                 lights[light_id].info = info
-                lights[light_id].schedule_update_ha_state()
-
-        for lightgroup_id, info in api_groups.items():
-            if 'state' not in info:
-                _LOGGER.warning('Group info does not contain state. '
-                                'Please update your hub.')
-                skip_groups = True
-                break
-
-            if lightgroup_id not in lightgroups:
-                lightgroups[lightgroup_id] = HueLight(
-                    int(lightgroup_id), info, bridge, update_lights,
-                    bridge_type, allow_unreachable, True)
-                new_lights.append(lightgroups[lightgroup_id])
-            else:
-                lightgroups[lightgroup_id].info = info
-                lightgroups[lightgroup_id].schedule_update_ha_state()
 
         if new_lights:
             add_devices(new_lights)
@@ -259,20 +225,15 @@ class HueLight(Light):
     """Representation of a Hue light."""
 
     def __init__(self, light_id, info, bridge, update_lights,
-                 bridge_type, allow_unreachable, is_group=False):
+                 bridge_type, allow_unreachable):
         """Initialize the light."""
         self.light_id = light_id
         self.info = info
         self.bridge = bridge
         self.update_lights = update_lights
         self.bridge_type = bridge_type
-        self.allow_unreachable = allow_unreachable
-        self.is_group = is_group
 
-        if is_group:
-            self._command_func = self.bridge.set_group
-        else:
-            self._command_func = self.bridge.set_light
+        self.allow_unreachable = allow_unreachable
 
     @property
     def unique_id(self):
@@ -282,44 +243,33 @@ class HueLight(Light):
 
     @property
     def name(self):
-        """Return the name of the Hue light."""
+        """Return the mame of the Hue light."""
         return self.info.get('name', DEVICE_DEFAULT_NAME)
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if self.is_group:
-            return self.info['action'].get('bri')
-        else:
-            return self.info['state'].get('bri')
+        return self.info['state'].get('bri')
 
     @property
     def xy_color(self):
         """Return the XY color value."""
-        if self.is_group:
-            return self.info['action'].get('xy')
-        else:
-            return self.info['state'].get('xy')
+        return self.info['state'].get('xy')
 
     @property
     def color_temp(self):
         """Return the CT color value."""
-        if self.is_group:
-            return self.info['action'].get('ct')
-        else:
-            return self.info['state'].get('ct')
+        return self.info['state'].get('ct')
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        if self.is_group:
-            return self.info['state']['any_on']
+        self.update_lights()
+
+        if self.allow_unreachable:
+            return self.info['state']['on']
         else:
-            if self.allow_unreachable:
-                return self.info['state']['on']
-            else:
-                return self.info['state']['reachable'] and \
-                    self.info['state']['on']
+            return self.info['state']['reachable'] and self.info['state']['on']
 
     @property
     def supported_features(self):
@@ -368,7 +318,7 @@ class HueLight(Light):
         elif self.bridge_type == 'hue':
             command['effect'] = 'none'
 
-        self._command_func(self.light_id, command)
+        self.bridge.set_light(self.light_id, command)
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
@@ -390,7 +340,7 @@ class HueLight(Light):
         elif self.bridge_type == 'hue':
             command['alert'] = 'none'
 
-        self._command_func(self.light_id, command)
+        self.bridge.set_light(self.light_id, command)
 
     def update(self):
         """Synchronize state with bridge."""

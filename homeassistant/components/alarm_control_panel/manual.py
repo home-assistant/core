@@ -116,7 +116,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
         self._state = STATE_ALARM_DISARMED
         self._state_ts = dt_util.utcnow()
-        self.schedule_update_ha_state()
+        self.update_ha_state()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
@@ -125,7 +125,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
         self._state = STATE_ALARM_ARMED_HOME
         self._state_ts = dt_util.utcnow()
-        self.schedule_update_ha_state()
+        self.update_ha_state()
 
         if self._pending_time:
             track_point_in_time(
@@ -139,7 +139,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
         self._state = STATE_ALARM_ARMED_AWAY
         self._state_ts = dt_util.utcnow()
-        self.schedule_update_ha_state()
+        self.update_ha_state()
 
         if self._pending_time:
             track_point_in_time(
@@ -151,7 +151,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
         self._pre_trigger_state = self._state
         self._state = STATE_ALARM_TRIGGERED
         self._state_ts = dt_util.utcnow()
-        self.schedule_update_ha_state()
+        self.update_ha_state()
 
         if self._trigger_time:
             track_point_in_time(

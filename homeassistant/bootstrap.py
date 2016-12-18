@@ -20,7 +20,6 @@ import homeassistant.loader as loader
 import homeassistant.util.package as pkg_util
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
-from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
@@ -549,11 +548,8 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
         err_handler.setFormatter(
             logging.Formatter('%(asctime)s %(name)s: %(message)s',
                               datefmt='%y-%m-%d %H:%M:%S'))
-
-        async_handler = AsyncHandler(hass.loop, err_handler)
-
         logger = logging.getLogger('')
-        logger.addHandler(async_handler)
+        logger.addHandler(err_handler)
         logger.setLevel(logging.INFO)
 
     else:
