@@ -171,7 +171,7 @@ def test_api_base_url(loop):
         })
     )
 
-    assert hass.config.api.base_url == 'http://example.com:8123'
+    assert hass.config.api.base_url == 'http://example.com'
 
     assert loop.run_until_complete(
         bootstrap.async_setup_component(hass, 'http', {
