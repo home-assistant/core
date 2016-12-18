@@ -4,6 +4,8 @@ Support for Blink4home cameras.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/blink4home/
 """
+# pylint: disable=line too long
+
 import asyncio
 import logging
 from datetime import timedelta
@@ -13,7 +15,7 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -183,10 +185,10 @@ class Blink4Home(object):
                           response.text)
             self.update()
         else:
-           _LOGGER.debug('Received error response on arm: %s',
-                         response.status_code)
-           _LOGGER.error('Error arming in to the Blink4Home platform. Received status was %s.',
-                         response.status_code)
+            _LOGGER.debug('Received error response on arm: %s',
+                          response.status_code)
+            _LOGGER.error('Error arming in to the Blink4Home platform. Received status was %s.',
+                          response.status_code)
 
     def disarm(self, second_try=False):
         """Arm the system."""
@@ -217,10 +219,10 @@ class Blink4Home(object):
                           response.text)
             self.update()
         else:
-           _LOGGER.debug('Received error response on disarm: %s',
-                         response.status_code)
-           _LOGGER.error('Error disarming in to the Blink4Home platform. Received status was %s.',
-                         response.status_code)
+            _LOGGER.debug('Received error response on disarm: %s',
+                          response.status_code)
+            _LOGGER.error('Error disarming in to the Blink4Home platform. Received status was %s.',
+                          response.status_code)
 
     def update(self, second_try=False):
         """Update the status."""
@@ -254,7 +256,7 @@ class Blink4Home(object):
             self._armed = result['network']['armed']
             self._notifications = result['network']['notifications']
         else:
-           _LOGGER.debug('Received error response on arm: %s',
-                         response.status_code)
-           _LOGGER.error('Error arming in to the Blink4Home platform. Received status was %s.',
-                         response.status_code)
+            _LOGGER.debug('Received error response on arm: %s',
+                          response.status_code)
+            _LOGGER.error('Error arming in to the Blink4Home platform. Received status was %s.',
+                          response.status_code)
