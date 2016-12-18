@@ -62,7 +62,7 @@ class InsteonLocalSwitchDevice(SwitchDevice):
         """Initialize the device."""
         self.node = node
         self.node.deviceName = name
-        self._value = 0
+        self._state = False
 
     @property
     def name(self):
@@ -73,11 +73,6 @@ class InsteonLocalSwitchDevice(SwitchDevice):
     def unique_id(self):
         """Return the ID of this insteon node."""
         return self.node.deviceId
-
-    @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        return self._value / 100 * 255
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -100,14 +95,14 @@ class InsteonLocalSwitchDevice(SwitchDevice):
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        return self._value != 0
+        return self._state
 
     def turn_on(self, **kwargs):
         """Turn device on."""
-        if self.node.on(100):
-            self._value = 255
+        if self.node.on():
+            self._state = True
 
     def turn_off(self, **kwargs):
         """Turn device off."""
         if self.node.offInstant():
-            self._value = 0
+            self._state = False
