@@ -133,8 +133,10 @@ class Blink4Home(object):
                 for key, value in networks.items():
                     _LOGGER.debug('Network: %s, value: %s',
                                   key, value)
-                    # choose network from config or the first one (maybe the only one)
-                    if not found and (self._network == 0 or str(self._network) == key):
+                    # choose network from config or
+                    # the first one (maybe the only one)
+                    if not found and (self._network == 0 or
+                                    str(self._network) == key):
                         self._network_id = key
                         found = True
 
@@ -153,7 +155,8 @@ class Blink4Home(object):
                 self._api_key = ''
                 _LOGGER.debug('Received error response: %s',
                               response.status_code)
-                _LOGGER.error('Error logging in to the Blink4Home platform. Received status was %s.',
+                _LOGGER.error('Error logging in to the Blink4Home'
+                              ' platform. Received status was %s.',
                               response.status_code)
 
     def arm(self, second_try=False):
@@ -163,7 +166,8 @@ class Blink4Home(object):
             self._login(True)
 
         if not self._api_key:
-            _LOGGER.error('Couldn\'t arm system. There was a problem with the login.')
+            _LOGGER.error('Couldn\'t arm system. There was a problem'
+                          ' with the login.')
 
         url = (API_URL + '/network/' + str(self._network_id) + '/arm')
         headers = HEADERS
@@ -187,7 +191,8 @@ class Blink4Home(object):
         else:
             _LOGGER.debug('Received error response on arm: %s',
                           response.status_code)
-            _LOGGER.error('Error arming in to the Blink4Home platform. Received status was %s.',
+            _LOGGER.error('Error arming in to the Blink4Home'
+                          ' platform. Received status was %s.',
                           response.status_code)
 
     def disarm(self, second_try=False):
@@ -197,7 +202,8 @@ class Blink4Home(object):
             self._login(True)
 
         if self._api_key == '':
-            _LOGGER.error('Couldn\'t disarm system. There was a problem with the login.')
+            _LOGGER.error('Couldn\'t disarm system. There was '
+                          'a problem with the login.')
 
         url = (API_URL + '/network/' + str(self._network_id) + '/disarm')
         headers = HEADERS
@@ -221,7 +227,8 @@ class Blink4Home(object):
         else:
             _LOGGER.debug('Received error response on disarm: %s',
                           response.status_code)
-            _LOGGER.error('Error disarming in to the Blink4Home platform. Received status was %s.',
+            _LOGGER.error('Error disarming in to the Blink4Home'
+                          ' platform. Received status was %s.',
                           response.status_code)
 
     def update(self, second_try=False):
@@ -231,7 +238,8 @@ class Blink4Home(object):
             self._login()
 
         if self._api_key == '':
-            _LOGGER.error('Couldn\'t update the system. There was a problem with the login.')
+            _LOGGER.error('Couldn\'t update the system. There '
+                          'was a problem with the login.')
 
         url = (API_URL + '/homescreen')
         headers = HEADERS
@@ -258,5 +266,6 @@ class Blink4Home(object):
         else:
             _LOGGER.debug('Received error response on arm: %s',
                           response.status_code)
-            _LOGGER.error('Error arming in to the Blink4Home platform. Received status was %s.',
+            _LOGGER.error('Error arming in to the Blink4Home '
+                          'platform. Received status was %s.',
                           response.status_code)
