@@ -28,11 +28,11 @@ light:
 
 """
 
+from time import sleep
+from datetime import timedelta
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light)
 import homeassistant.util as util
-from time import sleep
-from datetime import timedelta
 
 
 DEPENDENCIES = ['insteon_local']
@@ -47,16 +47,16 @@ DOMAIN = "light"
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon local light platform."""
-    INSTEON_LOCAL = hass.data['insteon_local']
+    insteonhub = hass.data['insteon_local']
     devs = []
     if len(config) > 0:
         items = config['lights'].items()
 
         # todo: use getLinked instead
-        for key, light in items:
-            device = INSTEON_LOCAL.dimmer(light['device_id'])
+        for light in items:
+            device = insteonhub.dimmer(light[1]['device_id'])
             device.beep()
-            devs.append(InsteonLocalDimmerDevice(device, light['name']))
+            devs.append(InsteonLocalDimmerDevice(device, light[1]['name']))
         add_devices(devs)
 
 
@@ -87,16 +87,16 @@ class InsteonLocalDimmerDevice(Light):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Update state of the sensor."""
-        id = self.node.deviceId.upper()
-        self.node.hub.directCommand(id, '19', '00')
-        resp = self.node.hub.getBufferStatus(id)
+        devid = self.node.deviceId.upper()
+        self.node.hub.directCommand(devid, '19', '00')
+        resp = self.node.hub.getBufferStatus(devid)
         attempts = 1
         while 'cmd2' not in resp and attempts < 9:
             if attempts % 3 == 0:
-                self.node.hub.directCommand(id, '19', '00')
+                self.node.hub.directCommand(devid, '19', '00')
             else:
                 sleep(1)
-            resp = self.node.hub.getBufferStatus(id)
+            resp = self.node.hub.getBufferStatus(devid)
             attempts += 1
 
         if 'cmd2' in resp:
@@ -116,7 +116,7 @@ class InsteonLocalDimmerDevice(Light):
         """Turn device on."""
         brightness = 100
         if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS] / 255 * 100
+            brightness = int(kwargs[ATTR_BRIGHTNESS]) / 255 * 100
 
         self.node.on(brightness)
 

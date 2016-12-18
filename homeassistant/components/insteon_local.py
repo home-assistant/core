@@ -16,7 +16,6 @@ REQUIREMENTS = ['insteonlocal']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'insteon_local'
-INSTEON_LOCAL = None
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -38,13 +37,13 @@ def setup(hass, config):
     password = config[DOMAIN][CONF_PASSWORD]
     host = config[DOMAIN][CONF_HOST]
 
-    INSTEON_LOCAL = Hub(host, username, password)
+    insteonhub = Hub(host, username, password)
 
-    if INSTEON_LOCAL is None:
+    if insteonhub is None:
         _LOGGER.error("Could not connect to Insteon service")
         return False
 
-    hass.data['insteon_local'] = INSTEON_LOCAL
+    hass.data['insteon_local'] = insteonhub
     discovery.load_platform(hass, 'light', DOMAIN, {}, config)
     discovery.load_platform(hass, 'switch', DOMAIN, {}, config)
     return True

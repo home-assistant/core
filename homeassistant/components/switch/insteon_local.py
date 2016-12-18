@@ -27,10 +27,10 @@ switch:
        name: Living Room
 
 """
-from homeassistant.components.switch import SwitchDevice
-import homeassistant.util as util
 from time import sleep
 from datetime import timedelta
+from homeassistant.components.switch import SwitchDevice
+import homeassistant.util as util
 
 DEPENDENCIES = ['insteon_local']
 
@@ -42,16 +42,16 @@ DOMAIN = "switch"
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon local switch platform."""
-    INSTEON_LOCAL = hass.data['insteon_local']
+    insteonhub = hass.data['insteon_local']
     devs = []
     if len(config) > 0:
         items = config['switches'].items()
 
         # todo: use getLinked instead
-        for key, switch in items:
-            device = INSTEON_LOCAL.switch(switch['device_id'])
+        for switch in items:
+            device = insteonhub.switch(switch[1]['device_id'])
             device.beep()
-            devs.append(InsteonLocalSwitchDevice(device, switch['name']))
+            devs.append(InsteonLocalSwitchDevice(device, switch[1]['name']))
         add_devices(devs)
 
 
@@ -82,16 +82,16 @@ class InsteonLocalSwitchDevice(SwitchDevice):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Update state of the sensor."""
-        id = self.node.deviceId.upper()
-        self.node.hub.directCommand(id, '19', '00')
-        resp = self.node.hub.getBufferStatus(id)
+        devid = self.node.deviceId.upper()
+        self.node.hub.directCommand(devid, '19', '00')
+        resp = self.node.hub.getBufferStatus(devid)
         attempts = 1
         while 'cmd2' not in resp and attempts < 9:
             if attempts % 3 == 0:
-                self.node.hub.directCommand(id, '19', '00')
+                self.node.hub.directCommand(devid, '19', '00')
             else:
                 sleep(2)
-            resp = self.node.hub.getBufferStatus(id)
+            resp = self.node.hub.getBufferStatus(devid)
             attempts += 1
 
         if 'cmd2' in resp:
