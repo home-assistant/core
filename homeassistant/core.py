@@ -298,9 +298,8 @@ class HomeAssistant(object):
         # cleanup async layer from python logging
         if self.data.get(DATA_ASYNCHANDLER):
             handler = self.data.pop(DATA_ASYNCHANDLER)
-            logger = logging.getLogger('')
-            handler.close()
-            logger.removeHandler(handler)
+            logging.getLogger('').removeHandler(handler)
+            yield from handler.async_close(blocking=True)
 
         self.loop.stop()
 
