@@ -161,13 +161,15 @@ def async_setup(hass, config):
     host = conf.get(CONF_BASE_URL)
 
     if host:
-        pass
+        port = None
     elif server_host != DEFAULT_SERVER_HOST:
         host = server_host
+        port = server_port
     else:
         host = hass_util.get_local_ip()
+        port = server_port
 
-    hass.config.api = rem.API(host, api_password, server_port,
+    hass.config.api = rem.API(host, api_password, port,
                               ssl_certificate is not None)
 
     return True
