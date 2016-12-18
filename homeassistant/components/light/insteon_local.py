@@ -116,8 +116,12 @@ class InsteonLocalDimmerDevice(Light):
         return SUPPORT_INSTEON_LOCAL
 
     def turn_on(self, **kwargs):
+        brightness = 100
         """Turn device on."""
-        self.node.on(100)
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS] / 255 * 100
+
+        self.node.on(brightness)
 
     def turn_off(self, **kwargs):
         """Turn device off."""
