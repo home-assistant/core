@@ -25,6 +25,11 @@ STATE_BOOST = "boost"
 STATE_AWAY = "away"
 STATE_MANUAL = "manual"
 
+ATTR_STATE_WINDOW_OPEN = "window_open"
+ATTR_STATE_VALVE = "valve"
+ATTR_STATE_LOCKED = "is_locked"
+ATTR_STATE_LOW_BAT = "low_battery"
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_MAC): cv.string,
 })
@@ -57,7 +62,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
         self.modes = {eq3.EQ3BTSMART_UNKOWN: STATE_UNKNOWN,
                       eq3.EQ3BTSMART_AUTO: STATE_AUTO,
-                      # away mode is handled separately, leaving here just for commentary
+                      # away handled separately, here just for reverse mapping
                       eq3.EQ3BTSMART_AWAY: STATE_AWAY,
                       eq3.EQ3BTSMART_CLOSED: STATE_OFF,
                       eq3.EQ3BTSMART_OPEN: STATE_ON,
@@ -137,6 +142,18 @@ class EQ3BTSmartThermostat(ClimateDevice):
     def max_temp(self):
         """Return the maximum temperature."""
         return self._thermostat.max_temp
+
+    @property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+        dev_specific = {
+            ATTR_STATE_LOCKED: self._thermostat.locked,
+            ATTR_STATE_LOW_BAT: self._thermostat.low_battery,
+            ATTR_STATE_VALVE: self._thermostat.valve_state,
+            ATTR_STATE_WINDOW_OPEN: self._thermostat.window_open,
+        }
+
+        return dev_specific
 
     def update(self):
         """Update the data from the thermostat."""
