@@ -112,4 +112,3 @@ class InsteonLocalSwitchDevice(SwitchDevice):
         """Turn device off."""
         if self.node.offInstant():
             self._value = 0
-
