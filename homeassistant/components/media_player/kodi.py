@@ -23,6 +23,8 @@ from homeassistant.const import (
     CONF_PORT, CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['websockets==3.2']
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TCP_PORT = 'tcp_port'
@@ -202,12 +204,15 @@ class KodiEntity(MediaPlayerDevice):
     @asyncio.coroutine
     def async_websocket_loop(self):
         """Check websocket for push events from Kodi."""
+        import websockets
+
         while True:
             try:
-                data = yield from self._websocket.receive_json()
+                msg = yield from self._websocket.recv()
             except websockets.exceptions.ConnectionClosed:
                 break
 
+            data = json.loads(msg)
             if data[ATTR_METHOD] in EXIT_NOTIFICATIONS:
                 self._players = None
                 yield from self.async_update_ha_state()
@@ -297,6 +302,8 @@ class KodiEntity(MediaPlayerDevice):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
+        import websockets
+
         self._app_properties = (yield from self.async_json_request(
             "Application.GetProperties",
             ['volume', 'muted']
@@ -331,14 +338,13 @@ class KodiEntity(MediaPlayerDevice):
 
         try:
             with async_timeout.timeout(DEFAULT_TIMEOUT, loop=self.hass.loop):
-                self._websocket = yield from self._session.ws_connect(
-                    self._ws_url, auth=self._auth)
+                self._websocket = yield from websockets.connect(
+                    self._ws_url)
             self.hass.loop.create_task(self.async_websocket_loop())
-        except (aiohttp.errors.ClientError,
-                asyncio.TimeoutError,
-                ConnectionRefusedError):
+        except (asyncio.TimeoutError,
+                ConnectionRefusedError) as error:
             self._websocket = None
-            _LOGGER.warning("Timeout connecting to websocket.")
+            _LOGGER.warning("Error connecting to websocket. %s", error)
 
     @property
     def volume_level(self):
