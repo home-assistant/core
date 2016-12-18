@@ -106,10 +106,10 @@ def setup_nest(hass, nest, config, pin=None):
     discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
 
-    sensor_config = conf.get(CONF_SENSORS)
+    sensor_config = conf.get(CONF_SENSORS, {})
     discovery.load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
 
-    binary_sensor_config = conf.get(CONF_BINARY_SENSORS)
+    binary_sensor_config = conf.get(CONF_BINARY_SENSORS, {})
     discovery.load_platform(hass, 'binary_sensor', DOMAIN,
                             binary_sensor_config, config)
 

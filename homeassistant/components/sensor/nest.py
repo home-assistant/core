@@ -27,12 +27,9 @@ DEPRECATED_WEATHER_VARS = {'weather_humidity': 'humidity',
                            'wind_speed': 'kph',
                            'wind_direction': 'direction'}
 
-SENSOR_UNITS = {'humidity': '%',
-                'temperature': '°C'}
+SENSOR_UNITS = {'humidity': '%', 'temperature': '°C'}
 
-PROTECT_VARS = ['co_status',
-                'smoke_status',
-                'battery_health']
+PROTECT_VARS = ['co_status', 'smoke_status', 'battery_health']
 
 PROTECT_VARS_DEPRECATED = ['battery_level']
 
@@ -43,9 +40,6 @@ _SENSOR_TYPES_DEPRECATED = SENSOR_TYPES_DEPRECATED \
 
 _VALID_SENSOR_TYPES = SENSOR_TYPES + SENSOR_TEMP_TYPES + PROTECT_VARS
 
-_VALID_SENSOR_TYPES_WITH_DEPRECATED = _VALID_SENSOR_TYPES \
-    + _SENSOR_TYPES_DEPRECATED
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -55,9 +49,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     nest = hass.data[DATA_NEST]
-    conditions = discovery_info.get(CONF_MONITORED_CONDITIONS)
-    if all(c is None for c in conditions):
-        conditions = _VALID_SENSOR_TYPES
+
+    """Add Nest Protect sensors if no sensor config is specified"""
+    if discovery_info == {}:
+        conditions = PROTECT_VARS
+    else:
+        conditions = discovery_info.get(CONF_MONITORED_CONDITIONS, {})
+        """Add all sensors if no monitored conditions are specified"""
+        if all(c is None for c in conditions):
+            conditions = _VALID_SENSOR_TYPES
 
     for variable in conditions:
         if variable in _SENSOR_TYPES_DEPRECATED:

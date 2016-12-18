@@ -38,8 +38,6 @@ _BINARY_TYPES_DEPRECATED = [
 
 _VALID_BINARY_SENSOR_TYPES = BINARY_TYPES + CLIMATE_BINARY_TYPES \
     + CAMERA_BINARY_TYPES
-_VALID_BINARY_SENSOR_TYPES_WITH_DEPRECATED = _VALID_BINARY_SENSOR_TYPES \
-    + _BINARY_TYPES_DEPRECATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,9 +48,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     nest = hass.data[DATA_NEST]
-    conditions = discovery_info.get(CONF_MONITORED_CONDITIONS)
-    if all(c is None for c in conditions):
-        conditions = _VALID_BINARY_SENSOR_TYPES
+
+    """Add Nest Protect sensors if no binary sensor config is specified"""
+    if discovery_info == {}:
+        conditions = BINARY_TYPES
+    else:
+        conditions = discovery_info.get(CONF_MONITORED_CONDITIONS, {})
+        """Add all binary sensors if no monitored conditions are specified"""
+        if all(c is None for c in conditions):
+            conditions = _VALID_BINARY_SENSOR_TYPES
 
     for variable in conditions:
         if variable in _BINARY_TYPES_DEPRECATED:
