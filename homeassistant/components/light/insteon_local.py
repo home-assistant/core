@@ -39,7 +39,7 @@ DEPENDENCIES = ['insteon_local']
 
 SUPPORT_INSTEON_LOCAL = SUPPORT_BRIGHTNESS
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=25)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 DOMAIN = "light"

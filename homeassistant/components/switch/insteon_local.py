@@ -34,7 +34,7 @@ from homeassistant.components.switch import SwitchDevice
 from time import sleep
 from datetime import timedelta
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=25)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 DOMAIN = "switch"
