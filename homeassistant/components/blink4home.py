@@ -18,7 +18,6 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Blink4Home'
 ATTRIBUTION = 'Blink4Home camera support'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 CONF_NETWORK_ID = 'network_id'
@@ -30,10 +29,10 @@ API_URL = 'https://rest.prir.immedia-semi.com'
 CLIENT_SPECIFIER = 'Home-Assistant | '
 HEADERS = {'Content-Type': 'application/json'}
 TOKEN_HEADER = 'TOKEN_AUTH'
+UNAUTH_ACCESS = 'Unauthorized access'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NETWORK_ID, default=0): cv.positive_int,
@@ -103,9 +102,11 @@ class Blink4Home(object):
         """Return the state."""
         return self._armed
 
-    def _login(self):
+    def _login(self, force=False):
         """Perform login."""
-        if self._api_key == '':
+        if not self._api_key or force:
+            self._api_key = ''
+
             url = (API_URL + '/login')
             data = {'password': self._password,
                     'client_specifier': CLIENT_SPECIFIER + str(self._version),
@@ -147,18 +148,19 @@ class Blink4Home(object):
                 _LOGGER.debug('Selected network: %s',
                               json.dumps(self._network_id))
             else:
+                self._api_key = ''
                 _LOGGER.debug('Received error response: %s',
                               response.status_code)
                 _LOGGER.error('Error logging in to the Blink4Home platform. Received status was %s.',
                               response.status_code)
 
-    def arm(self):
+    def arm(self, second_try=False):
         """Arm the system."""
         _LOGGER.debug('Arming the system')
-        if not self._logged_in:
-            self._login()
+        if not self._logged_in or not self._api_key:
+            self._login(True)
 
-        if self._api_key == '':
+        if not self._api_key:
             _LOGGER.error('Couldn\'t arm system. There was a problem with the login.')
 
         url = (API_URL + '/network/' + str(self._network_id) + '/arm')
@@ -168,21 +170,29 @@ class Blink4Home(object):
         response = requests.post(url, data='',
                                  headers=headers, timeout=10)
 
+        if UNAUTH_ACCESS in response.text:
+            # Token validity is gone
+            if not second_try:
+                self._login(True)
+                self.arm(True)
+            else:
+                _LOGGER.error('Unable to refresh token.')
+
         if response.status_code == 200:
             _LOGGER.debug('Received arm response: %s',
                           response.text)
             self.update()
         else:
-            _LOGGER.debug('Received error response on arm: %s',
-                          response.status_code)
-            _LOGGER.error('Error arming in to the Blink4Home platform. Received status was %s.',
-                          response.status_code)
+           _LOGGER.debug('Received error response on arm: %s',
+                         response.status_code)
+           _LOGGER.error('Error arming in to the Blink4Home platform. Received status was %s.',
+                         response.status_code)
 
-    def disarm(self):
+    def disarm(self, second_try=False):
         """Arm the system."""
         _LOGGER.debug('Disarming the system')
-        if not self._logged_in:
-            self._login()
+        if not self._logged_in or not self._api_key:
+            self._login(True)
 
         if self._api_key == '':
             _LOGGER.error('Couldn\'t disarm system. There was a problem with the login.')
@@ -194,17 +204,25 @@ class Blink4Home(object):
         response = requests.post(url, data='',
                                  headers=headers, timeout=10)
 
+        if UNAUTH_ACCESS in response.text:
+            # Token validity is gone
+            if not second_try:
+                self._login(True)
+                self.disarm(True)
+            else:
+                _LOGGER.error('Unable to refresh token.')
+
         if response.status_code == 200:
             _LOGGER.debug('Received disarm response: %s',
                           response.text)
             self.update()
         else:
-            _LOGGER.debug('Received error response on disarm: %s',
-                          response.status_code)
-            _LOGGER.error('Error disarming in to the Blink4Home platform. Received status was %s.',
-                          response.status_code)
+           _LOGGER.debug('Received error response on disarm: %s',
+                         response.status_code)
+           _LOGGER.error('Error disarming in to the Blink4Home platform. Received status was %s.',
+                         response.status_code)
 
-    def update(self):
+    def update(self, second_try=False):
         """Update the status."""
         _LOGGER.debug('Update the system')
         if not self._logged_in:
@@ -220,14 +238,23 @@ class Blink4Home(object):
         response = requests.get(url, headers=headers,
                                 timeout=10)
 
+        if UNAUTH_ACCESS in response.text:
+            # Token validity is gone
+            if not second_try:
+                self._login(True)
+                self.disarm(True)
+            else:
+                _LOGGER.error('Unable to refresh token.')
+
         if response.status_code == 200:
             _LOGGER.debug('Received update response: %s',
                           response.text)
             result = response.json()
+
             self._armed = result['network']['armed']
             self._notifications = result['network']['notifications']
         else:
-            _LOGGER.debug('Received error response on update: %s',
-                          response.status_code)
-            _LOGGER.error('Error updating in to the Blink4Home platform. Received status was %s.',
-                          response.status_code)
+           _LOGGER.debug('Received error response on arm: %s',
+                         response.status_code)
+           _LOGGER.error('Error arming in to the Blink4Home platform. Received status was %s.',
+                         response.status_code)
