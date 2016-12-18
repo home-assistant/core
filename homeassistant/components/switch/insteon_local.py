@@ -30,7 +30,7 @@
 DEPENDENCIES = ['insteon_local']
 
 from homeassistant.components.switch import SwitchDevice
-
+import homeassistant.util as util
 from time import sleep
 from datetime import timedelta
 
