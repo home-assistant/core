@@ -174,7 +174,6 @@ class SpeechManager(object):
         self.use_cache = DEFAULT_CACHE
         self.cache_dir = DEFAULT_CACHE_DIR
         self.time_memory = DEFAULT_TIME_MEMORY
-        self.base_url = hass.config.api.base_url
         self.file_cache = {}
         self.mem_cache = {}
 
@@ -267,7 +266,8 @@ class SpeechManager(object):
             filename = yield from self.async_get_tts_audio(
                 engine, key, message, use_cache)
 
-        return "{}/api/tts_proxy/{}".format(self.base_url, filename)
+        return "{}/api/tts_proxy/{}".format(
+            self.hass.config.api.base_url, filename)
 
     @asyncio.coroutine
     def async_get_tts_audio(self, engine, key, message, cache):
