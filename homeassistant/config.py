@@ -54,6 +54,8 @@ frontend:
 http:
   # Uncomment this to add a password (recommended!)
   # api_password: PASSWORD
+  # Uncomment this if you are using SSL or running in Docker etc
+  # base_url: example.duckdns.org:8123
 
 # Checks for available updates
 updater:
@@ -76,6 +78,11 @@ sun:
 # Weather Prediction
 sensor:
   platform: yr
+
+# Text to speech
+tts:
+  platform: google
+
 """
 
 
