@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    #vol.Optional(CONF_APPS, default=[]): cv.string,
+    # vol.Optional(CONF_APPS, default=[]): cv.string,
 })
 
 
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.info('Device %s accessible and ready for control',
                          device_id)
 
-            _LOGGER.error("APPS: %s %s" % (type(apps), apps))
+            _LOGGER.debug("APPS: %s %s", (type(apps), apps))
             for app, config in apps.items():
                 add_devices([FireTVApp(device, app, config)])
 
@@ -121,7 +121,8 @@ class FireTV(object):
     def app(self, app_id, command):
         try:
             response = requests.get(
-                APPS_BASE_URL.format(self.host, self.port, self.device_id, app_id, command),
+                APPS_BASE_URL.format(self.host, self.port,
+                                     self.device_id, app_id, command),
                 timeout=10).json()
             _LOGGER.debug("response %s", response)
             return response
@@ -135,8 +136,8 @@ class FireTVApp(MediaPlayerDevice):
     def __init__(self, device, app, config):
         self._device = device
         self._name = app
+        _LOGGER.debug("App config: %s", config)
         self._app_id = config['app_id']
-        _LOGGER.warning("FOO: %s" % config)
         if "icon" in config:
             self._icon = config['icon']
 
