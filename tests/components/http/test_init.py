@@ -1,6 +1,7 @@
 """The tests for the Home Assistant HTTP component."""
 import asyncio
 import requests
+from unittest.mock import MagicMock
 
 from homeassistant import bootstrap, const
 import homeassistant.components.http as http
@@ -154,3 +155,49 @@ def test_registering_view_while_running(hass, test_client):
 
     text = yield from resp.text()
     assert text == 'hello'
+
+
+def test_api_base_url(loop):
+    """Test setting api url."""
+
+    hass = MagicMock()
+    hass.loop = loop
+
+    assert loop.run_until_complete(
+        bootstrap.async_setup_component(hass, 'http', {
+            'http': {
+                'base_url': 'example.com'
+            }
+        })
+    )
+
+    assert hass.config.api.base_url == 'http://example.com:8123'
+
+    assert loop.run_until_complete(
+        bootstrap.async_setup_component(hass, 'http', {
+            'http': {
+                'server_host': '1.1.1.1'
+            }
+        })
+    )
+
+    assert hass.config.api.base_url == 'http://1.1.1.1:8123'
+
+    assert loop.run_until_complete(
+        bootstrap.async_setup_component(hass, 'http', {
+            'http': {
+                'server_host': '1.1.1.1'
+            }
+        })
+    )
+
+    assert hass.config.api.base_url == 'http://1.1.1.1:8123'
+
+    assert loop.run_until_complete(
+        bootstrap.async_setup_component(hass, 'http', {
+            'http': {
+            }
+        })
+    )
+
+    assert hass.config.api.base_url == 'http://127.0.0.1:8123'
