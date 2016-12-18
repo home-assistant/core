@@ -43,11 +43,12 @@ apcaccess==0.0.4
 apns2==0.1.1
 
 # homeassistant.components.sun
-astral==1.3.2
+astral==1.3.3
 
 # homeassistant.components.sensor.linux_battery
 batinfo==0.4.2
 
+# homeassistant.components.sensor.hydroquebec
 # homeassistant.components.sensor.scrape
 beautifulsoup4==4.5.1
 
@@ -64,6 +65,10 @@ blockchain==1.3.3
 # homeassistant.components.notify.aws_sns
 # homeassistant.components.notify.aws_sqs
 boto3==1.3.1
+
+# homeassistant.components.sensor.broadlink
+# homeassistant.components.switch.broadlink
+broadlink==0.2
 
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==2.0.1
@@ -101,7 +106,7 @@ dsmr_parser==0.4
 dweepy==0.2.0
 
 # homeassistant.components.sensor.eliqonline
-eliqonline==1.0.12
+eliqonline==1.0.13
 
 # homeassistant.components.enocean
 enocean==0.31
@@ -176,7 +181,7 @@ http://github.com/technicalpickles/python-nest/archive/b8391d2b3cb8682f8b0c2bdff
 https://github.com/Danielhiversen/flux_led/archive/0.10.zip#flux_led==0.10
 
 # homeassistant.components.switch.tplink
-https://github.com/GadgetReactor/pyHS100/archive/1f771b7d8090a91c6a58931532e42730b021cbde.zip#pyHS100==0.2.0
+https://github.com/GadgetReactor/pyHS100/archive/45fc3548882628bcde3e3d365db341849457bef2.zip#pyHS100==0.2.2
 
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.7.zip#pyW215==0.3.7
@@ -478,7 +483,7 @@ python-pushover==0.2
 python-synology==0.1.0
 
 # homeassistant.components.notify.telegram
-python-telegram-bot==5.2.0
+python-telegram-bot==5.3.0
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
@@ -600,11 +605,16 @@ vsure==0.11.1
 # homeassistant.components.sensor.vasttrafik
 vtjp==0.1.11
 
+# homeassistant.components.media_player.panasonic_viera
+# homeassistant.components.media_player.webostv
 # homeassistant.components.switch.wake_on_lan
 wakeonlan==0.2.2
 
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0
+
+# homeassistant.components.media_player.webostv
+websockets==3.2
 
 # homeassistant.components.zigbee
 xbee-helper==0.0.7

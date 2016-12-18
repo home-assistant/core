@@ -26,9 +26,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class TelldusLiveLight(TelldusLiveEntity, Light):
     """Representation of a light."""
 
+    def __init__(self, hass, device_id):
+        """Initialize the light."""
+        super().__init__(hass, device_id)
+        self._last_brightness = self.brightness
+
     def changed(self):
         """A property of the device might have changed."""
-        # pylint: disable=attribute-defined-outside-init
         self._last_brightness = self.brightness
         super().changed()
 

@@ -167,6 +167,7 @@ omit =
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
     homeassistant/components/emoncms_history.py
+    homeassistant/components/emulated_hue/upnp.py
     homeassistant/components/fan/mqtt.py
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
@@ -252,6 +253,7 @@ omit =
     homeassistant/components/sensor/bbox.py
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/bom.py
+    homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/cups.py
@@ -275,6 +277,7 @@ omit =
     homeassistant/components/sensor/haveibeenpwned.py
     homeassistant/components/sensor/hddtemp.py
     homeassistant/components/sensor/hp_ilo.py
+    homeassistant/components/sensor/hydroquebec.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/influxdb.py
@@ -323,6 +326,7 @@ omit =
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/anel_pwrctrl.py
     homeassistant/components/switch/arest.py
+    homeassistant/components/switch/broadlink.py
     homeassistant/components/switch/digitalloggers.py
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py

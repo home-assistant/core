@@ -20,6 +20,7 @@ import homeassistant.loader as loader
 import homeassistant.util.package as pkg_util
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
+from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
@@ -528,6 +529,10 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     except ImportError:
         pass
 
+    # AsyncHandler allready exists?
+    if hass.data.get(core.DATA_ASYNCHANDLER):
+        return
+
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path(ERROR_LOG_FILENAME)
     err_path_exists = os.path.isfile(err_log_path)
@@ -548,8 +553,12 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
         err_handler.setFormatter(
             logging.Formatter('%(asctime)s %(name)s: %(message)s',
                               datefmt='%y-%m-%d %H:%M:%S'))
+
+        async_handler = AsyncHandler(hass.loop, err_handler)
+        hass.data[core.DATA_ASYNCHANDLER] = async_handler
+
         logger = logging.getLogger('')
-        logger.addHandler(err_handler)
+        logger.addHandler(async_handler)
         logger.setLevel(logging.INFO)
 
     else:
