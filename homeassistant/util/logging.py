@@ -59,6 +59,7 @@ class AsyncHandler(object):
 
         if blocking:
             # Python 3.4.4+
+            # pylint: disable=no-member
             if hasattr(self._queue, 'join'):
                 yield from self._queue.join()
             else:
@@ -87,6 +88,8 @@ class AsyncHandler(object):
         while True:
             record = run_coroutine_threadsafe(
                 self._queue.get(), self.loop).result()
+
+            # pylint: disable=no-member
 
             if record is None:
                 self.handler.close()
