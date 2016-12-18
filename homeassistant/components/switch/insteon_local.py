@@ -27,17 +27,18 @@
            name: Living Room
     
     """
-DEPENDENCIES = ['insteon_local']
-
 from homeassistant.components.switch import SwitchDevice
 import homeassistant.util as util
 from time import sleep
 from datetime import timedelta
 
+DEPENDENCIES = ['insteon_local']
+
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 DOMAIN = "switch"
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon local switch platform."""
@@ -45,10 +46,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devs = []
     if len(config) > 0:
         items = config['switches'].items()
-        
-        # todo: use getLinked instead? We'd still need to include name and deviceid in config, and it takes a while to execute because of the sleeps when hitting the buffer though, so maybe it's not a priority
+
+        # todo: use getLinked instead
         for key, switch in items:
-            # todo: get device type and determine whether to use a dimmer or switch
             device = INSTEON_LOCAL.switch(switch['device_id'])
             device.beep()
             devs.append(InsteonLocalSwitchDevice(device, switch['name']))
@@ -57,24 +57,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class InsteonLocalSwitchDevice(SwitchDevice):
     """An abstract Class for an Insteon node."""
-    
+
     def __init__(self, node, name):
         """Initialize the device."""
         self.node = node
         self.node.deviceName = name
         self._value = 0
-    
+
     @property
     def name(self):
         """Return the the name of the node."""
-        
+
         return self.node.deviceName
-    
+
     @property
     def unique_id(self):
         """Return the ID of this insteon node."""
         return self.node.deviceId
-    
+
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
@@ -102,15 +102,13 @@ class InsteonLocalSwitchDevice(SwitchDevice):
     def is_on(self):
         """Return the boolean response if the node is on."""
         return self._value != 0
-    
+
     def turn_on(self, **kwargs):
         """Turn device on."""
         if self.node.on(100):
-            self._value = 255;
+            self._value = 255
 
-    
     def turn_off(self, **kwargs):
         """Turn device off."""
         if self.node.offInstant():
-            self._value = 0;
-
+            self._value = 0
