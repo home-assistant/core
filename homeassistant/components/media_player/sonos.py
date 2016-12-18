@@ -454,10 +454,10 @@ class SonosDevice(MediaPlayerDevice):
                     media_image_url = None
 
                 elif is_radio_stream:
-                    if media_image_url in ('', 'NOT_IMPLEMENTED', None):
-                        media_image_url = self._format_media_image_url(
-                            current_media_uri
-                        )
+                    media_image_url = self._format_media_image_url(
+                        media_image_url,
+                        current_media_uri
+                    )
                     support_previous_track = False
                     support_next_track = False
                     support_stop = False
@@ -522,10 +522,10 @@ class SonosDevice(MediaPlayerDevice):
 
                 else:
                     # not a radio stream
-                    if media_image_url in ('', 'NOT_IMPLEMENTED', None):
-                        media_image_url = self._format_media_image_url(
-                            track_info['uri']
-                        )
+                    media_image_url = self._format_media_image_url(
+                        media_image_url,
+                        track_info['uri']
+                    )
                     support_previous_track = True
                     support_next_track = True
                     support_stop = True
@@ -650,12 +650,14 @@ class SonosDevice(MediaPlayerDevice):
 
         self._last_avtransport_event = None
 
-    def _format_media_image_url(self, uri):
-        return 'http://{host}:{port}/getaa?s=1&u={uri}'.format(
-            host=self._player.ip_address,
-            port=1400,
-            uri=urllib.parse.quote(uri)
-        )
+    def _format_media_image_url(self, url, fallback_uri):
+        if url in ('', 'NOT_IMPLEMENTED', None):
+            return 'http://{host}:{port}/getaa?s=1&u={uri}'.format(
+                host=self._player.ip_address,
+                port=1400,
+                uri=urllib.parse.quote(fallback_uri)
+            )
+        return url
 
     def process_sonos_event(self, event):
         """Process a service event coming from the speaker."""
@@ -675,6 +677,7 @@ class SonosDevice(MediaPlayerDevice):
             next_track_uri = event.variables.get('next_track_uri')
             if next_track_uri:
                 next_track_image_url = self._format_media_image_url(
+                    None,
                     next_track_uri
                 )
 
