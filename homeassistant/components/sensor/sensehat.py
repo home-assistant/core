@@ -26,8 +26,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
     'temperature': ['temperature', TEMP_CELSIUS],
-    'humidity': ['humidity', "%"],
-    'pressure': ['pressure', "mb"],
+    'humidity': ['humidity', '%'],
+    'pressure': ['pressure', 'mb'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -56,7 +56,7 @@ def get_average(temp_base):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Setup the Sense HAT sensor platform."""
     data = SenseHatData()
     dev = []
 
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SenseHatSensor(Entity):
-    """Representation of a sensehat sensor."""
+    """Representation of a Sense HAT sensor."""
 
     def __init__(self, data, sensor_types):
         """Initialize the sensor."""
@@ -76,7 +76,6 @@ class SenseHatSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_types][1]
         self.type = sensor_types
         self._state = None
-        """updating data."""
         self.update()
 
     @property
@@ -98,7 +97,7 @@ class SenseHatSensor(Entity):
         """Get the latest data and updates the states."""
         self.data.update()
         if not self.data.humidity:
-            _LOGGER.error("Don't receive data!")
+            _LOGGER.error("Don't receive data")
             return
 
         if self.type == 'temperature':
@@ -120,14 +119,14 @@ class SenseHatData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from sensehat."""
+        """Get the latest data from Sense HAT."""
         from sense_hat import SenseHat
         sense = SenseHat()
         temp_from_h = sense.get_temperature_from_humidity()
         temp_from_p = sense.get_temperature_from_pressure()
         t_cpu = get_cpu_temp()
-        t_total = (temp_from_h+temp_from_p)/2
-        t_correct = t_total - ((t_cpu-t_total)/1.5)
+        t_total = (temp_from_h + temp_from_p) / 2
+        t_correct = t_total - ((t_cpu - t_total) / 1.5)
         t_correct = get_average(t_correct)
         self.temperature = t_correct
         self.humidity = sense.get_humidity()
