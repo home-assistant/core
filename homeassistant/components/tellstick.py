@@ -4,7 +4,6 @@ Tellstick Component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tellstick/
 """
-import asyncio
 import logging
 import threading
 
@@ -205,31 +204,31 @@ class TellstickDevice(Entity):
         """Let tellcore update the actual device to the requested state."""
         raise NotImplementedError
 
-    # FIXME: Better name.
-    def _send_requested_command(self):
-        """Send a tellstick command for setting the requested state"""
+    def _send_repeated_command(self):
+        """Send a tellstick command once and decrease the repeat count."""
+        from tellcore.library import TelldusError
+
         with TELLSTICK_LOCK:
             if self._repeats_left > 0:
                 self._repeats_left -= 1
                 try:
-                    self._send_device_command(self._requested_state, self._requested_data)
+                    self._send_device_command(self._requested_state,
+                                              self._requested_data)
                 except TelldusError as err:
                     _LOGGER.error(err)
 
     def _change_device_state(self, new_state, data):
         """The logic for actually turning on or off the device."""
-        from tellcore.library import TelldusError
-
         with TELLSTICK_LOCK:
             # Set the requested state and number of repeats before calling
-            # _send_requested_command the first time. Subsequent calls will be made
-            # from the callback. (We don't want to queue a lot of commands
+            # _send_repeated_command the first time. Subsequent calls will be
+            # made from the callback. (We don't want to queue a lot of commands
             # in case the user toggles the switch the other way before the
             # queue is fully processed.)
             self._requested_state = new_state
             self._requested_data = data
             self._repeats_left = self._signal_repetitions
-            self._send_requested_command()
+            self._send_repeated_command()
 
             # Sooner or later this will propagate to the model from the
             # callback, but for a fluid UI experience update it directly.
@@ -245,7 +244,7 @@ class TellstickDevice(Entity):
         self._change_device_state(False, None)
 
     def _update_model_from_command(self, tellcore_command, tellcore_data):
-        """Handle updates from the tellcore callback."""
+        """Update the model, from a sent tellcore command and data."""
         from tellcore.constants import (TELLSTICK_TURNON, TELLSTICK_TURNOFF,
                                         TELLSTICK_DIM)
 
@@ -258,29 +257,27 @@ class TellstickDevice(Entity):
                            self._parse_tellcore_data(tellcore_data))
 
     def update_from_callback(self, tellcore_command, tellcore_data):
-        from tellcore.constants import TELLSTICK_TURNOFF
-
+        """Handle updates from the tellcore callback."""
         self._update_model_from_command(tellcore_command, tellcore_data)
         self.schedule_update_ha_state()
 
         # This is a benign race on _repeats_left -- it's checked with the lock
-        # in _send_requested_command.
+        # in _send_repeated_command.
         if self._repeats_left > 0:
-            self.hass.loop.run_in_executor(None, self._send_requested_command)
-
+            self.hass.loop.run_in_executor(None, self._send_repeated_command)
 
     def _update_from_tellcore(self):
-        """Read the current state of the device."""
+        """Read the current state of the device from the tellcore library."""
         from tellcore.library import TelldusError
         from tellcore.constants import (TELLSTICK_TURNON, TELLSTICK_TURNOFF,
                                         TELLSTICK_DIM)
 
         with TELLSTICK_LOCK:
             try:
-                last_tellcore_command = self._tellcore_device.last_sent_command(
+                last_command = self._tellcore_device.last_sent_command(
                     TELLSTICK_TURNON | TELLSTICK_TURNOFF | TELLSTICK_DIM)
-                last_tellcore_data = self._tellcore_device.last_sent_value()
-                self._update_model_from_command(last_tellcore_command, last_tellcore_data)
+                last_data = self._tellcore_device.last_sent_value()
+                self._update_model_from_command(last_command, last_data)
             except TelldusError as err:
                 _LOGGER.error(err)
 
