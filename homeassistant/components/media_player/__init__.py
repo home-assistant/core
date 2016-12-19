@@ -718,8 +718,7 @@ class MediaPlayerDevice(Entity):
 
     def async_volume_up(self):
         """Turn volume up for media player."""
-        if self.volume_level < 1:
-            return self.async_set_volume_level(min(1, self.volume_level + .1))
+        return self.async_set_volume_level(min(1, self.volume_level + .1))
 
     def volume_down(self):
         """Turn volume down for media player."""
@@ -728,8 +727,7 @@ class MediaPlayerDevice(Entity):
 
     def async_volume_down(self):
         """Turn volume down for media player."""
-        if self.volume_level > 0:
-            return self.async_set_volume_level(max(0, self.volume_level - .1))
+        return self.async_set_volume_level(max(0, self.volume_level - .1))
 
     def media_play_pause(self):
         """Play or pause the media player."""
