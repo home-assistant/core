@@ -128,4 +128,4 @@ class InsteonLocalDimmerDevice(Light):
 
     def turn_off(self, **kwargs):
         """Turn device off."""
-        self.node.offInstant()
+        self.node.off()
