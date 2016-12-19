@@ -231,7 +231,7 @@ class CecDevice(Entity):
         return "%s %s" % (
             self.vendor_name, self._device.osd_name) \
             if self._device.osd_name is not None and \
-               self.vendor_name is not None and self.vendor_name != 'Unknown' \
+            self.vendor_name is not None and self.vendor_name != 'Unknown' \
             else "%s %d" % (self._device.type_name,
                             self._logical_address) \
             if self._device.osd_name is None \
