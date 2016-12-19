@@ -494,6 +494,9 @@ python-vlc==1.1.2
 # homeassistant.components.wink
 python-wink==0.11.0
 
+# homeassistant.components.device_tracker.trackr
+pytrackr==0.0.5
+
 # homeassistant.components.device_tracker.unifi
 pyunifi==1.3
 
