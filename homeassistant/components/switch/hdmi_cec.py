@@ -32,13 +32,14 @@ class CecSwitch(CecDevice, SwitchDevice):
 
     @property
     def is_on(self) -> bool:
+        """Return True if entity is on."""
         return self._state == STATE_ON
 
     def __init__(self, hass: HomeAssistant, device, logical):
         """Initialize the HDMI device."""
         CecDevice.__init__(self, hass, device, logical)
         self.entity_id = "%s.%s_%s" % (
-        DOMAIN, 'hdmi', hex(self._logical_address)[2:])
+            DOMAIN, 'hdmi', hex(self._logical_address)[2:])
         self.update()
 
     def turn_on(self, **kwargs) -> None:
