@@ -12,9 +12,8 @@ import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON )
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 import homeassistant.helpers.config_validation as cv
-from custom_components.tts.picotts import SUPPORT_LANGUAGES
 
 REQUIREMENTS = ['fuzzywuzzy==0.14.0']
 
@@ -22,13 +21,13 @@ ATTR_TEXT = 'text'
 
 DOMAIN = 'conversation'
 
-COMMANDS = {'en':{'turn_on':r'(?P<command>turn on|activ\w+|enable|open|launch|start) (?P<name>(?: |\w)+)',
+COMMANDS = {'en': {'turn_on':r'(?P<command>turn on|activ\w+|enable|open|launch|start) (?P<name>(?: |\w)+)',
                   'turn_off':r'(?P<command>turn off|disactiv\w+|disable|close) (?P<name>(?: |\w)+)',
                   },
-            'fr':{'turn_on':r'(?P<command>allum\w+|lanc\w+|activ\w+|ouvr\w+) (?P<name>(?: |\w)+)',
+            'fr': {'turn_on':r'(?P<command>allum\w+|lanc\w+|activ\w+|ouvr\w+) (?P<name>(?: |\w)+)',
                   'turn_off':r'(?P<command>étein\w+|ferm\w+|stop|arrêt\w+|désactiv\w+) (?P<name>(?: |\w)+)',
                   },
-            'es':{'turn_on':r'(?P<command>enciend\w+) (?P<name>(?: |\w)+)',
+            'es': {'turn_on':r'(?P<command>enciend\w+) (?P<name>(?: |\w)+)',
                   'turn_off':r'(?P<command>apag\w+) (?P<name>(?: |\w)+)',
                   },
             }
@@ -36,7 +35,7 @@ COMMANDS = {'en':{'turn_on':r'(?P<command>turn on|activ\w+|enable|open|launch|st
 SERVICE_PROCESS = 'process'
 
 SERVICE_PROCESS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TEXT): vol.All(cv.string, 
+    vol.Required(ATTR_TEXT): vol.All(cv.string,
                                      vol.Lower),
 })
 
@@ -44,7 +43,7 @@ CONF_LANG = 'language'
 
 DEFAULT_LANG = 'en'
 
-SUPPORT_LANGUAGES = ['en', 'fr']
+SUPPORT_LANGUAGES = ['en', 'fr', 'es']
 
 
 CONFIG_SCHEMA = vol.Schema({
@@ -60,7 +59,7 @@ def setup(hass, config):
     from fuzzywuzzy import process as fuzzyExtract
 
     logger = logging.getLogger(__name__)
-    language = config[DOMAIN].get(CONF_LANG,DEFAULT_LANG)
+    language = config[DOMAIN].get(CONF_LANG, DEFAULT_LANG)
     commands = COMMANDS[language]
     for c in commands:
         commands[c] = re.compile(commands[c])
