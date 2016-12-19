@@ -381,7 +381,7 @@ py-cpuinfo==0.2.3
 pyHS100==0.2.3
 
 # homeassistant.components.hdmi_cec
-pyCEC>=0.4.6
+pyCEC==0.4.6
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.15.0

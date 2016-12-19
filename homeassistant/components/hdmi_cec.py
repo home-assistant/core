@@ -106,7 +106,7 @@ def setup(hass: HomeAssistant, base_config):
     from pycec import CecConfig
     from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
     from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE, \
-        ADDR_AUDIO, ADDR_BROADCAST, ADDR_UNREGISTERED
+        ADDR_AUDIOSYSTEM, ADDR_BROADCAST, ADDR_UNREGISTERED
 
     hdmi_network = HDMINetwork(config=CecConfig(name="HA"), loop=hass.loop)
 
@@ -119,21 +119,21 @@ def setup(hass: HomeAssistant, base_config):
             if cmd == CMD_UP:
                 for _ in range(att):
                     hdmi_network.send_command(
-                        KeyPressCommand(KEY_VOLUME_UP, dst=ADDR_AUDIO))
+                        KeyPressCommand(KEY_VOLUME_UP, dst=ADDR_AUDIOSYSTEM))
                     hdmi_network.send_command(
-                        KeyReleaseCommand(dst=ADDR_AUDIO))
+                        KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
                 _LOGGER.info("Volume increased %d times", att)
             elif cmd == CMD_DOWN:
                 for _ in range(att):
                     hdmi_network.send_command(
-                        KeyPressCommand(KEY_VOLUME_DOWN, dst=ADDR_AUDIO))
+                        KeyPressCommand(KEY_VOLUME_DOWN, dst=ADDR_AUDIOSYSTEM))
                     hdmi_network.send_command(
-                        KeyReleaseCommand(dst=ADDR_AUDIO))
+                        KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
                 _LOGGER.info("Volume deceased %d times", att)
             elif cmd == CMD_MUTE:
                 hdmi_network.send_command(
-                    KeyPressCommand(KEY_MUTE, dst=ADDR_AUDIO))
-                hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIO))
+                    KeyPressCommand(KEY_MUTE, dst=ADDR_AUDIOSYSTEM))
+                hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
                 _LOGGER.info("Audio muted")
             else:
                 _LOGGER.warning("Unknown command %s", cmd)
