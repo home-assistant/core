@@ -216,7 +216,7 @@ class CecDevice(Entity):
         device.set_update_callback(self.update)
 
     def update(self, device=None):
-        """Updates device status."""
+        """Update device status."""
         if device:
             if device.power_status == 0:
                 self._state = STATE_ON
