@@ -215,7 +215,11 @@ class CecDevice(Entity):
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         device.set_update_callback(self.update)
 
-    def update(self, device=None):
+    def update(self):
+        """Update device status."""
+        self._update()
+
+    def _update(self, device=None):
         """Update device status."""
         if device:
             if device.power_status == 0:
