@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/media_player/
 """
 import asyncio
+import functools as ft
 import hashlib
 import logging
 import os
@@ -100,20 +101,62 @@ SUPPORT_SELECT_SOURCE = 2048
 SUPPORT_STOP = 4096
 SUPPORT_CLEAR_PLAYLIST = 8192
 
-# simple services that only take entity_id(s) as optional argument
+# Service call validation schemas
+MEDIA_PLAYER_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+})
+
+MEDIA_PLAYER_SET_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float,
+})
+
+MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean,
+})
+
+MEDIA_PLAYER_MEDIA_SEEK_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_SEEK_POSITION):
+        vol.All(vol.Coerce(float), vol.Range(min=0)),
+})
+
+MEDIA_PLAYER_SELECT_SOURCE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_INPUT_SOURCE): cv.string,
+})
+
+MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+    vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+})
+
 SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: 'turn_on',
-    SERVICE_TURN_OFF: 'turn_off',
-    SERVICE_TOGGLE: 'toggle',
-    SERVICE_VOLUME_UP: 'volume_up',
-    SERVICE_VOLUME_DOWN: 'volume_down',
-    SERVICE_MEDIA_PLAY_PAUSE: 'media_play_pause',
-    SERVICE_MEDIA_PLAY: 'media_play',
-    SERVICE_MEDIA_PAUSE: 'media_pause',
-    SERVICE_MEDIA_STOP: 'media_stop',
-    SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
-    SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
-    SERVICE_CLEAR_PLAYLIST: 'clear_playlist'
+    SERVICE_TURN_ON: {'method': 'async_turn_on'},
+    SERVICE_TURN_OFF: {'method': 'async_turn_off'},
+    SERVICE_TOGGLE: {'method': 'async_toggle'},
+    SERVICE_VOLUME_UP: {'method': 'async_volume_up'},
+    SERVICE_VOLUME_DOWN: {'method': 'async_volume_down'},
+    SERVICE_MEDIA_PLAY_PAUSE: {'method': 'async_media_play_pause'},
+    SERVICE_MEDIA_PLAY: {'method': 'async_media_play'},
+    SERVICE_MEDIA_PAUSE: {'method': 'async_media_pause'},
+    SERVICE_MEDIA_STOP: {'method': 'async_media_stop'},
+    SERVICE_MEDIA_NEXT_TRACK: {'method': 'async_media_next_track'},
+    SERVICE_MEDIA_PREVIOUS_TRACK: {'method': 'async_media_previous_track'},
+    SERVICE_CLEAR_PLAYLIST: {'method': 'async_clear_playlist'},
+    SERVICE_VOLUME_SET: {
+        'method': 'async_set_volume_level',
+        'schema': MEDIA_PLAYER_SET_VOLUME_SCHEMA},
+    SERVICE_VOLUME_MUTE: {
+        'method': 'async_mute_volume',
+        'schema': MEDIA_PLAYER_MUTE_VOLUME_SCHEMA},
+    SERVICE_MEDIA_SEEK: {
+        'method': 'async_media_seek',
+        'schema': MEDIA_PLAYER_MEDIA_SEEK_SCHEMA},
+    SERVICE_SELECT_SOURCE: {
+        'method': 'async_select_source',
+        'schema': MEDIA_PLAYER_SELECT_SOURCE_SCHEMA},
+    SERVICE_PLAY_MEDIA: {
+        'method': 'async_play_media',
+        'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
 }
 
 ATTR_TO_PROPERTY = [
@@ -140,34 +183,6 @@ ATTR_TO_PROPERTY = [
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
 ]
-
-# Service call validation schemas
-MEDIA_PLAYER_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
-})
-
-MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean,
-})
-
-MEDIA_PLAYER_SET_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float,
-})
-
-MEDIA_PLAYER_MEDIA_SEEK_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_SEEK_POSITION):
-        vol.All(vol.Coerce(float), vol.Range(min=0)),
-})
-
-MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
-    vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
-})
-
-MEDIA_PLAYER_SELECT_SOURCE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_INPUT_SOURCE): cv.string,
-})
 
 
 def is_on(hass, entity_id=None):
@@ -304,109 +319,67 @@ def clear_playlist(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Track states and offer events for media_players."""
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
     hass.http.register_view(MediaPlayerImageView(component.entities))
 
-    component.setup(config)
+    yield from component.async_setup(config)
 
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
 
-    def media_player_service_handler(service):
+    @asyncio.coroutine
+    def async_service_handler(service):
         """Map services to methods on MediaPlayerDevice."""
-        method = SERVICE_TO_METHOD[service.service]
+        method = SERVICE_TO_METHOD.get(service.service)
+        if not method:
+            return
 
-        for player in component.extract_from_service(service):
-            getattr(player, method)()
+        params = {}
+        if service.service == SERVICE_VOLUME_SET:
+            params['volume'] = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
+        elif service.service == SERVICE_VOLUME_MUTE:
+            params['mute'] = service.data.get(ATTR_MEDIA_VOLUME_MUTED)
+        elif service.service == SERVICE_MEDIA_SEEK:
+            params['position'] = service.data.get(ATTR_MEDIA_SEEK_POSITION)
+        elif service.service == SERVICE_SELECT_SOURCE:
+            params['source'] = service.data.get(ATTR_INPUT_SOURCE)
+        elif service.service == SERVICE_PLAY_MEDIA:
+            params['media_type'] = \
+                service.data.get(ATTR_MEDIA_CONTENT_TYPE)
+            params['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
+            params[ATTR_MEDIA_ENQUEUE] = \
+                service.data.get(ATTR_MEDIA_ENQUEUE)
+        target_players = component.async_extract_from_service(service)
 
-            if player.should_poll:
-                player.update_ha_state(True)
+        update_tasks = []
+        for player in target_players:
+            yield from getattr(player, method['method'])(**params)
+
+        for player in target_players:
+            if not player.should_poll:
+                continue
+
+            update_coro = player.async_update_ha_state(True)
+            if hasattr(player, 'async_update'):
+                update_tasks.append(hass.loop.create_task(update_coro))
+            else:
+                yield from update_coro
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     for service in SERVICE_TO_METHOD:
-        hass.services.register(DOMAIN, service, media_player_service_handler,
-                               descriptions.get(service),
-                               schema=MEDIA_PLAYER_SCHEMA)
-
-    def volume_set_service(service):
-        """Set specified volume on the media player."""
-        volume = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
-
-        for player in component.extract_from_service(service):
-            player.set_volume_level(volume)
-
-            if player.should_poll:
-                player.update_ha_state(True)
-
-    hass.services.register(DOMAIN, SERVICE_VOLUME_SET, volume_set_service,
-                           descriptions.get(SERVICE_VOLUME_SET),
-                           schema=MEDIA_PLAYER_SET_VOLUME_SCHEMA)
-
-    def volume_mute_service(service):
-        """Mute (true) or unmute (false) the media player."""
-        mute = service.data.get(ATTR_MEDIA_VOLUME_MUTED)
-
-        for player in component.extract_from_service(service):
-            player.mute_volume(mute)
-
-            if player.should_poll:
-                player.update_ha_state(True)
-
-    hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE, volume_mute_service,
-                           descriptions.get(SERVICE_VOLUME_MUTE),
-                           schema=MEDIA_PLAYER_MUTE_VOLUME_SCHEMA)
-
-    def media_seek_service(service):
-        """Seek to a position."""
-        position = service.data.get(ATTR_MEDIA_SEEK_POSITION)
-
-        for player in component.extract_from_service(service):
-            player.media_seek(position)
-
-            if player.should_poll:
-                player.update_ha_state(True)
-
-    hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service,
-                           descriptions.get(SERVICE_MEDIA_SEEK),
-                           schema=MEDIA_PLAYER_MEDIA_SEEK_SCHEMA)
-
-    def select_source_service(service):
-        """Change input to selected source."""
-        input_source = service.data.get(ATTR_INPUT_SOURCE)
-
-        for player in component.extract_from_service(service):
-            player.select_source(input_source)
-
-            if player.should_poll:
-                player.update_ha_state(True)
-
-    hass.services.register(DOMAIN, SERVICE_SELECT_SOURCE,
-                           select_source_service,
-                           descriptions.get(SERVICE_SELECT_SOURCE),
-                           schema=MEDIA_PLAYER_SELECT_SOURCE_SCHEMA)
-
-    def play_media_service(service):
-        """Play specified media_id on the media player."""
-        media_type = service.data.get(ATTR_MEDIA_CONTENT_TYPE)
-        media_id = service.data.get(ATTR_MEDIA_CONTENT_ID)
-        enqueue = service.data.get(ATTR_MEDIA_ENQUEUE)
-
-        kwargs = {
-            ATTR_MEDIA_ENQUEUE: enqueue,
-        }
-
-        for player in component.extract_from_service(service):
-            player.play_media(media_type, media_id, **kwargs)
-
-            if player.should_poll:
-                player.update_ha_state(True)
-
-    hass.services.register(DOMAIN, SERVICE_PLAY_MEDIA, play_media_service,
-                           descriptions.get(SERVICE_PLAY_MEDIA),
-                           schema=MEDIA_PLAYER_PLAY_MEDIA_SCHEMA)
+        schema = SERVICE_TO_METHOD[service].get(
+            'schema', MEDIA_PLAYER_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, service, async_service_handler,
+            descriptions.get(service), schema=schema)
 
     return True
 
@@ -548,53 +521,131 @@ class MediaPlayerDevice(Entity):
         """Turn the media player on."""
         raise NotImplementedError()
 
+    @asyncio.coroutine
+    def async_turn_on(self):
+        """Turn the media player on."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.turn_on)
+
     def turn_off(self):
         """Turn the media player off."""
         raise NotImplementedError()
+
+    @asyncio.coroutine
+    def async_turn_off(self):
+        """Turn the media player off."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.turn_off)
 
     def mute_volume(self, mute):
         """Mute the volume."""
         raise NotImplementedError()
 
+    @asyncio.coroutine
+    def async_mute_volume(self, mute):
+        """Mute the volume."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.mute_volume, mute)
+
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         raise NotImplementedError()
+
+    @asyncio.coroutine
+    def async_set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.set_volume_level, volume)
 
     def media_play(self):
         """Send play commmand."""
         raise NotImplementedError()
 
+    @asyncio.coroutine
+    def async_media_play(self):
+        """Send play commmand."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.media_play)
+
     def media_pause(self):
         """Send pause command."""
         raise NotImplementedError()
+
+    @asyncio.coroutine
+    def async_media_pause(self):
+        """Send pause command."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.media_pause)
 
     def media_stop(self):
         """Send stop command."""
         raise NotImplementedError()
 
+    @asyncio.coroutine
+    def async_media_stop(self):
+        """Send stop command."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.media_stop)
+
     def media_previous_track(self):
         """Send previous track command."""
         raise NotImplementedError()
+
+    @asyncio.coroutine
+    def async_media_previous_track(self):
+        """Send previous track command."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.media_previous_track)
 
     def media_next_track(self):
         """Send next track command."""
         raise NotImplementedError()
 
+    @asyncio.coroutine
+    def async_media_next_track(self):
+        """Send next track command."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.media_next_track)
+
     def media_seek(self, position):
         """Send seek command."""
         raise NotImplementedError()
 
-    def play_media(self, media_type, media_id):
+    @asyncio.coroutine
+    def async_media_seek(self, position):
+        """Send seek command."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.media_seek, position)
+
+    def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         raise NotImplementedError()
+
+    @asyncio.coroutine
+    def async_play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        yield from self.hass.loop.run_in_executor(
+            None, ft.partial(self.play_media, media_type, media_id, **kwargs))
 
     def select_source(self, source):
         """Select input source."""
         raise NotImplementedError()
 
+    @asyncio.coroutine
+    def async_select_source(self, source):
+        """Select input source."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.select_source, source)
+
     def clear_playlist(self):
         """Clear players playlist."""
         raise NotImplementedError()
+
+    @asyncio.coroutine
+    def async_clear_playlist(self):
+        """Clear players playlist."""
+        yield from self.hass.loop.run_in_executor(
+            None, self.clear_playlist)
 
     # No need to overwrite these.
     @property
@@ -654,15 +705,30 @@ class MediaPlayerDevice(Entity):
         else:
             self.turn_off()
 
+    def async_toggle(self):
+        """Toggle the power on the media player."""
+        if self.state in [STATE_OFF, STATE_IDLE]:
+            return self.async_turn_on()
+        else:
+            return self.async_turn_off()
+
     def volume_up(self):
         """Turn volume up for media player."""
         if self.volume_level < 1:
             self.set_volume_level(min(1, self.volume_level + .1))
 
+    def async_volume_up(self):
+        """Turn volume up for media player."""
+        return self.async_set_volume_level(min(1, self.volume_level + .1))
+
     def volume_down(self):
         """Turn volume down for media player."""
         if self.volume_level > 0:
             self.set_volume_level(max(0, self.volume_level - .1))
+
+    def async_volume_down(self):
+        """Turn volume down for media player."""
+        return self.async_set_volume_level(max(0, self.volume_level - .1))
 
     def media_play_pause(self):
         """Play or pause the media player."""
@@ -670,6 +736,13 @@ class MediaPlayerDevice(Entity):
             self.media_pause()
         else:
             self.media_play()
+
+    def async_media_play_pause(self):
+        """Play or pause the media player."""
+        if self.state == STATE_PLAYING:
+            return self.async_media_pause()
+        else:
+            return self.async_media_play()
 
     @property
     def entity_picture(self):
