@@ -30,6 +30,13 @@ ICON_PLAYER = 'mdi:play'
 ICON_TUNER = 'mdi:nest-thermostat'
 ICON_RECORDER = 'mdi:microphone'
 ICON_TV = 'mdi:television'
+ICONS_BY_TYPE = {
+    0: ICON_TV,
+    1: ICON_RECORDER,
+    3: ICON_TUNER,
+    4: ICON_PLAYER,
+    5: ICON_AUDIO
+}
 
 CEC_DEVICES = defaultdict(list)
 
@@ -181,15 +188,6 @@ def setup(hass: HomeAssistant, base_config):
     return True
 
 
-def icon_by_type(cec_type):
-    return ICON_TV if cec_type == 0 \
-        else ICON_RECORDER if cec_type == 1 \
-        else ICON_TUNER if cec_type == 3 \
-        else ICON_PLAYER if cec_type == 4 \
-        else ICON_AUDIO if cec_type == 5 \
-        else ICON_UNKNOWN
-
-
 class CecDevice(Entity):
     """Representation of a HDMI CEC device entity."""
 
@@ -225,11 +223,6 @@ class CecDevice(Entity):
             self._device.type_name, self._logical_address, self._device.osd_name)
 
     @property
-    def state(self) -> str:
-        """Cached state of device."""
-        return self._state
-
-    @property
     def vendor_id(self):
         """ID of device's vendor."""
         return self._device.vendor_id
@@ -258,11 +251,7 @@ class CecDevice(Entity):
     def icon(self):
         """Icon for device by its type."""
         return self._icon if self._icon is not None \
-            else ICON_TV if self._device.type == 0 \
-            else ICON_RECORDER if self._device.type == 1 \
-            else ICON_TUNER if self._device.type == 3 \
-            else ICON_PLAYER if self._device.type == 4 \
-            else ICON_AUDIO if self._device.type == 5 \
+            else ICONS_BY_TYPE.get(self._device.type) if self._device.type in ICONS_BY_TYPE \
             else ICON_UNKNOWN
 
     @property

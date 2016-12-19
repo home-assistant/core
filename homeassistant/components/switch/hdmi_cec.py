@@ -34,7 +34,6 @@ class CecSwitch(CecDevice, SwitchDevice):
 
     def __init__(self, hass: HomeAssistant, device, logical):
         """Initialize the HDMI device."""
-        self._state = False
         CecDevice.__init__(self, hass, device, logical)
         self.entity_id = "%s.%s_%s" % (DOMAIN, 'hdmi', hex(self._logical_address)[2:])
         self.update()
@@ -55,3 +54,8 @@ class CecSwitch(CecDevice, SwitchDevice):
     def is_standby(self):
         """Return true if device is in standby."""
         return self._state == STATE_OFF or self._state == STATE_STANDBY
+
+    @property
+    def state(self) -> str:
+        """Cached state of device."""
+        return self._state
