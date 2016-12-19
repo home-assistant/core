@@ -208,4 +208,3 @@ hdmi_cec:
       mute: Mutes audio system. Value is ignored.
       unmute: Unmutes audio system. Value is ignored.
       toggle mute: Toggles mute of audio system. Value is ignored.
-        example: [0, 2]
