@@ -138,7 +138,7 @@ class OpenWeatherMapWeather(WeatherEntity):
                      'fahrenheit')
 
         def create_dict(entry):
-            """Creates dict for forecast entry"""
+            """Create a dict containing forecast data for a specified time."""
             return {
                 'datetime': entry.get_reference_time('iso'),
                 'temp': entry.get_temperature(temp_unit).get('temp', None),

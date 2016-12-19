@@ -4,6 +4,8 @@ Demo platform that offers fake meteorological data.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
+from datetime import datetime, timedelta
+
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
@@ -28,8 +30,10 @@ CONDITION_CLASSES = {
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Demo weather."""
     add_devices([
-        DemoWeather('South', 'Sunshine', 21, 92, 1099, 0.5, TEMP_CELSIUS),
-        DemoWeather('North', 'Shower rain', -12, 54, 987, 4.8, TEMP_FAHRENHEIT)
+        DemoWeather('South', 'Sunshine', 21, 92, 1099, 0.5, TEMP_CELSIUS,
+                    [22, 19, 15, 12, 14, 18, 21]),
+        DemoWeather('North', 'Shower rain', -12, 54, 987, 4.8, TEMP_FAHRENHEIT,
+                    [-10, -13, -18, -23, -19, -14, -9])
     ])
 
 
@@ -37,7 +41,7 @@ class DemoWeather(WeatherEntity):
     """Representation of a weather condition."""
 
     def __init__(self, name, condition, temperature, humidity, pressure,
-                 wind_speed, temperature_unit):
+                 wind_speed, temperature_unit, forecast):
         """Initialize the Demo weather."""
         self._name = name
         self._condition = condition
@@ -46,6 +50,7 @@ class DemoWeather(WeatherEntity):
         self._humidity = humidity
         self._pressure = pressure
         self._wind_speed = wind_speed
+        self._forecast = forecast
 
     @property
     def name(self):
@@ -92,3 +97,19 @@ class DemoWeather(WeatherEntity):
     def attribution(self):
         """Return the attribution."""
         return 'Powered by Home Assistant'
+
+    @property
+    def forecast(self):
+        """Return the forecast."""
+        reftime = datetime.now().replace(hour=16, minute=00)
+
+        forecast_data = []
+        for entry in self._forecast:
+            dict = {
+                'datetime': reftime.isoformat(),
+                'temp': entry
+            }
+            reftime = reftime + timedelta(hours=4)
+            forecast_data.append(dict)
+
+        return forecast_data
