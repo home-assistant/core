@@ -27,7 +27,6 @@ COMMANDS = {'en':{'turn_on':r'(?P<command>turn on|activ\w+|enable|open|launch|st
                   },
             'fr':{'turn_on':r'(?P<command>allum\w+|lanc\w+|activ\w+|ouvr\w+) (?P<name>(?: |\w)+)',
                   'turn_off':r'(?P<command>étein\w+|ferm\w+|stop|arrêt\w+|désactiv\w+) (?P<name>(?: |\w)+)',
-                  'repeat':r'(?P<command>répèt\w+) (?P<name>(?: |\w)+)',
                   },
             'es':{'turn_on':r'(?P<command>enciend\w+) (?P<name>(?: |\w)+)',
                   'turn_off':r'(?P<command>apag\w+) (?P<name>(?: |\w)+)',
@@ -81,14 +80,7 @@ def setup(hass, config):
             logger.error("Unable to process: %s", text)
             return
 
-#         command = match.group('command')
         name = match.group('name')
-        if command == 'repeat':
-            hass.services.call('tts', 'picotts_say', {
-                'message':name,
-                'entity_id':'media_player.vlc'
-            }, blocking=True)
-            return
         entities = {state.entity_id: state.name for state in hass.states.all()}
         entity_ids = fuzzyExtract.extractOne(name, entities, score_cutoff=65)[2]
 
