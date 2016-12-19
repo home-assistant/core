@@ -1,6 +1,9 @@
 """
 Local Support for Insteon.
 
+Based on the insteonlocal library
+https://github.com/phareous/insteonlocal
+
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon_local/
 """

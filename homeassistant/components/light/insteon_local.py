@@ -4,6 +4,9 @@ Support for Insteon dimmers via local hub control.
 Based on the insteonlocal library
 https://github.com/phareous/insteonlocal
 
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/light.insteon_local/
+
 --
 Example platform config
 --
