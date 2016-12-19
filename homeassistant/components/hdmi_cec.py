@@ -268,7 +268,7 @@ class CecDevice(Entity):
         """Icon for device by its type."""
         return (self._icon if self._icon is not None else ICONS_BY_TYPE.get(
             self._device.type) if self._device.type in ICONS_BY_TYPE
-            else ICON_UNKNOWN)
+                else ICON_UNKNOWN)
 
     @property
     def device_state_attributes(self):
