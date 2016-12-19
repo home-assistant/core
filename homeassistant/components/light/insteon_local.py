@@ -1,7 +1,8 @@
 """
-Support for Insteon local lights.
+Support for Insteon dimmers via local hub control.
 
-For more details about this platform, please refer to the documentation at
+Based on the insteonlocal library
+https://github.com/phareous/insteonlocal
 
 --
 Example platform config

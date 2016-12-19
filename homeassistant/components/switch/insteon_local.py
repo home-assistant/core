@@ -1,7 +1,10 @@
 """
-Support for Insteon local Switches.
+Support for Insteon switch devices via local hub support
 
-For more details about this platform, please refer to the documentation at
+
+Based on the insteonlocal library
+https://github.com/phareous/insteonlocal
+
 
 --
 Example platform config
