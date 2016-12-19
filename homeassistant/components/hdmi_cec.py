@@ -132,9 +132,9 @@ def setup(hass: HomeAssistant, base_config):
                 _LOGGER.info("Volume deceased %d times", att)
             elif cmd == CMD_MUTE:
                 hdmi_network.send_command(
-                    KeyPressCommand(KEY_MUTE, dst=ADDR_AUDIOSYSTEM))
+                KeyPressCommand(KEY_MUTE, dst=ADDR_AUDIOSYSTEM))
                 hdmi_network.send_command(
-                    KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
+                KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
                 _LOGGER.info("Audio muted")
             else:
                 _LOGGER.warning("Unknown command %s", cmd)
