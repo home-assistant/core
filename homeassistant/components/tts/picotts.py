@@ -33,7 +33,7 @@ class PicoProvider(Provider):
     """pico speech api provider."""
 
     def get_tts_audio(self, message):
-        """Load TTS"""
+        """Load TTS."""
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as f:
             fname = f.name
         cmd = ['pico2wave', '--wave', fname, '-l', self.language, message]
