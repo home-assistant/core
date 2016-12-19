@@ -1,1 +1,2 @@
 """Tests for Home Assistant."""
+
