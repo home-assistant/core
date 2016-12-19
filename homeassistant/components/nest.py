@@ -173,18 +173,3 @@ class NestDevice(object):
         except socket.error:
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
-
-
-def is_thermostat(device):
-    """Target devices that are Nest Thermostats."""
-    return bool(device.__class__.__name__ == 'Thermostat')
-
-
-def is_protect(device):
-    """Target devices that are Nest Protect Smoke Alarms."""
-    return bool(device.__class__.__name__ == 'SmokeCoAlarm')
-
-
-def is_camera(device):
-    """Target devices that are Nest Protect Smoke Alarms."""
-    return bool(device.__class__.__name__ == 'Camera')

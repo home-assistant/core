@@ -10,8 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.nest import (
-    DATA_NEST, DOMAIN,
-    is_thermostat, is_protect)
+    DATA_NEST, DOMAIN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_PLATFORM,
@@ -98,13 +97,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for structure, device in chain(nest.thermostats(), nest.smoke_co_alarms()):
         sensors = [NestBasicSensor(structure, device, variable)
                    for variable in conf
-                   if variable in SENSOR_TYPES and is_thermostat(device)]
+                   if variable in SENSOR_TYPES and device.is_thermostat]
         sensors += [NestTempSensor(structure, device, variable)
                     for variable in conf
-                    if variable in SENSOR_TEMP_TYPES and is_thermostat(device)]
+                    if variable in SENSOR_TEMP_TYPES and device.is_thermostat]
         sensors += [NestProtectSensor(structure, device, variable)
                     for variable in conf
-                    if variable in PROTECT_VARS and is_protect(device)]
+                    if variable in PROTECT_VARS and device.is_smoke_co_alarm]
         all_sensors.extend(sensors)
 
     add_devices(all_sensors, True)

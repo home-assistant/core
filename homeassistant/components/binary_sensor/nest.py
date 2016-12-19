@@ -13,8 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.sensor.nest import NestSensor
 from homeassistant.const import (CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS)
-from homeassistant.components.nest import (
-    DATA_NEST, is_thermostat, is_camera)
+from homeassistant.components.nest import DATA_NEST
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['nest']
@@ -86,9 +85,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors += [NestBinarySensor(structure, device, variable)
                     for variable in conf
                     if variable in CLIMATE_BINARY_TYPES
-                    and is_thermostat(device)]
+                    and device.is_thermostat]
 
-        if is_camera(device):
+        if device.is_camera:
             sensors += [NestBinarySensor(structure, device, variable)
                         for variable in conf
                         if variable in CAMERA_BINARY_TYPES]
