@@ -171,7 +171,7 @@ def setup(hass: HomeAssistant, base_config):
     @callback
     def _update(call):
         """
-        Update callback.
+        Callback called when device update is needed.
 
         - called by service, requests CEC network to update data.
         """
