@@ -9,7 +9,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.nest import DATA_NEST, DOMAIN
+from homeassistant.components.nest import (
+    DATA_NEST, DOMAIN,
+    is_thermostat, is_protect)
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_PLATFORM,
@@ -93,7 +95,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(wstr)
 
     all_sensors = []
-    for structure, device in chain(nest.devices(), nest.protect_devices()):
+    for structure, device in chain(nest.thermostats(), nest.smoke_co_alarms()):
         sensors = [NestBasicSensor(structure, device, variable)
                    for variable in conf
                    if variable in SENSOR_TYPES and is_thermostat(device)]
@@ -106,16 +108,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         all_sensors.extend(sensors)
 
     add_devices(all_sensors, True)
-
-
-def is_thermostat(device):
-    """Target devices that are Nest Thermostats."""
-    return bool(device.__class__.__name__ == 'Device')
-
-
-def is_protect(device):
-    """Target devices that are Nest Protect Smoke Alarms."""
-    return bool(device.__class__.__name__ == 'ProtectDevice')
 
 
 class NestSensor(Entity):

@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    camera_devices = hass.data[nest.DATA_NEST].camera_devices()
+    camera_devices = hass.data[nest.DATA_NEST].cameras()
     cameras = [NestCamera(structure, device)
                for structure, device in camera_devices]
     add_devices(cameras, True)

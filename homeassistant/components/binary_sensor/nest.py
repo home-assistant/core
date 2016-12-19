@@ -76,9 +76,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(wstr)
 
     sensors = []
-    device_chain = chain(nest.devices(),
-                         nest.protect_devices(),
-                         nest.camera_devices())
+    device_chain = chain(nest.thermostats(),
+                         nest.smoke_co_alarms(),
+                         nest.cameras())
     for structure, device in device_chain:
         sensors += [NestBinarySensor(structure, device, variable)
                     for variable in conf

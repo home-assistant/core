@@ -132,8 +132,8 @@ class NestDevice(object):
             self._structure = conf[CONF_STRUCTURE]
         _LOGGER.debug("Structures to include: %s", self._structure)
 
-    def devices(self):
-        """Generator returning list of devices and their location."""
+    def thermostats(self):
+        """Generator returning list of thermostats and their location."""
         try:
             for structure in self.nest.structures:
                 if structure.name in self._structure:
@@ -146,8 +146,8 @@ class NestDevice(object):
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
 
-    def protect_devices(self):
-        """Generator returning list of protect devices."""
+    def smoke_co_alarms(self):
+        """Generator returning list of smoke co alarams."""
         try:
             for structure in self.nest.structures:
                 if structure.name in self._structure:
@@ -160,8 +160,8 @@ class NestDevice(object):
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
 
-    def camera_devices(self):
-        """Generator returning list of camera devices."""
+    def cameras(self):
+        """Generator returning list of cameras."""
         try:
             for structure in self.nest.structures:
                 if structure.name in self._structure:
@@ -177,14 +177,14 @@ class NestDevice(object):
 
 def is_thermostat(device):
     """Target devices that are Nest Thermostats."""
-    return bool(device.__class__.__name__ == 'Device')
+    return bool(device.__class__.__name__ == 'Thermostat')
 
 
 def is_protect(device):
     """Target devices that are Nest Protect Smoke Alarms."""
-    return bool(device.__class__.__name__ == 'ProtectDevice')
+    return bool(device.__class__.__name__ == 'SmokeCoAlarm')
 
 
 def is_camera(device):
     """Target devices that are Nest Protect Smoke Alarms."""
-    return bool(device.__class__.__name__ == 'CameraDevice')
+    return bool(device.__class__.__name__ == 'Camera')
