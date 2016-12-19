@@ -1,5 +1,9 @@
 """Logging utilities."""
+import asyncio
 import logging
+import threading
+
+from .async import run_coroutine_threadsafe
 
 
 class HideSensitiveDataFilter(logging.Filter):
@@ -15,3 +19,116 @@ class HideSensitiveDataFilter(logging.Filter):
         record.msg = record.msg.replace(self.text, '*******')
 
         return True
+
+
+# pylint: disable=invalid-name
+class AsyncHandler(object):
+    """Logging handler wrapper to add a async layer."""
+
+    def __init__(self, loop, handler):
+        """Initialize async logging handler wrapper."""
+        self.handler = handler
+        self.loop = loop
+        self._queue = asyncio.Queue(loop=loop)
+        self._thread = threading.Thread(target=self._process)
+
+        # Delegate from handler
+        self.setLevel = handler.setLevel
+        self.setFormatter = handler.setFormatter
+        self.addFilter = handler.addFilter
+        self.removeFilter = handler.removeFilter
+        self.filter = handler.filter
+        self.flush = handler.flush
+        self.handle = handler.handle
+        self.handleError = handler.handleError
+        self.format = handler.format
+
+        self._thread.start()
+
+    def close(self):
+        """Wrap close to handler."""
+        self.emit(None)
+
+    @asyncio.coroutine
+    def async_close(self, blocking=False):
+        """Close the handler.
+
+        When blocking=True, will wait till closed.
+        """
+        self.close()
+
+        if blocking:
+            # Python 3.4.4+
+            # pylint: disable=no-member
+            if hasattr(self._queue, 'join'):
+                yield from self._queue.join()
+            else:
+                while not self._queue.empty():
+                    yield from asyncio.sleep(0, loop=self.loop)
+
+    def emit(self, record):
+        """Process a record."""
+        ident = self.loop.__dict__.get("_thread_ident")
+
+        # inside eventloop
+        if ident is not None and ident == threading.get_ident():
+            self._queue.put_nowait(record)
+        # from a thread/executor
+        else:
+            self.loop.call_soon_threadsafe(self._queue.put_nowait, record)
+
+    def __repr__(self):
+        """String name of this."""
+        return str(self.handler)
+
+    def _process(self):
+        """Process log in a thread."""
+        support_join = hasattr(self._queue, 'task_done')
+
+        while True:
+            record = run_coroutine_threadsafe(
+                self._queue.get(), self.loop).result()
+
+            # pylint: disable=no-member
+
+            if record is None:
+                self.handler.close()
+                if support_join:
+                    self.loop.call_soon_threadsafe(self._queue.task_done)
+                return
+
+            self.handler.emit(record)
+            if support_join:
+                self.loop.call_soon_threadsafe(self._queue.task_done)
+
+    def createLock(self):
+        """Ignore lock stuff."""
+        pass
+
+    def acquire(self):
+        """Ignore lock stuff."""
+        pass
+
+    def release(self):
+        """Ignore lock stuff."""
+        pass
+
+    @property
+    def level(self):
+        """Wrap property level to handler."""
+        return self.handler.level
+
+    @property
+    def formatter(self):
+        """Wrap property formatter to handler."""
+        return self.handler.formatter
+
+    @property
+    def name(self):
+        """Wrap property set_name to handler."""
+        return self.handler.get_name()
+
+    @name.setter
+    def set_name(self, name):
+        """Wrap property get_name to handler."""
+        self.handler.name = name

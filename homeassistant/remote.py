@@ -55,15 +55,20 @@ class API(object):
     """Object to pass around Home Assistant API location and credentials."""
 
     def __init__(self, host: str, api_password: Optional[str]=None,
-                 port: Optional[int]=None, use_ssl: bool=False) -> None:
+                 port: Optional[int]=SERVER_PORT, use_ssl: bool=False) -> None:
         """Initalize the API."""
         self.host = host
-        self.port = port or SERVER_PORT
+        self.port = port
         self.api_password = api_password
+
         if use_ssl:
-            self.base_url = "https://{}:{}".format(host, self.port)
+            self.base_url = "https://{}".format(host)
         else:
-            self.base_url = "http://{}:{}".format(host, self.port)
+            self.base_url = "http://{}".format(host)
+
+        if port is not None:
+            self.base_url += ':{}'.format(port)
+
         self.status = None
         self._headers = {
             HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON,
@@ -106,8 +111,8 @@ class API(object):
 
     def __repr__(self) -> str:
         """Return the representation of the API."""
-        return "API({}, {}, {})".format(
-            self.host, self.api_password, self.port)
+        return "<API({}, password: {})>".format(
+            self.base_url, 'yes' if self.api_password is not None else 'no')
 
 
 class HomeAssistant(ha.HomeAssistant):
