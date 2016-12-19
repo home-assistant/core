@@ -30,8 +30,6 @@ ATTR_WEATHER_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_WIND_SPEED = 'wind_speed'
 ATTR_FORECAST = 'forecast'
 
-CONF_FORECAST = 'forecast'
-
 
 def setup(hass, config):
     """Setup the weather component."""

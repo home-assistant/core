@@ -9,8 +9,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA, CONF_FORECAST)
+from homeassistant.components.weather import (WeatherEntity, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
@@ -49,7 +48,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_FORECAST): cv.boolean
 })
 
 
@@ -60,7 +58,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     longitude = config.get(CONF_LONGITUDE, round(hass.config.longitude, 5))
     latitude = config.get(CONF_LATITUDE, round(hass.config.latitude, 5))
     name = config.get(CONF_NAME)
-    forecast = config.get(CONF_FORECAST, False)
 
     try:
         owm = pyowm.OWM(config.get(CONF_API_KEY))
@@ -71,18 +68,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = WeatherData(owm, latitude, longitude)
 
     add_devices([OpenWeatherMapWeather(
-        name, data, hass.config.units.temperature_unit, forecast)], True)
+        name, data, hass.config.units.temperature_unit)], True)
 
 
 class OpenWeatherMapWeather(WeatherEntity):
     """Implementation of an OpenWeatherMap sensor."""
 
-    def __init__(self, name, owm, temperature_unit, forecast):
+    def __init__(self, name, owm, temperature_unit):
         """Initialize the sensor."""
         self._name = name
         self._owm = owm
         self._temperature_unit = temperature_unit
-        self._forecast = forecast
         self.data = None
         self.forecast_data = None
 
@@ -138,16 +134,14 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        if self._forecast is False:
-            return None
-
         forecast_array = []
+        temp_unit = 'celsius' if self.hass.config.units.is_metric else 'fahrenheit'
 
         for forecast_entry in self.forecast_data.get_weathers():
             data_dict = {
                 'datetime': forecast_entry.get_reference_time('iso'),
-                'temp': forecast_entry.get_temperature('celsius')
-                    .get('temp', None),
+                'temp': forecast_entry.get_temperature(temp_unit)
+                        .get('temp', None),
             }
             forecast_array.append(data_dict)
 
@@ -156,8 +150,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     def update(self):
         """Get the latest data from OWM and updates the states."""
         self._owm.update()
-        if self._forecast:
-            self._owm.update_forecast()
+        self._owm.update_forecast()
         self.data = self._owm.data
         self.forecast_data = self._owm.forecast_data
 
