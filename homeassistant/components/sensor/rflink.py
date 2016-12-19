@@ -120,7 +120,6 @@ class RflinkSensor(rflink.RflinkDevice):
     @property
     def icon(self):
         """Return possible sensor specific icon or user override."""
-        print(self._icon, self._value_key)
         if self._icon:
             return self._icon
         elif self._value_key in SENSOR_ICONS:
