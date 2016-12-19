@@ -548,26 +548,14 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     def test_see_passive_zone_state(self):
         """Test that the device tracker sets gps for passive trackers."""
-        zone_info = {
-            'name': 'Home',
-            'latitude': 32.880837,
-            'longitude': -117.237561,
-            'radius': 250,
-            'passive': False
-        }
 
-        assert bootstrap.setup_component(self.hass, zone.DOMAIN, {
-            'zone': zone_info
-        })
-
-        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
-                                        TEST_PLATFORM))
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            setup_component(self.hass, device_tracker.DOMAIN, TEST_PLATFORM)
 
         params = {
             'mac': 'AA:BB:CC:DD:EE:FF',
             'dev_id': 'some_device',
             'host_name': 'dev',
-            'location_name': 'Work',
             'gps': [.3, .8],
             'gps_accuracy': 1,
             'battery': 100,
@@ -586,7 +574,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         state = self.hass.states.get('device_tracker.dev')
         attrs = state.attributes
-        self.assertEqual(state.state, 'Work')
+        self.assertEqual(state.state, 'not_home')
         self.assertEqual(state.object_id, 'dev')
         self.assertEqual(state.name, 'dev')
         self.assertEqual(attrs['friendly_name'], 'dev')
@@ -598,15 +586,31 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(attrs['source_type'], 'gps')
         self.assertEqual(attrs['number'], 1)
 
+        self.hass.config.components = []
+
+        with assert_setup_component(1, zone.DOMAIN):
+            zone_info = {
+                'name': 'Home',
+                'latitude': 32.880837,
+                'longitude': -117.237561,
+                'radius': 250,
+                'passive': False
+            }
+
+            setup_component(self.hass, zone.DOMAIN, {
+                'zone': zone_info
+            })
+
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            setup_component(self.hass, device_tracker.DOMAIN,
+                            {device_tracker.DOMAIN: {
+                                CONF_PLATFORM: 'test',
+                                device_tracker.CONF_CONSIDER_HOME: 59
+                            }})
+
         scanner = get_component('device_tracker.test').SCANNER
         scanner.reset()
         scanner.come_home('dev')
-
-        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'test',
-                device_tracker.CONF_CONSIDER_HOME: 59,
-            }}))
 
         self.assertEqual(STATE_HOME,
                          self.hass.states.get('device_tracker.dev').state)

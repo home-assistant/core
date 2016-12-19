@@ -71,8 +71,8 @@ ATTR_BATTERY = 'battery'
 ATTR_ATTRIBUTES = 'attributes'
 ATTR_SOURCE_TYPE = 'source_type'
 
-REPORT_SOURCE_GPS = 'gps'
-REPORT_SOURCE_ROUTER = 'router'
+SOURCE_TYPE_GPS = 'gps'
+SOURCE_TYPE_ROUTER = 'router'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,  # seconds
@@ -239,7 +239,7 @@ class DeviceTracker(object):
     def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
             location_name: str=None, gps: GPSType=None, gps_accuracy=None,
             battery: str=None, attributes: dict=None,
-            source_type: str=REPORT_SOURCE_GPS):
+            source_type: str=SOURCE_TYPE_GPS):
         """Notify the device tracker that you see a device."""
         self.hass.add_job(
             self.async_see(mac, dev_id, host_name, location_name, gps,
@@ -250,7 +250,7 @@ class DeviceTracker(object):
     def async_see(self, mac: str=None, dev_id: str=None, host_name: str=None,
                   location_name: str=None, gps: GPSType=None,
                   gps_accuracy=None, battery: str=None, attributes: dict=None,
-                  source_type: str=REPORT_SOURCE_GPS):
+                  source_type: str=SOURCE_TYPE_GPS):
         """Notify the device tracker that you see a device.
 
         This method is a coroutine.
@@ -412,7 +412,9 @@ class Device(Entity):
     @property
     def state_attributes(self):
         """Return the device state attributes."""
-        attr = {}
+        attr = {
+            ATTR_SOURCE_TYPE: self.source_type
+        }
 
         if self.gps:
             attr[ATTR_LATITUDE] = self.gps[0]
@@ -421,8 +423,6 @@ class Device(Entity):
 
         if self.battery:
             attr[ATTR_BATTERY] = self.battery
-
-        attr[ATTR_SOURCE_TYPE] = self.source_type
 
         return attr
 
@@ -439,7 +439,7 @@ class Device(Entity):
     @asyncio.coroutine
     def async_seen(self, host_name: str=None, location_name: str=None,
                    gps: GPSType=None, gps_accuracy=0, battery: str=None,
-                   attributes: dict=None, source_type: str=REPORT_SOURCE_GPS):
+                   attributes: dict=None, source_type: str=SOURCE_TYPE_GPS):
         """Mark the device as seen."""
         self.source_type = source_type
         self.last_seen = dt_util.utcnow()
@@ -484,7 +484,7 @@ class Device(Entity):
             return
         elif self.location_name:
             self._state = self.location_name
-        elif self.gps is not None and self.source_type == REPORT_SOURCE_GPS:
+        elif self.gps is not None and self.source_type == SOURCE_TYPE_GPS:
             zone_state = zone.async_active_zone(
                 self.hass, self.gps[0], self.gps[1], self.gps_accuracy)
             if zone_state is None:
@@ -657,7 +657,7 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
             kwargs = {
                 'mac': mac,
                 'host_name': host_name,
-                'source_type': REPORT_SOURCE_ROUTER
+                'source_type': SOURCE_TYPE_ROUTER
             }
 
             zone_home = hass.states.get(zone.ENTITY_ID_HOME)
