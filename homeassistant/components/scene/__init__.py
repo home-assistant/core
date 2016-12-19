@@ -99,6 +99,6 @@ class Scene(Entity):
     def async_activate(self):
         """Activate scene. Try to get entities into requested state.
 
-        This method must be run in the event loop and return a coro/task object
+        This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.loop.run_in_executor(None, self.activate)

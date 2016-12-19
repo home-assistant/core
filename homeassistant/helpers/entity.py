@@ -349,7 +349,7 @@ class ToggleEntity(Entity):
     def async_turn_on(self, **kwargs):
         """Turn the entity on.
 
-        This method must be run in the event loop and return a coro/task object
+        This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.loop.run_in_executor(
             None, ft.partial(self.turn_on, **kwargs))
@@ -361,7 +361,7 @@ class ToggleEntity(Entity):
     def async_turn_off(self, **kwargs):
         """Turn the entity off.
 
-        This method must be run in the event loop and return a coro/task object
+        This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.loop.run_in_executor(
             None, ft.partial(self.turn_off, **kwargs))
@@ -376,7 +376,7 @@ class ToggleEntity(Entity):
     def async_toggle(self):
         """Toggle the entity.
 
-        This method must be run in the event loop and return a coro/task object
+        This method must be run in the event loop and returns a coroutine.
         """
         if self.is_on:
             return self.async_turn_off()

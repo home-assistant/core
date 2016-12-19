@@ -84,7 +84,7 @@ class Camera(Entity):
     def async_camera_image(self):
         """Return bytes of camera image.
 
-        This method must be run in the event loop and return a coro/task object
+        This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.loop.run_in_executor(None, self.camera_image)
 

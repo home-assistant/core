@@ -151,7 +151,7 @@ class RemoteDevice(ToggleEntity):
     def async_send_command(self, **kwargs):
         """Send a command to a device.
 
-        This method must be run in the event loop and return a coro/task object
+        This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.loop.run_in_executor(
             None, ft.partial(self.send_command, **kwargs))

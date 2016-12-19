@@ -155,7 +155,7 @@ class AlarmControlPanel(Entity):
     def async_alarm_disarm(self, code=None):
         """Send disarm command.
 
-        This method must be run in the event loop and return a coro/task object
+        This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.loop.run_in_executor(
             None, self.alarm_disarm, code)
@@ -167,7 +167,7 @@ class AlarmControlPanel(Entity):
     def async_alarm_arm_home(self, code=None):
         """Send arm home command.
 
-        This method must be run in the event loop and return a coro/task object
+        This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.loop.run_in_executor(
             None, self.alarm_arm_home, code)
@@ -179,7 +179,7 @@ class AlarmControlPanel(Entity):
     def async_alarm_arm_away(self, code=None):
         """Send arm away command.
 
-        This method must be run in the event loop and return a coro/task object
+        This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.loop.run_in_executor(
             None, self.alarm_arm_away, code)
@@ -191,7 +191,7 @@ class AlarmControlPanel(Entity):
     def async_alarm_trigger(self, code=None):
         """Send alarm trigger command.
 
-        This method must be run in the event loop and return a coro/task object
+        This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.loop.run_in_executor(
             None, self.alarm_trigger, code)
