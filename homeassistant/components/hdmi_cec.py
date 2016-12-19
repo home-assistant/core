@@ -7,9 +7,9 @@ https://home-assistant.io/components/hdmi_cec/
 import logging
 
 import os
-import voluptuous as vol
 from collections import defaultdict
 from functools import reduce
+import voluptuous as vol
 
 from homeassistant.components import discovery
 from homeassistant.config import load_yaml_config_file
@@ -142,28 +142,28 @@ def setup(hass: HomeAssistant, base_config):
     @callback
     def _tx(call):
         """Send CEC command."""
-        d = call.data
-        if ATTR_RAW in d:
-            command = CecCommand(d[ATTR_RAW])
+        data = call.data
+        if ATTR_RAW in data:
+            command = CecCommand(data[ATTR_RAW])
         else:
-            if ATTR_SRC in d:
-                src = d[ATTR_SRC]
+            if ATTR_SRC in data:
+                src = data[ATTR_SRC]
             else:
                 src = ADDR_UNREGISTERED
-            if ATTR_DST in d:
-                dst = d[ATTR_DST]
+            if ATTR_DST in data:
+                dst = data[ATTR_DST]
             else:
                 dst = ADDR_BROADCAST
-            if ATTR_CMD in d:
-                cmd = d[ATTR_CMD]
+            if ATTR_CMD in data:
+                cmd = data[ATTR_CMD]
             else:
                 _LOGGER.error("Attribute 'cmd' is missing")
                 return False
-            if ATTR_ATT in d:
-                if isinstance(d[ATTR_ATT], (list,)):
-                    att = d[ATTR_ATT]
+            if ATTR_ATT in data:
+                if isinstance(data[ATTR_ATT], (list,)):
+                    att = data[ATTR_ATT]
                 else:
-                    att = reduce(lambda x, y: "%s:%x" % (x, y), d[ATTR_ATT])
+                    att = reduce(lambda x, y: "%s:%x" % (x, y), data[ATTR_ATT])
             else:
                 att = ""
             command = CecCommand(cmd, dst, src, att)
