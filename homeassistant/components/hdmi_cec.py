@@ -133,7 +133,8 @@ def setup(hass: HomeAssistant, base_config):
             elif cmd == CMD_MUTE:
                 hdmi_network.send_command(
                     KeyPressCommand(KEY_MUTE, dst=ADDR_AUDIOSYSTEM))
-                hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
+                hdmi_network.send_command(
+                    KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
                 _LOGGER.info("Audio muted")
             else:
                 _LOGGER.warning("Unknown command %s", cmd)
@@ -231,13 +232,13 @@ class CecDevice(Entity):
         return "%s %s" % (
             self.vendor_name, self._device.osd_name) \
             if self._device.osd_name is not None and \
-            self.vendor_name is not None and self.vendor_name != 'Unknown' \
+               self.vendor_name is not None and self.vendor_name != 'Unknown' \
             else "%s %d" % (self._device.type_name,
                             self._logical_address) \
             if self._device.osd_name is None \
             else "%s %d (%s)" % (
-                self._device.type_name, self._logical_address,
-                self._device.osd_name)
+            self._device.type_name, self._logical_address,
+            self._device.osd_name)
 
     @property
     def vendor_id(self):
@@ -269,7 +270,7 @@ class CecDevice(Entity):
         """Icon for device by its type."""
         return self._icon if self._icon is not None \
             else ICONS_BY_TYPE.get(
-                self._device.type) if self._device.type in ICONS_BY_TYPE \
+            self._device.type) if self._device.type in ICONS_BY_TYPE \
             else ICON_UNKNOWN
 
     @property
