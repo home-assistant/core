@@ -237,8 +237,8 @@ class CecDevice(Entity):
                             self._logical_address) \
             if self._device.osd_name is None \
             else "%s %d (%s)" % (
-            self._device.type_name, self._logical_address,
-            self._device.osd_name)
+                self._device.type_name, self._logical_address,
+                self._device.osd_name)
 
     @property
     def vendor_id(self):
@@ -270,7 +270,7 @@ class CecDevice(Entity):
         """Icon for device by its type."""
         return self._icon if self._icon is not None \
             else ICONS_BY_TYPE.get(
-            self._device.type) if self._device.type in ICONS_BY_TYPE \
+                self._device.type) if self._device.type in ICONS_BY_TYPE \
             else ICON_UNKNOWN
 
     @property
