@@ -22,12 +22,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon Hub light platform."""
     devs = []
     for device in INSTEON.devices:
-        if device.DeviceCategory in SUPPORTED_LIGHT_DEVICES:
-            new_device = InsteonToggleDevice(device, discovery_info[CONF_POLL])
-            INSTEON.houses[0].add_stream_callback(
-                device,
-                new_device.insteon_update)
-            devs.append(new_device)
+        if device.DeviceCategory not in SUPPORTED_LIGHT_DEVICES:
+            continue
+        new_device = InsteonToggleDevice(device, discovery_info[CONF_POLL])
+        INSTEON.houses[0].add_stream_callback(
+            device,
+            new_device.insteon_update)
+        devs.append(new_device)
     add_devices(devs)
 
 
@@ -56,8 +57,8 @@ class InsteonToggleDevice(Light):
         return self._value / 100 * 255
 
     def insteon_update(self, _):
-        """Callback for an update from the hosue streaming endpoint"""
-        self.update_ha_state()
+        """Callback for an update from the hosue streaming endpoint."""
+        self.schedule_update_ha_state()
 
     def update(self):
         """Update state of the sensor."""
@@ -92,10 +93,10 @@ class InsteonToggleDevice(Light):
         else:
             self._value = 100
             self.node.send_command('on')
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn device off."""
         self.node.send_command('off')
         self._value = 0
-        self.update_ha_state()
+        self.schedule_update_ha_state()
