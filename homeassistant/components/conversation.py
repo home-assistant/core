@@ -43,7 +43,7 @@ CONF_LANG = 'language'
 
 DEFAULT_LANG = 'en'
 
-SUPPORT_LANGUAGES = ['en', 'fr']
+SUPPORT_LANGUAGES = ['en', 'fr', 'es']
 
 
 CONFIG_SCHEMA = vol.Schema({
