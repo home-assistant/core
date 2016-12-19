@@ -54,27 +54,27 @@ def setup(hass, config):
     try:
         insteonhub = Hub(host, username, password, port, timeout, _LOGGER)
         # check for successful connection
-        buffer = insteonhub.getBufferStatus()
+        insteonhub.getBufferStatus()
     except ConnectTimeout as e:
-          _LOGGER.error("Error on insteon_local. Could not connect. Check config")
-          _LOGGER.error(e)
-          return False
+        _LOGGER.error("Error on insteon_local. Could not connect. Check config")
+        _LOGGER.error(e)
+        return False
     except RequestException as e:
         if insteonhub.http_code == 401:
-          _LOGGER.error("Bad user/pass for insteon_local hub")
-          return False
+            _LOGGER.error("Bad user/pass for insteon_local hub")
+            return False
         else:
-          _LOGGER.error("Error on insteon_local hub check")
-          _LOGGER.error(e)
-          return False
+            _LOGGER.error("Error on insteon_local hub check")
+            _LOGGER.error(e)
+            return False
     except ConnectionError as e:
-          _LOGGER.error("Error on insteon_local. Could not connect. Check config")
-          _LOGGER.error(e)
-          return False
+        _LOGGER.error("Error on insteon_local. Could not connect. Check config")
+        _LOGGER.error(e)
+        return False
     except Exception as e:
-          _LOGGER.error("Error on insteon_local hub check")
-          _LOGGER.error(e)
-          return False
+        _LOGGER.error("Error on insteon_local hub check")
+        _LOGGER.error(e)
+        return False
 
     hass.data['insteon_local'] = insteonhub
     discovery.load_platform(hass, 'light', DOMAIN, {}, config)
