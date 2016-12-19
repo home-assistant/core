@@ -9,9 +9,9 @@ https://home-assistant.io/components/insteon_local/
 """
 import logging
 import voluptuous as vol
-from requests.exceptions import (RequestException, ConnectionError, 
+from requests.exceptions import (RequestException, ConnectionError,
     ConnectTimeout)
-from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_HOST, 
+from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_HOST,
     CONF_PORT, CONF_TIMEOUT)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
