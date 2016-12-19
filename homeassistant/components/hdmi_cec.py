@@ -102,7 +102,6 @@ SERVICE_POWER_SCHEMA = vol.Schema({
 
 def setup(hass: HomeAssistant, base_config):
     """Setup CEC capability."""
-
     from pycec.network import HdmiNetwork
     from pycec import CecConfig
     from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
@@ -113,7 +112,7 @@ def setup(hass: HomeAssistant, base_config):
 
     @callback
     def _volume(call):
-        """Increase/decrease volume and mute/unmute system"""
+        """Increase/decrease volume and mute/unmute system."""
         for cmd, att in call.data.items():
             att = int(att)
             att = 1 if att < 1 else att
@@ -171,8 +170,11 @@ def setup(hass: HomeAssistant, base_config):
 
     @callback
     def _update(call):
-        """Update callback - called by service,
-         requests CEC network to update data."""
+        """
+        Update callback.
+
+        - called by service, requests CEC network to update data.
+        """
         hdmi_network.scan()
 
     @callback
@@ -234,8 +236,8 @@ class CecDevice(Entity):
                             self._logical_address) \
             if self._device.osd_name is None \
             else "%s %d (%s)" % (
-            self._device.type_name, self._logical_address,
-            self._device.osd_name)
+                self._device.type_name, self._logical_address,
+                self._device.osd_name)
 
     @property
     def vendor_id(self):
@@ -267,7 +269,7 @@ class CecDevice(Entity):
         """Icon for device by its type."""
         return self._icon if self._icon is not None \
             else ICONS_BY_TYPE.get(
-            self._device.type) if self._device.type in ICONS_BY_TYPE \
+                self._device.type) if self._device.type in ICONS_BY_TYPE \
             else ICON_UNKNOWN
 
     @property
