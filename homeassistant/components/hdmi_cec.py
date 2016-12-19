@@ -19,7 +19,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC>=0.2.0']
+REQUIREMENTS = ['pyCEC>=0.2.1']
 
 DOMAIN = 'hdmi_cec'
 
@@ -102,13 +102,13 @@ SERVICE_POWER_SCHEMA = vol.Schema({
 
 def setup(hass: HomeAssistant, base_config):
     """Setup CEC capability."""
-    from pycec.network import HdmiNetwork
+    from pycec.network import HDMINetwork
     from pycec import CecConfig
     from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
     from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE, \
         ADDR_AUDIO, ADDR_BROADCAST, ADDR_UNREGISTERED
 
-    hdmi_network = HdmiNetwork(config=CecConfig(name="HA"), loop=hass.loop)
+    hdmi_network = HDMINetwork(config=CecConfig(name="HA"), loop=hass.loop)
 
     @callback
     def _volume(call):
