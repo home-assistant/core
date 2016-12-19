@@ -1,6 +1,5 @@
 """
 Support for the picotts speech service.
-
 """
 import os
 import tempfile
@@ -12,7 +11,6 @@ import voluptuous as vol
 from homeassistant.components.tts import Provider, PLATFORM_SCHEMA, CONF_LANG
 
 _LOGGER = logging.getLogger(__name__)
-
 
 SUPPORT_LANGUAGES = ['en-US', 'en-GB', 'de-DE', 'es-ES', 'fr-FR', 'it-IT']
 
@@ -29,7 +27,6 @@ def get_engine(hass, config):
         return False
     return PicoProvider()
 
-
 class PicoProvider(Provider):
     """pico speech api provider."""
         
@@ -37,11 +34,15 @@ class PicoProvider(Provider):
         """Load TTS"""
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as f:
             fname = f.name
-        subprocess.call(['pico2wave', '--wave', fname, '-l', self.language, message])
+        cmd = ['pico2wave', '--wave', fname, '-l', self.language, message]
+        subprocess.call(cmd)
+        data = None
         try:
             with open(fname, 'rb') as voice:
                 data = voice.read()
         except OSError:
             return
-        os.remove(fname)
-        return ("wav", data)
+        finally:
+            os.remove(fname)
+        if data:
+            return ("wav", data)
