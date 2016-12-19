@@ -21,12 +21,16 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return HDMI devices as switches."""
     if ATTR_NEW in discovery_info:
-        _LOGGER.info("Setting up devices %s", discovery_info[ATTR_NEW])
+        _LOGGER.info("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
         add_devices(CecSwitch(hass, device, device.logical_address) for device in discovery_info[ATTR_NEW])
 
 
 class CecSwitch(CecDevice, SwitchDevice):
     """Representation of a HDMI device as a Switch."""
+
+    @property
+    def is_on(self) -> bool:
+        return self._state == STATE_ON
 
     def __init__(self, hass: HomeAssistant, device, logical):
         """Initialize the HDMI device."""
@@ -39,14 +43,12 @@ class CecSwitch(CecDevice, SwitchDevice):
         """Turn device on."""
         self._device.turn_on()
         self._state = STATE_ON
-        self.update()
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
         self._device.turn_off()
         self._state = STATE_OFF
-        self.update()
         self.schedule_update_ha_state()
 
     @property

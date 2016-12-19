@@ -1,5 +1,5 @@
 """
-CEC component.
+HDMI CEC component.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/hdmi_cec/
@@ -13,12 +13,12 @@ from functools import reduce
 
 from homeassistant.components import discovery
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP, STATE_ON,
+                                 STATE_OFF)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
-from pycec.datastruct import CecCommand
 
-REQUIREMENTS = ['pyCEC>=0.1.0']
+REQUIREMENTS = ['pyCEC>=0.2.0']
 
 DOMAIN = 'hdmi_cec'
 
@@ -32,13 +32,6 @@ ICON_RECORDER = 'mdi:microphone'
 ICON_TV = 'mdi:television'
 
 CEC_DEVICES = defaultdict(list)
-
-CONF_EXCLUDE = 'exclude'
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_EXCLUDE, default=[]): vol.Schema([int])
-    })
-}, extra=vol.REMOVE_EXTRA)
 
 CMD_UP = 'up'
 CMD_DOWN = 'down'
@@ -103,20 +96,11 @@ def setup(hass: HomeAssistant, base_config):
     """Setup CEC capability."""
 
     from pycec.network import HdmiNetwork
-    import cec
+    from pycec import CecConfig
+    from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
+    from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE, ADDR_AUDIO, ADDR_BROADCAST, ADDR_UNREGISTERED
 
-    _LOGGER.debug("CEC setup")
-    config = base_config.get(DOMAIN)
-
-    cecconfig = cec.libcec_configuration()
-    cecconfig.strDeviceName = "HA"
-    cecconfig.bActivateSource = 0
-    cecconfig.bMonitorOnly = 0
-    cecconfig.deviceTypes.Add(cec.CEC_DEVICE_TYPE_RECORDING_DEVICE)
-    cecconfig.clientVersion = cec.LIBCEC_VERSION_CURRENT
-    network = HdmiNetwork(config=cecconfig, loop=hass.loop)
-
-    exclude = config.get(CONF_EXCLUDE)
+    hdmi_network = HdmiNetwork(config=CecConfig(name="HA"), loop=hass.loop)
 
     @callback
     def _volume(call):
@@ -126,17 +110,17 @@ def setup(hass: HomeAssistant, base_config):
             att = 1 if att < 1 else att
             if cmd == CMD_UP:
                 for _ in range(att):
-                    network.send_command('f5:44:41')
-                    network.send_command('f5:45')
+                    hdmi_network.send_command(KeyPressCommand(KEY_VOLUME_UP, dst=ADDR_AUDIO))
+                    hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIO))
                 _LOGGER.info("Volume increased %d times", att)
             elif cmd == CMD_DOWN:
                 for _ in range(att):
-                    network.send_command('f5:44:42')
-                    network.send_command('f5:45')
+                    hdmi_network.send_command(KeyPressCommand(KEY_VOLUME_DOWN, dst=ADDR_AUDIO))
+                    hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIO))
                 _LOGGER.info("Volume deceased %d times", att)
             elif cmd == CMD_MUTE:
-                network.send_command('f5:44:43')
-                network.send_command('f5:45')
+                hdmi_network.send_command(KeyPressCommand(KEY_MUTE, dst=ADDR_AUDIO))
+                hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIO))
                 _LOGGER.info("Audio muted")
             else:
                 _LOGGER.warning("Unknown command %s", cmd)
@@ -151,53 +135,49 @@ def setup(hass: HomeAssistant, base_config):
             if ATTR_SRC in d:
                 src = d[ATTR_SRC]
             else:
-                src = 0xf
+                src = ADDR_UNREGISTERED
             if ATTR_DST in d:
                 dst = d[ATTR_DST]
             else:
-                dst = cec.CECDEVICE_BROADCAST
+                dst = ADDR_BROADCAST
             if ATTR_CMD in d:
                 cmd = d[ATTR_CMD]
             else:
                 _LOGGER.error("Attribute 'cmd' is missing")
                 return False
             if ATTR_ATT in d:
-                att = reduce(lambda x, y: "%s:%x" % (x, y), d[ATTR_ATT])
+                if isinstance(d[ATTR_ATT], (list,)):
+                    att = d[ATTR_ATT]
+                else:
+                    att = reduce(lambda x, y: "%s:%x" % (x, y), d[ATTR_ATT])
             else:
                 att = ""
             command = CecCommand(cmd, dst, src, att)
-        network.send_command(command)
+        hdmi_network.send_command(command)
 
     @callback
     def _update(call):
-        network.scan()
+        """Update callback - called by service, requests CEC network to update data."""
+        hdmi_network.scan()
 
+    @callback
     def _new_device(device):
-        _LOGGER.debug("New devices callback: %s", device)
+        """Called when new device is detected by HDMI network."""
         discovery.load_platform(hass, "switch", DOMAIN, discovered={ATTR_NEW: [device]},
                                 hass_config=base_config)
 
     def _start_cec(event):
-        """Open CEC adapter."""
-
-        _LOGGER.debug("Starting CEC")
-
+        """Register services and start HDMI network to watch for devices."""
         descriptions = load_yaml_config_file(
             os.path.join(os.path.dirname(__file__), 'services.yaml'))[DOMAIN]
-
-        _LOGGER.debug("Registering services")
         hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, _tx, descriptions[SERVICE_SEND_COMMAND])
         hass.services.register(DOMAIN, SERVICE_VOLUME, _volume, descriptions[SERVICE_VOLUME])
-        _LOGGER.debug("Registering update service")
         hass.services.register(DOMAIN, SERVICE_UPDATE_DEVICES, _update)
-
-        _LOGGER.debug("Setting update callback")
-        network.set_new_device_callback(_new_device)
-        _LOGGER.debug("INIT")
-        network.start()
+        hdmi_network.set_new_device_callback(_new_device)
+        hdmi_network.start()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_cec)
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, network.stop)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, hdmi_network.stop)
     return True
 
 
@@ -224,11 +204,12 @@ class CecDevice(Entity):
         device.set_update_callback(self.update)
 
     def update(self, device=None):
+        """Updates device status."""
         if device:
             if device.power_status == 0:
-                self._state = 'on'
+                self._state = STATE_ON
             elif device.power_status == 1:
-                self._state = 'off'
+                self._state = STATE_OFF
             else:
                 _LOGGER.warning("Unknown state: %d", device.power_status)
         self.schedule_update_ha_state()
@@ -245,32 +226,44 @@ class CecDevice(Entity):
 
     @property
     def state(self) -> str:
-        """No polling needed."""
+        """Cached state of device."""
         return self._state
 
     @property
     def vendor_id(self):
+        """ID of device's vendor."""
         return self._device.vendor_id
 
     @property
     def vendor_name(self):
+        """Name of device's vendor."""
         return self._device.vendor
 
     @property
     def physical_address(self):
+        """Physical address of device in HDMI network."""
         return str(self._device.physical_address)
 
     @property
     def type(self):
+        """String representation of device's type."""
         return self._device.type_name
 
     @property
     def type_id(self):
+        """Type ID of device."""
         return self._device.type
 
     @property
     def icon(self):
-        return icon_by_type(self._device.type) if self._icon is None else self._icon
+        """Icon for device by its type."""
+        return self._icon if self._icon is not None \
+            else ICON_TV if self._device.type == 0 \
+            else ICON_RECORDER if self._device.type == 1 \
+            else ICON_TUNER if self._device.type == 3 \
+            else ICON_PLAYER if self._device.type == 4 \
+            else ICON_AUDIO if self._device.type == 5 \
+            else ICON_UNKNOWN
 
     @property
     def device_state_attributes(self):
