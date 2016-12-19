@@ -83,7 +83,7 @@ class InsteonLocalDimmerDevice(Light):
     @property
     def unique_id(self):
         """Return the ID of this insteon node."""
-        return self.node.deviceId
+        return 'insteon_local_' + self.node.deviceId
 
     @property
     def brightness(self):

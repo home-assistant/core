@@ -81,7 +81,7 @@ class InsteonLocalSwitchDevice(SwitchDevice):
     @property
     def unique_id(self):
         """Return the ID of this insteon node."""
-        return self.node.deviceId
+        return 'insteon_local_' + self.node.deviceId
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
