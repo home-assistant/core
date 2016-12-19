@@ -8,7 +8,6 @@ from unittest.mock import call, patch
 from datetime import datetime, timedelta
 import os
 
-from homeassistant import bootstrap
 from homeassistant.components import zone
 from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
