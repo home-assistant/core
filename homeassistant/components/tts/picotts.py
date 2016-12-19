@@ -20,6 +20,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
 })
 
+
 def get_engine(hass, config):
     """Setup pico speech component."""
     if shutil.which("pico2wave") is None:
