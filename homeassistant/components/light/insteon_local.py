@@ -15,6 +15,8 @@ insteon_local:
   host: YOUR HUB IP
   username: YOUR HUB USERNAME
   password: YOUR HUB PASSWORD
+  timeout: 10
+  port: 25105
 
 --
 Example platform config
