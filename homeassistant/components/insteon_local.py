@@ -9,8 +9,8 @@ https://home-assistant.io/components/insteon_local/
 """
 import logging
 import voluptuous as vol
-from requests.exceptions import RequestException,ConnectionError,ConnectTimeout
-
+from requests.exceptions import (RequestException, ConnectionError, 
+    ConnectTimeout)
 from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_HOST, 
     CONF_PORT, CONF_TIMEOUT)
 from homeassistant.helpers import discovery
@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
     })
 }, extra=vol.ALLOW_EXTRA)
 
