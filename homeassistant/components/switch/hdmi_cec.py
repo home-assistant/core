@@ -22,7 +22,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return HDMI devices as switches."""
     if ATTR_NEW in discovery_info:
         _LOGGER.info("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
-        add_devices(CecSwitch(hass, device, device.logical_address) for device in discovery_info[ATTR_NEW])
+        add_devices(
+            CecSwitch(hass, device, device.logical_address) for device in
+            discovery_info[ATTR_NEW])
 
 
 class CecSwitch(CecDevice, SwitchDevice):
@@ -35,7 +37,8 @@ class CecSwitch(CecDevice, SwitchDevice):
     def __init__(self, hass: HomeAssistant, device, logical):
         """Initialize the HDMI device."""
         CecDevice.__init__(self, hass, device, logical)
-        self.entity_id = "%s.%s_%s" % (DOMAIN, 'hdmi', hex(self._logical_address)[2:])
+        self.entity_id = "%s.%s_%s" % (
+        DOMAIN, 'hdmi', hex(self._logical_address)[2:])
         self.update()
 
     def turn_on(self, **kwargs) -> None:

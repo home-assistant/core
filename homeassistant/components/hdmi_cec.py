@@ -13,7 +13,8 @@ from functools import reduce
 
 from homeassistant.components import discovery
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP, STATE_ON,
+from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
+                                 EVENT_HOMEASSISTANT_STOP, STATE_ON,
                                  STATE_OFF)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
@@ -105,7 +106,8 @@ def setup(hass: HomeAssistant, base_config):
     from pycec.network import HdmiNetwork
     from pycec import CecConfig
     from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
-    from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE, ADDR_AUDIO, ADDR_BROADCAST, ADDR_UNREGISTERED
+    from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE, \
+        ADDR_AUDIO, ADDR_BROADCAST, ADDR_UNREGISTERED
 
     hdmi_network = HdmiNetwork(config=CecConfig(name="HA"), loop=hass.loop)
 
@@ -117,16 +119,21 @@ def setup(hass: HomeAssistant, base_config):
             att = 1 if att < 1 else att
             if cmd == CMD_UP:
                 for _ in range(att):
-                    hdmi_network.send_command(KeyPressCommand(KEY_VOLUME_UP, dst=ADDR_AUDIO))
-                    hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIO))
+                    hdmi_network.send_command(
+                        KeyPressCommand(KEY_VOLUME_UP, dst=ADDR_AUDIO))
+                    hdmi_network.send_command(
+                        KeyReleaseCommand(dst=ADDR_AUDIO))
                 _LOGGER.info("Volume increased %d times", att)
             elif cmd == CMD_DOWN:
                 for _ in range(att):
-                    hdmi_network.send_command(KeyPressCommand(KEY_VOLUME_DOWN, dst=ADDR_AUDIO))
-                    hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIO))
+                    hdmi_network.send_command(
+                        KeyPressCommand(KEY_VOLUME_DOWN, dst=ADDR_AUDIO))
+                    hdmi_network.send_command(
+                        KeyReleaseCommand(dst=ADDR_AUDIO))
                 _LOGGER.info("Volume deceased %d times", att)
             elif cmd == CMD_MUTE:
-                hdmi_network.send_command(KeyPressCommand(KEY_MUTE, dst=ADDR_AUDIO))
+                hdmi_network.send_command(
+                    KeyPressCommand(KEY_MUTE, dst=ADDR_AUDIO))
                 hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIO))
                 _LOGGER.info("Audio muted")
             else:
@@ -164,21 +171,25 @@ def setup(hass: HomeAssistant, base_config):
 
     @callback
     def _update(call):
-        """Update callback - called by service, requests CEC network to update data."""
+        """Update callback - called by service,
+         requests CEC network to update data."""
         hdmi_network.scan()
 
     @callback
     def _new_device(device):
         """Called when new device is detected by HDMI network."""
-        discovery.load_platform(hass, "switch", DOMAIN, discovered={ATTR_NEW: [device]},
+        discovery.load_platform(hass, "switch", DOMAIN,
+                                discovered={ATTR_NEW: [device]},
                                 hass_config=base_config)
 
     def _start_cec(event):
         """Register services and start HDMI network to watch for devices."""
         descriptions = load_yaml_config_file(
             os.path.join(os.path.dirname(__file__), 'services.yaml'))[DOMAIN]
-        hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, _tx, descriptions[SERVICE_SEND_COMMAND])
-        hass.services.register(DOMAIN, SERVICE_VOLUME, _volume, descriptions[SERVICE_VOLUME])
+        hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, _tx,
+                               descriptions[SERVICE_SEND_COMMAND])
+        hass.services.register(DOMAIN, SERVICE_VOLUME, _volume,
+                               descriptions[SERVICE_VOLUME])
         hass.services.register(DOMAIN, SERVICE_UPDATE_DEVICES, _update)
         hdmi_network.set_new_device_callback(_new_device)
         hdmi_network.start()
@@ -217,10 +228,14 @@ class CecDevice(Entity):
         """Return the name of the device."""
         return "%s %s" % (
             self.vendor_name, self._device.osd_name) \
-            if self._device.osd_name is not None and self.vendor_name is not None and self.vendor_name != 'Unknown' \
-            else "%s %d" % (self._device.type_name, self._logical_address) if self._device.osd_name is None \
+            if self._device.osd_name is not None and \
+               self.vendor_name is not None and self.vendor_name != 'Unknown' \
+            else "%s %d" % (self._device.type_name,
+                            self._logical_address) \
+            if self._device.osd_name is None \
             else "%s %d (%s)" % (
-            self._device.type_name, self._logical_address, self._device.osd_name)
+            self._device.type_name, self._logical_address,
+            self._device.osd_name)
 
     @property
     def vendor_id(self):
@@ -251,7 +266,8 @@ class CecDevice(Entity):
     def icon(self):
         """Icon for device by its type."""
         return self._icon if self._icon is not None \
-            else ICONS_BY_TYPE.get(self._device.type) if self._device.type in ICONS_BY_TYPE \
+            else ICONS_BY_TYPE.get(
+            self._device.type) if self._device.type in ICONS_BY_TYPE \
             else ICON_UNKNOWN
 
     @property
