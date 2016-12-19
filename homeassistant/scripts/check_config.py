@@ -231,7 +231,8 @@ def check(config_path):
     yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
 
     try:
-        bootstrap.from_config_file(config_path, skip_pip=True)
+        with patch('homeassistant.util.logging.AsyncHandler._process'):
+            bootstrap.from_config_file(config_path, skip_pip=True)
         res['secret_cache'] = dict(yaml.__SECRET_CACHE)
     except Exception as err:  # pylint: disable=broad-except
         print(color('red', 'Fatal error while loading config:'), str(err))

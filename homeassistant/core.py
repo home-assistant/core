@@ -57,8 +57,8 @@ ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 # Size of a executor pool
 EXECUTOR_POOL_SIZE = 10
 
-# Time for cleanup internal pending tasks
-TIME_INTERVAL_TASKS_CLEANUP = 10
+# AsyncHandler for logging
+DATA_ASYNCHANDLER = 'log_asynchandler'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -294,6 +294,13 @@ class HomeAssistant(object):
         yield from self.async_block_till_done()
         self.executor.shutdown()
         self.state = CoreState.not_running
+
+        # cleanup async layer from python logging
+        if self.data.get(DATA_ASYNCHANDLER):
+            handler = self.data.pop(DATA_ASYNCHANDLER)
+            logging.getLogger('').removeHandler(handler)
+            yield from handler.async_close(blocking=True)
+
         self.loop.stop()
 
     # pylint: disable=no-self-use

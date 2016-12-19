@@ -77,7 +77,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.In(TRANSPARENCIES.keys()),
     vol.Optional(CONF_COLOR, default=DEFAULT_COLOR):
         vol.In(COLORS.keys()),
-    vol.Optional(CONF_COLOR, default=DEFAULT_COLOR): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
     vol.Optional(CONF_INTERRUPT, default=DEFAULT_INTERRUPT): cv.boolean,
 })

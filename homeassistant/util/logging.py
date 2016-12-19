@@ -43,14 +43,28 @@ class AsyncHandler(object):
         self.handleError = handler.handleError
         self.format = handler.format
 
+        self._thread.start()
+
     def close(self):
         """Wrap close to handler."""
         self.emit(None)
 
-    def open(self):
-        """Wrap open to handler."""
-        self._thread.start()
-        self.handler.open()
+    @asyncio.coroutine
+    def async_close(self, blocking=False):
+        """Close the handler.
+
+        When blocking=True, will wait till closed.
+        """
+        self.close()
+
+        if blocking:
+            # Python 3.4.4+
+            # pylint: disable=no-member
+            if hasattr(self._queue, 'join'):
+                yield from self._queue.join()
+            else:
+                while not self._queue.empty():
+                    yield from asyncio.sleep(0, loop=self.loop)
 
     def emit(self, record):
         """Process a record."""
@@ -69,15 +83,23 @@ class AsyncHandler(object):
 
     def _process(self):
         """Process log in a thread."""
+        support_join = hasattr(self._queue, 'task_done')
+
         while True:
             record = run_coroutine_threadsafe(
                 self._queue.get(), self.loop).result()
 
+            # pylint: disable=no-member
+
             if record is None:
                 self.handler.close()
+                if support_join:
+                    self.loop.call_soon_threadsafe(self._queue.task_done)
                 return
 
             self.handler.emit(record)
+            if support_join:
+                self.loop.call_soon_threadsafe(self._queue.task_done)
 
     def createLock(self):
         """Ignore lock stuff."""
