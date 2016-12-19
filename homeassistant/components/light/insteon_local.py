@@ -1,7 +1,11 @@
 """
-Support for Insteon local lights.
+Support for Insteon dimmers via local hub control.
 
-For more details about this platform, please refer to the documentation at
+Based on the insteonlocal library
+https://github.com/phareous/insteonlocal
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/light.insteon_local/
 
 --
 Example platform config
@@ -11,6 +15,8 @@ insteon_local:
   host: YOUR HUB IP
   username: YOUR HUB USERNAME
   password: YOUR HUB PASSWORD
+  timeout: 10
+  port: 25105
 
 --
 Example platform config
