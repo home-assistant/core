@@ -369,7 +369,7 @@ pwaqi==1.3
 py-cpuinfo==0.2.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.13.0
+pyRFXtrx==0.14.0
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.0.8
