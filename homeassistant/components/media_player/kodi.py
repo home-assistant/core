@@ -215,7 +215,7 @@ class KodiEntity(MediaPlayerDevice):
             data = json.loads(msg)
             if data[ATTR_METHOD] in EXIT_NOTIFICATIONS:
                 self._players = None
-                yield from self.async_update_ha_state()
+                self.hass.async_add_job(self.async_update_ha_state())
                 continue
 
             if data[ATTR_METHOD] in APPLICATION_NOTIFICATIONS:
@@ -240,7 +240,8 @@ class KodiEntity(MediaPlayerDevice):
                     if (data[ATTR_PARAMS]['data']['player']['playerid']
                             is not None):
                         # Media just started playing. Full update required
-                        yield from self.async_update_ha_state(True)
+                        self.hass.async_add_job(
+                            self.async_update_ha_state(True))
                 except KeyError:
                     pass
                 continue
@@ -249,7 +250,7 @@ class KodiEntity(MediaPlayerDevice):
                 self._players = []
                 self._properties = None
                 self._item = None
-                yield from self.async_update_ha_state()
+                self.hass.async_add_job(self.async_update_ha_state())
                 continue
 
             try:
@@ -267,13 +268,13 @@ class KodiEntity(MediaPlayerDevice):
             try:
                 if data[ATTR_PARAMS]['data']['item']['id'] != self._item['id']:
                     # New item is playing. Perform full update.
-                    yield from self.async_update_ha_state(True)
+                    self.hass.async_add_job(self.async_update_ha_state(True))
                     continue
             except KeyError:
                 pass
 
             # Update HA with changed state
-            yield from self.async_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
         # Exiting websocket loop
         try:
