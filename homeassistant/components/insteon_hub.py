@@ -13,7 +13,7 @@ from homeassistant.const import (CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['insteon_hub==0.7.0']
+REQUIREMENTS = ['insteon_hub==0.7.2']
 
 _LOGGER = logging.getLogger(__name__)
 

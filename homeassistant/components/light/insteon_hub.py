@@ -23,7 +23,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devs = []
     for device in INSTEON.devices:
         if device.DeviceCategory in SUPPORTED_LIGHT_DEVICES:
-            devs.append(InsteonToggleDevice(device, discovery_info[CONF_POLL]))
+            new_device = InsteonToggleDevice(device, discovery_info[CONF_POLL])
+            INSTEON.houses[0].add_stream_callback(
+                device,
+                new_device.insteon_update)
+            devs.append(new_device)
     add_devices(devs)
 
 
@@ -51,16 +55,24 @@ class InsteonToggleDevice(Light):
         """Return the brightness of this light between 0..255."""
         return self._value / 100 * 255
 
+    def insteon_update(self, _):
+        """Callback for an update from the hosue streaming endpoint"""
+        self.update_ha_state()
+
     def update(self):
         """Update state of the sensor."""
-        if self._should_poll:
-            resp = self.node.send_command('get_status', wait=True)
-            try:
-                self._value = resp['response']['level']
-                new_status = 'on' if self._value != 0 else 'off'
-                self.node.set_status(new_status)
-            except KeyError:
-                pass
+        resp = self.node.send_command('get_status', wait=True)
+        try:
+            self._value = resp['response']['level']
+            new_status = 'on' if self._value != 0 else 'off'
+            self.node.set_status(new_status)
+        except KeyError:
+            pass
+
+    @property
+    def should_poll(self):
+        """Return if polling is needed."""
+        return self._should_poll
 
     @property
     def is_on(self):
@@ -80,7 +92,10 @@ class InsteonToggleDevice(Light):
         else:
             self._value = 100
             self.node.send_command('on')
+        self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn device off."""
         self.node.send_command('off')
+        self._value = 0
+        self.update_ha_state()
