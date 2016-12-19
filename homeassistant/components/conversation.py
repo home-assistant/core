@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, )
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON )
 import homeassistant.helpers.config_validation as cv
 from custom_components.tts.picotts import SUPPORT_LANGUAGES
 
@@ -36,7 +36,8 @@ COMMANDS = {'en':{'turn_on':r'(?P<command>turn on|activ\w+|enable|open|launch|st
 SERVICE_PROCESS = 'process'
 
 SERVICE_PROCESS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TEXT): vol.All(cv.string, vol.Lower),
+    vol.Required(ATTR_TEXT): vol.All(cv.string, 
+                                     vol.Lower),
 })
 
 CONF_LANG = 'language'
@@ -67,8 +68,6 @@ def setup(hass, config):
     def process(service):
         """Parse text into commands."""
         
-        language = config[DOMAIN].get(CONF_LANG,DEFAULT_LANG)
-        
         text = service.data[ATTR_TEXT]
         match = None
         for command in commands:
@@ -82,7 +81,8 @@ def setup(hass, config):
 
         name = match.group('name')
         entities = {state.entity_id: state.name for state in hass.states.all()}
-        entity_ids = fuzzyExtract.extractOne(name, entities, score_cutoff=65)[2]
+        entity_ids = fuzzyExtract.extractOne(
+            name, entities, score_cutoff=65)[2]
 
         if not entity_ids:
             logger.error(
@@ -93,7 +93,6 @@ def setup(hass, config):
             hass.services.call(core.DOMAIN, SERVICE_TURN_ON, {
                 ATTR_ENTITY_ID: entity_ids,
             }, blocking=True)
-
         elif command == 'turn_off':
             hass.services.call(core.DOMAIN, SERVICE_TURN_OFF, {
                 ATTR_ENTITY_ID: entity_ids,
