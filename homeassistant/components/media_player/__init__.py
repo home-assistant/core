@@ -521,130 +521,156 @@ class MediaPlayerDevice(Entity):
         """Turn the media player on."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_turn_on(self):
-        """Turn the media player on."""
-        yield from self.hass.loop.run_in_executor(
+        """Turn the media player on.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.turn_on)
 
     def turn_off(self):
         """Turn the media player off."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_turn_off(self):
-        """Turn the media player off."""
-        yield from self.hass.loop.run_in_executor(
+        """Turn the media player off.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.turn_off)
 
     def mute_volume(self, mute):
         """Mute the volume."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_mute_volume(self, mute):
-        """Mute the volume."""
-        yield from self.hass.loop.run_in_executor(
+        """Mute the volume.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.mute_volume, mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_set_volume_level(self, volume):
-        """Set volume level, range 0..1."""
-        yield from self.hass.loop.run_in_executor(
+        """Set volume level, range 0..1.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.set_volume_level, volume)
 
     def media_play(self):
         """Send play commmand."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_media_play(self):
-        """Send play commmand."""
-        yield from self.hass.loop.run_in_executor(
+        """Send play commmand.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.media_play)
 
     def media_pause(self):
         """Send pause command."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_media_pause(self):
-        """Send pause command."""
-        yield from self.hass.loop.run_in_executor(
+        """Send pause command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.media_pause)
 
     def media_stop(self):
         """Send stop command."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_media_stop(self):
-        """Send stop command."""
-        yield from self.hass.loop.run_in_executor(
+        """Send stop command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.media_stop)
 
     def media_previous_track(self):
         """Send previous track command."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_media_previous_track(self):
-        """Send previous track command."""
-        yield from self.hass.loop.run_in_executor(
+        """Send previous track command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.media_previous_track)
 
     def media_next_track(self):
         """Send next track command."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_media_next_track(self):
-        """Send next track command."""
-        yield from self.hass.loop.run_in_executor(
+        """Send next track command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.media_next_track)
 
     def media_seek(self, position):
         """Send seek command."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_media_seek(self, position):
-        """Send seek command."""
-        yield from self.hass.loop.run_in_executor(
+        """Send seek command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.media_seek, position)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_play_media(self, media_type, media_id, **kwargs):
-        """Play a piece of media."""
-        yield from self.hass.loop.run_in_executor(
+        """Play a piece of media.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, ft.partial(self.play_media, media_type, media_id, **kwargs))
 
     def select_source(self, source):
         """Select input source."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_select_source(self, source):
-        """Select input source."""
-        yield from self.hass.loop.run_in_executor(
+        """Select input source.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.select_source, source)
 
     def clear_playlist(self):
         """Clear players playlist."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_clear_playlist(self):
-        """Clear players playlist."""
-        yield from self.hass.loop.run_in_executor(
+        """Clear players playlist.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.clear_playlist)
 
     # No need to overwrite these.
@@ -706,7 +732,10 @@ class MediaPlayerDevice(Entity):
             self.turn_off()
 
     def async_toggle(self):
-        """Toggle the power on the media player."""
+        """Toggle the power on the media player.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
         if self.state in [STATE_OFF, STATE_IDLE]:
             return self.async_turn_on()
         else:
@@ -718,7 +747,10 @@ class MediaPlayerDevice(Entity):
             self.set_volume_level(min(1, self.volume_level + .1))
 
     def async_volume_up(self):
-        """Turn volume up for media player."""
+        """Turn volume up for media player.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
         return self.async_set_volume_level(min(1, self.volume_level + .1))
 
     def volume_down(self):
@@ -727,7 +759,10 @@ class MediaPlayerDevice(Entity):
             self.set_volume_level(max(0, self.volume_level - .1))
 
     def async_volume_down(self):
-        """Turn volume down for media player."""
+        """Turn volume down for media player.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
         return self.async_set_volume_level(max(0, self.volume_level - .1))
 
     def media_play_pause(self):
@@ -738,7 +773,10 @@ class MediaPlayerDevice(Entity):
             self.media_play()
 
     def async_media_play_pause(self):
-        """Play or pause the media player."""
+        """Play or pause the media player.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
         if self.state == STATE_PLAYING:
             return self.async_media_pause()
         else:
