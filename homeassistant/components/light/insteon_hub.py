@@ -4,31 +4,35 @@ Support for Insteon Hub lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/insteon_hub/
 """
-from homeassistant.components.insteon_hub import INSTEON
+
+from homeassistant.components.insteon_hub import INSTEON, CONF_POLL
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light)
 
 DEPENDENCIES = ['insteon_hub']
 
 SUPPORT_INSTEON_HUB = SUPPORT_BRIGHTNESS
+SUPPORTED_LIGHT_DEVICES = [
+    "Switched Lighting Control",
+    "Dimmable Lighting Control"
+]
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon Hub light platform."""
     devs = []
     for device in INSTEON.devices:
-        if device.DeviceCategory == "Switched Lighting Control":
-            devs.append(InsteonToggleDevice(device))
-        if device.DeviceCategory == "Dimmable Lighting Control":
-            devs.append(InsteonToggleDevice(device))
+        if device.DeviceCategory in SUPPORTED_LIGHT_DEVICES:
+            devs.append(InsteonToggleDevice(device, discovery_info[CONF_POLL]))
     add_devices(devs)
 
 
 class InsteonToggleDevice(Light):
     """An abstract Class for an Insteon node."""
 
-    def __init__(self, node):
+    def __init__(self, node, should_poll=False):
         """Initialize the device."""
+        self._should_poll = should_poll
         self.node = node
         self._value = 0
 
@@ -49,16 +53,19 @@ class InsteonToggleDevice(Light):
 
     def update(self):
         """Update state of the sensor."""
-        resp = self.node.send_command('get_status', wait=True)
-        try:
-            self._value = resp['response']['level']
-        except KeyError:
-            pass
+        if self._should_poll:
+            resp = self.node.send_command('get_status', wait=True)
+            try:
+                self._value = resp['response']['level']
+                new_status = 'on' if self._value != 0 else 'off'
+                self.node.set_status(new_status)
+            except KeyError:
+                pass
 
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        return self._value != 0
+        return self.node.status in ['on', 'fastOn']
 
     @property
     def supported_features(self):

@@ -269,7 +269,7 @@ https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 influxdb==3.0.0
 
 # homeassistant.components.insteon_hub
-insteon_hub==0.4.5
+insteon_hub==0.7.0
 
 # homeassistant.components.media_player.kodi
 # homeassistant.components.notify.kodi
