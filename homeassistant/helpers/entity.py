@@ -346,20 +346,24 @@ class ToggleEntity(Entity):
         """Turn the entity on."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_turn_on(self, **kwargs):
-        """Turn the entity on."""
-        yield from self.hass.loop.run_in_executor(
+        """Turn the entity on.
+
+        This method must be run in the event loop and return a coro/task object
+        """
+        return self.hass.loop.run_in_executor(
             None, ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_turn_off(self, **kwargs):
-        """Turn the entity off."""
-        yield from self.hass.loop.run_in_executor(
+        """Turn the entity off.
+
+        This method must be run in the event loop and return a coro/task object
+        """
+        return self.hass.loop.run_in_executor(
             None, ft.partial(self.turn_off, **kwargs))
 
     def toggle(self) -> None:
@@ -369,10 +373,12 @@ class ToggleEntity(Entity):
         else:
             self.turn_on()
 
-    @asyncio.coroutine
     def async_toggle(self):
-        """Toggle the entity."""
+        """Toggle the entity.
+
+        This method must be run in the event loop and return a coro/task object
+        """
         if self.is_on:
-            yield from self.async_turn_off()
+            return self.async_turn_off()
         else:
-            yield from self.async_turn_on()
+            return self.async_turn_on()
