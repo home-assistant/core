@@ -101,24 +101,62 @@ SUPPORT_SELECT_SOURCE = 2048
 SUPPORT_STOP = 4096
 SUPPORT_CLEAR_PLAYLIST = 8192
 
+# Service call validation schemas
+MEDIA_PLAYER_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+})
+
+MEDIA_PLAYER_SET_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float,
+})
+
+MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean,
+})
+
+MEDIA_PLAYER_MEDIA_SEEK_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_SEEK_POSITION):
+        vol.All(vol.Coerce(float), vol.Range(min=0)),
+})
+
+MEDIA_PLAYER_SELECT_SOURCE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_INPUT_SOURCE): cv.string,
+})
+
+MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+    vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+})
+
 SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: 'async_turn_on',
-    SERVICE_TURN_OFF: 'async_turn_off',
-    SERVICE_TOGGLE: 'async_toggle',
-    SERVICE_VOLUME_UP: 'async_volume_up',
-    SERVICE_VOLUME_DOWN: 'async_volume_down',
-    SERVICE_MEDIA_PLAY_PAUSE: 'async_media_play_pause',
-    SERVICE_MEDIA_PLAY: 'async_media_play',
-    SERVICE_MEDIA_PAUSE: 'async_media_pause',
-    SERVICE_MEDIA_STOP: 'async_media_stop',
-    SERVICE_MEDIA_NEXT_TRACK: 'async_media_next_track',
-    SERVICE_MEDIA_PREVIOUS_TRACK: 'async_media_previous_track',
-    SERVICE_CLEAR_PLAYLIST: 'async_clear_playlist',
-    SERVICE_VOLUME_SET: 'async_set_volume_level',
-    SERVICE_VOLUME_MUTE: 'async_mute_volume',
-    SERVICE_MEDIA_SEEK: 'async_media_seek',
-    SERVICE_SELECT_SOURCE: 'async_select_source',
-    SERVICE_PLAY_MEDIA: 'async_play_media',
+    SERVICE_TURN_ON: {'method': 'async_turn_on'},
+    SERVICE_TURN_OFF: {'method': 'async_turn_off'},
+    SERVICE_TOGGLE: {'method': 'async_toggle'},
+    SERVICE_VOLUME_UP: {'method': 'async_volume_up'},
+    SERVICE_VOLUME_DOWN: {'method': 'async_volume_down'},
+    SERVICE_MEDIA_PLAY_PAUSE: {'method': 'async_media_play_pause'},
+    SERVICE_MEDIA_PLAY: {'method': 'async_media_play'},
+    SERVICE_MEDIA_PAUSE: {'method': 'async_media_pause'},
+    SERVICE_MEDIA_STOP: {'method': 'async_media_stop'},
+    SERVICE_MEDIA_NEXT_TRACK: {'method': 'async_media_next_track'},
+    SERVICE_MEDIA_PREVIOUS_TRACK: {'method': 'async_media_previous_track'},
+    SERVICE_CLEAR_PLAYLIST: {'method': 'async_clear_playlist'},
+    SERVICE_VOLUME_SET: {
+        'method': 'async_set_volume_level',
+        'schema': MEDIA_PLAYER_SET_VOLUME_SCHEMA},
+    SERVICE_VOLUME_MUTE: {
+        'method': 'async_mute_volume',
+        'schema': MEDIA_PLAYER_MUTE_VOLUME_SCHEMA},
+    SERVICE_MEDIA_SEEK: {
+        'method': 'async_media_seek',
+        'schema': MEDIA_PLAYER_MEDIA_SEEK_SCHEMA},
+    SERVICE_SELECT_SOURCE: {
+        'method': 'async_select_source',
+        'schema': MEDIA_PLAYER_SELECT_SOURCE_SCHEMA},
+    SERVICE_PLAY_MEDIA: {
+        'method': 'async_play_media',
+        'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
 }
 
 ATTR_TO_PROPERTY = [
@@ -145,34 +183,6 @@ ATTR_TO_PROPERTY = [
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
 ]
-
-# Service call validation schemas
-MEDIA_PLAYER_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
-})
-
-MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean,
-})
-
-MEDIA_PLAYER_SET_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float,
-})
-
-MEDIA_PLAYER_MEDIA_SEEK_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_SEEK_POSITION):
-        vol.All(vol.Coerce(float), vol.Range(min=0)),
-})
-
-MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
-    vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
-})
-
-MEDIA_PLAYER_SELECT_SOURCE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_INPUT_SOURCE): cv.string,
-})
 
 
 def is_on(hass, entity_id=None):
@@ -326,28 +336,30 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def async_service_handler(service):
         """Map services to methods on MediaPlayerDevice."""
-        method = SERVICE_TO_METHOD[service.service]
+        method = SERVICE_TO_METHOD.get(service.service)
+        if not method:
+            return
+
+        params = {}
+        if service.service == SERVICE_VOLUME_SET:
+            params['volume'] = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
+        elif service.service == SERVICE_VOLUME_MUTE:
+            params['mute'] = service.data.get(ATTR_MEDIA_VOLUME_MUTED)
+        elif service.service == SERVICE_MEDIA_SEEK:
+            params['position'] = service.data.get(ATTR_MEDIA_SEEK_POSITION)
+        elif service.service == SERVICE_SELECT_SOURCE:
+            params['source'] = service.data.get(ATTR_INPUT_SOURCE)
+        elif service.service == SERVICE_PLAY_MEDIA:
+            params['media_type'] = \
+                service.data.get(ATTR_MEDIA_CONTENT_TYPE)
+            params['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
+            params[ATTR_MEDIA_ENQUEUE] = \
+                service.data.get(ATTR_MEDIA_ENQUEUE)
         target_players = component.async_extract_from_service(service)
 
         update_tasks = []
         for player in target_players:
-            kwargs = {}
-            if service.service == SERVICE_VOLUME_SET:
-                kwargs['volume'] = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
-            elif service.service == SERVICE_VOLUME_MUTE:
-                kwargs['mute'] = service.data.get(ATTR_MEDIA_VOLUME_MUTED)
-            elif service.service == SERVICE_MEDIA_SEEK:
-                kwargs['position'] = service.data.get(ATTR_MEDIA_SEEK_POSITION)
-            elif service.service == SERVICE_SELECT_SOURCE:
-                kwargs['source'] = service.data.get(ATTR_INPUT_SOURCE)
-            elif service.service == SERVICE_PLAY_MEDIA:
-                kwargs['media_type'] = \
-                    service.data.get(ATTR_MEDIA_CONTENT_TYPE)
-                kwargs['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
-                kwargs[ATTR_MEDIA_ENQUEUE] = \
-                    service.data.get(ATTR_MEDIA_ENQUEUE)
-
-            yield from getattr(player, method)(**kwargs)
+            yield from getattr(player, method['method'])(**params)
 
         for player in target_players:
             if not player.should_poll:
@@ -363,19 +375,8 @@ def async_setup(hass, config):
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     for service in SERVICE_TO_METHOD:
-        # Look up correct schema
-        schema = MEDIA_PLAYER_SCHEMA
-        if service == SERVICE_VOLUME_SET:
-            schema = MEDIA_PLAYER_SET_VOLUME_SCHEMA
-        elif service == SERVICE_VOLUME_MUTE:
-            schema = MEDIA_PLAYER_MUTE_VOLUME_SCHEMA
-        elif service == SERVICE_MEDIA_SEEK:
-            schema = MEDIA_PLAYER_MEDIA_SEEK_SCHEMA
-        elif service == SERVICE_SELECT_SOURCE:
-            schema = MEDIA_PLAYER_SELECT_SOURCE_SCHEMA
-        elif service == SERVICE_PLAY_MEDIA:
-            schema = MEDIA_PLAYER_PLAY_MEDIA_SCHEMA
-
+        schema = SERVICE_TO_METHOD[service].get(
+            'schema', MEDIA_PLAYER_SCHEMA)
         hass.services.async_register(
             DOMAIN, service, async_service_handler,
             descriptions.get(service), schema=schema)
