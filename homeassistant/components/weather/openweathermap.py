@@ -137,15 +137,9 @@ class OpenWeatherMapWeather(WeatherEntity):
         temp_unit = ('celsius' if self.hass.config.units.is_metric else
                      'fahrenheit')
 
-        def create_dict(entry):
-            """Create a dict containing forecast data for a specified time."""
-            return {
-                'datetime': entry.get_reference_time('iso'),
-                'temp': entry.get_temperature(temp_unit).get('temp', None),
-            }
-
-        return [create_dict(entry) for entry in
-                self.forecast_data.get_weathers()]
+        return [{'datetime': entry.get_reference_time('iso'),
+                 'temp': entry.get_temperature(temp_unit).get('temp', None)}
+                for entry in self.forecast_data.get_weathers()]
 
     def update(self):
         """Get the latest data from OWM and updates the states."""
