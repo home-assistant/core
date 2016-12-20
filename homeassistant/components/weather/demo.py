@@ -105,11 +105,11 @@ class DemoWeather(WeatherEntity):
 
         forecast_data = []
         for entry in self._forecast:
-            dict = {
+            data_dict = {
                 'datetime': reftime.isoformat(),
                 'temp': entry
             }
             reftime = reftime + timedelta(hours=4)
-            forecast_data.append(dict)
+            forecast_data.append(data_dict)
 
         return forecast_data
