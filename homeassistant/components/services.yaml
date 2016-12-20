@@ -179,21 +179,8 @@ hdmi_cec:
         description: Optional parameters
         example: [0, 2]
 
-  turn_off:
-    description: turn off specific device
-
-    fields:
-      dst:
-        description: Target device to be turned off
-        example: 5
-
-  turn_on:
-    description: turn on specific device
-
-    fields:
-      dst:
-        description: Target device to be turned on
-        example: 5
+  update:
+    description: Update devices state from network.
 
   volume:
     description: Increase or decrease volume of systm

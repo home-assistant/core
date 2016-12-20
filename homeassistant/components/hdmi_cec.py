@@ -19,7 +19,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC>=0.2.1']
+REQUIREMENTS = ['pyCEC>=0.2.2']
 
 DOMAIN = 'hdmi_cec'
 
@@ -193,7 +193,8 @@ def setup(hass: HomeAssistant, base_config):
                                descriptions[SERVICE_SEND_COMMAND])
         hass.services.register(DOMAIN, SERVICE_VOLUME, _volume,
                                descriptions[SERVICE_VOLUME])
-        hass.services.register(DOMAIN, SERVICE_UPDATE_DEVICES, _update)
+        hass.services.register(DOMAIN, SERVICE_UPDATE_DEVICES, _update,
+                               descriptions[SERVICE_UPDATE_DEVICES])
         hdmi_network.set_new_device_callback(_new_device)
         hdmi_network.start()
 
