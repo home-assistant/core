@@ -10,8 +10,8 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.weather import WeatherEntity, PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, STATE_UNKNOWN)
+from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_LATITUDE,
+                                 CONF_LONGITUDE, STATE_UNKNOWN, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -104,7 +104,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self._temperature_unit
+        return TEMP_CELSIUS
 
     @property
     def pressure(self):
@@ -134,11 +134,8 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        temp_unit = ('celsius' if self.hass.config.units.is_metric else
-                     'fahrenheit')
-
         return [{'datetime': entry.get_reference_time('iso'),
-                 'temp': entry.get_temperature(temp_unit).get('temp', None)}
+                 'temp': entry.get_temperature('celsius').get('temp', None)}
                 for entry in self.forecast_data.get_weathers()]
 
     def update(self):

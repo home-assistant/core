@@ -92,7 +92,7 @@ class WeatherEntity(Entity):
     def state_attributes(self):
         """Return the state attributes."""
         data = {
-            ATTR_WEATHER_TEMPERATURE: self._temp_for_display,
+            ATTR_WEATHER_TEMPERATURE: self._temp_for_display(self.temperature),
             ATTR_WEATHER_HUMIDITY: self.humidity,
         }
 
@@ -118,6 +118,10 @@ class WeatherEntity(Entity):
 
         forecast = self.forecast
         if forecast is not None:
+            for forecast_entry in forecast:
+                forecast_entry['temp'] = self._temp_for_display(
+                    forecast_entry['temp'])
+
             data[ATTR_FORECAST] = forecast
 
         return data
@@ -132,10 +136,8 @@ class WeatherEntity(Entity):
         """Return the current condition."""
         raise NotImplementedError()
 
-    @property
-    def _temp_for_display(self):
+    def _temp_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
-        temp = self.temperature
         unit = self.temperature_unit
         hass_unit = self.hass.config.units.temperature_unit
 
