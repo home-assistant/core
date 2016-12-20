@@ -23,8 +23,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if ATTR_NEW in discovery_info:
         _LOGGER.info("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
         add_devices(
-            CecSwitch(hass, device, device.logical_address) for device in
-            discovery_info[ATTR_NEW])
+            CecSwitch(hass, hass.data.get(device), device.logical_address) for
+            device in discovery_info[ATTR_NEW])
 
 
 class CecSwitch(CecDevice, SwitchDevice):

@@ -50,11 +50,6 @@ CMD_MUTE_TOGGLE = 'toggle mute'
 EVENT_CEC_COMMAND_RECEIVED = 'cec_command_received'
 EVENT_CEC_KEYPRESS_RECEIVED = 'cec_keypress_received'
 
-SERVICE_SELECT_DEVICE = 'select_device'
-SERVICE_SEND_COMMAND = 'send_command'
-SERVICE_VOLUME = 'volume'
-SERVICE_UPDATE_DEVICES = 'update'
-
 ATTR_PHYSICAL_ADDRESS = 'physical_address'
 ATTR_TYPE_ID = 'type_id'
 ATTR_VENDOR_NAME = 'vendor_name'
@@ -73,31 +68,32 @@ ATTR_DIR = 'dir'
 ATTR_ABT = 'abt'
 ATTR_NEW = 'new'
 
+SERVICE_SEND_COMMAND = 'send_command'
 SERVICE_SEND_COMMAND_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(ATTR_CMD): vol.Coerce(int),
-        vol.Optional(ATTR_SRC): vol.Coerce(int),
-        vol.Optional(ATTR_DST): vol.Coerce(int),
-        vol.Optional(ATTR_ATT): vol.Coerce(int),
-        vol.Optional(ATTR_RAW): vol.Coerce(str)
-    })
-}, extra=vol.REMOVE_EXTRA)
+    vol.Optional(ATTR_CMD): vol.Coerce(int),
+    vol.Optional(ATTR_SRC): vol.Coerce(int),
+    vol.Optional(ATTR_DST): vol.Coerce(int),
+    vol.Optional(ATTR_ATT): vol.Coerce(int),
+    vol.Optional(ATTR_RAW): vol.Coerce(str)
+}, extra=vol.ALLOW_EXTRA)
 
+SERVICE_VOLUME = 'volume'
 SERVICE_VOLUME_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CMD_UP): vol.Coerce(int),
-        vol.Optional(CMD_DOWN): vol.Coerce(int),
-        vol.Optional(CMD_MUTE): None,
-        vol.Optional(CMD_UNMUTE): None,
-        vol.Optional(CMD_MUTE_TOGGLE): None
-    })
-}, extra=vol.REMOVE_EXTRA)
+    vol.Optional(CMD_UP): vol.Coerce(int),
+    vol.Optional(CMD_DOWN): vol.Coerce(int),
+    vol.Optional(CMD_MUTE): None,
+    vol.Optional(CMD_UNMUTE): None,
+    vol.Optional(CMD_MUTE_TOGGLE): None
+}, extra=vol.ALLOW_EXTRA)
 
-SERVICE_POWER_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(ATTR_DST): vol.Coerce(int),
-    })
-}, extra=vol.REMOVE_EXTRA)
+SERVICE_UPDATE_DEVICES = 'update'
+SERVICE_UPDATE_DEVICES_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({})
+}, extra=vol.ALLOW_EXTRA)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({})
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass: HomeAssistant, base_config):
@@ -114,7 +110,6 @@ def setup(hass: HomeAssistant, base_config):
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""
         for cmd, att in call.data.items():
-            att = int(att)
             att = 1 if att < 1 else att
             if cmd == CMD_UP:
                 for _ in range(att):
@@ -181,8 +176,10 @@ def setup(hass: HomeAssistant, base_config):
     @callback
     def _new_device(device):
         """Called when new device is detected by HDMI network."""
+        key = DOMAIN + '.' + device.name
+        hass.data[key] = device
         discovery.load_platform(hass, "switch", DOMAIN,
-                                discovered={ATTR_NEW: [device]},
+                                discovered={ATTR_NEW: [key]},
                                 hass_config=base_config)
 
     def _start_cec(event):
@@ -190,11 +187,15 @@ def setup(hass: HomeAssistant, base_config):
         descriptions = load_yaml_config_file(
             os.path.join(os.path.dirname(__file__), 'services.yaml'))[DOMAIN]
         hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, _tx,
-                               descriptions[SERVICE_SEND_COMMAND])
+                               descriptions[SERVICE_SEND_COMMAND],
+                               SERVICE_SEND_COMMAND_SCHEMA)
         hass.services.register(DOMAIN, SERVICE_VOLUME, _volume,
-                               descriptions[SERVICE_VOLUME])
+                               descriptions[SERVICE_VOLUME],
+                               SERVICE_VOLUME_SCHEMA)
         hass.services.register(DOMAIN, SERVICE_UPDATE_DEVICES, _update,
-                               descriptions[SERVICE_UPDATE_DEVICES])
+                               descriptions[SERVICE_UPDATE_DEVICES],
+                               SERVICE_UPDATE_DEVICES_SCHEMA)
+
         hdmi_network.set_new_device_callback(_new_device)
         hdmi_network.start()
 

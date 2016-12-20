@@ -185,7 +185,6 @@ omit =
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
     homeassistant/components/hdmi_cec.py
-    homeassistant/components/switch/hdmi_cec.py
     homeassistant/components/ifttt.py
     homeassistant/components/joaoapps_join.py
     homeassistant/components/keyboard.py
@@ -357,6 +356,7 @@ omit =
     homeassistant/components/switch/digitalloggers.py
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py
+    homeassistant/components/switch/hdmi_cec.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/hook.py
     homeassistant/components/switch/kankun.py
