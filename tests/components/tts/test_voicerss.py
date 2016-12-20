@@ -90,7 +90,7 @@ class TestTTSVoiceRSSPlatform(object):
         """Test service call say with german code."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        self.url_param['hl'] = 'de-de'
+        self.form_data['hl'] = 'de-de'
         aioclient_mock.post(
             self.url, data=self.form_data, status=200, content=b'test')
 
@@ -145,7 +145,7 @@ class TestTTSVoiceRSSPlatform(object):
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         aioclient_mock.post(
-            self.url, params=self.url_param, exc=asyncio.TimeoutError())
+            self.url, data=self.form_data, exc=asyncio.TimeoutError())
 
         config = {
             tts.DOMAIN: {
