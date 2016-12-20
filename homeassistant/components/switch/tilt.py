@@ -9,9 +9,6 @@ from threading import Timer
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components import switch
 from homeassistant.const import (STATE_ON, STATE_OFF)
-# from homeassistant.components.switch import PLATFORM_SCHEMA
-# import voluptuous as vol
-# import homeassistant.helpers.config_validation as cv
 import logging
 import pprint
 _LOGGER = logging.getLogger(__name__)
@@ -25,17 +22,6 @@ CONF_CONTACT_RUN_TIME = 'run_time'
 DEFAULT_CONTACT_DELAY = 1  # momentary contact relay switch on time (sec)
 DEFAULT_RUN_TIME = 10      # seconds required for door to open or close
 
-"""
-Not using vol because I don't know how to apply it to multiple devices
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-        vol.Required(CONF_TILT_SENSOR, default=None): cv.string,
-        vol.Required(CONF_SWITCH, default=None): cv.string,
-        vol.Optional(CONF_CONTACT_DELAY, default=DEFAULT_CONTACT_DELAY): cv.positive_int,
-        vol.Optional(CONF_CONTACT_RUN_TIME, default=DEFAULT_RUN_TIME): cv.positive_int,
-})
-"""
-
-
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Add all tilt sensors."""
@@ -44,7 +30,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
 
     for dev_name, properties in switches.items():
-        _LOGGER.debug("Adding switch %s: %s, %s", dev_name, properties.get(CONF_TILT_SENSOR),
+        _LOGGER.debug("Adding switch %s: %s, %s", dev_name,
+                      properties.get(CONF_TILT_SENSOR),
                       properties.get(CONF_SWITCH))
         devices.append(
             TiltSwitch(
