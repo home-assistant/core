@@ -169,7 +169,7 @@ class BroadlinkRMSwitch(SwitchDevice):
             return True
         try:
             self._device.send_data(packet)
-        except (socket.timeout, ValueError)  as error:
+        except (socket.timeout, ValueError) as error:
             if retry < 1:
                 _LOGGER.error(error)
                 return False
