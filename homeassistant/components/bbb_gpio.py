@@ -4,7 +4,6 @@ Support for controlling GPIO pins of a Beaglebone Black.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/bbb_gpio/
 """
-# pylint: disable=import-error
 import logging
 
 from homeassistant.const import (
