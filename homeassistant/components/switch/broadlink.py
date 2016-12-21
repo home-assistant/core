@@ -62,7 +62,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     @asyncio.coroutine
     def _learn_command(call):
         try:
-            auth = yield from hass.loop.run_in_executor(None, broadlink_device.auth)
+            auth = yield from hass.loop.run_in_executor(None,
+                                                        broadlink_device.auth)
         except socket.timeout:
             _LOGGER.error("Failed to connect to device, timeout.")
             return
@@ -190,7 +191,7 @@ class BroadlinkRMSwitch(SwitchDevice):
         if auth:
             return True
         return self._auth(max(0, retry-1))
-        
+
 
 class BroadlinkSP1Switch(BroadlinkRMSwitch):
     """Representation of an Broadlink switch."""
