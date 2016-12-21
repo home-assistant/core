@@ -267,12 +267,6 @@ def async_setup(hass, config):
 
         home_mode = service.data.get(ATTR_HOME_MODE)
 
-        if home_mode is None:
-            _LOGGER.error(
-                "Received call to %s without attribute %s",
-                SERVICE_SET_HOME_MODE, ATTR_HOME_MODE)
-            return
-
         for climate in target_climate:
             if home_mode:
                 yield from climate.async_turn_home_mode_on()
