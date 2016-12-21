@@ -198,6 +198,24 @@ def async_setup(hass, config):
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
+    def _async_update_climate(target_climate):
+        """Update climate entity after service stuff."""
+        update_tasks = []
+        for climate in target_climate:
+            if not climate.should_poll:
+                continue
+
+            update_coro = hass.loop.create_task(
+                climate.async_update_ha_state(True))
+            if hasattr(climate, 'async_update'):
+                update_tasks.append(update_coro)
+            else:
+                yield from update_coro
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    @asyncio.coroutine
     def async_away_mode_set_service(service):
         """Set away mode on target climate devices."""
         target_climate = component.async_extract_from_service(service)
@@ -216,20 +234,7 @@ def async_setup(hass, config):
             else:
                 yield from climate.async_turn_away_mode_off()
 
-        update_tasks = []
-        for climate in target_climate:
-            if not climate.should_poll:
-                continue
-
-            update_coro = hass.loop.create_task(
-                climate.async_update_ha_state(True))
-            if hasattr(climate, 'async_update'):
-                update_tasks.append(hass.loop.create_task(update_coro))
-            else:
-                yield from update_coro
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+        yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_AWAY_MODE, async_away_mode_set_service,
@@ -255,20 +260,7 @@ def async_setup(hass, config):
             else:
                 yield from climate.async_turn_aux_heat_off()
 
-        update_tasks = []
-        for climate in target_climate:
-            if not climate.should_poll:
-                continue
-
-            update_coro = hass.loop.create_task(
-                climate.async_update_ha_state(True))
-            if hasattr(climate, 'async_update'):
-                update_tasks.append(hass.loop.create_task(update_coro))
-            else:
-                yield from update_coro
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+        yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_AUX_HEAT, async_aux_heat_set_service,
@@ -294,20 +286,7 @@ def async_setup(hass, config):
 
             yield from climate.async_set_temperature(**kwargs)
 
-        update_tasks = []
-        for climate in target_climate:
-            if not climate.should_poll:
-                continue
-
-            update_coro = hass.loop.create_task(
-                climate.async_update_ha_state(True))
-            if hasattr(climate, 'async_update'):
-                update_tasks.append(hass.loop.create_task(update_coro))
-            else:
-                yield from update_coro
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+        yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_TEMPERATURE, async_temperature_set_service,
@@ -330,20 +309,7 @@ def async_setup(hass, config):
         for climate in target_climate:
             yield from climate.async_set_humidity(humidity)
 
-        update_tasks = []
-        for climate in target_climate:
-            if not climate.should_poll:
-                continue
-
-            update_coro = hass.loop.create_task(
-                climate.async_update_ha_state(True))
-            if hasattr(climate, 'async_update'):
-                update_tasks.append(hass.loop.create_task(update_coro))
-            else:
-                yield from update_coro
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+        yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_HUMIDITY, async_humidity_set_service,
@@ -366,20 +332,7 @@ def async_setup(hass, config):
         for climate in target_climate:
             yield from climate.async_set_fan_mode(fan)
 
-        update_tasks = []
-        for climate in target_climate:
-            if not climate.should_poll:
-                continue
-
-            update_coro = hass.loop.create_task(
-                climate.async_update_ha_state(True))
-            if hasattr(climate, 'async_update'):
-                update_tasks.append(hass.loop.create_task(update_coro))
-            else:
-                yield from update_coro
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+        yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_FAN_MODE, async_fan_mode_set_service,
@@ -402,20 +355,7 @@ def async_setup(hass, config):
         for climate in target_climate:
             yield from climate.async_set_operation_mode(operation_mode)
 
-        update_tasks = []
-        for climate in target_climate:
-            if not climate.should_poll:
-                continue
-
-            update_coro = hass.loop.create_task(
-                climate.async_update_ha_state(True))
-            if hasattr(climate, 'async_update'):
-                update_tasks.append(hass.loop.create_task(update_coro))
-            else:
-                yield from update_coro
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+        yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_OPERATION_MODE, async_operation_set_service,
@@ -438,25 +378,13 @@ def async_setup(hass, config):
         for climate in target_climate:
             yield from climate.async_set_swing_mode(swing_mode)
 
-        update_tasks = []
-        for climate in target_climate:
-            if not climate.should_poll:
-                continue
-
-            update_coro = hass.loop.create_task(
-                climate.async_update_ha_state(True))
-            if hasattr(climate, 'async_update'):
-                update_tasks.append(hass.loop.create_task(update_coro))
-            else:
-                yield from update_coro
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+        yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_SWING_MODE, async_swing_set_service,
         descriptions.get(SERVICE_SET_SWING_MODE),
         schema=SET_SWING_MODE_SCHEMA)
+
     return True
 
 
