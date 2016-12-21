@@ -104,7 +104,7 @@ SERVICE_STANDBY = 'standby'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_DEVICES): DEVICE_SCHEMA
+        vol.Optional(CONF_DEVICES): vol.Schema({cv.string: cv.string})
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -191,14 +191,18 @@ def setup(hass: HomeAssistant, base_config):
         if not addr:
             _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
             return
-        entity = hass.states.get(addr)
-        _LOGGER.debug("Selecting entity %s", entity)
-        if entity is not None:
-            addr = entity.attributes['physical_address']
-            _LOGGER.debug("Address aquired: %s", addr)
-        if addr is None:
-            _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
-            return
+        if addr in base_config[DOMAIN][CONF_DEVICES]:
+            addr = base_config[DOMAIN][CONF_DEVICES][addr]
+        else:
+            entity = hass.states.get(addr)
+            _LOGGER.debug("Selecting entity %s", entity)
+            if entity is not None:
+                addr = entity.attributes['physical_address']
+                _LOGGER.debug("Address aquired: %s", addr)
+                if addr is None:
+                    _LOGGER.error("Device not found: %s",
+                                  call.data[ATTR_DEVICE])
+                    return
         hdmi_network.active_source(PhysicalAddress(addr))
         _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
 

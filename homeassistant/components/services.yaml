@@ -200,7 +200,7 @@ hdmi_cec:
     description: Select HDMI device.
     fields:
       device:
-        description: Addres of device to select. Can be entity_id or physical address.
+        description: Addres of device to select. Can be entity_id, physical address or alias from confuguration.
         example: "'switch.hdmi_1' or '1.1.0.0' or '01:10'"
 
   power_on:
