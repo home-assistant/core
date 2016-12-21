@@ -98,7 +98,7 @@ def async_setup(hass, config):
             update_coro = hass.loop.create_task(
                 switch.async_update_ha_state(True))
             if hasattr(switch, 'async_update'):
-                update_tasks.append(hass.loop.create_task(update_coro))
+                update_tasks.append(update_coro)
             else:
                 yield from update_coro
 
