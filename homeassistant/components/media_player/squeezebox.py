@@ -111,7 +111,7 @@ class LogitechMediaServer(object):
         return players
 
     def get_playlists(self):
-        """Create a list of the playlists on LMS."""
+        """Create a list of the playlists on LMS. (Currently limited to 50)"""
         playlists = []
         prefix_id = "id:"
         prefix_name = "playlist:"
@@ -119,7 +119,7 @@ class LogitechMediaServer(object):
         response = self.get('playlists 0 50 tags:u<LF>')
         response = urllib.parse.unquote(response)
         if not response:
-            return {}
+            return playlists
         playlist = None
         for word in response.split():
             if word.startswith(prefix_id):
@@ -346,7 +346,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     def media_playlists(self):
         """In LMS Defined playlists."""
         if self._lms.playlists:
-            return '; '.join([str(x.display) for x in self._lms.playlists]) 
+            return '; '.join([x.display for x in self._lms.playlists])
 
     @property
     def supported_media_commands(self):
