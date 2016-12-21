@@ -5,21 +5,22 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/hdmi_cec/
 """
 import logging
-
 import os
 from collections import defaultdict
 from functools import reduce
+
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components import discovery
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
                                  EVENT_HOMEASSISTANT_STOP, STATE_ON,
-                                 STATE_OFF)
+                                 STATE_OFF, CONF_DEVICES)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC>=0.2.2']
+REQUIREMENTS = ['pyCEC>=0.3.1']
 
 DOMAIN = 'hdmi_cec'
 
@@ -91,8 +92,20 @@ SERVICE_UPDATE_DEVICES_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({})
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_SELECT_DEVICE = 'select_device'
+# pylint: disable=unnecessary-lambda
+DEVICE_SCHEMA = vol.Schema({
+    vol.All(cv.positive_int): vol.Any(lambda devices: DEVICE_SCHEMA(devices),
+                                      cv.string)
+})
+
+SERVICE_POWER_ON = 'power_on'
+SERVICE_STANDBY = 'standby'
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({})
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_DEVICES): DEVICE_SCHEMA
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -104,7 +117,7 @@ def setup(hass: HomeAssistant, base_config):
     from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE, \
         ADDR_AUDIOSYSTEM, ADDR_BROADCAST, ADDR_UNREGISTERED
 
-    hdmi_network = HDMINetwork(config=CecConfig(name="HA"), loop=hass.loop)
+    hdmi_network = HDMINetwork(config=CecConfig(name="HASS"), loop=hass.loop)
 
     @callback
     def _volume(call):
@@ -164,6 +177,29 @@ def setup(hass: HomeAssistant, base_config):
             command = CecCommand(cmd, dst, src, att)
         hdmi_network.send_command(command)
 
+    def _standby(call):
+        hdmi_network.standby()
+
+    def _power_on(call):
+        hdmi_network.power_on()
+
+    def _select_device(call):
+        """Select the active device."""
+        from pycec.datastruct import PhysicalAddress
+
+        addr = call.data[ATTR_DEVICE]
+        if not addr:
+            _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
+            return
+        entity = hass.states.get(addr)
+        if entity is not None:
+            addr = entity.physical_address
+        if addr is None:
+            _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
+            return
+        hdmi_network.active_source(PhysicalAddress(addr))
+        _LOGGER.info("Selected %s", call.data[ATTR_DEVICE])
+
     @callback
     def _update(call):
         """
@@ -195,6 +231,9 @@ def setup(hass: HomeAssistant, base_config):
         hass.services.register(DOMAIN, SERVICE_UPDATE_DEVICES, _update,
                                descriptions[SERVICE_UPDATE_DEVICES],
                                SERVICE_UPDATE_DEVICES_SCHEMA)
+        hass.services.register(DOMAIN, SERVICE_POWER_ON, _power_on)
+        hass.services.register(DOMAIN, SERVICE_STANDBY, _standby)
+        hass.services.register(DOMAIN, SERVICE_SELECT_DEVICE, _select_device)
 
         hdmi_network.set_new_device_callback(_new_device)
         hdmi_network.start()
@@ -272,9 +311,9 @@ class CecDevice(Entity):
     @property
     def icon(self):
         """Icon for device by its type."""
-        return (self._icon if self._icon is not None else ICONS_BY_TYPE.get(
-            self._device.type) if self._device.type in ICONS_BY_TYPE
-                else ICON_UNKNOWN)
+        return (self._icon if self._icon is not None else
+                ICONS_BY_TYPE.get(self._device.type)
+                if self._device.type in ICONS_BY_TYPE else ICON_UNKNOWN)
 
     @property
     def device_state_attributes(self):
