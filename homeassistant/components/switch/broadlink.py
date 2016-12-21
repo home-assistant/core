@@ -183,16 +183,15 @@ class BroadlinkRMSwitch(SwitchDevice):
             return self._sendpacket(packet, max(0, retry-1))
         return True
 
-    def _auth(self, retry=1):
+    def _auth(self, retry=2):
         try:
             auth = self._device.auth()
         except socket.timeout:
             auth = False
-        if auth:
-            return True
-        elif retry > 0:
+        if not auth and retry > 0:
             return self._auth(max(0, retry-1))
-        return False
+        return auth
+
 
 class BroadlinkSP1Switch(BroadlinkRMSwitch):
     """Representation of an Broadlink switch."""
