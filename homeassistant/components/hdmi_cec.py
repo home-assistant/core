@@ -20,7 +20,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC>=0.3.1']
+REQUIREMENTS = ['pyCEC>=0.3.3']
 
 DOMAIN = 'hdmi_cec'
 
@@ -192,13 +192,15 @@ def setup(hass: HomeAssistant, base_config):
             _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
             return
         entity = hass.states.get(addr)
+        _LOGGER.debug("Selecting entity %s", entity)
         if entity is not None:
-            addr = entity.physical_address
+            addr = entity.attributes['physical_address']
+            _LOGGER.debug("Address aquired: %s", addr)
         if addr is None:
             _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
             return
         hdmi_network.active_source(PhysicalAddress(addr))
-        _LOGGER.info("Selected %s", call.data[ATTR_DEVICE])
+        _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
 
     @callback
     def _update(call):

@@ -183,7 +183,7 @@ hdmi_cec:
     description: Update devices state from network.
 
   volume:
-    description: Increase or decrease volume of systm
+    description: Increase or decrease volume of system
 
     fields:
       up:
@@ -195,3 +195,16 @@ hdmi_cec:
       mute: Mutes audio system. Value is ignored.
       unmute: Unmutes audio system. Value is ignored.
       toggle mute: Toggles mute of audio system. Value is ignored.
+
+  select_device:
+    description: Select HDMI device.
+    fields:
+      device:
+        description: Addres of device to select. Can be entity_id or physical address.
+        example: "'switch.hdmi_1' or '1.1.0.0' or '01:10'"
+
+  power_on:
+    description: Power on all devices which supports it.
+
+  standby:
+    description: Standby all devices which supports it.
