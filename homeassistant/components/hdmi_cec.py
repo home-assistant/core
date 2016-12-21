@@ -20,7 +20,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC>=0.3.3']
+REQUIREMENTS = ['pyCEC>=0.3.4']
 
 DOMAIN = 'hdmi_cec'
 
@@ -119,7 +119,6 @@ def setup(hass: HomeAssistant, base_config):
 
     hdmi_network = HDMINetwork(config=CecConfig(name="HASS"), loop=hass.loop)
 
-    @callback
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""
         for cmd, att in call.data.items():
@@ -147,7 +146,6 @@ def setup(hass: HomeAssistant, base_config):
             else:
                 _LOGGER.warning("Unknown command %s", cmd)
 
-    @callback
     def _tx(call):
         """Send CEC command."""
         data = call.data
@@ -208,7 +206,6 @@ def setup(hass: HomeAssistant, base_config):
         hdmi_network.active_source(PhysicalAddress(addr))
         _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
 
-    @callback
     def _update(call):
         """
         Callback called when device update is needed.
@@ -226,11 +223,9 @@ def setup(hass: HomeAssistant, base_config):
                                 discovered={ATTR_NEW: [key]},
                                 hass_config=base_config)
 
-    @callback
     def _shutdown(call):
         hdmi_network.stop()
 
-    @callback
     def _start_cec(event):
         """Register services and start HDMI network to watch for devices."""
         descriptions = load_yaml_config_file(
