@@ -21,6 +21,18 @@ _LOGGER = logging.getLogger(__name__)
 
 VOICERSS_API_URL = "https://api.voicerss.org/"
 
+ERROR_MSG = [
+    b'Error description',
+    b'The subscription is expired or requests count limitation is exceeded!',
+    b'The request content length is too large!',
+    b'The language does not support!',
+    b'The language is not specified!',
+    b'The text is not specified!',
+    b'The API key is not available!',
+    b'The API key is not specified!',
+    b'The subscription does not support SSML!',
+]
+
 SUPPORT_LANGUAGES = [
     'ca-es', 'zh-cn', 'zh-hk', 'zh-tw', 'da-dk', 'nl-nl', 'en-au', 'en-ca',
     'en-gb', 'en-in', 'en-us', 'fi-fi', 'fr-ca', 'fr-fr', 'de-de', 'it-it',
@@ -83,7 +95,7 @@ class VoiceRSSProvider(Provider):
         self.hass = hass
         self.extension = conf.get(CONF_CODEC)
 
-        self.params = {
+        self.form_data = {
             'key': conf.get(CONF_API_KEY),
             'hl': conf.get(CONF_LANG),
             'c': (conf.get(CONF_CODEC)).upper(),
@@ -94,20 +106,27 @@ class VoiceRSSProvider(Provider):
     def async_get_tts_audio(self, message):
         """Load TTS from voicerss."""
         websession = async_get_clientsession(self.hass)
+        form_data = self.form_data.copy()
+
+        form_data['src'] = message
 
         request = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
                 request = yield from websession.post(
-                    VOICERSS_API_URL, params=self.params,
-                    data=bytes(message, 'utf-8')
+                    VOICERSS_API_URL, data=form_data
                 )
 
                 if request.status != 200:
-                    _LOGGER.error("Error %d on load url %s",
+                    _LOGGER.error("Error %d on load url %s.",
                                   request.status, request.url)
                     return (None, None)
                 data = yield from request.read()
+
+                if data in ERROR_MSG:
+                    _LOGGER.error(
+                        "Error receive %s from voicerss.", str(data, 'utf-8'))
+                    return (None, None)
 
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
             _LOGGER.error("Timeout for voicerss api.")
