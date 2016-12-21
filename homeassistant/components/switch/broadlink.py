@@ -190,8 +190,9 @@ class BroadlinkRMSwitch(SwitchDevice):
             auth = False
         if auth:
             return True
-        return self._auth(max(0, retry-1))
-
+        elif retry > 0:
+            return self._auth(max(0, retry-1))
+        return False
 
 class BroadlinkSP1Switch(BroadlinkRMSwitch):
     """Representation of an Broadlink switch."""
