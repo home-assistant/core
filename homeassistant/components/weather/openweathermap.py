@@ -9,7 +9,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.weather import WeatherEntity, PLATFORM_SCHEMA
+from homeassistant.components.weather import (
+    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
 from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_LATITUDE,
                                  CONF_LONGITUDE, STATE_UNKNOWN, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
@@ -134,9 +135,11 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return [{'datetime': entry.get_reference_time('iso'),
-                 'temp': entry.get_temperature('celsius').get('temp', None)}
-                for entry in self.forecast_data.get_weathers()]
+        return [{
+                ATTR_FORECAST_TIME: entry.get_reference_time('iso'),
+                ATTR_FORECAST_TEMP: entry.get_temperature('celsius')
+                .get('temp', None)
+                } for entry in self.forecast_data.get_weathers()]
 
     def update(self):
         """Get the latest data from OWM and updates the states."""

@@ -6,7 +6,8 @@ https://home-assistant.io/components/demo/
 """
 from datetime import datetime, timedelta
 
-from homeassistant.components.weather import WeatherEntity
+from homeassistant.components.weather import (
+    WeatherEntity, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
 from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 CONDITION_CLASSES = {
@@ -106,8 +107,8 @@ class DemoWeather(WeatherEntity):
         forecast_data = []
         for entry in self._forecast:
             data_dict = {
-                'datetime': reftime.isoformat(),
-                'temp': entry
+                ATTR_FORECAST_TIME: reftime.isoformat(),
+                ATTR_FORECAST_TEMP: entry
             }
             reftime = reftime + timedelta(hours=4)
             forecast_data.append(data_dict)

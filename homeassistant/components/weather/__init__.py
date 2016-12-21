@@ -29,6 +29,8 @@ ATTR_WEATHER_TEMPERATURE = 'temperature'
 ATTR_WEATHER_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_WIND_SPEED = 'wind_speed'
 ATTR_FORECAST = 'forecast'
+ATTR_FORECAST_TEMP = 'temperature'
+ATTR_FORECAST_TIME = 'datetime'
 
 
 def setup(hass, config):
@@ -119,8 +121,8 @@ class WeatherEntity(Entity):
         forecast = self.forecast
         if forecast is not None:
             for forecast_entry in forecast:
-                forecast_entry['temp'] = self._temp_for_display(
-                    forecast_entry['temp'])
+                forecast_entry[ATTR_FORECAST_TEMP] = self._temp_for_display(
+                    forecast_entry[ATTR_FORECAST_TEMP])
 
             data[ATTR_FORECAST] = forecast
 
