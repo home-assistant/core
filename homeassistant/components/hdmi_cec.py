@@ -177,9 +177,11 @@ def setup(hass: HomeAssistant, base_config):
             command = CecCommand(cmd, dst, src, att)
         hdmi_network.send_command(command)
 
+    @callback
     def _standby(call):
         hdmi_network.standby()
 
+    @callback
     def _power_on(call):
         hdmi_network.power_on()
 
@@ -198,9 +200,9 @@ def setup(hass: HomeAssistant, base_config):
             _LOGGER.debug("Selecting entity %s", entity)
             if entity is not None:
                 addr = entity.attributes['physical_address']
-                _LOGGER.debug("Address aquired: %s", addr)
+                _LOGGER.debug("Address acquired: %s", addr)
                 if addr is None:
-                    _LOGGER.error("Device not found: %s",
+                    _LOGGER.error("Device %s has not physical address.",
                                   call.data[ATTR_DEVICE])
                     return
         hdmi_network.active_source(PhysicalAddress(addr))
@@ -224,6 +226,11 @@ def setup(hass: HomeAssistant, base_config):
                                 discovered={ATTR_NEW: [key]},
                                 hass_config=base_config)
 
+    @callback
+    def _shutdown(call):
+        hdmi_network.stop()
+
+    @callback
     def _start_cec(event):
         """Register services and start HDMI network to watch for devices."""
         descriptions = load_yaml_config_file(
@@ -245,7 +252,7 @@ def setup(hass: HomeAssistant, base_config):
         hdmi_network.start()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_cec)
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, hdmi_network.stop)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
     return True
 
 
