@@ -90,6 +90,7 @@ class LogitechMediaServer(object):
         self._password = password
         self.http_port = self._get_http_port()
         self.init_success = True if self.http_port else False
+        self.playlists = self.get_playlists()
 
     def _get_http_port(self):
         """Get http port from media server, it is used to get cover art."""
@@ -108,6 +109,32 @@ class LogitechMediaServer(object):
             player = SqueezeBoxDevice(self, player_id)
             players.append(player)
         return players
+
+    def get_playlists(self):
+        """Create a list of the playlists on LMS."""
+        playlists = []
+        prefix_id = "id:"
+        prefix_name = "playlist:"
+        prefix_url = "url:"
+        response = self.get('playlists 0 50 tags:u<LF>')
+        response = urllib.parse.unquote(response)
+        if not response:
+            return {}
+        playlist = None
+        for word in response.split():
+            if word.startswith(prefix_id):
+                playlist_id = word.replace(prefix_id, '')
+                playlist = SqueezeBoxPlaylist(playlist_id)
+                continue
+            if word.startswith(prefix_name):
+                playlist.name = word.replace(prefix_name, '')
+                continue
+            if word.startswith(prefix_url):
+                playlist.url = word.replace(prefix_url, '')
+                _LOGGER.debug('Adding playlist: %s', playlist)
+                playlists.append(playlist)
+                continue
+        return playlists
 
     def query(self, *parameters):
         """Send request and await response from server."""
@@ -172,6 +199,35 @@ class LogitechMediaServer(object):
                           error)
             return None
 
+class SqueezeBoxPlaylist():
+    """Representation of a SqueezeBox playlist."""
+    def __init__(self, playlist_id):
+        self._id = playlist_id
+        self._name = None
+        self._url = None
+
+    @property
+    def name(self):
+        """Name of the playlist"""
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    @property
+    def url(self):
+        """URL of the playlist"""
+        return self._url
+
+    @url.setter
+    def url(self, value):
+        self._url = value
+
+    @property
+    def display(self):
+        """Display of the playlist"""
+        return "{}:{}".format(self._name, self._url)
 
 class SqueezeBoxDevice(MediaPlayerDevice):
     """Representation of a SqueezeBox device."""
@@ -285,6 +341,12 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """Album of current playing media."""
         if 'album' in self._status:
             return self._status['album'].rstrip()
+
+    @property
+    def media_playlists(self):
+        """In LMS Defined playlists."""
+        if self._lms.playlists:
+            return '; '.join([str(x.display) for x in self._lms.playlists]) 
 
     @property
     def supported_media_commands(self):
