@@ -111,7 +111,7 @@ class LogitechMediaServer(object):
         return players
 
     def get_playlists(self):
-        """Create a list of the playlists on LMS. (Currently limited to 50)"""
+        """Create a list of the playlists on LMS. (Currently limited to 50)."""
         playlists = []
         prefix_id = "id:"
         prefix_name = "playlist:"
@@ -202,14 +202,16 @@ class LogitechMediaServer(object):
 
 class SqueezeBoxPlaylist():
     """Representation of a SqueezeBox playlist."""
+
     def __init__(self, playlist_id):
+        """Initialize the SqeezeBox playlist."""
         self._id = playlist_id
         self._name = None
         self._url = None
 
     @property
     def name(self):
-        """Name of the playlist"""
+        """Name of the playlist."""
         return self._name
 
     @name.setter
@@ -218,7 +220,7 @@ class SqueezeBoxPlaylist():
 
     @property
     def url(self):
-        """URL of the playlist"""
+        """URL of the playlist."""
         return self._url
 
     @url.setter
@@ -227,7 +229,7 @@ class SqueezeBoxPlaylist():
 
     @property
     def display(self):
-        """Display of the playlist"""
+        """Display of the playlist."""
         return "{}:{}".format(self._name, self._url)
 
 
