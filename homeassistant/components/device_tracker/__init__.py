@@ -486,7 +486,7 @@ class Device(Entity):
             return None
 
         # prevent lookup of invalid macs
-        if not len(self.mac.split(':')) == 6:
+        if not len(self.mac) == 17:
             return 'unknown'
 
         # we only need the first 3 bytes of the mac for a lookup
