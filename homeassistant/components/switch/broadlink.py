@@ -21,7 +21,7 @@ from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_SWITCHES,
                                  CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['broadlink==0.2']
+REQUIREMENTS = ['https://github.com/Danielhiversen/python-broadlink/archive/master.zip#master==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,10 +62,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     @asyncio.coroutine
     def _learn_command(call):
         try:
-            yield from hass.loop.run_in_executor(None, broadlink_device.auth)
+            auth = yield from hass.loop.run_in_executor(None, broadlink_device.auth)
         except socket.timeout:
+            _LOGGER.error("Failed to connect to device, timeout.")
+            return
+        if not auth:
             _LOGGER.error("Failed to connect to device.")
             return
+
         yield from hass.loop.run_in_executor(None,
                                              broadlink_device.enter_learning)
 
@@ -173,13 +177,20 @@ class BroadlinkRMSwitch(SwitchDevice):
             if retry < 1:
                 _LOGGER.error(error)
                 return False
-            try:
-                self._device.auth()
-            except socket.timeout:
-                pass
+            if not self._auth():
+              return False
             return self._sendpacket(packet, max(0, retry-1))
         return True
 
+    def _auth(self, packet, retry=1):
+        try:
+            auth = self._device.auth()
+        except socket.timeout:
+            auth = False
+        if auth:
+            return True
+        return self._auth(max(0, retry-1))
+        
 
 class BroadlinkSP1Switch(BroadlinkRMSwitch):
     """Representation of an Broadlink switch."""
@@ -198,10 +209,8 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
             if retry < 1:
                 _LOGGER.error(error)
                 return False
-            try:
-                self._device.auth()
-            except socket.timeout:
-                pass
+            if not self._auth():
+                return False
             return self._sendpacket(packet, max(0, retry-1))
         return True
 
@@ -234,10 +243,8 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
             if retry < 1:
                 _LOGGER.error(error)
                 return
-            try:
-                self._device.auth()
-            except socket.timeout:
-                pass
+            if not self._auth():
+                return
             return self._update(max(0, retry-1))
         if state is None and retry > 0:
             return self._update(max(0, retry-1))
