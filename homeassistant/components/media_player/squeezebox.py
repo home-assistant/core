@@ -199,6 +199,7 @@ class LogitechMediaServer(object):
                           error)
             return None
 
+
 class SqueezeBoxPlaylist():
     """Representation of a SqueezeBox playlist."""
     def __init__(self, playlist_id):
@@ -228,6 +229,7 @@ class SqueezeBoxPlaylist():
     def display(self):
         """Display of the playlist"""
         return "{}:{}".format(self._name, self._url)
+
 
 class SqueezeBoxDevice(MediaPlayerDevice):
     """Representation of a SqueezeBox device."""
