@@ -178,11 +178,11 @@ class BroadlinkRMSwitch(SwitchDevice):
                 _LOGGER.error(error)
                 return False
             if not self._auth():
-              return False
+                return False
             return self._sendpacket(packet, max(0, retry-1))
         return True
 
-    def _auth(self, packet, retry=1):
+    def _auth(self, retry=1):
         try:
             auth = self._device.auth()
         except socket.timeout:
