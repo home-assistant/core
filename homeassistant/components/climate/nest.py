@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(
         [NestThermostat(structure, device, temp_unit)
-         for structure, device in hass.data[DATA_NEST].devices()],
+         for structure, device in hass.data[DATA_NEST].thermostats()],
         True
     )
 
