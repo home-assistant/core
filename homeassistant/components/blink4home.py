@@ -112,7 +112,7 @@ class Blink4Home(object):
             url = (API_URL + '/login')
             data = {'password': self._password,
                     'client_specifier': CLIENT_SPECIFIER +
-                    str(self._version),
+                                        str(self._version),
                     'email': self._username}
             _LOGGER.debug('Sending request with: %s',
                           json.dumps(data))
