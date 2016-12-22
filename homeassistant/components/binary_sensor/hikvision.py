@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
     CONF_SSL, EVENT_HOMEASSISTANT_STOP, ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
 
-REQUIREMENTS = ['pyhik==0.0.6', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyhik==0.0.7', 'pydispatcher==2.0.5']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORED = 'ignored'
