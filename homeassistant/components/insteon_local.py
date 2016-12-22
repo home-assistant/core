@@ -59,6 +59,11 @@ def setup(hass, config):
                       "Could not connect. Check config")
         _LOGGER.error(e)
         return False
+    except ConnectionError as e:
+        _LOGGER.error("Error on insteon_local. Could not connect."
+                      "Check config")
+        _LOGGER.error(e)
+        return False
     except RequestException as e:
         if insteonhub.http_code == 401:
             _LOGGER.error("Bad user/pass for insteon_local hub")
@@ -67,11 +72,6 @@ def setup(hass, config):
             _LOGGER.error("Error on insteon_local hub check")
             _LOGGER.error(e)
             return False
-    except ConnectionError as e:
-        _LOGGER.error("Error on insteon_local. Could not connect."
-                      "Check config")
-        _LOGGER.error(e)
-        return False
     except Exception as e:
         _LOGGER.error("Error on insteon_local hub check")
         _LOGGER.error(e)
