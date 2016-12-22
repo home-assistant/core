@@ -46,18 +46,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon local switch platform."""
     insteonhub = hass.data['insteon_local']
 
-    conf_switches = config_from_file(hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
+    conf_switches = config_from_file(hass.config.path(
+        INSTEON_LOCAL_SWITCH_CONF))
     if len(conf_switches):
         for device_id in conf_switches:
-            setup_switch(device_id, conf_switches[device_id], insteonhub, hass, add_devices)
+            setup_switch(device_id, conf_switches[device_id], insteonhub,
+                         hass, add_devices)
 
     linked = insteonhub.getLinked()
 
     for id in linked:
         if linked[id]['cat_type'] == 'switch' and id not in conf_switches:
-            request_configuration(id, insteonhub, hass, add_devices)
+            request_configuration(id, insteonhub, linked[id]['model_name'],
+                                  hass, add_devices)
 
-def request_configuration(id, insteonhub, hass, add_devices_callback):
+
+def request_configuration(id, insteonhub, model, hass, add_devices_callback):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
@@ -70,15 +74,18 @@ def request_configuration(id, insteonhub, hass, add_devices_callback):
 
     def insteon_switch_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_switch(id, data.get('name'), insteonhub, hass, add_devices_callback)
+        setup_switch(id, data.get('name'), insteonhub, hass,
+                     add_devices_callback)
 
     _CONFIGURING[id] = configurator.request_config(
-        hass, 'Insteon Switch ' + id, insteon_switch_configuration_callback,
-        description=('Enter a name for Switch ' + id),
+        hass, 'Insteon Switch ' + id,
+        insteon_switch_configuration_callback,
+        description=('Enter a name for ' + model + ' ' + id),
         entity_picture='/static/images/config_insteon.png',
         submit_caption='Confirm',
-        fields=[{'id': 'name','name': 'Name', 'type': ''}]
+        fields=[{'id': 'name', 'name': 'Name', 'type': ''}]
     )
+
 
 def setup_switch(id, name, insteonhub, hass, add_devices_callback):
     """Setup switch."""
@@ -90,12 +97,11 @@ def setup_switch(id, name, insteonhub, hass, add_devices_callback):
         _LOGGER.info('Device configuration done!')
 
     conf_switch = config_from_file(hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
-    if id not in     conf_switch:
+    if id not in conf_switch:
             conf_switch[id] = name
 
     if not config_from_file(
-            hass.config.path(INSTEON_LOCAL_SWITCH_CONF),
-                conf_switch):
+            hass.config.path(INSTEON_LOCAL_SWITCH_CONF), conf_switch):
         _LOGGER.error('failed to save config file')
 
     device = insteonhub.switch(id)
@@ -125,6 +131,7 @@ def config_from_file(filename, config=None):
                 return False
         else:
             return {}
+
 
 class InsteonLocalSwitchDevice(SwitchDevice):
     """An abstract Class for an Insteon node."""

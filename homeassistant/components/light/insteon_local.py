@@ -51,16 +51,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     conf_lights = config_from_file(hass.config.path(INSTEON_LOCAL_LIGHTS_CONF))
     if len(conf_lights):
         for device_id in conf_lights:
-            setup_light(device_id, conf_lights[device_id], insteonhub, hass, add_devices)
+            setup_light(device_id, conf_lights[device_id], insteonhub, hass,
+                        add_devices)
 
     linked = insteonhub.getLinked()
 
     for id in linked:
         if linked[id]['cat_type'] == 'dimmer' and id not in conf_lights:
-            request_configuration(id, insteonhub, hass, add_devices)
+            request_configuration(id, insteonhub, linked[id]['model_name'],
+                                  hass, add_devices)
 
 
-def request_configuration(id, insteonhub, hass, add_devices_callback):
+def request_configuration(id, insteonhub, model, hass, add_devices_callback):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
@@ -73,14 +75,15 @@ def request_configuration(id, insteonhub, hass, add_devices_callback):
 
     def insteon_light_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_light(id, data.get('name'), insteonhub, hass, add_devices_callback)
+        setup_light(id, data.get('name'), insteonhub, hass,
+                    add_devices_callback)
 
     _CONFIGURING[id] = configurator.request_config(
-        hass, 'Insteon Dimmer ' + id, insteon_light_configuration_callback,
-        description=('Enter a name for dimmer/light ' + id),
+        hass, 'Insteon  ' + model + ' ' + id, insteon_light_configuration_callback,
+        description=('Enter a name for ' + model + ' ' + id),
         entity_picture='/static/images/config_insteon.png',
         submit_caption='Confirm',
-        fields=[{'id': 'name','name': 'Name', 'type': ''}]
+        fields=[{'id': 'name', 'name': 'Name', 'type': ''}]
     )
 
 
@@ -129,6 +132,7 @@ def config_from_file(filename, config=None):
                 return False
         else:
             return {}
+
 
 class InsteonLocalDimmerDevice(Light):
     """An abstract Class for an Insteon node."""
