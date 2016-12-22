@@ -13,7 +13,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.cover import CoverDevice
 from homeassistant.components.cover import PLATFORM_SCHEMA
 from homeassistant.components import switch
-from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_ON, STATE_UNKNOWN)
+from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_ON,
+                                 STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     add_entities(devices)
+
 
 class TiltCover(CoverDevice):
     """
