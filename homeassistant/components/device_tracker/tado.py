@@ -11,7 +11,6 @@ from collections import namedtuple
 import requests
 import voluptuous as vol
 
-import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -41,6 +40,7 @@ def get_scanner(hass, config):
     scanner = TadoDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
+
 
 Device = namedtuple("Device", ["mac", "name"])
 
