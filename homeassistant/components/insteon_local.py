@@ -9,8 +9,7 @@ https://home-assistant.io/components/insteon_local/
 """
 import logging
 import voluptuous as vol
-from requests.exceptions import (RequestException, ConnectionError,
-                                 ConnectTimeout)
+import requests
 from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_HOST,
                                  CONF_PORT, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
@@ -54,28 +53,21 @@ def setup(hass, config):
         insteonhub = Hub(host, username, password, port, timeout, _LOGGER)
         # check for successful connection
         insteonhub.getBufferStatus()
-    except ConnectTimeout as e:
+    except requests.exceptions.ConnectTimeout:
         _LOGGER.error("Error on insteon_local."
-                      "Could not connect. Check config")
-        _LOGGER.error(e)
+                      "Could not connect. Check config", exc_info=True)
         return False
-    except ConnectionError as e:
+    except requests.exceptions.ConnectionError:
         _LOGGER.error("Error on insteon_local. Could not connect."
-                      "Check config")
-        _LOGGER.error(e)
+                      "Check config", exc_info=True)
         return False
-    except RequestException as e:
+    except requests.exceptions.RequestException:
         if insteonhub.http_code == 401:
             _LOGGER.error("Bad user/pass for insteon_local hub")
             return False
         else:
-            _LOGGER.error("Error on insteon_local hub check")
-            _LOGGER.error(e)
+            _LOGGER.error("Error on insteon_local hub check", exc_info=True)
             return False
-    except Exception as e:
-        _LOGGER.error("Error on insteon_local hub check")
-        _LOGGER.error(e)
-        return False
 
     hass.data['insteon_local'] = insteonhub
 

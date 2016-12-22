@@ -56,56 +56,57 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     linked = insteonhub.getLinked()
 
-    for id in linked:
-        if linked[id]['cat_type'] == 'dimmer' and id not in conf_lights:
-            request_configuration(id, insteonhub, linked[id]['model_name'],
+    for device_id in linked:
+        if (linked[device_id]['cat_type'] == 'dimmer'
+                and device_id not in conf_lights):
+            request_configuration(device_id, insteonhub, linked[device_id]['model_name'],
                                   hass, add_devices)
 
 
-def request_configuration(id, insteonhub, model, hass, add_devices_callback):
+def request_configuration(device_id, insteonhub, model, hass, add_devices_callback):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
     # We got an error if this method is called while we are configuring
-    if id in _CONFIGURING:
+    if device_id in _CONFIGURING:
         configurator.notify_errors(
-            _CONFIGURING[id], 'Failed to register, please try again.')
+            _CONFIGURING[device_id], 'Failed to register, please try again.')
 
         return
 
-    def insteon_light_configuration_callback(data):
+    def insteon_light_config_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_light(id, data.get('name'), insteonhub, hass,
+        setup_light(device_id, data.get('name'), insteonhub, hass,
                     add_devices_callback)
 
-    _CONFIGURING[id] = configurator.request_config(
-        hass, 'Insteon  ' + model + ' ' + id,
-        insteon_light_configuration_callback,
-        description=('Enter a name for ' + model + ' ' + id),
+    _CONFIGURING[device_id] = configurator.request_config(
+        hass, 'Insteon  ' + model + ' ' + device_id,
+        insteon_light_config_callback,
+        description=('Enter a name for ' + model + ' ' + device_id),
         entity_picture='/static/images/config_insteon.png',
         submit_caption='Confirm',
         fields=[{'id': 'name', 'name': 'Name', 'type': ''}]
     )
 
 
-def setup_light(id, name, insteonhub, hass, add_devices_callback):
+def setup_light(device_id, name, insteonhub, hass, add_devices_callback):
     """Setup light."""
-    if id in _CONFIGURING:
-        request_id = _CONFIGURING.pop(id)
+    if device_id in _CONFIGURING:
+        request_id = _CONFIGURING.pop(device_id)
         configurator = get_component('configurator')
         configurator.request_done(request_id)
         _LOGGER.info('Device configuration done!')
 
     conf_lights = config_from_file(hass.config.path(INSTEON_LOCAL_LIGHTS_CONF))
-    if id not in conf_lights:
-        conf_lights[id] = name
+    if device_id not in conf_lights:
+        conf_lights[device_id] = name
 
     if not config_from_file(
             hass.config.path(INSTEON_LOCAL_LIGHTS_CONF),
             conf_lights):
         _LOGGER.error('failed to save config file')
 
-    device = insteonhub.dimmer(id)
+    device = insteonhub.dimmer(device_id)
     add_devices_callback([InsteonLocalDimmerDevice(device, name)])
 
 
