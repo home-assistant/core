@@ -86,8 +86,8 @@ class TestTTSVoiceRSSPlatform(object):
         assert aioclient_mock.mock_calls[0][2] == self.form_data
         assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
 
-    def test_service_say_german(self, aioclient_mock):
-        """Test service call say with german code."""
+    def test_service_say_german_config(self, aioclient_mock):
+        """Test service call say with german code in the config."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         self.form_data['hl'] = 'de-de'
@@ -113,6 +113,35 @@ class TestTTSVoiceRSSPlatform(object):
         assert len(calls) == 1
         assert len(aioclient_mock.mock_calls) == 1
         assert aioclient_mock.mock_calls[0][2] == self.form_data
+
+    def test_service_say_german_service(self, aioclient_mock):
+        """Test service call say with german code in the service."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        self.form_data['hl'] = 'de-de'
+        aioclient_mock.post(
+            self.url, data=self.form_data, status=200, content=b'test')
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'voicerss',
+                'api_key': '1234567xx',
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'voicerss_say', {
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_LANGUAGE: "de-de"
+        })
+        self.hass.block_till_done()
+
+        assert len(calls) == 1
+        assert len(aioclient_mock.mock_calls) == 1
+        assert aioclient_mock.mock_calls[0][2] == self.form_data
+
 
     def test_service_say_error(self, aioclient_mock):
         """Test service call say with http response 400."""
