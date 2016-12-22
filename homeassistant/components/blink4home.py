@@ -51,10 +51,12 @@ def async_setup(hass, config):
     version = hass.config.as_dict()['version']
 
     def arm_blink(call):
+        """Arm the system."""
         blink = hass.data[DATA_BLINK]
         blink.arm()
 
     def disarm_blink(call):
+        """Disarm the system."""
         blink = hass.data[DATA_BLINK]
         blink.disarm()
 
@@ -151,7 +153,8 @@ class Blink4Home(object):
                 self._api_key = ''
                 _LOGGER.debug('Received error response: %s',
                               response.status_code)
-                _LOGGER.error('Error logging in to the Blink4Home platform. Received status was %s.',
+                _LOGGER.error('Error logging in to the Blink4Home platform. '
+                              'Received status was %s.',
                               response.status_code)
 
     def _do_post(self, url, data='', second_try=False):
@@ -218,9 +221,9 @@ class Blink4Home(object):
             self.update()
         else:
             _LOGGER.debug('Received error response on update: %s',
-                         response.text)
+                          response.text)
             _LOGGER.error('Error arming the Blink4Home platform. Received status was %s.',
-                         response.status_code)
+                          response.status_code)
 
     def disarm(self, second_try=False):
         """Disarm the system."""
@@ -234,9 +237,9 @@ class Blink4Home(object):
             self.update()
         else:
             _LOGGER.debug('Received error response on update: %s',
-                         response.text)
+                          response.text)
             _LOGGER.error('Error disarming the Blink4Home platform. Received status was %s.',
-                         response.status_code)
+                          response.status_code)
 
     def update(self, second_try=False):
         """Update the status."""
@@ -252,6 +255,6 @@ class Blink4Home(object):
             self._notifications = result['network']['notifications']
         else:
             _LOGGER.debug('Received error response on update: %s',
-                         response.text)
+                          response.text)
             _LOGGER.error('Error updating the Blink4Home sensor. Received status was %s.',
-                         response.status_code)
+                          response.status_code)
