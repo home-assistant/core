@@ -144,7 +144,7 @@ class TestTTS(object):
         assert req.status_code == 200
         assert req.content == demo_data
 
-    def test_setup_component_and_test_service_with_receive_voice_with_language(self):
+    def test_setup_component_and_test_service_with_receive_voice_german(self):
         """Setup the demo platform and call service and receive voice."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -166,7 +166,7 @@ class TestTTS(object):
 
         assert len(calls) == 1
         req = requests.get(calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        _, demo_data = self.demo_provider.get_tts_audio("bla", "en-bla")
+        _, demo_data = self.demo_provider.get_tts_audio("bla", "de")
         assert req.status_code == 200
         assert req.content == demo_data
 
