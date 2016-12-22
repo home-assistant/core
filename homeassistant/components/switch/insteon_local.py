@@ -68,12 +68,12 @@ def request_configuration(id, insteonhub, hass, add_devices_callback):
 
         return
 
-    def insteon_light_configuration_callback(data):
+    def insteon_switch_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
         setup_switch(id, data.get('name'), insteonhub, hass, add_devices_callback)
 
     _CONFIGURING[id] = configurator.request_config(
-        hass, 'Insteon Switch ' + id, insteon_light_configuration_callback,
+        hass, 'Insteon Switch ' + id, insteon_switch_configuration_callback,
         description=('Enter a name for Switch ' + id),
         entity_picture='/static/images/config_insteon.png',
         submit_caption='Confirm',
@@ -89,13 +89,13 @@ def setup_switch(id, name, insteonhub, hass, add_devices_callback):
         configurator.request_done(request_id)
         _LOGGER.info('Device configuration done!')
 
-    conf_lights = config_from_file(hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
-    if id not in conf_lights:
-        conf_lights[id] = name
+    conf_switch = config_from_file(hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
+    if id not in     conf_switch:
+            conf_switch[id] = name
 
     if not config_from_file(
             hass.config.path(INSTEON_LOCAL_SWITCH_CONF),
-            conf_lights):
+                conf_switch):
         _LOGGER.error('failed to save config file')
 
     device = insteonhub.switch(id)
