@@ -1,8 +1,8 @@
 """
 homeassistant.components.device_tracker.tado
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports geo fencing from Tado
-For more details about this platform, please refer to the documentation at
+Device tracker platform that supports presence detection.
+The detection is based on geofencing enabled devices used with Tado 'The Smart Thermostat'.
 """
 import logging
 from datetime import timedelta
