@@ -420,7 +420,7 @@ pyhomematic==0.1.18
 pyicloud==0.9.1
 
 # homeassistant.components.sensor.iss
-pyiss==1.0
+pyiss==1.0.1
 
 # homeassistant.components.sensor.lastfm
 pylast==1.6.0
