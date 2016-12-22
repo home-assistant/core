@@ -197,7 +197,7 @@ class Blink4Home(object):
             _LOGGER.debug('Token not valid: %s',
                           response.status_code)
             self._login(True)
-            self._do_post(url=url, second_try=True)
+            self._do_get(url=url, second_try=True)
         else:
             _LOGGER.debug('Received error response on get: %s',
                           response.text)
