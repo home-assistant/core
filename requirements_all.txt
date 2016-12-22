@@ -43,11 +43,12 @@ apcaccess==0.0.4
 apns2==0.1.1
 
 # homeassistant.components.sun
-astral==1.3.2
+astral==1.3.3
 
 # homeassistant.components.sensor.linux_battery
 batinfo==0.4.2
 
+# homeassistant.components.sensor.hydroquebec
 # homeassistant.components.sensor.scrape
 beautifulsoup4==4.5.1
 
@@ -105,7 +106,7 @@ dsmr_parser==0.4
 dweepy==0.2.0
 
 # homeassistant.components.sensor.eliqonline
-eliqonline==1.0.12
+eliqonline==1.0.13
 
 # homeassistant.components.enocean
 enocean==0.31
@@ -180,7 +181,7 @@ http://github.com/technicalpickles/python-nest/archive/b8391d2b3cb8682f8b0c2bdff
 https://github.com/Danielhiversen/flux_led/archive/0.10.zip#flux_led==0.10
 
 # homeassistant.components.switch.tplink
-https://github.com/GadgetReactor/pyHS100/archive/1f771b7d8090a91c6a58931532e42730b021cbde.zip#pyHS100==0.2.0
+https://github.com/GadgetReactor/pyHS100/archive/45fc3548882628bcde3e3d365db341849457bef2.zip#pyHS100==0.2.2
 
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.7.zip#pyW215==0.3.7
@@ -212,7 +213,7 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 # https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
 
 # homeassistant.components.netatmo
-https://github.com/jabesq/netatmo-api-python/archive/v0.8.0.zip#lnetatmo==0.8.0
+https://github.com/jabesq/netatmo-api-python/archive/v0.8.1.zip#lnetatmo==0.8.1
 
 # homeassistant.components.neato
 https://github.com/jabesq/pybotvac/archive/v0.0.1.zip#pybotvac==0.0.1
@@ -368,7 +369,7 @@ pwaqi==1.3
 py-cpuinfo==0.2.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.13.0
+pyRFXtrx==0.14.0
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.0.8
@@ -485,7 +486,7 @@ python-pushover==0.2
 python-synology==0.1.0
 
 # homeassistant.components.notify.telegram
-python-telegram-bot==5.2.0
+python-telegram-bot==5.3.0
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0

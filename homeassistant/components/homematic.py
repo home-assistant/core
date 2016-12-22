@@ -61,7 +61,7 @@ HM_DEVICE_TYPES = {
         'ThermostatWall', 'AreaThermostat', 'RotaryHandleSensor',
         'WaterSensor', 'PowermeterGas', 'LuxSensor', 'WeatherSensor',
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
-        'TemperatureSensor', 'CO2Sensor'],
+        'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2'],
     DISCOVER_BINARY_SENSORS: [
