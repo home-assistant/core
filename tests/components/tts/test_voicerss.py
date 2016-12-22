@@ -142,7 +142,6 @@ class TestTTSVoiceRSSPlatform(object):
         assert len(aioclient_mock.mock_calls) == 1
         assert aioclient_mock.mock_calls[0][2] == self.form_data
 
-
     def test_service_say_error(self, aioclient_mock):
         """Test service call say with http response 400."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
