@@ -36,6 +36,7 @@ class TestDemoClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(21, state.attributes.get('temperature'))
         self.assertEqual('on', state.attributes.get('away_mode'))
+        self.assertEqual('off', state.attributes.get('home_mode'))
         self.assertEqual(22, state.attributes.get('current_temperature'))
         self.assertEqual("On High", state.attributes.get('fan_mode'))
         self.assertEqual(67, state.attributes.get('humidity'))
@@ -211,10 +212,10 @@ class TestDemoClimate(unittest.TestCase):
     def test_set_home_mode_bad_attr(self):
         """Test setting the home mode without required attribute."""
         state = self.hass.states.get(ENTITY_CLIMATE)
-        self.assertEqual('on', state.attributes.get('home_mode'))
+        self.assertEqual('off', state.attributes.get('home_mode'))
         climate.set_home_mode(self.hass, None, ENTITY_CLIMATE)
         self.hass.block_till_done()
-        self.assertEqual('on', state.attributes.get('home_mode'))
+        self.assertEqual('off', state.attributes.get('home_mode'))
 
     def test_set_home_mode_on(self):
         """Test setting the home mode on/true."""
