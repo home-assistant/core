@@ -13,7 +13,7 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
