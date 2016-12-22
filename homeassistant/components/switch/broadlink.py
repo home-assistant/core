@@ -21,7 +21,7 @@ from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_SWITCHES,
                                  CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/python-broadlink/archive/master.zip#master==0.3']
+REQUIREMENTS = ['https://github.com/Danielhiversen/python-broadlink/archive/master.zip#broadlink==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
