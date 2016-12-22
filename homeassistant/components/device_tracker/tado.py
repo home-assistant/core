@@ -14,7 +14,7 @@ import voluptuous as vol
 import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle, convert
+from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 
 # Return cached results if last scan was less then this time ago
@@ -29,6 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 REQUIREMENTS = []
 
+
 def get_scanner(hass, config):
     """ Validates config and returns a Tado scanner. """
     info = config[DOMAIN]
@@ -42,6 +43,7 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 Device = namedtuple("Device", ["mac", "name"])
+
 
 class TadoDeviceScanner(object):
     """ This class gets geofenced devices from Tado. """
