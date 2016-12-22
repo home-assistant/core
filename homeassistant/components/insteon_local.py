@@ -77,6 +77,5 @@ def setup(hass, config):
         return False
 
     hass.data['insteon_local'] = insteonhub
-    discovery.load_platform(hass, 'light', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'switch', DOMAIN, {}, config)
+
     return True
