@@ -79,7 +79,8 @@ def request_configuration(id, insteonhub, model, hass, add_devices_callback):
                     add_devices_callback)
 
     _CONFIGURING[id] = configurator.request_config(
-        hass, 'Insteon  ' + model + ' ' + id, insteon_light_configuration_callback,
+        hass, 'Insteon  ' + model + ' ' + id,
+        insteon_light_configuration_callback,
         description=('Enter a name for ' + model + ' ' + id),
         entity_picture='/static/images/config_insteon.png',
         submit_caption='Confirm',
