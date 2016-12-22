@@ -174,17 +174,18 @@ class Blink4Home(object):
         response = requests.post(url, data=data,
                                  headers=headers, timeout=10)
 
-        if response.status_code == 401 and not second_try:
-            _LOGGER.debug('Token not valid: %s',
-                          response.status_code)
-            self._login(True)
-            self._do_post(url=url, data=data, second_try=True)
-        else:
-            _LOGGER.debug('Received error response on post: %s',
-                          response.text)
-            _LOGGER.error('Error with the Blink4Home '
-                          'platform. Received status was %s.',
-                          response.status_code)
+        if not response.status_code == 200:
+            if response.status_code == 401 and not second_try:
+                _LOGGER.debug('Token not valid: %s',
+                              response.status_code)
+                self._login(True)
+                self._do_post(url=url, data=data, second_try=True)
+            else:
+                _LOGGER.debug('Received error response on post: %s',
+                              response.text)
+                _LOGGER.error('Error with the Blink4Home '
+                              'platform. Received status was %s.',
+                              response.status_code)
 
         return response
 
@@ -202,17 +203,18 @@ class Blink4Home(object):
         response = requests.get(url, headers=headers,
                                 timeout=10)
 
-        if response.status_code == 401 and not second_try:
-            _LOGGER.debug('Token not valid: %s',
-                          response.status_code)
-            self._login(True)
-            self._do_get(url=url, second_try=True)
-        else:
-            _LOGGER.debug('Received error response on get: %s',
-                          response.text)
-            _LOGGER.error('Error with the Blink4Home '
-                          'platform. Received status was %s.',
-                          response.status_code)
+        if not response.status_code == 200:
+            if response.status_code == 401 and not second_try:
+                _LOGGER.debug('Token not valid: %s',
+                              response.status_code)
+                self._login(True)
+                self._do_get(url=url, second_try=True)
+            else:
+                _LOGGER.debug('Received error response on get: %s',
+                              response.text)
+                _LOGGER.error('Error with the Blink4Home '
+                              'platform. Received status was %s.',
+                              response.status_code)
 
         return response
 
