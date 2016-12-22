@@ -18,7 +18,7 @@ from homeassistant.util import dt as dt_util
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT,
-    CONF_WHITELIST, CONF_PROTOCOL)
+    CONF_WHITELIST, CONF_PROTOCOL, CONF_ID, CONF_STATE)
 
 REQUIREMENTS = ['pilight==0.1.1']
 
@@ -27,6 +27,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SEND_DELAY = "send_delay"
 
+CONF_UNIT = 'unit'
+CONF_UNITCODE = 'unitcode'
+CONF_SYSTEMCODE = 'systemcode'
+
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 5000
 DEFAULT_SEND_DELAY = 0.0
@@ -34,10 +38,21 @@ DOMAIN = 'pilight'
 
 EVENT = 'pilight_received'
 
+COMMAND_SCHEMA = vol.Schema({
+    vol.Optional(CONF_PROTOCOL): cv.string,
+    vol.Optional('on'): cv.positive_int,
+    vol.Optional('off'): cv.positive_int,
+    vol.Optional(CONF_UNIT): cv.positive_int,
+    vol.Optional(CONF_UNITCODE): cv.positive_int,
+    vol.Optional(CONF_ID): cv.positive_int,
+    vol.Optional(CONF_STATE): cv.string,
+    vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
+}, extra=vol.ALLOW_EXTRA)
+
 # The Pilight code schema depends on the protocol. Thus only require to have
 # the protocol information. Ensure that protocol is in a list otherwise
 # segfault in pilight-daemon, https://github.com/pilight/pilight/issues/296
-RF_CODE_SCHEMA = vol.Schema({
+RF_CODE_SCHEMA = COMMAND_SCHEMA.extend({
     vol.Required(CONF_PROTOCOL): vol.All(cv.ensure_list, [cv.string]),
 }, extra=vol.ALLOW_EXTRA)
 
