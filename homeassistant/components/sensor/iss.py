@@ -14,14 +14,13 @@ from homeassistant.const import (CONF_NAME)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyiss==1.0']
+REQUIREMENTS = ['pyiss==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ISS_VISIBLE = 'visible'
-CONF_ISS_NEXT_RISE = 'next_rise'
-CONF_ISS_NUMBER_PEOPLE_SPACE = 'number_of_people_in_space'
-CONF_TIME_SECOND = 'mn'
+ATTR_ISS_VISIBLE = 'visible'
+ATTR_ISS_NEXT_RISE = 'next_rise'
+ATTR_ISS_NUMBER_PEOPLE_SPACE = 'number_of_people_in_space'
 
 DEFAULT_NAME = 'ISS'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -62,7 +61,7 @@ class IssSensor(Entity):
         self._state = None
         self._attributes = {}
         self._client_name = name
-        self._name = CONF_ISS_VISIBLE
+        self._name = ATTR_ISS_VISIBLE
         self._unit_of_measurement = None
         self._icon = 'mdi:eye'
 
@@ -95,10 +94,10 @@ class IssSensor(Entity):
         """Get the latest data from ISS API and updates the states."""
         self._state = self.iss_data.is_above
 
-        self._attributes[CONF_ISS_NUMBER_PEOPLE_SPACE] = \
+        self._attributes[ATTR_ISS_NUMBER_PEOPLE_SPACE] = \
             self.iss_data.number_of_people_in_space
         delta = self.iss_data.next_rise - datetime.utcnow()
-        self._attributes[CONF_ISS_NEXT_RISE] = int(delta.total_seconds() / 60)
+        self._attributes[ATTR_ISS_NEXT_RISE] = int(delta.total_seconds() / 60)
 
 
 class IssData(object):
