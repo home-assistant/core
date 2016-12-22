@@ -90,7 +90,6 @@ def request_configuration(id, insteonhub, model, hass, add_devices_callback):
 
 def setup_light(id, name, insteonhub, hass, add_devices_callback):
     """Setup light."""
-
     if id in _CONFIGURING:
         request_id = _CONFIGURING.pop(id)
         configurator = get_component('configurator')

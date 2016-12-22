@@ -1,5 +1,5 @@
 """
-Support for Insteon switch devices via local hub support
+Support for Insteon switch devices via local hub support.
 
 Based on the insteonlocal library
 https://github.com/phareous/insteonlocal
@@ -89,7 +89,6 @@ def request_configuration(id, insteonhub, model, hass, add_devices_callback):
 
 def setup_switch(id, name, insteonhub, hass, add_devices_callback):
     """Setup switch."""
-
     if id in _CONFIGURING:
         request_id = _CONFIGURING.pop(id)
         configurator = get_component('configurator')
