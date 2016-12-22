@@ -21,26 +21,26 @@ unsees incoming packet id's.
 Device Entities take care of matching to the packet id, interpreting and
 performing actions based on the packet contents. Common entitiy logic is
 maintained in this file.
+
 """
 import asyncio
 import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
 
-REQUIREMENTS = ['rflink==0.0.7']
+REQUIREMENTS = ['rflink==0.0.14']
 
 DOMAIN = 'rflink'
 
 RFLINK_EVENT = {
-    'light': 'rflink_switch_packet_received',
-    'sensor': 'rflink_sensor_packet_received',
-    'switch': 'rflink_switch_packet_received',
+    'light': 'rflink_switch_event_received',
+    'sensor': 'rflink_sensor_event_received',
+    'switch': 'rflink_switch_event_received',
     'send_command': 'rflink_send_command',
 }
 
-ATTR_PACKET = 'packet'
+ATTR_EVENT = 'event'
 ATTR_COMMAND = 'command'
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,43 +48,16 @@ _LOGGER = logging.getLogger(__name__)
 KNOWN_DEVICE_IDS = []
 
 
-def serialize_id(packet):
-    """Serialize packet identifiers into device id."""
-    # invalid packet
-    if not (packet.get('protocol') and packet.get('id')):
-        return None
-
-    return '_'.join(filter(None, [
-        slugify(packet['protocol']),
-        packet['id'],
-        packet.get('switch', None),
-    ]))
-
-
-def deserialize_id(device_id):
-    """Split device id into dict of packet identifiers."""
-    return device_id.split('_')
-
-
-def identify_packet_type(packet):
-    """Look at packet to determine type of device."""
-    if 'switch' in packet:
+def identify_event_type(event):
+    """Look at event to determine type of device."""
+    if 'command' in event:
         return 'light'
-    elif 'temperature' in packet:
+    elif 'sensor' in event:
         return 'sensor'
-    elif 'version' in packet:
+    elif 'version' in event:
         return 'informative'
     else:
         return 'unknown'
-
-
-def ignore_device(device_id, ignore_device_ids):
-    """Validate device id with list of devices to ignore."""
-    # don't fire if device is set to ignore
-    for ignore in ignore_device_ids:
-        if (ignore == device_id or
-           (ignore.endswith('*') and device_id.startswith(ignore[:-1]))):
-            return
 
 
 @asyncio.coroutine
@@ -92,30 +65,27 @@ def async_setup(hass, config):
     """Setup the Rflink component."""
     from rflink.protocol import create_rflink_connection
 
-    ignore_device_ids = config.get('ignore_devices', [])
+    # make sure no known devices are left (mostly during tests)
+    del KNOWN_DEVICE_IDS[:]
 
-    def packet_callback(packet):
-        """Handle incoming rflink packets.
+    def event_callback(event):
+        """Handle incoming rflink events.
 
-        Rflink packets arrive as dictionaries of varying content depending
-        on their type. Identify the packets and distribute accordingly.
+        Rflink events arrive as dictionaries of varying content
+        depending on their type. Identify the events and distribute
+        accordingly.
+
         """
-        packet_type = identify_packet_type(packet)
+        event_type = identify_event_type(event)
+        _LOGGER.info('event type %s', event_type)
 
-        # fire bus event for packet type
-        if not packet_type:
-            _LOGGER.info(packet)
-        elif packet_type in RFLINK_EVENT:
-            device_id = serialize_id(packet)
-            if not device_id:
-                return
-
-            if ignore_device(device_id, ignore_device_ids):
-                return
-
-            hass.bus.fire(RFLINK_EVENT[packet_type], {ATTR_PACKET: packet})
+        # fire bus event for event type
+        if not event_type:
+            _LOGGER.info(event)
+        elif event_type in RFLINK_EVENT:
+            hass.bus.fire(RFLINK_EVENT[event_type], {ATTR_EVENT: event})
         else:
-            _LOGGER.debug('unhandled packet of type: %s', packet_type)
+            _LOGGER.debug('unhandled event of type: %s', event_type)
 
     # when connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN].get('host', None)
@@ -126,8 +96,9 @@ def async_setup(hass, config):
     connection = create_rflink_connection(
         port=port,
         host=host,
-        packet_callback=packet_callback,
+        event_callback=event_callback,
         loop=hass.loop,
+        ignore=config[DOMAIN].get('ignore_devices', []),
     )
     transport, protocol = yield from connection
     # handle shutdown of rflink asyncio transport
@@ -159,6 +130,7 @@ class RflinkDevice(Entity):
     """Represents a Rflink device.
 
     Contains the common logic for Rflink entities.
+
     """
 
     # should be set by component implementation
@@ -184,31 +156,31 @@ class RflinkDevice(Entity):
 
         # listen to component domain specific messages
         hass.bus.async_listen(RFLINK_EVENT[self.domain], lambda event:
-                              self.match_packet(event.data[ATTR_PACKET]))
+                              self.match_event(event.data[ATTR_EVENT]))
 
-    def match_packet(self, packet):
-        """Match and handle incoming packets.
+    def match_event(self, event):
+        """Match and handle incoming events.
 
-        Match incoming packet to this device id
-        or any of its aliasses (including wildcards).
+        Match incoming event to this device id or any of its aliasses
+        (including wildcards).
+
         """
-        device_id = serialize_id(packet)
+        device_id = event['id']
         if device_id and (
             device_id == self._device_id or
                 device_id in self._aliasses):
-            self.handle_packet(packet)
+            self.handle_event(event)
 
-    def handle_packet(self, packet):
-        """Handle incoming packet for device type."""
-
-        # call domain specific packet handler
-        self._handle_packet(packet)
+    def handle_event(self, event):
+        """Handle incoming event for device type."""
+        # call domain specific event handler
+        self._handle_event(event)
 
         # propagate changes through ha
         self.hass.async_add_job(self.async_update_ha_state())
 
-    def _handle_packet(self, packet):
-        """Domain specific packet handler."""
+    def _handle_event(self, event):
+        """Domain specific event handler."""
         raise NotImplementedError()
 
     @property
@@ -228,7 +200,7 @@ class RflinkDevice(Entity):
 
     @property
     def assumed_state(self):
-        """Assume device state until first device packet sets state."""
+        """Assume device state until first device event sets state."""
         return self._state is STATE_UNKNOWN
 
     def _send_command(self, command, *args):
@@ -243,7 +215,7 @@ class RflinkDevice(Entity):
 
         elif command == 'dim':
             # convert brightness to rflink dim level
-            cmd = str(int(args[0]/17))
+            cmd = str(int(args[0] / 17))
             self._state = True
 
         # send protocol, device id, switch nr and command to rflink
@@ -259,9 +231,9 @@ class RflinkDevice(Entity):
 class SwitchableRflinkDevice(RflinkDevice):
     """Rflink entity which can switch on/off (eg: light, switch)."""
 
-    def _handle_packet(self, packet):
+    def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
-        command = packet['command']
+        command = event['command']
         if command == 'on':
             self._state = True
         elif command == 'off':

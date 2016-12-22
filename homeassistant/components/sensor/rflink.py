@@ -1,8 +1,8 @@
-"""
-Support for Rflink lights.
+"""Support for Rflink lights.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.rflink/
+For more details about this platform, please refer to the documentation
+at https://home-assistant.io/components/light.rflink/
+
 """
 import asyncio
 from functools import partial
@@ -17,23 +17,26 @@ DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_KEYS_AND_UNITS = {
-    'temperature': '°C',
-    'humidity': '%',
-    'battery': None,
-}
-
 SENSOR_ICONS = {
     'humidity': 'mdi:water-percent',
     'battery': 'mdi:battery',
+    'temperature': 'mdi:thermometer',
 }
 
 VALID_CONFIG_KEYS = [
     'aliasses',
     'name',
     'icon',
-    'value_key',
+    'sensor_type',
 ]
+
+
+def lookup_unit_for_sensor_type(sensor_type):
+    """Get unit for sensor type."""
+    from rflink.parser import UNITS, PACKET_FIELDS
+    field_abbrev = {v: k for k, v in PACKET_FIELDS.items()}
+
+    return UNITS.get(field_abbrev.get(sensor_type))
 
 
 def devices_from_config(domain_config, hass=None):
@@ -42,7 +45,7 @@ def devices_from_config(domain_config, hass=None):
     for device_id, config in domain_config.get('devices', {}).items():
         # extract only valid keys from device configuration
         kwargs = {k: v for k, v in config.items() if k in VALID_CONFIG_KEYS}
-        kwargs['unit'] = SENSOR_KEYS_AND_UNITS[kwargs['value_key']]
+        kwargs['unit'] = lookup_unit_for_sensor_type(kwargs['sensor_type'])
         devices.append(RflinkSensor(device_id, hass, **kwargs))
         rflink.KNOWN_DEVICE_IDS.append(device_id)
     return devices
@@ -64,26 +67,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     @asyncio.coroutine
     def add_new_device(event):
         """Check if device is known, otherwise create device entity."""
-        packet = event.data[rflink.ATTR_PACKET]
-        device_id = rflink.serialize_id(packet)
+        event = event.data[rflink.ATTR_EVENT]
+        device_id = event['id']
         if device_id not in rflink.KNOWN_DEVICE_IDS:
             rflink.KNOWN_DEVICE_IDS.append(device_id)
             rflinksensor = partial(RflinkSensor, device_id, hass)
-            devices = []
-            # create entity for each value in this packet
-            for sensor_key, unit in SENSOR_KEYS_AND_UNITS.items():
-                if sensor_key in packet:
-                    devices.append(rflinksensor(sensor_key, unit))
-            yield from async_add_devices(devices)
-            # make sure the packet is processed by the new entities
-            for device in devices:
-                device.match_packet(packet)
+            device = rflinksensor(event['sensor'], event['unit'])
+            # add device entity
+            yield from async_add_devices([device])
+            # make sure the event is processed by the new entity
+            device.match_event(event)
 
             # maybe add to new devices group
             if new_devices_group:
                 yield from new_devices_group.async_update_tracked_entity_ids(
-                    list(new_devices_group.tracking) + [
-                        device.entity_id for device in devices])
+                    list(new_devices_group.tracking) + [device.entity_id])
 
     hass.bus.async_listen(rflink.RFLINK_EVENT[DOMAIN], add_new_device)
 
@@ -93,19 +91,16 @@ class RflinkSensor(rflink.RflinkDevice):
 
     # used for matching bus events
     domain = DOMAIN
-    # packets can contain multiple values
-    # which value this entity is bound to
-    value_key = None
 
-    def __init__(self, device_id, hass, value_key, unit, **kwargs):
+    def __init__(self, device_id, hass, sensor_type, unit, **kwargs):
         """Handle sensor specific args and super init."""
-        self._value_key = value_key
+        self._sensor_type = sensor_type
         self._unit = unit
         super().__init__(device_id, hass, **kwargs)
 
-    def _handle_packet(self, packet):
-        """Domain specific packet handler."""
-        self._state = packet[self._value_key]
+    def _handle_event(self, event):
+        """Domain specific event handler."""
+        self._state = event['value']
 
     @property
     def unit_of_measurement(self):
@@ -122,5 +117,5 @@ class RflinkSensor(rflink.RflinkDevice):
         """Return possible sensor specific icon or user override."""
         if self._icon:
             return self._icon
-        elif self._value_key in SENSOR_ICONS:
-            return SENSOR_ICONS[self._value_key]
+        elif self._sensor_type in SENSOR_ICONS:
+            return SENSOR_ICONS[self._sensor_type]
