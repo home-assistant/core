@@ -7,18 +7,16 @@ Jerry Workman <jerry.workman@gmail.com>
 
 
 from threading import Timer
-from homeassistant.components.cover import CoverDevice
-from homeassistant.components import switch
-from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_ON, STATE_OFF)
-from homeassistant.components.cover import PLATFORM_SCHEMA
+import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-import logging
-import pprint
-_LOGGER = logging.getLogger(__name__)
-pp = pprint.PrettyPrinter(indent=4)
+from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import PLATFORM_SCHEMA
+from homeassistant.components import switch
+from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_ON, STATE_UNKNOWN)
 
-DOMAIN = 'cover.tilt'
+_LOGGER = logging.getLogger(__name__)
+
 CONF_TILT_SENSOR = 'tilt_sensor'
 CONF_SWITCH = 'switch'
 CONF_CONTACT_DELAY = 'contact_delay'
@@ -27,17 +25,18 @@ DEFAULT_CONTACT_DELAY = 1  # momentary contact relay switch on time (sec)
 DEFAULT_RUN_TIME = 10      # seconds required for door to open or close
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-        vol.Required(CONF_TILT_SENSOR, default=None): cv.string,
-        vol.Required(CONF_SWITCH, default=None): cv.string,
-        vol.Optional(CONF_CONTACT_DELAY, default=DEFAULT_CONTACT_DELAY): cv.positive_int,
-        vol.Optional(CONF_CONTACT_RUN_TIME, default=DEFAULT_RUN_TIME): cv.positive_int,
+    vol.Required(CONF_TILT_SENSOR, default=None): cv.string,
+    vol.Required(CONF_SWITCH, default=None): cv.string,
+    vol.Optional(CONF_CONTACT_DELAY, default=DEFAULT_CONTACT_DELAY):
+        cv.positive_int,
+    vol.Optional(CONF_CONTACT_RUN_TIME, default=DEFAULT_RUN_TIME):
+        cv.positive_int,
 })
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Add all tilt sensors."""
-    _LOGGER.debug("CONFIG: %s", pp.pformat(config))
     covers = config.get('covers', {})
     devices = []
 
@@ -61,14 +60,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(devices)
 
-
 class TiltCover(CoverDevice):
     """
     Tilt sensor and (toggle) switch to control a garage door opener or
     motorized gate.
     """
 
-    # pylint: disable=too-many-instance-attributes,too-many-arguments
     def __init__(self, hass, dev_name, tilt_sensor_id, switch_id,
                  contact_delay=DEFAULT_CONTACT_DELAY,
                  run_time=DEFAULT_RUN_TIME):
@@ -79,7 +76,7 @@ class TiltCover(CoverDevice):
         self._switch = switch_id
         self._contact_delay = contact_delay
         self._run_time = run_time
-        self._state = STATE_OFF  # Assume closed
+        self._state = STATE_UNKNOWN
         self._running = False  # is door in the process of opening or closing
         self._delay_timer = None
         self._run_timer = None
@@ -95,18 +92,14 @@ class TiltCover(CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open garage door."""
-        _LOGGER.debug('tilt trying to open %s', self._name)
         if self.is_closed:
-            _LOGGER.debug('tilt opening %s', self._name)
             self._toggle()
         self._state = STATE_OPEN
         self.schedule_update_ha_state()
 
     def close_cover(self, **kwargs):
         """Close garage door."""
-        _LOGGER.debug('tilt trying to close %s', self._name)
         if not self.is_closed:
-            _LOGGER.debug('closing %s', self._name)
             self._toggle()
         self._state = STATE_CLOSED
         self.schedule_update_ha_state()
@@ -128,11 +121,9 @@ class TiltCover(CoverDevice):
 
         def _stop_run_timer():
             """The door should be open/closed by now"""
-            _LOGGER.debug('tilt switch %s stopping timer', self._name)
             self._running = False
             self._insure_relay_is_off()
 
-        _LOGGER.debug("switch.turn_on %s", self._switch)
         switch.turn_on(self.hass, self._switch)
         self._running = True
         self._delay_timer = Timer(self._contact_delay, _stop_delay_timer)
@@ -150,7 +141,6 @@ class TiltCover(CoverDevice):
             _LOGGER.debug('tilt switch %s running, assumed state is %s',
                           self._name, self._state)
         else:
-            _LOGGER.debug('updating, tilt sensor is %s', self._tilt_sensor)
             tilt = self._hass.states.get(self._tilt_sensor)
-            _LOGGER.debug('tilt switch %s is %s', self._name, tilt)
-            self._state = STATE_OPEN if tilt.state == STATE_ON else STATE_CLOSED
+            self._state = \
+                STATE_OPEN if tilt.state == STATE_ON else STATE_CLOSED
