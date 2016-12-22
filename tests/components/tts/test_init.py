@@ -170,7 +170,6 @@ class TestTTS(object):
         assert req.status_code == 200
         assert req.content == demo_data
 
-
     def test_setup_component_and_web_view_wrong_file(self):
         """Setup the demo platform and receive wrong file from web."""
         config = {
