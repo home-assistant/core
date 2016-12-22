@@ -55,7 +55,9 @@ class AsyncHandler(object):
 
         When blocking=True, will wait till closed.
         """
-        self.close()
+        if not self._thread.is_alive():
+            return
+        yield from self._queue.put(None)
 
         if blocking:
             # Python 3.4.4+
