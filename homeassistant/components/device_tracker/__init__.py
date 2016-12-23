@@ -486,7 +486,7 @@ class Device(Entity):
             return None
 
         if '_' in self.mac:
-            prefix, mac = self.mac.split('_', 1)
+            _, mac = self.mac.split('_', 1)
         else:
             mac = self.mac
 
