@@ -221,21 +221,24 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
             mac = 'B8:27:EB:00:00:00'
             device = device_tracker.Device(
-                self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+                self.hass, timedelta(seconds=180),
+                True, 'test', mac, 'Test name')
             run_coroutine_threadsafe(device.set_vendor_for_mac(),
                                      self.hass.loop).result()
             self.assertEqual(device.vendor, vendor_string)
 
             mac = '0:27:EB:00:00:00'
             device = device_tracker.Device(
-                self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+                self.hass, timedelta(seconds=180),
+                True, 'test', mac, 'Test name')
             run_coroutine_threadsafe(device.set_vendor_for_mac(),
                                      self.hass.loop).result()
             self.assertEqual(device.vendor, vendor_string)
 
             mac = 'PREFIXED_B8:27:EB:00:00:00'
             device = device_tracker.Device(
-                self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+                self.hass, timedelta(seconds=180),
+                True, 'test', mac, 'Test name')
             run_coroutine_threadsafe(device.set_vendor_for_mac(),
                                      self.hass.loop).result()
             self.assertEqual(device.vendor, vendor_string)
