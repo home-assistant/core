@@ -5,10 +5,11 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/hdmi_cec/
 """
 import logging
+import multiprocessing
+
 import os
 from collections import defaultdict
 from functools import reduce
-
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -20,7 +21,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC>=0.3.4']
+REQUIREMENTS = ['pyCEC>=0.3.6']
 
 DOMAIN = 'hdmi_cec'
 
@@ -47,6 +48,8 @@ CMD_DOWN = 'down'
 CMD_MUTE = 'mute'
 CMD_UNMUTE = 'unmute'
 CMD_MUTE_TOGGLE = 'toggle mute'
+CMD_PRESS = 'press'
+CMD_RELEASE = 'release'
 
 EVENT_CEC_COMMAND_RECEIVED = 'cec_command_received'
 EVENT_CEC_KEYPRESS_RECEIVED = 'cec_keypress_received'
@@ -80,8 +83,8 @@ SERVICE_SEND_COMMAND_SCHEMA = vol.Schema({
 
 SERVICE_VOLUME = 'volume'
 SERVICE_VOLUME_SCHEMA = vol.Schema({
-    vol.Optional(CMD_UP): vol.Coerce(int),
-    vol.Optional(CMD_DOWN): vol.Coerce(int),
+    vol.Optional(CMD_UP): vol.Any(CMD_PRESS, CMD_RELEASE, vol.Coerce(int)),
+    vol.Optional(CMD_DOWN): vol.Any(CMD_PRESS, CMD_RELEASE, vol.Coerce(int)),
     vol.Optional(CMD_MUTE): None,
     vol.Optional(CMD_UNMUTE): None,
     vol.Optional(CMD_MUTE_TOGGLE): None
@@ -93,50 +96,101 @@ SERVICE_UPDATE_DEVICES_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SELECT_DEVICE = 'select_device'
+
+SERVICE_POWER_ON = 'power_on'
+SERVICE_STANDBY = 'standby'
+
 # pylint: disable=unnecessary-lambda
 DEVICE_SCHEMA = vol.Schema({
     vol.All(cv.positive_int): vol.Any(lambda devices: DEVICE_SCHEMA(devices),
                                       cv.string)
 })
 
-SERVICE_POWER_ON = 'power_on'
-SERVICE_STANDBY = 'standby'
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_DEVICES): vol.Schema({cv.string: cv.string})
+        vol.Optional(CONF_DEVICES): vol.Any(DEVICE_SCHEMA,
+                                            vol.Schema({
+                                                vol.All(cv.string): vol.Any(
+                                                    cv.string)
+                                            }))
     })
 }, extra=vol.ALLOW_EXTRA)
 
 
+def pad_physical_address(addr):
+    """Right-pad a physical address."""
+    return addr + [0] * (4 - len(addr))
+
+
+def parse_mapping(mapping, parents=None):
+    """Parse configuration device mapping."""
+    if parents is None:
+        parents = []
+    for addr, val in mapping.items():
+        if isinstance(addr, (str,)) and isinstance(val, (str,)):
+            from pycec.network import PhysicalAddress
+            yield (addr, PhysicalAddress(val))
+        else:
+            cur = parents + [addr]
+            if isinstance(val, dict):
+                yield from parse_mapping(val, cur)
+            elif isinstance(val, str):
+                yield (val, pad_physical_address(cur))
+
+
 def setup(hass: HomeAssistant, base_config):
     """Setup CEC capability."""
-    from pycec.network import HDMINetwork
-    from pycec import CecConfig
+    from pycec.network import HDMINetwork, CecConfig
     from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
     from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE, \
         ADDR_AUDIOSYSTEM, ADDR_BROADCAST, ADDR_UNREGISTERED
 
-    hdmi_network = HDMINetwork(config=CecConfig(name="HASS"), loop=hass.loop)
+    # Parse configuration into a dict of device name to physical address
+    # represented as a list of four elements.
+    device_aliases = {}
+    devices = base_config[DOMAIN].get(CONF_DEVICES, {})
+    _LOGGER.debug("Parsing config %s", devices)
+    device_aliases.update(parse_mapping(devices))
+    _LOGGER.debug("Parsed devices: %s", device_aliases)
+
+    hdmi_network = HDMINetwork(config=CecConfig(name="HASS"), loop=(
+        # Create own thread if more than 1 CPU
+        hass.loop if multiprocessing.cpu_count() < 2 else None))
 
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""
         for cmd, att in call.data.items():
             att = 1 if att < 1 else att
             if cmd == CMD_UP:
-                for _ in range(att):
-                    hdmi_network.send_command(
-                        KeyPressCommand(KEY_VOLUME_UP, dst=ADDR_AUDIOSYSTEM))
-                    hdmi_network.send_command(
-                        KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
-                _LOGGER.info("Volume increased %d times", att)
+                if att == CMD_PRESS:
+                    KeyPressCommand(KEY_VOLUME_UP, dst=ADDR_AUDIOSYSTEM)
+                    _LOGGER.info("Volume up pressed")
+                elif att == CMD_RELEASE:
+                    KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM)
+                    _LOGGER.info("Volume up released")
+                else:
+                    for _ in range(att):
+                        hdmi_network.send_command(
+                            KeyPressCommand(KEY_VOLUME_UP,
+                                            dst=ADDR_AUDIOSYSTEM))
+                        hdmi_network.send_command(
+                            KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
+                    _LOGGER.info("Volume increased %d times", att)
             elif cmd == CMD_DOWN:
-                for _ in range(att):
-                    hdmi_network.send_command(
-                        KeyPressCommand(KEY_VOLUME_DOWN, dst=ADDR_AUDIOSYSTEM))
-                    hdmi_network.send_command(
-                        KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
-                _LOGGER.info("Volume deceased %d times", att)
+                if att == CMD_PRESS:
+                    KeyPressCommand(KEY_VOLUME_DOWN, dst=ADDR_AUDIOSYSTEM)
+                    _LOGGER.info("Volume down pressed")
+                elif att == CMD_RELEASE:
+                    KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM)
+                    _LOGGER.info("Volume down released")
+                else:
+                    for _ in range(att):
+                        hdmi_network.send_command(
+                            KeyPressCommand(KEY_VOLUME_DOWN,
+                                            dst=ADDR_AUDIOSYSTEM))
+                        hdmi_network.send_command(
+                            KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
+                    _LOGGER.info("Volume deceased %d times", att)
             elif cmd == CMD_MUTE:
                 hdmi_network.send_command(
                     KeyPressCommand(KEY_MUTE, dst=ADDR_AUDIOSYSTEM))
@@ -185,14 +239,14 @@ def setup(hass: HomeAssistant, base_config):
 
     def _select_device(call):
         """Select the active device."""
-        from pycec.datastruct import PhysicalAddress
+        from pycec.network import PhysicalAddress
 
         addr = call.data[ATTR_DEVICE]
         if not addr:
             _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
             return
-        if addr in base_config[DOMAIN][CONF_DEVICES]:
-            addr = base_config[DOMAIN][CONF_DEVICES][addr]
+        if addr in device_aliases:
+            addr = device_aliases[addr]
         else:
             entity = hass.states.get(addr)
             _LOGGER.debug("Selecting entity %s", entity)
@@ -203,7 +257,9 @@ def setup(hass: HomeAssistant, base_config):
                     _LOGGER.error("Device %s has not physical address.",
                                   call.data[ATTR_DEVICE])
                     return
-        hdmi_network.active_source(PhysicalAddress(addr))
+        if not isinstance(addr, (PhysicalAddress,)):
+            addr = PhysicalAddress(addr)
+        hdmi_network.active_source(addr)
         _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
 
     def _update(call):
