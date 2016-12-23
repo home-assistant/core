@@ -261,7 +261,7 @@ class TestTTS(object):
         """Setup demo platform with cache and call service without cache."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        _, demo_data = self.demo_provider.get_tts_audio("bla", None)
+        _, demo_data = self.demo_provider.get_tts_audio("bla")
         cache_file = os.path.join(
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3")
@@ -317,7 +317,7 @@ class TestTTS(object):
 
     def test_setup_component_load_cache_retrieve_without_mem_cache(self):
         """Setup component and load cache and get without mem cache."""
-        _, demo_data = self.demo_provider.get_tts_audio("bla", None)
+        _, demo_data = self.demo_provider.get_tts_audio("bla")
         cache_file = os.path.join(
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_demo.mp3")
