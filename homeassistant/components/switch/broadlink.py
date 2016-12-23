@@ -22,7 +22,8 @@ from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_SWITCHES,
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/python-broadlink/'
-                'archive/6d6ae7b685723c8b5d7365200218e1d50cf91d27.zip#broadlink==0.3']
+                'archive/6d6ae7b685723c8b5d7365200218e1d50cf91d27.zip'
+                '#broadlink==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ SERVICE_LEARN = "learn_command"
 
 RM_TYPES = ["rm", "rm2", "rm_mini", "rm_pro_phicomm", "rm2_home_plus",
             "rm2_home_plus_gdt", "rm2_pro_plus", "rm2_pro_plus2",
-            "rm2_pro_plus_bl",  "rm_mini_shate"]
+            "rm2_pro_plus_bl", "rm_mini_shate"]
 SP1_TYPES = ["sp1", ]
 SP2_TYPES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
 SWITCH_TYPES = []
