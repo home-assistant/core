@@ -153,22 +153,9 @@ class InsteonLocalSwitchDevice(SwitchDevice):
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
-        """Update state of the sensor."""
-        dev_id = self.node.device_id.upper()
-        self.node.hub.direct_command(dev_id, '19', '00')
-        resp = self.node.hub.get_buffer_status(dev_id)
-        attempts = 1
-        while 'cmd2' not in resp and attempts < 9:
-            if attempts % 3 == 0:
-                self.node.hub.direct_command(dev_id, '19', '00')
-            else:
-                sleep(2)
-            resp = self.node.hub.get_buffer_status(dev_id)
-            attempts += 1
-
+        resp = self.node.status(0)
         if 'cmd2' in resp:
-            _LOGGER.info("cmd2 value = " + resp['cmd2'])
-            self._state = int(resp['cmd2'], 16) > 0
+            self._value = int(resp['cmd2'], 16) > 0
 
     @property
     def is_on(self):
