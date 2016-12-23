@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for device_id in linked:
         if linked[device_id]['cat_type'] == 'switch' and device_id not in conf_switches:
-            request_configuration(device_id, insteonhub, linked[device_id]['model_name'],
+            request_configuration(device_id, insteonhub, linked[device_id]['model_name'] + ' ' + linked[device_id]['sku'],
                                   hass, add_devices)
 
 
@@ -78,9 +78,9 @@ def request_configuration(device_id, insteonhub, model, hass, add_devices_callba
                      add_devices_callback)
 
     _CONFIGURING[device_id] = configurator.request_config(
-        hass, 'Insteon Switch ' + device_id,
+        hass, 'Insteon Switch ' + model + ' addr: ' + device_id,
         insteon_switch_config_callback,
-        description=('Enter a name for ' + model + ' ' + device_id),
+        description=('Enter a name for ' + model + ' addr: ' + device_id),
         entity_picture='/static/images/config_insteon.png',
         submit_caption='Confirm',
         fields=[{'id': 'name', 'name': 'Name', 'type': ''}]
