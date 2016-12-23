@@ -162,18 +162,7 @@ class InsteonLocalDimmerDevice(Light):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Update state of the sensor."""
-        devid = self.node.device_id.upper()
-        self.node.hub.direct_command(devid, '19', '00')
-        resp = self.node.hub.get_buffer_status(devid)
-        attempts = 1
-        while 'cmd2' not in resp and attempts < 9:
-            if attempts % 3 == 0:
-                self.node.hub.direct_command(devid, '19', '00')
-            else:
-                sleep(1)
-            resp = self.node.hub.get_buffer_status(devid)
-            attempts += 1
-
+        resp = self.node.status(0)
         if 'cmd2' in resp:
             self._value = int(resp['cmd2'], 16)
 
