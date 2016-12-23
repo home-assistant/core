@@ -59,7 +59,7 @@ class GoogleProvider(Provider):
         }
 
     @asyncio.coroutine
-    def async_get_tts_audio(self, message, language):
+    def async_get_tts_audio(self, message, language=None):
         """Load TTS from google."""
         from gtts_token import gtts_token
 
