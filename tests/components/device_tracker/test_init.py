@@ -192,8 +192,9 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                         "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
         self.assertEqual(device.config_picture, gravatar_url)
 
-    def test_mac_vendor_lookup(self, mac):
+    def test_mac_vendor_lookup(self):
         """Test if vendor string is lookup on macvendors API."""
+        mac = 'B8:27:EB:00:00:00'
         vendor_string = 'Raspberry Pi Foundation'
 
         device = device_tracker.Device(
