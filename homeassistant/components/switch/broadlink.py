@@ -30,7 +30,15 @@ DEFAULT_NAME = 'Broadlink switch'
 DEFAULT_TIMEOUT = 10
 SERVICE_LEARN = "learn_command"
 
-SENSOR_TYPES = ["rm", "sp1", "sp2"]
+RM_TYPES = ["rm", "rm2", "rm_mini", "rm_pro_phicomm", "rm2_home_plus",
+            "rm2_home_plus_gdt", "rm2_pro_plus", "rm2_pro_plus2",
+            "rm2_pro_plus_bl",  "rm_mini_shate"]
+SP1_TYPES = ["sp1", ]
+SP2_TPYES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
+SWITCH_TYPES = []
+SWITCH_TYPES.extend(RM_TYPES)
+SWITCH_TYPES.extend(SP1_TYPES)
+SWITCH_TYPES.extend(SP2_TPYES)
 
 SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_OFF, default=None): cv.string,
@@ -42,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SWITCHES, default={}): vol.Schema({cv.slug: SWITCH_SCHEMA}),
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_TYPE, default=SENSOR_TYPES[0]): vol.In(SENSOR_TYPES),
+    vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]): vol.In(SWITCH_TYPES),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
 })
 
@@ -55,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ip_addr = config.get(CONF_HOST)
     mac_addr = binascii.unhexlify(
         config.get(CONF_MAC).encode().replace(b':', b''))
-    sensor_type = config.get(CONF_TYPE)
+    switch_type = config.get(CONF_TYPE)
 
     persistent_notification = loader.get_component('persistent_notification')
 
@@ -93,15 +101,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                              "Did not received any signal",
                                              title='Broadlink switch')
 
-    if sensor_type == "rm":
+    if switch_type.lower() in RM_TPYES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
         switch = BroadlinkRMSwitch
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' + ip_addr,
                                _learn_command)
-    elif sensor_type == "sp1":
+    elif switch_type.lower() in SP1_TPYES:
         broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr)
         switch = BroadlinkSP1Switch
-    elif sensor_type == "sp2":
+    elif switch_type.lower() in SP2_TPYES:
         broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr)
         switch = BroadlinkSP2Switch
 
