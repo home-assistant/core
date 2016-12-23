@@ -400,7 +400,8 @@ class Provider(object):
         This method is a coroutine.
         """
         extension, data = yield from self.hass.loop.run_in_executor(
-            None, functools.partial(self.get_tts_audio, message, language=language))
+            None,
+            functools.partial(self.get_tts_audio, message, language=language))
         return (extension, data)
 
 
