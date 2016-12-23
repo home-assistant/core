@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             setup_switch(device_id, conf_switches[device_id], insteonhub,
                          hass, add_devices)
 
-    linked = insteonhub.getLinked()
+    linked = insteonhub.get_inked()
 
     for device_id in linked:
         if linked[device_id]['cat_type'] == 'switch' and device_id not in conf_switches:
@@ -155,15 +155,15 @@ class InsteonLocalSwitchDevice(SwitchDevice):
     def update(self):
         """Update state of the sensor."""
         dev_id = self.node.deviceId.upper()
-        self.node.hub.directCommand(dev_id, '19', '00')
-        resp = self.node.hub.getBufferStatus(dev_id)
+        self.node.hub.direct_command(dev_id, '19', '00')
+        resp = self.node.hub.get_buffer_status(dev_id)
         attempts = 1
         while 'cmd2' not in resp and attempts < 9:
             if attempts % 3 == 0:
-                self.node.hub.directCommand(dev_id, '19', '00')
+                self.node.hub.direct_command(dev_id, '19', '00')
             else:
                 sleep(2)
-            resp = self.node.hub.getBufferStatus(dev_id)
+            resp = self.node.hub.get_buffer_status(dev_id)
             attempts += 1
 
         if 'cmd2' in resp:

@@ -14,7 +14,7 @@ from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_HOST,
                                  CONF_PORT, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['insteonlocal==0.37']
+REQUIREMENTS = ['insteonlocal==0.38']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ def setup(hass, config):
     try:
         insteonhub = Hub(host, username, password, port, timeout, _LOGGER)
         # check for successful connection
-        insteonhub.getBufferStatus()
+        insteonhub.get_buffer_status()
     except requests.exceptions.ConnectTimeout:
         _LOGGER.error("Error on insteon_local."
                       "Could not connect. Check config", exc_info=True)

@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             setup_light(device_id, conf_lights[device_id], insteonhub, hass,
                         add_devices)
 
-    linked = insteonhub.getLinked()
+    linked = insteonhub.get_linked()
 
     for device_id in linked:
         if (linked[device_id]['cat_type'] == 'dimmer'
@@ -163,15 +163,15 @@ class InsteonLocalDimmerDevice(Light):
     def update(self):
         """Update state of the sensor."""
         devid = self.node.deviceId.upper()
-        self.node.hub.directCommand(devid, '19', '00')
-        resp = self.node.hub.getBufferStatus(devid)
+        self.node.hub.direct_command(devid, '19', '00')
+        resp = self.node.hub.get_buffer_status(devid)
         attempts = 1
         while 'cmd2' not in resp and attempts < 9:
             if attempts % 3 == 0:
-                self.node.hub.directCommand(devid, '19', '00')
+                self.node.hub.direct_command(devid, '19', '00')
             else:
                 sleep(1)
-            resp = self.node.hub.getBufferStatus(devid)
+            resp = self.node.hub.get_buffer_status(devid)
             attempts += 1
 
         if 'cmd2' in resp:
