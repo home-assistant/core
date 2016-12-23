@@ -21,7 +21,6 @@ insteon_local:
 import json
 import logging
 import os
-from time import sleep
 from datetime import timedelta
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.loader import get_component
@@ -56,12 +55,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     linked = insteonhub.get_inked()
 
     for device_id in linked:
-        if linked[device_id]['cat_type'] == 'switch' and device_id not in conf_switches:
-            request_configuration(device_id, insteonhub, linked[device_id]['model_name'] + ' ' + linked[device_id]['sku'],
-                                  hass, add_devices)
+        if linked[device_id]['cat_type'] == 'switch'\
+                and device_id not in conf_switches:
+            request_configuration(device_id, insteonhub,
+                                  linked[device_id]['model_name'] + ' ' +
+                                  linked[device_id]['sku'], hass, add_devices)
 
 
-def request_configuration(device_id, insteonhub, model, hass, add_devices_callback):
+def request_configuration(device_id, insteonhub, model, hass,
+                          add_devices_callback):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
