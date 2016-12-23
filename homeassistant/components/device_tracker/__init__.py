@@ -485,13 +485,18 @@ class Device(Entity):
         if not self.mac:
             return None
 
+        if '_' in self.mac:
+            prefix, mac = self.mac.split('_', 1)
+        else:
+            mac = self.mac
+
         # prevent lookup of invalid macs
-        if not len(self.mac.split(':')) == 6:
+        if not len(mac.split(':')) == 6:
             return 'unknown'
 
         # we only need the first 3 bytes of the mac for a lookup
         # this improves somewhat on privacy
-        oui_bytes = self.mac.split(':')[0:3]
+        oui_bytes = mac.split(':')[0:3]
         # bytes like 00 get truncates to 0, API needs full bytes
         oui = '{:02x}:{:02x}:{:02x}'.format(*[int(b, 16) for b in oui_bytes])
         url = 'http://api.macvendors.com/' + oui

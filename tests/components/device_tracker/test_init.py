@@ -192,9 +192,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                         "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
         self.assertEqual(device.config_picture, gravatar_url)
 
-    def test_mac_vendor_lookup(self):
+    def test_mac_vendor_lookup(self, mac):
         """Test if vendor string is lookup on macvendors API."""
-        mac = 'B8:27:EB:00:00:00'
         vendor_string = 'Raspberry Pi Foundation'
 
         device = device_tracker.Device(
@@ -209,6 +208,37 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             assert aioclient_mock.call_count == 1
 
         self.assertEqual(device.vendor, vendor_string)
+
+    def test_mac_vendor_mac_formats(self):
+        """Verify all variations of MAC addresses are handled correctly."""
+        vendor_string = 'Raspberry Pi Foundation'
+
+        with mock_aiohttp_client() as aioclient_mock:
+            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
+                               text=vendor_string)
+            aioclient_mock.get('http://api.macvendors.com/00:27:eb',
+                               text=vendor_string)
+
+            mac = 'B8:27:EB:00:00:00'
+            device = device_tracker.Device(
+                self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+            run_coroutine_threadsafe(device.set_vendor_for_mac(),
+                                     self.hass.loop).result()
+            self.assertEqual(device.vendor, vendor_string)
+
+            mac = '0:27:EB:00:00:00'
+            device = device_tracker.Device(
+                self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+            run_coroutine_threadsafe(device.set_vendor_for_mac(),
+                                     self.hass.loop).result()
+            self.assertEqual(device.vendor, vendor_string)
+
+            mac = 'PREFIXED_B8:27:EB:00:00:00'
+            device = device_tracker.Device(
+                self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
+            run_coroutine_threadsafe(device.set_vendor_for_mac(),
+                                     self.hass.loop).result()
+            self.assertEqual(device.vendor, vendor_string)
 
     def test_mac_vendor_lookup_unknown(self):
         """Prevent another mac vendor lookup if was not found first time."""
