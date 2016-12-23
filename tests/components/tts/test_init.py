@@ -140,7 +140,7 @@ class TestTTS(object):
 
         assert len(calls) == 1
         req = requests.get(calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        _, demo_data = self.demo_provider.get_tts_audio("bla", None)
+        _, demo_data = self.demo_provider.get_tts_audio("bla")
         assert req.status_code == 200
         assert req.content == demo_data
 
