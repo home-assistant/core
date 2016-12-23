@@ -134,7 +134,6 @@ class TestTTSGooglePlatform(object):
         assert len(calls) == 1
         assert len(aioclient_mock.mock_calls) == 1
 
-
     @patch('gtts_token.gtts_token.Token.calculate_token', autospec=True,
            return_value=5)
     def test_service_say_error(self, mock_calculate, aioclient_mock):

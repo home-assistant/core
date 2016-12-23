@@ -5,8 +5,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tts/
 """
 import asyncio
-import logging
+import functools
 import hashlib
+import logging
 import mimetypes
 import os
 import re
@@ -386,12 +387,12 @@ class Provider(object):
     hass = None
     language = None
 
-    def get_tts_audio(self, message, language):
+    def get_tts_audio(self, message, language=None):
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
     @asyncio.coroutine
-    def async_get_tts_audio(self, message, language):
+    def async_get_tts_audio(self, message, language=None):
         """Load tts audio file from provider.
 
         Return a tuple of file extension and data as bytes.
@@ -399,7 +400,8 @@ class Provider(object):
         This method is a coroutine.
         """
         extension, data = yield from self.hass.loop.run_in_executor(
-            None, self.get_tts_audio, message, language)
+            None,
+            functools.partial(self.get_tts_audio, message, language=language))
         return (extension, data)
 
 

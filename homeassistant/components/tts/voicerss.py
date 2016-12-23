@@ -103,7 +103,7 @@ class VoiceRSSProvider(Provider):
         }
 
     @asyncio.coroutine
-    def async_get_tts_audio(self, message, language):
+    def async_get_tts_audio(self, message, language=None):
         """Load TTS from voicerss."""
         websession = async_get_clientsession(self.hass)
         form_data = self.form_data.copy()

@@ -17,7 +17,7 @@ def get_engine(hass, config):
 class DemoProvider(Provider):
     """Demo speech api provider."""
 
-    def get_tts_audio(self, message, language):
+    def get_tts_audio(self, message, language=None):
         """Load TTS from demo."""
         filename = os.path.join(os.path.dirname(__file__), "demo.mp3")
         try:
