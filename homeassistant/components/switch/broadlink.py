@@ -21,7 +21,8 @@ from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_SWITCHES,
                                  CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/python-broadlink/archive/master.zip#broadlink==0.3']
+REQUIREMENTS = ['https://github.com/Danielhiversen/python-broadlink/',
+                'archive/6d6ae7b685723c8b5d7365200218e1d50cf91d27.zip#broadlink==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,15 +102,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                              "Did not received any signal",
                                              title='Broadlink switch')
 
-    if switch_type.lower() in RM_TPYES:
+    if switch_type.lower() in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
         switch = BroadlinkRMSwitch
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' + ip_addr,
                                _learn_command)
-    elif switch_type.lower() in SP1_TPYES:
+    elif switch_type.lower() in SP1_TYPES:
         broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr)
         switch = BroadlinkSP1Switch
-    elif switch_type.lower() in SP2_TPYES:
+    elif switch_type.lower() in SP2_TYPES:
         broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr)
         switch = BroadlinkSP2Switch
 

@@ -42,6 +42,9 @@ apcaccess==0.0.4
 # homeassistant.components.notify.apns
 apns2==0.1.1
 
+# homeassistant.components.switch.broadlink
+archive/6d6ae7b685723c8b5d7365200218e1d50cf91d27.zip#broadlink==0.3
+
 # homeassistant.components.sun
 astral==1.3.3
 
@@ -67,7 +70,6 @@ blockchain==1.3.3
 boto3==1.3.1
 
 # homeassistant.components.sensor.broadlink
-# homeassistant.components.switch.broadlink
 broadlink==0.2
 
 # homeassistant.components.sensor.coinmarketcap
@@ -179,6 +181,9 @@ http://github.com/technicalpickles/python-nest/archive/e6c9d56a8df455d4d77463898
 
 # homeassistant.components.light.flux_led
 https://github.com/Danielhiversen/flux_led/archive/0.10.zip#flux_led==0.10
+
+# homeassistant.components.switch.broadlink
+https://github.com/Danielhiversen/python-broadlink/
 
 # homeassistant.components.switch.tplink
 https://github.com/GadgetReactor/pyHS100/archive/45fc3548882628bcde3e3d365db341849457bef2.zip#pyHS100==0.2.2
