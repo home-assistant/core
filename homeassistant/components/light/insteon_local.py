@@ -152,7 +152,7 @@ class InsteonLocalDimmerDevice(Light):
     @property
     def unique_id(self):
         """Return the ID of this insteon node."""
-        return 'insteon_local_' + self.node.deviceId
+        return 'insteon_local_' + self.node.device_id
 
     @property
     def brightness(self):
@@ -162,7 +162,7 @@ class InsteonLocalDimmerDevice(Light):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Update state of the sensor."""
-        devid = self.node.deviceId.upper()
+        devid = self.node.device_id.upper()
         self.node.hub.direct_command(devid, '19', '00')
         resp = self.node.hub.get_buffer_status(devid)
         attempts = 1

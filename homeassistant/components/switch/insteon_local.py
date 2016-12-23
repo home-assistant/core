@@ -149,12 +149,12 @@ class InsteonLocalSwitchDevice(SwitchDevice):
     @property
     def unique_id(self):
         """Return the ID of this insteon node."""
-        return 'insteon_local_' + self.node.deviceId
+        return 'insteon_local_' + self.node.device_id
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Update state of the sensor."""
-        dev_id = self.node.deviceId.upper()
+        dev_id = self.node.device_id.upper()
         self.node.hub.direct_command(dev_id, '19', '00')
         resp = self.node.hub.get_buffer_status(dev_id)
         attempts = 1
