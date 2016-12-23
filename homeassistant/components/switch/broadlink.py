@@ -35,11 +35,11 @@ RM_TYPES = ["rm", "rm2", "rm_mini", "rm_pro_phicomm", "rm2_home_plus",
             "rm2_home_plus_gdt", "rm2_pro_plus", "rm2_pro_plus2",
             "rm2_pro_plus_bl",  "rm_mini_shate"]
 SP1_TYPES = ["sp1", ]
-SP2_TPYES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
+SP2_TYPES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
 SWITCH_TYPES = []
 SWITCH_TYPES.extend(RM_TYPES)
 SWITCH_TYPES.extend(SP1_TYPES)
-SWITCH_TYPES.extend(SP2_TPYES)
+SWITCH_TYPES.extend(SP2_TYPES)
 
 SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_OFF, default=None): cv.string,
