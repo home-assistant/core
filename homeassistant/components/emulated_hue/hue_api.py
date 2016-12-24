@@ -205,12 +205,6 @@ class HueOneLightChangeView(HomeAssistantView):
             # as the actual requested command.
             config.cached_states[entity_id] = (result, brightness)
 
-        # Separate call to turn on needed
-        if domain != core.DOMAIN:
-            hass.async_add_job(hass.services.async_call(
-                core.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id},
-                blocking=True))
-
         hass.async_add_job(hass.services.async_call(
             domain, service, data, blocking=True))
 
