@@ -202,7 +202,10 @@ class HueOneLightChangeView(HomeAssistantView):
         # If the requested entity is a cover, convert to open_cover/close_cover
         elif entity.domain == "cover":
             domain = entity.domain
-            service = SERVICE_OPEN_COVER if result == SERVICE_TURN_ON else SERVICE_CLOSE_COVER
+            if service == SERVICE_TURN_ON:
+                service = SERVICE_OPEN_COVER
+            else:
+                service = SERVICE_CLOSE_COVER
 
         if entity.domain in config.off_maps_to_on_domains:
             # Map the off command to on
