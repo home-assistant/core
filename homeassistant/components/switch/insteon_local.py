@@ -155,9 +155,10 @@ class InsteonLocalSwitchDevice(SwitchDevice):
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
+        """Get the updated status of the switch."""
         resp = self.node.status(0)
         if 'cmd2' in resp:
-            self._value = int(resp['cmd2'], 16) > 0
+            self._state = int(resp['cmd2'], 16) > 0
 
     @property
     def is_on(self):
