@@ -28,6 +28,7 @@ ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 
 MANAGER = None
 
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup the camera component."""
