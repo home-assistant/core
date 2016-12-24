@@ -1,8 +1,8 @@
-"""
-Support for Rflink lights.
+"""Support for Rflink lights.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.rflink/
+For more details about this platform, please refer to the documentation
+at https://home-assistant.io/components/light.rflink/
+
 """
 import asyncio
 import logging
@@ -80,7 +80,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     @asyncio.coroutine
     def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
-        packet = event.data[rflink.ATTR_PACKET]
+        packet = event.data[rflink.ATTR_EVENT]
         entity_type = entity_type_for_device_id(packet['protocol'])
         entity_class = entity_class_for_type(entity_type)
 
@@ -115,7 +115,7 @@ class DimmableRflinkLight(RflinkLight):
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
             # rflink only support 16 brightness levels
-            self._brightness = int(kwargs[ATTR_BRIGHTNESS]/17)*17
+            self._brightness = int(kwargs[ATTR_BRIGHTNESS] / 17) * 17
 
         # if receiver supports dimming this will turn on the light
         # at the requested dim level

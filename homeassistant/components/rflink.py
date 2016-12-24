@@ -179,9 +179,11 @@ class RflinkDevice(Entity):
 
         """
         device_id = event['id']
-        if device_id and (
-            device_id == self._device_id or
-                device_id in self._aliasses):
+        if not device_id:
+            return
+        match = device_id == self._device_id
+        match_alias = device_id in self._aliasses
+        if match or match_alias:
             self.handle_event(event)
 
     def handle_event(self, event):
