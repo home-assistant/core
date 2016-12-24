@@ -59,8 +59,8 @@ volume_set:
       description: Name(s) of entities to set volume level on
       example: 'media_player.living_room_sonos'
     volume_level:
-      description: Volume level to set
-      example: 60
+      description: Volume level to set as float
+      example: 0.6
 
 media_play_pause:
   description: Toggle media player play/pause state

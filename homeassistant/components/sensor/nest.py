@@ -75,29 +75,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(wstr)
 
     all_sensors = []
-    for structure, device in chain(nest.devices(), nest.protect_devices()):
+    for structure, device in chain(nest.thermostats(), nest.smoke_co_alarms()):
         sensors = [NestBasicSensor(structure, device, variable)
                    for variable in conditions
-                   if variable in SENSOR_TYPES and is_thermostat(device)]
+                   if variable in SENSOR_TYPES and device.is_thermostat]
         sensors += [NestTempSensor(structure, device, variable)
                     for variable in conditions
-                    if variable in SENSOR_TEMP_TYPES and is_thermostat(device)]
+                    if variable in SENSOR_TEMP_TYPES and device.is_thermostat]
         sensors += [NestProtectSensor(structure, device, variable)
                     for variable in conditions
-                    if variable in PROTECT_VARS and is_protect(device)]
+                    if variable in PROTECT_VARS and device.is_smoke_co_alarm]
         all_sensors.extend(sensors)
 
     add_devices(all_sensors, True)
-
-
-def is_thermostat(device):
-    """Target devices that are Nest Thermostats."""
-    return bool(device.__class__.__name__ == 'Device')
-
-
-def is_protect(device):
-    """Target devices that are Nest Protect Smoke Alarms."""
-    return bool(device.__class__.__name__ == 'ProtectDevice')
 
 
 class NestSensor(Entity):

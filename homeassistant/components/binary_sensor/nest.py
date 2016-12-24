@@ -9,8 +9,8 @@ import logging
 
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
 from homeassistant.components.sensor.nest import NestSensor
-from homeassistant.const import (CONF_MONITORED_CONDITIONS)
-from homeassistant.components.nest import (DATA_NEST, is_thermostat, is_camera)
+from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.components.nest import DATA_NEST
 
 DEPENDENCIES = ['nest']
 
@@ -67,9 +67,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(wstr)
 
     sensors = []
-    device_chain = chain(nest.devices(),
-                         nest.protect_devices(),
-                         nest.camera_devices())
+    device_chain = chain(nest.thermostats(),
+                         nest.smoke_co_alarms(),
+                         nest.cameras())
     for structure, device in device_chain:
         sensors += [NestBinarySensor(structure, device, variable)
                     for variable in conditions
@@ -77,9 +77,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors += [NestBinarySensor(structure, device, variable)
                     for variable in conditions
                     if variable in CLIMATE_BINARY_TYPES
-                    and is_thermostat(device)]
+                    and device.is_thermostat]
 
-        if is_camera(device):
+        if device.is_camera:
             sensors += [NestBinarySensor(structure, device, variable)
                         for variable in conditions
                         if variable in CAMERA_BINARY_TYPES]
@@ -109,13 +109,14 @@ class NestActivityZoneSensor(NestBinarySensor):
 
     def __init__(self, structure, device, zone):
         """Initialize the sensor."""
-        super(NestActivityZoneSensor, self).__init__(structure, device, None)
+        super(NestActivityZoneSensor, self).__init__(structure, device, "")
         self.zone = zone
+        self._name = "{} {} activity".format(self._name, self.zone.name)
 
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        return "{} {} activity".format(self._name, self.zone.name)
+        return self._name
 
     def update(self):
         """Retrieve latest state."""
