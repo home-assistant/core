@@ -267,7 +267,7 @@ influxdb==3.0.0
 insteon_hub==0.4.5
 
 # homeassistant.components.insteon_local
-insteonlocal==0.37
+insteonlocal==0.39
 
 # homeassistant.components.media_player.kodi
 # homeassistant.components.notify.kodi
