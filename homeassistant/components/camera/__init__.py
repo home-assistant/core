@@ -26,10 +26,13 @@ STATE_IDLE = 'idle'
 
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 
+MANAGER = None
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup the camera component."""
+    global MANAGER
+
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
@@ -37,7 +40,25 @@ def async_setup(hass, config):
     hass.http.register_view(CameraMjpegStream(component.entities))
 
     yield from component.async_setup(config)
+    MANAGER = CameraManager(component.entities)
+
     return True
+
+
+class CameraManager(object):
+    """Keeps available cameras."""
+
+    def __init__(self, entities):
+        """Initialize a speech store."""
+        self.entities = entities
+
+    @asyncio.coroutine
+    def async_camera_image(self, entity_id):
+        """Service handle for get_image."""
+        if entity_id not in self.entities:
+            return None
+        result = yield from self.entities[entity_id].async_camera_image()
+        return result
 
 
 class Camera(Entity):
