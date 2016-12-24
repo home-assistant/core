@@ -26,10 +26,11 @@ maintained in this file.
 import asyncio
 import logging
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['rflink==0.0.14']
+REQUIREMENTS = ['rflink==0.0.16']
 
 DOMAIN = 'rflink'
 
@@ -108,14 +109,26 @@ def async_setup(hass, config):
     # provide channel for sending commands to rflink gateway
     @asyncio.coroutine
     def send_command_ack(event):
-        """Send command to rflink gateway via asyncio transport/protocol."""
-        command = event.data[ATTR_COMMAND]
-        yield from protocol.send_command_ack(*command)
+        """Send command to rflink gateway via asyncio transport/protocol.
+
+        Waits for Rflink to confirm the packet has been sent.
+
+        """
+        yield from protocol.send_command_ack(
+            event.data[ATTR_ENTITY_ID],
+            event.data[ATTR_COMMAND],
+        )
 
     def send_command(event):
-        """Send command to rflink gateway via asyncio transport/protocol."""
-        command = event.data[ATTR_COMMAND]
-        protocol.send_command(*command)
+        """Send command to rflink gateway via asyncio transport/protocol.
+
+        Does not wait for Rflink to confirm the packet has been sent.
+
+        """
+        protocol.send_command(
+            event.data[ATTR_ENTITY_ID],
+            event.data[ATTR_COMMAND],
+        )
 
     if config.get('wait_for_ack', True):
         hass.bus.async_listen(RFLINK_EVENT['send_command'], send_command_ack)
@@ -196,6 +209,8 @@ class RflinkDevice(Entity):
     @property
     def is_on(self):
         """Return true if device is on."""
+        if self.assumed_state:
+            return False
         return self._state
 
     @property
@@ -221,10 +236,15 @@ class RflinkDevice(Entity):
         # send protocol, device id, switch nr and command to rflink
         self.hass.bus.fire(
             RFLINK_EVENT['send_command'],
-            {ATTR_COMMAND: self._device_id.split('_') + [cmd]}
+            {
+                ATTR_ENTITY_ID: self._device_id,
+                ATTR_COMMAND: cmd,
+            }
         )
-        # todo, wait for rflink ok response
 
+        # Update state of entity to represent the desired state even though we
+        # do not have a confirmation yet the command has been successfully sent
+        # by rflink.
         self.update_ha_state()
 
 

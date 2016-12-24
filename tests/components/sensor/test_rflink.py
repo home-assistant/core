@@ -1,7 +1,7 @@
-"""Test for DSMR components.
+"""Test for RFlink sensor components.
 
-Tests setup of the DSMR component and ensure incoming telegrams cause
-Entity to be updated with new values.
+Test setup of rflink sensor component/platform. Verify manual and
+automatic sensor creation.
 
 """
 
