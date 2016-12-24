@@ -23,6 +23,7 @@ CONF_ON_CODE_RECIEVE = 'on_code_receive'
 CONF_SYSTEMCODE = 'systemcode'
 CONF_UNIT = 'unit'
 CONF_UNITCODE = 'unitcode'
+CONF_ECHO = 'echo'
 
 DEPENDENCIES = ['pilight']
 
@@ -36,6 +37,10 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Optional(CONF_STATE): cv.string,
     vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
 }, extra=vol.ALLOW_EXTRA)
+
+RECEIVE_SCHEMA = COMMAND_SCHEMA.extend({
+    vol.Optional(CONF_ECHO): cv.boolean
+})
 
 SWITCHES_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,
@@ -73,6 +78,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices)
 
 
+class _ReceiveHandle(object):
+    def __init__(self, config, echo):
+        self.config_items = config.items()
+        self.echo = echo
+
+    def match(self, code):
+        return self.config_items <= code.items()
+
+    def run(self, switch, turn_on):
+        switch.set_state(turn_on=turn_on, send_code=self.echo)
+
+
 class PilightSwitch(SwitchDevice):
     """Representation of a Pilight switch."""
 
@@ -84,8 +101,15 @@ class PilightSwitch(SwitchDevice):
         self._state = False
         self._code_on = code_on
         self._code_off = code_off
-        self._code_on_receive = code_on_receive
-        self._code_off_receive = code_off_receive
+
+        self._code_on_receive = []
+        self._code_off_receive = []
+
+        for code_list, conf in ((self._code_on_receive, code_on_receive),
+                                (self._code_off_receive, code_off_receive)):
+            for code in conf:
+                echo = code.pop(CONF_ECHO, True)
+                code_list.append(_ReceiveHandle(code, echo))
 
         if any(self._code_on_receive) or any(self._code_off_receive):
             hass.bus.listen(pilight.EVENT, self._handle_code)
@@ -116,26 +140,32 @@ class PilightSwitch(SwitchDevice):
         # - Call turn on/off only once, even if more than one code is received
         if any(self._code_on_receive):
             for on_code in self._code_on_receive:
-                if on_code.items() <= call.data.items():
-                    self.turn_on()
+                if on_code.match(call.data):
+                    on_code.run(switch=self, turn_on=True)
                     break
 
         if any(self._code_off_receive):
             for off_code in self._code_off_receive:
-                if off_code.items() <= call.data.items():
-                    self.turn_off()
+                if off_code.match(call.data):
+                    off_code.run(switch=self, turn_on=False)
                     break
+
+    def set_state(self, turn_on, send_code=True):
+        if send_code:
+            if turn_on:
+                self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
+                                         self._code_on, blocking=True)
+            else:
+                self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
+                                         self._code_off, blocking=True)
+
+        self._state = turn_on
+        self.schedule_update_ha_state()
 
     def turn_on(self):
         """Turn the switch on by calling pilight.send service with on code."""
-        self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
-                                 self._code_on, blocking=True)
-        self._state = True
-        self.schedule_update_ha_state()
+        self.set_state(turn_on=True)
 
     def turn_off(self):
         """Turn the switch on by calling pilight.send service with off code."""
-        self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
-                                 self._code_off, blocking=True)
-        self._state = False
-        self.schedule_update_ha_state()
+        self.set_state(turn_on=False)
