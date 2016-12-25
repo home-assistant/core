@@ -51,7 +51,8 @@ ATTR_MESSAGE = 'message'
 ATTR_CACHE = 'cache'
 ATTR_LANGUAGE = 'language'
 
-_RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([a-z]+)\.[a-z0-9]{3,4}")
+_RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([^_]+)_([a-z]+)\.[a-z0-9]{3,4}")
+KEY_PATTERN = '{}_{}_{}'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
@@ -211,7 +212,8 @@ class SpeechManager(object):
             for file_data in folder_data:
                 record = _RE_VOICE_FILE.match(file_data)
                 if record:
-                    key = "{}_{}".format(record.group(1), record.group(2))
+                    key = KEY_PATTERN.format(
+                        record.group(1), record.group(2), record.group(3))
                     cache[key.lower()] = file_data.lower()
             return cache
 
@@ -254,10 +256,9 @@ class SpeechManager(object):
 
         This method is a coroutine.
         """
-        msg_hash = hashlib.sha1(bytes(
-            message if language is None else (message + language),
-            'utf-8')).hexdigest()
-        key = ("{}_{}".format(msg_hash, engine)).lower()
+        msg_hash = hashlib.sha1(bytes(message, 'utf-8')).hexdigest()
+        language_key = language or self.providers[engine].language or engine
+        key = KEY_PATTERN.format(msg_hash, language_key, engine).lower()
         use_cache = cache if cache is not None else self.use_cache
 
         # is speech allready in memory
@@ -266,7 +267,7 @@ class SpeechManager(object):
         # is file store in file cache
         elif use_cache and key in self.file_cache:
             filename = self.file_cache[key]
-            self.hass.async_add_job(self.async_file_to_mem(engine, key))
+            self.hass.async_add_job(self.async_file_to_mem(key))
         # load speech from provider into memory
         else:
             filename = yield from self.async_get_tts_audio(
@@ -321,7 +322,7 @@ class SpeechManager(object):
             _LOGGER.error("Can't write %s", filename)
 
     @asyncio.coroutine
-    def async_file_to_mem(self, engine, key):
+    def async_file_to_mem(self, key):
         """Load voice from file cache into memory.
 
         This method is a coroutine.
@@ -369,13 +370,13 @@ class SpeechManager(object):
         if not record:
             raise HomeAssistantError("Wrong tts file format!")
 
-        key = "{}_{}".format(record.group(1), record.group(2))
+        key = KEY_PATTERN.format(
+            record.group(1), record.group(2), record.group(3))
 
         if key not in self.mem_cache:
             if key not in self.file_cache:
                 raise HomeAssistantError("%s not in cache!", key)
-            engine = record.group(2)
-            yield from self.async_file_to_mem(engine, key)
+            yield from self.async_file_to_mem(key)
 
         content, _ = mimetypes.guess_type(filename)
         return (content, self.mem_cache[key][MEM_CACHE_VOICE])
