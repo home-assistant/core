@@ -203,7 +203,7 @@ class HueOneLightChangeView(HomeAssistantView):
             # they'll map to "on". Thus, instead of reporting its actual
             # status, we report what Alexa will want to see, which is the same
             # as the actual requested command.
-            config.cached_states[entity_id] = (result, 100)
+            config.cached_states[entity_id] = (result, brightness)
 
         # Separate call to turn on needed
         if domain != core.DOMAIN:
@@ -288,6 +288,9 @@ def get_entity_state(config, entity):
             final_brightness = round(min(1.0, level) * 255)
     else:
         final_state, final_brightness = cached_state
+        # Make sure brightness is valid
+        if final_brightness is None:
+            final_brightness = 100 if final_state else 0;
 
     return (final_state, final_brightness)
 
