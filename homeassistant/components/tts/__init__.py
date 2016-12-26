@@ -384,17 +384,15 @@ class Provider(object):
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_get_tts_audio(self, message):
         """Load tts audio file from provider.
 
         Return a tuple of file extension and data as bytes.
 
-        This method is a coroutine.
+        This method must be run in the event loop and returns a coroutine.
         """
-        extension, data = yield from self.hass.loop.run_in_executor(
+        return self.hass.loop.run_in_executor(
             None, self.get_tts_audio, message)
-        return (extension, data)
 
 
 class TextToSpeechView(HomeAssistantView):
