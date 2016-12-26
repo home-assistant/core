@@ -38,7 +38,7 @@ DEFAULT_LISTEN_PORT = 8300
 DEFAULT_OFF_MAPS_TO_ON_DOMAINS = ['script', 'scene']
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
-    'switch', 'light', 'group', 'input_boolean', 'media_player', 'fan'
+    'switch', 'light', 'group', 'input_boolean', 'media_player', 'fan', 'cover'
 ]
 DEFAULT_TYPE = TYPE_ALEXA
 

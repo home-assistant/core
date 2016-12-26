@@ -240,10 +240,10 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             level)
 
     def test_put_light_state_media_player(self):
-        """Test turning on media player and setting volume."""
-        # Turn the music player off first
+        """Test setting media player volume."""
+        # Turn the music player on first
         self.hass.services.call(
-            media_player.DOMAIN, const.SERVICE_TURN_OFF,
+            media_player.DOMAIN, const.SERVICE_TURN_ON,
             {const.ATTR_ENTITY_ID: 'media_player.walkman'},
             blocking=True)
 

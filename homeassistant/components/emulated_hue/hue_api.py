@@ -7,6 +7,7 @@ from aiohttp import web
 from homeassistant import core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_SET,
+    SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER,
     STATE_ON, STATE_OFF, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
 )
 from homeassistant.components.light import (
@@ -193,6 +194,12 @@ class HueOneLightChangeView(HomeAssistantView):
                     service = SERVICE_VOLUME_SET
                     # Convert 0-100 to 0.0-1.0
                     data[ATTR_MEDIA_VOLUME_LEVEL] = brightness / 100.0
+        elif entity.domain == "cover":
+            domain = entity.domain
+            if service == SERVICE_TURN_ON:
+                service = SERVICE_OPEN_COVER
+            elif service == SERVICE_TURN_OFF:
+                service = SERVICE_CLOSE_COVER
 
         if entity.domain in config.off_maps_to_on_domains:
             # Map the off command to on
@@ -204,12 +211,6 @@ class HueOneLightChangeView(HomeAssistantView):
             # status, we report what Alexa will want to see, which is the same
             # as the actual requested command.
             config.cached_states[entity_id] = (result, brightness)
-
-        # Separate call to turn on needed
-        if domain != core.DOMAIN:
-            hass.async_add_job(hass.services.async_call(
-                core.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id},
-                blocking=True))
 
         hass.async_add_job(hass.services.async_call(
             domain, service, data, blocking=True))
