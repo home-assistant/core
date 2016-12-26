@@ -288,6 +288,9 @@ def get_entity_state(config, entity):
             final_brightness = round(min(1.0, level) * 255)
     else:
         final_state, final_brightness = cached_state
+        # Make sure brightness is valid
+        if final_brightness is None:
+            final_brightness = 255 if final_state else 0
 
     return (final_state, final_brightness)
 
