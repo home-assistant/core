@@ -145,8 +145,12 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
             from pycec.const import STATUS_STOP
             from pycec.const import STATUS_STILL
             from pycec.const import POWER_OFF
+            from pycec.const import POWER_ON
             if device.power_status == POWER_OFF:
                 self._state = STATE_OFF
+            elif not self.support_pause:
+                if device.power_status == POWER_ON:
+                    self._state = STATE_ON
             elif device.status == STATUS_PLAY:
                 self._state = STATE_PLAYING
             elif device.status == STATUS_STOP:
@@ -154,7 +158,7 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
             elif device.status == STATUS_STILL:
                 self._state = STATE_PAUSED
             else:
-                _LOGGER.warning("Unknown state: %d", device.power_status)
+                _LOGGER.warning("Unknown state: %x", device.status)
         self.schedule_update_ha_state()
 
     @property

@@ -26,7 +26,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC>=0.4.1']
+REQUIREMENTS = ['pyCEC>=0.4.3']
 
 DOMAIN = 'hdmi_cec'
 
@@ -166,14 +166,14 @@ def setup(hass: HomeAssistant, base_config):
     device_aliases.update(parse_mapping(devices))
     _LOGGER.debug("Parsed devices: %s", device_aliases)
 
-    platform = base_config[DOMAIN].get(CONF_PLATFORM, MEDIA_PLAYER)
+    platform = base_config[DOMAIN].get(CONF_PLATFORM, SWITCH)
 
     from pycec.cec import CecAdapter
     loop = (
         # Create own thread if more than 1 CPU
         hass.loop if multiprocessing.cpu_count() < 2 else None)
     hdmi_network = HDMINetwork(
-        CecAdapter(name="HASS", activate_source=False, loop=loop), loop=loop)
+        CecAdapter(name="HASS", activate_source=False), loop=loop)
 
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""
