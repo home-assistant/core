@@ -6,22 +6,27 @@ https://home-assistant.io/components/hdmi_cec/
 """
 import logging
 import multiprocessing
-
 import os
 from collections import defaultdict
 from functools import reduce
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant import core
 from homeassistant.components import discovery
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
+from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
                                  EVENT_HOMEASSISTANT_STOP, STATE_ON,
-                                 STATE_OFF, CONF_DEVICES)
+                                 STATE_OFF, CONF_DEVICES, CONF_PLATFORM,
+                                 CONF_CUSTOMIZE, STATE_PLAYING, STATE_IDLE,
+                                 STATE_PAUSED)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC>=0.3.6']
+REQUIREMENTS = ['pyCEC>=0.4.1']
 
 DOMAIN = 'hdmi_cec'
 
@@ -72,12 +77,14 @@ ATTR_DIR = 'dir'
 ATTR_ABT = 'abt'
 ATTR_NEW = 'new'
 
+_VOL_HEX = vol.Any(vol.Coerce(int), lambda x: int(x, 16))
+
 SERVICE_SEND_COMMAND = 'send_command'
 SERVICE_SEND_COMMAND_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_CMD): vol.Coerce(int),
-    vol.Optional(ATTR_SRC): vol.Coerce(int),
-    vol.Optional(ATTR_DST): vol.Coerce(int),
-    vol.Optional(ATTR_ATT): vol.Coerce(int),
+    vol.Optional(ATTR_CMD): _VOL_HEX,
+    vol.Optional(ATTR_SRC): _VOL_HEX,
+    vol.Optional(ATTR_DST): _VOL_HEX,
+    vol.Optional(ATTR_ATT): _VOL_HEX,
     vol.Optional(ATTR_RAW): vol.Coerce(str)
 }, extra=vol.ALLOW_EXTRA)
 
@@ -106,13 +113,19 @@ DEVICE_SCHEMA = vol.Schema({
                                       cv.string)
 })
 
+CUSTOMIZE_SCHEMA = vol.Schema({
+    vol.Optional(CONF_PLATFORM, default=MEDIA_PLAYER): vol.Any(MEDIA_PLAYER,
+                                                               SWITCH)
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_DEVICES): vol.Any(DEVICE_SCHEMA,
                                             vol.Schema({
                                                 vol.All(cv.string): vol.Any(
                                                     cv.string)
-                                            }))
+                                            })),
+        vol.Optional(CONF_PLATFORM): vol.Any(SWITCH, MEDIA_PLAYER)
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -140,7 +153,7 @@ def parse_mapping(mapping, parents=None):
 
 def setup(hass: HomeAssistant, base_config):
     """Setup CEC capability."""
-    from pycec.network import HDMINetwork, CecConfig
+    from pycec.network import HDMINetwork
     from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
     from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE, \
         ADDR_AUDIOSYSTEM, ADDR_BROADCAST, ADDR_UNREGISTERED
@@ -153,44 +166,23 @@ def setup(hass: HomeAssistant, base_config):
     device_aliases.update(parse_mapping(devices))
     _LOGGER.debug("Parsed devices: %s", device_aliases)
 
-    hdmi_network = HDMINetwork(config=CecConfig(name="HASS"), loop=(
+    platform = base_config[DOMAIN].get(CONF_PLATFORM, MEDIA_PLAYER)
+
+    from pycec.cec import CecAdapter
+    loop = (
         # Create own thread if more than 1 CPU
-        hass.loop if multiprocessing.cpu_count() < 2 else None))
+        hass.loop if multiprocessing.cpu_count() < 2 else None)
+    hdmi_network = HDMINetwork(
+        CecAdapter(name="HASS", activate_source=False, loop=loop), loop=loop)
 
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""
         for cmd, att in call.data.items():
             att = 1 if att < 1 else att
             if cmd == CMD_UP:
-                if att == CMD_PRESS:
-                    KeyPressCommand(KEY_VOLUME_UP, dst=ADDR_AUDIOSYSTEM)
-                    _LOGGER.info("Volume up pressed")
-                elif att == CMD_RELEASE:
-                    KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM)
-                    _LOGGER.info("Volume up released")
-                else:
-                    for _ in range(att):
-                        hdmi_network.send_command(
-                            KeyPressCommand(KEY_VOLUME_UP,
-                                            dst=ADDR_AUDIOSYSTEM))
-                        hdmi_network.send_command(
-                            KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
-                    _LOGGER.info("Volume increased %d times", att)
+                _process_volume(KEY_VOLUME_UP, att)
             elif cmd == CMD_DOWN:
-                if att == CMD_PRESS:
-                    KeyPressCommand(KEY_VOLUME_DOWN, dst=ADDR_AUDIOSYSTEM)
-                    _LOGGER.info("Volume down pressed")
-                elif att == CMD_RELEASE:
-                    KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM)
-                    _LOGGER.info("Volume down released")
-                else:
-                    for _ in range(att):
-                        hdmi_network.send_command(
-                            KeyPressCommand(KEY_VOLUME_DOWN,
-                                            dst=ADDR_AUDIOSYSTEM))
-                        hdmi_network.send_command(
-                            KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
-                    _LOGGER.info("Volume deceased %d times", att)
+                _process_volume(KEY_VOLUME_DOWN, att)
             elif cmd == CMD_MUTE:
                 hdmi_network.send_command(
                     KeyPressCommand(KEY_MUTE, dst=ADDR_AUDIOSYSTEM))
@@ -199,6 +191,18 @@ def setup(hass: HomeAssistant, base_config):
                 _LOGGER.info("Audio muted")
             else:
                 _LOGGER.warning("Unknown command %s", cmd)
+
+    def _process_volume(cmd, att):
+        if att == CMD_PRESS:
+            KeyPressCommand(cmd, dst=ADDR_AUDIOSYSTEM)
+        elif att == CMD_RELEASE:
+            KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM)
+        else:
+            for _ in range(int(att)):
+                hdmi_network.send_command(
+                    KeyPressCommand(cmd, dst=ADDR_AUDIOSYSTEM))
+                hdmi_network.send_command(
+                    KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
 
     def _tx(call):
         """Send CEC command."""
@@ -275,8 +279,9 @@ def setup(hass: HomeAssistant, base_config):
         """Called when new device is detected by HDMI network."""
         key = DOMAIN + '.' + device.name
         hass.data[key] = device
-        discovery.load_platform(hass, "switch", DOMAIN,
-                                discovered={ATTR_NEW: [key]},
+        discovery.load_platform(hass, base_config.get(core.DOMAIN).get(
+            CONF_CUSTOMIZE, {}).get(key, {}).get(CONF_PLATFORM, platform),
+                                DOMAIN, discovered={ATTR_NEW: [key]},
                                 hass_config=base_config)
 
     def _shutdown(call):
@@ -327,10 +332,21 @@ class CecDevice(Entity):
     def _update(self, device=None):
         """Update device status."""
         if device:
-            if device.power_status == 0:
-                self._state = STATE_ON
-            elif device.power_status == 1:
+            from pycec.const import STATUS_PLAY
+            from pycec.const import STATUS_STOP
+            from pycec.const import STATUS_STILL
+            from pycec.const import POWER_OFF
+            from pycec.const import POWER_ON
+            if device.power_status == POWER_OFF:
                 self._state = STATE_OFF
+            elif device.status == STATUS_PLAY:
+                self._state = STATE_PLAYING
+            elif device.status == STATUS_STOP:
+                self._state = STATE_IDLE
+            elif device.status == STATUS_STILL:
+                self._state = STATE_PAUSED
+            elif device.power_status == POWER_ON:
+                self._state = STATE_ON
             else:
                 _LOGGER.warning("Unknown state: %d", device.power_status)
         self.schedule_update_ha_state()

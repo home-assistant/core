@@ -22,18 +22,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return HDMI devices as switches."""
     if ATTR_NEW in discovery_info:
         _LOGGER.info("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
-        add_devices(CecSwitch(hass, hass.data.get(device),
-                              hass.data.get(device).logical_address) for device
-                    in discovery_info[ATTR_NEW])
+        add_devices(CecSwitchDevice(hass, hass.data.get(device),
+                                    hass.data.get(device).logical_address) for
+                    device in discovery_info[ATTR_NEW])
 
 
-class CecSwitch(CecDevice, SwitchDevice):
+class CecSwitchDevice(CecDevice, SwitchDevice):
     """Representation of a HDMI device as a Switch."""
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._state == STATE_ON
 
     def __init__(self, hass: HomeAssistant, device, logical):
         """Initialize the HDMI device."""
@@ -46,13 +41,16 @@ class CecSwitch(CecDevice, SwitchDevice):
         """Turn device on."""
         self._device.turn_on()
         self._state = STATE_ON
-        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
         self._device.turn_off()
-        self._state = STATE_OFF
-        self.schedule_update_ha_state()
+        self._state = STATE_ON
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
+        return self._state == STATE_ON
 
     @property
     def is_standby(self):
