@@ -7,7 +7,8 @@ from aiohttp import web
 from homeassistant import core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_SET,
-    STATE_ON, STATE_OFF, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
+    SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, STATE_ON, STATE_OFF,
+    HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_SUPPORTED_FEATURES, SUPPORT_BRIGHTNESS
@@ -161,6 +162,9 @@ class HueOneLightChangeView(HomeAssistantView):
         # Choose general HA domain
         domain = core.DOMAIN
 
+        # Entity needs separate call to turn on
+        turn_on_needed = False
+
         # Convert the resulting "on" status into the service we need to call
         service = SERVICE_TURN_ON if result else SERVICE_TURN_OFF
 
@@ -189,10 +193,19 @@ class HueOneLightChangeView(HomeAssistantView):
                 ATTR_SUPPORTED_MEDIA_COMMANDS, 0)
             if media_commands & SUPPORT_VOLUME_SET == SUPPORT_VOLUME_SET:
                 if brightness is not None:
+                    turn_on_needed = True
                     domain = entity.domain
                     service = SERVICE_VOLUME_SET
                     # Convert 0-100 to 0.0-1.0
                     data[ATTR_MEDIA_VOLUME_LEVEL] = brightness / 100.0
+
+        # If the requested entity is a cover, convert to open_cover/close_cover
+        elif entity.domain == "cover":
+            domain = entity.domain
+            if service == SERVICE_TURN_ON:
+                service = SERVICE_OPEN_COVER
+            else:
+                service = SERVICE_CLOSE_COVER
 
         if entity.domain in config.off_maps_to_on_domains:
             # Map the off command to on
@@ -206,7 +219,7 @@ class HueOneLightChangeView(HomeAssistantView):
             config.cached_states[entity_id] = (result, brightness)
 
         # Separate call to turn on needed
-        if domain != core.DOMAIN:
+        if turn_on_needed:
             hass.async_add_job(hass.services.async_call(
                 core.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id},
                 blocking=True))
