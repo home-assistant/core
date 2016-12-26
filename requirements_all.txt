@@ -351,7 +351,7 @@ pmsensor==0.3
 proliphix==0.4.1
 
 # homeassistant.components.sensor.systemmonitor
-psutil==5.0.0
+psutil==5.0.1
 
 # homeassistant.components.wink
 pubnubsub-handler==0.0.5
@@ -419,6 +419,9 @@ pyhomematic==0.1.18
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
 
+# homeassistant.components.sensor.iss
+pyiss==1.0.1
+
 # homeassistant.components.sensor.lastfm
 pylast==1.6.0
 
@@ -446,7 +449,7 @@ pynx584==0.2
 
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
-pyowm==2.5.0
+pyowm==2.6.0
 
 # homeassistant.components.switch.acer_projector
 pyserial==3.1.1
@@ -555,7 +558,7 @@ snapcast==1.2.2
 somecomfort==0.3.2
 
 # homeassistant.components.sensor.speedtest
-speedtest-cli==1.0.0
+speedtest-cli==1.0.1
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
