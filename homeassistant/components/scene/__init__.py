@@ -96,10 +96,9 @@ class Scene(Entity):
         """Activate scene. Try to get entities into requested state."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_activate(self):
         """Activate scene. Try to get entities into requested state.
 
-        This method is a coroutine.
+        This method must be run in the event loop and returns a coroutine.
         """
-        yield from self.hass.loop.run_in_executor(None, self.activate)
+        return self.hass.loop.run_in_executor(None, self.activate)
