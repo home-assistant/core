@@ -449,7 +449,7 @@ pynx584==0.2
 
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
-pyowm==2.5.0
+pyowm==2.6.0
 
 # homeassistant.components.switch.acer_projector
 pyserial==3.1.1
