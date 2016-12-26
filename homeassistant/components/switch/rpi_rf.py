@@ -21,13 +21,16 @@ CONF_CODE_ON = 'code_on'
 CONF_GPIO = 'gpio'
 CONF_PROTOCOL = 'protocol'
 CONF_PULSELENGTH = 'pulselength'
+CONF_REPEATS = 'repeats'
 
 DEFAULT_PROTOCOL = 1
+DEFAULT_REPEATS = 10
 
 SWITCH_SCHEMA = vol.Schema({
     vol.Required(CONF_CODE_OFF): cv.positive_int,
     vol.Required(CONF_CODE_ON): cv.positive_int,
     vol.Optional(CONF_PULSELENGTH): cv.positive_int,
+    vol.Optional(CONF_REPEATS, default=DEFAULT_REPEATS): cv.positive_int,
     vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): cv.positive_int,
 })
 
@@ -55,6 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 rfdevice,
                 properties.get(CONF_PROTOCOL),
                 properties.get(CONF_PULSELENGTH),
+                properties.get(CONF_REPEATS),
                 properties.get(CONF_CODE_ON),
                 properties.get(CONF_CODE_OFF)
             )
@@ -68,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RPiRFSwitch(SwitchDevice):
     """Representation of a GPIO RF switch."""
 
-    def __init__(self, hass, name, rfdevice, protocol, pulselength,
+    def __init__(self, hass, name, rfdevice, protocol, pulselength, repeats,
                  code_on, code_off):
         """Initialize the switch."""
         self._hass = hass
@@ -79,6 +83,7 @@ class RPiRFSwitch(SwitchDevice):
         self._pulselength = pulselength
         self._code_on = code_on
         self._code_off = code_off
+        self._rfdevice.tx_repeat = repeats
 
     @property
     def should_poll(self):
