@@ -44,8 +44,10 @@ class PicoProvider(Provider):
             with open(fname, 'rb') as voice:
                 data = voice.read()
         except OSError:
-            return
+            _LOGGER.error("Error trying to read %s",fname)
+            return (None, None)
         finally:
             os.remove(fname)
         if data:
             return ("wav", data)
+        return (None, None)
