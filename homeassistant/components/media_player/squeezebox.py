@@ -73,6 +73,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
     lms = LogitechMediaServer(hass, host, port, username, password)
+    if lms is False:
+        return False
 
     players = yield from lms.create_players()
     yield from async_add_devices(players)
