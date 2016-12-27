@@ -6,12 +6,14 @@ https://home-assistant.io/components/rest_command/
 """
 import asyncio
 import logging
+import os
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import CONF_TIMEOUT
+from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -39,14 +41,15 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_URL): cv.template,
+    # pylint: disable=no-value-for-parameter
+    vol.Required(ATTR_URL): vol.Url(),
     vol.Optional(ATTR_PARAMS): {cv.match_all: cv.string},
     vol.Optional(ATTR_USERNAME): cv.string,
     vol.Optional(ATTR_PASSWORD): cv.string,
 })
 
 SERVICE_PAYLOAD_SCHEMA = SERVICE_SCHEMA.extend({
-    vol.Optional(ATTR_PAYLOAD): vol.Any(cv.string, {cv.match_all: cv.string}),
+    vol.Optional(ATTR_PAYLOAD): vol.Any({cv.match_all: cv.string}, cv.string),
 })
 
 
@@ -54,6 +57,11 @@ SERVICE_PAYLOAD_SCHEMA = SERVICE_SCHEMA.extend({
 def async_setup(hass, config):
     """Setup the rest_command component."""
     conf = config.get(DOMAIN, {})
+
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml')
+    )
 
     @asyncio.coroutine
     def async_service_handler(call):
@@ -104,12 +112,14 @@ def async_setup(hass, config):
 
     # register services
 
-    for name in ['get', 'delete']:
+    for name in [SERVICE_GET, SERVICE_DELETE]:
         hass.services.async_register(
-            DOMAIN, name, async_service_handler, schema=SERVICE_SCHEMA)
+            DOMAIN, name, async_service_handler, descriptions[DOMAIN][name],
+            schema=SERVICE_SCHEMA)
 
-    for name in ['post', 'put']:
+    for name in [SERVICE_POST, SERVICE_PUT]:
         hass.services.async_register(
-            DOMAIN, name, async_service_handler, schema=SERVICE_PAYLOAD_SCHEMA)
+            DOMAIN, name, async_service_handler, descriptions[DOMAIN][name],
+            schema=SERVICE_PAYLOAD_SCHEMA)
 
     return True
