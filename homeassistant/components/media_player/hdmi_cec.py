@@ -158,7 +158,7 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
             elif device.status == STATUS_STILL:
                 self._state = STATE_PAUSED
             else:
-                _LOGGER.warning("Unknown state: %x", device.status)
+                _LOGGER.warning("Unknown state: %s", device.status)
         self.schedule_update_ha_state()
 
     @property

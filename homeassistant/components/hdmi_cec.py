@@ -22,11 +22,11 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
                                  EVENT_HOMEASSISTANT_STOP, STATE_ON,
                                  STATE_OFF, CONF_DEVICES, CONF_PLATFORM,
                                  CONF_CUSTOMIZE, STATE_PLAYING, STATE_IDLE,
-                                 STATE_PAUSED)
+                                 STATE_PAUSED, CONF_HOST)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC>=0.4.3']
+REQUIREMENTS = ['pyCEC>=0.4.4']
 
 DOMAIN = 'hdmi_cec'
 
@@ -125,7 +125,8 @@ CONFIG_SCHEMA = vol.Schema({
                                                 vol.All(cv.string): vol.Any(
                                                     cv.string)
                                             })),
-        vol.Optional(CONF_PLATFORM): vol.Any(SWITCH, MEDIA_PLAYER)
+        vol.Optional(CONF_PLATFORM): vol.Any(SWITCH, MEDIA_PLAYER),
+        vol.Optional(CONF_HOST): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -157,6 +158,8 @@ def setup(hass: HomeAssistant, base_config):
     from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
     from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE, \
         ADDR_AUDIOSYSTEM, ADDR_BROADCAST, ADDR_UNREGISTERED
+    from pycec.cec import CecAdapter
+    from pycec.tcp import TcpAdapter
 
     # Parse configuration into a dict of device name to physical address
     # represented as a list of four elements.
@@ -168,12 +171,15 @@ def setup(hass: HomeAssistant, base_config):
 
     platform = base_config[DOMAIN].get(CONF_PLATFORM, SWITCH)
 
-    from pycec.cec import CecAdapter
     loop = (
         # Create own thread if more than 1 CPU
         hass.loop if multiprocessing.cpu_count() < 2 else None)
-    hdmi_network = HDMINetwork(
-        CecAdapter(name="HASS", activate_source=False), loop=loop)
+    host = base_config[DOMAIN].get(CONF_HOST, None)
+    if host:
+        adapter = TcpAdapter(host, name="HASS", activate_source=False)
+    else:
+        adapter = CecAdapter(name="HASS", activate_source=False)
+    hdmi_network = HDMINetwork(adapter, loop=loop)
 
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""

@@ -214,6 +214,7 @@ omit =
     homeassistant/components/media_player/emby.py
     homeassistant/components/media_player/firetv.py
     homeassistant/components/media_player/gpmdp.py
+    homeassistant/components/media_player/hdmi_cec.py
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/lg_netcast.py
