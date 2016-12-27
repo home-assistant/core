@@ -59,13 +59,18 @@ class GoogleProvider(Provider):
         }
 
     @asyncio.coroutine
-    def async_get_tts_audio(self, message):
+    def async_get_tts_audio(self, message, language=None):
         """Load TTS from google."""
         from gtts_token import gtts_token
 
         token = gtts_token.Token()
         websession = async_get_clientsession(self.hass)
         message_parts = self._split_message_to_parts(message)
+
+        # If language is not specified or is not supported - use the language
+        # from the config.
+        if language not in SUPPORT_LANGUAGES:
+            language = self.language
 
         data = b''
         for idx, part in enumerate(message_parts):
@@ -74,7 +79,7 @@ class GoogleProvider(Provider):
 
             url_param = {
                 'ie': 'UTF-8',
-                'tl': self.language,
+                'tl': language,
                 'q': yarl.quote(part),
                 'tk': part_token,
                 'total': len(message_parts),
@@ -92,8 +97,8 @@ class GoogleProvider(Provider):
                     )
 
                     if request.status != 200:
-                        _LOGGER.error("Error %d on load url %s", request.code,
-                                      request.url)
+                        _LOGGER.error("Error %d on load url %s",
+                                      request.status, request.url)
                         return (None, None)
                     data += yield from request.read()
 

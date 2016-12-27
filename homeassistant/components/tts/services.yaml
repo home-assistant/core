@@ -3,12 +3,20 @@ say:
 
   fields:
     entity_id:
-      description: Name(s) of media player entities
+      description: Name(s) of media player entities.
       example: 'media_player.floor'
 
     message:
-      description: Text to speak on devices
+      description: Text to speak on devices.
       example: 'My name is hanna'
+
+    cache:
+      description: Control file cache of this message.
+      example: 'true'
+
+    language:
+      description: Language to use for speech generation.
+      example: 'ru' 
 
 clear_cache:
   description: Remove cache files and RAM cache.

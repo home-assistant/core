@@ -424,9 +424,11 @@ class SonosDevice(MediaPlayerDevice):
                 media_artist = track_info.get('artist')
                 media_album_name = track_info.get('album')
                 media_title = track_info.get('title')
+                media_image_url = track_info.get('album_art', None)
 
                 media_position = None
                 media_position_updated_at = None
+                source_name = None
 
                 is_radio_stream = \
                     current_media_uri.startswith('x-sonosapi-stream:') or \
@@ -453,6 +455,7 @@ class SonosDevice(MediaPlayerDevice):
 
                 elif is_radio_stream:
                     media_image_url = self._format_media_image_url(
+                        media_image_url,
                         current_media_uri
                     )
                     support_previous_track = False
@@ -520,6 +523,7 @@ class SonosDevice(MediaPlayerDevice):
                 else:
                     # not a radio stream
                     media_image_url = self._format_media_image_url(
+                        media_image_url,
                         track_info['uri']
                     )
                     support_previous_track = True
@@ -646,12 +650,14 @@ class SonosDevice(MediaPlayerDevice):
 
         self._last_avtransport_event = None
 
-    def _format_media_image_url(self, uri):
-        return 'http://{host}:{port}/getaa?s=1&u={uri}'.format(
-            host=self._player.ip_address,
-            port=1400,
-            uri=urllib.parse.quote(uri)
-        )
+    def _format_media_image_url(self, url, fallback_uri):
+        if url in ('', 'NOT_IMPLEMENTED', None):
+            return 'http://{host}:{port}/getaa?s=1&u={uri}'.format(
+                host=self._player.ip_address,
+                port=1400,
+                uri=urllib.parse.quote(fallback_uri)
+            )
+        return url
 
     def process_sonos_event(self, event):
         """Process a service event coming from the speaker."""
@@ -671,6 +677,7 @@ class SonosDevice(MediaPlayerDevice):
             next_track_uri = event.variables.get('next_track_uri')
             if next_track_uri:
                 next_track_image_url = self._format_media_image_url(
+                    None,
                     next_track_uri
                 )
 

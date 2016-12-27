@@ -61,7 +61,7 @@ HM_DEVICE_TYPES = {
         'ThermostatWall', 'AreaThermostat', 'RotaryHandleSensor',
         'WaterSensor', 'PowermeterGas', 'LuxSensor', 'WeatherSensor',
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
-        'TemperatureSensor', 'CO2Sensor'],
+        'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2'],
     DISCOVER_BINARY_SENSORS: [
@@ -825,7 +825,7 @@ class HMDevice(Entity):
         if have_change:
             _LOGGER.debug("%s update_ha_state after '%s'", self._name,
                           attribute)
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def _subscribe_homematic_events(self):
         """Subscribe all required events to handle job."""

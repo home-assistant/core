@@ -115,7 +115,7 @@ def async_setup(hass, config):
             update_coro = hass.loop.create_task(
                 alarm.async_update_ha_state(True))
             if hasattr(alarm, 'async_update'):
-                update_tasks.append(hass.loop.create_task(update_coro))
+                update_tasks.append(update_coro)
             else:
                 yield from update_coro
 
@@ -152,40 +152,48 @@ class AlarmControlPanel(Entity):
         """Send disarm command."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
-        """Send disarm command."""
-        yield from self.hass.loop.run_in_executor(
+        """Send disarm command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.alarm_disarm, code)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_alarm_arm_home(self, code=None):
-        """Send arm home command."""
-        yield from self.hass.loop.run_in_executor(
+        """Send arm home command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.alarm_arm_home, code)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_alarm_arm_away(self, code=None):
-        """Send arm away command."""
-        yield from self.hass.loop.run_in_executor(
+        """Send arm away command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.alarm_arm_away, code)
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_alarm_trigger(self, code=None):
-        """Send alarm trigger command."""
-        yield from self.hass.loop.run_in_executor(
+        """Send alarm trigger command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, self.alarm_trigger, code)
 
     @property

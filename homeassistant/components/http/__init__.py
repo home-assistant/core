@@ -18,7 +18,7 @@ from aiohttp.web_exceptions import HTTPUnauthorized, HTTPMovedPermanently
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.remote as rem
-from homeassistant.util import get_local_ip
+import homeassistant.util as hass_util
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
     SERVER_PORT, CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS,
@@ -41,6 +41,7 @@ REQUIREMENTS = ('aiohttp_cors==0.5.0',)
 CONF_API_PASSWORD = 'api_password'
 CONF_SERVER_HOST = 'server_host'
 CONF_SERVER_PORT = 'server_port'
+CONF_BASE_URL = 'base_url'
 CONF_DEVELOPMENT = 'development'
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
@@ -84,6 +85,7 @@ HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
     vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
         vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+    vol.Optional(CONF_BASE_URL): cv.string,
     vol.Optional(CONF_DEVELOPMENT, default=DEFAULT_DEVELOPMENT): cv.string,
     vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
     vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
@@ -155,9 +157,19 @@ def async_setup(hass, config):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
 
     hass.http = server
-    hass.config.api = rem.API(server_host if server_host != '0.0.0.0'
-                              else get_local_ip(),
-                              api_password, server_port,
+
+    host = conf.get(CONF_BASE_URL)
+
+    if host:
+        port = None
+    elif server_host != DEFAULT_SERVER_HOST:
+        host = server_host
+        port = server_port
+    else:
+        host = hass_util.get_local_ip()
+        port = server_port
+
+    hass.config.api = rem.API(host, api_password, port,
                               ssl_certificate is not None)
 
     return True
