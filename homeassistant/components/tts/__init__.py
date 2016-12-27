@@ -247,7 +247,8 @@ class SpeechManager(object):
     def async_register_engine(self, engine, provider, config):
         """Register a TTS provider."""
         provider.hass = self.hass
-        provider.language = config.get(CONF_LANG)
+        if CONF_LANG in config:
+            provider.language = config.get(CONF_LANG)
         self.providers[engine] = provider
 
     @asyncio.coroutine
@@ -257,7 +258,7 @@ class SpeechManager(object):
         This method is a coroutine.
         """
         msg_hash = hashlib.sha1(bytes(message, 'utf-8')).hexdigest()
-        language_key = language or self.providers[engine].language or engine
+        language_key = language or self.providers[engine].language
         key = KEY_PATTERN.format(msg_hash, language_key, engine).lower()
         use_cache = cache if cache is not None else self.use_cache
 
