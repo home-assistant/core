@@ -264,7 +264,7 @@ class TellstickDevice(Entity):
         # This is a benign race on _repeats_left -- it's checked with the lock
         # in _send_repeated_command.
         if self._repeats_left > 0:
-            self.hass.loop.run_in_executor(None, self._send_repeated_command)
+            self.hass.async_add_job(self._send_repeated_command)
 
     def _update_from_tellcore(self):
         """Read the current state of the device from the tellcore library."""
