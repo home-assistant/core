@@ -96,14 +96,15 @@ class LogitechMediaServer(object):
     @asyncio.coroutine
     def create_players(self):
         """Create a list of devices connected to LMS."""
-        players = []
-        result = yield from self.async_query('players', 'status')
+        result = []
+        data = yield from self.async_query('players', 'status')
 
-        for players in result['players_loop']:
-            player = SqueezeBoxDevice(self, players['playerid'], players['name'])
+        for players in data['players_loop']:
+            player = SqueezeBoxDevice(
+                self, players['playerid'], players['name'])
             yield from player.async_update()
-            players.append(player)
-        return players
+            result.append(player)
+        return result
 
     @asyncio.coroutine
     def async_query(self, *parameters, player=""):
