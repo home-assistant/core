@@ -26,7 +26,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC>=0.4.4']
+REQUIREMENTS = ['pyCEC>=0.4.5']
 
 DOMAIN = 'hdmi_cec'
 
@@ -184,7 +184,6 @@ def setup(hass: HomeAssistant, base_config):
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""
         for cmd, att in call.data.items():
-            att = 1 if att < 1 else att
             if cmd == CMD_UP:
                 _process_volume(KEY_VOLUME_UP, att)
             elif cmd == CMD_DOWN:
@@ -199,12 +198,16 @@ def setup(hass: HomeAssistant, base_config):
                 _LOGGER.warning("Unknown command %s", cmd)
 
     def _process_volume(cmd, att):
+        if isinstance(att, (str,)):
+            att = att.strip()
         if att == CMD_PRESS:
-            KeyPressCommand(cmd, dst=ADDR_AUDIOSYSTEM)
+            hdmi_network.send_command(
+                KeyPressCommand(cmd, dst=ADDR_AUDIOSYSTEM))
         elif att == CMD_RELEASE:
-            KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM)
+            hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
         else:
-            for _ in range(int(att)):
+            att = 1 if att == "" else int(att)
+            for _ in range(1, att):
                 hdmi_network.send_command(
                     KeyPressCommand(cmd, dst=ADDR_AUDIOSYSTEM))
                 hdmi_network.send_command(
