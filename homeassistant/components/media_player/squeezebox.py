@@ -211,9 +211,10 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             .format(tags=tags))
 
         try:
-            self._status = {**response, **response["remoteMeta"]}
+            self._status = response.copy()
+            self._status.update(response["remoteMeta"])
         except KeyError:
-            self._status = response
+            self._status = response.copy()
 
     @property
     def volume_level(self):
