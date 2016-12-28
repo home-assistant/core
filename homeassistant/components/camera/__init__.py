@@ -7,13 +7,18 @@ https://home-assistant.io/components/camera/
 """
 import asyncio
 import logging
+import os
 
 from aiohttp import web
+import voluptuous as vol
 
+from homeassistant.config import load_yaml_config_file
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
@@ -26,14 +31,15 @@ STATE_IDLE = 'idle'
 
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 
-MANAGER = None
+SCHEMA_SERVICE_UPDATE_IMAGE = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+SERVICE_UPDATE_IMAGE = 'update_image'
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup the camera component."""
-    global MANAGER
-
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
@@ -41,25 +47,25 @@ def async_setup(hass, config):
     hass.http.register_view(CameraMjpegStream(component.entities))
 
     yield from component.async_setup(config)
-    MANAGER = CameraManager(component.entities)
 
-    return True
-
-
-class CameraManager(object):
-    """Keeps available cameras."""
-
-    def __init__(self, entities):
-        """Initialize a speech store."""
-        self.entities = entities
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file,
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
-    def async_camera_image(self, entity_id):
-        """Service handle for get_image."""
-        if entity_id not in self.entities:
-            return None
-        result = yield from self.entities[entity_id].async_camera_image()
-        return result
+    def async_update_image_handle(service):
+        """Service handle for say."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        for entity_id in entity_ids:
+            if entity_id in component.entities:
+                yield from component.entities[entity_id].async_camera_image()
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_UPDATE_IMAGE, async_update_image_handle,
+        descriptions.get(SERVICE_UPDATE_IMAGE),
+        schema=SCHEMA_SERVICE_UPDATE_IMAGE)
+
+    return True
 
 
 class Camera(Entity):
@@ -109,6 +115,7 @@ class Camera(Entity):
 
         This method must be run in the event loop.
         """
+        logging.getLogger(__name__).error('Camera.async_camera_image')
         image = yield from self.hass.loop.run_in_executor(
             None, self.camera_image)
         return image
@@ -224,6 +231,7 @@ class CameraImageView(CameraView):
     def handle(self, request, camera):
         """Serve camera image."""
         image = yield from camera.async_camera_image()
+        logging.getLogger(__name__).error('CameraImageView handle')
 
         if image is None:
             return web.Response(status=500)
@@ -240,4 +248,6 @@ class CameraMjpegStream(CameraView):
     @asyncio.coroutine
     def handle(self, request, camera):
         """Serve camera image."""
+        logging.getLogger(__name__).error('CameraMjpegStream handle')
+
         yield from camera.handle_async_mjpeg_stream(request)

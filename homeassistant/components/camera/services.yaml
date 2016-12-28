@@ -1,0 +1,7 @@
+update_image:
+  description: Make camere refetch an image..
+
+  fields:
+    entity_id:
+      description: Name(s) of camera entities.
+      example: 'camera.foscam_camera'
