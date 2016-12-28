@@ -54,6 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Schema({cv.slug: SWITCH_SCHEMA}),
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_MAC): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]): vol.In(SWITCH_TYPES),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
 })
@@ -63,8 +64,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Broadlink switches."""
     import broadlink
     devices = config.get(CONF_SWITCHES, {})
-    switches = []
     ip_addr = config.get(CONF_HOST)
+    friendly_name = config.get(CONF_FRIENDLY_NAME)
     mac_addr = binascii.unhexlify(
         config.get(CONF_MAC).encode().replace(b':', b''))
     switch_type = config.get(CONF_TYPE)
@@ -107,15 +108,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
-        switch = BroadlinkRMSwitch
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' + ip_addr,
+        switches = []
+        for object_id, device_config in devices.items():
+            switches.append(
+                BroadlinkRMSwitch(
+                    device_config.get(CONF_FRIENDLY_NAME, object_id),
+                    device_config.get(CONF_COMMAND_ON),
+                    device_config.get(CONF_COMMAND_OFF),
+                    broadlink_device
+                )
+            )
                                _learn_command)
     elif switch_type in SP1_TYPES:
         broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr)
-        switch = BroadlinkSP1Switch
+        switches = [BroadlinkSP1Switch(friendly_name, device=broadlink_device)]
     elif switch_type in SP2_TYPES:
         broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr)
-        switch = BroadlinkSP2Switch
+        switches = [BroadlinkSP2Switch(friendly_name, device=broadlink_device)]
 
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
@@ -123,23 +133,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except socket.timeout:
         _LOGGER.error("Failed to connect to device.")
 
-    for object_id, device_config in devices.items():
-        switches.append(
-            switch(
-                device_config.get(CONF_FRIENDLY_NAME, object_id),
-                device_config.get(CONF_COMMAND_ON),
-                device_config.get(CONF_COMMAND_OFF),
-                broadlink_device
-            )
-        )
-
     add_devices(switches)
 
 
 class BroadlinkRMSwitch(SwitchDevice):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, friendly_name, command_on, command_off, device):
+    def __init__(self, friendly_name, command_on=None, command_off=None, device):
         """Initialize the switch."""
         self._name = friendly_name
         self._state = False
