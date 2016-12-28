@@ -27,10 +27,10 @@ CONF_DELAY = 'delay'
 DEFAULT_DELAY = 20
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-        vol.Required(CONF_SENSORS, default=None): cv.string,
-        vol.Required(CONF_SWITCH, default=None): cv.string,
-        vol.Optional(CONF_DELAY,
-                     default=DEFAULT_DELAY): cv.positive_int,
+    vol.Required(CONF_SENSORS, default=None): cv.string,
+    vol.Required(CONF_SWITCH, default=None): cv.string,
+    vol.Optional(CONF_DELAY,
+                 default=DEFAULT_DELAY): cv.positive_int,
 })
 
 
@@ -62,7 +62,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class CountdownTimer(Entity):
-    """Binary sensor(s) and a switch(light) once turned on by sensor turns off after a delay."""
+    """
+    Binary sensor(s) and a switch(light) once turned on by sensor
+    turns off after a delay.
+    """
 
     # pylint: disable=too-many-instance-attributes,too-many-arguments
     def __init__(self, hass, dev_name, sensors, switch_id, delay):
@@ -77,11 +80,13 @@ class CountdownTimer(Entity):
         self._state = 0
         self._all_entities = sensors + "," + switch_id
         self._timer = Timer(60, self.timer_timeout)  # One minute
-        track_state_change(self._hass, self._sensors.split(','), self._sensor_changed)
+        track_state_change(self._hass, self._sensors.split(','),
+                           self._sensor_changed)
 
     def _sensor_changed(self, entity, old_state, new_state):
         """ binary_sensor callback """
-        _debug('%s binary sensor, new state: %s' % (self._full_name, new_state.state))
+        _debug('%s binary sensor, new state: %s' % (self._full_name,
+                                                    new_state.state))
         if new_state.state == STATE_ON:
             switch.turn_on(self._hass, self._switch)
             if self._count_down > self._delay:
