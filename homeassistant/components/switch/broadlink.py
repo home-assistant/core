@@ -109,6 +109,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' + ip_addr,
+                               _learn_command)
         switches = []
         for object_id, device_config in devices.items():
             switches.append(
@@ -119,7 +120,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     broadlink_device
                 )
             )
-                               _learn_command)
     elif switch_type in SP1_TYPES:
         broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr)
         switches = [BroadlinkSP1Switch(friendly_name, device=broadlink_device)]
