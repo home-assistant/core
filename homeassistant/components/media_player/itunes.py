@@ -77,7 +77,10 @@ class Itunes(object):
             elif method == 'DELETE':
                 response = requests.delete(url, timeout=DEFAULT_TIMEOUT)
 
-            return response.json()
+            if response.status_code > 399:
+                return {'player_state': 'error'}
+            else:
+                return response.json()
         except requests.exceptions.HTTPError:
             return {'player_state': 'error'}
         except requests.exceptions.RequestException:
@@ -117,17 +120,8 @@ class Itunes(object):
 
     def play_playlist(self, playlist_id_or_name):
         """Set a playlist to be current and returns the current state."""
-        response = self._request('GET', '/playlists')
-        playlists = response.get('playlists', [])
-
-        found_playlists = \
-            [playlist for playlist in playlists if
-             (playlist_id_or_name in [playlist["name"], playlist["id"]])]
-
-        if len(found_playlists) > 0:
-            playlist = found_playlists[0]
-            path = '/playlists/' + playlist['id'] + '/play'
-            return self._request('PUT', path)
+        path = '/playlists/' + playlist_id_or_name + '/play'
+        return self._request('PUT', path)
 
     def artwork_url(self):
         """Return a URL of the current track's album art."""
@@ -345,7 +339,6 @@ class ItunesDevice(MediaPlayerDevice):
         if media_type == MEDIA_TYPE_PLAYLIST:
             response = self.client.play_playlist(media_id)
             self.update_state(response)
-
 
 class AirPlayDevice(MediaPlayerDevice):
     """Representation an AirPlay device via an iTunes API instance."""
