@@ -340,6 +340,7 @@ class ItunesDevice(MediaPlayerDevice):
             response = self.client.play_playlist(media_id)
             self.update_state(response)
 
+
 class AirPlayDevice(MediaPlayerDevice):
     """Representation an AirPlay device via an iTunes API instance."""
 
