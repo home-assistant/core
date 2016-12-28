@@ -30,6 +30,7 @@ class MockDevice(STD):
     """Mock device."""
 
     def __init__(self):
+        """Init the class."""
         self._config = MockConfig
 
 
@@ -49,6 +50,7 @@ class MockPreset(Preset):
     """Mock preset."""
 
     def __init__(self, id):
+        """Init the class."""
         self._id = id
         self._name = "preset"
 
@@ -64,6 +66,7 @@ class MockVolumeMuted(Volume):
     """Mock volume muted."""
 
     def __init__(self):
+        """Init the class."""
         self._actual = 12
         self._muted = True
 
@@ -72,6 +75,7 @@ class MockStatusStandby(Status):
     """Mock status standby."""
 
     def __init__(self):
+        """Init the class."""
         self._source = "STANDBY"
 
 
@@ -79,6 +83,7 @@ class MockStatusPlaying(Status):
     """Mock status playing media."""
 
     def __init__(self):
+        """Init the class."""
         self._source = ""
         self._play_status = "PLAY_STATE"
         self._image = "image.url"
@@ -93,6 +98,7 @@ class MockStatusPlayingRadio(Status):
     """Mock status radio."""
 
     def __init__(self):
+        """Init the class."""
         self._source = ""
         self._play_status = "PLAY_STATE"
         self._image = "image.url"
@@ -107,6 +113,7 @@ class MockStatusUnknown(Status):
     """Mock status unknown media."""
 
     def __init__(self):
+        """Init the class."""
         self._source = ""
         self._play_status = "PLAY_STATE"
         self._image = "image.url"
@@ -121,6 +128,7 @@ class MockStatusPause(Status):
     """Mock status pause."""
 
     def __init__(self):
+        """Init the class."""
         self._source = ""
         self._play_status = "PAUSE_STATE"
 
