@@ -105,15 +105,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                              "Did not received any signal",
                                              title='Broadlink switch')
 
-    if switch_type.lower() in RM_TYPES:
+    if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
         switch = BroadlinkRMSwitch
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' + ip_addr,
                                _learn_command)
-    elif switch_type.lower() in SP1_TYPES:
+    elif switch_type in SP1_TYPES:
         broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr)
         switch = BroadlinkSP1Switch
-    elif switch_type.lower() in SP2_TYPES:
+    elif switch_type in SP2_TYPES:
         broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr)
         switch = BroadlinkSP2Switch
 
