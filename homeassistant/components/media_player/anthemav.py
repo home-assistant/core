@@ -28,6 +28,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SUPPORT_ANTHEMAV = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
+VIDEO_FORMATS = {'0': 'No Video', '1': 'Other Video', '2': '1080p60',
+        '3': '1080p50', '4': '1080p24', '5': '1080i60', '6': '1080i50',
+        '7': '720p60', '8': '720p50', '9': '576p50', '10': '576i50',
+        '11': '480p60', '12': '480i60', '13': '3D', '14': '4K'}
+
+AUDIO_MODES = {'00': 'None', '01': 'AnthemLogic-Movie', '02': 'AnthemLogic-Music',
+        '03': 'PLIIx Movie', '04': 'PLIIx Music', '05': 'Neo:6 Cinema',
+        '06': 'Neo:6 Music', '07': 'All Channel Stereo', 
+        '08': 'All Channel Mono', '09': 'Mono', '10': 'Mono-Academy',
+        '11': 'Mono(L)', '12': 'Mono(R)', '13': 'High Blend',
+        '14': 'Dolby Surround', '15': 'Neo:X-Cinema',
+        '16': 'Neo:X-Music'}
+
+AUDIO_FORMATS = {'0': 'No Input', '1': 'Analog', '2': 'PCM', '3': 'Dolby',
+        '4': 'DSD', '5': 'DTS', '6': 'Atmos'}
+
+AUDIO_CHANNELS = {'0': 'No Input', '1': 'Other', '2': 'Mono', '3': '2.0',
+        '4': '5.1', '5': '6.1', '6': '7.1', '7': 'Atmos'}
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     anthemav = AnthemAVR(config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT))
 
@@ -55,16 +74,21 @@ class AnthemAVR(MediaPlayerDevice):
         self._selected_source = ''
         self._source_name_to_number = {}
         self._source_number_to_name = {}
+        self._video_formats = VIDEO_FORMATS.copy()
+        self._audio_modes = AUDIO_MODES.copy()
+
         _LOGGER.debug('class __init__ successful')
 
     def _setup_inputs(self, telnet):
         _LOGGER.info('Setting up Anthem Inputs')
-        self._input_count = int(self.telnet_query(telnet, 'ICN'))
-        for source_number in range(1,self._input_count+1):
-            source_name = self.telnet_query(telnet, 'ISN'+str(source_number).zfill(2))
-
-            self._source_name_to_number[source_name] = source_number
-            self._source_number_to_name[source_number] = source_name
+        ic = self.telnet_query(telnet, 'ICN')
+        if ic :
+            self._input_count = int(ic)
+            for source_number in range(1,self._input_count+1):
+                source_name = self.telnet_query(telnet, 'ISN'+str(source_number).zfill(2))
+                self._source_name_to_number[source_name] = source_number
+                self._source_number_to_name[source_number] = source_name
+                self._should_setup_inputs = False
 
     @classmethod
     def telnet_query(cls, telnet, code):
@@ -121,7 +145,6 @@ class AnthemAVR(MediaPlayerDevice):
 
             if self._should_setup_inputs:
                 self._setup_inputs(telnet)
-                self._should_setup_inputs = False
 
             source_number = int(self.telnet_query(telnet,'Z1INP'))
 
@@ -129,6 +152,11 @@ class AnthemAVR(MediaPlayerDevice):
                 self._selected_source = self._source_number_to_name.get(source_number)
             else:
                 self._selected_source = None
+
+            self._format_video = self.telnet_query(telnet, 'Z1VIR')
+            self._format_audio = self.telnet_query(telnet, 'Z1AIN')
+            self._audo_channels = self.telnet_query(telnet, 'Z1AIC')
+            self._audio_mode = self.telnet_query(telnet, 'Z1ALM')
 
         telnet.close()
         return True
@@ -188,6 +216,18 @@ class AnthemAVR(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         self.telnet_command('Z1MUT' + ('1' if mute else '0'))
+
+    @property
+    def media_title(self):
+        """Title of current playing media."""
+        return self._selected_source
+
+    @property
+    def app_name(self):
+        out_video = self._video_formats[self._format_video] if self._video_formats[self._format_video] else 'Unknown Video'
+        out_audio = self._format_audio if self._format_audio else 'Unknown Audio'
+        out_mode = self._audio_modes[self._audio_mode] if self._audio_modes[self._audio_mode] else 'Unknown Mode'
+        return out_video+' / '+out_audio+' ('+out_mode+')'
 
     @property
     def source(self):
