@@ -68,7 +68,6 @@ class AnthemAVR(MediaPlayerDevice):
 
     @classmethod
     def telnet_query(cls, telnet, code):
-        _LOGGER.debug('Querying value of "%s"', code)
         telnet.write(code.encode('ASCII') + b'?;\r')
         lines = []
         while True:
@@ -76,13 +75,11 @@ class AnthemAVR(MediaPlayerDevice):
             if not line:
                 break
             lines.append(line.decode('ASCII').strip())
-            _LOGGER.debug('Recived: "%s"', line)
 
         for resp in lines:
-            _LOGGER.debug('Evaluating: "%s"', resp)
             m = re.match("^"+code+"([^;]+);",resp)
             if m:
-                _LOGGER.info("Telnet polled value for %s is %s",code,m.group(1))
+                _LOGGER.debug("Telnet polled value for %s is %s",code,m.group(1))
                 return m.group(1)
 
         return 
@@ -112,7 +109,6 @@ class AnthemAVR(MediaPlayerDevice):
         self._muted = (self.telnet_query(telnet, 'Z1MUT') == '1')
         self._attenuation = int(self.telnet_query(telnet, 'Z1VOL'))
         self._volume = (90.00 + self._attenuation) / 90
-        _LOGGER.debug('Attenuation is %d which means volume is %f', self._attenuation, self._volume)
 
         if self._should_setup_inputs:
             self._setup_inputs(telnet)
