@@ -115,17 +115,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             switches.append(
                 BroadlinkRMSwitch(
                     device_config.get(CONF_FRIENDLY_NAME, object_id),
+                    broadlink_device,
                     device_config.get(CONF_COMMAND_ON),
-                    device_config.get(CONF_COMMAND_OFF),
-                    broadlink_device
+                    device_config.get(CONF_COMMAND_OFF)
                 )
             )
     elif switch_type in SP1_TYPES:
         broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr)
-        switches = [BroadlinkSP1Switch(friendly_name, device=broadlink_device)]
+        switches = [BroadlinkSP1Switch(friendly_name, broadlink_device)]
     elif switch_type in SP2_TYPES:
         broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr)
-        switches = [BroadlinkSP2Switch(friendly_name, device=broadlink_device)]
+        switches = [BroadlinkSP2Switch(friendly_name, broadlink_device)]
 
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
@@ -139,7 +139,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class BroadlinkRMSwitch(SwitchDevice):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, friendly_name, command_on=None, command_off=None, device):
+    def __init__(self, friendly_name, device,
+                 command_on=None, command_off=None):
         """Initialize the switch."""
         self._name = friendly_name
         self._state = False
