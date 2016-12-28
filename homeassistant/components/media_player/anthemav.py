@@ -46,7 +46,7 @@ class AnthemAVR(MediaPlayerDevice):
         self._host = host
         self._port = port
         self._pwstate = 'PWSTANDBY'
-        self._volume = 0
+        self._volume = 0.00
         self._attenuation = 0
         self._muted = False
         self._should_setup_sources = True
@@ -74,10 +74,14 @@ class AnthemAVR(MediaPlayerDevice):
         return 
 
     def telnet_command(self, command):
-        """Establish a telnet connection and sends `command`."""
-        telnet = telnetlib.Telnet(self._host, self._port)
+        try:
+            telnet = telnetlib.Telnet(self._host,self._port)
+        except OSError:
+            _LOGGER.error('Unable to connect to Anthem control port')
+            return False
+
         _LOGGER.debug('Sending: "%s"', command)
-        telnet.write(command.encode('ASCII') + b'\r')
+        telnet.write(command.encode('ASCII') + b';\r')
         telnet.read_very_eager()  # skip response
         telnet.close()
 
@@ -92,7 +96,9 @@ class AnthemAVR(MediaPlayerDevice):
         self._name = self.telnet_query(telnet, 'IDM')
         self._pwstate = self.telnet_query(telnet, 'Z1POW')
         self._muted = (self.telnet_query(telnet, 'Z1MUT') == '1')
-        self._attenuation = self.telnet_query(telnet, 'Z1VOL')
+        self._attenuation = int(self.telnet_query(telnet, 'Z1VOL'))
+        self._volume = (90.00 + self._attenuation) / 90
+        _LOGGER.debug('Attenuation is %d which means volume is %f', self._attenuation, self._volume)
 
         telnet.close()
         return True
@@ -110,21 +116,41 @@ class AnthemAVR(MediaPlayerDevice):
     def state(self):
         """Return the state of the device."""
         if self._pwstate == '0':
-            _LOGGER.info('Telling system that I am OFF')
             return STATE_OFF
         if self._pwstate == '1':
-            _LOGGER.info('Telling system that I am ON')
             return STATE_ON
 
-        _LOGGER.info('Telling system that I am confused')
         return STATE_UNKNOWN
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return 0.5
+        return self._volume
 
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
+
+    def turn_off(self):
+        """Turn off media player."""
+        self.telnet_command('PWSTANDBY')
+
+    def volume_up(self):
+        """Volume up media player."""
+        self.telnet_command('Z1VUP01')
+
+    def volume_down(self):
+        """Volume down media player."""
+        self.telnet_command('Z1VDN01')
+
+    def set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        _LOGGER.debug('Request to set volume to %f',volume)
+        setatt = (-90 * volume)
+        _LOGGER.debug('Desired attenuation is %d',setatt)
+        self.telnet_command('Z1VOL-49')
+
+    def mute_volume(self, mute):
+        """Mute (true) or unmute (false) media player."""
+        self.telnet_command('Z1MUT' + ('1' if mute else '0'))
