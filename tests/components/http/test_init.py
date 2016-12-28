@@ -119,6 +119,7 @@ class TestCors:
 
 class TestView(http.HomeAssistantView):
     """Test the HTTP views."""
+
     name = 'test'
     url = '/hello'
 

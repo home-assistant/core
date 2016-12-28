@@ -38,6 +38,7 @@ class MockConfig(Config):
     """Mock config."""
 
     def __init__(self):
+        """Init class."""
         self._name = "name"
 
 
@@ -59,6 +60,7 @@ class MockVolume(Volume):
     """Mock volume with value."""
 
     def __init__(self):
+        """Init class."""
         self._actual = 12
 
 
