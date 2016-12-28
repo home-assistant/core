@@ -22,16 +22,19 @@ class TestLiteJet(unittest.TestCase):
         self.hass.stop()
 
     def test_is_ignored_unspecified(self):
+        """Ensure it is ignored when unspecified."""
         self.hass.data['litejet_config'] = {}
         assert not litejet.is_ignored(self.hass, 'Test')
 
     def test_is_ignored_empty(self):
+        """Ensure it is ignored when empty."""
         self.hass.data['litejet_config'] = {
             litejet.CONF_EXCLUDE_NAMES: []
         }
         assert not litejet.is_ignored(self.hass, 'Test')
 
     def test_is_ignored_normal(self):
+        """Test if usually ignored."""
         self.hass.data['litejet_config'] = {
             litejet.CONF_EXCLUDE_NAMES: ['Test', 'Other One']
         }

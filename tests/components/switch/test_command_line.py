@@ -185,7 +185,7 @@ class TestCommandSwitch(unittest.TestCase):
         self.assertFalse(state_device.assumed_state)
 
     def test_entity_id_set_correctly(self):
-        """Test that entity_id is set correctly from object_id"""
+        """Test that entity_id is set correctly from object_id."""
         self.hass = get_test_home_assistant()
 
         init_args = [

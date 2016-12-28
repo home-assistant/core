@@ -28,7 +28,7 @@ class TestRemote(unittest.TestCase):
         self.hass.stop()
 
     def test_is_on(self):
-        """ Test is_on"""
+        """Test is_on."""
         self.hass.states.set('remote.test', STATE_ON)
         self.assertTrue(remote.is_on(self.hass, 'remote.test'))
 
@@ -42,7 +42,7 @@ class TestRemote(unittest.TestCase):
         self.assertFalse(remote.is_on(self.hass))
 
     def test_turn_on(self):
-        """ Test turn_on"""
+        """Test turn_on."""
         turn_on_calls = mock_service(
             self.hass, remote.DOMAIN, SERVICE_TURN_ON)
 
@@ -58,7 +58,7 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(remote.DOMAIN, call.domain)
 
     def test_turn_off(self):
-        """ Test turn_off"""
+        """Test turn_off."""
         turn_off_calls = mock_service(
             self.hass, remote.DOMAIN, SERVICE_TURN_OFF)
 
@@ -75,7 +75,7 @@ class TestRemote(unittest.TestCase):
         self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
 
     def test_send_command(self):
-        """ Test send_command"""
+        """Test send_command."""
         send_command_calls = mock_service(
             self.hass, remote.DOMAIN, SERVICE_SEND_COMMAND)
 
