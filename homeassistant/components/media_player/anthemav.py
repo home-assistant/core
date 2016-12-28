@@ -11,7 +11,7 @@ import voluptuous as vol
 DOMAIN = 'anthemav'
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    PLATFORM_SCHEMA, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON, STATE_UNKNOWN)
@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     })
 
 SUPPORT_ANTHEMAV = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF 
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     anthemav = AnthemAVR(config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT))
@@ -49,8 +49,22 @@ class AnthemAVR(MediaPlayerDevice):
         self._volume = 0.00
         self._attenuation = 0
         self._muted = False
-        self._should_setup_sources = True
+        self._input_count = 0
+        self._input_list = {}
+        self._should_setup_inputs = True
+        self._selected_source = ''
+        self._source_name_to_number = {}
+        self._source_number_to_name = {}
         _LOGGER.debug('class __init__ successful')
+
+    def _setup_inputs(self, telnet):
+        _LOGGER.info('Setting up Anthem Inputs')
+        self._input_count = int(self.telnet_query(telnet, 'ICN'))
+        for source_number in range(1,self._input_count+1):
+            source_name = self.telnet_query(telnet, 'ISN'+str(source_number).zfill(2))
+
+            self._source_name_to_number[source_name] = source_number
+            self._source_number_to_name[source_number] = source_name
 
     @classmethod
     def telnet_query(cls, telnet, code):
@@ -99,6 +113,17 @@ class AnthemAVR(MediaPlayerDevice):
         self._attenuation = int(self.telnet_query(telnet, 'Z1VOL'))
         self._volume = (90.00 + self._attenuation) / 90
         _LOGGER.debug('Attenuation is %d which means volume is %f', self._attenuation, self._volume)
+
+        if self._should_setup_inputs:
+            self._setup_inputs(telnet)
+            self._should_setup_inputs = False
+
+        source_number = int(self.telnet_query(telnet,'Z1INP'))
+
+        if source_number:
+            self._selected_source = self._source_number_to_name.get(source_number)
+        else:
+            self._selected_source = None
 
         telnet.close()
         return True
@@ -154,3 +179,17 @@ class AnthemAVR(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         self.telnet_command('Z1MUT' + ('1' if mute else '0'))
+
+    @property
+    def source(self):
+        """Return the current input source."""
+        return self._selected_source
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return list(self._source_name_to_number.keys())
+
+    def select_source(self, source):
+        """Select input source."""
+        self.telnet_command('Z1INP'+self._source_name_to_number.get(source))
