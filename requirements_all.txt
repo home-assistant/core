@@ -583,6 +583,9 @@ temperusb==1.5.1
 # homeassistant.components.thingspeak
 thingspeak==0.4.0
 
+# homeassistant.components.device_tracker.mikrotik
+tikapy==0.2.1
+
 # homeassistant.components.sensor.transmission
 # homeassistant.components.switch.transmission
 transmissionrpc==0.11
