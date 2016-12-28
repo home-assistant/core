@@ -106,20 +106,29 @@ class AnthemAVR(MediaPlayerDevice):
 
         self._name = self.telnet_query(telnet, 'IDM')
         self._pwstate = self.telnet_query(telnet, 'Z1POW')
-        self._muted = (self.telnet_query(telnet, 'Z1MUT') == '1')
-        self._attenuation = int(self.telnet_query(telnet, 'Z1VOL'))
-        self._volume = (90.00 + self._attenuation) / 90
 
-        if self._should_setup_inputs:
-            self._setup_inputs(telnet)
-            self._should_setup_inputs = False
-
-        source_number = int(self.telnet_query(telnet,'Z1INP'))
-
-        if source_number:
-            self._selected_source = self._source_number_to_name.get(source_number)
+        if self._pwstate != '1':
+            self._muted = False
+            self._volume = 0
         else:
-            self._selected_source = None
+            self._muted = (self.telnet_query(telnet, 'Z1MUT') == '1')
+
+            self._attenuation = self.telnet_query(telnet, 'Z1VOL')
+            if self._attenuation:
+                self._volume = (90.00 + int(self._attenuation)) / 90
+            else:
+                self._volume = 0
+
+            if self._should_setup_inputs:
+                self._setup_inputs(telnet)
+                self._should_setup_inputs = False
+
+            source_number = int(self.telnet_query(telnet,'Z1INP'))
+
+            if source_number:
+                self._selected_source = self._source_number_to_name.get(source_number)
+            else:
+                self._selected_source = None
 
         telnet.close()
         return True
@@ -155,7 +164,11 @@ class AnthemAVR(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self.telnet_command('PWSTANDBY')
+        self.telnet_command('Z1POW0')
+
+    def turn_on(self):
+        """Turn the media player on."""
+        self.telnet_command('Z1POW1;Z1POW')
 
     def volume_up(self):
         """Volume up media player."""
