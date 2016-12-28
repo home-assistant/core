@@ -242,3 +242,6 @@ class AnthemAVR(MediaPlayerDevice):
     def select_source(self, source):
         """Select input source."""
         self.telnet_command('Z1INP'+self._source_name_to_number.get(source))
+
+    def media_play(self):
+        return
