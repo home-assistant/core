@@ -176,10 +176,6 @@ http://github.com/technicalpickles/python-nest/archive/e6c9d56a8df455d4d77463898
 # homeassistant.components.light.flux_led
 https://github.com/Danielhiversen/flux_led/archive/0.10.zip#flux_led==0.10
 
-# homeassistant.components.sensor.broadlink
-# homeassistant.components.switch.broadlink
-https://github.com/Danielhiversen/python-broadlink/archive/6d6ae7b685723c8b5d7365200218e1d50cf91d27.zip#broadlink==0.3
-
 # homeassistant.components.switch.tplink
 https://github.com/GadgetReactor/pyHS100/archive/45fc3548882628bcde3e3d365db341849457bef2.zip#pyHS100==0.2.2
 
@@ -226,6 +222,10 @@ https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
 
 # homeassistant.components.media_player.russound_rnet
 https://github.com/laf/russound/archive/0.1.6.zip#russound==0.1.6
+
+# homeassistant.components.sensor.broadlink
+# homeassistant.components.switch.broadlink
+https://github.com/mjg59/python-broadlink/archive/a4465a751583c299f327a279d078a874e3e672ba.zip#broadlink==0.2
 
 # homeassistant.components.switch.anel_pwrctrl
 https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
