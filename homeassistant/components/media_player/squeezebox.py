@@ -177,7 +177,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     """Representation of a SqueezeBox device."""
 
     def __init__(self, lms, player_id):
-        """Initialize the SqeezeBox device."""
+        """Initialize the SqueezeBox device."""
         super(SqueezeBoxDevice, self).__init__()
         self._lms = lms
         self._id = player_id

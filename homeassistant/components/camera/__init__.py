@@ -109,16 +109,12 @@ class Camera(Entity):
         """Return bytes of camera image."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_camera_image(self):
         """Return bytes of camera image.
 
-        This method must be run in the event loop.
+        This method must be run in the event loop and returns a coroutine.
         """
-        logging.getLogger(__name__).error('Camera.async_camera_image')
-        image = yield from self.hass.loop.run_in_executor(
-            None, self.camera_image)
-        return image
+        return self.hass.loop.run_in_executor(None, self.camera_image)
 
     @asyncio.coroutine
     def handle_async_mjpeg_stream(self, request):
