@@ -115,7 +115,6 @@ class Camera(Entity):
 
         This method must be run in the event loop.
         """
-        logging.getLogger(__name__).error('Camera.async_camera_image')
         image = yield from self.hass.loop.run_in_executor(
             None, self.camera_image)
         return image
@@ -231,7 +230,6 @@ class CameraImageView(CameraView):
     def handle(self, request, camera):
         """Serve camera image."""
         image = yield from camera.async_camera_image()
-        logging.getLogger(__name__).error('CameraImageView handle')
 
         if image is None:
             return web.Response(status=500)
@@ -248,6 +246,4 @@ class CameraMjpegStream(CameraView):
     @asyncio.coroutine
     def handle(self, request, camera):
         """Serve camera image."""
-        logging.getLogger(__name__).error('CameraMjpegStream handle')
-
         yield from camera.handle_async_mjpeg_stream(request)
