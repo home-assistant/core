@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Home Assistant setup script."""
 import os
 from setuptools import setup, find_packages
 from homeassistant.const import (__version__, PROJECT_PACKAGE_NAME,

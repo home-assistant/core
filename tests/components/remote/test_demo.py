@@ -30,7 +30,6 @@ class TestDemoRemote(unittest.TestCase):
 
     def test_methods(self):
         """Test if methods call the services as expected."""
-
         self.assertTrue(
             setup_component(self.hass, remote.DOMAIN,
                             {remote.DOMAIN: {CONF_PLATFORM: 'demo'}}))
@@ -50,7 +49,6 @@ class TestDemoRemote(unittest.TestCase):
 
     def test_services(self):
         """Test the provided services."""
-
         # Test turn_on
         turn_on_calls = mock_service(
             self.hass, remote.DOMAIN, SERVICE_TURN_ON)

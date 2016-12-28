@@ -1,3 +1,4 @@
+"""Test the Emulated Hue component."""
 from unittest.mock import patch
 
 from homeassistant.components.emulated_hue import Config, _LOGGER
