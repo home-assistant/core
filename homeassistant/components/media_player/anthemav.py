@@ -41,10 +41,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    yield from async_add_devices([AnthemAVR(hass,host,port)], True)
+    devices = [AnthemAVR(hass,host,port)]
+
+    yield from async_add_devices(devices)
 
     def update_entities_message(message):
         _LOGGER.info('update_entities_message'+message)
+        for device in devices:
+            device.message = message
+            hass.async_add_job(device.async_update_ha_state)
 
     # conn = create_anthemav_reader(args.host,args.port,print_callback,loop=loop)
     avr = create_anthemav_reader(host,port,update_entities_message, loop=hass.loop)
@@ -113,10 +118,6 @@ class AnthemAVR(MediaPlayerDevice):
         
     def mute_volume(self, mute):
         _LOGGER.debug('Request to mute %s',str(mute))
-
-    def update(self):
-        _LOGGER.info('update invoked')
-        return run_coroutine_threadsafe(self.async_update(), self.hass.loop).result()
 
     @asyncio.coroutine
     def async_update(self):
