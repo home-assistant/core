@@ -66,10 +66,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                       host, port, error)
         return False
 
+    # Combine it with port to allow multiple servers at the same host
+    key = "{}:{}".format(ipaddr, port)
+
     # Only add a media server once
-    if ipaddr in KNOWN_DEVICES:
+    if key in KNOWN_DEVICES:
         return False
-    KNOWN_DEVICES.append(ipaddr)
+    KNOWN_DEVICES.append(key)
 
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
     lms = LogitechMediaServer(hass, host, port, username, password)
@@ -107,19 +110,13 @@ class LogitechMediaServer(object):
         return result
 
     @asyncio.coroutine
-    def async_query(self, *parameters, player=""):
-        """Send request and await response from server."""
-        response = yield from self._query(parameters, player)
-        return response
-
-    @asyncio.coroutine
-    def _query(self, command, player=""):
+    def async_query(self, *command, player=""):
         """Abstract out the JSON-RPC connection."""
         response = None
         auth = None if self._username is None else aiohttp.BasicAuth(
             self._username, self._password)
-        url = "http://{}:{}{}".format(
-            self.host, self.port, '/jsonrpc.js')
+        url = "http://{}:{}/jsonrpc.js".format(
+            self.host, self.port)
         data = json.dumps({
             "id": "1",
             "method": "slim.request",
@@ -191,12 +188,10 @@ class SqueezeBoxDevice(MediaPlayerDevice):
                 return STATE_IDLE
         return STATE_UNKNOWN
 
-    @asyncio.coroutine
     def async_query(self, *parameters):
         """Send a command to the LMS."""
-        response = yield from self._lms.async_query(
+        return self._lms.async_query(
             *parameters, player=self._id)
-        return response
 
     def query(self, *parameters):
         """Queue up a command to send the LMS."""
@@ -214,7 +209,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             self._status = response.copy()
             self._status.update(response["remoteMeta"])
         except KeyError:
-            self._status = response.copy()
+            pass
 
     @property
     def volume_level(self):
@@ -256,8 +251,6 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         else:
             media_url = ('/music/current/cover.jpg?player={player}').format(
                 player=self._id)
-
-        _LOGGER.debug("Media image url: %s", media_url)
 
         # pylint: disable=protected-access
         if self._lms._username:
