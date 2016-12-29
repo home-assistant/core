@@ -92,7 +92,7 @@ def setup(hass, config):
         if state is None or state.entity_id in blacklist:
             return
 
-        if len(whitelist) > 0 and state.entity_id not in whitelist:
+        if whitelist and state.entity_id not in whitelist:
             return
 
         try:
@@ -125,7 +125,7 @@ def setup(hass, config):
             if isinstance(value, (int, float)):
                 state_fields[key] = float(value)
 
-        if len(state_fields) > 0:
+        if state_fields:
             json_body.append(
                 {
                     'measurement': "hass.state",
