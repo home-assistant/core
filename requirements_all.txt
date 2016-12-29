@@ -66,6 +66,10 @@ blockchain==1.3.3
 # homeassistant.components.notify.aws_sqs
 boto3==1.3.1
 
+# homeassistant.components.sensor.broadlink
+# homeassistant.components.switch.broadlink
+broadlink==0.3
+
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==2.0.1
 
@@ -223,8 +227,7 @@ https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
 # homeassistant.components.media_player.russound_rnet
 https://github.com/laf/russound/archive/0.1.6.zip#russound==0.1.6
 
-# homeassistant.components.sensor.broadlink
-# homeassistant.components.switch.broadlink
+# homeassistant.components.switch.broadlink2
 https://github.com/mjg59/python-broadlink/archive/a4465a751583c299f327a279d078a874e3e672ba.zip#broadlink==0.2
 
 # homeassistant.components.switch.anel_pwrctrl

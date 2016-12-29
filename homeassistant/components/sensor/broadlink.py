@@ -20,9 +20,7 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['https://github.com/mjg59/python-broadlink/archive'
-                '/a4465a751583c299f327a279d078a874e3e672ba.zip'
-                '#broadlink==0.2']
+REQUIREMENTS = ['broadlink==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
