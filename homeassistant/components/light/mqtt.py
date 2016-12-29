@@ -90,7 +90,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             CONF_BRIGHTNESS: config.get(CONF_BRIGHTNESS_VALUE_TEMPLATE),
             CONF_RGB: config.get(CONF_RGB_VALUE_TEMPLATE),
             CONF_COLOR_TEMP: config.get(CONF_COLOR_TEMP_VALUE_TEMPLATE),
-            CONF_COLOR_TEMP+"_COMMAND": config.get(CONF_COLOR_TEMP_COMMAND_TEMPLATE)
+            CONF_COLOR_TEMP+"_COMMAND":
+            config.get(CONF_COLOR_TEMP_COMMAND_TEMPLATE)
         },
         config.get(CONF_QOS),
         config.get(CONF_RETAIN),
@@ -191,8 +192,10 @@ class MqttLight(Light):
 
         def color_temp_received(topic, payload, qos):
             """A new MQTT message for color temp has been received."""
-            self._color_temp = int(float((templates[CONF_COLOR_TEMP](payload))))
-            _LOGGER.debug("Received color temp: %f, converts to %d", float(payload), self._color_temp)
+            self._color_temp = \
+                int(float((templates[CONF_COLOR_TEMP](payload))))
+            _LOGGER.debug("Received color temp: %f, converts to %d",
+                          float(payload), self._color_temp)
             self.update_ha_state()
 
         if self._topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None:
@@ -274,8 +277,11 @@ class MqttLight(Light):
 
         if ATTR_COLOR_TEMP in kwargs and \
            self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
-            color_temp = int(float((self.templates[CONF_COLOR_TEMP+"_COMMAND"](str(kwargs[ATTR_COLOR_TEMP])))))
-            _LOGGER.debug("Command temp %f mired, coverts to %d K" % (kwargs[ATTR_COLOR_TEMP], color_temp))
+            color_temp = int(float((
+                self.templates[CONF_COLOR_TEMP+"_COMMAND"](
+                    str(kwargs[ATTR_COLOR_TEMP])))))
+            _LOGGER.debug("Command temp %f mired, coverts to %d K" %
+                          (kwargs[ATTR_COLOR_TEMP], color_temp))
             mqtt.publish(
                 self._hass, self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC],
                 color_temp, self._qos, self._retain)
