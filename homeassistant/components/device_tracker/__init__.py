@@ -8,7 +8,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import os
-from typing import Any, Sequence, Callable
+from typing import Any, List, Sequence, Callable
 
 import aiohttp
 import async_timeout
@@ -143,22 +143,33 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
             return
 
         try:
-            if hasattr(platform, 'get_scanner'):
+            scanner = None
+            setup = None
+            if hasattr(platform, 'async_get_scanner'):
+                scanner = yield from platform.async_get_scanner(
+                    hass, {DOMAIN: p_config})
+            elif hasattr(platform, 'get_scanner'):
                 scanner = yield from hass.loop.run_in_executor(
                     None, platform.get_scanner, hass, {DOMAIN: p_config})
+            elif hasattr(platform, 'async_setup_scanner'):
+                setup = yield from platform.setup_scanner(
+                    hass, p_config, tracker.see)
+            elif hasattr(platform, 'setup_scanner'):
+                setup = yield from hass.loop.run_in_executor(
+                    None, platform.setup_scanner, hass, p_config, tracker.see)
+            else:
+                raise HomeAssistantError("Invalid device_tracker platform.")
 
-                if scanner is None:
-                    _LOGGER.error('Error setting up platform %s', p_type)
-                    return
+            if scanner is None and not setup:
+                _LOGGER.error('Error setting up platform %s', p_type)
+                return
 
+            # setup scanner
+            if scanner:
                 yield from async_setup_scanner_platform(
                     hass, p_config, scanner, tracker.async_see)
                 return
 
-            ret = yield from hass.loop.run_in_executor(
-                None, platform.setup_scanner, hass, p_config, tracker.see)
-            if not ret:
-                _LOGGER.error('Error setting up platform %s', p_type)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error setting up platform %s', p_type)
 
@@ -526,6 +537,34 @@ class Device(Entity):
                 yield from resp.release()
 
 
+class DeviceScanner(object):
+    """Device scanner object."""
+
+    hass = None  # type: HomeAssistantType
+
+    def scan_devices(self) -> List[str]:
+        """Scan for devices."""
+        raise NotImplementedError()
+
+    def async_scan_devices(self) -> Any:
+        """Scan for devices.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(None, self.scan_devices)
+
+    def get_device_name(self, mac: str) -> str:
+        """Get device name from mac."""
+        raise NotImplementedError()
+
+    def async_get_device_name(self, mac: str) -> Any:
+        """Get device name from mac.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(None, self.get_device_name, mac)
+
+
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     """Load devices from YAML configuration file."""
     return run_coroutine_threadsafe(
@@ -582,26 +621,28 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
     This method is a coroutine.
     """
     interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    scanner.hass = hass
 
     # Initial scan of each mac we also tell about host name for config
     seen = set()  # type: Any
 
-    def device_tracker_scan(now: dt_util.dt.datetime):
+    @asyncio.coroutine
+    def async_device_tracker_scan(now: dt_util.dt.datetime):
         """Called when interval matches."""
-        found_devices = scanner.scan_devices()
+        found_devices = yield from scanner.async_scan_devices()
 
         for mac in found_devices:
             if mac in seen:
                 host_name = None
             else:
-                host_name = scanner.get_device_name(mac)
+                host_name = yield from scanner.async_get_device_name(mac)
                 seen.add(mac)
-            hass.add_job(async_see_device(mac=mac, host_name=host_name))
+            hass.async_add_job(async_see_device(mac=mac, host_name=host_name))
 
     async_track_utc_time_change(
-        hass, device_tracker_scan, second=range(0, 60, interval))
+        hass, async_device_tracker_scan, second=range(0, 60, interval))
 
-    hass.async_add_job(device_tracker_scan, None)
+    hass.async_add_job(async_device_tracker_scan, None)
 
 
 def update_config(path: str, dev_id: str, device: Device):
