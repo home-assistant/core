@@ -280,8 +280,8 @@ class MqttLight(Light):
             color_temp = int(float((
                 self.templates[CONF_COLOR_TEMP+"_COMMAND"](
                     str(kwargs[ATTR_COLOR_TEMP])))))
-            _LOGGER.debug("Command temp %f mired, coverts to %d K" %
-                          (kwargs[ATTR_COLOR_TEMP], color_temp))
+            _LOGGER.debug("Command temp %f mired, coverts to %d K",
+                          kwargs[ATTR_COLOR_TEMP], color_temp)
             mqtt.publish(
                 self._hass, self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC],
                 color_temp, self._qos, self._retain)
