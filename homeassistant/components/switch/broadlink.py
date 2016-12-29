@@ -21,7 +21,6 @@ from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_SWITCHES,
                                  CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 
-
 REQUIREMENTS = ['broadlink==0.3']
 
 _LOGGER = logging.getLogger(__name__)
