@@ -1,7 +1,19 @@
+#!/bin/sh
+# Resolve all frontend dependencies that the application requires to run.
+
+# Stop on errors
+set -e
+
 echo "Bootstrapping frontend..."
+
 git submodule update
 cd homeassistant/components/frontend/www_static/home-assistant-polymer
+
+# Install node modules
 npm install
+
+# Install bower web components. Allow to download the components as root since the user in docker is root.
 ./node_modules/.bin/bower install --allow-root
+
 npm run setup_js_dev
 cd ../../../../..

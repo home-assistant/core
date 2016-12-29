@@ -1,3 +1,7 @@
+# Dockerfile for development
+# Based on the production Dockerfile, but with development additions.
+# Keep this file as close as possible to the production Dockerfile, so the environments match.
+
 FROM python:3.5
 MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 
@@ -6,7 +10,8 @@ VOLUME /config
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-RUN pip3 install --no-cache-dir colorlog cython mysqlclient psycopg2 uvloop
+#RUN pip3 install --no-cache-dir colorlog cython mysqlclient psycopg2 uvloop
+RUN pip3 install --no-cache-dir colorlog cython mysqlclient psycopg2
 
 # For the nmap tracker, bluetooth tracker, Z-Wave, tellstick
 RUN echo "deb http://download.telldus.com/debian/ stable main" >> /etc/apt/sources.list.d/telldus.list && \
@@ -23,6 +28,28 @@ RUN script/build_python_openzwave && \
 
 COPY requirements_all.txt requirements_all.txt
 RUN pip3 install --no-cache-dir -r requirements_all.txt
+
+# BEGIN: Development additions
+
+# Install nodejs
+RUN curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash - && \
+    apt-get install -y nodejs
+
+# Install tox
+RUN pip3 install --no-cache-dir tox
+
+# Copy over everything required to run tox
+COPY requirements_test.txt .
+COPY setup.cfg .
+COPY setup.py .
+COPY tox.ini .
+COPY homeassistant/const.py homeassistant/const.py
+
+# Get all dependencies, this may fail since some dependencies are having issues with Python 3.5
+# When these dependencies are fixed, the "|| true" can be removed.
+RUN tox --notest
+
+# END: Development additions
 
 # Copy source
 COPY . .
