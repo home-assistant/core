@@ -189,7 +189,10 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         return STATE_UNKNOWN
 
     def async_query(self, *parameters):
-        """Send a command to the LMS."""
+        """Send a command to the LMS.
+        
+        This method must be run in the event loop and returns a coroutine.
+        """
         return self._lms.async_query(
             *parameters, player=self._id)
 
