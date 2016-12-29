@@ -540,7 +540,7 @@ sendgrid==3.6.3
 sense-hat==2.2.0
 
 # homeassistant.components.media_player.aquostv
-sharp-aquos-rc==0.2
+sharp_aquos_rc==0.3.2
 
 # homeassistant.components.notify.slack
 slacker==0.9.30
