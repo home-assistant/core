@@ -210,7 +210,9 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
 
     def __init__(self, friendly_name, device):
         """Initialize the switch."""
-        super().__init__(friendly_name, device, 1, 0)
+        super().__init__(friendly_name, device, None, None)
+        self._command_on = 1
+        self._command_off = 0
 
     def _sendpacket(self, packet, retry=2):
         """Send packet to device."""
