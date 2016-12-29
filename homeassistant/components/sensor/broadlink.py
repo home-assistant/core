@@ -114,9 +114,7 @@ class BroadlinkData(object):
         self._device = broadlink.a1((ip_addr, 80), mac_addr)
         self._device.timeout = timeout
         self.update = Throttle(interval)(self._update)
-        try:
-            self._device.auth()
-        except socket.timeout:
+        if not self._auth():
             _LOGGER.error("Failed to connect to device.")
 
     def _update(self, retry=2):
@@ -126,8 +124,15 @@ class BroadlinkData(object):
             if retry < 1:
                 _LOGGER.error(error)
                 return
-            try:
-                self._device.auth()
-            except socket.timeout:
-                pass
+            if not self._auth():
+                return
             return self._update(max(0, retry-1))
+
+    def _auth(self, retry=2):
+        try:
+            auth = self._device.auth()
+        except socket.timeout:
+            auth = False
+        if not auth and retry > 0:
+            return self._auth(max(0, retry-1))
+        return auth

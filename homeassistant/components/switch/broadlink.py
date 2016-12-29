@@ -139,8 +139,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class BroadlinkRMSwitch(SwitchDevice):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, friendly_name, device,
-                 command_on=None, command_off=None):
+    def __init__(self, friendly_name, device, command_on, command_off):
         """Initialize the switch."""
         self._name = friendly_name
         self._state = False
@@ -209,11 +208,9 @@ class BroadlinkRMSwitch(SwitchDevice):
 class BroadlinkSP1Switch(BroadlinkRMSwitch):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, friendly_name, command_on, command_off, device):
+    def __init__(self, friendly_name, device):
         """Initialize the switch."""
-        super().__init__(friendly_name, command_on, command_off, device)
-        self._command_on = 1
-        self._command_off = 0
+        super().__init__(friendly_name, device, 1, 0)
 
     def _sendpacket(self, packet, retry=2):
         """Send packet to device."""
@@ -232,9 +229,9 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
 class BroadlinkSP2Switch(BroadlinkSP1Switch):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, friendly_name, command_on, command_off, device):
+    def __init__(self, friendly_name, device):
         """Initialize the switch."""
-        super().__init__(friendly_name, command_on, command_off, device)
+        super().__init__(friendly_name, device)
 
     @property
     def assumed_state(self):
