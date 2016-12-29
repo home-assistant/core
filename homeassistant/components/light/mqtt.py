@@ -35,6 +35,9 @@ CONF_BRIGHTNESS_SCALE = 'brightness_scale'
 CONF_COLOR_TEMP_STATE_TOPIC = 'color_temp_state_topic'
 CONF_COLOR_TEMP_COMMAND_TOPIC = 'color_temp_command_topic'
 CONF_COLOR_TEMP_VALUE_TEMPLATE = 'color_temp_value_template'
+CONF_COLOR_TEMP_COMMAND_TEMPLATE = 'color_temp_command_template'
+
+CONF_COLOR_TEMP_COMMAND = 'color_temp_command'
 
 DEFAULT_NAME = 'MQTT Light'
 DEFAULT_PAYLOAD_ON = 'ON'
@@ -51,6 +54,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_COLOR_TEMP_COMMAND_TEMPLATE): cv.template,
     vol.Optional(CONF_RGB_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_RGB_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_RGB_VALUE_TEMPLATE): cv.template,
@@ -85,7 +89,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
             CONF_BRIGHTNESS: config.get(CONF_BRIGHTNESS_VALUE_TEMPLATE),
             CONF_RGB: config.get(CONF_RGB_VALUE_TEMPLATE),
-            CONF_COLOR_TEMP: config.get(CONF_COLOR_TEMP_VALUE_TEMPLATE)
+            CONF_COLOR_TEMP: config.get(CONF_COLOR_TEMP_VALUE_TEMPLATE),
+            CONF_COLOR_TEMP+"_COMMAND": config.get(CONF_COLOR_TEMP_COMMAND_TEMPLATE)
         },
         config.get(CONF_QOS),
         config.get(CONF_RETAIN),
@@ -136,6 +141,8 @@ class MqttLight(Light):
                 tpl.hass = hass
                 templates[key] = tpl.render_with_possible_json_value
 
+        self.templates = templates
+
         def state_received(topic, payload, qos):
             """A new MQTT message has been received."""
             payload = templates[CONF_STATE](payload)
@@ -184,7 +191,8 @@ class MqttLight(Light):
 
         def color_temp_received(topic, payload, qos):
             """A new MQTT message for color temp has been received."""
-            self._color_temp = int(templates[CONF_COLOR_TEMP](payload))
+            self._color_temp = int(float((templates[CONF_COLOR_TEMP](payload))))
+            _LOGGER.debug("Received color temp: %f, converts to %d", float(payload), self._color_temp)
             self.update_ha_state()
 
         if self._topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None:
@@ -266,7 +274,8 @@ class MqttLight(Light):
 
         if ATTR_COLOR_TEMP in kwargs and \
            self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
-            color_temp = int(kwargs[ATTR_COLOR_TEMP])
+            color_temp = int(float((self.templates[CONF_COLOR_TEMP+"_COMMAND"](str(kwargs[ATTR_COLOR_TEMP])))))
+            _LOGGER.debug("Command temp %f mired, coverts to %d K" % (kwargs[ATTR_COLOR_TEMP], color_temp))
             mqtt.publish(
                 self._hass, self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC],
                 color_temp, self._qos, self._retain)
@@ -283,7 +292,7 @@ class MqttLight(Light):
             should_update = True
 
         if should_update:
-            self.schedule_update_ha_state()
+            self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -293,4 +302,4 @@ class MqttLight(Light):
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False
-            self.schedule_update_ha_state()
+            self.update_ha_state()
