@@ -35,7 +35,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MODE, default='rgbw'):
         vol.All(cv.string, vol.In(['rgbw', 'rgb'])),
     vol.Optional(CONF_PROTOCOL, default=None):
-        vol.All(cv.string, vol.In(['LEDENET'])),
+        vol.All(cv.string, vol.In(['ledenet'])),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
