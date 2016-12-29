@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 properties.get(CONF_DELAY, DEFAULT_DELAY),
             ))
     if not timers:
-        _LOGGER.error("No countdown timers added. Check configuration.")
+        _LOGGER.info("No countdown timers added. Check configuration.")
         return False
 
     add_devices_callback(timers)
@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 class CountdownTimer(Entity):
     """
-    Binary sensor(s) and a switch(light) once turned on by sensor
+    Binary sensor(s) and a switch(light) once turned on by a sensor
     turns off after a delay.
     """
 
@@ -78,7 +78,6 @@ class CountdownTimer(Entity):
         self._delay = delay  # minutes
         self._count_down = 0
         self._state = 0
-        self._all_entities = sensors + "," + switch_id
         self._timer = Timer(60, self.timer_timeout)  # One minute
         track_state_change(self._hass, self._sensors.split(','),
                            self._sensor_changed)
