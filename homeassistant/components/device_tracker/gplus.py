@@ -1,7 +1,5 @@
-""".
-
+"""
 Get location from Google Plus Geolocation API.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.gplus/
 """
@@ -36,7 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HSID): cv.string,
     vol.Required(CONF_FREQ): cv.string,
     vol.Required(CONF_HOME_URL): cv.string,
-    #    vol.Optional(CONF_ACCURACY, default=100): cv.positive_int,
     vol.Optional(CONF_INTERVAL, default=1): vol.All(cv.positive_int,
                                                     vol.Range(min=1)),
     vol.Optional(CONF_SCAN_INTERVAL, default=10): vol.All(cv.positive_int,
@@ -49,7 +46,6 @@ def setup_scanner(hass, config, see):
     import requests
 
 
-#    max_accuracy = config[CONF_ACCURACY]
     conf_id = config[CONF_ID]
     url = config[CONF_URL]
     cookie_sid = config[CONF_SID]
@@ -60,7 +56,8 @@ def setup_scanner(hass, config, see):
     hurl = config[CONF_HOME_URL]
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0',
+        'User-Agent':
+            'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
         'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
@@ -79,20 +76,18 @@ def setup_scanner(hass, config, see):
         'at': None,
     }
 
-    #update data['at'], which may change every 14 days.
-    #Otherwise, Google rejects location queries.
-    #visit the Google plus profile page, and extract the field from the first script in it
     def update_data_at():
+        """ Update data['at'], which may change every 14 days.
+        Otherwise, Google rejects location queries.
+        Visit the Google plus profile page, and extract the field from the first script in it
+        """
         api_request = requests.get(
             hurl, headers=headers, cookies=cookies)
         soup = BeautifulSoup(api_request.text, 'html.parser')
         scripts = soup.find_all('script')
         script = (scripts[0]).contents[0]
-        #print(script.body.attrs)
-        #_LOGGER.error(script)
         sdict = json.loads(script[25:-1])
         data['at'] = sdict['SNlM0e']
-        #_LOGGER.info(data['at'])
 
     def get_position(_):
         """Get device position."""
@@ -100,28 +95,26 @@ def setup_scanner(hass, config, see):
             update_data_at()
         api_request = requests.post(url, headers=headers, cookies=cookies,
                                     data=data, timeout=15)
-        if api_request.ok:
-            ans = api_request.text
-            matched_lines = [line for line in ans.split(
-                '\n') if "www.google.com/maps/" in line]
-            if len(matched_lines) == 0:
-                _LOGGER.error("Google didn't send the location. Updating data['at']")
-                update_data_at()#will try again next time.
-            else:
-                line = matched_lines[0]
-                words = line.split(',')
-                if len(words) > 15:
-                    latitude = words[12]
-                    longitude = words[13]
-                    accuracy = words[15]
-                    see(
-                        dev_id=conf_id,
-                        gps=(latitude, longitude),
-                        gps_accuracy=int(accuracy),)
-                else:
-                    _LOGGER.error("Unexpected. Please file an issue.")
+        if not api_request.ok:
+            _LOGGER.error("No response received to the location query")
+        ans = api_request.text
+        matched_lines = [line for line in ans.split(
+            '\n') if "www.google.com/maps/" in line]
+        if len(matched_lines) == 0:
+            _LOGGER.error("Google didn't send the location. Updating data['at']")
+            update_data_at()#the new value will be used at the next call.
         else:
-            _LOGGER.error("Unable to update device position")
+            line = matched_lines[0]
+            words = line.split(',')
+            if len(words) <= 15:
+                _LOGGER.error("Unexpected response to location query. Please file an issue.")
+            latitude = words[12]
+            longitude = words[13]
+            accuracy = words[15]
+            see(
+                dev_id=conf_id,
+                gps=(latitude, longitude),
+                gps_accuracy=int(accuracy),)
 
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, get_position)
