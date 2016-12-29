@@ -57,7 +57,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     else:
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
-    
+
     # In case the port is not discovered
     if port is None:
         port = DEFAULT_PORT
@@ -194,7 +194,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def async_query(self, *parameters):
         """Send a command to the LMS.
-        
+
         This method must be run in the event loop and returns a coroutine.
         """
         return self._lms.async_query(
