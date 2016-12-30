@@ -1,5 +1,6 @@
 """
-homeassistant.components.device_tracker.tado
+homeassistant.components.device_tracker.tado.
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Device tracker platform that supports presence detection.
 The detection is based on geofencing enabled devices used with Tado.
@@ -31,7 +32,7 @@ REQUIREMENTS = []
 
 
 def get_scanner(hass, config):
-    """ Validates config and returns a Tado scanner. """
+    """Validate config and returns a Tado scanner."""
     info = config[DOMAIN]
 
     if info.get(CONF_USERNAME) is None or info.get(CONF_PASSWORD) is None:
@@ -47,9 +48,10 @@ Device = namedtuple("Device", ["mac", "name"])
 
 
 class TadoDeviceScanner(object):
-    """ This class gets geofenced devices from Tado. """
+    """This class gets geofenced devices from Tado."""
 
     def __init__(self, config):
+        """Initialize the scanner."""
         self.last_results = []
 
         self.username = config[CONF_USERNAME]
@@ -60,17 +62,13 @@ class TadoDeviceScanner(object):
         _LOGGER.info("Tado scanner initialized")
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device ids.
-        """
-
+        """Scan for new devices and return a list containing found device ids."""
         self._update_info()
 
         return [device.mac for device in self.last_results]
 
     def get_device_name(self, mac):
-        """ Returns the name of the given device or None if we don't know. """
-
+        """Return the name of the given device or None if we don't know."""
         filter_named = [device.name for device in self.last_results
                         if device.mac == mac]
 
@@ -82,7 +80,8 @@ class TadoDeviceScanner(object):
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
         """
-        Query's Tado for device marked as at home.
+        Query Tado for device marked as at home.
+
         Returns boolean if scanning successful.
         """
         _LOGGER.debug("Requesting Tado")
