@@ -10,8 +10,7 @@ VOLUME /config
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-#RUN pip3 install --no-cache-dir colorlog cython mysqlclient psycopg2 uvloop
-RUN pip3 install --no-cache-dir colorlog cython mysqlclient psycopg2
+RUN pip3 install --no-cache-dir colorlog cython mysqlclient psycopg2 uvloop
 
 # For the nmap tracker, bluetooth tracker, Z-Wave, tellstick
 RUN echo "deb http://download.telldus.com/debian/ stable main" >> /etc/apt/sources.list.d/telldus.list && \
@@ -45,9 +44,8 @@ COPY setup.py .
 COPY tox.ini .
 COPY homeassistant/const.py homeassistant/const.py
 
-# Get all dependencies, this may fail since some dependencies are having issues with Python 3.5
-# When these dependencies are fixed, the "|| true" can be removed.
-RUN tox --notest
+# Get all dependencies
+RUN tox -e py35 --notest
 
 # END: Development additions
 
