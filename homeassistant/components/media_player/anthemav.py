@@ -62,17 +62,24 @@ class AnthemAVR(MediaPlayerDevice):
         self.hass = hass
         self._host = host
         self._port = port
+        self._connected = False
 
     def poll_and_return(self,property,dval):
-        _LOGGER.debug('p&r for '+property)
         if self.reader:
-            _LOGGER.debug('reader exists, should I risk it?')
             pval = getattr(self.reader, property)
-            _LOGGER.debug('And here it is: '+str(pval))
+            _LOGGER.debug('query for '+property+' returned from avr object: '+str(pval))
             return pval
         else:
-            _LOGGER.debug('Punting and sending: '+str(dval))
+            _LOGGER.debug('query for '+property+' returned from fallback: '+str(dval))
             return dval
+
+    def poll_or_null(self,property):
+        if self.reader:
+            pval = getattr(self.reader, property)
+            _LOGGER.debug('query for '+property+' returned from avr object: '+str(pval))
+            return pval
+        else:
+            return 
 
     @property
     def reader(self):
@@ -87,23 +94,26 @@ class AnthemAVR(MediaPlayerDevice):
 
     @property
     def supported_media_commands(self):
-        _LOGGER.debug('query for supported media commands')
         return SUPPORT_ANTHEMAV
 
     @property
     def name(self):
-        _LOGGER.debug('query for name')
-        return "Anthem AVR"
+        return self.poll_and_return('model',DEFAULT_NAME)
 
     @property
     def state(self):
-        _LOGGER.debug('query for state')
-        return STATE_ON
+        pwrstate = self.poll_or_null('power')
+
+        if pwrstate == True:
+            return STATE_ON
+        elif pwrstate == False:
+            return STATE_OFF
+        else:
+            return STATE_UNKNOWN
 
     @property
     def volume_level(self):
-        _LOGGER.debug('query for volume')
-        self.poll_and_return('volume_as_percentage',0.0)
+        return self.poll_and_return('volume_as_percentage',0.0)
 
     @property
     def media_title(self):
@@ -128,10 +138,16 @@ class AnthemAVR(MediaPlayerDevice):
         _LOGGER.debug('Select %s',source)
 
     def turn_off(self):
-        _LOGGER.debug('turn me off')
+        if hasattr(self, 'reader'):
+            self.reader.power = False
+        else:
+            _LOGGER.warn('Cannot issue command to missing AVR')
 
     def turn_on(self):
-        _LOGGER.debug('turn me on')
+        if hasattr(self, 'reader'):
+            self.reader.power = True
+        else:
+            _LOGGER.warn('Cannot issue command to missing AVR')
 
     def volume_up(self):
         _LOGGER.debug('volume up')
@@ -150,5 +166,6 @@ class AnthemAVR(MediaPlayerDevice):
     def async_update(self):
         _LOGGER.info('async_update invoked')
         if self.reader:
+            self.reader.ping()
             _LOGGER.warn(self.reader.staticstring)
 
