@@ -62,7 +62,7 @@ class TadoDeviceScanner(object):
         _LOGGER.info("Tado scanner initialized")
 
     def scan_devices(self):
-        """Scan for new devices and return a list containing found device ids."""
+        """Scan for devices and return a list containing found device ids."""
         self._update_info()
 
         return [device.mac for device in self.last_results]
