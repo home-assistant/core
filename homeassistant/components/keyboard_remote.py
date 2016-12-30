@@ -1,5 +1,5 @@
 """
-Recieve signals from a keyboard and use it as a remote control.
+Receive signals from a keyboard and use it as a remote control.
 
 This component allows to use a keyboard as remote control. It will
 fire ´keyboard_remote_command_received´ events witch can then be used
@@ -12,7 +12,7 @@ because `evdev` will block it.
 Example:
   keyboard_remote:
     device_descriptor: '/dev/input/by-id/foo'
-    key_value: 'key_up' # optional alternaive 'key_down' and 'key_hold'
+    type: 'key_up' # optional alternaive 'key_down' and 'key_hold'
     # be carefull, 'key_hold' fires a lot of events
 
   and an automation rule to bring breath live into it.
@@ -33,6 +33,7 @@ Example:
 import threading
 import logging
 import os
+import time
 
 import voluptuous as vol
 
@@ -65,7 +66,7 @@ def setup(hass, config):
     """Setup keyboard_remote."""
     config = config.get(DOMAIN)
     device_descriptor = config.get(DEVICE_DESCRIPTOR)
-    if not device_descriptor or not os.path.isfile(device_descriptor):
+    if not device_descriptor or not os.path.exists(device_descriptor):
         id_folder = '/dev/input/by-id/'
         _LOGGER.error(
             'A device_descriptor must be defined. '
@@ -112,16 +113,42 @@ class KeyboardRemote(threading.Thread):
         self.stopped = threading.Event()
         self.hass = hass
         self.key_value = key_value
+        self.device_descriptor = device_descriptor
 
     def run(self):
         """Main loop of the KeyboardRemote."""
-        from evdev import categorize, ecodes
+        from evdev import categorize, ecodes, InputDevice
         _LOGGER.debug('KeyboardRemote interface started for %s', self.dev)
 
         self.dev.grab()
+        keyboard_connected = True
 
         while not self.stopped.isSet():
-            event = self.dev.read_one()
+
+            # Is keyboard still there?
+            keyboard_still_connected = os.path.exists(self.device_descriptor)
+
+            # still disconnected
+            if not keyboard_connected and not keyboard_still_connected:
+                continue
+
+            # keyboard reconnected
+            if not keyboard_connected and keyboard_still_connected:
+                _LOGGER.debug('KeyboardRemote: keyboard re-connected, %s',
+                              self.device_descriptor)
+                time.sleep(1)  # Time to allow ACL permissions to kick in
+                self.dev = InputDevice(self.device_descriptor)
+                self.dev.grab()
+                keyboard_connected = True
+
+            try:
+                event = self.dev.read_one()
+            except IOError:  # Keyboard Disconnected
+                keyboard_connected = False
+                _LOGGER.debug(
+                    'KeyboardRemote: keyboard disconnected, %s',
+                    self.device_descriptor)
+                continue
 
             if not event:
                 continue
