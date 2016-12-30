@@ -178,7 +178,7 @@ hikvision==0.4
 http://github.com/technicalpickles/python-nest/archive/e6c9d56a8df455d4d7746389811f2c1387e8cb33.zip#python-nest==3.0.3
 
 # homeassistant.components.light.flux_led
-https://github.com/Danielhiversen/flux_led/archive/0.10.zip#flux_led==0.10
+https://github.com/Danielhiversen/flux_led/archive/0.11.zip#flux_led==0.11
 
 # homeassistant.components.switch.tplink
 https://github.com/GadgetReactor/pyHS100/archive/45fc3548882628bcde3e3d365db341849457bef2.zip#pyHS100==0.2.2
@@ -220,9 +220,6 @@ https://github.com/jabesq/pybotvac/archive/v0.0.1.zip#pybotvac==0.0.1
 
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
-
-# homeassistant.components.qwikswitch
-https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
 
 # homeassistant.components.media_player.russound_rnet
 https://github.com/laf/russound/archive/0.1.6.zip#russound==0.1.6
@@ -450,6 +447,9 @@ pynx584==0.2
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
 pyowm==2.6.0
+
+# homeassistant.components.qwikswitch
+pyqwikswitch==0.4
 
 # homeassistant.components.switch.acer_projector
 pyserial==3.1.1
