@@ -2,7 +2,8 @@
 homeassistant.components.device_tracker.tado
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Device tracker platform that supports presence detection.
-The detection is based on geofencing enabled devices used with Tado 'The Smart Thermostat'.
+The detection is based on geofencing enabled devices used with Tado.
+Tado is a Smart Thermostat device.
 """
 import logging
 from datetime import timedelta
@@ -53,6 +54,7 @@ class TadoDeviceScanner(object):
 
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.tadoapiurl = 'https://my.tado.com/api/v2/me'
 
         self.success_init = self._update_info()
         _LOGGER.info("Tado scanner initialized")
@@ -87,18 +89,20 @@ class TadoDeviceScanner(object):
 
         last_results = []
         credentials = {'username': self.username, 'password': self.password}
-        tadoresponse = requests.get('https://my.tado.com/api/v2/me', params=credentials)
+        tadoresponse = requests.get(self.tadoapiurl, params=credentials)
 
-        # If reponse was not succesfull, raise exception
+        # If response was not successful, raise exception
         tadoresponse.raise_for_status()
 
         tadojson = tadoresponse.json()
 
-        # Find mobileDevices that have geofencing enabled, and are currently at home
+        # Find devices that have geofencing enabled, and are currently at home
         for mobiledevice in tadojson['mobileDevices']:
             if 'location' in mobiledevice:
                 if mobiledevice['location']['atHome']:
-                    last_results.append(Device(mobiledevice['id'], mobiledevice['name']))
+                    deviceid = mobiledevice['id']
+                    devicename = mobiledevice['name']
+                    last_results.append(Device(deviceid, devicename))
 
         self.last_results = last_results
 
