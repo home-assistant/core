@@ -40,19 +40,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    _LOGGER.info('Provisioning Anthem AVR device at '+host+':'+str(port))
 
-    devices = [AnthemAVR(hass,host,port)]
+    device = AnthemAVR(hass,host,port)
 
-    yield from async_add_devices(devices)
+    yield from async_add_devices([device])
 
     def update_entities_message(connobj,message):
         _LOGGER.info('update_entities_message'+message)
-        for device in devices:
-            device.reader = connobj
-            device.message = message
-            hass.async_add_job(device.async_update_ha_state)
+        device.reader = connobj
+        hass.async_add_job(device.async_update_ha_state)
 
     avr = create_anthemav_reader(host,port,update_entities_message, loop=hass.loop)
+
     transport, _ = yield from hass.loop.create_task(avr)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, transport.close)
 
@@ -63,9 +63,23 @@ class AnthemAVR(MediaPlayerDevice):
         self._host = host
         self._port = port
 
+    def poll_and_return(self,property,dval):
+        _LOGGER.debug('p&r for '+property)
+        if self.reader:
+            _LOGGER.debug('reader exists, should I risk it?')
+            pval = getattr(self.reader, property)
+            _LOGGER.debug('And here it is: '+str(pval))
+            return pval
+        else:
+            _LOGGER.debug('Punting and sending: '+str(dval))
+            return dval
+
     @property
     def reader(self):
-        return self._reader
+        if hasattr(self, '_reader'):
+            return self._reader
+        else:
+            return
 
     @reader.setter
     def reader(self,value):
@@ -85,6 +99,11 @@ class AnthemAVR(MediaPlayerDevice):
     def state(self):
         _LOGGER.debug('query for state')
         return STATE_ON
+
+    @property
+    def volume_level(self):
+        _LOGGER.debug('query for volume')
+        self.poll_and_return('volume_as_percentage',0.0)
 
     @property
     def media_title(self):
@@ -116,10 +135,10 @@ class AnthemAVR(MediaPlayerDevice):
 
     def volume_up(self):
         _LOGGER.debug('volume up')
-        return 0.5
 
     def volume_down(self):
         _LOGGER.debug('volume down')
+
 
     def set_volume_level(self, volume):
         _LOGGER.debug('Request to set volume to %f',volume)
