@@ -142,6 +142,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         if platform is None:
             return
 
+        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:
             scanner = None
             setup = None
@@ -160,14 +161,13 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
             else:
                 raise HomeAssistantError("Invalid device_tracker platform.")
 
-            if scanner is None and not setup:
-                _LOGGER.error('Error setting up platform %s', p_type)
-                return
-
-            # setup scanner
             if scanner:
                 yield from async_setup_scanner_platform(
                     hass, p_config, scanner, tracker.async_see)
+                return
+
+            if not setup:
+                _LOGGER.error('Error setting up platform %s', p_type)
                 return
 
         except Exception:  # pylint: disable=broad-except
