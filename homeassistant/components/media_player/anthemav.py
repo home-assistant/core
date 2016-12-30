@@ -45,13 +45,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     yield from async_add_devices(devices)
 
-    def update_entities_message(message):
+    def update_entities_message(connobj,message):
         _LOGGER.info('update_entities_message'+message)
         for device in devices:
+            device.reader = connobj
             device.message = message
             hass.async_add_job(device.async_update_ha_state)
 
-    # conn = create_anthemav_reader(args.host,args.port,print_callback,loop=loop)
     avr = create_anthemav_reader(host,port,update_entities_message, loop=hass.loop)
     transport, _ = yield from hass.loop.create_task(avr)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, transport.close)
@@ -62,6 +62,14 @@ class AnthemAVR(MediaPlayerDevice):
         self.hass = hass
         self._host = host
         self._port = port
+
+    @property
+    def reader(self):
+        return self._reader
+
+    @reader.setter
+    def reader(self,value):
+        self._reader = value
 
     @property
     def supported_media_commands(self):
@@ -122,4 +130,6 @@ class AnthemAVR(MediaPlayerDevice):
     @asyncio.coroutine
     def async_update(self):
         _LOGGER.info('async_update invoked')
+        if self.reader:
+            _LOGGER.warn(self.reader.staticstring)
 
