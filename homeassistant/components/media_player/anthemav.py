@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON, STATE_UNKNOWN,
-    EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_STOP, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
@@ -34,13 +34,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT): cv.port,
+    vol.Optional(CONF_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=1))
     })
+
+SCAN_INTERVAL = 120
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    _LOGGER.info('Provisioning Anthem AVR device at '+host+':'+str(port))
+
+    SCAN_INTERVAL = config.get(CONF_SCAN_INTERVAL) or 120
+
+    _LOGGER.info('Provisioning Anthem AVR device at '+host+':'+str(port)+' with a '+str(SCAN_INTERVAL)+' second scan interval')
 
     device = AnthemAVR(hass,host,port)
 
