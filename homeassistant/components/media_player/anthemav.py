@@ -131,29 +131,23 @@ class AnthemAVR(MediaPlayerDevice):
 
     @property
     def source(self):
-        return "Source"
+        return self.poll_and_return('input_name',"Unknown")
 
     @property
     def source_list(self):
-        return ['Source', 'Moo', 'Cow']
+        return self.poll_and_return('input_list',["Unknown"])
 
     def media_play(self):
         return
 
     def select_source(self, source):
-        _LOGGER.debug('Select %s',source)
+        self.update_avr('input_name',source)
 
     def turn_off(self):
-        if hasattr(self, 'reader'):
-            self.reader.power = False
-        else:
-            _LOGGER.warn('Cannot issue command to missing AVR')
+        self.update_avr('power',False)
 
     def turn_on(self):
-        if hasattr(self, 'reader'):
-            self.reader.power = True
-        else:
-            _LOGGER.warn('Cannot issue command to missing AVR')
+        self.update_avr('power',True)
 
     def volume_up(self):
         _LOGGER.debug('volume up')
@@ -161,12 +155,18 @@ class AnthemAVR(MediaPlayerDevice):
     def volume_down(self):
         _LOGGER.debug('volume down')
 
-
     def set_volume_level(self, volume):
-        _LOGGER.debug('Request to set volume to %f',volume)
+        self.update_avr('volume_as_percentage',volume)
         
     def mute_volume(self, mute):
         _LOGGER.debug('Request to mute %s',str(mute))
+
+    def update_avr(self,property,value):
+        _LOGGER.info('Sending command to AVR: set '+property+' to '+str(value))
+        if hasattr(self, 'reader'):
+            setattr(self.reader, property,value)
+        else:
+            _LOGGER.warn('Unable to issue command to missing AVR')
 
     @asyncio.coroutine
     def async_update(self):
