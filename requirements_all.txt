@@ -525,7 +525,7 @@ radiotherm==1.2
 rxv==0.4.0
 
 # homeassistant.components.media_player.samsungtv
-samsungctl==0.5.1
+samsungctl==0.6.0
 
 # homeassistant.components.sensor.deutsche_bahn
 schiene==0.18
