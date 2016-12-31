@@ -1,15 +1,14 @@
 """
-Support for the Netatmo Welcome camera.
-
+Support for the Netatmo cameras.
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.netatmo/
+https://home-assistant.io/components/camera.netatmo/.
 """
 import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.netatmo import WelcomeData
+from homeassistant.components.netatmo import CameraData
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.loader import get_component
 from homeassistant.helpers import config_validation as cv
@@ -30,41 +29,43 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup access to Netatmo Welcome cameras."""
+    """Setup access to Netatmo cameras."""
     netatmo = get_component('netatmo')
     home = config.get(CONF_HOME)
     import lnetatmo
     try:
-        data = WelcomeData(netatmo.NETATMO_AUTH, home)
+        data = CameraData(netatmo.NETATMO_AUTH, home)
         for camera_name in data.get_camera_names():
+            camera_type = data.get_camera_type(camera=camera_name, home=home)
             if CONF_CAMERAS in config:
                 if config[CONF_CAMERAS] != [] and \
                    camera_name not in config[CONF_CAMERAS]:
                     continue
-            add_devices([WelcomeCamera(data, camera_name, home)])
+            add_devices([NetatmoCamera(data, camera_name, home, camera_type)])
     except lnetatmo.NoDevice:
         return None
 
 
-class WelcomeCamera(Camera):
-    """Representation of the images published from Welcome camera."""
+class NetatmoCamera(Camera):
+    """Representation of the images published from a Netatmo camera."""
 
-    def __init__(self, data, camera_name, home):
+    def __init__(self, data, camera_name, home, camera_type):
         """Setup for access to the Netatmo camera images."""
-        super(WelcomeCamera, self).__init__()
+        super(NetatmoCamera, self).__init__()
         self._data = data
         self._camera_name = camera_name
         if home:
             self._name = home + ' / ' + camera_name
         else:
             self._name = camera_name
-        camera_id = data.welcomedata.cameraByName(camera=camera_name,
+        camera_id = data.camera_data.cameraByName(camera=camera_name,
                                                   home=home)['id']
         self._unique_id = "Welcome_camera {0} - {1}".format(self._name,
                                                             camera_id)
-        self._vpnurl, self._localurl = self._data.welcomedata.cameraUrls(
+        self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
             camera=camera_name
             )
+        self._cameratype = camera_type
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -79,14 +80,46 @@ class WelcomeCamera(Camera):
             _LOGGER.error('Welcome VPN url changed: %s', error)
             self._data.update()
             (self._vpnurl, self._localurl) = \
-                self._data.welcomedata.cameraUrls(camera=self._camera_name)
+                self._data.camera_data.cameraUrls(camera=self._camera_name)
             return None
         return response.content
 
+    def camera_stream(self):
+        """Return a stream response from the camera."""
+        try:
+            if self._localurl:
+                response = requests.get('{0}/live/index_local.m3u8'.format(
+                    self._localurl), timeout=10)
+            else:
+                response = requests.get('{0}//live/index.m3u8'.format(
+                    self._vpnurl), timeout=10)
+        except requests.exceptions.RequestException as error:
+            _LOGGER.error('Welcome VPN url changed: %s', error)
+            self._data.update()
+            (self._vpnurl, self._localurl) = \
+                self._data.camera_data.cameraUrls(camera=self._camera_name)
+            return None
+        return response
+
     @property
     def name(self):
-        """Return the name of this Netatmo Welcome device."""
+        """Return the name of this Netatmo camera device."""
         return self._name
+
+    @property
+    def brand(self):
+        """Camera brand."""
+        return "Netatmo"
+
+    @property
+    def model(self):
+        """Camera model."""
+        if self._cameratype == "NOC":
+            return "Presence"
+        elif self._cameratype == "NACamera":
+            return "Welcome"
+        else:
+            return None
 
     @property
     def unique_id(self):
