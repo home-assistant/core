@@ -1,6 +1,8 @@
 """
 Support for the Netatmo binary sensors.
+
 The binary sensors based on events seen by the Netatmo cameras.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.netatmo/.
 """
