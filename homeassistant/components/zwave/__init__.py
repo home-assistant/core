@@ -474,9 +474,9 @@ def setup(hass, config):
         node = NETWORK.nodes[node_id]
         param = service.data.get(const.ATTR_CONFIG_PARAMETER)
         node.set_config_param(param, value, size)
-        _LOGGER.info("Config parameter %s on Node %s : %s"
+        _LOGGER.info("Config parameter %s on Node %s : %s",
                      param, node_id, get_config_value(node, param))
-        
+
     def change_association(service):
         """Change an association in the zwave network."""
         association_type = service.data.get(const.ATTR_ASSOCIATION)
