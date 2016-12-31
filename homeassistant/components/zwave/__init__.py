@@ -473,7 +473,6 @@ def setup(hass, config):
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = NETWORK.nodes[node_id]
         param = service.data.get(const.ATTR_CONFIG_PARAMETER)
-        node.set_config_param(param, value, size)
         _LOGGER.info("Config parameter %s on Node %s : %s",
                      param, node_id, get_config_value(node, param))
 
