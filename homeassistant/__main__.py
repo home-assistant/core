@@ -356,7 +356,8 @@ def try_to_restart() -> None:
 
 def main() -> int:
     """Start Home Assistant."""
-    monkey_patch_asyncio()
+    if not sys.version_info >= (3, 5):
+        monkey_patch_asyncio()
 
     validate_python()
 
