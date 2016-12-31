@@ -136,6 +136,11 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int),
     vol.Optional(const.ATTR_CONFIG_SIZE): vol.Coerce(int)
 })
+PRINT_CONFIG_PARAMETER_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
+})
+
 CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_ASSOCIATION): cv.string,
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -463,6 +468,15 @@ def setup(hass, config):
         _LOGGER.info("Setting config parameter %s on Node %s "
                      "with value %s and size=%s", param, node_id, value, size)
 
+    def print_config_parameter(service):
+        """Print a config parameter from a node."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        node = NETWORK.nodes[node_id]
+        param = service.data.get(const.ATTR_CONFIG_PARAMETER)
+        node.set_config_param(param, value, size)
+        _LOGGER.info("Config parameter %s on Node %s : %s"
+                     param, node_id, get_config_value(node, param))
+        
     def change_association(service):
         """Change an association in the zwave network."""
         association_type = service.data.get(const.ATTR_ASSOCIATION)
@@ -548,6 +562,11 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_SET_CONFIG_PARAMETER],
                                schema=SET_CONFIG_PARAMETER_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_PRINT_CONFIG_PARAMETER,
+                               print_config_parameter,
+                               descriptions[
+                                   const.SERVICE_PRINT_CONFIG_PARAMETER],
+                               schema=PRINT_CONFIG_PARAMETER_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_CHANGE_ASSOCIATION,
                                change_association,
                                descriptions[
