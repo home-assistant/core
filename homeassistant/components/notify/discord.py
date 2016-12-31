@@ -1,18 +1,14 @@
-"""
-Discord platform for notify component.
-"""
+"""Discord platform for notify component."""
 import logging
 import asyncio
-
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.notify import (
     ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiohttp==1.1.0','websockets','discord.py==0.16.0']
+REQUIREMENTS = ['aiohttp==1.1.0', 'websockets', 'discord.py==0.16.0']
 
 CONF_CLIENT_ID = 'client_id'
 
@@ -26,19 +22,19 @@ def get_service(hass, config):
     try:
         client_id=config.get(CONF_CLIENT_ID)
     except RandomError:
-        _LOGGER.error(
-            "Please specify a client ID")
+        _LOGGER.error("Please specify a client ID")
         return None
-    return DiscordNotificationService(hass,client_id)
+    return DiscordNotificationService(hass, client_id)
+
 
 class DiscordNotificationService(BaseNotificationService):
     """Implement the notification service for Discord"""
-    def __init__(self,hass,client_id):
+    def __init__(self, hass, client_id):
         """Initialize the service."""
         self.client_id = client_id
         self.hass = hass
 
-    async def async_send_message(self,message,target):
+    async def async_send_message(self, message,target):
         """Login to Discord and send message"""
         import discord
         discord_bot = discord.Client(loop=self.hass.loop)
@@ -55,6 +51,7 @@ class DiscordNotificationService(BaseNotificationService):
         await discord_bot.logout()
         await discord_bot.close()
 
-    def send_message(self, message=None,target=None, **kwargs):
+    def send_message(self, message=None, target=None, **kwargs):
         """Send a message using Discord"""
-        asyncio.gather(self.async_send_message(message,target),loop=self.hass.loop)
+        asyncio.gather(self.async_send_message(message,target),
+                       loop=self.hass.loop)
