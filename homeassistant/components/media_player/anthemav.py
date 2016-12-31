@@ -21,8 +21,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 
-from anthemav.protocol import create_anthemav_reader
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Anthem AVR"
@@ -52,15 +50,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     yield from async_add_devices([device])
 
-    def update_entities_message(connobj,message):
-        _LOGGER.info('update_entities_message'+message)
-        device.reader = connobj
+    def anthemav_update_callback(message):
+        _LOGGER.info("Reveived update callback from AVR: %s" % message)
         hass.async_add_job(device.async_update_ha_state)
 
-    avr = create_anthemav_reader(host,port,update_entities_message, loop=hass.loop)
+    avr =  yield from anthemav.Connection.create(host=host,port=port,loop=hass.loop,update_callback=anthemav_update_callback)
+    device._avr = avr
 
-    transport, _ = yield from hass.loop.create_task(avr)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, transport.close)
+    _LOGGER.warn('dump_devicedata: '+device.dump_avrdata)
+    _LOGGER.warn('dump_conndata: '+avr.dump_conndata)
+    _LOGGER.warn('dump_rawdata: '+avr.protocol.dump_rawdata)
+
+    #transport, _ = yield from hass.loop.create_task(avr)
+    #hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, transport.close)
 
 class AnthemAVR(MediaPlayerDevice):
     def __init__(self,hass,host,port):
@@ -89,10 +91,9 @@ class AnthemAVR(MediaPlayerDevice):
 
     @property
     def reader(self):
-        if hasattr(self, '_reader'):
-            return self._reader
-        else:
-            return
+        if hasattr(self, '_avr'):
+            if hasattr(self._avr, 'protocol'):
+                return self._avr.protocol
 
     @reader.setter
     def reader(self,value):
@@ -171,7 +172,9 @@ class AnthemAVR(MediaPlayerDevice):
     @asyncio.coroutine
     def async_update(self):
         _LOGGER.info('async_update invoked')
-        if self.reader:
-            self.reader.ping()
-            _LOGGER.warn(self.reader.staticstring)
+        _LOGGER.warn(self.dump_avrdata)
 
+    @property
+    def dump_avrdata(self):
+        attrs = vars(self)
+        return('dump_avrdata: '+', '.join("%s: %s" % item for item in attrs.items()))
