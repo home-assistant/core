@@ -1,8 +1,8 @@
-"""
-Support for Rflink switches.
+"""Support for Rflink switches.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rflink/
+For more details about this platform, please refer to the documentation
+at https://home-assistant.io/components/switch.rflink/
+
 """
 import asyncio
 import logging
@@ -25,7 +25,6 @@ VALID_CONFIG_KEYS = [
 
 def devices_from_config(domain_config, hass=None):
     """Parse config and add rflink switch devices."""
-
     devices = []
     for device_id, config in domain_config.get('devices', {}).items():
         # extract only valid keys from device configuration

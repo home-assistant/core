@@ -6,59 +6,35 @@ automatic sensor creation.
 """
 
 import asyncio
-from unittest.mock import Mock
 
-from homeassistant.bootstrap import async_setup_component
-from tests.common import assert_setup_component
+from ..test_rflink import mock_rflink
 
+DOMAIN = 'sensor'
 
-@asyncio.coroutine
-def mock_rflink(hass, config, monkeypatch):
-    """Create mock Rflink asyncio protocol, test component setup."""
-    transport, protocol = (Mock(), Mock())
-
-    @asyncio.coroutine
-    def create_rflink_connection(*args, **kwargs):
-        return transport, protocol
-    mock_create = Mock(wraps=create_rflink_connection)
-    monkeypatch.setattr(
-        'rflink.protocol.create_rflink_connection',
-        mock_create)
-
-    # verify instanstiation of component with given config
-    with assert_setup_component(1, 'sensor'):
-        yield from async_setup_component(hass, 'sensor', config)
-
-    # hook into mock config for injecting events
-    event_callback = mock_create.call_args_list[0][1]['event_callback']
-    assert event_callback
-
-    return event_callback, mock_create
+CONFIG = {
+    'rflink': {
+        'port': '/dev/ttyABC0',
+        'ignore_devices': ['ignore_wildcard_*', 'ignore_sensor'],
+    },
+    DOMAIN: {
+        'platform': 'rflink',
+        'devices': {
+            'test': {
+                'name': 'test',
+                'sensor_type': 'temperature',
+                'icon': 'mdi:thermometer-lines',
+            },
+        },
+    },
+}
 
 
 @asyncio.coroutine
 def test_default_setup(hass, monkeypatch):
     """Test all basic functionality of the rflink sensor component."""
-
-    config = {
-        'rflink': {
-            'port': '/dev/ttyABC0',
-            'ignore_devices': ['ignore_wildcard_*', 'ignore_sensor'],
-        },
-        'sensor': {
-            'platform': 'rflink',
-            'devices': {
-                'test': {
-                    'name': 'test',
-                    'sensor_type': 'temperature',
-                    'icon': 'mdi:thermometer-lines',
-                },
-            },
-        },
-    }
-
     # setup mocking rflink module
-    event_callback, create = yield from mock_rflink(hass, config, monkeypatch)
+    event_callback, create, _ = yield from mock_rflink(
+        hass, CONFIG, DOMAIN, monkeypatch)
 
     # make sure arguments are passed
     assert create.call_args_list[0][1]['ignore']
@@ -101,19 +77,19 @@ def test_default_setup(hass, monkeypatch):
 @asyncio.coroutine
 def test_new_sensors_group(hass, monkeypatch):
     """New devices should be added to configured group."""
-
     config = {
         'rflink': {
             'port': '/dev/ttyABC0',
         },
-        'sensor': {
+        DOMAIN: {
             'platform': 'rflink',
             'new_devices_group': 'new_rflink_sensors',
         },
     }
 
     # setup mocking rflink module
-    event_callback, _ = yield from mock_rflink(hass, config, monkeypatch)
+    event_callback, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
 
     # test event for new unconfigured sensor
     event_callback({

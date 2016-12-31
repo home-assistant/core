@@ -44,7 +44,6 @@ def entity_class_for_type(entity_type):
 
 def devices_from_config(domain_config, hass=None):
     """Parse config and add rflink switch devices."""
-
     devices = []
     for device_id, config in domain_config.get('devices', {}).items():
         # extract only valid keys from device configuration
@@ -78,19 +77,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         new_devices_group = None
 
     @asyncio.coroutine
-    def add_new_device(event):
+    def add_new_device(ha_event):
         """Check if device is known, otherwise add to list of known devices."""
-        packet = event.data[rflink.ATTR_EVENT]
-        entity_type = entity_type_for_device_id(packet['protocol'])
+        event = ha_event.data[rflink.ATTR_EVENT]
+        entity_type = entity_type_for_device_id(event['id'])
         entity_class = entity_class_for_type(entity_type)
 
-        device_id = rflink.serialize_id(packet)
-        if device_id not in rflink.KNOWN_DEVICE_IDS:
-            rflink.KNOWN_DEVICE_IDS.append(device_id)
-            device = entity_class(device_id, hass)
+        if event['id'] not in rflink.KNOWN_DEVICE_IDS:
+            rflink.KNOWN_DEVICE_IDS.append(event['id'])
+            device = entity_class(event['id'], hass)
             yield from async_add_devices([device])
-            # make sure the packet is processed by the new entity
-            device.match_packet(packet)
+            # make sure the event is processed by the new entity
+            device.match_event(event)
 
             # maybe add to new devices group
             if new_devices_group:
@@ -109,6 +107,7 @@ class RflinkLight(rflink.SwitchableRflinkDevice, Light):
 
 class DimmableRflinkLight(RflinkLight):
     """Rflink light device that support dimming."""
+
     _brightness = 255
 
     def turn_on(self, **kwargs):
@@ -119,7 +118,7 @@ class DimmableRflinkLight(RflinkLight):
 
         # if receiver supports dimming this will turn on the light
         # at the requested dim level
-        self._send_command("dim", self._brightness)
+        self._send_command('dim', self._brightness)
 
         # if the receiving device does not support dimlevel this
         # will ensure it is turned on when full brightness is set

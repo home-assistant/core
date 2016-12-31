@@ -6,12 +6,11 @@ control of Rflink switch devices.
 """
 
 import asyncio
-from unittest.mock import Mock
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
-from tests.common import assert_setup_component
+
+from ..test_rflink import mock_rflink
 
 DOMAIN = 'switch'
 
@@ -20,12 +19,12 @@ CONFIG = {
         'port': '/dev/ttyABC0',
         'ignore_devices': ['ignore_wildcard_*', 'ignore_sensor'],
     },
-    'switch': {
+    DOMAIN: {
         'platform': 'rflink',
         'devices': {
             'protocol_0_0': {
-                    'name': 'test',
-                    'aliasses': ['test_alias_0_0'],
+                'name': 'test',
+                'aliasses': ['test_alias_0_0'],
             },
         },
     },
@@ -33,41 +32,11 @@ CONFIG = {
 
 
 @asyncio.coroutine
-def mock_rflink(hass, config, domain, monkeypatch):
-    """Create mock Rflink asyncio protocol, test component setup."""
-    transport, protocol = (Mock(), Mock())
-
-    @asyncio.coroutine
-    def send_command_ack(*command):
-        return True
-    protocol.send_command_ack = Mock(wraps=send_command_ack)
-
-    @asyncio.coroutine
-    def create_rflink_connection(*args, **kwargs):
-        return transport, protocol
-    mock_create = Mock(wraps=create_rflink_connection)
-    monkeypatch.setattr(
-        'rflink.protocol.create_rflink_connection',
-        mock_create)
-
-    # verify instanstiation of component with given config
-    with assert_setup_component(1, domain):
-        yield from async_setup_component(hass, domain, config)
-
-    # hook into mock config for injecting events
-    event_callback = mock_create.call_args_list[0][1]['event_callback']
-    assert event_callback
-
-    return event_callback, mock_create, protocol
-
-
-@asyncio.coroutine
 def test_default_setup(hass, monkeypatch):
     """Test all basic functionality of the rflink switch component."""
-
     # setup mocking rflink module
     event_callback, create, protocol = yield from mock_rflink(
-        hass, CONFIG, 'switch', monkeypatch)
+        hass, CONFIG, DOMAIN, monkeypatch)
 
     # make sure arguments are passed
     assert create.call_args_list[0][1]['ignore']

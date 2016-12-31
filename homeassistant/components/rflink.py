@@ -55,8 +55,6 @@ def identify_event_type(event):
         return 'light'
     elif 'sensor' in event:
         return 'sensor'
-    elif 'version' in event:
-        return 'informative'
     else:
         return 'unknown'
 
@@ -81,9 +79,7 @@ def async_setup(hass, config):
         _LOGGER.info('event type %s', event_type)
 
         # fire bus event for event type
-        if not event_type:
-            _LOGGER.info(event)
-        elif event_type in RFLINK_EVENT:
+        if event_type in RFLINK_EVENT:
             hass.bus.fire(RFLINK_EVENT[event_type], {ATTR_EVENT: event})
         else:
             _LOGGER.debug('unhandled event of type: %s', event_type)
@@ -151,7 +147,7 @@ class RflinkDevice(Entity):
     # default state
     _state = STATE_UNKNOWN
 
-    def __init__(self, device_id, hass, name=None, aliasses=[], icon=None):
+    def __init__(self, device_id, hass, name=None, aliasses=None, icon=None):
         """Initialize the device."""
         self.hass = hass
 
@@ -161,8 +157,12 @@ class RflinkDevice(Entity):
             self._name = name
         else:
             self._name = device_id
+
         # generate list of device_ids to match against
-        self._aliasses = aliasses
+        if aliasses:
+            self._aliasses = aliasses
+        else:
+            self._aliasses = []
 
         # optional attributes
         self._icon = icon
@@ -178,9 +178,8 @@ class RflinkDevice(Entity):
         (including wildcards).
 
         """
-        device_id = event['id']
-        if not device_id:
-            return
+        device_id = event.get('id', None)
+
         match = device_id == self._device_id
         match_alias = device_id in self._aliasses
         if match or match_alias:
