@@ -21,7 +21,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['anthemav']
+REQUIREMENTS = ['anthemav>=1.1.3']
 
 DEFAULT_NAME = "Anthem AVR"
 
