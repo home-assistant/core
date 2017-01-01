@@ -73,7 +73,6 @@ class AnthemAVR(MediaPlayerDevice):
         self.hass = hass
         self._host = host
         self._port = port
-        self._connected = False
 
     def poll_and_return(self,property,dval):
         if self.reader:
@@ -127,11 +126,11 @@ class AnthemAVR(MediaPlayerDevice):
 
     @property
     def media_title(self):
-        return "Media Title"
+        return self.poll_and_return('input_name','No Source')
 
     @property
     def app_name(self):
-        return "App Name"
+        return self.poll_and_return('video_input_resolution_text','')+' '+self.poll_and_return('audio_input_name','')
 
     @property
     def source(self):
