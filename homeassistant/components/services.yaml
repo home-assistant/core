@@ -156,41 +156,41 @@ verisure:
 
 hdmi_cec:
   send_command:
-    description: Sends CEC command into HDMI CEC capable adapter
+    description: Sends CEC command into HDMI CEC capable adapter.
 
     fields:
       raw:
-        description: Raw CEC command in format "00:00:00:00" where first two digits are source and destination, second byte is command and optional other bytes are command parameters. If raw command specified, other params are ignored.
-        example: '10:36'
+        description: 'Raw CEC command in format "00:00:00:00" where first two digits are source and destination, second byte is command and optional other bytes are command parameters. If raw command specified, other params are ignored.'
+        example: '"10:36"'
 
       src:
-        desctiption: Source of command
-        example: 1
+        desctiption: 'Source of command. Could be decimal number or string with hexadeximal notation: "0x10".'
+        example: '12 or "0xc"'
 
       dst:
-        description: Destination for command
-        example: 5
+        description: 'Destination for command. Could be decimal number or string with hexadeximal notation: "0x10".'
+        example: '5 or "0x5"'
 
       cmd:
-        description: Command
-        example: 144
+        description: 'Command itself. Could be decimal number or string with hexadeximal notation: "0x10".'
+        example: '144 or "0x90"'
 
       att:
-        description: Optional parameters
+        description: Optional parameters.
         example: [0, 2]
 
   update:
     description: Update devices state from network.
 
   volume:
-    description: Increase or decrease volume of system
+    description: Increase or decrease volume of system.
 
     fields:
       up:
-        description: Increases volume x times.
+        description: Increases volume x levels.
         example: 3
       down:
-        description: Decreases volume x times.
+        description: Decreases volume x levels.
         example: 3
       mute: Mutes audio system. Value is ignored.
       unmute: Unmutes audio system. Value is ignored.
@@ -201,7 +201,7 @@ hdmi_cec:
     fields:
       device:
         description: Addres of device to select. Can be entity_id, physical address or alias from confuguration.
-        example: "'switch.hdmi_1' or '1.1.0.0' or '01:10'"
+        example: '"switch.hdmi_1" or "1.1.0.0" or "01:10"'
 
   power_on:
     description: Power on all devices which supports it.

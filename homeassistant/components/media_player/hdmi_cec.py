@@ -43,8 +43,7 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
 
     def send_keypress(self, key):
         """Send keypress to CEC adapter."""
-        from pycec.commands import KeyPressCommand
-        from pycec.commands import KeyReleaseCommand
+        from pycec.commands import KeyPressCommand, KeyReleaseCommand
         _LOGGER.debug("Sending keypress %s to device %s", hex(key),
                       hex(self._logical_address))
         self._device.send_command(
@@ -141,11 +140,8 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
     def _update(self, device=None):
         """Update device status."""
         if device:
-            from pycec.const import STATUS_PLAY
-            from pycec.const import STATUS_STOP
-            from pycec.const import STATUS_STILL
-            from pycec.const import POWER_OFF
-            from pycec.const import POWER_ON
+            from pycec.const import STATUS_PLAY, STATUS_STOP, STATUS_STILL, \
+                POWER_OFF, POWER_ON
             if device.power_status == POWER_OFF:
                 self._state = STATE_OFF
             elif not self.support_pause:
@@ -164,17 +160,15 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
     @property
     def supported_media_commands(self):
         """Flag media commands that are supported."""
-        from pycec.const import TYPE_RECORDER
-        from pycec.const import TYPE_PLAYBACK
+        from pycec.const import TYPE_RECORDER, TYPE_PLAYBACK, TYPE_TUNER, \
+            TYPE_AUDIO
         if self.type_id == TYPE_RECORDER or self.type == TYPE_PLAYBACK:
             return (SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA |
                     SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_PREVIOUS_TRACK |
                     SUPPORT_NEXT_TRACK)
-        from pycec.const import TYPE_TUNER
         if self.type == TYPE_TUNER:
             return (SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA |
                     SUPPORT_PAUSE | SUPPORT_STOP)
-        from pycec.const import TYPE_AUDIO
         if self.type_id == TYPE_AUDIO:
             return (SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP |
                     SUPPORT_VOLUME_MUTE)

@@ -341,11 +341,8 @@ class CecDevice(Entity):
     def _update(self, device=None):
         """Update device status."""
         if device:
-            from pycec.const import STATUS_PLAY
-            from pycec.const import STATUS_STOP
-            from pycec.const import STATUS_STILL
-            from pycec.const import POWER_OFF
-            from pycec.const import POWER_ON
+            from pycec.const import STATUS_PLAY, STATUS_STOP, STATUS_STILL, \
+                POWER_OFF, POWER_ON
             if device.power_status == POWER_OFF:
                 self._state = STATE_OFF
             elif device.status == STATUS_PLAY:
