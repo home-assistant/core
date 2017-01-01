@@ -40,7 +40,7 @@ set_config_parameter:
       description: (Optional) The size of the value. Defaults to 2.
 
 print_config_parameter:
-  description: Prints a W-Wave node config parameter value to log.
+  description: Prints a Z-Wave node config parameter value to log.
   fields:
     node_id:
       description: Node id of the device to print the parameter from (integer).
