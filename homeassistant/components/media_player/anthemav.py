@@ -6,8 +6,6 @@ import logging
 import asyncio
 import voluptuous as vol
 
-import anthemav
-
 DOMAIN = 'anthemav'
 
 from homeassistant.components.media_player import (
@@ -22,6 +20,8 @@ from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+REQUIREMENTS = ['anthemav']
 
 DEFAULT_NAME = "Anthem AVR"
 
@@ -39,6 +39,9 @@ SCAN_INTERVAL = 120
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+
+    import anthemav
+
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
