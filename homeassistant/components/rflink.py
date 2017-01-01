@@ -30,7 +30,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['rflink==0.0.16']
+REQUIREMENTS = ['rflink==0.0.17']
 
 DOMAIN = 'rflink'
 
