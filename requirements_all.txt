@@ -454,6 +454,9 @@ pycmus==0.1.0
 # homeassistant.components.binary_sensor.hikvision
 pydispatcher==2.0.5
 
+# homeassistant.components.sensor.ebox
+pyebox==0.1.0
+
 # homeassistant.components.media_player.emby
 pyemby==0.2
 
