@@ -263,6 +263,7 @@ omit =
     homeassistant/components/sensor/dht.py
     homeassistant/components/sensor/dovado.py
     homeassistant/components/sensor/dte_energy_bridge.py
+    homeassistant/components/sensor/ebox.py
     homeassistant/components/sensor/efergy.py
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/emoncms.py
