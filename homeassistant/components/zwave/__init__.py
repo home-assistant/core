@@ -603,7 +603,12 @@ class ZWaveDeviceEntity:
             const.ATTR_NODE_ID: self._value.node.node_id,
         }
 
-        battery_level = self._value.node.get_battery_level()
+        try:
+            battery_level = self._value.node.get_battery_level()
+        except RuntimeError:
+            # If we get an runtime error the dict has changed while
+            # we was looking for a value, just do it again
+            battery_level = self._value.node.get_battery_level()
 
         if battery_level is not None:
             attrs[ATTR_BATTERY_LEVEL] = battery_level
