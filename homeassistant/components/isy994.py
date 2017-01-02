@@ -4,6 +4,7 @@ Support the ISY-994 controllers.
 For configuration details please visit the documentation for this component at
 https://home-assistant.io/components/isy994/
 """
+from collections import namedtuple
 import logging
 from urllib.parse import urlparse
 import voluptuous as vol
@@ -47,6 +48,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SENSOR_NODES = []
+WEATHER_NODES = []
 NODES = []
 GROUPS = []
 PROGRAMS = {}
@@ -132,6 +134,20 @@ def _categorize_programs() -> None:
                         PROGRAMS[component].append(program)
 
 
+def _categorize_weather() -> None:
+    """Categorize the ISY994 weather data."""
+    global WEATHER_NODES
+
+    items = [item for item in dir(ISY.climate)
+             if item + '_units' in dir(ISY.climate)]
+
+    weather_node = namedtuple('WeatherNode', ('status', 'name', 'uom'))
+
+    WEATHER_NODES = [weather_node(getattr(ISY.climate, item),
+                                  item, getattr(ISY.climate, item + '_units'))
+                     for item in items]
+
+
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ISY 994 platform."""
     isy_config = config.get(DOMAIN)
@@ -177,6 +193,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _categorize_nodes(hidden_identifier, sensor_identifier)
 
     _categorize_programs()
+
+    if ISY.configuration.get('Weather Information'):
+        _categorize_weather()
 
     # Listen for HA stop to disconnect.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
