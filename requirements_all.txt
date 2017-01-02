@@ -426,7 +426,7 @@ pylast==1.6.0
 pylitejet==0.1
 
 # homeassistant.components.sensor.loopenergy
-pyloopenergy==0.0.15
+pyloopenergy==0.0.16
 
 # homeassistant.components.mochad
 pymochad==0.1.1
