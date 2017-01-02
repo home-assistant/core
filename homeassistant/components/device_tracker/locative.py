@@ -8,9 +8,8 @@ import asyncio
 from functools import partial
 import logging
 
-from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE,
-                                 STATE_NOT_HOME,
-                                 HTTP_UNPROCESSABLE_ENTITY)
+from homeassistant.const import (
+    ATTR_LATITUDE, ATTR_LONGITUDE, STATE_NOT_HOME, HTTP_UNPROCESSABLE_ENTITY)
 from homeassistant.components.http import HomeAssistantView
 # pylint: disable=unused-import
 from homeassistant.components.device_tracker import (  # NOQA

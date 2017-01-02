@@ -13,7 +13,8 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
@@ -41,7 +42,7 @@ def get_scanner(hass, config):
         return None
 
 
-class DdWrtDeviceScanner(object):
+class DdWrtDeviceScanner(DeviceScanner):
     """This class queries a wireless router running DD-WRT firmware."""
 
     def __init__(self, config):
