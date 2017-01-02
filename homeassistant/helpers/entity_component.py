@@ -323,10 +323,10 @@ class EntityPlatform(object):
            not any(entity.should_poll for entity
                    in self.platform_entities):
             return
-
+        seconds, minutes, hours = process_scan_interval(self.scan_interval)
         self._async_unsub_polling = async_track_utc_time_change(
             self.component.hass, self._update_entity_states,
-            second=range(0, 60, self.scan_interval))
+            second=seconds, minute=minutes, hour=hours)
 
     @asyncio.coroutine
     def _async_process_entity(self, new_entity, update_before_add):
@@ -389,3 +389,33 @@ class EntityPlatform(object):
                 yield from asyncio.wait(tasks, loop=self.component.hass.loop)
         finally:
             self._process_updates = False
+
+
+def process_scan_interval(interval_in_seconds):
+    """Convert the scan interval to the closest available interval.  
+    
+    Scan intervals are set at entity creation so using explicit
+    time deltas is a challenge. Instead we find time subsets
+    that approximate the interval.
+    """
+    if interval_in_seconds<=60:
+        num_intervals = round(60/interval_in_seconds)
+        interval_step = 60//num_intervals
+        seconds = range(0, 60, interval_step)
+        minutes, hours = None, None
+    elif interval_in_seconds<=3600:
+        num_intervals = round(60/(interval_in_seconds/60.0))
+        interval_step = 60//num_intervals
+        seconds = [0]
+        minutes = range(0, 60, interval_step)
+        hours = None
+    elif interval_in_seconds<=24*3600:
+        num_intervals = round(24/(interval_in_seconds/3600.0))
+        interval_step = 24//num_intervals
+        seconds, minutes = [0], [0]
+        hours = range(0, 60, interval_step)
+    else:
+        # update once a day, at midnight
+        seconds, minutes, hours = [0], [0], [0]
+    return seconds, minutes, hours
+    

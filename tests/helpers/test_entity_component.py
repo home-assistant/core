@@ -10,7 +10,7 @@ import homeassistant.core as ha
 import homeassistant.loader as loader
 from homeassistant.components import group
 from homeassistant.helpers.entity import Entity, generate_entity_id
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_component import EntityComponent, process_scan_interval
 from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
 
@@ -398,3 +398,16 @@ class TestHelpersEntityComponent(unittest.TestCase):
             return entity
 
         component.add_entities(create_entity(i) for i in range(2))
+
+class TestProcessScanInterval(unittest.TestCase):
+    def test_process_scan_interval(self):
+        seconds, minutes, hours = process_scan_interval(2)
+        self.assertEqual(seconds, range(0, 60, 2))
+        self.assertEqual(len(seconds), 30)
+        self.assertIsNone(minutes)
+        self.assertIsNone(hours)
+
+        seconds, minutes, hours = process_scan_interval(180)
+        self.assertEqual(len(minutes), 20)
+        self.assertEqual(seconds, [0])
+        self.assertEqual(hours, None)
