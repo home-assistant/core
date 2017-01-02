@@ -70,7 +70,6 @@ def create_dsmr_connection(host, port, dsmr_version,telegram_callback,
     from dsmr_parser import telegram_specifications
     from dsmr_parser.parsers import TelegramParser, TelegramParserV2_2
     from dsmr_parser.protocol import DSMRProtocol
-    import socket
     from functools import partial
 
     if dsmr_version == '2.2':
@@ -80,7 +79,7 @@ def create_dsmr_connection(host, port, dsmr_version,telegram_callback,
         specifications = telegram_specifications.V4
         telegram_parser = TelegramParser
 
-    protocol = partial(DSMRProtocol, loop, telegram_parser(specifications),
+    protocol = partial(DSMRProtocol, loop, telegram_parser(specifications), 
                        telegram_callback=telegram_callback)
 
     conn = loop.create_connection(protocol, host, port)
