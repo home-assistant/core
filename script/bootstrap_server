@@ -1,3 +1,9 @@
+#!/bin/sh
+# Resolve all server dependencies that the application requires to run.
+
+# Stop on errors
+set -e
+
 cd "$(dirname "$0")/.."
 
 echo "Installing dependencies..."

@@ -1,11 +1,15 @@
-# Build and run Home Assinstant in Docker
+#!/bin/sh
+# Build and run Home Assinstant in Docker.
 
 # Optional: pass in a timezone as first argument
 # If not given will attempt to mount /etc/localtime
 
+# Stop on errors
+set -e
+
 cd "$(dirname "$0")/.."
 
-docker build -t home-assistant-dev .
+docker build -t home-assistant-dev -f virtualization/Docker/Dockerfile.dev .
 
 if [ $# -gt 0 ]
 then
