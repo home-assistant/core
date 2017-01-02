@@ -31,7 +31,7 @@ import logging
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import voluptuous as vol
@@ -44,6 +44,7 @@ CONF_DSMR_VERSION = 'dsmr_version'
 
 DEFAULT_DSMR_VERSION = '2.2'
 DEFAULT_PORT = '/dev/ttyUSB0'
+DEFAULT_HOST = ''
 DOMAIN = 'dsmr'
 
 ICON_GAS = 'mdi:fire'
@@ -54,10 +55,37 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
         cv.string, vol.In(['4', '2.2'])),
 })
 
+def create_dsmr_connection(host, port, dsmr_version,telegram_callback,
+                           loop=None):
+    """
+    Creates a DSMR asyncio protocol coroutine which connects
+    to a serial to network bridge (i.e. ser2net) via TCP/IP.
+    """
+
+    from dsmr_parser import telegram_specifications
+    from dsmr_parser.parsers import TelegramParser, TelegramParserV2_2
+    from dsmr_parser.protocol import DSMRProtocol
+    import socket
+    from functools import partial
+
+    if dsmr_version == '2.2':
+        specifications = telegram_specifications.V2_2
+        telegram_parser = TelegramParserV2_2
+    elif dsmr_version == '4':
+        specifications = telegram_specifications.V4
+        telegram_parser = TelegramParser
+
+    protocol = partial(DSMRProtocol, loop, telegram_parser(specifications),
+                       telegram_callback=telegram_callback)
+
+    conn = loop.create_connection(protocol, host, port)
+
+    return conn
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -107,8 +135,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # Creates a asyncio.Protocol for reading DSMR telegrams from serial
     # and calls update_entities_telegram to update entities on arrival
-    dsmr = create_dsmr_reader(config[CONF_PORT], config[CONF_DSMR_VERSION],
-                              update_entities_telegram, loop=hass.loop)
+    if config[CONF_HOST] == '':
+        dsmr = create_dsmr_reader(config[CONF_PORT], config[CONF_DSMR_VERSION],
+                                 update_entities_telegram, loop=hass.loop)
+    else:
+        dsmr = create_dsmr_connection(config[CONF_HOST], config[CONF_PORT],
+                                 config[CONF_DSMR_VERSION],
+                                 update_entities_telegram, loop=hass.loop)
 
     # Start DSMR asycnio.Protocol reader
     transport, _ = yield from hass.loop.create_task(dsmr)
