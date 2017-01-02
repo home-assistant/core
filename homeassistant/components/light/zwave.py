@@ -65,6 +65,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
     if value.genre != zwave.const.GENRE_USER:
         return
+    if value.label != zwave.const.LABEL_LEVEL:
+        return
 
     value.set_change_verified(False)
 

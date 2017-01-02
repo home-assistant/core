@@ -357,8 +357,18 @@ def setup(hass, config):
             polling_intensity = convert(
                 node_config.get(CONF_POLLING_INTENSITY), int)
             if polling_intensity:
+                _LOGGER.debug('Set polling intesity to %s for node_id=%s'
+                              ' command_class=%s, index=%s, instance=%s,'
+                              ' label=%s',
+                              polling_intensity, node.node_id,
+                              value.command_class, value.index,
+                              value.instance, value.label)
                 value.enable_poll(polling_intensity)
             else:
+                _LOGGER.debug('Disable poll for node_id:%s command_class=%s,'
+                              ' index=%s, instance=%s, label=%s', node.node_id,
+                              value.command_class, value.index, value.instance,
+                              value.label)
                 value.disable_poll()
 
             discovery.load_platform(hass, component, DOMAIN, {

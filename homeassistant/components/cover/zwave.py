@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
 
     if (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
-            and value.index == 0):
+            and value.label == zwave.const.LABEL_LEVEL):
         value.set_change_verified(False)
         add_devices([ZwaveRollershutter(value)])
     elif (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_BINARY or
@@ -89,7 +89,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                 class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == \
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and \
-               value.label == 'Level':
+               value.label == zwave.const.LABEL_LEVEL:
                 self._current_position = value.data
 
     @property
@@ -120,9 +120,9 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                 class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == \
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Open' or value.command_class == \
+               zwave.const.LABEL_OPEN or value.command_class == \
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Up':
+               zwave.const.LABEL_UP:
                 self._lozwmgr.pressButton(value.value_id)
                 break
 
@@ -132,9 +132,9 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                 class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == \
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Down' or value.command_class == \
+               zwave.const.LABEL_DOWN or value.command_class == \
                zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Close':
+               zwave.const.LABEL_CLOSE:
                 self._lozwmgr.pressButton(value.value_id)
                 break
 
