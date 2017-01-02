@@ -46,8 +46,9 @@ class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
     def _value_changed(self, value):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id:
+            _LOGGER.debug('Value changed for label %s', self._value.label)
             self._state = value.data
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     @property
     def is_on(self):

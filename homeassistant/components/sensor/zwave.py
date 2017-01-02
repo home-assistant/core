@@ -72,7 +72,8 @@ class ZWaveSensor(zwave.ZWaveDeviceEntity, Entity):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id or \
            self._value.node == value.node:
-            self.update_ha_state()
+            _LOGGER.debug('Value changed for label %s', self._value.label)
+            self.schedule_update_ha_state()
 
 
 class ZWaveMultilevelSensor(ZWaveSensor):
