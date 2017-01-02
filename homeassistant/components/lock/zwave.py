@@ -76,6 +76,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id or \
            self._value.node == value.node:
+            _LOGGER.debug('Value changed for label %s', self._value.label)
             self.update_properties()
             self.schedule_update_ha_state()
 
