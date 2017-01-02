@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.string, vol.In(['4', '2.2'])),
 })
 
-def create_dsmr_connection(host, port, dsmr_version,telegram_callback,
+def create_dsmr_connection(host, port, dsmr_version, telegram_callback,
                            loop=None):
     """
     Creates a DSMR asyncio protocol coroutine which connects
@@ -79,7 +79,7 @@ def create_dsmr_connection(host, port, dsmr_version,telegram_callback,
         specifications = telegram_specifications.V4
         telegram_parser = TelegramParser
 
-    protocol = partial(DSMRProtocol, loop, telegram_parser(specifications), 
+    protocol = partial(DSMRProtocol, loop, telegram_parser(specifications),
                        telegram_callback=telegram_callback)
 
     conn = loop.create_connection(protocol, host, port)
