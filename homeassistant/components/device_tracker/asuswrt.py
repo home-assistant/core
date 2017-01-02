@@ -14,7 +14,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -97,7 +98,7 @@ def get_scanner(hass, config):
 AsusWrtResult = namedtuple('AsusWrtResult', 'neighbors leases arp nvram')
 
 
-class AsusWrtDeviceScanner(object):
+class AsusWrtDeviceScanner(DeviceScanner):
     """This class queries a router running ASUSWRT firmware."""
 
     # Eighth attribute needed for mode (AP mode vs router mode)

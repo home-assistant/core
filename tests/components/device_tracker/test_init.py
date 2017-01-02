@@ -315,7 +315,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         scanner = get_component('device_tracker.test').SCANNER
 
         with patch.dict(device_tracker.DISCOVERY_PLATFORMS, {'test': 'test'}):
-            with patch.object(scanner, 'scan_devices') as mock_scan:
+            with patch.object(scanner, 'scan_devices',
+                              autospec=True) as mock_scan:
                 with assert_setup_component(1, device_tracker.DOMAIN):
                     assert setup_component(
                         self.hass, device_tracker.DOMAIN, TEST_PLATFORM)
