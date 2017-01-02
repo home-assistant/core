@@ -4,10 +4,13 @@ Z-Wave platform that handles simple binary switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.zwave/
 """
+import logging
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.components import zwave
+
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
@@ -46,8 +49,9 @@ class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
     def _value_changed(self, value):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id:
+            _LOGGER.debug('Value changed for label %s', self._value.label)
             self._state = value.data
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     @property
     def is_on(self):
