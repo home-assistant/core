@@ -11,10 +11,15 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
+                                            ATTR_COLOR_TEMP,
                                             SUPPORT_BRIGHTNESS,
-                                            SUPPORT_RGB_COLOR, Light,
-                                            PLATFORM_SCHEMA)
+                                            SUPPORT_RGB_COLOR,
+                                            SUPPORT_COLOR_TEMP,
+                                            Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import color as color_util
+from homeassistant.util.color import \
+    color_temperature_mired_to_kelvin as mired_to_kelvin
 
 REQUIREMENTS = ['pyyeelight==1.0-beta']
 
@@ -22,7 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'yeelight'
 
-SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
+SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR |
+                    SUPPORT_COLOR_TEMP)
 
 DEVICE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string, })
 
@@ -33,9 +39,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yeelight bulbs."""
     lights = []
-    for ipaddr, device_config in config[CONF_DEVICES].items():
-        device = {'name': device_config[CONF_NAME], 'ipaddr': ipaddr}
+    if discovery_info is not None:
+        device = {'name': discovery_info['hostname'],
+                  'ipaddr': discovery_info['host']}
         lights.append(YeelightLight(device))
+    else:
+        for ipaddr, device_config in config[CONF_DEVICES].items():
+            device = {'name': device_config[CONF_NAME], 'ipaddr': ipaddr}
+            lights.append(YeelightLight(device))
 
     add_devices(lights)
 
@@ -54,6 +65,7 @@ class YeelightLight(Light):
         self._state = None
         self._bright = None
         self._rgb = None
+        self._ct = None
         try:
             self._bulb = pyyeelight.YeelightBulb(self._ipaddr)
         except socket.error:
@@ -87,6 +99,11 @@ class YeelightLight(Light):
         return self._rgb
 
     @property
+    def color_temp(self):
+        """Return the color temperature."""
+        return color_util.color_temperature_kelvin_to_mired(self._ct)
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_YEELIGHT
@@ -100,6 +117,11 @@ class YeelightLight(Light):
             rgb = kwargs[ATTR_RGB_COLOR]
             self._bulb.set_rgb_color(rgb[0], rgb[1], rgb[2])
             self._rgb = [rgb[0], rgb[1], rgb[2]]
+
+        if ATTR_COLOR_TEMP in kwargs:
+            kelvin = int(mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
+            self._bulb.set_color_temperature(kelvin)
+            self._ct = kelvin
 
         if ATTR_BRIGHTNESS in kwargs:
             bright = int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
@@ -134,3 +156,7 @@ class YeelightLight(Light):
         green = int((raw_rgb - (red * 65536)) / 256)
         blue = raw_rgb - (red * 65536) - (green * 256)
         self._rgb = [red, green, blue]
+
+        # Update CT value
+        self._ct = int(self._bulb.get_property(
+            self._bulb.PROPERTY_NAME_COLOR_TEMPERATURE))
