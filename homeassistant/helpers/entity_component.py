@@ -392,24 +392,24 @@ class EntityPlatform(object):
 
 
 def process_scan_interval(interval_in_seconds):
-    """Convert the scan interval to the closest available interval.  
-    
+    """Convert the scan interval to the closest available interval.
+
     Scan intervals are set at entity creation so using explicit
     time deltas is a challenge. Instead we find time subsets
     that approximate the interval.
     """
-    if interval_in_seconds<=60:
+    if interval_in_seconds <= 60:
         num_intervals = round(60/interval_in_seconds)
         interval_step = 60//num_intervals
         seconds = range(0, 60, interval_step)
         minutes, hours = None, None
-    elif interval_in_seconds<=3600:
+    elif interval_in_seconds <= 3600:
         num_intervals = round(60/(interval_in_seconds/60.0))
         interval_step = 60//num_intervals
         seconds = [0]
         minutes = range(0, 60, interval_step)
         hours = None
-    elif interval_in_seconds<=24*3600:
+    elif interval_in_seconds <= 24*3600:
         num_intervals = round(24/(interval_in_seconds/3600.0))
         interval_step = 24//num_intervals
         seconds, minutes = [0], [0]
@@ -418,4 +418,3 @@ def process_scan_interval(interval_in_seconds):
         # update once a day, at midnight
         seconds, minutes, hours = [0], [0], [0]
     return seconds, minutes, hours
-    
