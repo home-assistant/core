@@ -38,7 +38,7 @@ CONF_REFRESH_DELAY = 'delay'
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
 DEFAULT_POLLING_INTERVAL = 60000
-DEFAULT_DEBUG = True
+DEFAULT_DEBUG = False
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 2
@@ -165,7 +165,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_CONFIG_PATH): cv.string,
         vol.Optional(CONF_CUSTOMIZE, default={}):
             vol.Schema({cv.string: CUSTOMIZE_SCHEMA}),
-        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
         vol.Optional(CONF_POLLING_INTERVAL, default=DEFAULT_POLLING_INTERVAL):
             cv.positive_int,
         vol.Optional(CONF_USB_STICK_PATH, default=DEFAULT_CONF_USB_STICK_PATH):
