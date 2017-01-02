@@ -46,30 +46,41 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
+    #
+    # If there's a better way to do this, I'm all ears.  I need to squash the
+    # global SCAN_INTERVAL value if the user has supplied an alternative scan
+    # interval in the configuration.  Since this is a local push/asyncio
+    # platform, I don't have direct control over the interval.  Setting this
+    # global is the only way I can tell hass itself how frequently to call
+    # async_update.
+    #
+    # pylint: disable=redefined-outer-name
+    # pylint: disable=invalid-name
     SCAN_INTERVAL = config.get(CONF_SCAN_INTERVAL) or 120
 
-    _LOGGER.info('Provisioning Anthem AVR device at %s:%d scan every %d sec'
-                 % (host, port, SCAN_INTERVAL))
+    _LOGGER.info('Provisioning Anthem AVR device at %s:%d scan every %d sec',
+                 host, port, SCAN_INTERVAL)
 
     device = AnthemAVR(hass, host, port)
 
     yield from async_add_devices([device])
 
     def anthemav_update_callback(message):
-        _LOGGER.info("Received update callback from AVR: %s" % message)
+        """Receive notification from transport that new data exists."""
+        _LOGGER.info('Received update callback from AVR: %s', message)
         hass.async_add_job(device.async_update_ha_state)
 
     avr = yield from anthemav.Connection.create(
-            host=host, port=port,
-            loop=hass.loop, update_callback=anthemav_update_callback)
+        host=host, port=port, loop=hass.loop,
+        update_callback=anthemav_update_callback)
 
-    device._avr = avr
+    device.avr = avr
 
     _LOGGER.debug('dump_devicedata: '+device.dump_avrdata)
     _LOGGER.debug('dump_conndata: '+avr.dump_conndata)
     _LOGGER.debug('dump_rawdata: '+avr.protocol.dump_rawdata)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device._avr.close)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.avr.close)
 
 
 class AnthemAVR(MediaPlayerDevice):
@@ -81,20 +92,21 @@ class AnthemAVR(MediaPlayerDevice):
         self.hass = hass
         self._host = host
         self._port = port
+        self.avr = None
 
-    def _poll_and_return(self, property, dval):
+    def _poll_and_return(self, propname, dval):
         if self.reader:
-            pval = getattr(self.reader, property)
-            _LOGGER.debug('query '+property+' returned from avr: '+str(pval))
+            pval = getattr(self.reader, propname)
+            _LOGGER.debug('query '+propname+' returned from avr: '+str(pval))
             return pval
         else:
-            _LOGGER.debug('query '+property+' returned default: '+str(dval))
+            _LOGGER.debug('query '+propname+' returned default: '+str(dval))
             return dval
 
-    def _poll_or_null(self, property):
+    def _poll_or_null(self, propname):
         if self.reader:
-            pval = getattr(self.reader, property)
-            _LOGGER.debug('query '+property+' returned from avr: '+str(pval))
+            pval = getattr(self.reader, propname)
+            _LOGGER.debug('query '+propname+' returned from avr: '+str(pval))
             return pval
         else:
             return
@@ -102,13 +114,13 @@ class AnthemAVR(MediaPlayerDevice):
     @property
     def reader(self):
         """Expose the protocol with smart wrapper."""
-        if hasattr(self, '_avr'):
-            if hasattr(self._avr, 'protocol'):
-                return self._avr.protocol
+        if hasattr(self, 'avr'):
+            if hasattr(self.avr, 'protocol'):
+                return self.avr.protocol
 
     @reader.setter
     def reader(self, value):
-        self._reader = value
+        self.avr.protocol = value
 
     @property
     def supported_media_commands(self):
@@ -190,19 +202,19 @@ class AnthemAVR(MediaPlayerDevice):
         """Engage AVR mute."""
         _LOGGER.debug('Request to mute %s', str(mute))
 
-    def update_avr(self, property, value):
+    def update_avr(self, propname, value):
         """Update a property in the AVR."""
-        _LOGGER.info('Sending command to AVR: set '+property+' to '+str(value))
+        _LOGGER.info('Sending command to AVR: set '+propname+' to '+str(value))
         if hasattr(self, 'reader'):
-            setattr(self.reader, property, value)
+            setattr(self.reader, propname, value)
         else:
-            _LOGGER.warn('Unable to issue command to missing AVR')
+            _LOGGER.warning('Unable to issue command to missing AVR')
 
     @asyncio.coroutine
     def async_update(self):
         """Vestigial function unneeeded because this platform is local push."""
         _LOGGER.info('async_update invoked')
-        # _LOGGER.debug(self.dump_avrdata)
+        _LOGGER.debug(self.dump_avrdata)
 
     @property
     def dump_avrdata(self):
