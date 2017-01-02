@@ -462,11 +462,29 @@ def setup(hass, config):
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = NETWORK.nodes[node_id]
         param = service.data.get(const.ATTR_CONFIG_PARAMETER)
-        value = service.data.get(const.ATTR_CONFIG_VALUE)
+        selection = service.data.get(const.ATTR_CONFIG_VALUE)
         size = service.data.get(const.ATTR_CONFIG_SIZE, 2)
-        node.set_config_param(param, value, size)
-        _LOGGER.info("Setting config parameter %s on Node %s "
-                     "with value %s and size=%s", param, node_id, value, size)
+        i = 0
+        for value in (
+                node.get_values(class_id=const.COMMAND_CLASS_CONFIGURATION)
+                .values()):
+            if value.index == param and value.type == const.TYPE_LIST:
+                _LOGGER.debug('Values for parameter %s: %s', param,
+                              value.data_items)
+                i = len(value.data_items) - 1
+        if i == 0:
+            node.set_config_param(param, selection, size)
+        else:
+            if selection > i:
+                _LOGGER.info('Config parameter selection does not exist!'
+                             ' Please check zwcfg_[home_id].xml in'
+                             ' your homeassistant config directory. '
+                             ' Available selections are 0 to %s', i)
+                return
+            node.set_config_param(param, selection, size)
+            _LOGGER.info('Setting config parameter %s on Node %s '
+                         'with selection %s and size=%s', param, node_id,
+                         selection, size)
 
     def print_config_parameter(service):
         """Print a config parameter from a node."""
