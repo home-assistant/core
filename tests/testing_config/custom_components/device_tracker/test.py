@@ -1,12 +1,14 @@
 """Provide a mock device scanner."""
 
+from homeassistant.components.device_tracker import DeviceScanner
+
 
 def get_scanner(hass, config):
     """Return a mock scanner."""
     return SCANNER
 
 
-class MockScanner(object):
+class MockScanner(DeviceScanner):
     """Mock device scanner."""
 
     def __init__(self):
