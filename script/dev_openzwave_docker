@@ -1,5 +1,5 @@
-# Open a docker that can be used to debug/dev python-openzwave
-# Pass in a command line argument to build
+#!/bin/sh
+# Open a docker that can be used to debug/dev python-openzwave. Pass in a command line argument to build
 
 cd "$(dirname "$0")/.."
 
