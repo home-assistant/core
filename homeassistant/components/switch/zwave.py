@@ -4,10 +4,13 @@ Z-Wave platform that handles simple binary switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.zwave/
 """
+import logging
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.components import zwave
+
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
