@@ -12,7 +12,8 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
 from homeassistant.util import Throttle
 
@@ -46,7 +47,7 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-class SnmpScanner(object):
+class SnmpScanner(DeviceScanner):
     """Queries any SNMP capable Access Point for connected devices."""
 
     def __init__(self, config):
