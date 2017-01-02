@@ -10,7 +10,7 @@ VOLUME /config
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-RUN pip3 install --no-cache-dir colorlog cython mysqlclient psycopg2 uvloop
+RUN pip3 install --no-cache-dir colorlog cython
 
 # For the nmap tracker, bluetooth tracker, Z-Wave, tellstick
 RUN echo "deb http://download.telldus.com/debian/ stable main" >> /etc/apt/sources.list.d/telldus.list && \
@@ -26,7 +26,8 @@ RUN script/build_python_openzwave && \
   ln -sf /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/python-openzwave/config
 
 COPY requirements_all.txt requirements_all.txt
-RUN pip3 install --no-cache-dir -r requirements_all.txt
+RUN pip3 install --no-cache-dir -r requirements_all.txt && \
+    pip3 install --no-cache-dir mysqlclient psycopg2 uvloop
 
 # BEGIN: Development additions
 

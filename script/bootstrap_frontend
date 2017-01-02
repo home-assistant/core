@@ -4,6 +4,8 @@
 # Stop on errors
 set -e
 
+cd "$(dirname "$0")/.."
+
 echo "Bootstrapping frontend..."
 
 git submodule update
