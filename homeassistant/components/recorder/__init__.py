@@ -12,15 +12,15 @@ import queue
 import threading
 import time
 from datetime import timedelta, datetime
-from typing import Any, Union, Optional, List
+from typing import Any, Union, Optional, List, Dict
 
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.const import (ATTR_ENTITY_ID, ATTR_DOMAIN,
-                                 EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-                                 EVENT_TIME_CHANGED, MATCH_ALL)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_DOMAIN, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
+    CONF_INCLUDE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, QueryType
@@ -35,10 +35,6 @@ DEFAULT_DB_FILE = 'home-assistant_v2.db'
 
 CONF_DB_URL = 'db_url'
 CONF_PURGE_DAYS = 'purge_days'
-CONF_EXCLUDE = 'exclude'
-CONF_INCLUDE = 'include'
-CONF_ENTITIES = 'entities'
-CONF_DOMAINS = 'domains'
 
 RETRIES = 3
 CONNECT_RETRY_WAIT = 10
@@ -49,12 +45,12 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PURGE_DAYS):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_DB_URL): cv.string,
-        CONF_EXCLUDE: vol.Schema({
+        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
             vol.Optional(CONF_DOMAINS, default=[]):
                 vol.All(cv.ensure_list, [cv.string])
         }),
-        CONF_INCLUDE: vol.Schema({
+        vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
             vol.Optional(CONF_DOMAINS, default=[]):
                 vol.All(cv.ensure_list, [cv.string])
@@ -125,8 +121,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         db_url = DEFAULT_URL.format(
             hass_config_path=hass.config.path(DEFAULT_DB_FILE))
 
-    include = config.get(DOMAIN, {}).get(CONF_INCLUDE)
-    exclude = config.get(DOMAIN, {}).get(CONF_EXCLUDE)
+    include = config.get(DOMAIN, {}).get(CONF_INCLUDE, {})
+    exclude = config.get(DOMAIN, {}).get(CONF_EXCLUDE, {})
     _INSTANCE = Recorder(hass, purge_days=purge_days, uri=db_url,
                          include=include, exclude=exclude)
 
@@ -172,7 +168,7 @@ class Recorder(threading.Thread):
     """A threaded recorder class."""
 
     def __init__(self, hass: HomeAssistant, purge_days: int, uri: str,
-                 include: list, exclude: list) -> None:
+                 include: Dict, exclude: Dict) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self)
 
@@ -184,20 +180,11 @@ class Recorder(threading.Thread):
         self.db_ready = threading.Event()
         self.engine = None  # type: Any
         self._run = None  # type: Any
-        self.include = include
-        self.exclude = exclude
-        if self.include:
-            self.include_entities = include[CONF_ENTITIES]
-            self.include_domains = include[CONF_DOMAINS]
-        else:
-            self.include_entities = []
-            self.include_domains = []
-        if self.exclude:
-            self.exclude_entities = exclude[CONF_ENTITIES]
-            self.exclude_domains = exclude[CONF_DOMAINS]
-        else:
-            self.exclude_entities = []
-            self.exclude_domains = []
+
+        self.include = include.get(CONF_ENTITIES, []) + \
+            include.get(CONF_DOMAINS, [])
+        self.exclude = exclude.get(CONF_ENTITIES, []) + \
+            exclude.get(CONF_DOMAINS, [])
 
         def start_recording(event):
             """Start recording."""
@@ -246,13 +233,12 @@ class Recorder(threading.Thread):
             entity_id = event.data.get(ATTR_ENTITY_ID)
             domain = event.data.get(ATTR_DOMAIN)
 
-            if self.exclude and entity_id in self.exclude_entities or \
-               domain in self.exclude_domains:
+            if entity_id in self.exclude or domain in self.exclude:
                 self.queue.task_done()
                 continue
 
-            if self.include and entity_id not in self.include_entities and \
-               domain not in self.include_domains:
+            if (self.include and entity_id not in self.include and
+                    domain not in self.include):
                 self.queue.task_done()
                 continue
 
