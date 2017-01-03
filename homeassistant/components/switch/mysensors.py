@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, add_devices, device_class_map))
+            map_sv_types, devices, device_class_map, add_devices))
         platform_devices.append(devices)
 
     def send_ir_code_service(service):

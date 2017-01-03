@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.notify as notify
-from tests.common import get_test_home_assistant
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestCommandLine(unittest.TestCase):
@@ -28,15 +28,6 @@ class TestCommandLine(unittest.TestCase):
                 'platform': 'command_line',
                 'command': 'echo $(cat); exit 1',
             }})
-
-    def test_bad_config(self):
-        """Test set up the platform with bad/missing configuration."""
-        self.assertFalse(setup_component(self.hass, notify.DOMAIN, {
-            'notify': {
-                'name': 'test',
-                'platform': 'bad_platform',
-            }
-        }))
 
     def test_command_line_output(self):
         """Test the command line output."""

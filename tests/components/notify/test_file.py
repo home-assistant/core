@@ -23,16 +23,6 @@ class TestNotifyFile(unittest.TestCase):
         """"Stop down everything that was started."""
         self.hass.stop()
 
-    def test_bad_config(self):
-        """Test set up the platform with bad/missing config."""
-        with assert_setup_component(0):
-            assert not setup_component(self.hass, notify.DOMAIN, {
-                'notify': {
-                    'name': 'test',
-                    'platform': 'file',
-                },
-            })
-
     @patch('homeassistant.components.notify.file.os.stat')
     @patch('homeassistant.util.dt.utcnow')
     def test_notify_file(self, mock_utcnow, mock_stat):
@@ -42,8 +32,8 @@ class TestNotifyFile(unittest.TestCase):
 
         m_open = mock_open()
         with patch(
-                'homeassistant.components.notify.file.open',
-                m_open, create=True
+            'homeassistant.components.notify.file.open',
+            m_open, create=True
         ):
             filename = 'mock_file'
             message = 'one, two, testing, testing'
