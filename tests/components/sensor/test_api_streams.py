@@ -1,3 +1,4 @@
+"""Test cases for the API stream sensor."""
 import asyncio
 import logging
 

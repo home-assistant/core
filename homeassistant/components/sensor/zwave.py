@@ -4,12 +4,15 @@ Interfaces with Z-Wave sensors.
 For more details about this platform, please refer to the documentation
 at https://home-assistant.io/components/sensor.zwave/
 """
+import logging
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components import zwave
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -72,7 +75,8 @@ class ZWaveSensor(zwave.ZWaveDeviceEntity, Entity):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id or \
            self._value.node == value.node:
-            self.update_ha_state()
+            _LOGGER.debug('Value changed for label %s', self._value.label)
+            self.schedule_update_ha_state()
 
 
 class ZWaveMultilevelSensor(ZWaveSensor):

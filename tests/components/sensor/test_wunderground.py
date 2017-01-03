@@ -23,6 +23,16 @@ VALID_CONFIG = {
     ]
 }
 
+INVALID_CONFIG = {
+    'platform': 'wunderground',
+    'api_key': 'BOB',
+    'pws_id': 'bar',
+    'lang': 'foo',
+    'monitored_conditions': [
+        'weather', 'feelslike_c', 'alerts'
+    ]
+}
+
 FEELS_LIKE = '40'
 WEATHER = 'Clear'
 HTTPS_ICON_URL = 'https://icons.wxug.com/i/c/k/clear.gif'
@@ -128,17 +138,9 @@ class TestWundergroundSetup(unittest.TestCase):
         self.assertTrue(
             wunderground.setup_platform(self.hass, VALID_CONFIG,
                                         self.add_devices, None))
-        invalid_config = {
-            'platform': 'wunderground',
-            'api_key': 'BOB',
-            'pws_id': 'bar',
-            'monitored_conditions': [
-                'weather', 'feelslike_c', 'alerts'
-            ]
-        }
 
         self.assertTrue(
-            wunderground.setup_platform(self.hass, invalid_config,
+            wunderground.setup_platform(self.hass, INVALID_CONFIG,
                                         self.add_devices, None))
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)

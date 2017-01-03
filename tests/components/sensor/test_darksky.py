@@ -17,6 +17,15 @@ from tests.common import load_fixture, get_test_home_assistant
 class TestDarkSkySetup(unittest.TestCase):
     """Test the Dark Sky platform."""
 
+    def add_entities(self, new_entities, update_before_add=False):
+        """Mock add entities."""
+        if update_before_add:
+            for entity in new_entities:
+                entity.update()
+
+        for entity in new_entities:
+            self.entities.append(entity)
+
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
@@ -30,6 +39,7 @@ class TestDarkSkySetup(unittest.TestCase):
         self.lon = -122.423
         self.hass.config.latitude = self.lat
         self.hass.config.longitude = self.lon
+        self.entities = []
 
     def test_setup_with_config(self):
         """Test the platform setup with configuration."""
@@ -63,6 +73,7 @@ class TestDarkSkySetup(unittest.TestCase):
                r'(-?\d+\.?\d*),(-?\d+\.?\d*)')
         mock_req.get(re.compile(uri),
                      text=load_fixture('darksky.json'))
-        darksky.setup_platform(self.hass, self.config, MagicMock())
+        darksky.setup_platform(self.hass, self.config, self.add_entities)
         self.assertTrue(mock_get_forecast.called)
         self.assertEqual(mock_get_forecast.call_count, 1)
+        self.assertEqual(len(self.entities), 2)

@@ -50,14 +50,15 @@ class TestLiteJetScene(unittest.TestCase):
         self.hass.stop()
 
     def scene(self):
+        """Get the current scene."""
         return self.hass.states.get(ENTITY_SCENE)
 
     def other_scene(self):
+        """Get the other scene."""
         return self.hass.states.get(ENTITY_OTHER_SCENE)
 
     def test_activate(self):
         """Test activating the scene."""
-
         scene.activate(self.hass, ENTITY_SCENE)
         self.hass.block_till_done()
         self.mock_lj.activate_scene.assert_called_once_with(

@@ -95,7 +95,8 @@ def async_setup(hass, config):
             attr = 'async_toggle'
 
         tasks = [getattr(input_b, attr)() for input_b in target_inputs]
-        yield from asyncio.wait(tasks, loop=hass.loop)
+        if tasks:
+            yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handler_service, schema=SERVICE_SCHEMA)

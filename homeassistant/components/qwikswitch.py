@@ -15,8 +15,7 @@ from homeassistant.components.light import (ATTR_BRIGHTNESS,
 from homeassistant.components.switch import SwitchDevice
 
 DOMAIN = 'qwikswitch'
-REQUIREMENTS = ['https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip'
-                '#pyqwikswitch==0.4']
+REQUIREMENTS = ['pyqwikswitch==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

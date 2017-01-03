@@ -14,7 +14,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -97,7 +98,7 @@ def get_scanner(hass, config):
 AsusWrtResult = namedtuple('AsusWrtResult', 'neighbors leases arp nvram')
 
 
-class AsusWrtDeviceScanner(object):
+class AsusWrtDeviceScanner(DeviceScanner):
     """This class queries a router running ASUSWRT firmware."""
 
     # Eighth attribute needed for mode (AP mode vs router mode)
@@ -286,8 +287,10 @@ class AsusWrtDeviceScanner(object):
 
                 # match mac addresses to IP addresses in ARP table
                 for arp in result.arp:
-                    if match.group('mac').lower() in arp.decode('utf-8'):
-                        arp_match = _ARP_REGEX.search(arp.decode('utf-8'))
+                    if match.group('mac').lower() in \
+                            arp.decode('utf-8').lower():
+                        arp_match = _ARP_REGEX.search(
+                            arp.decode('utf-8').lower())
                         if not arp_match:
                             _LOGGER.warning('Could not parse arp row: %s', arp)
                             continue

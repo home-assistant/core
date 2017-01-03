@@ -36,26 +36,31 @@ SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TURN_OFF_ACTION, default=None): vol.In(TURN_OFF_ACTION),
-    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Setup the Kodi platform."""
-    url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
 
-    jsonrpc_url = config.get('url')  # deprecated
-    if jsonrpc_url:
-        url = jsonrpc_url.rstrip('/jsonrpc')
+    if host.startswith('http://') or host.startswith('https://'):
+        host = host.lstrip('http://').lstrip('https://')
+        _LOGGER.warning(
+            "Kodi host name should no longer conatin http:// See updated "
+            "definitions here: "
+            "https://home-assistant.io/components/media_player.kodi/")
 
-    add_devices([
+    add_entities([
         KodiDevice(
             config.get(CONF_NAME),
-            url,
-            auth=(config.get(CONF_USERNAME), config.get(CONF_PASSWORD)),
+            host=host, port=port,
+            username=config.get(CONF_USERNAME),
+            password=config.get(CONF_PASSWORD),
             turn_off_action=config.get(CONF_TURN_OFF_ACTION)),
     ])
 
@@ -63,15 +68,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class KodiDevice(MediaPlayerDevice):
     """Representation of a XBMC/Kodi device."""
 
-    def __init__(self, name, url, auth=None, turn_off_action=None):
+    def __init__(self, name, host, port, username=None, password=None,
+                 turn_off_action=None):
         """Initialize the Kodi device."""
         import jsonrpc_requests
         self._name = name
-        self._url = url
-        self._server = jsonrpc_requests.Server(
-            '{}/jsonrpc'.format(self._url),
-            auth=auth,
-            timeout=5)
+
+        kwargs = {'timeout': 5}
+
+        if username is not None:
+            kwargs['auth'] = (username, password)
+            image_auth_string = "{}:{}@".format(username, password)
+        else:
+            image_auth_string = ""
+
+        self._http_url = 'http://{}:{}/jsonrpc'.format(host, port)
+        self._image_url = 'http://{}{}:{}/image'.format(
+            image_auth_string, host, port)
+
+        self._server = jsonrpc_requests.Server(self._http_url, **kwargs)
+
         self._turn_off_action = turn_off_action
         self._players = list()
         self._properties = None
@@ -91,7 +107,7 @@ class KodiDevice(MediaPlayerDevice):
             return self._server.Player.GetActivePlayers()
         except jsonrpc_requests.jsonrpc.TransportError:
             if self._players is not None:
-                _LOGGER.warning('Unable to fetch kodi data')
+                _LOGGER.info('Unable to fetch kodi data')
                 _LOGGER.debug('Unable to fetch kodi data', exc_info=True)
             return None
 
@@ -174,16 +190,13 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self._item is not None:
-            return self._get_image_url()
+        if self._item is None:
+            return None
 
-    def _get_image_url(self):
-        """Helper function that parses the thumbnail URLs used by Kodi."""
         url_components = urllib.parse.urlparse(self._item['thumbnail'])
-
         if url_components.scheme == 'image':
-            return '{}/image/{}'.format(
-                self._url,
+            return '{}/{}'.format(
+                self._image_url,
                 urllib.parse.quote_plus(self._item['thumbnail']))
 
     @property

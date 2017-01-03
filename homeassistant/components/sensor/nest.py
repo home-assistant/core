@@ -9,7 +9,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.nest import DATA_NEST, DOMAIN
+from homeassistant.components.nest import (
+    DATA_NEST, DOMAIN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_PLATFORM,
@@ -18,7 +19,8 @@ from homeassistant.const import (
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
-                'operation_mode']
+                'operation_mode',
+                'hvac_state']
 
 SENSOR_TYPES_DEPRECATED = ['last_ip',
                            'local_ip',
@@ -92,29 +94,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(wstr)
 
     all_sensors = []
-    for structure, device in chain(nest.devices(), nest.protect_devices()):
+    for structure, device in chain(nest.thermostats(), nest.smoke_co_alarms()):
         sensors = [NestBasicSensor(structure, device, variable)
                    for variable in conf
-                   if variable in SENSOR_TYPES and is_thermostat(device)]
+                   if variable in SENSOR_TYPES and device.is_thermostat]
         sensors += [NestTempSensor(structure, device, variable)
                     for variable in conf
-                    if variable in SENSOR_TEMP_TYPES and is_thermostat(device)]
+                    if variable in SENSOR_TEMP_TYPES and device.is_thermostat]
         sensors += [NestProtectSensor(structure, device, variable)
                     for variable in conf
-                    if variable in PROTECT_VARS and is_protect(device)]
+                    if variable in PROTECT_VARS and device.is_smoke_co_alarm]
         all_sensors.extend(sensors)
 
     add_devices(all_sensors, True)
-
-
-def is_thermostat(device):
-    """Target devices that are Nest Thermostats."""
-    return bool(device.__class__.__name__ == 'Device')
-
-
-def is_protect(device):
-    """Target devices that are Nest Protect Smoke Alarms."""
-    return bool(device.__class__.__name__ == 'ProtectDevice')
 
 
 class NestSensor(Entity):
@@ -128,13 +120,20 @@ class NestSensor(Entity):
 
         # device specific
         self._location = self.device.where
-        self._name = self.device.name_long
+        self._name = "{} {}".format(self.device.name_long,
+                                    self.variable.replace("_", " "))
         self._state = None
+        self._unit = None
 
     @property
     def name(self):
         """Return the name of the nest, if any."""
-        return "{} {}".format(self._name, self.variable.replace("_", " "))
+        return self._name
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit
 
 
 class NestBasicSensor(NestSensor):
@@ -145,13 +144,10 @@ class NestBasicSensor(NestSensor):
         """Return the state of the sensor."""
         return self._state
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_UNITS.get(self.variable, None)
-
     def update(self):
         """Retrieve latest state."""
+        self._unit = SENSOR_UNITS.get(self.variable, None)
+
         if self.variable == 'operation_mode':
             self._state = getattr(self.device, "mode")
         else:
@@ -162,20 +158,17 @@ class NestTempSensor(NestSensor):
     """Representation of a Nest Temperature sensor."""
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        if self.device.temperature_scale == 'C':
-            return TEMP_CELSIUS
-        else:
-            return TEMP_FAHRENHEIT
-
-    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
 
     def update(self):
         """Retrieve latest state."""
+        if self.device.temperature_scale == 'C':
+            self._unit = TEMP_CELSIUS
+        else:
+            self._unit = TEMP_FAHRENHEIT
+
         temp = getattr(self.device, self.variable)
         if temp is None:
             self._state = None

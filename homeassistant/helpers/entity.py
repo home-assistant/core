@@ -79,6 +79,9 @@ class Entity(object):
     # Owning hass instance. Will be set by EntityComponent
     hass = None  # type: Optional[HomeAssistant]
 
+    # If we reported if this entity was slow
+    _slow_reported = False
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -243,7 +246,8 @@ class Entity(object):
 
         end = timer()
 
-        if end - start > 0.4:
+        if not self._slow_reported and end - start > 0.4:
+            self._slow_reported = True
             _LOGGER.warning('Updating state for %s took %.3f seconds. '
                             'Please report platform to the developers at '
                             'https://goo.gl/Nvioub', self.entity_id,
@@ -342,20 +346,24 @@ class ToggleEntity(Entity):
         """Turn the entity on."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_turn_on(self, **kwargs):
-        """Turn the entity on."""
-        yield from self.hass.loop.run_in_executor(
+        """Turn the entity on.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
     def async_turn_off(self, **kwargs):
-        """Turn the entity off."""
-        yield from self.hass.loop.run_in_executor(
+        """Turn the entity off.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, ft.partial(self.turn_off, **kwargs))
 
     def toggle(self, **kwargs) -> None:
@@ -367,8 +375,11 @@ class ToggleEntity(Entity):
 
     @asyncio.coroutine
     def async_toggle(self, **kwargs):
-        """Toggle the entity."""
+        """Toggle the entity.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
         if self.is_on:
-            yield from self.async_turn_off(**kwargs)
+            return self.async_turn_off(**kwargs)
         else:
-            yield from self.async_turn_on(**kwargs)
+            return self.async_turn_on(**kwargs)

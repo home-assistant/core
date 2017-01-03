@@ -1,6 +1,7 @@
 """The tests for the Home Assistant HTTP component."""
 import asyncio
 import requests
+from unittest.mock import MagicMock
 
 from homeassistant import bootstrap, const
 import homeassistant.components.http as http
@@ -62,7 +63,6 @@ class TestCors:
 
     def test_cors_allowed_with_password_in_url(self):
         """Test cross origin resource sharing with password in url."""
-
         req = requests.get(_url(const.URL_API),
                            params={'api_password': API_PASSWORD},
                            headers={const.HTTP_HEADER_ORIGIN: HTTP_BASE_URL})
@@ -118,6 +118,7 @@ class TestCors:
 
 
 class TestView(http.HomeAssistantView):
+    """Test the HTTP views."""
 
     name = 'test'
     url = '/hello'
@@ -154,3 +155,48 @@ def test_registering_view_while_running(hass, test_client):
 
     text = yield from resp.text()
     assert text == 'hello'
+
+
+def test_api_base_url(loop):
+    """Test setting api url."""
+    hass = MagicMock()
+    hass.loop = loop
+
+    assert loop.run_until_complete(
+        bootstrap.async_setup_component(hass, 'http', {
+            'http': {
+                'base_url': 'example.com'
+            }
+        })
+    )
+
+    assert hass.config.api.base_url == 'http://example.com'
+
+    assert loop.run_until_complete(
+        bootstrap.async_setup_component(hass, 'http', {
+            'http': {
+                'server_host': '1.1.1.1'
+            }
+        })
+    )
+
+    assert hass.config.api.base_url == 'http://1.1.1.1:8123'
+
+    assert loop.run_until_complete(
+        bootstrap.async_setup_component(hass, 'http', {
+            'http': {
+                'server_host': '1.1.1.1'
+            }
+        })
+    )
+
+    assert hass.config.api.base_url == 'http://1.1.1.1:8123'
+
+    assert loop.run_until_complete(
+        bootstrap.async_setup_component(hass, 'http', {
+            'http': {
+            }
+        })
+    )
+
+    assert hass.config.api.base_url == 'http://127.0.0.1:8123'

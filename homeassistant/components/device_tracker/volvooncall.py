@@ -14,12 +14,9 @@ from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 from homeassistant.util import slugify
 from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME)
+    CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
 from homeassistant.components.device_tracker import (
-    DEFAULT_SCAN_INTERVAL,
-    PLATFORM_SCHEMA)
+    DEFAULT_SCAN_INTERVAL, PLATFORM_SCHEMA)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(minutes=1)
 

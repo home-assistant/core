@@ -9,6 +9,7 @@ import socket
 
 import voluptuous as vol
 
+from homeassistant import util
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,16 +41,15 @@ def setup(hass, config):
         'requires_api_password': requires_api_password,
     }
 
+    host_ip = util.get_local_ip()
+
     try:
-        info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name,
-                           socket.inet_pton(
-                               socket.AF_INET, hass.config.api.host),
-                           hass.config.api.port, 0, 0, params)
+        host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
     except socket.error:
-        info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name,
-                           socket.inet_pton(
-                               socket.AF_INET6, hass.config.api.host),
-                           hass.config.api.port, 0, 0, params)
+        host_ip_pton = socket.inet_pton(socket.AF_INET6, host_ip)
+
+    info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name, host_ip_pton,
+                       hass.http.server_port, 0, 0, params)
 
     zeroconf.register_service(info)
 

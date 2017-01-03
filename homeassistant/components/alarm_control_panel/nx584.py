@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_UNKNOWN, CONF_NAME, CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pynx584==0.2']
+REQUIREMENTS = ['pynx584==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,11 +63,6 @@ class NX584Alarm(alarm.AlarmControlPanel):
         self._state = STATE_UNKNOWN
 
     @property
-    def should_poll(self):
-        """Polling needed."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the device."""
         return self._name
@@ -91,9 +86,11 @@ class NX584Alarm(alarm.AlarmControlPanel):
             _LOGGER.error('Unable to connect to %(host)s: %(reason)s',
                           dict(host=self._url, reason=ex))
             self._state = STATE_UNKNOWN
+            zones = []
         except IndexError:
             _LOGGER.error('nx584 reports no partitions')
             self._state = STATE_UNKNOWN
+            zones = []
 
         bypassed = False
         for zone in zones:
@@ -122,7 +119,3 @@ class NX584Alarm(alarm.AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._alarm.arm('exit')
-
-    def alarm_trigger(self, code=None):
-        """Alarm trigger command."""
-        raise NotImplementedError()

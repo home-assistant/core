@@ -38,14 +38,19 @@ SENSOR_TYPES = {
     'sum_rain_1': ['sum_rain_1', 'mm', 'mdi:weather-rainy'],
     'sum_rain_24': ['sum_rain_24', 'mm', 'mdi:weather-rainy'],
     'battery_vp': ['Battery', '', 'mdi:battery'],
+    'battery_lvl': ['Battery_lvl', '', 'mdi:battery'],
     'min_temp': ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
     'max_temp': ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
     'WindAngle': ['Angle', '', 'mdi:compass'],
+    'WindAngle_value': ['Angle Value', 'º', 'mdi:compass'],
     'WindStrength': ['Strength', 'km/h', 'mdi:weather-windy'],
     'GustAngle': ['Gust Angle', '', 'mdi:compass'],
+    'GustAngle_value': ['Gust Angle Value', 'º', 'mdi:compass'],
     'GustStrength': ['Gust Strength', 'km/h', 'mdi:weather-windy'],
     'rf_status': ['Radio', '', 'mdi:signal'],
-    'wifi_status': ['Wifi', '', 'mdi:wifi']
+    'rf_status_lvl': ['Radio_lvl', '', 'mdi:signal'],
+    'wifi_status': ['Wifi', '', 'mdi:wifi'],
+    'wifi_status_lvl': ['Wifi_lvl', 'dBm', 'mdi:wifi']
 }
 
 MODULE_SCHEMA = vol.Schema({
@@ -103,6 +108,7 @@ class NetAtmoSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         module_id = self.netatmo_data.\
             station_data.moduleByName(module=module_name)['_id']
+        self.module_id = module_id[1]
         self._unique_id = "Netatmo Sensor {0} - {1} ({2})".format(self._name,
                                                                   module_id,
                                                                   self.type)
@@ -154,21 +160,58 @@ class NetAtmoSensor(Entity):
             self._state = data['CO2']
         elif self.type == 'pressure':
             self._state = round(data['Pressure'], 1)
-        elif self.type == 'battery_vp':
+        elif self.type == 'battery_lvl':
+            self._state = data['battery_vp']
+        elif self.type == 'battery_vp' and self.module_id == '6':
+            if data['battery_vp'] >= 5590:
+                self._state = "Full"
+            elif data['battery_vp'] >= 5180:
+                self._state = "High"
+            elif data['battery_vp'] >= 4770:
+                self._state = "Medium"
+            elif data['battery_vp'] >= 4360:
+                self._state = "Low"
+            elif data['battery_vp'] < 4360:
+                self._state = "Very Low"
+        elif self.type == 'battery_vp' and self.module_id == '5':
             if data['battery_vp'] >= 5500:
                 self._state = "Full"
-            elif data['battery_vp'] >= 5100:
+            elif data['battery_vp'] >= 5000:
                 self._state = "High"
-            elif data['battery_vp'] >= 4600:
+            elif data['battery_vp'] >= 4500:
                 self._state = "Medium"
-            elif data['battery_vp'] >= 4100:
+            elif data['battery_vp'] >= 4000:
                 self._state = "Low"
-            elif data['battery_vp'] < 4100:
+            elif data['battery_vp'] < 4000:
+                self._state = "Very Low"
+        elif self.type == 'battery_vp' and self.module_id == '3':
+            if data['battery_vp'] >= 5640:
+                self._state = "Full"
+            elif data['battery_vp'] >= 5280:
+                self._state = "High"
+            elif data['battery_vp'] >= 4920:
+                self._state = "Medium"
+            elif data['battery_vp'] >= 4560:
+                self._state = "Low"
+            elif data['battery_vp'] < 4560:
+                self._state = "Very Low"
+        elif self.type == 'battery_vp' and self.module_id == '2':
+            if data['battery_vp'] >= 5500:
+                self._state = "Full"
+            elif data['battery_vp'] >= 5000:
+                self._state = "High"
+            elif data['battery_vp'] >= 4500:
+                self._state = "Medium"
+            elif data['battery_vp'] >= 4000:
+                self._state = "Low"
+            elif data['battery_vp'] < 4000:
                 self._state = "Very Low"
         elif self.type == 'min_temp':
             self._state = data['min_temp']
         elif self.type == 'max_temp':
             self._state = data['max_temp']
+        elif self.type == 'WindAngle_value':
+            self._state = data['WindAngle']
         elif self.type == 'WindAngle':
             if data['WindAngle'] >= 330:
                 self._state = "North (%d\xb0)" % data['WindAngle']
@@ -190,6 +233,8 @@ class NetAtmoSensor(Entity):
                 self._state = "North (%d\xb0)" % data['WindAngle']
         elif self.type == 'WindStrength':
             self._state = data['WindStrength']
+        elif self.type == 'GustAngle_value':
+            self._state = data['GustAngle']
         elif self.type == 'GustAngle':
             if data['GustAngle'] >= 330:
                 self._state = "North (%d\xb0)" % data['GustAngle']
@@ -211,6 +256,8 @@ class NetAtmoSensor(Entity):
                 self._state = "North (%d\xb0)" % data['GustAngle']
         elif self.type == 'GustStrength':
             self._state = data['GustStrength']
+        elif self.type == 'rf_status_lvl':
+            self._state = data['rf_status']
         elif self.type == 'rf_status':
             if data['rf_status'] >= 90:
                 self._state = "Low"
@@ -220,13 +267,17 @@ class NetAtmoSensor(Entity):
                 self._state = "High"
             elif data['rf_status'] <= 59:
                 self._state = "Full"
+        elif self.type == 'wifi_status_lvl':
+            self._state = data['wifi_status']
         elif self.type == 'wifi_status':
             if data['wifi_status'] >= 86:
-                self._state = "Bad"
+                self._state = "Low"
             elif data['wifi_status'] >= 71:
-                self._state = "Middle"
-            elif data['wifi_status'] <= 70:
-                self._state = "Good"
+                self._state = "Medium"
+            elif data['wifi_status'] >= 56:
+                self._state = "High"
+            elif data['wifi_status'] <= 55:
+                self._state = "Full"
 
 
 class NetAtmoData(object):
@@ -248,7 +299,7 @@ class NetAtmoData(object):
     def update(self):
         """Call the Netatmo API to update the data."""
         import lnetatmo
-        self.station_data = lnetatmo.DeviceList(self.auth)
+        self.station_data = lnetatmo.WeatherStationData(self.auth)
 
         if self.station is not None:
             self.data = self.station_data.lastData(station=self.station,
