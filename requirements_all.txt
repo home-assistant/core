@@ -442,7 +442,7 @@ pynut2==2.1.2
 
 # homeassistant.components.alarm_control_panel.nx584
 # homeassistant.components.binary_sensor.nx584
-pynx584==0.2
+pynx584==0.4
 
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
