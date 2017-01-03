@@ -39,8 +39,8 @@ class PicoProvider(Provider):
         """Load TTS using pico2wave."""
         if language not in SUPPORT_LANGUAGES:
             language = self.language
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tempfp:
-            fname = tempfp.name
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmpf:
+            fname = tmpf.name
         cmd = ['pico2wave', '--wave', fname, '-l', language, message]
         subprocess.call(cmd)
         data = None
