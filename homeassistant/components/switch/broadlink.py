@@ -141,11 +141,6 @@ class BroadlinkRMSwitch(SwitchDevice):
         return True
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state
@@ -217,11 +212,6 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     def assumed_state(self):
         """Return true if unable to access real state of entity."""
         return False
-
-    @property
-    def should_poll(self):
-        """Polling needed."""
-        return True
 
     def update(self):
         """Synchronize state with switch."""
