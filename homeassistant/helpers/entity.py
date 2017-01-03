@@ -373,7 +373,6 @@ class ToggleEntity(Entity):
         else:
             self.turn_on(**kwargs)
 
-    @asyncio.coroutine
     def async_toggle(self, **kwargs):
         """Toggle the entity.
 
@@ -383,3 +382,4 @@ class ToggleEntity(Entity):
             return self.async_turn_off(**kwargs)
         else:
             return self.async_turn_on(**kwargs)
+
