@@ -129,25 +129,32 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     @asyncio.coroutine
     def connect_and_reconnect():
         """Connect to DSMR and keep reconnecting until HA stops."""
-        while hass.state != CoreState.Stopping:
-            # create asyncio
-            reader = yield from reader_factory()
+        while hass.state != CoreState.stopping:
             # Start DSMR asycnio.Protocol reader
-            transport, protocol = yield from hass.loop.create_task(reader)
+            try:
+                transport, protocol = yield from hass.loop.create_task(
+                    reader_factory())
+            except:
+                _LOGGER.exception('error connecting to DSMR')
+                transport = None
 
-            # register listener to close transport on HA shutdown
-            stop_listerer = hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, transport.close)
+            if transport:
+                # register listener to close transport on HA shutdown
+                stop_listerer = hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STOP, transport.close)
 
-            # wait for reader to close
-            yield from protocol.wait_closed()
+                # wait for reader to close
+                yield from protocol.wait_closed()
 
-            if hass.state != CoreState.Stopping:
-                # remove listerer
-                stop_listerer()
+            if hass.state != CoreState.stopping:
+                if transport:
+                    # remove listerer
+                    stop_listerer()
 
                 # throttle reconnect attempts
                 yield from asyncio.sleep(RECONNECT_INTERVAL)
+
+    hass.loop.create_task(connect_and_reconnect())
 
 
 class DSMREntity(Entity):
