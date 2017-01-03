@@ -405,6 +405,7 @@ class TestProcessScanInterval(unittest.TestCase):
     """Test homeassistant.helpers.entity_component scan interval function."""
 
     def test_process_scan_interval(self):
+        """Test scan interval processing."""
         seconds, minutes, hours = process_scan_interval(2)
         self.assertEqual(seconds, range(0, 60, 2))
         self.assertEqual(len(seconds), 30)
