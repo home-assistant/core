@@ -79,7 +79,7 @@ def brightness_state(value):
     if value.data > 0:
         return (value.data / 99) * 255, STATE_ON
     else:
-        return None, STATE_OFF
+        return 0, STATE_OFF
 
 
 class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
@@ -92,7 +92,6 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._brightness = None
-        self._last_brightness = 255
         self._state = None
         self._delay = delay
         self._refresh_value = refresh
@@ -123,12 +122,6 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         """Update internal properties based on zwave values."""
         # Brightness
         self._brightness, self._state = brightness_state(self._value)
-        # If there is an actual brightness change - save it in last_brightness.
-        # If light was turned off - keep the previous value.
-        if self._brightness:
-            self._last_bightness = self._brightness
-        else:
-            self._brightness = 255
 
     def _value_changed(self, value):
         """Called when a value has changed on the network."""
@@ -172,12 +165,13 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = self._last_brightness = kwargs[ATTR_BRIGHTNESS]
-
         # Zwave multilevel switches use a range of [0, 99] to control
-        # brightness.
-        brightness = int((self._last_brightness / 255) * 99)
+        # brightness. Level 255 means to set it to previous value.
+        if ATTR_BRIGHTNESS in kwargs:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
+            brightness = int((self._brightness / 255) * 99)
+        else:
+            brightness = 255
 
         if self._value.node.set_dimmer(self._value.value_id, brightness):
             self._state = STATE_ON
