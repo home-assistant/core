@@ -27,7 +27,7 @@ ATTR_DISCOVER_CONFIG = 'config'
 
 # Use a global tellstick domain lock to avoid getting Tellcore errors when
 # calling concurrently.
-TELLSTICK_LOCK = threading.Lock()
+TELLSTICK_LOCK = threading.RLock()
 
 # A TellstickRegistry that keeps a map from tellcore_id to the corresponding
 # tellcore_device and HA device (entity).
@@ -59,12 +59,12 @@ def _discover(hass, config, component_name, found_tellcore_devices):
 def setup(hass, config):
     """Setup the Tellstick component."""
     from tellcore.constants import TELLSTICK_DIM
-    from tellcore.library import DirectCallbackDispatcher
+    from tellcore.telldus import AsyncioCallbackDispatcher
     from tellcore.telldus import TelldusCore
 
     try:
         tellcore_lib = TelldusCore(
-            callback_dispatcher=DirectCallbackDispatcher())
+            callback_dispatcher=AsyncioCallbackDispatcher(hass.loop))
     except OSError:
         _LOGGER.exception('Could not initialize Tellstick')
         return False
@@ -115,8 +115,7 @@ class TellstickRegistry(object):
         ha_device = self._id_to_ha_device_map.get(tellcore_id, None)
         if ha_device is not None:
             # Pass it on to the HA device object
-            ha_device.update_from_tellcore(tellcore_command, tellcore_data)
-            ha_device.schedule_update_ha_state()
+            ha_device.update_from_callback(tellcore_command, tellcore_data)
 
     def _setup_tellcore_callback(self, hass, tellcore_lib):
         """Register the callback handler."""
@@ -156,12 +155,17 @@ class TellstickDevice(Entity):
         """Initalize the Tellstick device."""
         self._signal_repetitions = signal_repetitions
         self._state = None
+        self._requested_state = None
+        self._requested_data = None
+        self._repeats_left = 0
+
         # Look up our corresponding tellcore device
         self._tellcore_device = tellcore_registry.get_tellcore_device(
             tellcore_id)
+        self._name = self._tellcore_device.name
         # Query tellcore for the current state
-        self.update()
-        # Add ourselves to the mapping
+        self._update_from_tellcore()
+        # Add ourselves to the mapping for callbacks
         tellcore_registry.register_ha_device(tellcore_id, self)
 
     @property
@@ -177,7 +181,7 @@ class TellstickDevice(Entity):
     @property
     def name(self):
         """Return the name of the device as reported by tellcore."""
-        return self._tellcore_device.name
+        return self._name
 
     @property
     def is_on(self):
@@ -196,60 +200,88 @@ class TellstickDevice(Entity):
         """Update the device entity state to match the arguments."""
         raise NotImplementedError
 
-    def _send_tellstick_command(self):
-        """Let tellcore update the device to match the current state."""
+    def _send_device_command(self, requested_state, requested_data):
+        """Let tellcore update the actual device to the requested state."""
         raise NotImplementedError
 
-    def _do_action(self, new_state, data):
-        """The logic for actually turning on or off the device."""
+    def _send_repeated_command(self):
+        """Send a tellstick command once and decrease the repeat count."""
         from tellcore.library import TelldusError
 
         with TELLSTICK_LOCK:
-            # Update self with requested new state
+            if self._repeats_left > 0:
+                self._repeats_left -= 1
+                try:
+                    self._send_device_command(self._requested_state,
+                                              self._requested_data)
+                except TelldusError as err:
+                    _LOGGER.error(err)
+
+    def _change_device_state(self, new_state, data):
+        """The logic for actually turning on or off the device."""
+        with TELLSTICK_LOCK:
+            # Set the requested state and number of repeats before calling
+            # _send_repeated_command the first time. Subsequent calls will be
+            # made from the callback. (We don't want to queue a lot of commands
+            # in case the user toggles the switch the other way before the
+            # queue is fully processed.)
+            self._requested_state = new_state
+            self._requested_data = data
+            self._repeats_left = self._signal_repetitions
+            self._send_repeated_command()
+
+            # Sooner or later this will propagate to the model from the
+            # callback, but for a fluid UI experience update it directly.
             self._update_model(new_state, data)
-            # ... and then send this new state to the Tellstick
-            try:
-                for _ in range(self._signal_repetitions):
-                    self._send_tellstick_command()
-            except TelldusError:
-                _LOGGER.error(TelldusError)
-        self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._do_action(True, self._parse_ha_data(kwargs))
+        self._change_device_state(True, self._parse_ha_data(kwargs))
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self._do_action(False, None)
+        self._change_device_state(False, None)
 
-    def update_from_tellcore(self, tellcore_command, tellcore_data):
-        """Handle updates from the tellcore callback."""
+    def _update_model_from_command(self, tellcore_command, tellcore_data):
+        """Update the model, from a sent tellcore command and data."""
         from tellcore.constants import (TELLSTICK_TURNON, TELLSTICK_TURNOFF,
                                         TELLSTICK_DIM)
 
         if tellcore_command not in [TELLSTICK_TURNON, TELLSTICK_TURNOFF,
                                     TELLSTICK_DIM]:
-            _LOGGER.debug("Unhandled tellstick command: %d",
-                          tellcore_command)
+            _LOGGER.debug("Unhandled tellstick command: %d", tellcore_command)
             return
 
         self._update_model(tellcore_command != TELLSTICK_TURNOFF,
                            self._parse_tellcore_data(tellcore_data))
 
-    def update(self):
-        """Poll the current state of the device."""
+    def update_from_callback(self, tellcore_command, tellcore_data):
+        """Handle updates from the tellcore callback."""
+        self._update_model_from_command(tellcore_command, tellcore_data)
+        self.schedule_update_ha_state()
+
+        # This is a benign race on _repeats_left -- it's checked with the lock
+        # in _send_repeated_command.
+        if self._repeats_left > 0:
+            self.hass.async_add_job(self._send_repeated_command)
+
+    def _update_from_tellcore(self):
+        """Read the current state of the device from the tellcore library."""
         from tellcore.library import TelldusError
         from tellcore.constants import (TELLSTICK_TURNON, TELLSTICK_TURNOFF,
                                         TELLSTICK_DIM)
 
-        try:
-            last_tellcore_command = self._tellcore_device.last_sent_command(
-                TELLSTICK_TURNON | TELLSTICK_TURNOFF | TELLSTICK_DIM
-            )
-            last_tellcore_data = self._tellcore_device.last_sent_value()
+        with TELLSTICK_LOCK:
+            try:
+                last_command = self._tellcore_device.last_sent_command(
+                    TELLSTICK_TURNON | TELLSTICK_TURNOFF | TELLSTICK_DIM)
+                last_data = self._tellcore_device.last_sent_value()
+                self._update_model_from_command(last_command, last_data)
+            except TelldusError as err:
+                _LOGGER.error(err)
 
-            self.update_from_tellcore(last_tellcore_command,
-                                      last_tellcore_data)
-        except TelldusError:
-            _LOGGER.error(TelldusError)
+    def update(self):
+        """Poll the current state of the device."""
+        self._update_from_tellcore()
+        self.schedule_update_ha_state()
