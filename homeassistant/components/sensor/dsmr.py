@@ -40,8 +40,7 @@ import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = [('https://github.com/aequitas/dsmr_parser/archive/tcp.zip'
-                 '#dsmr_parser==0.6')]
+REQUIREMENTS = ['dsmr_parser==0.6']
 
 CONF_DSMR_VERSION = 'dsmr_version'
 
@@ -134,7 +133,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             try:
                 transport, protocol = yield from hass.loop.create_task(
                     reader_factory())
+            # pylint: disable=bare-except
             except:
+                # log any error while establishing connection and drop to retry
+                # connection wait
                 _LOGGER.exception('error connecting to DSMR')
                 transport = None
 
