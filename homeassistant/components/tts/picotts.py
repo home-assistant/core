@@ -1,6 +1,8 @@
 """
 Support for the picotts speech service.
-For more information see...
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/tts/picotts/
 """
 import os
 import tempfile
@@ -35,8 +37,8 @@ class PicoProvider(Provider):
 
     def get_tts_audio(self, message):
         """Load TTS."""
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as f:
-            fname = f.name
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as fp:
+            fname = fp.name
         cmd = ['pico2wave', '--wave', fname, '-l', self.language, message]
         subprocess.call(cmd)
         data = None
@@ -44,7 +46,7 @@ class PicoProvider(Provider):
             with open(fname, 'rb') as voice:
                 data = voice.read()
         except OSError:
-            _LOGGER.error("Error trying to read %s",fname)
+            _LOGGER.error("Error trying to read %s", fname)
             return (None, None)
         finally:
             os.remove(fname)
