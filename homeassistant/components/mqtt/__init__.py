@@ -220,7 +220,7 @@ def setup(hass, config):
     client_id = conf.get(CONF_CLIENT_ID)
     keepalive = conf.get(CONF_KEEPALIVE)
 
-    internal_server_config = _setup_server(hass, config)
+    broker_config = _setup_server(hass, config)
 
     if CONF_BROKER in conf:
         broker = conf[CONF_BROKER]
@@ -232,10 +232,9 @@ def setup(hass, config):
         client_cert = conf.get(CONF_CLIENT_CERT)
         tls_insecure = conf.get(CONF_TLS_INSECURE)
         protocol = conf[CONF_PROTOCOL]
-    elif internal_server_config:
+    elif broker_config:
         # If no broker passed in, auto config to internal server
-        broker, port, username, password, certificate, protocol = \
-            internal_server_config
+        broker, port, username, password, certificate, protocol = broker_config
         # Embedded broker doesn't have some ssl variables
         client_key, client_cert, tls_insecure = None, None, None
     else:

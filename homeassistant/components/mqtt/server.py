@@ -61,6 +61,7 @@ def start(hass, server_config):
 
 def generate_config(hass, passwd):
     """Generate a configuration based on current Home Assistant instance."""
+    from homeassistant.components.mqtt import PROTOCOL_311
     config = {
         'listeners': {
             'default': {
@@ -98,6 +99,6 @@ def generate_config(hass, passwd):
         username = None
         password = None
 
-    client_config = ('localhost', 1883, username, password, None, '3.1.1')
+    client_config = ('localhost', 1883, username, password, None, PROTOCOL_311)
 
     return config, client_config
