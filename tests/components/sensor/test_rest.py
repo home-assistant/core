@@ -200,7 +200,7 @@ class TestRestData(unittest.TestCase):
         self.rest.update()
         self.assertEqual('test data', self.rest.data)
 
-    @patch('requests.get', side_effect=RequestException)
+    @patch('requests.Session', side_effect=RequestException)
     def test_update_request_exception(self, mock_req):
         """Test update when a request exception occurs."""
         self.rest.update()

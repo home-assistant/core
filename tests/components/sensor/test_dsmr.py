@@ -11,7 +11,7 @@ from unittest.mock import Mock
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.sensor.dsmr import DerivativeDSMREntity
 from homeassistant.const import STATE_UNKNOWN
-from tests.common import assert_setup_component
+from tests.common import assert_setup_component, mock_coro
 
 
 @asyncio.coroutine
@@ -35,7 +35,7 @@ def test_default_setup(hass, monkeypatch):
     }
 
     # mock for injecting DSMR telegram
-    dsmr = Mock(return_value=Mock())
+    dsmr = Mock(return_value=mock_coro([Mock(), None]))
     monkeypatch.setattr('dsmr_parser.protocol.create_dsmr_reader', dsmr)
 
     with assert_setup_component(1):
@@ -66,6 +66,7 @@ def test_default_setup(hass, monkeypatch):
     assert power_tariff.attributes.get('unit_of_measurement') is None
 
 
+@asyncio.coroutine
 def test_derivative():
     """Test calculation of derivative value."""
     from dsmr_parser.objects import MBusObject
