@@ -68,7 +68,7 @@ boto3==1.3.1
 
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
-broadlink==0.2
+broadlink==0.3
 
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==2.0.1

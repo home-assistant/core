@@ -21,7 +21,7 @@ from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_SWITCHES,
                                  CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['broadlink==0.2']
+REQUIREMENTS = ['broadlink==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,13 @@ DEFAULT_NAME = 'Broadlink switch'
 DEFAULT_TIMEOUT = 10
 SERVICE_LEARN = "learn_command"
 
-SENSOR_TYPES = ["rm", "sp1", "sp2"]
+RM_TYPES = ["rm", "rm2", "rm_mini", "rm_pro_phicomm", "rm2_home_plus",
+            "rm2_home_plus_gdt", "rm2_pro_plus", "rm2_pro_plus2",
+            "rm2_pro_plus_bl", "rm_mini_shate"]
+SP1_TYPES = ["sp1"]
+SP2_TYPES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
+
+SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES
 
 SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_OFF, default=None): cv.string,
@@ -39,10 +45,12 @@ SWITCH_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+    vol.Optional(CONF_SWITCHES, default={}):
+        vol.Schema({cv.slug: SWITCH_SCHEMA}),
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_TYPE, default=SENSOR_TYPES[0]): vol.In(SENSOR_TYPES),
+    vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]): vol.In(SWITCH_TYPES),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
 })
 
@@ -51,21 +59,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Broadlink switches."""
     import broadlink
     devices = config.get(CONF_SWITCHES, {})
-    switches = []
     ip_addr = config.get(CONF_HOST)
+    friendly_name = config.get(CONF_FRIENDLY_NAME)
     mac_addr = binascii.unhexlify(
         config.get(CONF_MAC).encode().replace(b':', b''))
-    sensor_type = config.get(CONF_TYPE)
+    switch_type = config.get(CONF_TYPE)
 
     persistent_notification = loader.get_component('persistent_notification')
 
     @asyncio.coroutine
     def _learn_command(call):
         try:
-            yield from hass.loop.run_in_executor(None, broadlink_device.auth)
+            auth = yield from hass.loop.run_in_executor(None,
+                                                        broadlink_device.auth)
         except socket.timeout:
+            _LOGGER.error("Failed to connect to device, timeout.")
+            return
+        if not auth:
             _LOGGER.error("Failed to connect to device.")
             return
+
         yield from hass.loop.run_in_executor(None,
                                              broadlink_device.enter_learning)
 
@@ -88,17 +101,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                              "Did not received any signal",
                                              title='Broadlink switch')
 
-    if sensor_type == "rm":
+    if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
-        switch = BroadlinkRMSwitch
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' + ip_addr,
                                _learn_command)
-    elif sensor_type == "sp1":
+        switches = []
+        for object_id, device_config in devices.items():
+            switches.append(
+                BroadlinkRMSwitch(
+                    device_config.get(CONF_FRIENDLY_NAME, object_id),
+                    broadlink_device,
+                    device_config.get(CONF_COMMAND_ON),
+                    device_config.get(CONF_COMMAND_OFF)
+                )
+            )
+    elif switch_type in SP1_TYPES:
         broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr)
-        switch = BroadlinkSP1Switch
-    elif sensor_type == "sp2":
+        switches = [BroadlinkSP1Switch(friendly_name, broadlink_device)]
+    elif switch_type in SP2_TYPES:
         broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr)
-        switch = BroadlinkSP2Switch
+        switches = [BroadlinkSP2Switch(friendly_name, broadlink_device)]
 
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
@@ -106,23 +128,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except socket.timeout:
         _LOGGER.error("Failed to connect to device.")
 
-    for object_id, device_config in devices.items():
-        switches.append(
-            switch(
-                device_config.get(CONF_FRIENDLY_NAME, object_id),
-                device_config.get(CONF_COMMAND_ON),
-                device_config.get(CONF_COMMAND_OFF),
-                broadlink_device
-            )
-        )
-
     add_devices(switches)
 
 
 class BroadlinkRMSwitch(SwitchDevice):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, friendly_name, command_on, command_off, device):
+    def __init__(self, friendly_name, device, command_on, command_off):
         """Initialize the switch."""
         self._name = friendly_name
         self._state = False
@@ -173,20 +185,27 @@ class BroadlinkRMSwitch(SwitchDevice):
             if retry < 1:
                 _LOGGER.error(error)
                 return False
-            try:
-                self._device.auth()
-            except socket.timeout:
-                pass
+            if not self._auth():
+                return False
             return self._sendpacket(packet, max(0, retry-1))
         return True
+
+    def _auth(self, retry=2):
+        try:
+            auth = self._device.auth()
+        except socket.timeout:
+            auth = False
+        if not auth and retry > 0:
+            return self._auth(max(0, retry-1))
+        return auth
 
 
 class BroadlinkSP1Switch(BroadlinkRMSwitch):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, friendly_name, command_on, command_off, device):
+    def __init__(self, friendly_name, device):
         """Initialize the switch."""
-        super().__init__(friendly_name, command_on, command_off, device)
+        super().__init__(friendly_name, device, None, None)
         self._command_on = 1
         self._command_off = 0
 
@@ -198,10 +217,8 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
             if retry < 1:
                 _LOGGER.error(error)
                 return False
-            try:
-                self._device.auth()
-            except socket.timeout:
-                pass
+            if not self._auth():
+                return False
             return self._sendpacket(packet, max(0, retry-1))
         return True
 
@@ -209,9 +226,9 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
 class BroadlinkSP2Switch(BroadlinkSP1Switch):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, friendly_name, command_on, command_off, device):
+    def __init__(self, friendly_name, device):
         """Initialize the switch."""
-        super().__init__(friendly_name, command_on, command_off, device)
+        super().__init__(friendly_name, device)
 
     @property
     def assumed_state(self):
@@ -234,10 +251,8 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
             if retry < 1:
                 _LOGGER.error(error)
                 return
-            try:
-                self._device.auth()
-            except socket.timeout:
-                pass
+            if not self._auth():
+                return
             return self._update(max(0, retry-1))
         if state is None and retry > 0:
             return self._update(max(0, retry-1))
