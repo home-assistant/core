@@ -7,13 +7,26 @@ https://home-assistant.io/components/mqtt/#use-the-embedded-broker
 import logging
 import tempfile
 
+import voluptuous as vol
+
 from homeassistant.core import callback
-from homeassistant.components.mqtt import PROTOCOL_311
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
 REQUIREMENTS = ['hbmqtt==0.8']
 DEPENDENCIES = ['http']
+
+# None allows custom config to be created through generate_config
+HBMQTT_CONFIG_SCHEMA = vol.Any(None, vol.Schema({
+    vol.Optional('auth'): vol.Schema({
+        vol.Optional('password-file'): cv.isfile,
+    }, extra=vol.ALLOW_EXTRA),
+    vol.Optional('listeners'): vol.Schema({
+        vol.Required('default'): vol.Schema(dict),
+        str: vol.Schema(dict)
+    })
+}, extra=vol.ALLOW_EXTRA))
 
 
 def start(hass, server_config):
@@ -48,6 +61,7 @@ def start(hass, server_config):
 
 def generate_config(hass, passwd):
     """Generate a configuration based on current Home Assistant instance."""
+    from homeassistant.components.mqtt import PROTOCOL_311
     config = {
         'listeners': {
             'default': {
