@@ -79,7 +79,7 @@ def brightness_state(value):
     if value.data > 0:
         return (value.data / 99) * 255, STATE_ON
     else:
-        return 255, STATE_OFF
+        return None, STATE_OFF
 
 
 class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
@@ -92,7 +92,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._brightness = None
-        self._last_brightness = None
+        self._last_brightness = 255
         self._state = None
         self._delay = delay
         self._refresh_value = refresh
@@ -127,6 +127,8 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         # If light was turned off - keep the previous value.
         if self._brightness:
             self._last_bightness = self._brightness
+        else:
+            self._brightness = 255
 
     def _value_changed(self, value):
         """Called when a value has changed on the network."""
