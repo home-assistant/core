@@ -75,6 +75,10 @@ logbook:
 # Track the sun
 sun:
 
+# Weather Prediction
+sensor:
+  platform: yr
+
 # Text to speech
 tts:
   platform: google
