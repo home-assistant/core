@@ -641,9 +641,8 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
             hass.async_add_job(async_see_device(mac=mac, host_name=host_name))
 
     async_track_time_interval(
-            hass, async_device_tracker_scan,
-            timedelta(seconds=interval)
-    )
+        hass, async_device_tracker_scan,
+        timedelta(seconds=interval))
 
     hass.async_add_job(async_device_tracker_scan, None)
 
