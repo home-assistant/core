@@ -67,7 +67,7 @@ class BBBGPIOSwitch(ToggleEntity):
 
         bbb_gpio.setup_output(self._pin)
 
-        if self._state == false:
+        if self._state == False:
             bbb_gpio.write_output(self._pin, 1 if self._invert_logic else 0)
         else:
             bbb_gpio.write_output(self._pin, 0 if self._invert_logic else 1)
