@@ -405,7 +405,10 @@ def async_from_config_dict(config: Dict[str, Any],
     config = new_config
 
     # Merge packages into the main config
-    config = merge_packages_config(config)
+    try:
+        config = merge_packages_config(config)
+    except vol.Invalid as ex:
+        async_log_exception(ex, 'packages', config, hass)
 
     # Filter out the repeating and common config section [homeassistant]
     components = set(key.split(' ')[0] for key in config.keys()
