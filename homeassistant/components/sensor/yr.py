@@ -187,8 +187,7 @@ class YrData(object):
                 model = self.data['meta']['model']
                 if '@nextrun' not in model:
                     model = model[0]
-                self._nextrun = dt_util.parse_datetime(model['@nextrun']) +\
-                    timedelta(minutes=10)
+                self._nextrun = dt_util.parse_datetime(model['@nextrun'])
             except (ExpatError, IndexError) as err:
                 try_again(err)
                 return
