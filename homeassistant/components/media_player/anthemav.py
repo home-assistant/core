@@ -23,7 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'anthemav'
 
-DEFAULT_NAME = "Anthem AVR"
 DEFAULT_PORT = 14999
 
 SUPPORT_ANTHEMAV = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -31,7 +30,7 @@ SUPPORT_ANTHEMAV = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     })
 
@@ -43,6 +42,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    name = config.get(CONF_NAME)
 
     _LOGGER.info('Provisioning Anthem AVR device at %s:%d', host, port)
 
@@ -55,7 +55,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         host=host, port=port, loop=hass.loop,
         update_callback=anthemav_update_callback)
 
-    device = AnthemAVR(avr)
+    device = AnthemAVR(avr, name)
 
     _LOGGER.debug('dump_devicedata: '+device.dump_avrdata)
     _LOGGER.debug('dump_conndata: '+avr.dump_conndata)
@@ -68,10 +68,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class AnthemAVR(MediaPlayerDevice):
     """Entity reading values from Anthem AVR protocol."""
 
-    def __init__(self, avr):
+    def __init__(self, avr, name):
         """"Initialize entity with transport."""
         super().__init__()
         self.avr = avr
+        self._name = name
 
     def _lookup(self, propname, dval=None):
         return getattr(self.avr.protocol, propname, dval)
@@ -89,7 +90,7 @@ class AnthemAVR(MediaPlayerDevice):
     @property
     def name(self):
         """Return name of device."""
-        return self._lookup('model', DEFAULT_NAME)
+        return self._name or self._lookup('model')
 
     @property
     def state(self):
