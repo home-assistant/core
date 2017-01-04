@@ -17,7 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['anthemav>=1.1.3']
+REQUIREMENTS = ['anthemav==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +31,7 @@ SUPPORT_ANTHEMAV = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.port,
-    vol.Optional(CONF_SCAN_INTERVAL): vol.All(vol.Coerce(int))
+    vol.Optional(CONF_PORT): cv.port,
     })
 
 SCAN_INTERVAL = 120
@@ -45,18 +44,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-
-    #
-    # If there's a better way to do this, I'm all ears.  I need to squash the
-    # global SCAN_INTERVAL value if the user has supplied an alternative scan
-    # interval in the configuration.  Since this is a local push/asyncio
-    # platform, I don't have direct control over the interval.  Setting this
-    # global is the only way I can tell hass itself how frequently to call
-    # async_update.
-    #
-    # pylint: disable=redefined-outer-name
-    # pylint: disable=invalid-name
-    SCAN_INTERVAL = config.get(CONF_SCAN_INTERVAL) or 120
 
     _LOGGER.info('Provisioning Anthem AVR device at %s:%d scan every %d sec',
                  host, port, SCAN_INTERVAL)
