@@ -157,6 +157,7 @@ omit =
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
+    homeassistant/components/device_tracker/ping.py
     homeassistant/components/device_tracker/snmp.py
     homeassistant/components/device_tracker/swisscom.py
     homeassistant/components/device_tracker/thomson.py
