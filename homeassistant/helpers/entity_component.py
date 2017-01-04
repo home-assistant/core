@@ -326,7 +326,7 @@ class EntityPlatform(object):
             return
 
         async_track_time_interval(
-            self.component.hass, self._update_entity_states, 
+            self.component.hass, self._update_entity_states,
             timedelta(seconds=self.scan_interval)
         )
 

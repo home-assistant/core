@@ -11,7 +11,6 @@ import homeassistant.loader as loader
 from homeassistant.components import group
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_component import process_scan_interval
 from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
 
