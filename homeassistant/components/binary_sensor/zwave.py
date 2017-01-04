@@ -20,6 +20,8 @@ DEPENDENCIES = []
 PHILIO = 0x013c
 PHILIO_SLIM_SENSOR = 0x0002
 PHILIO_SLIM_SENSOR_MOTION = (PHILIO, PHILIO_SLIM_SENSOR, 0)
+PHILIO_3_IN_1_SENSOR_GEN_4 = 0x000d
+PHILIO_3_IN_1_SENSOR_GEN_4_MOTION = (PHILIO, PHILIO_3_IN_1_SENSOR_GEN_4, 0)
 WENZHOU = 0x0118
 WENZHOU_SLIM_SENSOR_MOTION = (WENZHOU, PHILIO_SLIM_SENSOR, 0)
 
@@ -27,6 +29,7 @@ WORKAROUND_NO_OFF_EVENT = 'trigger_no_off_event'
 
 DEVICE_MAPPINGS = {
     PHILIO_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
+    PHILIO_3_IN_1_SENSOR_GEN_4_MOTION: WORKAROUND_NO_OFF_EVENT,
     WENZHOU_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
 }
 
@@ -96,6 +99,7 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity, Entity):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id or \
            self._value.node == value.node:
+            _LOGGER.debug('Value changed for label %s', self._value.label)
             self.schedule_update_ha_state()
 
 
