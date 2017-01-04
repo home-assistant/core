@@ -66,8 +66,8 @@ def setup(hass, config):
     """Setup keyboard_remote."""
     config = config.get(DOMAIN)
     device_descriptor = config.get(DEVICE_DESCRIPTOR)
-    if not device_descriptor or not os.path.exists(device_descriptor):
-        id_folder = '/dev/input/by-id/'
+    if not device_descriptor:
+        id_folder = '/dev/input/'
         _LOGGER.error(
             'A device_descriptor must be defined. '
             'Possible descriptors are %s:\n%s',
@@ -108,46 +108,56 @@ class KeyboardRemote(threading.Thread):
         """Construct a KeyboardRemote interface object."""
         from evdev import InputDevice
 
-        self.dev = InputDevice(device_descriptor)
+        self.device_descriptor = device_descriptor
+        try:
+            self.dev = InputDevice(device_descriptor)
+        except OSError:  # Keyboard not present
+            _LOGGER.debug(
+                'KeyboardRemote: keyboard not connected, %s',
+                self.device_descriptor)
+            self.keyboard_connected = False
+        else:
+            self.keyboard_connected = True
+            _LOGGER.debug(
+                'KeyboardRemote: keyboard connected, %s',
+                self.dev)
+
         threading.Thread.__init__(self)
         self.stopped = threading.Event()
         self.hass = hass
         self.key_value = key_value
-        self.device_descriptor = device_descriptor
 
     def run(self):
         """Main loop of the KeyboardRemote."""
         from evdev import categorize, ecodes, InputDevice
-        _LOGGER.debug('KeyboardRemote interface started for %s', self.dev)
 
-        self.dev.grab()
-        keyboard_connected = True
+        if self.keyboard_connected:
+            self.dev.grab()
+            _LOGGER.debug(
+                'KeyboardRemote interface started for %s',
+                self.dev)
 
         while not self.stopped.isSet():
+            # Sleeps to ease load on processor
+            time.sleep(.1)
 
-            # Is keyboard still there?
-            keyboard_still_connected = os.path.exists(self.device_descriptor)
-
-            # still disconnected
-            if not keyboard_connected and not keyboard_still_connected:
-                continue
-
-            # keyboard reconnected
-            if not keyboard_connected and keyboard_still_connected:
-                _LOGGER.debug('KeyboardRemote: keyboard re-connected, %s',
-                              self.device_descriptor)
-                time.sleep(1)  # Time to allow ACL permissions to kick in
-                self.dev = InputDevice(self.device_descriptor)
-                self.dev.grab()
-                keyboard_connected = True
+            if not self.keyboard_connected:
+                try:
+                    self.dev = InputDevice(self.device_descriptor)
+                except OSError:  # still disconnected
+                    continue
+                else:
+                    self.dev.grab()
+                    self.keyboard_connected = True
+                    _LOGGER.debug('KeyboardRemote: keyboard re-connected, %s',
+                                  self.device_descriptor)
 
             try:
                 event = self.dev.read_one()
             except IOError:  # Keyboard Disconnected
-                keyboard_connected = False
-                _LOGGER.debug(
-                    'KeyboardRemote: keyboard disconnected, %s',
-                    self.device_descriptor)
+                self.keyboard_connected = False
+                _LOGGER.debug('KeyboardRemote: keyard disconnected, %s',
+                              self.device_descriptor)
                 continue
 
             if not event:
