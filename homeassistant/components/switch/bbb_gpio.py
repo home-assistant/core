@@ -7,7 +7,7 @@ Allowed GPIO pin name is GPIOxxx or Px_x
 switch:
   - platform: bbb_gpio
     pins:
-      GPIO0_7: 
+      GPIO0_7:
         name: LED Red
       P9_12:
         name: LED Green
@@ -43,6 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Schema({cv.string: PIN_SCHEMA}),
 })
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Beaglebone GPIO devices."""
@@ -67,7 +68,7 @@ class BBBGPIOSwitch(ToggleEntity):
 
         bbb_gpio.setup_output(self._pin)
 
-        if self._state == False:
+        if self._state is False:
             bbb_gpio.write_output(self._pin, 1 if self._invert_logic else 0)
         else:
             bbb_gpio.write_output(self._pin, 0 if self._invert_logic else 1)
