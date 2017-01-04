@@ -34,8 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT): cv.port,
     })
 
-SCAN_INTERVAL = 120
-
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -45,8 +43,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    _LOGGER.info('Provisioning Anthem AVR device at %s:%d scan every %d sec',
-                 host, port, SCAN_INTERVAL)
+    _LOGGER.info('Provisioning Anthem AVR device at %s:%d', host, port)
 
     def anthemav_update_callback(message):
         """Receive notification from transport that new data exists."""
@@ -77,13 +74,7 @@ class AnthemAVR(MediaPlayerDevice):
         self.avr = avr
 
     def _lookup(self, propname, dval):
-        if self.reader:
-            pval = getattr(self.reader, propname)
-            _LOGGER.debug('query '+propname+' returned from avr: '+str(pval))
-            return pval
-        else:
-            _LOGGER.debug('query '+propname+' returned default: '+str(dval))
-            return dval
+        return getattr(self.reader, propname, dval)
 
     @property
     def reader(self):
