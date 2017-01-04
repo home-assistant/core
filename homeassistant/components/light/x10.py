@@ -92,4 +92,5 @@ class X10Light(Light):
         self._state = False
 
     def update(self):
+        """Fetch update state."""
         self._state = bool(get_unit_status(self._id))
