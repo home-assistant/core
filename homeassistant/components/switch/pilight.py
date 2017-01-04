@@ -80,13 +80,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class _ReceiveHandle(object):
     def __init__(self, config, echo):
+        """Initialize the handle."""
         self.config_items = config.items()
         self.echo = echo
 
     def match(self, code):
+        """Test if the received code matches the configured values.
+
+        The received values have to be a subset of the configured options.
+        """
         return self.config_items <= code.items()
 
     def run(self, switch, turn_on):
+        """Change the state of the switch."""
         switch.set_state(turn_on=turn_on, send_code=self.echo)
 
 
@@ -151,6 +157,12 @@ class PilightSwitch(SwitchDevice):
                     break
 
     def set_state(self, turn_on, send_code=True):
+        """Set the state of the switch.
+
+        This sets the state of the switch. If send_code is set to True, then
+        it will call the pilight.send service to actually send the codes
+        to the pilight daemon.
+        """
         if send_code:
             if turn_on:
                 self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
