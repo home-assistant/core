@@ -33,36 +33,36 @@ def setup(hass, config):
     return True
 
 
-def setup_output(port):
+def setup_output(pin):
     """Setup a GPIO as output."""
     import Adafruit_BBIO.GPIO as GPIO
-    GPIO.setup(port, GPIO.OUT)
+    GPIO.setup(pin, GPIO.OUT)
 
 
-def setup_input(port, pull_mode):
+def setup_input(pin, pull_mode):
     """Setup a GPIO as input."""
     import Adafruit_BBIO.GPIO as GPIO
-    GPIO.setup(port, GPIO.IN,
+    GPIO.setup(pin, GPIO.IN,
                GPIO.PUD_DOWN if pull_mode == 'DOWN' else GPIO.PUD_UP)
 
 
-def write_output(port, value):
+def write_output(pin, value):
     """Write a value to a GPIO."""
     import Adafruit_BBIO.GPIO as GPIO
-    GPIO.output(port, value)
+    GPIO.output(pin, value)
 
 
-def read_input(port):
+def read_input(pin):
     """Read a value from a GPIO."""
     import Adafruit_BBIO.GPIO as GPIO
-    return GPIO.input(port)
+    return GPIO.input(pin)
 
 
-def edge_detect(port, event_callback, bounce):
+def edge_detect(pin, event_callback, bounce):
     """Add detection for RISING and FALLING events."""
     import Adafruit_BBIO.GPIO as GPIO
     GPIO.add_event_detect(
-        port,
+        pin,
         GPIO.BOTH,
         callback=event_callback,
         bouncetime=bounce)
