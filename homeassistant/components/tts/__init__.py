@@ -49,8 +49,7 @@ SERVICE_CLEAR_CACHE = 'clear_cache'
 ATTR_MESSAGE = 'message'
 ATTR_CACHE = 'cache'
 ATTR_LANGUAGE = 'language'
-
-_RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([^_]+)_([a-z]+)\.[a-z0-9]{3,4}")
+_RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([^_]+)_([a-z_]+)\.[a-z0-9]{3,4}")
 KEY_PATTERN = '{}_{}_{}'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
