@@ -58,6 +58,7 @@ class X10Light(Light):
         self._name = light['name']
         self._id = light['id']
         self._brightness = 0
+        self._state = False
 
     @property
     def name(self):
@@ -72,7 +73,7 @@ class X10Light(Light):
     @property
     def is_on(self):
         """Return true if light is on."""
-        return bool(get_unit_status(self._id))
+        return self._state
 
     @property
     def supported_features(self):
@@ -83,7 +84,12 @@ class X10Light(Light):
         """Instruct the light to turn on."""
         x10_command('on ' + self._id)
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+        self._state = True
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         x10_command('off ' + self._id)
+        self._state = False
+
+    def update(self):
+        self._state = bool(get_unit_status(self._id))
