@@ -14,7 +14,6 @@ device_tracker:
 import logging
 import subprocess
 import sys
-import re
 from datetime import timedelta
 
 import voluptuous as vol
@@ -39,8 +38,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 class Host:
-    """Host object with ping detection"""
+    """Host object with ping detection."""
+
     def __init__(self, ip_address, dev_id, hass, config):
+        """Initialize the Host pinger."""
         self.hass = hass
         self.ip_address = ip_address
         self.dev_id = dev_id
@@ -48,11 +49,11 @@ class Host:
         if sys.platform == "win32":
             self._ping_cmd = ['ping', '-n 1', '-w 1000', self.ip_address]
         else:
-            self._ping_cmd = ['ping', '-n', '-q', '-c1', '-W1', self.ip_address]
-
+            self._ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
+                              self.ip_address]
 
     def ping(self):
-        """Send ICMP ping and return True if success"""
+        """Send ICMP ping and return True if success."""
         pinger = subprocess.Popen(self._ping_cmd, stdout=subprocess.PIPE)
         try:
             pinger.communicate()
@@ -61,7 +62,7 @@ class Host:
             return False
 
     def update(self, see):
-        """Update device state by sending one or more ping messages"""
+        """Update device state by sending one or more ping messages."""
         failed = 0
         while failed < self._count:  # check more times if host in unreachable
             if self.ping():
@@ -73,14 +74,16 @@ class Host:
 
 
 def setup_scanner(hass, config, see):
-    hosts = [Host(ip, dev_id, hass, config) for (dev_id, ip) in config[const.CONF_HOSTS].items()]
+    """Setup the Host objects and return the update function."""
+    hosts = [Host(ip, dev_id, hass, config) for (dev_id, ip) in
+             config[const.CONF_HOSTS].items()]
     interval = timedelta(seconds=len(hosts) * config[CONF_PING_COUNT] +
-                                 DEFAULT_SCAN_INTERVAL)
+                         DEFAULT_SCAN_INTERVAL)
     _LOGGER.info("Started ping tracker with interval=%s on hosts: %s",
                  interval, ",".join([host.ip_address for host in hosts]))
 
     def update(now):
-        """This update function gets called every interval time"""
+        """Update all the hosts on every interval time."""
         for host in hosts:
             host.update(see)
         track_point_in_utc_time(hass, update, now + interval)
