@@ -55,7 +55,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         host=host, port=port, loop=hass.loop,
         update_callback=anthemav_update_callback)
 
-    device = AnthemAVR(hass, avr)
+    device = AnthemAVR(avr)
 
     _LOGGER.debug('dump_devicedata: '+device.dump_avrdata)
     _LOGGER.debug('dump_conndata: '+avr.dump_conndata)
@@ -68,19 +68,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class AnthemAVR(MediaPlayerDevice):
     """Entity reading values from Anthem AVR protocol."""
 
-    def __init__(self, hass, avr):
-        """"Initialize entity with hass, host, and port."""
+    def __init__(self, avr):
+        """"Initialize entity with transport."""
         super().__init__()
-        self.hass = hass
         self.avr = avr
 
-    def _lookup(self, propname, dval):
-        return getattr(self.reader, propname, dval)
-
-    @property
-    def reader(self):
-        """Expose the protocol with smart wrapper."""
-        return self.avr.protocol
+    def _lookup(self, propname, dval=None):
+        return getattr(self.avr.protocol, propname, dval)
 
     @property
     def supported_media_commands(self):
@@ -100,7 +94,7 @@ class AnthemAVR(MediaPlayerDevice):
     @property
     def state(self):
         """Return state of power on/off."""
-        pwrstate = self._lookup('power', None)
+        pwrstate = self._lookup('power')
 
         if pwrstate is True:
             return STATE_ON
@@ -142,29 +136,29 @@ class AnthemAVR(MediaPlayerDevice):
 
     def select_source(self, source):
         """Change AVR to the designated source (by name)."""
-        self.update_avr('input_name', source)
+        self._update_avr('input_name', source)
         return self._lookup('input_list', ["Unknown"])
 
     def turn_off(self):
         """Turn AVR power off."""
-        self.update_avr('power', False)
+        self._update_avr('power', False)
 
     def turn_on(self):
         """Turn AVR power on."""
-        self.update_avr('power', True)
+        self._update_avr('power', True)
 
     def set_volume_level(self, volume):
         """Set AVR volume (0 to 1)."""
-        self.update_avr('volume_as_percentage', volume)
+        self._update_avr('volume_as_percentage', volume)
 
     def mute_volume(self, mute):
         """Engage AVR mute."""
-        self.update_avr('mute', mute)
+        self._update_avr('mute', mute)
 
-    def update_avr(self, propname, value):
+    def _update_avr(self, propname, value):
         """Update a property in the AVR."""
         _LOGGER.info('Sending command to AVR: set '+propname+' to '+str(value))
-        setattr(self.reader, propname, value)
+        setattr(self.avr.protocol, propname, value)
 
     def media_play(self):
         """Unused stub to satisfy frontend code."""
