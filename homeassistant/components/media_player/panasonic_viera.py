@@ -133,10 +133,13 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         """Turn on the media player."""
         if self._mac:
             self._wol.send_magic_packet(self._mac)
+            self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
-        self.send_key('NRC_POWER-ONOFF')
+        if self._state != STATE_OFF:
+            self.send_key('NRC_POWER-ONOFF')
+            self._state = STATE_OFF
 
     def volume_up(self):
         """Volume up the media player."""
