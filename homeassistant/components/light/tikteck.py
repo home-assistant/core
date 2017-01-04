@@ -18,8 +18,6 @@ REQUIREMENTS = ['tikteck==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'tikteck'
-
 SUPPORT_TIKTECK_LED = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 
 DEVICE_SCHEMA = vol.Schema({
