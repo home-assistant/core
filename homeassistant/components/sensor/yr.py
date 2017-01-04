@@ -82,8 +82,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     weather = YrData(hass, coordinates, dev)
     # Update weather on the hour, spread seconds
-    async_track_utc_time_change(hass, weather.async_update, minute=0,
-                                second=randrange(5, 25))
+    async_track_utc_time_change(hass, weather.async_update,
+                                minute=randrange(1, 10),
+                                second=randrange(0, 59))
     yield from weather.async_update()
 
 
@@ -139,7 +140,8 @@ class YrData(object):
 
     def __init__(self, hass, coordinates, devices):
         """Initialize the data object."""
-        self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/'
+        self._url = 'https://aa015h6buqvih86i1.api.met.no/'\
+                    'weatherapi/locationforecast/1.9/'
         self._urlparams = coordinates
         self._nextrun = None
         self.devices = devices
