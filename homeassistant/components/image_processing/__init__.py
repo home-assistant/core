@@ -20,6 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util.async import run_coroutine_threadsafe
 
 DOMAIN = 'image_processing'
 DEPENDENCIES = ['camera']
@@ -40,7 +41,10 @@ ATTR_PLATE = 'plate'
 ATTR_CONFIDENCE = 'confidence'
 
 CONF_SOURCE = 'source'
+CONF_CONFIDENCE = 'confidence'
+
 DEFAULT_TIMEOUT = 10
+DEFAULT_CONFIDENCE = 80
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SOURCE): vol.All(cv.ensure_list, [vol.Schema({
@@ -48,6 +52,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_NAME): cv.string,
     })]),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
+        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
 
 SERVICE_SCAN_SCHEMA = vol.Schema({
@@ -66,7 +72,7 @@ def async_setup(hass, config):
     """Setup image processing."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    yield from component.async_setup()
+    yield from component.async_setup(config)
 
     descriptions = yield from hass.loop.run_in_executor(
         None, load_yaml_config_file,
@@ -162,10 +168,15 @@ class ImageProcessingEntity(Entity):
         yield from self.async_image_processing(image)
 
 
-class ImageProcessingALPREntity(ImageProcessingEntity):
+class ImageProcessingAlprEntity(ImageProcessingEntity):
     """Base entity class for alpr image processing."""
 
     plates = {}  # last scan data
+
+    @property
+    def processing_class(self):
+        """Return the class of this entity from PROCESSING_CLASSES."""
+        return 'alpr'
 
     @property
     def state(self):
@@ -180,9 +191,14 @@ class ImageProcessingALPREntity(ImageProcessingEntity):
                 plate = i_pl
         return plate
 
+    def process_plates(self, plates):
+        """Send event with new plates and store data."""
+        run_coroutine_threadsafe(
+            self.async_process_plates(plates), self.hass.loop).result()
+
     @asyncio.coroutine
     def async_process_plates(self, plates):
-        """Send event with new plates.
+        """Send event with new plates and store data.
 
         This method is a coroutine.
         """
