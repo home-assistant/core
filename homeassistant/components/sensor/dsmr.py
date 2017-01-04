@@ -67,7 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the DSMR sensor."""
     # Suppress logging
-    logging.getLogger('dsmr_parser').setLevel(logging.DEBUG)
+    logging.getLogger('dsmr_parser').setLevel(logging.ERROR)
 
     from dsmr_parser import obis_references as obis_ref
     from dsmr_parser.protocol import create_dsmr_reader, create_tcp_dsmr_reader
