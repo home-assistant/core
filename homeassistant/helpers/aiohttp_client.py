@@ -1,16 +1,19 @@
 """Helper for aiohttp webclient stuff."""
+import sys
 import asyncio
-
 import aiohttp
 
+from aiohttp.hdrs import USER_AGENT
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-
+from homeassistant.const import __version__
 
 DATA_CONNECTOR = 'aiohttp_connector'
 DATA_CONNECTOR_NOTVERIFY = 'aiohttp_connector_notverify'
 DATA_CLIENTSESSION = 'aiohttp_clientsession'
 DATA_CLIENTSESSION_NOTVERIFY = 'aiohttp_clientsession_notverify'
+SERVER_SOFTWARE = 'HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}'.format(
+    __version__, aiohttp.__version__, sys.version_info)
 
 
 @callback
@@ -28,7 +31,8 @@ def async_get_clientsession(hass, verify_ssl=True):
         connector = _async_get_connector(hass, verify_ssl)
         clientsession = aiohttp.ClientSession(
             loop=hass.loop,
-            connector=connector
+            connector=connector,
+            headers={USER_AGENT: SERVER_SOFTWARE}
         )
         _async_register_clientsession_shutdown(hass, clientsession)
         hass.data[key] = clientsession
@@ -52,6 +56,7 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
     clientsession = aiohttp.ClientSession(
         loop=hass.loop,
         connector=connector,
+        headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs
     )
 
