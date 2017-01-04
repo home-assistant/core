@@ -24,7 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import process_scan_interval
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
@@ -640,10 +640,10 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
                 seen.add(mac)
             hass.async_add_job(async_see_device(mac=mac, host_name=host_name))
 
-    seconds, minutes, hours = process_scan_interval(interval)
-    async_track_utc_time_change(
-        hass, async_device_tracker_scan,
-        second=seconds, minute=minutes, hour=hours)
+    async_track_time_interval(
+            hass, async_device_tracker_scan,
+            timedelta(seconds=interval)
+    )
 
     hass.async_add_job(async_device_tracker_scan, None)
 

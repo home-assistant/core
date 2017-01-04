@@ -399,20 +399,3 @@ class TestHelpersEntityComponent(unittest.TestCase):
             return entity
 
         component.add_entities(create_entity(i) for i in range(2))
-
-
-class TestProcessScanInterval(unittest.TestCase):
-    """Test homeassistant.helpers.entity_component scan interval function."""
-
-    def test_process_scan_interval(self):
-        """Test scan interval processing."""
-        seconds, minutes, hours = process_scan_interval(2)
-        self.assertEqual(seconds, range(0, 60, 2))
-        self.assertEqual(len(seconds), 30)
-        self.assertIsNone(minutes)
-        self.assertIsNone(hours)
-
-        seconds, minutes, hours = process_scan_interval(180)
-        self.assertEqual(len(minutes), 20)
-        self.assertEqual(seconds, [0])
-        self.assertEqual(hours, None)
