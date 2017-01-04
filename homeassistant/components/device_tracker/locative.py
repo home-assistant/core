@@ -63,18 +63,18 @@ class LocativeView(HomeAssistantView):
             return ('Device id not specified.',
                     HTTP_UNPROCESSABLE_ENTITY)
 
-        if 'id' not in data:
-            _LOGGER.error('Location id not specified.')
-            return ('Location id not specified.',
-                    HTTP_UNPROCESSABLE_ENTITY)
-
         if 'trigger' not in data:
             _LOGGER.error('Trigger is not specified.')
             return ('Trigger is not specified.',
                     HTTP_UNPROCESSABLE_ENTITY)
 
+        if 'id' not in data and data['trigger'] != 'test':
+            _LOGGER.error('Location id not specified.')
+            return ('Location id not specified.',
+                    HTTP_UNPROCESSABLE_ENTITY)
+
         device = data['device'].replace('-', '')
-        location_name = data['id'].lower()
+        location_name = data['id'].lower() if 'id' in data else 'test'
         direction = data['trigger']
         gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 
