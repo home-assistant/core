@@ -37,7 +37,7 @@ aiohttp_cors==0.5.0
 amcrest==1.0.0
 
 # homeassistant.components.media_player.anthemav
-anthemav>=1.1.3
+anthemav==1.1.5
 
 # homeassistant.components.apcupsd
 apcaccess==0.0.4
