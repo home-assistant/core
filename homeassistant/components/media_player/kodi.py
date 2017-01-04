@@ -247,33 +247,31 @@ class KodiDevice(MediaPlayerDevice):
         else:
             _LOGGER.warning('turn_off requested but turn_off_action is none')
 
-        yield from self.async_update_ha_state()
-
     @asyncio.coroutine
     def async_volume_up(self):
         """Volume up the media player."""
         assert (
             yield from self._server.Input.ExecuteAction('volumeup')) == 'OK'
-        yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_volume_down(self):
         """Volume down the media player."""
         assert (
             yield from self._server.Input.ExecuteAction('volumedown')) == 'OK'
-        yield from self.async_update_ha_state()
 
-    @asyncio.coroutine
     def async_set_volume_level(self, volume):
-        """Set volume level, range 0..1."""
-        yield from self._server.Application.SetVolume(int(volume * 100))
-        yield from self.async_update_ha_state()
+        """Set volume level, range 0..1.
 
-    @asyncio.coroutine
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self._server.Application.SetVolume(int(volume * 100))
+
     def async_mute_volume(self, mute):
-        """Mute (true) or unmute (false) media player."""
-        yield from self._server.Application.SetMute(mute)
-        yield from self.async_update_ha_state()
+        """Mute (true) or unmute (false) media player.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self._server.Application.SetMute(mute)
 
     @asyncio.coroutine
     def async_set_play_state(self, state):
@@ -283,8 +281,6 @@ class KodiDevice(MediaPlayerDevice):
         if len(players) != 0:
             yield from self._server.Player.PlayPause(
                 players[0]['playerid'], state)
-
-        yield from self.async_update_ha_state()
 
     def async_media_play_pause(self):
         """Pause media on media player.
@@ -329,8 +325,6 @@ class KodiDevice(MediaPlayerDevice):
             yield from self._server.Player.GoTo(
                 players[0]['playerid'], direction)
 
-        yield from self.async_update_ha_state()
-
     def async_media_next_track(self):
         """Send next track command.
 
@@ -365,8 +359,6 @@ class KodiDevice(MediaPlayerDevice):
 
         if len(players) != 0:
             yield from self._server.Player.Seek(players[0]['playerid'], time)
-
-        yield from self.async_update_ha_state()
 
     def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player.
