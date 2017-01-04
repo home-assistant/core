@@ -25,10 +25,12 @@ def async_get_clientsession(hass, verify_ssl=True):
         key = DATA_CLIENTSESSION_NOTVERIFY
 
     if key not in hass.data:
+        config = hass.config.as_dict()
         connector = _async_get_connector(hass, verify_ssl)
         clientsession = aiohttp.ClientSession(
             loop=hass.loop,
-            connector=connector
+            connector=connector,
+            headers={'User-Agent': 'Home Assistant' + config['version']}
         )
         _async_register_clientsession_shutdown(hass, clientsession)
         hass.data[key] = clientsession
@@ -48,10 +50,12 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
     This method must be run in the event loop.
     """
     connector = _async_get_connector(hass, verify_ssl)
+    config = hass.config.as_dict()
 
     clientsession = aiohttp.ClientSession(
         loop=hass.loop,
         connector=connector,
+        headers={'User-Agent': 'Home Assistant' + config['version']},
         **kwargs
     )
 
