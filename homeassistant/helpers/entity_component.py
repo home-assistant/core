@@ -325,7 +325,7 @@ class EntityPlatform(object):
                    in self.platform_entities):
             return
 
-        async_track_time_interval(
+        self._async_unsub_polling = async_track_time_interval(
             self.component.hass, self._update_entity_states,
             timedelta(seconds=self.scan_interval)
         )
