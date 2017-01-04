@@ -343,6 +343,7 @@ omit =
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
     homeassistant/components/thingspeak.py
+    homeassistant/components/tts/picotts.py
     homeassistant/components/upnp.py
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/zeroconf.py
