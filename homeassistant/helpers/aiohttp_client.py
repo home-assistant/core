@@ -3,6 +3,7 @@ import sys
 import asyncio
 import aiohttp
 
+from aiohttp.hdrs import USER_AGENT
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.const import __version__
@@ -31,7 +32,7 @@ def async_get_clientsession(hass, verify_ssl=True):
         clientsession = aiohttp.ClientSession(
             loop=hass.loop,
             connector=connector,
-            headers={'User-Agent': SERVER_SOFTWARE}
+            headers={USER_AGENT: SERVER_SOFTWARE}
         )
         _async_register_clientsession_shutdown(hass, clientsession)
         hass.data[key] = clientsession
@@ -55,7 +56,7 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
     clientsession = aiohttp.ClientSession(
         loop=hass.loop,
         connector=connector,
-        headers={'User-Agent': SERVER_SOFTWARE},
+        headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs
     )
 
