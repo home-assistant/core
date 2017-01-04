@@ -50,7 +50,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 WINK_COMPONENTS = [
-    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate', 'fan'
+    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
+    'fan'
 ]
 
 
