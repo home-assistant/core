@@ -1,8 +1,13 @@
 #!/bin/sh
-# Excutes the tests with tox in a docker container.
+# Executes the tests with tox in a docker container.
 
 # Stop on errors
 set -e
 
+cd "$(dirname "$0")/.."
+
 docker build -t home-assistant-test -f virtualization/Docker/Dockerfile.dev .
-docker run --rm -it home-assistant-test tox -e py35
+docker run --rm \
+    -v `pwd`:/usr/src/app \
+    -t -i home-assistant-test \
+    tox -e py35

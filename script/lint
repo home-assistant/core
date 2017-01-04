@@ -1,6 +1,8 @@
 #!/bin/sh
 # Execute lint to spot code mistakes.
 
+cd "$(dirname "$0")/.."
+
 if [ "$1" = "--changed" ]; then
   export files="`git diff upstream/dev --name-only | grep -e '\.py$'`"
   echo "================================================="

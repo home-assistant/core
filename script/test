@@ -1,4 +1,6 @@
 #!/bin/sh
-# Excutes the tests with tox.
+# Executes the tests with tox.
+
+cd "$(dirname "$0")/.."
 
 tox -e py34
