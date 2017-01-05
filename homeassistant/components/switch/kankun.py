@@ -6,10 +6,31 @@ https://home-assistant.io/components/switch.kankun/
 """
 import logging
 import requests
+import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_PORT, CONF_PATH, CONF_USERNAME, CONF_PASSWORD,
+    CONF_SWITCHES)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_PORT = 80
+DEFAULT_PATH = "/cgi-bin/json.cgi"
+
+SWITCH_SCHEMA = vol.Schema({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+})
 
 
 # pylint: disable=unused-argument
@@ -22,12 +43,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         devices.append(
             KankunSwitch(
                 hass,
-                properties.get('name', dev_name),
-                properties.get('host', None),
-                properties.get('port', 80),
-                properties.get('path', '/cgi-bin/json.cgi'),
-                properties.get('user', None),
-                properties.get('passwd')))
+                properties.get(CONF_NAME, dev_name),
+                properties.get(CONF_HOST, None),
+                properties.get(CONF_PORT, DEFAULT_PORT),
+                properties.get(CONF_PATH, DEFAULT_PATH),
+                properties.get(CONF_USERNAME, None),
+                properties.get(CONF_PASSWORD)))
 
     add_devices_callback(devices)
 
