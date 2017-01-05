@@ -113,10 +113,8 @@ class KankunSwitch(SwitchDevice):
         """Turn the device on."""
         if self._switch('on'):
             self._state = True
-            self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if self._switch('off'):
             self._state = False
-            self.update_ha_state()
