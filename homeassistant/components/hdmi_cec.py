@@ -26,7 +26,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC>=0.4.5']
+REQUIREMENTS = ['pyCEC==0.4.6']
 
 DOMAIN = 'hdmi_cec'
 
@@ -86,7 +86,7 @@ SERVICE_SEND_COMMAND_SCHEMA = vol.Schema({
     vol.Optional(ATTR_DST): _VOL_HEX,
     vol.Optional(ATTR_ATT): _VOL_HEX,
     vol.Optional(ATTR_RAW): vol.Coerce(str)
-}, extra=vol.ALLOW_EXTRA)
+}, extra=vol.PREVENT_EXTRA)
 
 SERVICE_VOLUME = 'volume'
 SERVICE_VOLUME_SCHEMA = vol.Schema({
@@ -95,12 +95,12 @@ SERVICE_VOLUME_SCHEMA = vol.Schema({
     vol.Optional(CMD_MUTE): None,
     vol.Optional(CMD_UNMUTE): None,
     vol.Optional(CMD_MUTE_TOGGLE): None
-}, extra=vol.ALLOW_EXTRA)
+}, extra=vol.PREVENT_EXTRA)
 
 SERVICE_UPDATE_DEVICES = 'update'
 SERVICE_UPDATE_DEVICES_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({})
-}, extra=vol.ALLOW_EXTRA)
+}, extra=vol.PREVENT_EXTRA)
 
 SERVICE_SELECT_DEVICE = 'select_device'
 
