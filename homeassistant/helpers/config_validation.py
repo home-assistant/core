@@ -85,6 +85,8 @@ def isfile(value: Any) -> str:
 
 def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
     """Wrap value in list if it is not one."""
+    if value is None:
+        return []
     return value if isinstance(value, list) else [value]
 
 
