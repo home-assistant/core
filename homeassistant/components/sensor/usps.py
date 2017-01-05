@@ -56,7 +56,7 @@ class USPSSensor(Entity):
         self._profile = myusps.get_profile(session)
         self._packages = None
         self.update = Throttle(interval)(self._update)
-        self._update()
+        self.update()
 
     @property
     def name(self):
