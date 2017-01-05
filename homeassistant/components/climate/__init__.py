@@ -5,16 +5,17 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/climate/
 """
 import asyncio
+from datetime import timedelta
 import logging
 import os
 import functools as ft
 from numbers import Number
-import voluptuous as vol
 
-from homeassistant.helpers.entity_component import EntityComponent
+import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +26,7 @@ from homeassistant.const import (
 DOMAIN = "climate"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-SCAN_INTERVAL = 60
+SCAN_INTERVAL = timedelta(seconds=60)
 
 SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_SET_AUX_HEAT = "set_aux_heat"
