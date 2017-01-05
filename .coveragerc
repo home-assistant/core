@@ -13,6 +13,9 @@ omit =
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
+    homeassistant/components/bbb_gpio.py
+    homeassistant/components/*/bbb_gpio.py
+
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
 
@@ -157,6 +160,7 @@ omit =
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
+    homeassistant/components/device_tracker/ping.py
     homeassistant/components/device_tracker/snmp.py
     homeassistant/components/device_tracker/swisscom.py
     homeassistant/components/device_tracker/thomson.py
@@ -183,6 +187,7 @@ omit =
     homeassistant/components/light/lifx.py
     homeassistant/components/light/limitlessled.py
     homeassistant/components/light/osramlightify.py
+    homeassistant/components/light/tikteck.py
     homeassistant/components/light/x10.py
     homeassistant/components/light/yeelight.py
     homeassistant/components/lirc.py
@@ -320,6 +325,7 @@ omit =
     homeassistant/components/sensor/transmission.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
+    homeassistant/components/sensor/usps.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/xbox_live.py
@@ -334,6 +340,7 @@ omit =
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/hook.py
+    homeassistant/components/switch/kankun.py
     homeassistant/components/switch/mystrom.py
     homeassistant/components/switch/netio.py
     homeassistant/components/switch/orvibo.py
@@ -345,6 +352,7 @@ omit =
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
     homeassistant/components/thingspeak.py
+    homeassistant/components/tts/picotts.py
     homeassistant/components/upnp.py
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/zeroconf.py

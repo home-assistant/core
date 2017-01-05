@@ -1,16 +1,19 @@
 """Helper for aiohttp webclient stuff."""
+import sys
 import asyncio
-
 import aiohttp
 
+from aiohttp.hdrs import USER_AGENT
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-
+from homeassistant.const import __version__
 
 DATA_CONNECTOR = 'aiohttp_connector'
 DATA_CONNECTOR_NOTVERIFY = 'aiohttp_connector_notverify'
 DATA_CLIENTSESSION = 'aiohttp_clientsession'
 DATA_CLIENTSESSION_NOTVERIFY = 'aiohttp_clientsession_notverify'
+SERVER_SOFTWARE = 'HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}'.format(
+    __version__, aiohttp.__version__, sys.version_info)
 
 
 @callback
@@ -28,7 +31,8 @@ def async_get_clientsession(hass, verify_ssl=True):
         connector = _async_get_connector(hass, verify_ssl)
         clientsession = aiohttp.ClientSession(
             loop=hass.loop,
-            connector=connector
+            connector=connector,
+            headers={USER_AGENT: SERVER_SOFTWARE}
         )
         _async_register_clientsession_shutdown(hass, clientsession)
         hass.data[key] = clientsession
@@ -52,6 +56,7 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
     clientsession = aiohttp.ClientSession(
         loop=hass.loop,
         connector=connector,
+        headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs
     )
 
@@ -87,33 +92,29 @@ def _async_get_connector(hass, verify_ssl=True):
         if DATA_CONNECTOR not in hass.data:
             connector = aiohttp.TCPConnector(loop=hass.loop)
             hass.data[DATA_CONNECTOR] = connector
-
-            _async_register_connector_shutdown(hass, connector)
         else:
             connector = hass.data[DATA_CONNECTOR]
     else:
         if DATA_CONNECTOR_NOTVERIFY not in hass.data:
             connector = aiohttp.TCPConnector(loop=hass.loop, verify_ssl=False)
             hass.data[DATA_CONNECTOR_NOTVERIFY] = connector
-
-            _async_register_connector_shutdown(hass, connector)
         else:
             connector = hass.data[DATA_CONNECTOR_NOTVERIFY]
 
     return connector
 
 
-@callback
-# pylint: disable=invalid-name
-def _async_register_connector_shutdown(hass, connector):
-    """Register connector pool close on homeassistant shutdown.
+@asyncio.coroutine
+def async_cleanup_websession(hass):
+    """Cleanup aiohttp connector pool.
 
-    This method must be run in the event loop.
+    This method is a coroutine.
     """
-    @asyncio.coroutine
-    def _async_close_connector(event):
-        """Close websession on shutdown."""
-        yield from connector.close()
+    tasks = []
+    if DATA_CONNECTOR in hass.data:
+        tasks.append(hass.data[DATA_CONNECTOR].close())
+    if DATA_CONNECTOR_NOTVERIFY in hass.data:
+        tasks.append(hass.data[DATA_CONNECTOR_NOTVERIFY].close())
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_close_connector)
+    if tasks:
+        yield from asyncio.wait(tasks, loop=hass.loop)
