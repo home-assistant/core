@@ -272,6 +272,8 @@ influxdb==3.0.0
 insteon_hub==0.4.5
 
 # homeassistant.components.media_player.kodi
+jsonrpc-async==0.1
+
 # homeassistant.components.notify.kodi
 jsonrpc-requests==0.3
 
