@@ -17,43 +17,34 @@ class TestRestCommandSetup(object):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
+        self.config = {
+            rc.DOMAIN: {'test_get': {
+                'url': 'http://example.com/'
+            }}
+        }
+
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
 
     def test_setup_component(self):
         """Test setup component."""
-        config = {
-            rc.DOMAIN: {}
-        }
-
         with assert_setup_component(1):
-            setup_component(self.hass, rc.DOMAIN, config)
+            setup_component(self.hass, rc.DOMAIN, self.config)
 
     def test_setup_component_timeout(self):
         """Test setup component timeout."""
-        config = {
-            rc.DOMAIN: {
-                'timeout': 10,
-            }
-        }
+        self.config[rc.DOMAIN]['test_get']['timeout'] = 10
 
         with assert_setup_component(1):
-            setup_component(self.hass, rc.DOMAIN, config)
+            setup_component(self.hass, rc.DOMAIN, self.config)
 
     def test_setup_component_test_service(self):
         """Test setup component and check if service exits."""
-        config = {
-            rc.DOMAIN: {}
-        }
-
         with assert_setup_component(1):
-            setup_component(self.hass, rc.DOMAIN, config)
+            setup_component(self.hass, rc.DOMAIN, self.config)
 
-        assert self.hass.services.has_service(rc.DOMAIN, rc.SERVICE_GET)
-        assert self.hass.services.has_service(rc.DOMAIN, rc.SERVICE_POST)
-        assert self.hass.services.has_service(rc.DOMAIN, rc.SERVICE_PUT)
-        assert self.hass.services.has_service(rc.DOMAIN, rc.SERVICE_DELETE)
+        assert self.hass.services.has_service(rc.DOMAIN, 'test_get')
 
 
 class TestRestCommandComponent(object):
@@ -61,153 +52,153 @@ class TestRestCommandComponent(object):
 
     def setup_method(self):
         """Setup things to be run when tests are started."""
-        config = {
-            rc.DOMAIN: {}
+        self.url = "https://example.com/"
+        self.config = {
+            rc.DOMAIN: {
+                'get_test': {
+                    'url': self.url,
+                    'method': 'get',
+                },
+                'post_test': {
+                    'url': self.url,
+                    'method': 'post',
+                },
+                'put_test': {
+                    'url': self.url,
+                    'method': 'put',
+                },
+                'delete_test': {
+                    'url': self.url,
+                    'method': 'delete',
+                },
+            }
         }
 
         self.hass = get_test_home_assistant()
-        setup_component(self.hass, rc.DOMAIN, config)
 
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
 
+    def test_setup_tests(self):
+        """Setup test config and test it."""
+        with assert_setup_component(4):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        assert self.hass.services.has_service(rc.DOMAIN, 'get_test')
+        assert self.hass.services.has_service(rc.DOMAIN, 'post_test')
+        assert self.hass.services.has_service(rc.DOMAIN, 'put_test')
+        assert self.hass.services.has_service(rc.DOMAIN, 'delete_test')
+
     def test_rest_command_timeout(self, aioclient_mock):
         """Call a rest command with timeout."""
-        url = "https://example.com/"
-        data = {
-            'url': url,
-        }
+        with assert_setup_component(4):
+            setup_component(self.hass, rc.DOMAIN, self.config)
 
-        aioclient_mock.get(url, exc=asyncio.TimeoutError())
+        aioclient_mock.get(self.url, exc=asyncio.TimeoutError())
 
-        self.hass.services.call(rc.DOMAIN, rc.SERVICE_GET, data)
+        self.hass.services.call(rc.DOMAIN, 'get_test', {})
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
 
     def test_rest_command_aiohttp_error(self, aioclient_mock):
         """Call a rest command with aiohttp exception."""
-        url = "https://example.com/"
-        data = {
-            'url': url,
-        }
+        with assert_setup_component(4):
+            setup_component(self.hass, rc.DOMAIN, self.config)
 
-        aioclient_mock.get(url, exc=aiohttp.errors.ClientError())
+        aioclient_mock.get(self.url, exc=aiohttp.errors.ClientError())
 
-        self.hass.services.call(rc.DOMAIN, rc.SERVICE_GET, data)
+        self.hass.services.call(rc.DOMAIN, 'get_test', {})
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
 
     def test_rest_command_http_error(self, aioclient_mock):
         """Call a rest command with status code 400."""
-        url = "https://example.com/"
-        data = {
-            'url': url,
-        }
+        with assert_setup_component(4):
+            setup_component(self.hass, rc.DOMAIN, self.config)
 
-        aioclient_mock.get(url, status=400)
+        aioclient_mock.get(self.url, status=400)
 
-        self.hass.services.call(rc.DOMAIN, rc.SERVICE_GET, data)
+        self.hass.services.call(rc.DOMAIN, 'get_test', {})
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
 
     def test_rest_command_auth(self, aioclient_mock):
         """Call a rest command with auth credential."""
-        url = "https://example.com/"
         data = {
-            'url': url,
             'username': 'test',
             'password': '123456',
         }
+        self.config[rc.DOMAIN]['get_test'].update(data)
 
-        aioclient_mock.get(url, content=b'success')
+        with assert_setup_component(4):
+            setup_component(self.hass, rc.DOMAIN, self.config)
 
-        self.hass.services.call(rc.DOMAIN, rc.SERVICE_GET, data)
-        self.hass.block_till_done()
+        aioclient_mock.get(self.url, content=b'success')
 
-        assert len(aioclient_mock.mock_calls) == 1
-
-    def test_rest_command_params(self, aioclient_mock):
-        """Call a rest command with url query params."""
-        url = "https://example.com/"
-        params = {
-            'idx': '5',
-            'token': 'xy',
-        }
-        data = {
-            'url': url,
-            'params': params,
-        }
-
-        aioclient_mock.get(url, params=params, content=b'success')
-
-        self.hass.services.call(rc.DOMAIN, rc.SERVICE_GET, data)
+        self.hass.services.call(rc.DOMAIN, 'get_test', {})
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
 
     def test_rest_command_form_data(self, aioclient_mock):
         """Call a rest command with post form data."""
-        url = "https://example.com/"
-        payload = {
-            'name': 'Maier',
-            'sex': 'm',
-        }
         data = {
-            'url': url,
-            'payload': payload,
+            'payload': 'test'
         }
+        self.config[rc.DOMAIN]['post_test'].update(data)
 
-        aioclient_mock.post(url, content=b'success')
+        with assert_setup_component(4):
+            setup_component(self.hass, rc.DOMAIN, self.config)
 
-        self.hass.services.call(rc.DOMAIN, rc.SERVICE_POST, data)
+        aioclient_mock.post(self.url, content=b'success')
+
+        self.hass.services.call(rc.DOMAIN, 'post_test', {})
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2] == payload
+        assert aioclient_mock.mock_calls[0][2] == b'test'
 
     def test_rest_command_get(self, aioclient_mock):
         """Call a rest command with get."""
-        url = "https://example.com/"
-        data = {
-            'url': url,
-        }
+        with assert_setup_component(4):
+            setup_component(self.hass, rc.DOMAIN, self.config)
 
-        aioclient_mock.get(url, content=b'success')
+        aioclient_mock.get(self.url, content=b'success')
 
-        self.hass.services.call(rc.DOMAIN, rc.SERVICE_GET, data)
+        self.hass.services.call(rc.DOMAIN, 'get_test', {})
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
 
     def test_rest_command_delete(self, aioclient_mock):
         """Call a rest command with delete."""
-        url = "https://example.com/"
-        data = {
-            'url': url,
-        }
+        with assert_setup_component(4):
+            setup_component(self.hass, rc.DOMAIN, self.config)
 
-        aioclient_mock.delete(url, content=b'success')
+        aioclient_mock.delete(self.url, content=b'success')
 
-        self.hass.services.call(rc.DOMAIN, rc.SERVICE_DELETE, data)
+        self.hass.services.call(rc.DOMAIN, 'delete_test', {})
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
 
     def test_rest_command_post(self, aioclient_mock):
         """Call a rest command with post."""
-        url = "https://example.com/"
         data = {
-            'url': url,
             'payload': 'data',
         }
+        self.config[rc.DOMAIN]['post_test'].update(data)
 
-        aioclient_mock.post(url, content=b'success')
+        with assert_setup_component(4):
+            setup_component(self.hass, rc.DOMAIN, self.config)
 
-        self.hass.services.call(rc.DOMAIN, rc.SERVICE_POST, data)
+        aioclient_mock.post(self.url, content=b'success')
+
+        self.hass.services.call(rc.DOMAIN, 'post_test', {})
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
@@ -215,15 +206,17 @@ class TestRestCommandComponent(object):
 
     def test_rest_command_put(self, aioclient_mock):
         """Call a rest command with put."""
-        url = "https://example.com/"
         data = {
-            'url': url,
             'payload': 'data',
         }
+        self.config[rc.DOMAIN]['put_test'].update(data)
 
-        aioclient_mock.put(url, content=b'success')
+        with assert_setup_component(4):
+            setup_component(self.hass, rc.DOMAIN, self.config)
 
-        self.hass.services.call(rc.DOMAIN, rc.SERVICE_PUT, data)
+        aioclient_mock.put(self.url, content=b'success')
+
+        self.hass.services.call(rc.DOMAIN, 'put_test', {})
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
