@@ -72,7 +72,7 @@ ATTR_BATTERY = 'battery'
 ATTR_ATTRIBUTES = 'attributes'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,  # seconds
+    vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
     vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
     vol.Optional(CONF_CONSIDER_HOME,
                  default=timedelta(seconds=DEFAULT_CONSIDER_HOME)): vol.All(
