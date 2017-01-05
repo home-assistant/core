@@ -74,7 +74,7 @@ class LocativeView(HomeAssistantView):
                     HTTP_UNPROCESSABLE_ENTITY)
 
         device = data['device'].replace('-', '')
-        location_name = data['id'].lower() if 'id' in data else 'test'
+        location_name = data.get('id', data['trigger']).lower()
         direction = data['trigger']
         gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 
