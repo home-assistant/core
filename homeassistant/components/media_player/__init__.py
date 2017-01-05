@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/media_player/
 """
 import asyncio
+from datetime import timedelta
 import functools as ft
 import hashlib
 import logging
@@ -34,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'media_player'
 DEPENDENCIES = ['http']
-SCAN_INTERVAL = 10
+SCAN_INTERVAL = timedelta(seconds=10)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
