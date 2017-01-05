@@ -6,8 +6,8 @@ https://home-assistant.io/components/notify.lannouncer/
 """
 import logging
 
-from urllib.parse import quote_plus
-import requests
+from urllib.parse import urlencode
+import socket
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -16,8 +16,8 @@ from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
 ATTR_METHOD = 'method'
-ATTR_METHOD_SPEAK = 'speak'
-ATTR_METHOD_ALARM = 'alarm'
+ATTR_METHOD_DEFAULT = 'speak'
+ATTR_METHOD_ALLOWED = ['speak', 'alarm']
 
 DEFAULT_PORT = 1035
 
@@ -34,14 +34,15 @@ def get_service(hass, config):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    return LannouncerNotificationService(host, port)
+    return LannouncerNotificationService(hass, host, port)
 
 
 class LannouncerNotificationService(BaseNotificationService):
     """Implementation of a notification service for Lannouncer."""
 
-    def __init__(self, host, port):
+    def __init__(self, hass, host, port):
         """Initialize the service."""
+        self._hass = hass
         self._host = host
         self._port = port
 
@@ -51,29 +52,34 @@ class LannouncerNotificationService(BaseNotificationService):
         if data is not None and ATTR_METHOD in data:
             method = data.get(ATTR_METHOD)
         else:
-            method = ATTR_METHOD_SPEAK
+            method = ATTR_METHOD_DEFAULT
 
-        if method == ATTR_METHOD_SPEAK:
-            url = "http://{}:{}/?SPEAK={}&@DONE@".format(
-                self._host, self._port, quote_plus(message))
-
-        elif method == ATTR_METHOD_ALARM:
-            url = "http://{}:{}/?ALARM={}&@DONE@".format(
-                self._host, self._port, quote_plus(message))
-
-        else:
+        if method not in ATTR_METHOD_ALLOWED:
             _LOGGER.error("Unknown method %s", method)
             return None
 
+        cmd = urlencode({method: message})
+
         try:
-            _LOGGER.debug("Sending message to %s", url)
-            requests.get(url)
+            # Open socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(10)
+            sock.connect((self._host, self._port))
 
-        except requests.ConnectionError:
-            # Lannouncer doesn't send a HTTP response code,
-            # but just prints the raw string LANnouncer: OK
-            pass
+            # Send message
+            _LOGGER.debug("Sending message: %s", cmd)
+            sock.sendall(cmd.encode())
+            sock.sendall("&@DONE@\n".encode())
 
-        except requests.exceptions.RequestException as err:
-            _LOGGER.exception('Could not send lannouncer notification: %s',
-                              err)
+            # Check response
+            buffer = sock.recv(1024)
+            if buffer != b'LANnouncer: OK':
+                _LOGGER.error('Error sending data to Lannnouncer: %s',
+                              buffer.decode())
+
+            # Close socket
+            sock.close()
+        except socket.gaierror:
+            _LOGGER.error('Unable to connect to host %s', self._host)
+        except socket.error:
+            _LOGGER.exception('Failed to send data to Lannnouncer')
