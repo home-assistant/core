@@ -405,8 +405,7 @@ def key_dependency(key, dependency):
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): string,
-    vol.Optional(CONF_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_SCAN_INTERVAL): time_period
 }, extra=vol.ALLOW_EXTRA)
 
 EVENT_SCHEMA = vol.Schema({

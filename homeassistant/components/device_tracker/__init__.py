@@ -24,6 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
@@ -71,7 +72,7 @@ ATTR_BATTERY = 'battery'
 ATTR_ATTRIBUTES = 'attributes'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,  # seconds
+    vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
     vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
     vol.Optional(CONF_CONSIDER_HOME,
                  default=timedelta(seconds=DEFAULT_CONSIDER_HOME)): vol.All(
@@ -639,8 +640,9 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
                 seen.add(mac)
             hass.async_add_job(async_see_device(mac=mac, host_name=host_name))
 
-    async_track_utc_time_change(
-        hass, async_device_tracker_scan, second=range(0, 60, interval))
+    async_track_time_interval(
+        hass, async_device_tracker_scan,
+        timedelta(seconds=interval))
 
     hass.async_add_job(async_device_tracker_scan, None)
 

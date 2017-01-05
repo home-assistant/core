@@ -1,5 +1,6 @@
 """Helpers for components that manage entities."""
 import asyncio
+from datetime import timedelta
 
 from homeassistant import config as conf_util
 from homeassistant.bootstrap import (
@@ -12,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_utc_time_change
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.util.async import (
     run_callback_threadsafe, run_coroutine_threadsafe)
@@ -324,9 +325,10 @@ class EntityPlatform(object):
                    in self.platform_entities):
             return
 
-        self._async_unsub_polling = async_track_utc_time_change(
+        self._async_unsub_polling = async_track_time_interval(
             self.component.hass, self._update_entity_states,
-            second=range(0, 60, self.scan_interval))
+            timedelta(seconds=self.scan_interval)
+        )
 
     @asyncio.coroutine
     def _async_process_entity(self, new_entity, update_before_add):
