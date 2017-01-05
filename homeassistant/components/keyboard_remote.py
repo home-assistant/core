@@ -1,5 +1,5 @@
 """
-Recieve signals from a keyboard and use it as a remote control.
+Receive signals from a keyboard and use it as a remote control.
 
 This component allows to use a keyboard as remote control. It will
 fire ´keyboard_remote_command_received´ events witch can then be used
@@ -12,7 +12,7 @@ because `evdev` will block it.
 Example:
   keyboard_remote:
     device_descriptor: '/dev/input/by-id/foo'
-    key_value: 'key_up' # optional alternaive 'key_down' and 'key_hold'
+    type: 'key_up' # optional alternaive 'key_down' and 'key_hold'
     # be carefull, 'key_hold' fires a lot of events
 
   and an automation rule to bring breath live into it.
@@ -33,6 +33,7 @@ Example:
 import threading
 import logging
 import os
+import time
 
 import voluptuous as vol
 
@@ -65,8 +66,8 @@ def setup(hass, config):
     """Setup keyboard_remote."""
     config = config.get(DOMAIN)
     device_descriptor = config.get(DEVICE_DESCRIPTOR)
-    if not device_descriptor or not os.path.isfile(device_descriptor):
-        id_folder = '/dev/input/by-id/'
+    if not device_descriptor:
+        id_folder = '/dev/input/'
         _LOGGER.error(
             'A device_descriptor must be defined. '
             'Possible descriptors are %s:\n%s',
@@ -107,7 +108,20 @@ class KeyboardRemote(threading.Thread):
         """Construct a KeyboardRemote interface object."""
         from evdev import InputDevice
 
-        self.dev = InputDevice(device_descriptor)
+        self.device_descriptor = device_descriptor
+        try:
+            self.dev = InputDevice(device_descriptor)
+        except OSError:  # Keyboard not present
+            _LOGGER.debug(
+                'KeyboardRemote: keyboard not connected, %s',
+                self.device_descriptor)
+            self.keyboard_connected = False
+        else:
+            self.keyboard_connected = True
+            _LOGGER.debug(
+                'KeyboardRemote: keyboard connected, %s',
+                self.dev)
+
         threading.Thread.__init__(self)
         self.stopped = threading.Event()
         self.hass = hass
@@ -115,13 +129,36 @@ class KeyboardRemote(threading.Thread):
 
     def run(self):
         """Main loop of the KeyboardRemote."""
-        from evdev import categorize, ecodes
-        _LOGGER.debug('KeyboardRemote interface started for %s', self.dev)
+        from evdev import categorize, ecodes, InputDevice
 
-        self.dev.grab()
+        if self.keyboard_connected:
+            self.dev.grab()
+            _LOGGER.debug(
+                'KeyboardRemote interface started for %s',
+                self.dev)
 
         while not self.stopped.isSet():
-            event = self.dev.read_one()
+            # Sleeps to ease load on processor
+            time.sleep(.1)
+
+            if not self.keyboard_connected:
+                try:
+                    self.dev = InputDevice(self.device_descriptor)
+                except OSError:  # still disconnected
+                    continue
+                else:
+                    self.dev.grab()
+                    self.keyboard_connected = True
+                    _LOGGER.debug('KeyboardRemote: keyboard re-connected, %s',
+                                  self.device_descriptor)
+
+            try:
+                event = self.dev.read_one()
+            except IOError:  # Keyboard Disconnected
+                self.keyboard_connected = False
+                _LOGGER.debug('KeyboardRemote: keyard disconnected, %s',
+                              self.device_descriptor)
+                continue
 
             if not event:
                 continue
