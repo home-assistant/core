@@ -303,6 +303,9 @@ mficlient==0.3.0
 # homeassistant.components.sensor.miflora
 miflora==0.1.14
 
+# homeassistant.components.sensor.usps
+myusps==1.0.0
+
 # homeassistant.components.discovery
 netdisco==0.8.1
 
@@ -583,6 +586,9 @@ temperusb==1.5.1
 # homeassistant.components.thingspeak
 thingspeak==0.4.0
 
+# homeassistant.components.light.tikteck
+tikteck==0.4
+
 # homeassistant.components.sensor.transmission
 # homeassistant.components.switch.transmission
 transmissionrpc==0.11
@@ -597,7 +603,7 @@ uber_rides==0.2.7
 urllib3
 
 # homeassistant.components.camera.uvc
-uvcclient==0.9.0
+uvcclient==0.10.0
 
 # homeassistant.components.device_tracker.volvooncall
 volvooncall==0.1.1
