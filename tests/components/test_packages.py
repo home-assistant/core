@@ -3,6 +3,8 @@ from unittest.mock import patch
 import pytest
 from homeassistant.components import packages as pkg
 
+import voluptuous as vol
+
 
 # pylint: disable=redefined-outer-name
 @pytest.fixture
@@ -26,7 +28,7 @@ def test_blocked_comps(log_err):
 
     assert log_err.call_count == 1
     assert config == {}
-    assert 'not allowed' in log_err.call_args[0]
+    assert 'not allowed' in log_err.call_args[0][0]
 
 
 def test_merge_dict(log_err):
@@ -79,4 +81,39 @@ def test_new(log_err):
 
     assert log_err.call_count == 0
     assert len(config) == 1
+    assert len(config['light']) == 1
+
+
+def test_schema_err(log_err):
+    """Test if we have a type mismatch for packages."""
+    package_1 = {
+        'input_boolean': None,
+    }
+    config = {
+        'packages': {
+            'bool_package': package_1
+        }
+    }
+    with pytest.raises(vol.Invalid):
+        pkg.merge_packages_config(config)
+
+
+def test_type_mismatch(log_err):
+    """Test if we have a type mismatch for packages."""
+    package_1 = {
+        'input_boolean': [{'ib1': None}],
+        'light': {'platform': 'one'}
+    }
+    config = {
+        'packages': {
+            'bool_package': package_1
+        },
+        'input_boolean': {'ib2': None},
+        'light': [{'platform': 'two'}]
+    }
+    pkg.merge_packages_config(config)
+
+    assert log_err.call_count == 2
+    assert len(config) == 2
+    assert len(config['input_boolean']) == 1
     assert len(config['light']) == 1
