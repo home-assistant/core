@@ -35,8 +35,8 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Required(CONF_URL): cv.template,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
         vol.All(vol.Lower, vol.In(SUPPORT_REST_METHODS)),
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.template,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
 })
