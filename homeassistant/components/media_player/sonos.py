@@ -15,7 +15,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_STOP)
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_STOP,
+    SUPPORT_PLAY)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
     CONF_HOSTS)
@@ -39,7 +40,7 @@ _REQUESTS_LOGGER.setLevel(logging.ERROR)
 SUPPORT_SONOS = SUPPORT_STOP | SUPPORT_PAUSE | SUPPORT_VOLUME_SET |\
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
     SUPPORT_PLAY_MEDIA | SUPPORT_SEEK | SUPPORT_CLEAR_PLAYLIST |\
-    SUPPORT_SELECT_SOURCE
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 SERVICE_GROUP_PLAYERS = 'sonos_group_players'
 SERVICE_UNJOIN = 'sonos_unjoin'
@@ -292,6 +293,7 @@ class SonosDevice(MediaPlayerDevice):
         self._support_next_track = False
         self._support_stop = False
         self._support_pause = False
+        self._support_play = False
         self._current_track_uri = None
         self._current_track_is_radio_stream = False
         self._queue = None
@@ -441,6 +443,7 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = False
                     support_stop = False
                     support_pause = False
+                    support_play = False
 
                     if is_playing_tv:
                         media_artist = SUPPORT_SOURCE_TV
@@ -462,6 +465,7 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = False
                     support_stop = False
                     support_pause = False
+                    support_play = False
 
                     source_name = 'Radio'
                     # Check if currently playing radio station is in favorites
@@ -530,6 +534,7 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = True
                     support_stop = True
                     support_pause = True
+                    support_play = True
 
                     position_info = self._player.avTransport.GetPositionInfo(
                         [('InstanceID', 0),
@@ -608,6 +613,7 @@ class SonosDevice(MediaPlayerDevice):
                 self._support_next_track = support_next_track
                 self._support_stop = support_stop
                 self._support_pause = support_pause
+                self._support_play = support_play
                 self._is_playing_tv = is_playing_tv
                 self._is_playing_line_in = is_playing_line_in
                 self._source_name = source_name
@@ -643,6 +649,7 @@ class SonosDevice(MediaPlayerDevice):
             self._support_next_track = False
             self._support_stop = False
             self._support_pause = False
+            self._support_play = False
             self._is_playing_tv = False
             self._is_playing_line_in = False
             self._favorite_sources = None
@@ -808,6 +815,9 @@ class SonosDevice(MediaPlayerDevice):
 
         if not self._support_pause:
             supported = supported ^ SUPPORT_PAUSE
+
+        if not self._support_play:
+            supported = supported ^ SUPPORT_PLAY
 
         return supported
 
