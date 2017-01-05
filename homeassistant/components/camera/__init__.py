@@ -6,6 +6,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/camera/
 """
 import asyncio
+from datetime import timedelta
 import logging
 
 from aiohttp import web
@@ -17,7 +18,7 @@ from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = timedelta(seconds=30)
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 STATE_RECORDING = 'recording'
