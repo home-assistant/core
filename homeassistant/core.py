@@ -288,12 +288,17 @@ class HomeAssistant(object):
 
         This method is a coroutine.
         """
+        import homeassistant.helpers.aiohttp_client as aiohttp_client
+
         self.state = CoreState.stopping
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         yield from self.async_block_till_done()
         self.executor.shutdown()
         self.state = CoreState.not_running
+
+        # cleanup connector pool from aiohttp
+        yield from aiohttp_client.async_cleanup_websession(self)
 
         # cleanup async layer from python logging
         if self.data.get(DATA_ASYNCHANDLER):
