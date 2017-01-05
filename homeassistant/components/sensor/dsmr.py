@@ -71,6 +71,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     from dsmr_parser import obis_references as obis_ref
     from dsmr_parser.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+    import serial
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
@@ -133,8 +134,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             try:
                 transport, protocol = yield from hass.loop.create_task(
                     reader_factory())
-            # pylint: disable=bare-except
-            except:
+            except (serial.serialutil.SerialException, ConnectionRefusedError,
+                    TimeoutError):
                 # log any error while establishing connection and drop to retry
                 # connection wait
                 _LOGGER.exception('error connecting to DSMR')
