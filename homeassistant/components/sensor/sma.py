@@ -31,14 +31,6 @@ SENSOR_OPTIONS = ['current_consumption', 'current_power', 'total_consumption',
                   'total_yield']
 
 
-# TODO: candidate for inclusion into config_validation
-def ensure_list(value):
-    """Wrap value in list if it is not one - allow empty lists."""
-    if value is None:
-        return []
-    return value if isinstance(value, list) else [value]
-
-
 def _check_sensor_schema(conf):
     """Check sensors and attributes are valid."""
     valid = list(conf[CONF_CUSTOM].keys())
@@ -58,7 +50,7 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): str,
     vol.Required(CONF_PASSWORD): str,
     vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
-    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: ensure_list}),
+    vol.Required(CONF_SENSORS): vol.Schema({cv.slug: cv.ensure_list}),
     vol.Optional(CONF_CUSTOM, default={}): vol.Schema({
         cv.slug: {
             vol.Required('key'): vol.All(str, vol.Length(min=13, max=13)),
