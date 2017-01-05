@@ -145,7 +145,7 @@ def _categorize_weather() -> None:
     WEATHER_NODES = [WeatherNode(getattr(ISY.climate, attr), attr,
                                  getattr(ISY.climate, attr + '_units'))
                      for attr in climate_attrs
-                     if attr + '_units' in dir(ISY.climate)]
+                     if attr + '_units' in climate_attrs]
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
