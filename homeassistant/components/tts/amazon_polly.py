@@ -85,8 +85,8 @@ def get_engine(hass, config):
         config[CONF_SAMPLE_RATE] = DEFAULT_SAMPLE_RATES[output_format]
     sample_rate = config.get(CONF_SAMPLE_RATE)
     if sample_rate not in SUPPORTED_SAMPLE_RATES_MAP.get(output_format):
-        fmt_str = "{} is not a valid sample rate for {}"
-        _LOGGER.error(fmt_str.format(sample_rate, output_format))
+        _LOGGER.error("%s is not a valid sample rate for %s",
+                      sample_rate, output_format)
         return None
 
     import boto3
@@ -105,6 +105,7 @@ def get_engine(hass, config):
     polly_client = boto3.client("polly", **aws_config)
 
     def find_voice_language():
+        """Get the language code for the chosen voice."""
         all_voices = polly_client.describe_voices()
         for voice in all_voices.get("Voices"):
             if voice.get("Id", "") == config.get(CONF_VOICE):
