@@ -61,6 +61,9 @@ SUPPORTED_DOMAINS = ['binary_sensor', 'cover', 'fan', 'light', 'lock',
                      'sensor', 'switch']
 
 
+WeatherNode = namedtuple('WeatherNode', ('status', 'name', 'uom'))
+
+
 def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
     """Filter a list of ISY nodes based on the units and states provided."""
     filtered_nodes = []
@@ -138,14 +141,11 @@ def _categorize_weather() -> None:
     """Categorize the ISY994 weather data."""
     global WEATHER_NODES
 
-    items = [item for item in dir(ISY.climate)
-             if item + '_units' in dir(ISY.climate)]
-
-    weather_node = namedtuple('WeatherNode', ('status', 'name', 'uom'))
-
-    WEATHER_NODES = [weather_node(getattr(ISY.climate, item),
-                                  item, getattr(ISY.climate, item + '_units'))
-                     for item in items]
+    climate_attrs = dir(ISY.climate)
+    WEATHER_NODES = [WeatherNode(getattr(ISY.climate, attr), attr,
+                                 getattr(ISY.climate, attr + '_units'))
+                     for attr in climate_attrs
+                     if attr + '_units' in dir(ISY.climate)]
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
