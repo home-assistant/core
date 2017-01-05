@@ -48,8 +48,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     def anthemav_update_callback(message):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update callback from AVR: %s', message)
-        hass.async_add_job(device.async_update_ha_state())
+        _LOGGER.info('Received update calback from AVR: %s', message)
+        device.schedule_update_ha_state()
 
     avr = yield from anthemav.Connection.create(
         host=host, port=port, loop=hass.loop,
@@ -138,7 +138,6 @@ class AnthemAVR(MediaPlayerDevice):
     def select_source(self, source):
         """Change AVR to the designated source (by name)."""
         self._update_avr('input_name', source)
-        return self._lookup('input_list', ["Unknown"])
 
     def turn_off(self):
         """Turn AVR power off."""
