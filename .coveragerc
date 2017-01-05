@@ -330,6 +330,7 @@ omit =
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/sensor/zamg.py
+    homeassistant/components/sensor/zabbix.py
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/anel_pwrctrl.py
     homeassistant/components/switch/arest.py
@@ -354,6 +355,7 @@ omit =
     homeassistant/components/tts/picotts.py
     homeassistant/components/upnp.py
     homeassistant/components/weather/openweathermap.py
+    homeassistant/components/zabbix.py
     homeassistant/components/zeroconf.py
 
 
