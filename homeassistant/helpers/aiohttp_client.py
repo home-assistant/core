@@ -105,7 +105,6 @@ def _async_get_connector(hass, verify_ssl=True):
 
 
 @asyncio.coroutine
-# pylint: disable=invalid-name
 def async_cleanup_websession(hass):
     """Cleanup aiohttp connector pool.
 
