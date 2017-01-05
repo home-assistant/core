@@ -30,6 +30,7 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
+from homeassistant.helpers.aiohttp_client import async_cleanup_websession
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 import homeassistant.util as util
@@ -294,6 +295,9 @@ class HomeAssistant(object):
         yield from self.async_block_till_done()
         self.executor.shutdown()
         self.state = CoreState.not_running
+
+        # cleanup connector pool from aiohttp
+        yield from async_cleanup_websession(self)
 
         # cleanup async layer from python logging
         if self.data.get(DATA_ASYNCHANDLER):
