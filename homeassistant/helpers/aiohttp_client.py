@@ -92,33 +92,29 @@ def _async_get_connector(hass, verify_ssl=True):
         if DATA_CONNECTOR not in hass.data:
             connector = aiohttp.TCPConnector(loop=hass.loop)
             hass.data[DATA_CONNECTOR] = connector
-
-            _async_register_connector_shutdown(hass, connector)
         else:
             connector = hass.data[DATA_CONNECTOR]
     else:
         if DATA_CONNECTOR_NOTVERIFY not in hass.data:
             connector = aiohttp.TCPConnector(loop=hass.loop, verify_ssl=False)
             hass.data[DATA_CONNECTOR_NOTVERIFY] = connector
-
-            _async_register_connector_shutdown(hass, connector)
         else:
             connector = hass.data[DATA_CONNECTOR_NOTVERIFY]
 
     return connector
 
 
-@callback
-# pylint: disable=invalid-name
-def _async_register_connector_shutdown(hass, connector):
-    """Register connector pool close on homeassistant shutdown.
+@asyncio.coroutine
+def async_cleanup_websession(hass):
+    """Cleanup aiohttp connector pool.
 
-    This method must be run in the event loop.
+    This method is a coroutine.
     """
-    @asyncio.coroutine
-    def _async_close_connector(event):
-        """Close websession on shutdown."""
-        yield from connector.close()
+    tasks = []
+    if DATA_CONNECTOR in hass.data:
+        tasks.append(hass.data[DATA_CONNECTOR].close())
+    if DATA_CONNECTOR_NOTVERIFY in hass.data:
+        tasks.append(hass.data[DATA_CONNECTOR_NOTVERIFY].close())
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_close_connector)
+    if tasks:
+        yield from asyncio.wait(tasks, loop=hass.loop)
