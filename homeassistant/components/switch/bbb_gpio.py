@@ -91,10 +91,10 @@ class BBBGPIOSwitch(ToggleEntity):
         """Turn the device on."""
         bbb_gpio.write_output(self._pin, 0 if self._invert_logic else 1)
         self._state = True
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn the device off."""
         bbb_gpio.write_output(self._pin, 1 if self._invert_logic else 0)
         self._state = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()
