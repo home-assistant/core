@@ -412,6 +412,9 @@ pyenvisalink==1.9
 # homeassistant.components.ifttt
 pyfttt==0.3
 
+# homeassistant.components.sensor.skybeacon
+pygatt==3.0.0
+
 # homeassistant.components.remote.harmony
 pyharmony==1.0.12
 

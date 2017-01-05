@@ -308,6 +308,7 @@ omit =
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py
     homeassistant/components/sensor/serial_pm.py
+    homeassistant/components/sensor/skybeacon.py
     homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/sonarr.py
     homeassistant/components/sensor/speedtest.py
