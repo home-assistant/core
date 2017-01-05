@@ -18,7 +18,7 @@ from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.util.async import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
-DEFAULT_SCAN_INTERVAL = 15
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 
 
 class EntityComponent(object):
@@ -326,8 +326,7 @@ class EntityPlatform(object):
             return
 
         self._async_unsub_polling = async_track_time_interval(
-            self.component.hass, self._update_entity_states,
-            timedelta(seconds=self.scan_interval)
+            self.component.hass, self._update_entity_states, self.scan_interval
         )
 
     @asyncio.coroutine

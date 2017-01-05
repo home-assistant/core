@@ -4,6 +4,7 @@ Provides functionality to interact with fans.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/fan/
 """
+from datetime import timedelta
 import logging
 import os
 
@@ -21,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 
 
 DOMAIN = 'fan'
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_FANS = 'all fans'
 ENTITY_ID_ALL_FANS = group.ENTITY_ID_FORMAT.format(GROUP_NAME_ALL_FANS)

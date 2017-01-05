@@ -4,6 +4,7 @@ Support for custom shell commands to retrieve values.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.command_line/
 """
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -22,7 +23,7 @@ DEFAULT_NAME = 'Binary Command Sensor'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 
-SCAN_INTERVAL = 60
+SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND): cv.string,

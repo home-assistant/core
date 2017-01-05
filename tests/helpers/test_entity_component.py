@@ -97,7 +97,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
     def test_polling_only_updates_entities_it_should_poll(self):
         """Test the polling of only updated entities."""
-        component = EntityComponent(_LOGGER, DOMAIN, self.hass, 20)
+        component = EntityComponent(
+            _LOGGER, DOMAIN, self.hass, timedelta(seconds=20))
 
         no_poll_ent = EntityTest(should_poll=False)
         no_poll_ent.async_update = Mock()
@@ -127,8 +128,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         ent2.update = lambda *_: component.add_entities([ent1])
 
         fire_time_changed(
-            self.hass, dt_util.utcnow() +
-            timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+            self.hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL
         )
         self.hass.block_till_done()
 
@@ -332,7 +332,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         component.setup({
             DOMAIN: {
                 'platform': 'platform',
-                'scan_interval': 30,
+                'scan_interval': timedelta(seconds=30),
             }
         })
 
@@ -348,7 +348,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             add_devices([EntityTest(should_poll=True)])
 
         platform = MockPlatform(platform_setup)
-        platform.SCAN_INTERVAL = 30
+        platform.SCAN_INTERVAL = timedelta(seconds=30)
 
         loader.set_component('test_domain.platform', platform)
 
