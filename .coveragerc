@@ -13,6 +13,9 @@ omit =
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
+    homeassistant/components/bbb_gpio.py
+    homeassistant/components/*/bbb_gpio.py
+
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
 
