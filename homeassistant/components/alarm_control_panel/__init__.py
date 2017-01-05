@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel/
 """
 import asyncio
+from datetime import timedelta
 import logging
 import os
 
@@ -20,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
 DOMAIN = 'alarm_control_panel'
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = timedelta(seconds=30)
 ATTR_CHANGED_BY = 'changed_by'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'

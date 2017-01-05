@@ -5,13 +5,14 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor/
 """
 import asyncio
+from datetime import timedelta
 import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 DOMAIN = 'sensor'
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 

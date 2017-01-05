@@ -27,7 +27,7 @@ DEFAULT_NAME = 'Alarm'
 DEFAULT_PORT = '5007'
 DEFAULT_SSL = False
 
-SCAN_INTERVAL = 1
+SCAN_INTERVAL = datetime.timedelta(seconds=1)
 
 ZONE_TYPES_SCHEMA = vol.Schema({
     cv.positive_int: vol.In(SENSOR_CLASSES),
