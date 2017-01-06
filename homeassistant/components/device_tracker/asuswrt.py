@@ -16,7 +16,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD,
+    CONF_USERNAME, CONF_PORT)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 

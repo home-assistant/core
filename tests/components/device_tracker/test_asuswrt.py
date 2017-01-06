@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker.asuswrt import (
     CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, DOMAIN,
     PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
-                                 CONF_HOST)
+                                 CONF_HOST, CONF_PORT)
 
 from tests.common import (
     get_test_home_assistant, get_test_config_dir, assert_setup_component)
@@ -73,6 +73,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
             DOMAIN: {
                 CONF_PLATFORM: 'asuswrt',
                 CONF_HOST: 'fake_host',
+                CONF_PORT: 22,
                 CONF_USERNAME: 'fake_user',
                 CONF_PASSWORD: 'fake_pass',
                 CONF_TRACK_NEW: True,
@@ -98,6 +99,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'asuswrt',
                 CONF_HOST: 'fake_host',
+                CONF_PORT: 22,
                 CONF_USERNAME: 'fake_user',
                 CONF_PUB_KEY: FAKEFILE,
                 CONF_TRACK_NEW: True,
@@ -122,6 +124,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         conf_dict = PLATFORM_SCHEMA({
             CONF_PLATFORM: 'asuswrt',
             CONF_HOST: 'fake_host',
+            CONF_PORT: 22,
             CONF_USERNAME: 'fake_user',
             CONF_PUB_KEY: FAKEFILE
         })
@@ -147,6 +150,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         conf_dict = PLATFORM_SCHEMA({
             CONF_PLATFORM: 'asuswrt',
             CONF_HOST: 'fake_host',
+            CONF_PORT: 22222,
             CONF_USERNAME: 'fake_user',
             CONF_PASSWORD: 'fake_pass'
         })
@@ -174,6 +178,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         conf_dict = {
             CONF_PLATFORM: 'asuswrt',
             CONF_HOST: 'fake_host',
+            CONF_PORT: 22,
             CONF_USERNAME: 'fake_user',
         }
 
