@@ -124,7 +124,7 @@ class ImageProcessingEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.run_in_executor(None, self.process_image, image)
+        return self.hass.loop.run_in_executor(None, self.process_image, image)
 
     @property
     def state_attributes(self):
@@ -151,19 +151,19 @@ class ImageProcessingEntity(Entity):
             return
 
         url = "{0}{1}".format(
-            self.hass.conf.api.base_url,
+            self.hass.config.api.base_url,
             state.attributes.get(ATTR_ENTITY_PICTURE))
 
         response = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                response = websession.get(url)
+                response = yield from websession.get(url)
 
                 if response.status != 200:
                     _LOGGER.error("Error %d on %s", response.status, url)
                     return
 
-                image = response.read()
+                image = yield from response.read()
 
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
             _LOGGER.error("Can't connect to %s", url)
