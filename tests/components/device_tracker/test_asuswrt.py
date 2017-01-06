@@ -12,7 +12,7 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME, CONF_TRACK_NEW)
 from homeassistant.components.device_tracker.asuswrt import (
     CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, DOMAIN,
-    PLATFORM_SCHEMA)
+    CONF_PORT, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
 
@@ -86,6 +86,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
 
         conf_dict[DOMAIN][CONF_MODE] = 'router'
         conf_dict[DOMAIN][CONF_PROTOCOL] = 'ssh'
+        conf_dict[DOMAIN][CONF_PORT] = 22
         self.assertEqual(asuswrt_mock.call_count, 1)
         self.assertEqual(asuswrt_mock.call_args, mock.call(conf_dict[DOMAIN]))
 
@@ -111,6 +112,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
 
         conf_dict[DOMAIN][CONF_MODE] = 'router'
         conf_dict[DOMAIN][CONF_PROTOCOL] = 'ssh'
+        conf_dict[DOMAIN][CONF_PORT] = 22
         self.assertEqual(asuswrt_mock.call_count, 1)
         self.assertEqual(asuswrt_mock.call_args, mock.call(conf_dict[DOMAIN]))
 
