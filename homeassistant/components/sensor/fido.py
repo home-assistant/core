@@ -1,0 +1,196 @@
+"""
+Support for Fido.
+
+Get data from 'Usage Summary' page:
+https://www.fido.ca/pages/#/my-account/wireless
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.fido/
+"""
+import logging
+from datetime import timedelta
+
+import requests
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_USERNAME, CONF_PASSWORD,
+    CONF_NAME, CONF_MONITORED_VARIABLES)
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ["pyfido==0.1.3"]
+
+_LOGGER = logging.getLogger(__name__)
+
+KILOBITS = "Kb"  # type: str
+PRICE = "CAD"  # type: str
+MESSAGES = "messages"  # type: str
+MINUTES = "minutes"  # type: str
+
+DEFAULT_NAME = "Fido"
+
+REQUESTS_TIMEOUT = 15
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+
+
+SENSOR_TYPES = {
+    'fido_dollar': ['Fido dollar',
+                    PRICE, 'mdi:square-inc-cash'],
+    'balance': ['Balance',
+                PRICE, 'mdi:square-inc-cash'],
+    'data_used': ['Data used',
+                  KILOBITS, 'mdi:download'],
+    'data_limit': ['Data limit',
+                   KILOBITS, 'mdi:download'],
+    'data_remaining': ['Data remaining',
+                       KILOBITS, 'mdi:download'],
+    'text_used': ['Text used',
+                  MESSAGES, 'mdi:message-text'],
+    'text_limit': ['Text limit',
+                   MESSAGES, 'mdi:message-text'],
+    'text_remaining': ['Text remaining',
+                       MESSAGES, 'mdi:message-text'],
+    'mms_used': ['MMS used',
+                 MESSAGES, 'mdi:message-image'],
+    'mms_limit': ['MMS limit',
+                  MESSAGES, 'mdi:message-image'],
+    'mms_remaining': ['MMS remaining',
+                      MESSAGES, 'mdi:message-image'],
+    'text_int_used': ['International text used',
+                      MESSAGES, 'mdi:message-alert'],
+    'text_int_limit': ['International text limit',
+                       MESSAGES, 'mdi:message-alart'],
+    'text_int_remaining': ['Internaltional remaining',
+                           MESSAGES, 'mdi:message-alert'],
+    'talk_used': ['Talk time',
+                  MINUTES, 'mdi:cellphone'],
+    'talk_limit': ['Talk time limit',
+                   MINUTES, 'mdi:cellphone'],
+    'talt_remaining': ['Talk time remaining',
+                       MINUTES, 'mdi:cellphone'],
+    'talk_other_used': ['Other Talk time',
+                        MINUTES, 'mdi:cellphone'],
+    'talk_other_limit': ['Other Talk time limit',
+                         MINUTES, 'mdi:cellphone'],
+    'talt_other_remaining': ['Other Talk time remaining',
+                             MINUTES, 'mdi:cellphone'],
+}
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_MONITORED_VARIABLES):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
+JANRAIN_CLIENT_ID = "bfkecrvys7sprse8kc4wtwugr2bj9hmp"
+HOST_JANRAIN = "https://rogers-fido.janraincapture.com"
+HOST_FIDO = "https://www.fido.ca/pages/api/selfserve"
+LOGIN_URL = "{}/widget/traditional_signin.jsonp".format(HOST_JANRAIN)
+TOKEN_URL = "{}/widget/get_result.jsonp".format(HOST_JANRAIN)
+ACCOUNT_URL = "{}/v3/login".format(HOST_FIDO)
+BALANCE_URL = "{}/v2/accountOverview".format(HOST_FIDO)
+FIDO_DOLLAR_URL = "{}/v1/wireless/rewards/basicinfo".format(HOST_FIDO)
+USAGE_URL = "{}/v1/postpaid/dashboard/usage".format(HOST_FIDO)
+
+
+DATA_MAP = {'data': ('data', 'D'),
+            'text': ('text', 'BL'),
+            'mms': ('text', 'M'),
+            'text_int': ('text', 'SI'),
+            'talk': ('talk', 'V'),
+            'talk_other': ('talk', 'VL')}
+
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the Fido sensor."""
+    # Create a data fetcher to support all of the configured sensors. Then make
+    # the first call to init the data.
+
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+
+    try:
+        fido_data = FidoData(username, password)
+        fido_data.update()
+    except requests.exceptions.HTTPError as error:
+        _LOGGER.error(error)
+        return False
+
+    name = config.get(CONF_NAME)
+
+    sensors = []
+    for variable in config[CONF_MONITORED_VARIABLES]:
+        sensors.append(FidoSensor(fido_data, variable, name))
+
+    add_devices(sensors)
+
+
+class FidoSensor(Entity):
+    """Implementation of a Fido sensor."""
+
+    def __init__(self, fido_data, sensor_type, name):
+        """Initialize the sensor."""
+        self.client_name = name
+        self.type = sensor_type
+        self.entity_id = "sensor.{}_{}".format(name, sensor_type)
+        self._name = SENSOR_TYPES[sensor_type][0]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._icon = SENSOR_TYPES[sensor_type][2]
+        self.fido_data = fido_data
+        self._state = None
+
+        self.update()
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return '{} {}'.format(self.client_name, self._name)
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return self._unit_of_measurement
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return self._icon
+
+    def update(self):
+        """Get the latest data from Fido and update the state."""
+        self.fido_data.update()
+        if self.type in self.fido_data.data:
+            if self.fido_data.data[self.type] is not None:
+                self._state = round(self.fido_data.data[self.type], 2)
+
+
+class FidoData(object):
+    """Get data from Fido."""
+
+    def __init__(self, number, password):
+        """Initialize the data object."""
+        from pyfido import FidoClient
+        self.client = FidoClient(number, password, REQUESTS_TIMEOUT)
+        self.data = {}
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Get the latest data from Fido."""
+        from pyfido.client import PyFidoError
+        try:
+            self.client.fetch_data()
+        except PyFidoError as exp:
+            _LOGGER.error(exp)
+            return
+        # Update data
+        self.data = self.client.get_data()
