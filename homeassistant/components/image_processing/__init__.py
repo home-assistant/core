@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/image_processing/
 """
 import asyncio
+from datetime import timedelta
 import logging
 import os
 
@@ -27,6 +28,8 @@ DEPENDENCIES = ['camera']
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=10)
+
 PROCESSING_CLASSES = [
     None,            # Generic
     'alpr',          # Processing licences plates
@@ -46,11 +49,13 @@ CONF_CONFIDENCE = 'confidence'
 DEFAULT_TIMEOUT = 10
 DEFAULT_CONFIDENCE = 80
 
+SOURCE_SCHEMA = vol.Schema({
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Optional(CONF_NAME): cv.string,
+})
+
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SOURCE): vol.All(cv.ensure_list, [vol.Schema({
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_NAME): cv.string,
-    })]),
+    vol.Optional(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
         vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
@@ -70,7 +75,7 @@ def scan(hass, entity_id=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup image processing."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     yield from component.async_setup(config)
 
@@ -98,24 +103,28 @@ def async_setup(hass, config):
 class ImageProcessingEntity(Entity):
     """Base entity class for image processing."""
 
-    camera_entity = None  # Load pictre from
     timeout = DEFAULT_TIMEOUT  # timeout for requests
+
+    @property
+    def camera_entity(self):
+        """Return camera entity id from process pictures."""
+        return None
 
     @property
     def processing_class(self):
         """Return the class of this entity from PROCESSING_CLASSES."""
         return None
 
-    def image_processing(self, image):
+    def process_image(self, image):
         """Process image."""
         raise NotImplementedError()
 
-    def async_image_processing(self, image):
+    def async_process_image(self, image):
         """Process image.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.run_in_executor(None, self.image_processing, image)
+        return self.hass.run_in_executor(None, self.process_image, image)
 
     @property
     def state_attributes(self):
@@ -165,7 +174,7 @@ class ImageProcessingEntity(Entity):
                 yield from response.release()
 
         # process image data
-        yield from self.async_image_processing(image)
+        yield from self.async_process_image(image)
 
 
 class ImageProcessingAlprEntity(ImageProcessingEntity):

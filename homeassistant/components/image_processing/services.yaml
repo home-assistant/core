@@ -1,7 +1,7 @@
 # Describes the format for available image_processing services
 
 scan:
-  description: Processing immediately a image
+  description: Process an image immediately
 
   fields:
     entity_id:

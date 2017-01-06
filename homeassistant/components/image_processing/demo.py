@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/demo/
 """
 
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # NOQA
 from homeassistant.components.image_processing import ImageProcessingAlprEntity
 
 
@@ -19,15 +18,20 @@ class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
 
     def __init__(self, camera_entity, name):
         """Initialize demo alpr."""
-        self.name = name
-        self.camera_entity = camera_entity
+        self._name = name
+        self._camera = camera_entity
+
+    @property
+    def camera_entity(self):
+        """Return camera entity id from process pictures."""
+        return self._camera
 
     @property
     def name(self):
         """Return the name of the entity."""
-        return self.name
+        return self._name
 
-    def image_processing(self, image):
+    def process_image(self, image):
         """Process image."""
         demo_data = {
             'AC3829': 98.3,
