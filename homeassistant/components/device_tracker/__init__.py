@@ -495,6 +495,7 @@ class Device(Entity):
                 self._state = zone_state.name
         elif self.stale():
             self._state = STATE_NOT_HOME
+            self.gps = None
             self.last_update_home = False
         else:
             self._state = STATE_HOME

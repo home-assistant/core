@@ -547,7 +547,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     def test_see_passive_zone_state(self):
         """Test that the device tracker sets gps for passive trackers."""
-
         register_time = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
         scan_time = datetime(2015, 9, 15, 23, 1, tzinfo=dt_util.UTC)
 
@@ -622,14 +621,14 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         state = self.hass.states.get('device_tracker.dev1')
         attrs = state.attributes
         self.assertEqual(STATE_HOME, state.state)
-        self.assertEqual(state.object_id, 'dev1')
-        self.assertEqual(state.name, 'dev1')
-        self.assertEqual(attrs['friendly_name'], 'dev1')
-        self.assertEqual(attrs['latitude'], 32.880837)
-        self.assertEqual(attrs['longitude'], 32.880837)
-        self.assertEqual(attrs['gps_accuracy'], 0)
-        self.assertEqual(attrs['source_type'],
-                         device_tracker.SOURCE_TYPE_ROUTER)
+        self.assertEqual('dev1', state.object_id)
+        self.assertEqual('dev1', state.name)
+        self.assertEqual('dev1', attrs.get('friendly_name'))
+        self.assertEqual(32.880837, attrs.get('latitude'))
+        self.assertEqual(32.880837, attrs.get('longitude'))
+        self.assertEqual(0, attrs.get('gps_accuracy'))
+        self.assertEqual(device_tracker.SOURCE_TYPE_ROUTER,
+                         attrs.get('source_type'))
 
         scanner.leave_home('dev1')
 
@@ -640,15 +639,15 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         state = self.hass.states.get('device_tracker.dev1')
         attrs = state.attributes
-        self.assertEqual(state.state, STATE_NOT_HOME)
-        self.assertEqual(state.object_id, 'dev1')
-        self.assertEqual(state.name, 'dev1')
-        self.assertEqual(attrs['friendly_name'], 'dev1')
-        self.assertEqual(attrs['latitude'], 32.880837)
-        self.assertEqual(attrs['longitude'], 32.880837)
-        self.assertEqual(attrs['gps_accuracy'], 0)
-        self.assertEqual(attrs['source_type'],
-                         device_tracker.SOURCE_TYPE_ROUTER)
+        self.assertEqual(STATE_NOT_HOME, state.state)
+        self.assertEqual('dev1', state.object_id)
+        self.assertEqual('dev1', state.name)
+        self.assertEqual('dev1', attrs.get('friendly_name'))
+        self.assertEqual(None, attrs.get('latitude'))
+        self.assertEqual(None, attrs.get('longitude'))
+        self.assertEqual(None, attrs.get('gps_accuracy'))
+        self.assertEqual(device_tracker.SOURCE_TYPE_ROUTER,
+                         attrs.get('source_type'))
 
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
     def test_see_failures(self, mock_warning):
