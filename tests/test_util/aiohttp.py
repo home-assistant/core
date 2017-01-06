@@ -148,8 +148,14 @@ def mock_aiohttp_client():
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
 
+    @asyncio.coroutine
+    def fake_close():
+        """Fake cleanup."""
+        pass
+
     with mock.patch('aiohttp.ClientSession') as mock_session:
         instance = mock_session()
+        instance.close = fake_close
 
         for method in ('get', 'post', 'put', 'options', 'delete'):
             setattr(instance, method,
