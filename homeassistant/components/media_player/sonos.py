@@ -293,7 +293,6 @@ class SonosDevice(MediaPlayerDevice):
         self._support_next_track = False
         self._support_stop = False
         self._support_pause = False
-        self._support_play = False
         self._current_track_uri = None
         self._current_track_is_radio_stream = False
         self._queue = None
@@ -443,7 +442,6 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = False
                     support_stop = False
                     support_pause = False
-                    support_play = False
 
                     if is_playing_tv:
                         media_artist = SUPPORT_SOURCE_TV
@@ -465,7 +463,6 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = False
                     support_stop = False
                     support_pause = False
-                    support_play = False
 
                     source_name = 'Radio'
                     # Check if currently playing radio station is in favorites
@@ -534,7 +531,6 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = True
                     support_stop = True
                     support_pause = True
-                    support_play = True
 
                     position_info = self._player.avTransport.GetPositionInfo(
                         [('InstanceID', 0),
@@ -613,7 +609,6 @@ class SonosDevice(MediaPlayerDevice):
                 self._support_next_track = support_next_track
                 self._support_stop = support_stop
                 self._support_pause = support_pause
-                self._support_play = support_play
                 self._is_playing_tv = is_playing_tv
                 self._is_playing_line_in = is_playing_line_in
                 self._source_name = source_name
@@ -649,7 +644,6 @@ class SonosDevice(MediaPlayerDevice):
             self._support_next_track = False
             self._support_stop = False
             self._support_pause = False
-            self._support_play = False
             self._is_playing_tv = False
             self._is_playing_line_in = False
             self._favorite_sources = None
@@ -815,9 +809,6 @@ class SonosDevice(MediaPlayerDevice):
 
         if not self._support_pause:
             supported = supported ^ SUPPORT_PAUSE
-
-        if not self._support_play:
-            supported = supported ^ SUPPORT_PLAY
 
         return supported
 
