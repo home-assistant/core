@@ -353,6 +353,7 @@ omit =
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/picotts.py
     homeassistant/components/upnp.py
+    homeassistant/components/weather/bom.py
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/zeroconf.py
 
