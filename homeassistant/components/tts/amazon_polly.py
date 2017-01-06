@@ -81,8 +81,8 @@ def get_engine(hass, config):
     """Setup Amazon Polly speech component."""
     # pylint: disable=import-error
     output_format = config.get(CONF_OUTPUT_FORMAT)
-    if config.get(CONF_SAMPLE_RATE) is None:
-        config[CONF_SAMPLE_RATE] = DEFAULT_SAMPLE_RATES[output_format]
+    sample_rate = config.get(CONF_SAMPLE_RATE,
+                             DEFAULT_SAMPLE_RATES[output_format])
     sample_rate = config.get(CONF_SAMPLE_RATE)
     if sample_rate not in SUPPORTED_SAMPLE_RATES_MAP.get(output_format):
         _LOGGER.error("%s is not a valid sample rate for %s",
