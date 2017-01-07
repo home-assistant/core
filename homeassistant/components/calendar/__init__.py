@@ -6,6 +6,8 @@ https://home-assistant.io/components/calendar/
 
 """
 import logging
+from datetime import timedelta
+
 import re
 
 from homeassistant.components.google import (CONF_OFFSET,
@@ -20,6 +22,7 @@ from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=60)
 DOMAIN = 'calendar'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -27,7 +30,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 def setup(hass, config):
     """Track states and offer events for calendars."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, 60, DOMAIN)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
 
     component.setup(config)
 
