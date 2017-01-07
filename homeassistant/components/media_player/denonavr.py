@@ -203,7 +203,9 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self._title is not None:
+        if self._current_source not in self._receiver.playing_func_list:
+            return self._current_source
+        elif self._title is not None:
             return self._title
         else:
             return self._frequency
