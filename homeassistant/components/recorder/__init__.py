@@ -16,9 +16,9 @@ from typing import Any, Union, Optional, List, Dict
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_DOMAIN, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
+    ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
     CONF_INCLUDE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 import homeassistant.helpers.config_validation as cv
@@ -230,8 +230,8 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 continue
 
-            entity_id = event.data.get(ATTR_ENTITY_ID)
-            domain = event.data.get(ATTR_DOMAIN)
+            entity_id = str(event.data.get(ATTR_ENTITY_ID))
+            domain = split_entity_id(entity_id)[0]
 
             if entity_id in self.exclude or domain in self.exclude:
                 self.queue.task_done()
