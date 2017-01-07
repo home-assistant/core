@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import functools as ft
+import re
 from timeit import default_timer as timer
 
 from typing import Any, Optional, List, Dict
@@ -11,7 +12,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_ENTITY_PICTURE)
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.async import (
@@ -253,8 +254,35 @@ class Entity(object):
                             'https://goo.gl/Nvioub', self.entity_id,
                             end - start)
 
+        def get_overrides(entity_id: str) -> Dict:
+            """Return a dictionary of overrides related to entity_id.
+
+            Whole-domain overrides are of lowest priorities,
+            then regexp on entity ID, and finally exact entity_id
+            matches are of highest priority.
+            """
+            domain_result = regexp_result = exact_result = {}
+            domain = split_entity_id(entity_id)[0]
+            for key, value in _OVERWRITE.items():
+                key_list = [
+                    single_key.strip() for single_key in key.split(',')]
+                if domain in key_list:
+                    domain_result = value
+                if entity_id in key_list:
+                    exact_result = value
+                else:
+                    for pattern in key_list:
+                        if re.fullmatch(pattern, entity_id):
+                            regexp_result = value
+                            break
+            result = {}
+            result.update(domain_result)
+            result.update(regexp_result)
+            result.update(exact_result)
+            return result
+
         # Overwrite properties that have been set in the config file.
-        attr.update(_OVERWRITE.get(self.entity_id, {}))
+        attr.update(get_overrides(self.entity_id))
 
         # Remove hidden property if false so it won't show up.
         if not attr.get(ATTR_HIDDEN, True):

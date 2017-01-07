@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__)
-from homeassistant.core import valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
@@ -86,19 +85,9 @@ tts:
 """
 
 
-def _valid_customize(value):
-    """Config validator for customize."""
-    if not isinstance(value, dict):
-        raise vol.Invalid('Expected dictionary')
-
-    for key, val in value.items():
-        if not valid_entity_id(key):
-            raise vol.Invalid('Invalid entity ID: {}'.format(key))
-
-        if not isinstance(val, dict):
-            raise vol.Invalid('Value of {} is not a dictionary'.format(key))
-
-    return value
+CUSTOMIZE_SCHEMA = vol.Schema({
+    cv.string: vol.All(dict, cv.ordered_dict(cv.string)),
+})
 
 
 CORE_CONFIG_SCHEMA = vol.Schema({
@@ -110,7 +99,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
     vol.Required(CONF_CUSTOMIZE,
-                 default=MappingProxyType({})): _valid_customize,
+                 default=MappingProxyType({})): CUSTOMIZE_SCHEMA,
 })
 
 
