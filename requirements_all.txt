@@ -183,10 +183,6 @@ http://github.com/technicalpickles/python-nest/archive/e6c9d56a8df455d4d77463898
 # homeassistant.components.light.flux_led
 https://github.com/Danielhiversen/flux_led/archive/0.11.zip#flux_led==0.11
 
-# homeassistant.components.light.mipow
-mipow==0.2
-bluepy=1.0.5
-
 # homeassistant.components.switch.tplink
 https://github.com/GadgetReactor/pyHS100/archive/45fc3548882628bcde3e3d365db341849457bef2.zip#pyHS100==0.2.2
 
@@ -653,3 +649,9 @@ yahooweather==0.8
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.6
+
+# homeassistant.components.light.mipow
+mipow==0.2
+
+# homeassistant.components.light.mipow
+bluepy==1.0.5
