@@ -129,6 +129,10 @@ class TestWundergroundSetup(unittest.TestCase):
         self.hass.config.latitude = self.lat
         self.hass.config.longitude = self.lon
 
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
+
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_setup(self, req_mock):
         """Test that the component is loaded if passed in PWS Id."""

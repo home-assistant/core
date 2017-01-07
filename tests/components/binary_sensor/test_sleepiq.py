@@ -31,6 +31,10 @@ class TestSleepIQBinarySensorSetup(unittest.TestCase):
             'password': self.password,
         }
 
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
+
     @requests_mock.Mocker()
     def test_setup(self, mock):
         """Test for successfully setting up the SleepIQ platform."""
