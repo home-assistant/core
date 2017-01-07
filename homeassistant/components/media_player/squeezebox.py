@@ -52,8 +52,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     if discovery_info is not None:
-        host = discovery_info['server']
-        port = discovery_info['port']
+        host = discovery_info[0]
+        port = discovery_info[1]
     else:
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
@@ -80,11 +80,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
     lms = LogitechMediaServer(hass, host, port, username, password)
-
-    players = yield from lms.create_players()
-    if players is False:
+    if lms is False:
         return False
 
+    players = yield from lms.create_players()
     yield from async_add_devices(players)
 
     return True
@@ -106,9 +105,6 @@ class LogitechMediaServer(object):
         """Create a list of devices connected to LMS."""
         result = []
         data = yield from self.async_query('players', 'status')
-
-        if not data:
-            return False
 
         for players in data['players_loop']:
             player = SqueezeBoxDevice(
