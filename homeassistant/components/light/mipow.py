@@ -92,6 +92,10 @@ class MipowLight(Light):
         """We can report the actual state."""
         return False
 
+    def set_effect(self, red, green, blue, white, nu, speed):
+        """Set the rgb state."""
+        return self._bulb.set_effect(red, green, blue, white, nu, speed)
+
     def set_rgb(self, red, green, blue):
         """Set the rgb state."""
         return self._bulb.set_rgb(red, green, blue)
