@@ -14,6 +14,14 @@ from apns2.errors import Unregistered
 class TestApns(unittest.TestCase):
     """Test the APNS component."""
 
+    def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
+
     def test_apns_setup_full(self):
         """Test setup with all data."""
         config = {
@@ -25,9 +33,8 @@ class TestApns(unittest.TestCase):
                 'cert_file': 'test_app.pem'
             }
         }
-        hass = get_test_home_assistant()
 
-        self.assertTrue(notify.setup(hass, config))
+        self.assertTrue(notify.setup(self.hass, config))
 
     def test_apns_setup_missing_name(self):
         """Test setup with missing name."""
@@ -39,8 +46,7 @@ class TestApns(unittest.TestCase):
                 'cert_file': 'test_app.pem'
             }
         }
-        hass = get_test_home_assistant()
-        self.assertFalse(notify.setup(hass, config))
+        self.assertFalse(notify.setup(self.hass, config))
 
     def test_apns_setup_missing_certificate(self):
         """Test setup with missing name."""
@@ -51,8 +57,7 @@ class TestApns(unittest.TestCase):
                 'name': 'test_app'
             }
         }
-        hass = get_test_home_assistant()
-        self.assertFalse(notify.setup(hass, config))
+        self.assertFalse(notify.setup(self.hass, config))
 
     def test_apns_setup_missing_topic(self):
         """Test setup with missing topic."""
@@ -63,8 +68,7 @@ class TestApns(unittest.TestCase):
                 'name': 'test_app'
             }
         }
-        hass = get_test_home_assistant()
-        self.assertFalse(notify.setup(hass, config))
+        self.assertFalse(notify.setup(self.hass, config))
 
     def test_register_new_device(self):
         """Test registering a new device with a name."""
@@ -76,18 +80,17 @@ class TestApns(unittest.TestCase):
                 'cert_file': 'test_app.pem'
             }
         }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
+        devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('5678: {name: test device 2}\n')
 
-        notify.setup(hass, config)
-        self.assertTrue(hass.services.call('apns',
-                                           'test_app',
-                                           {'push_id': '1234',
-                                            'name': 'test device'},
-                                           blocking=True))
+        notify.setup(self.hass, config)
+        self.assertTrue(self.hass.services.call('apns',
+                                                'test_app',
+                                                {'push_id': '1234',
+                                                 'name': 'test device'},
+                                                blocking=True))
 
         devices = {str(key): value for (key, value) in
                    load_yaml_config_file(devices_path).items()}
@@ -112,16 +115,15 @@ class TestApns(unittest.TestCase):
                 'cert_file': 'test_app.pem'
             }
         }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
+        devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('5678: {name: test device 2}\n')
 
-        notify.setup(hass, config)
-        self.assertTrue(hass.services.call('apns', 'test_app',
-                                           {'push_id': '1234'},
-                                           blocking=True))
+        notify.setup(self.hass, config)
+        self.assertTrue(self.hass.services.call('apns', 'test_app',
+                                                {'push_id': '1234'},
+                                                blocking=True))
 
         devices = {str(key): value for (key, value) in
                    load_yaml_config_file(devices_path).items()}
@@ -143,19 +145,18 @@ class TestApns(unittest.TestCase):
                 'cert_file': 'test_app.pem'
             }
         }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
+        devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('1234: {name: test device 1}\n')
             out.write('5678: {name: test device 2}\n')
 
-        notify.setup(hass, config)
-        self.assertTrue(hass.services.call('apns',
-                                           'test_app',
-                                           {'push_id': '1234',
-                                            'name': 'updated device 1'},
-                                           blocking=True))
+        notify.setup(self.hass, config)
+        self.assertTrue(self.hass.services.call('apns',
+                                                'test_app',
+                                                {'push_id': '1234',
+                                                 'name': 'updated device 1'},
+                                                blocking=True))
 
         devices = {str(key): value for (key, value) in
                    load_yaml_config_file(devices_path).items()}
@@ -180,21 +181,20 @@ class TestApns(unittest.TestCase):
                 'cert_file': 'test_app.pem'
             }
         }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
+        devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('1234: {name: test device 1, '
                       'tracking_device_id: tracking123}\n')
             out.write('5678: {name: test device 2, '
                       'tracking_device_id: tracking456}\n')
 
-        notify.setup(hass, config)
-        self.assertTrue(hass.services.call('apns',
-                                           'test_app',
-                                           {'push_id': '1234',
-                                            'name': 'updated device 1'},
-                                           blocking=True))
+        notify.setup(self.hass, config)
+        self.assertTrue(self.hass.services.call('apns',
+                                                'test_app',
+                                                {'push_id': '1234',
+                                                 'name': 'updated device 1'},
+                                                blocking=True))
 
         devices = {str(key): value for (key, value) in
                    load_yaml_config_file(devices_path).items()}
@@ -224,23 +224,22 @@ class TestApns(unittest.TestCase):
                 'cert_file': 'test_app.pem'
             }
         }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
+        devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('1234: {name: test device 1}\n')
 
-        notify.setup(hass, config)
+        notify.setup(self.hass, config)
 
-        self.assertTrue(hass.services.call('notify', 'test_app',
-                                           {'message': 'Hello',
-                                            'data': {
-                                                'badge': 1,
-                                                'sound': 'test.mp3',
-                                                'category': 'testing'
-                                                }
-                                            },
-                                           blocking=True))
+        self.assertTrue(self.hass.services.call('notify', 'test_app',
+                                                {'message': 'Hello',
+                                                 'data': {
+                                                     'badge': 1,
+                                                     'sound': 'test.mp3',
+                                                     'category': 'testing'
+                                                     }
+                                                 },
+                                                blocking=True))
 
         self.assertTrue(send.called)
         self.assertEqual(1, len(send.mock_calls))
@@ -266,23 +265,22 @@ class TestApns(unittest.TestCase):
                 'cert_file': 'test_app.pem'
             }
         }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
+        devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('1234: {name: test device 1, disabled: True}\n')
 
-        notify.setup(hass, config)
+        notify.setup(self.hass, config)
 
-        self.assertTrue(hass.services.call('notify', 'test_app',
-                                           {'message': 'Hello',
-                                            'data': {
-                                                'badge': 1,
-                                                'sound': 'test.mp3',
-                                                'category': 'testing'
-                                            }
-                                            },
-                                           blocking=True))
+        self.assertTrue(self.hass.services.call('notify', 'test_app',
+                                                {'message': 'Hello',
+                                                 'data': {
+                                                     'badge': 1,
+                                                     'sound': 'test.mp3',
+                                                     'category': 'testing'
+                                                 }
+                                                 },
+                                                blocking=True))
 
         self.assertFalse(send.called)
 
@@ -291,9 +289,7 @@ class TestApns(unittest.TestCase):
         """Test updating an existing device."""
         send = mock_client.return_value.send_notification
 
-        hass = get_test_home_assistant()
-
-        devices_path = hass.config.path('test_app_apns.yaml')
+        devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('1234: {name: test device 1, '
                       'tracking_device_id: tracking123}\n')
@@ -301,7 +297,7 @@ class TestApns(unittest.TestCase):
                       'tracking_device_id: tracking456}\n')
 
         notify_service = ApnsNotificationService(
-            hass,
+            self.hass,
             'test_app',
             'testapp.appname',
             False,
@@ -313,7 +309,7 @@ class TestApns(unittest.TestCase):
             State('device_tracker.tracking456', None),
             State('device_tracker.tracking456', 'home'))
 
-        hass.block_till_done()
+        self.hass.block_till_done()
 
         notify_service.send_message(message='Hello', target='home')
 
@@ -340,17 +336,16 @@ class TestApns(unittest.TestCase):
                 'cert_file': 'test_app.pem'
             }
         }
-        hass = get_test_home_assistant()
 
-        devices_path = hass.config.path('test_app_apns.yaml')
+        devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('1234: {name: test device 1}\n')
 
-        notify.setup(hass, config)
+        notify.setup(self.hass, config)
 
-        self.assertTrue(hass.services.call('notify', 'test_app',
-                                           {'message': 'Hello'},
-                                           blocking=True))
+        self.assertTrue(self.hass.services.call('notify', 'test_app',
+                                                {'message': 'Hello'},
+                                                blocking=True))
 
         devices = {str(key): value for (key, value) in
                    load_yaml_config_file(devices_path).items()}
