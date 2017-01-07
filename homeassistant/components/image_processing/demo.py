@@ -73,4 +73,4 @@ class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
             'DF923043': 90.8
         }
 
-        self.async_process_plates(demo_data)
+        self.process_plates(demo_data, 1)

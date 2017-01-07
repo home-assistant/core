@@ -13,6 +13,7 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, CONF_TIMEOUT,
@@ -21,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async import run_callback_threadsafe
 
 DOMAIN = 'image_processing'
 DEPENDENCIES = ['camera']
@@ -181,6 +182,12 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
     """Base entity class for alpr image processing."""
 
     plates = {}  # last scan data
+    vehicles = 0  # vehicles count
+
+    @property
+    def confidence(self):
+        """Return minimum confidence for send events."""
+        return DEFAULT_CONFIDENCE
 
     @property
     def processing_class(self):
@@ -200,30 +207,47 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
                 plate = i_pl
         return plate
 
-    def process_plates(self, plates):
-        """Send event with new plates and store data."""
-        run_coroutine_threadsafe(
-            self.async_process_plates(plates), self.hass.loop).result()
+    @property
+    def state_attributes(self):
+        """Return device specific state attributes."""
+        attr = super().state_attributes
 
-    @asyncio.coroutine
-    def async_process_plates(self, plates):
+        attr.update({
+            'plates': self.plates,
+            'vehicles': self.vehicles
+        })
+
+        return attr
+
+    def process_plates(self, plates, vehicles):
+        """Send event with new plates and store data."""
+        run_callback_threadsafe(
+            self.hass.loop, self.async_process_plates, plates, vehicles
+        ).result()
+
+    @callback
+    def async_process_plates(self, plates, vehicles):
         """Send event with new plates and store data.
 
-        This method is a coroutine.
+        plates are a dict in follow format:
+          { 'plate': confidence }
+
+        This method must be run in the event loop.
         """
+        plates = {plate: confidence for plate, confidence in plates.items()
+                  if confidence >= self.confidence}
         new_plates = set(plates) - set(self.plates)
 
         # send events
-        event_tasks = []
         for i_plate in new_plates:
-            event_tasks.append(self.hass.bus.async_fire(EVENT_FOUND_PLATE, {
-                ATTR_PLATE: i_plate,
-                ATTR_ENTITY_ID: self.entity_id,
-                ATTR_CONFIDENCE: plates.get(i_plate),
-            }))
-
-        if event_tasks:
-            yield from asyncio.wait(event_tasks, loop=self.hass.loop)
+            self.hass.async_add_job(
+                self.hass.bus.async_fire, EVENT_FOUND_PLATE, {
+                    ATTR_PLATE: i_plate,
+                    ATTR_ENTITY_ID: self.entity_id,
+                    ATTR_CONFIDENCE: plates.get(i_plate),
+                }
+            )
 
         # update entity store
         self.plates = plates
+        self.vehicles = vehicles

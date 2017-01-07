@@ -1,7 +1,8 @@
 """The tests for the image_processing component."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 
+from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.image_processing as ip
@@ -62,7 +63,8 @@ class TestImageProcessing(object):
         }
 
         with patch('homeassistant.components.image_processing.demo.'
-                   'DemoImageProcessing.should_poll', return_value=False):
+                   'DemoImageProcessing.should_poll',
+                   new_callable=PropertyMock(return_value=False)):
             setup_component(self.hass, ip.DOMAIN, config)
 
         state = self.hass.states.get('camera.demo_camera')
@@ -124,3 +126,75 @@ class TestImageProcessing(object):
 
         assert len(aioclient_mock.mock_calls) == 1
         assert not mock_process.called
+
+
+class TestImageProcessingAlpr(object):
+    """Test class for image processing."""
+
+    def setup_method(self):
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+        config = {
+            ip.DOMAIN: {
+                'platform': 'demo'
+            },
+            'camera': {
+                'platform': 'demo'
+            },
+        }
+
+        with patch('homeassistant.components.image_processing.demo.'
+                   'DemoImageProcessingAlpr.should_poll',
+                   new_callable=PropertyMock(return_value=False)):
+            setup_component(self.hass, ip.DOMAIN, config)
+
+        state = self.hass.states.get('camera.demo_camera')
+        self.url = "{0}{1}".format(
+            self.hass.config.api.base_url,
+            state.attributes.get(ATTR_ENTITY_PICTURE))
+
+        self.alpr_events = []
+
+        @callback
+        def mock_alpr_event(event):
+            """Mock event."""
+            self.alpr_events.append(event)
+
+        self.hass.bus.listen(ip.EVENT_FOUND_PLATE, mock_alpr_event)
+
+    def teardown_method(self):
+        """Stop everything that was started."""
+        self.hass.stop()
+
+    def test_alpr_event_single_call(self, aioclient_mock):
+        """Setup and scan a picture and test plates from event."""
+        aioclient_mock.get(self.url, content=b'image')
+
+        ip.scan(self.hass, entity_id='image_processing.demo_alpr')
+        self.hass.block_till_done()
+
+        assert len(self.alpr_events) == 4
+
+    def test_alpr_event_double_call(self, aioclient_mock):
+        """Setup and scan a picture and test plates from event."""
+        aioclient_mock.get(self.url, content=b'image')
+
+        ip.scan(self.hass, entity_id='image_processing.demo_alpr')
+        ip.scan(self.hass, entity_id='image_processing.demo_alpr')
+        self.hass.block_till_done()
+
+        assert len(self.alpr_events) == 4
+
+    @patch('homeassistant.components.image_processing.demo.'
+           'DemoImageProcessingAlpr.confidence',
+           new_callable=PropertyMock(return_value=95))
+    def test_alpr_event_single_call_confidence(self, confidence_mock,
+                                               aioclient_mock):
+        """Setup and scan a picture and test plates from event."""
+        aioclient_mock.get(self.url, content=b'image')
+
+        ip.scan(self.hass, entity_id='image_processing.demo_alpr')
+        self.hass.block_till_done()
+
+        assert len(self.alpr_events) == 2
