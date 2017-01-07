@@ -261,7 +261,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
                 port=self._lms.http_port)
 
         url = urllib.parse.urljoin(base_url, media_url)
-
+        url = url.rstrip()
         _LOGGER.debug("Media image url: %s", url)
         return url
 
