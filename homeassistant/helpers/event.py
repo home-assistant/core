@@ -85,7 +85,7 @@ track_state_change = threaded_listener_factory(async_track_state_change)
 
 
 def async_track_point_in_time(hass, action, point_in_time):
-    """Add a listener that fires once after a spefic point in time."""
+    """Add a listener that fires once after a specific point in time."""
     utc_point_in_time = dt_util.as_utc(point_in_time)
 
     @callback
@@ -131,6 +131,33 @@ def async_track_point_in_utc_time(hass, action, point_in_time):
 
 track_point_in_utc_time = threaded_listener_factory(
     async_track_point_in_utc_time)
+
+
+def async_track_time_interval(hass, action, interval):
+    """Add a listener that fires repetitively at every timedelta interval."""
+    def next_interval():
+        """Return the next interval."""
+        return dt_util.utcnow() + interval
+
+    @callback
+    def interval_listener(now):
+        """Called when when the interval has elapsed."""
+        nonlocal remove
+        remove = async_track_point_in_utc_time(
+            hass, interval_listener, next_interval())
+        hass.async_run_job(action, now)
+
+    remove = async_track_point_in_utc_time(
+        hass, interval_listener, next_interval())
+
+    def remove_listener():
+        """Remove interval listener."""
+        remove()
+
+    return remove_listener
+
+
+track_time_interval = threaded_listener_factory(async_track_time_interval)
 
 
 def async_track_sunrise(hass, action, offset=None):

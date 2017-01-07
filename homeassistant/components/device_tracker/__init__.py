@@ -24,6 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
@@ -50,10 +51,10 @@ CONF_TRACK_NEW = 'track_new_devices'
 DEFAULT_TRACK_NEW = True
 
 CONF_CONSIDER_HOME = 'consider_home'
-DEFAULT_CONSIDER_HOME = 180
+DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 
 CONF_SCAN_INTERVAL = 'interval_seconds'
-DEFAULT_SCAN_INTERVAL = 12
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=12)
 
 CONF_AWAY_HIDE = 'hide_if_away'
 DEFAULT_AWAY_HIDE = False
@@ -75,10 +76,10 @@ SOURCE_TYPE_GPS = 'gps'
 SOURCE_TYPE_ROUTER = 'router'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,  # seconds
+    vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
     vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
     vol.Optional(CONF_CONSIDER_HOME,
-                 default=timedelta(seconds=DEFAULT_CONSIDER_HOME)): vol.All(
+                 default=DEFAULT_CONSIDER_HOME): vol.All(
                      cv.time_period, cv.positive_timedelta)
 })
 
@@ -125,8 +126,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         return False
     else:
         conf = conf[0] if len(conf) > 0 else {}
-        consider_home = conf.get(CONF_CONSIDER_HOME,
-                                 timedelta(seconds=DEFAULT_CONSIDER_HOME))
+        consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
         track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
@@ -157,7 +157,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                 scanner = yield from hass.loop.run_in_executor(
                     None, platform.get_scanner, hass, {DOMAIN: p_config})
             elif hasattr(platform, 'async_setup_scanner'):
-                setup = yield from platform.setup_scanner(
+                setup = yield from platform.async_setup_scanner(
                     hass, p_config, tracker.see)
             elif hasattr(platform, 'setup_scanner'):
                 setup = yield from hass.loop.run_in_executor(
@@ -669,9 +669,7 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
 
             hass.async_add_job(async_see_device(**kwargs))
 
-    async_track_utc_time_change(
-        hass, async_device_tracker_scan, second=range(0, 60, interval))
-
+    async_track_time_interval(hass, async_device_tracker_scan, interval)
     hass.async_add_job(async_device_tracker_scan, None)
 
 
