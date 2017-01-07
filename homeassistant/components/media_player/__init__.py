@@ -758,7 +758,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.async_set_volume_level(min(1, self.volume_level + .1))
+        return self.hass.loop.run_in_executor(None, self.volume_up)
 
     def volume_down(self):
         """Turn volume down for media player."""
@@ -770,7 +770,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.async_set_volume_level(max(0, self.volume_level - .1))
+        return self.hass.loop.run_in_executor(None, self.volume_down)
 
     def media_play_pause(self):
         """Play or pause the media player."""
