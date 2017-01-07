@@ -161,8 +161,6 @@ class TestCommandSwitch(unittest.TestCase):
 
     def test_assumed_state_should_be_true_if_command_state_is_false(self):
         """Test with state value."""
-        self.hass = get_test_home_assistant()
-
         # args: hass, device_name, friendly_name, command_on, command_off,
         #       command_state, value_template
         init_args = [
@@ -186,8 +184,6 @@ class TestCommandSwitch(unittest.TestCase):
 
     def test_entity_id_set_correctly(self):
         """Test that entity_id is set correctly from object_id."""
-        self.hass = get_test_home_assistant()
-
         init_args = [
             self.hass,
             "test_device_name",

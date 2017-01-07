@@ -572,6 +572,10 @@ class TestSonarrSetup(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.hass.config.time_zone = 'America/Los_Angeles'
 
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
+
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_diskspace_no_paths(self, req_mock):
         """Test getting all disk space."""

@@ -41,6 +41,10 @@ class TestDarkSkySetup(unittest.TestCase):
         self.hass.config.longitude = self.lon
         self.entities = []
 
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
+
     def test_setup_with_config(self):
         """Test the platform setup with configuration."""
         self.assertTrue(
