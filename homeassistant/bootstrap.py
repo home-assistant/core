@@ -14,7 +14,6 @@ from voluptuous.humanize import humanize_error
 
 import homeassistant.components as core_components
 from homeassistant.components import persistent_notification
-from homeassistant.components.packages import merge_packages_config
 import homeassistant.config as conf_util
 import homeassistant.core as core
 import homeassistant.loader as loader
@@ -377,7 +376,8 @@ def async_from_config_dict(config: Dict[str, Any],
     core_config = config.get(core.DOMAIN, {})
 
     try:
-        yield from conf_util.async_process_ha_core_config(hass, core_config)
+        yield from conf_util.async_process_ha_core_config(hass, core_config,
+                                                          config)
     except vol.Invalid as ex:
         async_log_exception(ex, 'homeassistant', core_config, hass)
         return None
@@ -403,12 +403,6 @@ def async_from_config_dict(config: Dict[str, Any],
     for key, value in config.items():
         new_config[key] = value or {}
     config = new_config
-
-    # Merge packages into the main config
-    try:
-        config = merge_packages_config(config)
-    except vol.Invalid as ex:
-        async_log_exception(ex, 'packages', config, hass)
 
     # Filter out the repeating and common config section [homeassistant]
     components = set(key.split(' ')[0] for key in config.keys()
