@@ -53,7 +53,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     if discovery_info is not None:
         host = discovery_info[0]
-        port = discovery_info[1]
+        port = None # Port is not collected in netdisco 0.8.1
     else:
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
