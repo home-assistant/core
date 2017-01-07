@@ -341,6 +341,9 @@ pexpect==4.0.1
 # homeassistant.components.light.hue
 phue==0.9
 
+# homeassistant.components.light.mipow
+mipow==0.2
+
 # homeassistant.components.pilight
 pilight==0.1.1
 
@@ -650,8 +653,3 @@ yahooweather==0.8
 # homeassistant.components.zeroconf
 zeroconf==0.17.6
 
-# homeassistant.components.light.mipow
-mipow==0.2
-
-# homeassistant.components.light.mipow
-bluepy==1.0.5
