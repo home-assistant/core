@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.email/
 import logging
 import datetime
 import email
+import base64
 
 from collections import deque
 from homeassistant.helpers.entity import Entity
@@ -186,6 +187,9 @@ class EmailContentSensor(Entity):
     @staticmethod
     def get_msg_subject(email_message):
         """Decode the message subject."""
+        if not email_message['Subject']:
+            return ''
+
         decoded_header = email.header.decode_header(email_message['Subject'])
         header = email.header.make_header(decoded_header)
         return str(header)
@@ -202,12 +206,18 @@ class EmailContentSensor(Entity):
         message_untyped_text = None
 
         for part in email_message.walk():
+            if not part.get_payload():
+                continue
+
             if part.get_content_type() == 'text/plain':
                 if message_text is None:
                     message_text = part.get_payload()
             elif part.get_content_type() == 'text/html':
                 if message_html is None:
-                    message_html = part.get_payload()
+                    if part['Content-Transfer-Encoding'] == 'base64':
+                        message_html = base64.decodestring(part.get_payload().encode('utf-8'))
+                    else:
+                        message_html = part.get_payload()
             elif part.get_content_type().startswith('text'):
                 if message_untyped_text is None:
                     message_untyped_text = part.get_payload()
