@@ -284,8 +284,7 @@ class TestMediaPlayerWeb(unittest.TestCase):
             def get(self, url):
                 return MockResponse()
 
-            @asyncio.coroutine
-            def close(self):
+            def detach(self):
                 pass
 
         self.hass.data[DATA_CLIENTSESSION] = MockWebsession()
