@@ -13,7 +13,7 @@ from homeassistant.components.light import (
     FLASH_SHORT,
     SUPPORT_FLASH, ATTR_FLASH)
 
-REQUIREMENTS = ['mipow==0.2', 'bluepy==1.0.5']
+REQUIREMENTS = ['mipow==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
