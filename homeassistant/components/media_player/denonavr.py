@@ -195,7 +195,7 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self._power == "ON":
+        if self._current_source in self._receiver.playing_func_list:
             return self._media_image_url
         else:
             return None
