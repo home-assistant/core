@@ -229,11 +229,11 @@ class FanEntity(ToggleEntity):
 
     def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""
-        pass
+        raise NotImplementedError()
 
     def set_direction(self: ToggleEntity, direction: str) -> None:
         """Set the direction of the fan."""
-        pass
+        raise NotImplementedError()
 
     def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
         """Turn on the fan."""
@@ -250,8 +250,7 @@ class FanEntity(ToggleEntity):
     @property
     def is_on(self):
         """Return true if the entity is on."""
-        return self.state_attributes.get(ATTR_SPEED, STATE_UNKNOWN) \
-            not in [SPEED_OFF, STATE_UNKNOWN]
+        return self.speed not in [SPEED_OFF, STATE_UNKNOWN]
 
     @property
     def speed_list(self: ToggleEntity) -> list:
@@ -261,8 +260,7 @@ class FanEntity(ToggleEntity):
     @property
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
-        return self.state_attributes.get(ATTR_DIRECTION, STATE_UNKNOWN) \
-            not in [DIRECTION_FORWARD, DIRECTION_REVERSE]
+        return None
 
     @property
     def state_attributes(self: ToggleEntity) -> dict:
