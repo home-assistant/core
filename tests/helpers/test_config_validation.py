@@ -191,15 +191,20 @@ def test_event_schema():
 
 def test_platform_validator():
     """Test platform validation."""
-    # Prepares loading
-    get_test_home_assistant()
+    hass = None
 
-    schema = vol.Schema(cv.platform_validator('light'))
+    try:
+        hass = get_test_home_assistant()
 
-    with pytest.raises(vol.MultipleInvalid):
-        schema('platform_that_does_not_exist')
+        schema = vol.Schema(cv.platform_validator('light'))
 
-    schema('hue')
+        with pytest.raises(vol.MultipleInvalid):
+            schema('platform_that_does_not_exist')
+
+        schema('hue')
+    finally:
+        if hass is not None:
+            hass.stop()
 
 
 def test_icon():
