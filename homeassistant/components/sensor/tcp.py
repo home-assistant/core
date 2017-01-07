@@ -57,7 +57,7 @@ class TcpSensor(Entity):
         value_template = config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
-            value_template = Template(value_template, hass)
+            value_template.hass = hass
 
         self._hass = hass
         self._config = {
