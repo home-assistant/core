@@ -29,7 +29,8 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
     SERVICE_VOLUME_MUTE, SERVICE_TOGGLE, SERVICE_MEDIA_STOP,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK,
+    SERVICE_SELECT_PLAY_MODE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +49,21 @@ ENTITY_IMAGE_CACHE = {
     ATTR_CACHE_URLS: [],
     ATTR_CACHE_MAXSIZE: 16
 }
+
+
+PLAY_MODE_NORMAL = 'NORMAL'
+PLAY_MODE_SHUFFLE_NOREPEAT = 'SHUSHUFFLE_NOREPEATFFLE'
+PLAY_MODE_SHUFFLE = 'SHUFFLE'
+PLAY_MODE_REPEAT_ALL = 'REPEAT_ALL'
+PLAY_MODE_SHUFFLE_REPEAT_ONE = 'SHUFFLE_REPEAT_ONE'
+PLAY_MODE_REPEAT_ONE = 'REPEAT_ONE'
+
+PLAY_MODES = (PLAY_MODE_NORMAL,
+              PLAY_MODE_SHUFFLE_NOREPEAT,
+              PLAY_MODE_SHUFFLE,
+              PLAY_MODE_REPEAT_ALL,
+              PLAY_MODE_SHUFFLE_REPEAT_ONE,
+              PLAY_MODE_REPEAT_ONE)
 
 CONTENT_TYPE_HEADER = 'Content-Type'
 
@@ -79,6 +95,7 @@ ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
 ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
+ATTR_PLAY_MODE = 'play_mode'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -101,6 +118,7 @@ SUPPORT_VOLUME_STEP = 1024
 SUPPORT_SELECT_SOURCE = 2048
 SUPPORT_STOP = 4096
 SUPPORT_CLEAR_PLAYLIST = 8192
+SUPPORT_PLAY_MODE = 16384
 
 # Service call validation schemas
 MEDIA_PLAYER_SCHEMA = vol.Schema({
@@ -128,6 +146,10 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+})
+
+MEDIA_PLAYER_SELECT_PLAY_MODE = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_PLAY_MODE): vol.All(cv.string, vol.In(PLAY_MODES)),
 })
 
 SERVICE_TO_METHOD = {
@@ -158,6 +180,9 @@ SERVICE_TO_METHOD = {
     SERVICE_PLAY_MEDIA: {
         'method': 'async_play_media',
         'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
+    SERVICE_SELECT_PLAY_MODE: {
+        'method': 'async_select_play_mode',
+        'schema': MEDIA_PLAYER_SELECT_PLAY_MODE},
 }
 
 ATTR_TO_PROPERTY = [
@@ -183,6 +208,7 @@ ATTR_TO_PROPERTY = [
     ATTR_SUPPORTED_MEDIA_COMMANDS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_PLAY_MODE,
 ]
 
 
@@ -318,6 +344,16 @@ def clear_playlist(hass, entity_id=None):
     """Send the media player the command for clear playlist."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
+
+
+def select_play_mode(hass, mode, entity_id=None):
+    """Send the media player the command to change the play mode."""
+    data = {ATTR_PLAY_MODE: mode}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SELECT_SOURCE, data)
 
 
 @asyncio.coroutine
@@ -514,6 +550,11 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def play_mode(self):
+        """Current play mode."""
+        return None
+
+    @property
     def supported_media_commands(self):
         """Flag media commands that are supported."""
         return 0
@@ -674,6 +715,18 @@ class MediaPlayerDevice(Entity):
         return self.hass.loop.run_in_executor(
             None, self.clear_playlist)
 
+    def select_play_mode(self, mode):
+        """Shuffle player."""
+        raise NotImplementedError()
+
+    def async_select_play_mode(self, mode):
+        """Shuffle player.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.play_mode, mode)
+
     # No need to overwrite these.
     @property
     def support_pause(self):
@@ -724,6 +777,11 @@ class MediaPlayerDevice(Entity):
     def support_clear_playlist(self):
         """Boolean if clear playlist command supported."""
         return bool(self.supported_media_commands & SUPPORT_CLEAR_PLAYLIST)
+
+    @property
+    def support_play_mode(self):
+        """Boolean if shuffle command supported."""
+        return bool(self.supported_media_commands & SUPPORT_PLAY_MODE)
 
     def toggle(self):
         """Toggle the power on the media player."""
