@@ -663,8 +663,8 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
 
             zone_home = hass.states.get(zone.ENTITY_ID_HOME)
             if zone_home:
-                kwargs['gps'] = [zone_home.attributes[ATTR_LONGITUDE],
-                                 zone_home.attributes[ATTR_LATITUDE]]
+                kwargs['gps'] = [zone_home.attributes[ATTR_LATITUDE],
+                                 zone_home.attributes[ATTR_LONGITUDE]]
                 kwargs['gps_accuracy'] = 0
 
             hass.async_add_job(async_see_device(**kwargs))

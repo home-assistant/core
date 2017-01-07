@@ -550,53 +550,11 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         register_time = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
         scan_time = datetime(2015, 9, 15, 23, 1, tzinfo=dt_util.UTC)
 
-        # with assert_setup_component(1, device_tracker.DOMAIN):
-        #     setup_component(self.hass, device_tracker.DOMAIN, TEST_PLATFORM)
-        #
-        # params = {
-        #     'mac': 'AA:BB:CC:DD:EE:FF',
-        #     'dev_id': 'some_device',
-        #     'host_name': 'dev1',
-        #     'gps': [.3, .8],
-        #     'gps_accuracy': 1,
-        #     'battery': 100,
-        #     'attributes': {
-        #         'test': 'test',
-        #         'number': 1,
-        #     },
-        # }
-        #
-        # with patch('homeassistant.components.device_tracker.dt_util.utcnow',
-        #            return_value=register_time):
-        #     device_tracker.see(self.hass, **params)
-        #
-        # self.hass.block_till_done()
-        #
-        # config = device_tracker.load_config(self.yaml_devices, self.hass,
-        #                                     timedelta(seconds=0))
-        # assert len(config) == 1
-        #
-        # state = self.hass.states.get('device_tracker.dev1')
-        # attrs = state.attributes
-        # self.assertEqual(state.state, STATE_NOT_HOME)
-        # self.assertEqual(state.object_id, 'dev1')
-        # self.assertEqual(state.name, 'dev1')
-        # self.assertEqual(attrs['friendly_name'], 'dev1')
-        # self.assertEqual(attrs['battery'], 100)
-        # self.assertEqual(attrs['latitude'], 0.3)
-        # self.assertEqual(attrs['longitude'], 0.8)
-        # self.assertEqual(attrs['test'], 'test')
-        # self.assertEqual(attrs['gps_accuracy'], 1)
-        # self.assertEqual(attrs['source_type'], 'gps')
-        # self.assertEqual(attrs['number'], 1)
-        #
-        # self.hass.config.components = []
-
         with assert_setup_component(1, zone.DOMAIN):
             zone_info = {
                 'name': 'Home',
-                'latitude': 32.880837,
-                'longitude': 32.880837,
+                'latitude': 1,
+                'longitude': 2,
                 'radius': 250,
                 'passive': False
             }
@@ -621,14 +579,14 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         state = self.hass.states.get('device_tracker.dev1')
         attrs = state.attributes
         self.assertEqual(STATE_HOME, state.state)
-        self.assertEqual('dev1', state.object_id)
-        self.assertEqual('dev1', state.name)
-        self.assertEqual('dev1', attrs.get('friendly_name'))
-        self.assertEqual(32.880837, attrs.get('latitude'))
-        self.assertEqual(32.880837, attrs.get('longitude'))
-        self.assertEqual(0, attrs.get('gps_accuracy'))
-        self.assertEqual(device_tracker.SOURCE_TYPE_ROUTER,
-                         attrs.get('source_type'))
+        self.assertEqual(state.object_id, 'dev1')
+        self.assertEqual(state.name, 'dev1')
+        self.assertEqual(attrs.get('friendly_name'), 'dev1')
+        self.assertEqual(attrs.get('latitude'), 1)
+        self.assertEqual(attrs.get('longitude'), 2)
+        self.assertEqual(attrs.get('gps_accuracy'), 0)
+        self.assertEqual(attrs.get('source_type'),
+                         device_tracker.SOURCE_TYPE_ROUTER)
 
         scanner.leave_home('dev1')
 
@@ -640,14 +598,14 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         state = self.hass.states.get('device_tracker.dev1')
         attrs = state.attributes
         self.assertEqual(STATE_NOT_HOME, state.state)
-        self.assertEqual('dev1', state.object_id)
-        self.assertEqual('dev1', state.name)
-        self.assertEqual('dev1', attrs.get('friendly_name'))
-        self.assertEqual(None, attrs.get('latitude'))
-        self.assertEqual(None, attrs.get('longitude'))
-        self.assertEqual(None, attrs.get('gps_accuracy'))
-        self.assertEqual(device_tracker.SOURCE_TYPE_ROUTER,
-                         attrs.get('source_type'))
+        self.assertEqual(state.object_id, 'dev1')
+        self.assertEqual(state.name, 'dev1')
+        self.assertEqual(attrs.get('friendly_name'), 'dev1')
+        self.assertEqual(attrs.get('latitude'), None)
+        self.assertEqual(attrs.get('longitude'), None)
+        self.assertEqual(attrs.get('gps_accuracy'), None)
+        self.assertEqual(attrs.get('source_type'),
+                         device_tracker.SOURCE_TYPE_ROUTER)
 
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
     def test_see_failures(self, mock_warning):
