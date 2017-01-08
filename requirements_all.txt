@@ -309,7 +309,7 @@ mficlient==0.3.0
 miflora==0.1.14
 
 # homeassistant.components.sensor.usps
-myusps==1.0.0
+myusps==1.0.1
 
 # homeassistant.components.discovery
 netdisco==0.8.1
