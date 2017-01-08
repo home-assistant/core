@@ -1,0 +1,46 @@
+#!/bin/sh
+# Sets up and builds libcec to be used with Home Assistant.
+# Dependencies that need to be installed:
+# apt-get install cmake libudev-dev libxrandr-dev python-dev swig
+
+# Stop on errors
+set -e
+
+cd "$(dirname "$0")/.."
+mkdir -p build && cd build
+
+if [ ! -d libcec ]; then
+  git clone --branch release --depth 1 https://github.com/Pulse-Eight/libcec.git
+fi
+
+cd libcec
+git checkout release
+git pull
+git submodule update --init src/platform
+
+# Build libcec platform libs
+(
+    mkdir -p src/platform/build
+    cd src/platform/build
+    cmake ..
+    make
+    make install
+)
+
+# Fix upstream install hardcoded Debian path.
+sed -i \
+    -e '/DESTINATION/s/dist-packages/site-packages/' \
+    src/libcec/cmake/CheckPlatformSupport.cmake
+
+# Build libcec
+(
+    mkdir -p build && cd build
+
+    cmake \
+        -DPYTHON_LIBRARY="/usr/local/lib/libpython3.5m.so" \
+        -DPYTHON_INCLUDE_DIR="/usr/local/include/python3.5m" \
+        ..
+    make
+    make install
+    ldconfig
+)
