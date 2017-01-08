@@ -269,7 +269,9 @@ class Entity(object):
             result = _OVERWRITE_CACHE.get(self.entity_id)
             if result is not None:
                 return result
-            domain_result = glob_result = exact_result = {}  # type: Dict[str, Any]
+            domain_result = {}  # type: Dict[str, Any]
+            glob_result = {}  # type: Dict[str, Any]
+            exact_result = {}  # type: Dict[str, Any]
             domain = split_entity_id(entity_id)[0]
             for key, value in _OVERWRITE.items():
                 key_list = [
