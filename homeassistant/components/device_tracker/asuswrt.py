@@ -16,8 +16,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD,
-    CONF_USERNAME, CONF_PORT)
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -114,12 +114,17 @@ class AsusWrtDeviceScanner(DeviceScanner):
         self.protocol = config[CONF_PROTOCOL]
         self.mode = config[CONF_MODE]
         self.port = config.get(CONF_PORT)
+        self.ssh_args = {}
 
         if self.protocol == 'ssh':
+
+            if self.port != DEFAULT_SSH_PORT:
+                self.ssh_args['port'] = self.port
+            
             if self.ssh_key:
-                self.ssh_args = {'ssh_key': self.ssh_key, 'port': self.port}
+                self.ssh_args['ssh_key'] = self.ssh_key;                
             elif self.password:
-                self.ssh_args = {'password': self.password, 'port': self.port}
+                self.ssh_args['password'] = self.password;                
             else:
                 _LOGGER.error('No password or private key specified')
                 self.success_init = False
