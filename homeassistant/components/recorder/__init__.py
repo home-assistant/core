@@ -181,8 +181,8 @@ class Recorder(threading.Thread):
         self.engine = None  # type: Any
         self._run = None  # type: Any
 
-        self.include = include.get(CONF_ENTITIES, []) + \
-            include.get(CONF_DOMAINS, [])
+        self.include_e = include.get(CONF_ENTITIES, [])
+        self.include_d = include.get(CONF_DOMAINS, [])
         self.exclude = exclude.get(CONF_ENTITIES, []) + \
             exclude.get(CONF_DOMAINS, [])
 
@@ -230,17 +230,25 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 continue
 
-            entity_id = str(event.data.get(ATTR_ENTITY_ID))
-            domain = split_entity_id(entity_id)[0]
+            if ATTR_ENTITY_ID in event.data:
+                entity_id = event.data[ATTR_ENTITY_ID]
+                domain = split_entity_id(entity_id)[0]
 
-            if entity_id in self.exclude or domain in self.exclude:
-                self.queue.task_done()
-                continue
+                # Exclude entities OR
+                # Exclude domains, but include specific entities
+                if (entity_id in self.exclude) or \
+                        (domain in self.exclude and
+                         entity_id not in self.include_e):
+                    self.queue.task_done()
+                    continue
 
-            if (self.include and entity_id not in self.include and
-                    domain not in self.include):
-                self.queue.task_done()
-                continue
+                # Included domains only (excluded entities above) OR
+                # Include entities only, but only if no excludes
+                if (self.include_d and domain not in self.include_d) or \
+                        (self.include_e and entity_id not in self.include_e
+                         and not self.exclude):
+                    self.queue.task_done()
+                    continue
 
             dbevent = Events.from_event(event)
             self._commit(dbevent)

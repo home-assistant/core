@@ -212,11 +212,11 @@ def hass_recorder():
     hass.stop()
 
 
-def _add_two_entities(hass):
-    entity_ids = ['test.recorder', 'test2.recorder']
+def _add_entities(hass, entity_ids):
+    """Add entities."""
     attributes = {'test_attr': 5, 'test_attr_10': 'nice'}
-    for entity_id in entity_ids:
-        hass.states.set(entity_id, 'state1', attributes)
+    for idx, entity_id in enumerate(entity_ids):
+        hass.states.set(entity_id, 'state{}'.format(idx), attributes)
         hass.block_till_done()
     recorder._INSTANCE.block_till_done()
     db_states = recorder.query('States')
@@ -229,7 +229,7 @@ def _add_two_entities(hass):
 def test_saving_state_include_domains(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder({'include': {'domains': 'test2'}})
-    states = _add_two_entities(hass)
+    states = _add_entities(hass, ['test.recorder', 'test2.recorder'])
     assert len(states) == 1
     assert hass.states.get('test2.recorder') == states[0]
 
@@ -237,7 +237,7 @@ def test_saving_state_include_domains(hass_recorder):
 def test_saving_state_incl_entities(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder({'include': {'entities': 'test2.recorder'}})
-    states = _add_two_entities(hass)
+    states = _add_entities(hass, ['test.recorder', 'test2.recorder'])
     assert len(states) == 1
     assert hass.states.get('test2.recorder') == states[0]
 
@@ -245,7 +245,7 @@ def test_saving_state_incl_entities(hass_recorder):
 def test_saving_state_exclude_domains(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder({'exclude': {'domains': 'test'}})
-    states = _add_two_entities(hass)
+    states = _add_entities(hass, ['test.recorder', 'test2.recorder'])
     assert len(states) == 1
     assert hass.states.get('test2.recorder') == states[0]
 
@@ -253,6 +253,27 @@ def test_saving_state_exclude_domains(hass_recorder):
 def test_saving_state_exclude_entities(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder({'exclude': {'entities': 'test.recorder'}})
-    states = _add_two_entities(hass)
+    states = _add_entities(hass, ['test.recorder', 'test2.recorder'])
     assert len(states) == 1
     assert hass.states.get('test2.recorder') == states[0]
+
+
+def test_saving_state_exclude_domain_include_entity(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder({
+        'include': {'entities': 'test.recorder'},
+        'exclude': {'domains': 'test'}})
+    states = _add_entities(hass, ['test.recorder', 'test2.recorder'])
+    assert len(states) == 2
+
+
+def test_saving_state_include_domain_exclude_entity(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder({
+        'exclude': {'entities': 'test.recorder'},
+        'include': {'domains': 'test'}})
+    states = _add_entities(hass, ['test.recorder', 'test2.recorder',
+                                  'test.ok'])
+    assert len(states) == 1
+    assert hass.states.get('test.ok') == states[0]
+    assert hass.states.get('test.ok').state == 'state2'
