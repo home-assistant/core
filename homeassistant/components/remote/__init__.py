@@ -36,7 +36,7 @@ GROUP_NAME_ALL_REMOTES = 'all remotes'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = timedelta(seconds=30)
 SERVICE_SEND_COMMAND = 'send_command'
 SERVICE_SYNC = 'sync'
 

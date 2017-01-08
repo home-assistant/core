@@ -43,6 +43,7 @@ class TestDdwrt(unittest.TestCase):
 
     def teardown_method(self, _):
         """Stop everything that was started."""
+        self.hass.stop()
         try:
             os.remove(self.hass.config.path(device_tracker.YAML_DEVICES))
         except FileNotFoundError:

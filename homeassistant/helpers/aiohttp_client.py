@@ -34,7 +34,6 @@ def async_get_clientsession(hass, verify_ssl=True):
             connector=connector,
             headers={USER_AGENT: SERVER_SOFTWARE}
         )
-        _async_register_clientsession_shutdown(hass, clientsession)
         hass.data[key] = clientsession
 
     return hass.data[key]
@@ -111,8 +110,12 @@ def async_cleanup_websession(hass):
     This method is a coroutine.
     """
     tasks = []
+    if DATA_CLIENTSESSION in hass.data:
+        hass.data[DATA_CLIENTSESSION].detach()
     if DATA_CONNECTOR in hass.data:
         tasks.append(hass.data[DATA_CONNECTOR].close())
+    if DATA_CLIENTSESSION_NOTVERIFY in hass.data:
+        hass.data[DATA_CLIENTSESSION_NOTVERIFY].detach()
     if DATA_CONNECTOR_NOTVERIFY in hass.data:
         tasks.append(hass.data[DATA_CONNECTOR_NOTVERIFY].close())
 
