@@ -2,7 +2,7 @@
 import asyncio
 import logging
 import functools as ft
-import re
+import fnmatch
 from timeit import default_timer as timer
 
 from typing import Any, Optional, List, Dict
@@ -20,6 +20,7 @@ from homeassistant.util.async import (
 
 # Entity attributes that we will overwrite
 _OVERWRITE = {}  # type: Dict[str, Any]
+_OVERWRITE_CACHE = {}  # type: Dict[str, Dict]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,8 +65,10 @@ def set_customize(customize: Dict[str, Any]) -> None:
     Async friendly.
     """
     global _OVERWRITE
+    global _OVERWRITE_CACHE
 
     _OVERWRITE = {key.lower(): val for key, val in customize.items()}
+    _OVERWRITE_CACHE = {}
 
 
 class Entity(object):
@@ -258,27 +261,33 @@ class Entity(object):
             """Return a dictionary of overrides related to entity_id.
 
             Whole-domain overrides are of lowest priorities,
-            then regexp on entity ID, and finally exact entity_id
+            then glob on entity ID, and finally exact entity_id
             matches are of highest priority.
+
+            The lookups are cached in a global variable.
             """
-            domain_result = regexp_result = exact_result = {}
+            result = _OVERWRITE_CACHE.get(self.entity_id)
+            if result is not None:
+                return result
+            domain_result = glob_result = exact_result = {}  # type: Dict[str, Any]
             domain = split_entity_id(entity_id)[0]
             for key, value in _OVERWRITE.items():
                 key_list = [
                     single_key.strip() for single_key in key.split(',')]
                 if domain in key_list:
-                    domain_result = value
+                    domain_result.update(value)
                 if entity_id in key_list:
-                    exact_result = value
+                    exact_result.update(value)
                 else:
-                    for pattern in key_list:
-                        if re.fullmatch(pattern, entity_id):
-                            regexp_result = value
+                    for single_key in key_list:
+                        if fnmatch.fnmatchcase(entity_id, single_key):
+                            glob_result.update(value)
                             break
             result = {}
             result.update(domain_result)
-            result.update(regexp_result)
+            result.update(glob_result)
             result.update(exact_result)
+            _OVERWRITE_CACHE[entity_id] = result
             return result
 
         # Overwrite properties that have been set in the config file.

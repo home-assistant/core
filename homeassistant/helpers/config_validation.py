@@ -376,9 +376,12 @@ def ordered_dict(value_validator, key_validator=match_all):
         """Validate ordered dict."""
         config = OrderedDict()
 
-        for key, val in value.items():
-            v_res = item_validator({key: val})
-            config.update(v_res)
+        try:
+            for key, val in value.items():
+                v_res = item_validator({key: val})
+                config.update(v_res)
+        except AttributeError:
+            raise vol.Invalid('Value {} is not a dictionary'.format(value))
 
         return config
 

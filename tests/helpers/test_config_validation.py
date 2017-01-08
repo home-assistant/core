@@ -429,9 +429,22 @@ def test_has_at_least_one_key():
         schema(value)
 
 
+def test_ordered_dict_only_dict():
+    """Test ordered_dict validator."""
+    schema = vol.Schema(cv.ordered_dict(cv.match_all, cv.match_all))
+
+    for value in (None, [], 100, 'hello'):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+
 def test_ordered_dict_order():
     """Test ordered_dict validator."""
     schema = vol.Schema(cv.ordered_dict(int, cv.string))
+
+    for value in (None, [], 100, 'hello'):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
 
     val = OrderedDict()
     val['first'] = 1
