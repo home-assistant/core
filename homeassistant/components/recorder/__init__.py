@@ -246,6 +246,8 @@ class Recorder(threading.Thread):
             self._commit(dbevent)
 
             if event.event_type != EVENT_STATE_CHANGED:
+
+                assert False, "why does this deadlock (py34)?"
                 self.queue.task_done()
                 continue
 
