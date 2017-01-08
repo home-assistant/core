@@ -72,7 +72,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         conf_dict = {
             DOMAIN: {
                 CONF_PLATFORM: 'asuswrt',
-                CONF_HOST: 'fake_host',                
+                CONF_HOST: 'fake_host',
                 CONF_USERNAME: 'fake_user',
                 CONF_PASSWORD: 'fake_pass',
                 CONF_TRACK_NEW: True,
@@ -97,7 +97,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         conf_dict = {
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'asuswrt',
-                CONF_HOST: 'fake_host',                
+                CONF_HOST: 'fake_host',
                 CONF_USERNAME: 'fake_user',
                 CONF_PUB_KEY: FAKEFILE,
                 CONF_TRACK_NEW: True,
@@ -121,7 +121,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.addCleanup(ssh_mock.stop)
         conf_dict = PLATFORM_SCHEMA({
             CONF_PLATFORM: 'asuswrt',
-            CONF_HOST: 'fake_host',            
+            CONF_HOST: 'fake_host',
             CONF_USERNAME: 'fake_user',
             CONF_PUB_KEY: FAKEFILE
         })
