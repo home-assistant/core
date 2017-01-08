@@ -15,7 +15,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_STOP)
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_STOP,
+    SUPPORT_PLAY_MODE)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
     CONF_HOSTS)
@@ -39,7 +40,7 @@ _REQUESTS_LOGGER.setLevel(logging.ERROR)
 SUPPORT_SONOS = SUPPORT_STOP | SUPPORT_PAUSE | SUPPORT_VOLUME_SET |\
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
     SUPPORT_PLAY_MEDIA | SUPPORT_SEEK | SUPPORT_CLEAR_PLAYLIST |\
-    SUPPORT_SELECT_SOURCE
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY_MODE
 
 SERVICE_GROUP_PLAYERS = 'sonos_group_players'
 SERVICE_UNJOIN = 'sonos_unjoin'
@@ -292,6 +293,7 @@ class SonosDevice(MediaPlayerDevice):
         self._support_next_track = False
         self._support_stop = False
         self._support_pause = False
+        self._support_play_mode = False
         self._current_track_uri = None
         self._current_track_is_radio_stream = False
         self._queue = None
@@ -300,6 +302,7 @@ class SonosDevice(MediaPlayerDevice):
         self._is_playing_tv = None
         self._favorite_sources = None
         self._source_name = None
+        self._play_mode = None
         self.soco_snapshot = Snapshot(self._player)
 
     @property
@@ -413,6 +416,7 @@ class SonosDevice(MediaPlayerDevice):
 
             if not self._coordinator:
 
+                play_mode = self._player.play_mode
                 is_playing_tv = self._player.is_playing_tv
                 is_playing_line_in = self._player.is_playing_line_in
 
@@ -441,6 +445,7 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = False
                     support_stop = False
                     support_pause = False
+                    support_play_mode = False
 
                     if is_playing_tv:
                         media_artist = SUPPORT_SOURCE_TV
@@ -462,6 +467,7 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = False
                     support_stop = False
                     support_pause = False
+                    support_play_mode = False
 
                     source_name = 'Radio'
                     # Check if currently playing radio station is in favorites
@@ -530,6 +536,7 @@ class SonosDevice(MediaPlayerDevice):
                     support_next_track = True
                     support_stop = True
                     support_pause = True
+                    support_play_mode = True
 
                     position_info = self._player.avTransport.GetPositionInfo(
                         [('InstanceID', 0),
@@ -605,12 +612,14 @@ class SonosDevice(MediaPlayerDevice):
                 self._current_track_uri = track_info['uri']
                 self._current_track_is_radio_stream = is_radio_stream
                 self._support_previous_track = support_previous_track
+                self._support_play_mode = support_play_mode
                 self._support_next_track = support_next_track
                 self._support_stop = support_stop
                 self._support_pause = support_pause
                 self._is_playing_tv = is_playing_tv
                 self._is_playing_line_in = is_playing_line_in
                 self._source_name = source_name
+                self._play_mode = play_mode
 
                 # update state of the whole group
                 # pylint: disable=protected-access
@@ -647,6 +656,7 @@ class SonosDevice(MediaPlayerDevice):
             self._is_playing_line_in = False
             self._favorite_sources = None
             self._source_name = None
+            self._play_mode = None
 
         self._last_avtransport_event = None
 
@@ -790,6 +800,14 @@ class SonosDevice(MediaPlayerDevice):
             return self._media_title
 
     @property
+    def play_mode(self):
+        """Title of current playing media."""
+        if self._coordinator:
+            return self._coordinator.play_mode
+        else:
+            return self._play_mode
+
+    @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
         if self._coordinator:
@@ -808,6 +826,9 @@ class SonosDevice(MediaPlayerDevice):
 
         if not self._support_pause:
             supported = supported ^ SUPPORT_PAUSE
+
+        if not self._support_play_mode:
+            supported = supported ^ SUPPORT_PLAY_MODE
 
         return supported
 
@@ -916,6 +937,13 @@ class SonosDevice(MediaPlayerDevice):
             self._coordinator.clear_playlist()
         else:
             self._player.clear_queue()
+
+    def select_play_mode(self, mode):
+        """Select players play mode."""
+        if self._coordinator:
+            self._coordinator.play_mode(mode)
+        else:
+            self._player.play_mode(mode)
 
     def turn_on(self):
         """Turn the media player on."""
