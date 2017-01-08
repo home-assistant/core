@@ -5,13 +5,14 @@ https://home-assistant.io/components/sensor.sma/
 """
 import asyncio
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL)
-from homeassistant.helpers.event import async_track_utc_time_change
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -35,7 +36,6 @@ def _check_sensor_schema(conf):
     """Check sensors and attributes are valid."""
     valid = list(conf[CONF_CUSTOM].keys())
     valid.extend(SENSOR_OPTIONS)
-    print(valid)
     for sensor, attrs in conf[CONF_SENSORS].items():
         if sensor not in valid:
             raise vol.Invalid("{} does not exist".format(sensor))
@@ -94,7 +94,6 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
            GROUP_USER: pysma.GROUP_USER}[config[CONF_GROUP]]
     sma = pysma.SMA(session, config[CONF_HOST], config[CONF_PASSWORD],
                     group=grp)
-    print(sma)
 
     # Ensure we logout on shutdown
     @asyncio.coroutine
@@ -118,13 +117,12 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
             backoff -= 1
             return
 
-        print('SMA query:', keys_to_query)
         values = yield from sma.read(keys_to_query)
         if values is None:
             backoff = 3
             return
         res = dict(zip(names_to_query, values))
-        print("update sma sensors {} {}".format(values, res))
+        _LOGGER.debug("Update sensors %s %s %s", keys_to_query, values, res)
         tasks = []
         for sensor in hass_sensors:
             task = sensor.async_update_values(res)
@@ -133,8 +131,8 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
-    secs = range(0, 60, config.get(CONF_SCAN_INTERVAL, 5))
-    async_track_utc_time_change(hass, async_sma, second=secs)
+    interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=5)
+    async_track_time_interval(hass, async_sma, interval)
 
 
 class SMAsensor(Entity):
