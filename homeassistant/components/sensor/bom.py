@@ -80,14 +80,14 @@ def validate_station(station):
     if station is None:
         return
     station = station.replace('.shtml', '')
-    if not re.fullmatch(r'ID[DNQTVW]60801\.\d\d\d\d\d', station):
+    if not re.fullmatch(r'ID[A-Z]\d\d\d\d\d\.\d\d\d\d\d', station):
         raise vol.error.Invalid('Malformed station ID')
     return station
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ZONE_ID): cv.string,
-    vol.Optional(CONF_WMO_ID): cv.string,
+    vol.Inclusive(CONF_ZONE_ID, 'Deprecated partial station ID'): cv.string,
+    vol.Inclusive(CONF_WMO_ID, 'Deprecated partial station ID'): cv.string,
     vol.Optional(CONF_NAME, default=None): cv.string,
     vol.Optional(CONF_STATION): validate_station,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
@@ -100,17 +100,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     station = config.get(CONF_STATION)
     zone_id, wmo_id = config.get(CONF_ZONE_ID), config.get(CONF_WMO_ID)
     if station is not None:
-        pass
+        if zone_id and wmo_id:
+            _LOGGER.warning(
+                'Using config "%s", not "%s" and "%s" for BOM sensor',
+                CONF_STATION, CONF_ZONE_ID, CONF_WMO_ID)
     elif zone_id and wmo_id:
-        station = zone_id + '.' + wmo_id
-    elif wmo_id:
-        stations = bom_stations(hass.config.config_dir)
-        lookup = {wmo: zone for zone, wmo in (k.split('.') for k in stations)}
-        station = lookup[wmo_id] + '.' + wmo_id
+        station = '{}.{}'.format(zone_id, wmo_id)
     else:
-        if zone_id:
-            _LOGGER.info('zone_id does not uniquely identify a station, '
-                         'falling back to lat/lon autodetection...')
         station = closest_station(config.get(CONF_LATITUDE),
                                   config.get(CONF_LONGITUDE),
                                   hass.config.config_dir)
@@ -119,16 +115,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             return False
 
     rest = BOMCurrentData(hass, station)
-    sensors = [BOMCurrentSensor(rest, variable, config.get(CONF_NAME))
-               for variable in config[CONF_MONITORED_CONDITIONS]]
     try:
         rest.update()
     except ValueError as err:
         _LOGGER.error("Received error from BOM_Current: %s", err)
         return False
-
-    add_devices(sensors)
-
+    add_devices([BOMCurrentSensor(rest, variable, config.get(CONF_NAME))
+                 for variable in config[CONF_MONITORED_CONDITIONS]])
     return True
 
 
@@ -245,14 +238,15 @@ def _get_bom_stations():
                     if wmo != '..':
                         latlon[wmo] = (float(lat), float(lon))
     zones = {}
-    pattern = (r'<a href="/products/(?P<zone>ID[DNQTVW]60801)/'
+    pattern = (r'<a href="/products/(?P<zone>ID[A-Z]\d\d\d\d\d)/'
                r'(?P=zone)\.(?P<wmo>\d\d\d\d\d).shtml">')
     for state in ('nsw', 'vic', 'qld', 'wa', 'tas', 'nt'):
         url = 'http://www.bom.gov.au/{0}/observations/{0}all.shtml'.format(
             state)
         for zone_id, wmo_id in re.findall(pattern, requests.get(url).text):
             zones[wmo_id] = zone_id
-    return {zones[k] + '.' + k: latlon[k] for k in set(latlon) & set(zones)}
+    return {'{}.{}'.format(zones[k], k): latlon[k]
+            for k in set(latlon) & set(zones)}
 
 
 def bom_stations(cache_dir):

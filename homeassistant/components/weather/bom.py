@@ -59,6 +59,11 @@ class BOMWeather(WeatherEntity):
         """Return the name of the sensor."""
         return 'BOM {}'.format(self.stationname or '(unknown station)')
 
+    @property
+    def condition(self):
+        """Return the current condition."""
+        return self.bom_data.data.get('weather')
+
     # Now implement the WeatherEntity interface
 
     @property
