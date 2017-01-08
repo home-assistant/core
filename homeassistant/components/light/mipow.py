@@ -61,12 +61,6 @@ class MipowLight(Light):
         self._bulb = mipow.mipow(self._address)
         self._white = 0
         self._rgb = (0, 0, 0)
-        self.r = 0
-        self.g = 0
-        self.b = 0
-        self.h = 0
-        self.s = 0
-        self.v = 0
         self._brightness = 0
         self._state = False
         if self._bulb.connect() is False:
