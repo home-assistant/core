@@ -10,6 +10,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.const import (CONF_ENTITIES, CONF_ENTITY_ID, STATE_IDLE,
                                  CONF_NAME, CONF_STATE, STATE_ON, STATE_OFF,
                                  SERVICE_TURN_ON, SERVICE_TURN_OFF,
@@ -61,10 +62,26 @@ def turn_on(hass, entity_id):
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
+@callback
+def async_turn_on(hass, entity_id):
+    """Async acknowledge the alert."""
+    data = {ATTR_ENTITY_ID: entity_id}
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
+
+
 def turn_off(hass, entity_id):
     """Reset alert."""
     data = {ATTR_ENTITY_ID: entity_id}
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+
+
+@callback
+def async_turn_off(hass, entity_id):
+    """Async reset the alert."""
+    data = {ATTR_ENTITY_ID: entity_id}
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
 
 
 def toggle(hass, entity_id):
@@ -73,7 +90,8 @@ def toggle(hass, entity_id):
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Setup alert component."""
     alerts = config.get(DOMAIN)
 
@@ -92,10 +110,11 @@ def setup(hass, config):
                 yield from alert.async_turn_off()
 
     for alert in alerts.get(CONF_ENTITIES):
-        entity = Alert(hass, alert[CONF_NAME], alert[CONF_ENTITY_ID],
-                       alert.get(CONF_STATE, STATE_ON), alert[CONF_REPEAT],
-                       alert.get(CONF_SKIP_FIRST, False),
-                       alert[CONF_NOTIFIERS])
+        entity = yield from hass.loop.run_in_executor(
+            None, Alert, hass, alert[CONF_NAME], alert[CONF_ENTITY_ID],
+            alert.get(CONF_STATE, STATE_ON), alert[CONF_REPEAT],
+            alert.get(CONF_SKIP_FIRST, False),
+            alert[CONF_NOTIFIERS])
         ALL_ALERTS[entity.entity_id] = entity
 
     descriptions = {}
