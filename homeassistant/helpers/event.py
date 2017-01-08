@@ -135,6 +135,8 @@ track_point_in_utc_time = threaded_listener_factory(
 
 def async_track_time_interval(hass, action, interval):
     """Add a listener that fires repetitively at every timedelta interval."""
+    remove = None
+
     def next_interval():
         """Return the next interval."""
         return dt_util.utcnow() + interval
