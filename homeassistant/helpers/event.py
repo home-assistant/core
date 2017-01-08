@@ -166,6 +166,7 @@ def async_track_sunrise(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunrise daily."""
     from homeassistant.components import sun
     offset = offset or timedelta()
+    remove = None
 
     def next_rise():
         """Return the next sunrise."""
@@ -201,6 +202,7 @@ def async_track_sunset(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunset daily."""
     from homeassistant.components import sun
     offset = offset or timedelta()
+    remove = None
 
     def next_set():
         """Return next sunrise."""
