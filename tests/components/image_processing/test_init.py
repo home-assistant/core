@@ -174,7 +174,10 @@ class TestImageProcessingAlpr(object):
         ip.scan(self.hass, entity_id='image_processing.demo_alpr')
         self.hass.block_till_done()
 
+        state = self.hass.states.get('image_processing.demo_alpr')
+
         assert len(self.alpr_events) == 4
+        assert state.state == 'AC3829'
 
     def test_alpr_event_double_call(self, aioclient_mock):
         """Setup and scan a picture and test plates from event."""
@@ -184,7 +187,10 @@ class TestImageProcessingAlpr(object):
         ip.scan(self.hass, entity_id='image_processing.demo_alpr')
         self.hass.block_till_done()
 
+        state = self.hass.states.get('image_processing.demo_alpr')
+
         assert len(self.alpr_events) == 4
+        assert state.state == 'AC3829'
 
     @patch('homeassistant.components.image_processing.demo.'
            'DemoImageProcessingAlpr.confidence',
@@ -197,4 +203,7 @@ class TestImageProcessingAlpr(object):
         ip.scan(self.hass, entity_id='image_processing.demo_alpr')
         self.hass.block_till_done()
 
+        state = self.hass.states.get('image_processing.demo_alpr')
+
         assert len(self.alpr_events) == 2
+        assert state.state == 'AC3829'

@@ -54,9 +54,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     entities = []
     for camera in config[CONF_SOURCE]:
         entities.append(OpenAlprLocalEntity(
-            camera[CONF_ENTITY_ID], command, confidence, camera[CONF_NAME]))
+            camera[CONF_ENTITY_ID], command, confidence, camera.get(CONF_NAME)
+        ))
 
-    async_add_devices(entities)
+    yield from async_add_devices(entities)
 
 
 class OpenAlprLocalEntity(ImageProcessingAlprEntity):
