@@ -160,6 +160,8 @@ class MipowLight(Light):
             if rgb is None and bright is None and flash is None:
                 self._white = 255
                 white = 255
+                self._state = True
+                self._bulb.on()
         self._state = True
 
         if flash is not None:
@@ -183,6 +185,7 @@ class MipowLight(Light):
             self._rgb = rgb
         elif white is not None:
             self._white = white
+            self._brightness = 0
             self._rgb = (0, 0, 0)
         if bright is not None:
             self.set_rgb(self._rgb[0], self._rgb[1], self._rgb[2])
