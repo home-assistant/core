@@ -33,6 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
 })
 
+# pylint: disable=C0103
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Mipow platform."""
