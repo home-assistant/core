@@ -32,6 +32,29 @@ send_command:
     command:
       description: Command to send
       example: 'Play'
+    num_repeats:
+      description: An optional value that specifies the number of times you want to repeat the command. If not specified, the command will not be repeated
+      example: '5'
+    delay_secs:
+      description: An optional value that specifies that number of seconds you want to wait in between repeated commands. If not specified, the default of 0.4 seconds will be used
+      example: '0.75'
+      
+send_commands:
+  description: Sends a set of commands to a single device
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to send command from
+      example: 'remote.family_room'
+    device:
+      description: Device ID to send command to
+      example: '32756745'
+    commands:
+      description: A list of commands to send
+      example: ['Channel2', 'Channel4', 'Channel5']
+    delay_secs:
+      description: An optional value that specifies that number of seconds you want to wait in between commands. If not specified, the default of 0.4 seconds will be used
+      example: '0.75'
 
 harmony_sync:
   description: Syncs the remote's configuration

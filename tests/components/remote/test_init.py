@@ -12,6 +12,7 @@ import homeassistant.components.remote as remote
 from tests.common import mock_service, get_test_home_assistant
 TEST_PLATFORM = {remote.DOMAIN: {CONF_PLATFORM: 'test'}}
 SERVICE_SEND_COMMAND = 'send_command'
+SERVICE_SEND_COMMANDS = 'send_commands'
 
 
 class TestRemote(unittest.TestCase):
@@ -81,7 +82,7 @@ class TestRemote(unittest.TestCase):
 
         remote.send_command(
             self.hass, entity_id='entity_id_val',
-            device='test_device', command='test_command')
+            device='test_device', command='test_command', num_repeats='4', delay_secs='0.6')
 
         self.hass.block_till_done()
 
@@ -90,6 +91,24 @@ class TestRemote(unittest.TestCase):
 
         self.assertEqual(remote.DOMAIN, call.domain)
         self.assertEqual(SERVICE_SEND_COMMAND, call.service)
+        self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
+		
+	def test_send_commands(self):
+        """Test send_commands."""
+        send_commands_calls = mock_service(
+            self.hass, remote.DOMAIN, SERVICE_SEND_COMMANDS)
+
+        remote.send_commands(
+            self.hass, entity_id='entity_id_val',
+            device='test_device', commands=['test_command_1', 'test_command_2'], delay_secs='0.7')
+
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(send_commands_calls))
+        call = send_commands_calls[-1]
+
+        self.assertEqual(remote.DOMAIN, call.domain)
+        self.assertEqual(SERVICE_SEND_COMMANDS, call.service)
         self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
 
     def test_services(self):
