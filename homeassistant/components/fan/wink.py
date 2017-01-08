@@ -7,7 +7,8 @@ https://home-assistant.io/components/fan.wink/
 import logging
 
 from homeassistant.components.fan import (FanEntity, SPEED_HIGH,
-                                          SPEED_LOW, SPEED_MEDIUM)
+                                          SPEED_LOW, SPEED_MEDIUM,
+                                          STATE_UNKNOWN)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.wink import WinkDevice
 
@@ -51,6 +52,22 @@ class WinkFanDevice(WinkDevice, FanEntity):
     def is_on(self):
         """Return true if the entity is on."""
         return self.wink.state()
+
+    @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        current_wink_speed = self.wink.current_fan_speed()
+        if SPEED_AUTO == current_wink_speed:
+            return SPEED_AUTO
+        if SPEED_LOWEST == current_wink_speed:
+            return SPEED_LOWEST
+        if SPEED_LOW == current_wink_speed:
+            return SPEED_LOW
+        if SPEED_MEDIUM == current_wink_speed:
+            return SPEED_MEDIUM
+        if SPEED_HIGH == current_wink_speed:
+            return SPEED_HIGH
+        return STATE_UNKNOWN
 
     @property
     def current_direction(self):

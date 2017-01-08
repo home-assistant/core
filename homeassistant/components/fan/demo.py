@@ -31,7 +31,7 @@ class DemoFan(FanEntity):
     def __init__(self, hass, name: str, initial_state: str) -> None:
         """Initialize the entity."""
         self.hass = hass
-        self.speed = initial_state
+        self._speed = initial_state
         self.oscillating = False
         self.direction = "forward"
         self._name = name
@@ -45,6 +45,11 @@ class DemoFan(FanEntity):
     def should_poll(self):
         """No polling needed for a demo fan."""
         return False
+
+    @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        return self._speed
 
     @property
     def speed_list(self) -> list:
@@ -62,7 +67,7 @@ class DemoFan(FanEntity):
 
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        self.speed = speed
+        self._speed = speed
         self.update_ha_state()
 
     def set_direction(self, direction: str) -> None:

@@ -253,6 +253,11 @@ class FanEntity(ToggleEntity):
         return self.speed not in [SPEED_OFF, STATE_UNKNOWN]
 
     @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        return None
+
+    @property
     def speed_list(self: ToggleEntity) -> list:
         """Get the list of available speeds."""
         return []
