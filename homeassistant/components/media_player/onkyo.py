@@ -111,13 +111,21 @@ class OnkyoDevice(MediaPlayerDevice):
         current_source_raw = self.command('input-selector query')
         if not (volume_raw and mute_raw and current_source_raw):
             return
-        for source in current_source_raw[1]:
+
+        # eiscp can return string or tuple. Make everything tuples.
+        if isinstance(current_source_raw[1], str):
+            current_source_tuples = \
+                (current_source_raw[0], (current_source_raw[1],))
+        else:
+            current_source_tuples = current_source_raw
+
+        for source in current_source_tuples[1]:
             if source in self._source_mapping:
                 self._current_source = self._source_mapping[source]
                 break
             else:
                 self._current_source = '_'.join(
-                    [i for i in current_source_raw[1]])
+                    [i for i in current_source_tuples[1]])
         self._muted = bool(mute_raw[1] == 'on')
         self._volume = int(volume_raw[1], 16) / 80.0
 
