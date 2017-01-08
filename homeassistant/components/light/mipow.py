@@ -129,16 +129,18 @@ class MipowLight(Light):
     def get_bright(self):
         """Return Brightness."""
         rgb = self._bulb.get_colour()
-        hsv = self.hsvconv(rgb[0], rgb[1], rgb[2])
+        hsv = self.hsv_conv(rgb[0], rgb[1], rgb[2])
         return (hsv[2]) * 255
 
-    def rgbconv(self, hue, sat, val):
+# pylint: disable=R0201
+    def rgb_conv(self, hue, sat, val):
         """Used to convert hsv to rgb."""
         import colorsys
         rgb = colorsys.hsv_to_rgb(hue, sat, val)
         return rgb
 
-    def hsvconv(self, re, gr, bl):
+# pylint: disable=R0201
+    def hsv_conv(self, re, gr, bl):
         """Used to convert rgb to hsv."""
         import colorsys
         hsv = colorsys.rgb_to_hsv(re/255, gr/255, bl/255)
@@ -166,9 +168,9 @@ class MipowLight(Light):
 
         if bright is not None:
             rgbs = self._bulb.get_colour()
-            hsvs = self.hsvconv(rgbs[0], rgbs[1], rgbs[2])
+            hsvs = self.hsv_conv(rgbs[0], rgbs[1], rgbs[2])
             bri = bright / 255
-            rgbv = self.rgbconv(hsvs[0], hsvs[1], bri)
+            rgbv = self.rgb_conv(hsvs[0], hsvs[1], bri)
             respred = int(round(rgbv[0]*255))
             respgreen = int(round(rgbv[1]*255))
             respblue = int(round(rgbv[2]*255))
