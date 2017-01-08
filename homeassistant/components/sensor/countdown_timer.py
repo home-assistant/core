@@ -3,18 +3,22 @@ Countdown Timer component for Home Assistant https://home-assistant.io/.
 
 Documentation: https://home-assistant.io/components/sensor.countdown_timer/
 Jerry Workman <jerry.workman@gmail.com>
+
+There is no blocking I/O so asyncio is not required
 """
 
 import string
 import logging
-from threading import Timer
+from datetime import timedelta
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components import switch as switch
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_ON, STATE_UNKNOWN)
-from homeassistant.helpers.event import track_state_change
+import homeassistant.util.dt as dt_util
+from homeassistant.helpers.event import track_state_change, \
+    track_point_in_time
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,18 +43,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def _debug(msg):
-    _LOGGER.debug("%s: %s", DOMAIN, msg)
-
-
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup cover."""
+    """Setup countdown_timer."""
     value_template = config.get('timers', {})
     timers = []
 
-    for dev_name, properties in value_template .items():
-        _debug("Adding timed switch %s" % dev_name)
+    for dev_name, properties in value_template.items():
+        _LOGGER.debug("Adding timed switch %s", dev_name)
         timers.append(
             CountdownTimer(
                 hass,
@@ -63,8 +63,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     if not timers:
         _LOGGER.info("No countdown timers added. Check configuration.")
         return False
-
     add_devices_callback(timers)
+    return True
 
 
 class CountdownTimer(Entity):
@@ -84,18 +84,21 @@ class CountdownTimer(Entity):
         self._delay = delay  # minutes
         self._count_down = 0
         self._state = 0
-        self._timer = Timer(60, self.timer_timeout)  # One minute
         if restart:
-            # restart the timers
+            # restart the countdown timers
             self._count_down = delay
-            self._timer.start()
+            self._start_timer(dt_util.utcnow())
+        # async_track_state_change is used in the core
         track_state_change(self._hass, self._sensors.split(','),
                            self._sensor_changed)
 
+    def _debug(self, msg):
+        _LOGGER.debug('%s: %s', self._name, str(msg))
+
+    # pylint: disable=unused-argument
     def _sensor_changed(self, entity, old_state, new_state):
         """binary_sensor callback."""
-        _debug('%s binary sensor, new state: %s' % (self._full_name,
-                                                    new_state.state))
+        self._debug('new state: %s' % new_state.state)
         if new_state.state == STATE_ON:
             switch.turn_on(self._hass, self._switch)
             if self._count_down > self._delay:
@@ -103,28 +106,31 @@ class CountdownTimer(Entity):
                 self._state = self._count_down
             else:
                 # reset all
-                self._state = self._count_down = self._delay
+                self._state = self._count_down = self._delay + 1
             self.update_ha_state()
-            # self.schedule_update_ha_state()
-            self._timer.cancel()
-            self._timer = Timer(60, self.timer_timeout)  # One minute
-            self._timer.start()
+            # how do I cancel a track_point_in_time ?
+            self.count_down(dt_util.utcnow())
 
-    def timer_timeout(self):
+    def _start_timer(self, time):
+        """Start HA track_point_in_time"""
+        self._debug("Time now: " + str(time))
+        expire_time = time + timedelta(minutes=1)
+        self._debug("Starting timer, expires at: " + str(expire_time))
+        track_point_in_time(self._hass, self.count_down, expire_time)
+
+    def count_down(self, time):
         """timed out so turn switch off."""
+        self._debug("Tic - Time now: " + str(dt_util.utcnow()))
         self._count_down -= 1  # minute
-        _debug('Tic - %d left.' % self._count_down)
+        # self._debug('Tic - %d left.' % self._count_down)
         # count down in 1 minute increments for display.
         self._state = int(self._count_down)  # countdowm timer
         if self._count_down <= 0:
             self._state = 0
-            _debug('Timed out')
+            self._debug('Timed out')
             switch.turn_off(self._hass, self._switch)
         else:
-            self._timer.cancel()  # just in case
-            self._timer = Timer(60, self.timer_timeout)  # One minute
-            self._timer.start()
-        # self.schedule_update_ha_state()
+            self._start_timer(time)
         self.update_ha_state()
 
     @property
@@ -166,7 +172,5 @@ class CountdownTimer(Entity):
             return switch_state == STATE_ON
 
     def update(self):
-        """Update state."""
+        """Update state, async not needed here."""
         self._state = self._count_down
-        # self.schedule_update_ha_state()
-        self.update_ha_state()
