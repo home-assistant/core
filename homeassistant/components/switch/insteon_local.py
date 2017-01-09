@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             setup_switch(device_id, conf_switches[device_id], insteonhub,
                          hass, add_devices)
 
-    linked = insteonhub.get_inked()
+    linked = insteonhub.get_linked()
 
     for device_id in linked:
         if linked[device_id]['cat_type'] == 'switch'\
