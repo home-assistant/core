@@ -14,8 +14,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_SEEK, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
+    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_SEEK, SUPPORT_PLAY,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_OFF, CONF_HOST, CONF_PORT, CONF_NAME)
 from homeassistant.loader import get_component
@@ -33,7 +33,7 @@ DEFAULT_PORT = 5672
 GPMDP_CONFIG_FILE = 'gpmpd.conf'
 
 SUPPORT_GPMDP = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_SEEK | SUPPORT_VOLUME_SET
+    SUPPORT_SEEK | SUPPORT_VOLUME_SET | SUPPORT_PLAY
 
 PLAYBACK_DICT = {'0': STATE_PAUSED,  # Stopped
                  '1': STATE_PAUSED,
