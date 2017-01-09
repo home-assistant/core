@@ -56,7 +56,7 @@ class LannouncerNotificationService(BaseNotificationService):
 
         if method not in ATTR_METHOD_ALLOWED:
             _LOGGER.error("Unknown method %s", method)
-            return None
+            return
 
         cmd = urlencode({method: message})
 
