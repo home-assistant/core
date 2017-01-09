@@ -126,7 +126,7 @@ class MjpegCamera(Camera):
 
         finally:
             if stream is not None:
-                self.hass.async_add_job(stream.release())
+                yield from stream.close()
             if response is not None:
                 yield from response.write_eof()
 

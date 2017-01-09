@@ -274,6 +274,9 @@ influxdb==3.0.0
 # homeassistant.components.insteon_hub
 insteon_hub==0.4.5
 
+# homeassistant.components.insteon_local
+insteonlocal==0.39
+
 # homeassistant.components.media_player.kodi
 jsonrpc-async==0.1
 
