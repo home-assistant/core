@@ -18,11 +18,13 @@ RUN echo "deb http://download.telldus.com/debian/ stable main" >> /etc/apt/sourc
 
 COPY script/build_python_openzwave script/build_python_openzwave
 RUN script/build_python_openzwave && \
-  mkdir -p /usr/local/share/python-openzwave && \
-  ln -sf /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/python-openzwave/config
+    mkdir -p /usr/local/share/python-openzwave && \
+    mv /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/python-openzwave/config && \
+    rm -rf build/
 
 COPY script/build_libcec script/build_libcec
-RUN script/build_libcec
+RUN script/build_libcec && \
+    rm -rf build/
 
 COPY requirements_all.txt requirements_all.txt
 RUN pip3 install --no-cache-dir -r requirements_all.txt && \
