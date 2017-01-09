@@ -49,14 +49,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pwaqi
 
     dev = []
-    if config.get(CONF_STATIONS):
-        for station in config.get(CONF_STATIONS):
-            dev.append(WaqiSensor(WaqiData(station), station))
-    else:
-        for location_name in config.get(CONF_LOCATIONS):
-            station_ids = pwaqi.findStationCodesByCity(location_name)
-            _LOGGER.info('Stations returned: %s', station_ids)
-            for station in station_ids:
+    station_filter = config.get(CONF_STATIONS)
+    for location_name in config.get(CONF_LOCATIONS):
+        station_ids = pwaqi.findStationCodesByCity(location_name)
+        _LOGGER.info('The following stations were returned: %s', station_ids)
+        for station in station_ids:
+            waqi_sensor = WaqiSensor(WaqiData(station), station)
+            if (not station_filter) or (waqi_sensor.name in station_filter):
                 dev.append(WaqiSensor(WaqiData(station), station))
 
     add_devices(dev)
@@ -76,9 +75,9 @@ class WaqiSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         try:
-            return 'WAQI {}'.format(self._details['city']['name'])
+            return self._details['city']['name']
         except (KeyError, TypeError):
-            return 'WAQI {}'.format(self._station_id)
+            return self._station_id
 
     @property
     def icon(self):
