@@ -3,7 +3,7 @@
 FINGERPRINTS = {
     "core.js": "22d39af274e1d824ca1302e10971f2d8",
     "frontend.html": "61e57194179b27563a05282b58dd4f47",
-    "mdi.html": "48fcee544a61b668451faf2b7295df70",
+    "mdi.html": "5bb2f1717206bad0d187c2633062c575",
     "micromarkdown-js.html": "93b5ec4016f0bba585521cf4d18dec1a",
     "panels/ha-panel-dev-event.html": "f19840b9a6a46f57cb064b384e1353f5",
     "panels/ha-panel-dev-info.html": "3765a371478cc66d677cf6dcc35267c6",
