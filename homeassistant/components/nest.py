@@ -38,19 +38,13 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
 })
 
-BINARY_SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
-})
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_CLIENT_SECRET): cv.string,
         vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string),
         vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-        vol.Optional(CONF_BINARY_SENSORS): BINARY_SENSOR_SCHEMA
+        vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA
     })
 }, extra=vol.ALLOW_EXTRA)
 

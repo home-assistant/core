@@ -55,9 +55,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         conditions = PROTECT_VARS
     else:
         conditions = discovery_info.get(CONF_MONITORED_CONDITIONS, {})
-        # Add all sensors if no monitored conditions are specified
-        if all(c is None for c in conditions):
-            conditions = _VALID_SENSOR_TYPES
 
     for variable in conditions:
         if variable in _SENSOR_TYPES_DEPRECATED:
