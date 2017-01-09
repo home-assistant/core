@@ -1,32 +1,19 @@
-"""The tests for the openalpr local platform."""
+"""The tests for the openalpr clooud platform."""
 import asyncio
-from unittest.mock import patch, PropertyMock, MagicMock
+from unittest.mock import patch, PropertyMock
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.image_processing as ip
+from homeassistant.components.image_processing.openalpr_cloud import (
+    OPENALPR_API_URL)
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture)
 
 
-@asyncio.coroutine
-def mock_async_subprocess():
-    """Get a Popen mock back."""
-    async_popen = MagicMock()
-
-    @asyncio.coroutine
-    def communicate(input=None):
-        """Communicate mock."""
-        fixture = bytes(load_fixture('alpr_stdout.txt'), 'utf-8')
-        return (fixture, None)
-
-    async_popen.communicate = communicate
-    return async_popen
-
-
-class TestOpenAlprLocalSetup(object):
+class TestOpenAlprCloudlSetup(object):
     """Test class for image processing."""
 
     def setup_method(self):
@@ -41,11 +28,12 @@ class TestOpenAlprLocalSetup(object):
         """Setup platform with one entity."""
         config = {
             ip.DOMAIN: {
-                'platform': 'openalpr_local',
+                'platform': 'openalpr_cloud',
                 'source': {
                     'entity_id': 'camera.demo_camera'
                 },
                 'region': 'eu',
+                'api_key': 'sk_abcxyz123456',
             },
             'camera': {
                 'platform': 'demo'
@@ -61,12 +49,13 @@ class TestOpenAlprLocalSetup(object):
         """Setup platform with one entity and set name."""
         config = {
             ip.DOMAIN: {
-                'platform': 'openalpr_local',
+                'platform': 'openalpr_cloud',
                 'source': {
                     'entity_id': 'camera.demo_camera',
                     'name': 'test local'
                 },
                 'region': 'eu',
+                'api_key': 'sk_abcxyz123456',
             },
             'camera': {
                 'platform': 'demo'
@@ -78,14 +67,33 @@ class TestOpenAlprLocalSetup(object):
 
         assert self.hass.states.get('image_processing.test_local')
 
+    def test_setup_platform_without_api_key(self):
+        """Setup platform with one entity without api_key."""
+        config = {
+            ip.DOMAIN: {
+                'platform': 'openalpr_cloud',
+                'source': {
+                    'entity_id': 'camera.demo_camera'
+                },
+                'region': 'eu',
+            },
+            'camera': {
+                'platform': 'demo'
+            },
+        }
+
+        with assert_setup_component(0, ip.DOMAIN):
+            setup_component(self.hass, ip.DOMAIN, config)
+
     def test_setup_platform_without_region(self):
         """Setup platform with one entity without region."""
         config = {
             ip.DOMAIN: {
-                'platform': 'openalpr_local',
+                'platform': 'openalpr_cloud',
                 'source': {
                     'entity_id': 'camera.demo_camera'
                 },
+                'api_key': 'sk_abcxyz123456',
             },
             'camera': {
                 'platform': 'demo'
@@ -96,7 +104,7 @@ class TestOpenAlprLocalSetup(object):
             setup_component(self.hass, ip.DOMAIN, config)
 
 
-class TestOpenAlprLocal(object):
+class TestOpenAlprCloud(object):
     """Test class for image processing."""
 
     def setup_method(self):
@@ -105,20 +113,21 @@ class TestOpenAlprLocal(object):
 
         config = {
             ip.DOMAIN: {
-                'platform': 'openalpr_local',
+                'platform': 'openalpr_cloud',
                 'source': {
                     'entity_id': 'camera.demo_camera',
                     'name': 'test local'
                 },
                 'region': 'eu',
+                'api_key': 'sk_abcxyz123456',
             },
             'camera': {
                 'platform': 'demo'
             },
         }
 
-        with patch('homeassistant.components.image_processing.openalpr_local.'
-                   'OpenAlprLocalEntity.should_poll',
+        with patch('homeassistant.components.image_processing.openalpr_cloud.'
+                   'OpenAlprCloudEntity.should_poll',
                    new_callable=PropertyMock(return_value=False)):
             setup_component(self.hass, ip.DOMAIN, config)
 
@@ -136,30 +145,68 @@ class TestOpenAlprLocal(object):
 
         self.hass.bus.listen(ip.EVENT_FOUND_PLATE, mock_alpr_event)
 
+        self.params = {
+            'secret_key': "sk_abcxyz123456",
+            'tasks': "plate",
+            'return_image': 0,
+            'country': 'eu',
+            'image_bytes': "aW1hZ2U="
+        }
+
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('asyncio.create_subprocess_exec',
-           return_value=mock_async_subprocess())
-    def test_openalpr_process_image(self, popen_mock, aioclient_mock):
+    def test_openalpr_process_image(self, aioclient_mock):
         """Setup and scan a picture and test plates from event."""
         aioclient_mock.get(self.url, content=b'image')
+        aioclient_mock.post(
+            OPENALPR_API_URL, params=self.params,
+            text=load_fixture('alpr_cloud.json'), status=200
+        )
 
         ip.scan(self.hass, entity_id='image_processing.test_local')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.test_local')
 
-        assert popen_mock.called
+        assert len(aioclient_mock.mock_calls) == 2
         assert len(self.alpr_events) == 5
         assert state.attributes.get('vehicles') == 1
-        assert state.state == 'PE3R2X'
+        assert state.state == 'H786P0J'
 
         event_data = [event.data for event in self.alpr_events if
-                      event.data.get(ip.ATTR_PLATE) == 'PE3R2X']
+                      event.data.get(ip.ATTR_PLATE) == 'H786P0J']
         assert len(event_data) == 1
-        assert event_data[0][ip.ATTR_PLATE] == 'PE3R2X'
-        assert event_data[0][ip.ATTR_CONFIDENCE] == float(98.9371)
+        assert event_data[0][ip.ATTR_PLATE] == 'H786P0J'
+        assert event_data[0][ip.ATTR_CONFIDENCE] == float(90.436699)
         assert event_data[0][ip.ATTR_ENTITY_ID] == \
             'image_processing.test_local'
+
+    def test_openalpr_process_image_api_error(self, aioclient_mock):
+        """Setup and scan a picture and test api error."""
+        aioclient_mock.get(self.url, content=b'image')
+        aioclient_mock.post(
+            OPENALPR_API_URL, params=self.params,
+            text="{'error': 'error message'}", status=400
+        )
+
+        ip.scan(self.hass, entity_id='image_processing.test_local')
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 2
+        assert len(self.alpr_events) == 0
+
+    def test_openalpr_process_image_api_timeout(self, aioclient_mock):
+        """Setup and scan a picture and test api error."""
+        aioclient_mock.get(self.url, content=b'image')
+        aioclient_mock.post(
+            OPENALPR_API_URL, params=self.params,
+            exc=asyncio.TimeoutError()
+        )
+
+        ip.scan(self.hass, entity_id='image_processing.test_local')
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 2
+        assert len(self.alpr_events) == 0

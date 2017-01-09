@@ -14,10 +14,11 @@ import voluptuous as vol
 
 from homeassistant.core import split_entity_id
 from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingAlprEntity, CONF_CONFIDENCE, CONF_SOURCE,
     CONF_ENTITY_ID, CONF_NAME)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the openalpr cloud api platform."""
-    api_key =
     confidence = config[CONF_CONFIDENCE]
     params = {
         'secret_key': config[CONF_API_KEY],
@@ -66,6 +66,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 class OpenAlprCloudEntity(ImageProcessingAlprEntity):
     """OpenAlpr cloud entity."""
+
     def __init__(self, camera_entity, params, confidence, name=None):
         """Initialize openalpr local api."""
         self._params = params
@@ -130,10 +131,14 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
         vehicles = 0
         result = {}
 
-        for row in data['plate']['results']
+        for row in data['plate']['results']:
             vehicles += 1
 
             for p_data in row['candidates']:
-                result.update({p_data['plate']: p_data['confidence']})
+                try:
+                    result.update(
+                        {p_data['plate']: float(p_data['confidence'])})
+                except ValueError:
+                    continue
 
         self.async_process_plates(result, vehicles)

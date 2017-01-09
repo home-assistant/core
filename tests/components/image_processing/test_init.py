@@ -81,7 +81,7 @@ class TestImageProcessing(object):
     @patch('homeassistant.components.image_processing.demo.'
            'DemoImageProcessing.process_image', autospec=True)
     def test_get_image_from_camera(self, mock_process, mock_camera):
-        """Grab a image from camera entity"""
+        """Grab a image from camera entity."""
         self.hass.start()
 
         ip.scan(self.hass, entity_id='image_processing.demo')
@@ -179,6 +179,13 @@ class TestImageProcessingAlpr(object):
         assert len(self.alpr_events) == 4
         assert state.state == 'AC3829'
 
+        event_data = [event.data for event in self.alpr_events if
+                      event.data.get(ip.ATTR_PLATE) == 'AC3829']
+        assert len(event_data) == 1
+        assert event_data[0][ip.ATTR_PLATE] == 'AC3829'
+        assert event_data[0][ip.ATTR_CONFIDENCE] == 98.3
+        assert event_data[0][ip.ATTR_ENTITY_ID] == 'image_processing.demo_alpr'
+
     def test_alpr_event_double_call(self, aioclient_mock):
         """Setup and scan a picture and test plates from event."""
         aioclient_mock.get(self.url, content=b'image')
@@ -191,6 +198,13 @@ class TestImageProcessingAlpr(object):
 
         assert len(self.alpr_events) == 4
         assert state.state == 'AC3829'
+
+        event_data = [event.data for event in self.alpr_events if
+                      event.data.get(ip.ATTR_PLATE) == 'AC3829']
+        assert len(event_data) == 1
+        assert event_data[0][ip.ATTR_PLATE] == 'AC3829'
+        assert event_data[0][ip.ATTR_CONFIDENCE] == 98.3
+        assert event_data[0][ip.ATTR_ENTITY_ID] == 'image_processing.demo_alpr'
 
     @patch('homeassistant.components.image_processing.demo.'
            'DemoImageProcessingAlpr.confidence',
@@ -207,3 +221,10 @@ class TestImageProcessingAlpr(object):
 
         assert len(self.alpr_events) == 2
         assert state.state == 'AC3829'
+
+        event_data = [event.data for event in self.alpr_events if
+                      event.data.get(ip.ATTR_PLATE) == 'AC3829']
+        assert len(event_data) == 1
+        assert event_data[0][ip.ATTR_PLATE] == 'AC3829'
+        assert event_data[0][ip.ATTR_CONFIDENCE] == 98.3
+        assert event_data[0][ip.ATTR_ENTITY_ID] == 'image_processing.demo_alpr'

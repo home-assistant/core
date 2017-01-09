@@ -107,7 +107,7 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
         )
 
         # send image
-        stdout, stderr = yield from alpr.communicate(input=image)
+        stdout, _ = yield from alpr.communicate(input=image)
         stdout = io.StringIO(str(stdout, 'utf-8'))
 
         while True:
