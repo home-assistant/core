@@ -86,7 +86,7 @@ tts:
 
 
 CUSTOMIZE_SCHEMA = vol.Schema({
-    cv.string: cv.ordered_dict(cv.string),
+    cv.string: cv.ordered_dict(cv.match_all, cv.string),
 })
 
 

@@ -210,6 +210,17 @@ class TestConfig(unittest.TestCase):
 
         return self.hass.states.get('test.test')
 
+    def test_entity_customization_false(self):
+        """Test entity customization through configuration."""
+        config = {CONF_LATITUDE: 50,
+                  CONF_LONGITUDE: 50,
+                  CONF_NAME: 'Test',
+                  CONF_CUSTOMIZE: {'test.test': {'hidden': False}}}
+
+        state = self._compute_state(config)
+
+        assert 'hidden' not in state.attributes
+
     def test_entity_customization(self):
         """Test entity customization through configuration."""
         config = {CONF_LATITUDE: 50,
@@ -232,18 +243,17 @@ class TestConfig(unittest.TestCase):
 
         assert state.attributes['hidden']
 
-    def test_entity_customization_regexp(self):
+    def test_entity_customization_glob(self):
         """Test entity customization through configuration."""
         config = {CONF_LATITUDE: 50,
                   CONF_LONGITUDE: 50,
                   CONF_NAME: 'Test',
                   CONF_CUSTOMIZE: {
                       'test': {'hidden': False},
-                      'test.t.*': {'hidden': True}
+                      'test.t*': {'hidden': True}
                   }}
 
         state = self._compute_state(config)
-
         assert state.attributes['hidden']
 
     def test_entity_customization_exact(self):
