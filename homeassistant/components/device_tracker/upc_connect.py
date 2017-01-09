@@ -102,13 +102,13 @@ class UPCDeviceScanner(DeviceScanner):
                 'Password': self.password,
             })
 
-            # erfolgreich?
+            # successfull?
             if data.find("successful") != -1:
                 return True
             return False
 
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
-            _LOGGER.error("Can not load loging page from %s", self.host)
+            _LOGGER.error("Can not load login page from %s", self.host)
             return False
 
         finally:
