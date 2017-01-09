@@ -77,7 +77,7 @@ class WaqiSensor(Entity):
         try:
             return self._details['city']['name']
         except (KeyError, TypeError):
-            return self._station_id
+            return 'WAQI {}'.format(self._station_id)
 
     @property
     def icon(self):
