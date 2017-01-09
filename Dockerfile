@@ -13,13 +13,16 @@ RUN echo "deb http://download.telldus.com/debian/ stable main" >> /etc/apt/sourc
     wget -qO - http://download.telldus.se/debian/telldus-public.key | apt-key add - && \
     apt-get update && \
     apt-get install -y --no-install-recommends nmap net-tools cython3 libudev-dev sudo libglib2.0-dev bluetooth libbluetooth-dev \
-            libtelldus-core2 && \
+            libtelldus-core2 cmake libxrandr-dev swig && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY script/build_python_openzwave script/build_python_openzwave
 RUN script/build_python_openzwave && \
   mkdir -p /usr/local/share/python-openzwave && \
   ln -sf /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/python-openzwave/config
+
+COPY script/build_libcec script/build_libcec
+RUN script/build_libcec
 
 COPY requirements_all.txt requirements_all.txt
 RUN pip3 install --no-cache-dir -r requirements_all.txt && \
