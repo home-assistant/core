@@ -30,6 +30,7 @@ ATTR_TIME = 'time'
 ATTRIBUTION = 'Data provided by the World Air Quality Index project'
 
 CONF_LOCATIONS = 'locations'
+CONF_STATIONS = 'stations'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
@@ -38,7 +39,8 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_LOCATIONS): cv.ensure_list
+    vol.Optional(CONF_STATIONS): cv.ensure_list,
+    vol.Required(CONF_LOCATIONS): cv.ensure_list,
 })
 
 
@@ -47,11 +49,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pwaqi
 
     dev = []
-    for location_name in config.get(CONF_LOCATIONS):
-        station_ids = pwaqi.findStationCodesByCity(location_name)
-        _LOGGER.error('The following stations were returned: %s', station_ids)
-        for station in station_ids:
+    if config.get(CONF_STATIONS):
+        for station in config.get(CONF_STATIONS):
             dev.append(WaqiSensor(WaqiData(station), station))
+    else:
+        for location_name in config.get(CONF_LOCATIONS):
+            station_ids = pwaqi.findStationCodesByCity(location_name)
+            _LOGGER.error('The following stations were returned: %s', station_ids)
+            for station in station_ids:
+                dev.append(WaqiSensor(WaqiData(station), station))
 
     add_devices(dev)
 
