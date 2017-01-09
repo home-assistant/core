@@ -19,7 +19,7 @@ from tests.common import assert_setup_component
 
 @pytest.fixture
 def mock_connection_factory(monkeypatch):
-    """Mocks the create functions for serial and TCP Asyncio connections."""
+    """Mock the create functions for serial and TCP Asyncio connections."""
     from dsmr_parser.protocol import DSMRProtocol
     transport = asynctest.Mock(spec=asyncio.Transport)
     protocol = asynctest.Mock(spec=DSMRProtocol)
