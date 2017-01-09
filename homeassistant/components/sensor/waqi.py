@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         for location_name in config.get(CONF_LOCATIONS):
             station_ids = pwaqi.findStationCodesByCity(location_name)
-            _LOGGER.error('The following stations were returned: %s', station_ids)
+            _LOGGER.info('Stations returned: %s', station_ids)
             for station in station_ids:
                 dev.append(WaqiSensor(WaqiData(station), station))
 
