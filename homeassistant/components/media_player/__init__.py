@@ -101,6 +101,7 @@ SUPPORT_VOLUME_STEP = 1024
 SUPPORT_SELECT_SOURCE = 2048
 SUPPORT_STOP = 4096
 SUPPORT_CLEAR_PLAYLIST = 8192
+SUPPORT_PLAY = 16384
 
 # Service call validation schemas
 MEDIA_PLAYER_SCHEMA = vol.Schema({
@@ -675,6 +676,11 @@ class MediaPlayerDevice(Entity):
             None, self.clear_playlist)
 
     # No need to overwrite these.
+    @property
+    def support_play(self):
+        """Boolean if play is supported."""
+        return bool(self.supported_media_commands & SUPPORT_PLAY)
+
     @property
     def support_pause(self):
         """Boolean if pause is supported."""
