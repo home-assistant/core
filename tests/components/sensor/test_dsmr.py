@@ -1,22 +1,51 @@
 """Test for DSMR components.
 
-Tests setup of the DSMR component and ensure incoming telegrams cause Entity
-to be updated with new values.
+Tests setup of the DSMR component and ensure incoming telegrams cause
+Entity to be updated with new values.
+
 """
 
 import asyncio
 from decimal import Decimal
 from unittest.mock import Mock
 
+import asynctest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.sensor.dsmr import DerivativeDSMREntity
 from homeassistant.const import STATE_UNKNOWN
-from tests.common import assert_setup_component, mock_coro
+import pytest
+from tests.common import assert_setup_component
+
+
+@pytest.fixture
+def mock_connection_factory(monkeypatch):
+    """Mocks the create functions for serial and TCP Asyncio connections."""
+    from dsmr_parser.protocol import DSMRProtocol
+    transport = asynctest.Mock(spec=asyncio.Transport)
+    protocol = asynctest.Mock(spec=DSMRProtocol)
+
+    @asyncio.coroutine
+    def connection_factory(*args, **kwargs):
+        """Return mocked out Asyncio classes."""
+        return (transport, protocol)
+    connection_factory = Mock(wraps=connection_factory)
+
+    # apply the mock to both connection factories
+    monkeypatch.setattr(
+        'dsmr_parser.protocol.create_dsmr_reader',
+        connection_factory)
+    monkeypatch.setattr(
+        'dsmr_parser.protocol.create_tcp_dsmr_reader',
+        connection_factory)
+
+    return connection_factory, transport, protocol
 
 
 @asyncio.coroutine
-def test_default_setup(hass, monkeypatch):
+def test_default_setup(hass, mock_connection_factory):
     """Test the default setup."""
+    (connection_factory, transport, protocol) = mock_connection_factory
+
     from dsmr_parser.obis_references import (
         CURRENT_ELECTRICITY_USAGE,
         ELECTRICITY_ACTIVE_TARIFF,
@@ -34,15 +63,11 @@ def test_default_setup(hass, monkeypatch):
         ]),
     }
 
-    # mock for injecting DSMR telegram
-    dsmr = Mock(return_value=mock_coro([Mock(), None]))
-    monkeypatch.setattr('dsmr_parser.protocol.create_dsmr_reader', dsmr)
-
     with assert_setup_component(1):
         yield from async_setup_component(hass, 'sensor',
                                          {'sensor': config})
 
-    telegram_callback = dsmr.call_args_list[0][0][2]
+    telegram_callback = connection_factory.call_args_list[0][0][2]
 
     # make sure entities have been created and return 'unknown' state
     power_consumption = hass.states.get('sensor.power_consumption')
@@ -99,3 +124,80 @@ def test_derivative():
         'state should be difference between first and second update'
 
     assert entity.unit_of_measurement == 'm3/h'
+
+
+@asyncio.coroutine
+def test_tcp(hass, mock_connection_factory):
+    """If proper config provided TCP connection should be made."""
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    config = {
+        'platform': 'dsmr',
+        'host': 'localhost',
+        'port': 1234,
+    }
+
+    with assert_setup_component(1):
+        yield from async_setup_component(hass, 'sensor',
+                                         {'sensor': config})
+
+    assert connection_factory.call_args_list[0][0][0] == 'localhost'
+    assert connection_factory.call_args_list[0][0][1] == '1234'
+
+
+@asyncio.coroutine
+def test_connection_errors_retry(hass, monkeypatch, mock_connection_factory):
+    """Connection should be retried on error during setup."""
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    config = {
+        'platform': 'dsmr',
+        'reconnect_interval': 0,
+    }
+
+    # override the mock to have it fail the first time
+    first_fail_connection_factory = Mock(
+        wraps=connection_factory, side_effect=[
+            TimeoutError])
+
+    monkeypatch.setattr(
+        'dsmr_parser.protocol.create_dsmr_reader',
+        first_fail_connection_factory)
+    yield from async_setup_component(hass, 'sensor', {'sensor': config})
+
+    # wait for sleep to resolve
+    yield from hass.async_block_till_done()
+    assert first_fail_connection_factory.call_count == 2, \
+        'connecting not retried'
+
+
+@asyncio.coroutine
+def test_reconnect(hass, monkeypatch, mock_connection_factory):
+    """If transport disconnects, the connection should be retried."""
+    (connection_factory, transport, protocol) = mock_connection_factory
+    config = {
+        'platform': 'dsmr',
+        'reconnect_interval': 0,
+    }
+
+    # mock waiting coroutine while connection lasts
+    closed = asyncio.Event(loop=hass.loop)
+
+    @asyncio.coroutine
+    def wait_closed():
+        yield from closed.wait()
+    protocol.wait_closed = wait_closed
+
+    yield from async_setup_component(hass, 'sensor', {'sensor': config})
+
+    assert connection_factory.call_count == 1
+
+    # indicate disconnect, release wait lock and allow reconnect to happen
+    closed.set()
+    # wait for lock set to resolve
+    yield from hass.async_block_till_done()
+    # wait for sleep to resolve
+    yield from hass.async_block_till_done()
+
+    assert connection_factory.call_count == 2, \
+        'connecting not retried'

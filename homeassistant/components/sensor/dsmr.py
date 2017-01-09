@@ -43,6 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['dsmr_parser==0.6']
 
 CONF_DSMR_VERSION = 'dsmr_version'
+CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 
 DEFAULT_DSMR_VERSION = '2.2'
 DEFAULT_PORT = '/dev/ttyUSB0'
@@ -60,6 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=None): cv.string,
     vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
         cv.string, vol.In(['4', '2.2'])),
+    vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
 })
 
 
@@ -155,7 +157,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     stop_listerer()
 
                 # throttle reconnect attempts
-                yield from asyncio.sleep(RECONNECT_INTERVAL)
+                yield from asyncio.sleep(config[CONF_RECONNECT_INTERVAL],
+                                         loop=hass.loop)
 
     hass.loop.create_task(connect_and_reconnect())
 
