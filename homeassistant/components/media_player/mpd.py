@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, SUPPORT_PLAY, MEDIA_TYPE_PLAYLIST,
-    MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_PORT, CONF_PASSWORD,
     CONF_HOST)
@@ -30,7 +30,7 @@ DEFAULT_PORT = 6600
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
     SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY
+    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -88,6 +88,8 @@ class MpdDevice(MediaPlayerDevice):
         self.password = password
         self.status = None
         self.currentsong = None
+        self.playlists = []
+        self.currentplaylist = None
 
         self.client = mpd.MPDClient()
         self.client.timeout = 10
@@ -181,6 +183,20 @@ class MpdDevice(MediaPlayerDevice):
         """Flag of media commands that are supported."""
         return SUPPORT_MPD
 
+    @property
+    def source(self):
+        """Name of the current input source."""
+        return self.currentplaylist
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return self.playlists
+
+    def select_source(self, source):
+        """Choose a different available playlist and play it."""
+        self.play_media(MEDIA_TYPE_PLAYLIST, source)
+
     def turn_off(self):
         """Service to send the MPD the command to stop playing."""
         self.client.stop()
@@ -188,6 +204,13 @@ class MpdDevice(MediaPlayerDevice):
     def turn_on(self):
         """Service to send the MPD the command to start playing."""
         self.client.play()
+        self._update_playlists()
+
+    def _update_playlists(self):
+        """Update available MPD playlists."""
+        self.playlists = []
+        for playlist_data in self.client.listplaylists():
+            self.playlists.append(playlist_data['playlist'])
 
     def set_volume_level(self, volume):
         """Set volume of media player."""
@@ -225,11 +248,15 @@ class MpdDevice(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
-        _LOGGER.info(str.format("Playing playlist: {0}", media_id))
-        if media_type == MEDIA_TYPE_PLAYLIST:
-            self.client.clear()
-            self.client.load(media_id)
-            self.client.play()
-        else:
+        if media_id not in self.playlists:
+            _LOGGER.error(str.format("Invalid playlist name %s.",
+                                     media_id))
+        elif media_type != MEDIA_TYPE_PLAYLIST:
             _LOGGER.error(str.format("Invalid media type. Expected: {0}",
                                      MEDIA_TYPE_PLAYLIST))
+        else:
+            _LOGGER.info(str.format("Playing playlist: {0}", media_id))
+            self.client.clear()
+            self.client.load(media_id)
+            self.currentplaylist = media_id
+            self.client.play()
