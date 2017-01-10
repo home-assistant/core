@@ -150,21 +150,19 @@ class NAD(MediaPlayerDevice):
 
     def volume_up(self):
         """Volume up the media player."""
-        self._volume = self.calc_volume(self._nad_receiver.main_volume('+'))
+        self._nad_receiver.main_volume('+')
 
     def volume_down(self):
         """Volume down the media player."""
-        self._volume = self.calc_volume(self._nad_receiver.main_volume('-'))
+        self._nad_receiver.main_volume('-')
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self._volume = self.calc_volume(
-            self._nad_receiver.main_volume('=', self.calc_db(volume)))
+        self._nad_receiver.main_volume('=', self.calc_db(volume))
 
     def select_source(self, source):
         """Select input source."""
-        self._source = self._nad_receiver.\
-            main_source('=', self._reverse_mapping.get(source))
+        self._nad_receiver.main_source('=', self._reverse_mapping.get(source))
 
     @property
     def source(self):
