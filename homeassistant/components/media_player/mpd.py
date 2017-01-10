@@ -209,7 +209,7 @@ class MpdDevice(MediaPlayerDevice):
     def turn_on(self):
         """Service to send the MPD the command to start playing."""
         self.client.play()
-        self._update_playlists()
+        self._update_playlists(no_throttle=True)
 
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
     def _update_playlists(self):
