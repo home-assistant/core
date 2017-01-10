@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.mpd/
 """
 import logging
 import socket
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -18,6 +19,7 @@ from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_PORT, CONF_PASSWORD,
     CONF_HOST)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['python-mpd2==0.5.5']
 
@@ -27,6 +29,8 @@ CONF_LOCATION = 'location'
 
 DEFAULT_LOCATION = 'MPD'
 DEFAULT_PORT = 6600
+
+PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
     SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
@@ -102,6 +106,7 @@ class MpdDevice(MediaPlayerDevice):
         try:
             self.status = self.client.status()
             self.currentsong = self.client.currentsong()
+            self._update_playlists()
         except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError):
             # Cleanly disconnect in case connection is not in valid state
             try:
@@ -206,6 +211,7 @@ class MpdDevice(MediaPlayerDevice):
         self.client.play()
         self._update_playlists()
 
+    @Throttle(PLAYLIST_UPDATE_INTERVAL)
     def _update_playlists(self):
         """Update available MPD playlists."""
         self.playlists = []
@@ -248,15 +254,17 @@ class MpdDevice(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
-        if media_id not in self.playlists:
-            _LOGGER.error(str.format("Invalid playlist name %s.",
-                                     media_id))
-        elif media_type != MEDIA_TYPE_PLAYLIST:
-            _LOGGER.error(str.format("Invalid media type. Expected: {0}",
-                                     MEDIA_TYPE_PLAYLIST))
-        else:
-            _LOGGER.info(str.format("Playing playlist: {0}", media_id))
+        _LOGGER.info(str.format("Playing playlist: {0}", media_id))
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            if media_id in self.playlists:
+                self.currentplaylist = media_id
+            else:
+                self.currentplaylist = None
+                _LOGGER.warning(str.format("Unknown playlist name %s.",
+                                           media_id))
             self.client.clear()
             self.client.load(media_id)
-            self.currentplaylist = media_id
             self.client.play()
+        else:
+            _LOGGER.error(str.format("Invalid media type. Expected: {0}",
+                                     MEDIA_TYPE_PLAYLIST))
