@@ -2,7 +2,10 @@
 import asyncio
 from unittest import mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.bootstrap import (async_setup_component, setup_component)
+from homeassistant.const import (ATTR_ENTITY_ID, CONF_NAME, CONF_PLATFORM)
+import homeassistant.components.camera as camera
+from tests.common import assert_setup_component
 
 
 @asyncio.coroutine
@@ -99,3 +102,44 @@ def test_limit_refetch(aioclient_mock, hass, test_client):
     assert resp.status == 200
     body = yield from resp.text()
     assert body == 'hello planet'
+
+
+@asyncio.coroutine
+def test_setup_component(aioclient_mock, hass, test_client):
+    """Test that setup register service."""
+    config = {
+        camera.DOMAIN: {
+            CONF_PLATFORM: 'generic',
+            'still_image_url': 'http://example.com',
+        }
+    }
+    with assert_setup_component(1, camera.DOMAIN):
+        assert(yield from async_setup_component(hass, camera.DOMAIN, config))
+    assert hass.services.has_service(
+        camera.DOMAIN, camera.SERVICE_UPDATE_IMAGE)
+
+
+@asyncio.coroutine
+def test_call_service(aioclient_mock, hass, test_client):
+    """Test that update_image service call causes data image refetch."""
+    aioclient_mock.get('http://example.com', text='hello world')
+    name = 'test_camera'
+
+    config = {
+        camera.DOMAIN: {
+            CONF_NAME: name,
+            CONF_PLATFORM: 'generic',
+            'still_image_url': 'http://example.com',
+        }
+    }
+    with assert_setup_component(1, camera.DOMAIN):
+        assert(yield from async_setup_component(hass, camera.DOMAIN, config))
+    assert aioclient_mock.call_count == 0
+
+    yield from hass.services.async_call(
+        camera.DOMAIN,
+        camera.SERVICE_UPDATE_IMAGE,
+        {ATTR_ENTITY_ID: "{}.{}".format(camera.DOMAIN, name)})
+
+    yield from hass.async_block_till_done()
+    assert aioclient_mock.call_count == 1
