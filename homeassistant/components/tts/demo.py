@@ -34,7 +34,7 @@ class DemoProvider(Provider):
         self._lang = lang
 
     @property
-    def language(self):
+    def default_language(self):
         """Default language."""
         return self._lang
 

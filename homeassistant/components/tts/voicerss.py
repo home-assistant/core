@@ -104,7 +104,7 @@ class VoiceRSSProvider(Provider):
         }
 
     @property
-    def language(self):
+    def default_language(self):
         """Default language."""
         return self._lang
 
@@ -123,8 +123,9 @@ class VoiceRSSProvider(Provider):
 
         # If language is specified and supported - use it instead of the
         # language in the config.
-        if language in SUPPORT_LANGUAGES:
-            form_data['hl'] = language
+        if language not in SUPPORT_LANGUAGES:
+            language = self.default_language
+        form_data['hl'] = language
 
         request = None
         try:

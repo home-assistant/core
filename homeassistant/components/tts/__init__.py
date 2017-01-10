@@ -257,11 +257,12 @@ class SpeechManager(object):
         """
         provider = self.providers[engine]
         msg_hash = hashlib.sha1(bytes(message, 'utf-8')).hexdigest()
-        language_key = language or provider.language
+        language_key = language or provider.default_language
         key = KEY_PATTERN.format(msg_hash, language_key, engine).lower()
         use_cache = cache if cache is not None else self.use_cache
 
-        if language_key not in provider.supported_languages:
+        if language_key is None or \
+           language_key not in provider.supported_languages:
             raise HomeAssistantError("Not supported language {0}".format(
                 language_key
             ))
@@ -393,7 +394,7 @@ class Provider(object):
     hass = None
 
     @property
-    def language(self):
+    def default_language(self):
         """Default language."""
         return None
 

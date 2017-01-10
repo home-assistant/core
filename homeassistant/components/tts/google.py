@@ -60,7 +60,7 @@ class GoogleProvider(Provider):
         }
 
     @property
-    def language(self):
+    def default_language(self):
         """Default language."""
         return self._lang
 
@@ -81,7 +81,7 @@ class GoogleProvider(Provider):
         # If language is not specified or is not supported - use the language
         # from the config.
         if language not in SUPPORT_LANGUAGES:
-            language = self.language
+            language = self.default_language
 
         data = b''
         for idx, part in enumerate(message_parts):

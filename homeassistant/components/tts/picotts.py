@@ -40,7 +40,7 @@ class PicoProvider(Provider):
         self._lang = lang
 
     @property
-    def language(self):
+    def default_language(self):
         """Default language."""
         return self._lang
 
@@ -52,9 +52,11 @@ class PicoProvider(Provider):
     def get_tts_audio(self, message, language=None):
         """Load TTS using pico2wave."""
         if language not in SUPPORT_LANGUAGES:
-            language = self.language
+            language = self.default_language
+
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmpf:
             fname = tmpf.name
+
         cmd = ['pico2wave', '--wave', fname, '-l', language, message]
         subprocess.call(cmd)
         data = None
@@ -66,6 +68,7 @@ class PicoProvider(Provider):
             return (None, None)
         finally:
             os.remove(fname)
+
         if data:
             return ("wav", data)
         return (None, None)
