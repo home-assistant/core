@@ -212,7 +212,7 @@ class MpdDevice(MediaPlayerDevice):
         self._update_playlists(no_throttle=True)
 
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
-    def _update_playlists(self):
+    def _update_playlists(self, **kwargs):
         """Update available MPD playlists."""
         self.playlists = []
         for playlist_data in self.client.listplaylists():
