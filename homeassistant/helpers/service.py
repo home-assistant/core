@@ -5,6 +5,8 @@ import logging
 # pylint: disable=unused-import
 from typing import Optional  # NOQA
 
+import yaml
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
@@ -83,7 +85,7 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
                 return {key: _data_template_creator(item)
                         for key, item in value.items()}
             value.hass = hass
-            return value.async_render(variables)
+            return yaml.load(value.async_render(variables))
         service_data.update(_data_template_creator(
             config[CONF_SERVICE_DATA_TEMPLATE]))
 
