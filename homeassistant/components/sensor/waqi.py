@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info('The following stations were returned: %s', station_ids)
         for station in station_ids:
             waqi_sensor = WaqiSensor(WaqiData(station), station)
-            if (not station_filter) or (waqi_sensor.name in station_filter):
+            if (not station_filter) or (waqi_sensor.station_name in station_filter):
                 dev.append(WaqiSensor(WaqiData(station), station))
 
     add_devices(dev)
@@ -75,9 +75,17 @@ class WaqiSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         try:
-            return self._details['city']['name']
+            return 'WAQI {}'.format(self._details['city']['name'])
         except (KeyError, TypeError):
             return 'WAQI {}'.format(self._station_id)
+
+    @property
+    def station_name(self):
+        """Return the name of the station."""
+        try:
+            return self._details['city']['name']
+        except (KeyError, TypeError):
+            return None
 
     @property
     def icon(self):
