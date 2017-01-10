@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__)
-from homeassistant.core import valid_entity_id
+from homeassistant.core import valid_entity_id, DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
 from homeassistant.util.yaml import load_yaml
@@ -102,6 +102,11 @@ def _valid_customize(value):
     return value
 
 
+PACKAGES_CONFIG_SCHEMA = vol.Schema({
+    cv.slug: vol.Schema(  # Package names are slugs
+        {cv.slug: vol.Any(dict, list)})  # Only slugs for component names
+})
+
 CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_NAME: vol.Coerce(str),
     CONF_LATITUDE: cv.latitude,
@@ -112,10 +117,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_TIME_ZONE: cv.time_zone,
     vol.Required(CONF_CUSTOMIZE,
                  default=MappingProxyType({})): _valid_customize,
-    vol.Optional(CONF_PACKAGES, default={}): vol.Schema({
-        cv.slug: vol.Schema(  # Package names are slugs
-            {cv.slug: vol.Any(dict, list)})  # Only slugs for component names
-    })
+    vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 
 
@@ -268,17 +270,12 @@ def process_ha_config_upgrade(hass):
 
 
 @asyncio.coroutine
-def async_process_ha_core_config(hass, config, complete_config=None):
+def async_process_ha_core_config(hass, config):
     """Process the [homeassistant] section from the config.
 
     This method is a coroutine.
     """
     config = CORE_CONFIG_SCHEMA(config)
-
-    if complete_config:
-        merge_packages_config(complete_config, config[CONF_PACKAGES])
-        del config[CONF_PACKAGES]
-
     hac = hass.config
 
     def set_time_zone(time_zone_str):
@@ -374,7 +371,7 @@ def _log_pkg_error(package, component, config, message):
     message = "Package {} setup failed. Component {} {}".format(
         package, component, message)
 
-    pack_config = config[CONF_PACKAGES].get(package, config)
+    pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
     message += " (See {}:{}). ".format(
         getattr(pack_config, '__config_file__', '?'),
         getattr(pack_config, '__line__', '?'))
@@ -389,8 +386,8 @@ def _identify_config_schema(module):
     except (AttributeError, KeyError):
         return (None, None)
     t_schema = str(schema)
-    if t_schema.startswith('<function ordered_dict') or \
-            t_schema.startswith('<Schema({<function slug'):
+    if (t_schema.startswith('<function ordered_dict') or
+            t_schema.startswith('<Schema({<function slug')):
         return ('dict', schema)
     if t_schema.startswith('All(<function ensure_list'):
         return ('list', schema)
@@ -400,6 +397,7 @@ def _identify_config_schema(module):
 def merge_packages_config(config, packages):
     """Merge packages into the root level config. Mutate config."""
     # pylint: disable=too-many-nested-blocks
+    PACKAGES_CONFIG_SCHEMA(packages)
     for pack_name, pack_conf in packages.items():
         for comp_name, comp_conf in pack_conf.items():
             component = get_component(comp_name)

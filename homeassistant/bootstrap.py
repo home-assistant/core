@@ -376,8 +376,7 @@ def async_from_config_dict(config: Dict[str, Any],
     core_config = config.get(core.DOMAIN, {})
 
     try:
-        yield from conf_util.async_process_ha_core_config(hass, core_config,
-                                                          config)
+        yield from conf_util.async_process_ha_core_config(hass, core_config)
     except vol.Invalid as ex:
         async_log_exception(ex, 'homeassistant', core_config, hass)
         return None
@@ -395,6 +394,10 @@ def async_from_config_dict(config: Dict[str, Any],
 
     if not loader.PREPARED:
         yield from hass.loop.run_in_executor(None, loader.prepare, hass)
+
+    # Merge packages
+    conf_util.merge_packages_config(
+        config, core_config.get(conf_util.CONF_PACKAGES, {}))
 
     # Make a copy because we are mutating it.
     # Use OrderedDict in case original one was one.

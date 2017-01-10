@@ -361,86 +361,80 @@ class TestConfig(unittest.TestCase):
 
 # pylint: disable=redefined-outer-name
 @pytest.fixture
-def log_err():
-    """Patch _log_error from packages."""
+def merge_log_err(hass):
+    """Patch _merge_log_error from packages."""
     with mock.patch('homeassistant.config._LOGGER.error') \
             as logerr:
         yield logerr
 
 
-def test_merge_dict(log_err):
-    """Test if we can merge dict based config - groups, input_*."""
-    package_1 = {
-        'input_boolean': {'ib1': None}
+def test_merge(merge_log_err):
+    """Test if we can merge packages."""
+    packages = {
+        'pack_dict': {'input_boolean': {'ib1': None}},
+        'pack_list': {'light': {'platform': 'test'}},
+        'pack_list2': {'light': [{'platform': 'test'}]},
     }
     config = {
-        'packages': {
-            'bool_package': package_1
-        },
-        'input_boolean': {'ib2': None}
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'input_boolean': {'ib2': None},
+        'light': {'platform': 'test'}
     }
-    config_util.merge_packages_config(config, config['packages'])
-    del config['packages']
+    config_util.merge_packages_config(config, packages)
 
-    assert log_err.call_count == 0
-    assert len(config) == 1
+    assert merge_log_err.call_count == 0
+    assert len(config) == 3
     assert len(config['input_boolean']) == 2
+    assert len(config['light']) == 3
 
 
-def test_merge_list(log_err):
-    """Test if we can merge list based config - typically platforms."""
-    package_1 = {
-        'light': [{'platform': 'one'}]
+def test_merge_new(merge_log_err):
+    """Test adding new components to outer scope."""
+    packages = {
+        'pack_1': {'light': [{'platform': 'one'}]},
+        'pack_2': {'light': {'platform': 'one'}},
     }
     config = {
-        'packages': {
-            'light_package': package_1
-        },
-        'light': [{'platform': 'two'}]
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
     }
-    config_util.merge_packages_config(config, config['packages'])
-    del config['packages']
+    config_util.merge_packages_config(config, packages)
 
-    assert log_err.call_count == 0
-    assert len(config) == 1
+    assert merge_log_err.call_count == 0
+    assert len(config) == 2
     assert len(config['light']) == 2
 
 
-def test_new(log_err):
-    """Test adding new config to outer scope."""
-    package_1 = {
-        'light': {'platform': 'one'}
-    }
-    config = {
-        'packages': {
-            'light_package': package_1
-        }
-    }
-    config_util.merge_packages_config(config, config['packages'])
-    del config['packages']
-
-    assert log_err.call_count == 0
-    assert len(config) == 1
-    assert len(config['light']) == 1
-
-
-def test_type_mismatch(log_err):
+def test_merge_type_mismatch(merge_log_err):
     """Test if we have a type mismatch for packages."""
-    package_1 = {
-        'input_boolean': [{'ib1': None}],
-        'light': {'platform': 'one'}
+    packages = {
+        'pack_1': {'input_boolean': [{'ib1': None}]},
+        'pack_2': {'light': {'ib1': None}},  # light gets merged - ensure_list
     }
     config = {
-        'packages': {
-            'bool_package': package_1
-        },
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
         'input_boolean': {'ib2': None},
         'light': [{'platform': 'two'}]
     }
-    config_util.merge_packages_config(config, config['packages'])
-    del config['packages']
+    config_util.merge_packages_config(config, packages)
 
-    assert log_err.call_count == 1
-    assert len(config) == 2
+    assert merge_log_err.call_count == 1
+    assert len(config) == 3
     assert len(config['input_boolean']) == 1
     assert len(config['light']) == 2
+
+
+def test_merge_id_schema(hass):
+    """Test if we identify the config schemas correctly."""
+    types = {
+        'panel_custom': 'list',
+        'group': 'dict',
+        'script': 'dict',
+        'input_boolean': 'dict',
+        'shell_command': 'dict',
+        'qwikswitch': '',
+    }
+    for name, expected_type in types.items():
+        module = config_util.get_component(name)
+        typ, _ = config_util._identify_config_schema(module)
+        assert typ == expected_type, "{} expected {}, got {}".format(
+            name, expected_type, typ)
