@@ -224,6 +224,9 @@ https://github.com/jabesq/pybotvac/archive/v0.0.1.zip#pybotvac==0.0.1
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
 
+# homeassistant.components.media_player.nad
+https://github.com/joopert/nad_receiver/archive/0.0.2.zip#nad_receiver==0.0.2
+
 # homeassistant.components.media_player.russound_rnet
 https://github.com/laf/russound/archive/0.1.6.zip#russound==0.1.6
 
