@@ -9,6 +9,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import hashlib
+from time import time
 
 from aiohttp import web
 
@@ -20,6 +21,7 @@ from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
 SCAN_INTERVAL = timedelta(seconds=30)
+CACHE_VIEW_TIME = 1
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 STATE_RECORDING = 'recording'
@@ -198,11 +200,20 @@ class CameraImageView(CameraView):
 
     url = "/api/camera_proxy/{entity_id}"
     name = "api:camera:image"
+    cache = {}
 
     @asyncio.coroutine
     def handle(self, request, camera):
         """Serve camera image."""
-        image = yield from camera.async_camera_image()
+        entity_id = camera.entity_id
+
+        image = None
+        if entity_id in self.cache and \
+           (time() - self.cache[entity_id]['time'] <= CACHE_VIEW_TIME):
+            image = self.cache[entity_id]['image']
+        else:
+            image = yield from camera.async_camera_image()
+            self.cache[entity_id] = {'time': time(), 'image': image}
 
         if image is None:
             return web.Response(status=500)
