@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ATTRIBUTION = "Powered by Dark Sky"
 CONF_UNITS = 'units'
 CONF_UPDATE_INTERVAL = 'update_interval'
+CONF_FORECAST = 'forecast'
 
 DEFAULT_NAME = 'Dark Sky'
 
@@ -97,6 +98,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
+    # Check to make sure that forecast is in a valid range of 1 week
+    forecast = config.get(CONF_FORECAST)
+    if forecast is not None:
+        for forecast_day in forecast:
+            if forecast_day > 7 or forecast_day < 1:
+                _LOGGER.error("DarkSky only supports 7 day forecast")
+                return False
+
     if CONF_UNITS in config:
         units = config[CONF_UNITS]
     elif hass.config.units.is_metric:
@@ -122,6 +131,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(DarkSkySensor(forecast_data, variable, name))
+        if forecast is not None and variable in ['temperature_min',
+                                                 'temperature_max',
+                                                 'apparent_temperature_min',
+                                                 'apparent_temperature_max',
+                                                 'precip_intensity_max']:
+            for forecast_day in forecast:
+                sensors.append(DarkSkySensor(forecast_data,
+                                             variable, name, forecast_day))
 
     add_devices(sensors, True)
 
@@ -129,19 +146,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DarkSkySensor(Entity):
     """Implementation of a Dark Sky sensor."""
 
-    def __init__(self, forecast_data, sensor_type, name):
+    def __init__(self, forecast_data, sensor_type, name, forecast_day=0):
         """Initialize the sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.forecast_data = forecast_data
         self.type = sensor_type
+        self.forecast_day = forecast_day
         self._state = None
         self._unit_of_measurement = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self.client_name, self._name)
+        if self.forecast_day == 0:
+            return '{} {}'.format(self.client_name, self._name)
+        else:
+            return '{} {} {}'.format(self.client_name, self._name,
+                                     self.forecast_day)
 
     @property
     def state(self):
@@ -210,7 +232,7 @@ class DarkSkySensor(Entity):
                 self._state = getattr(daily, 'summary', '')
             else:
                 if hasattr(daily, 'data'):
-                    self._state = self.get_state(daily.data[0])
+                    self._state = self.get_state(daily.data[self.forecast_day])
                 else:
                     self._state = 0
         else:
