@@ -143,12 +143,10 @@ class NAD(MediaPlayerDevice):
     def turn_off(self):
         """Turn the media player off."""
         self._nad_receiver.main_power('=', 'Off')
-        self.update()
 
     def turn_on(self):
         """Turn the media player on."""
         self._nad_receiver.main_power('=', 'On')
-        self.update()
 
     def volume_up(self):
         """Volume up the media player."""
@@ -184,5 +182,3 @@ class NAD(MediaPlayerDevice):
             self._nad_receiver.main_mute('=', 'On')
         else:
             self._nad_receiver.main_mute('=', 'Off')
-
-        self.update()
