@@ -85,7 +85,11 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
                 return {key: _data_template_creator(item)
                         for key, item in value.items()}
             value.hass = hass
-            return yaml.load(value.async_render(variables))
+            rendered = value.async_render(variables)
+            try:
+                return yaml.load(rendered, yaml.SafeLoader)
+            except yaml.MarkedYAMLError:
+                return rendered
         service_data.update(_data_template_creator(
             config[CONF_SERVICE_DATA_TEMPLATE]))
 
