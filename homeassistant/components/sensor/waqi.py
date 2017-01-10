@@ -55,7 +55,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info('The following stations were returned: %s', station_ids)
         for station in station_ids:
             waqi_sensor = WaqiSensor(WaqiData(station), station)
-            if (not station_filter) or (waqi_sensor.station_name in station_filter):
+            if (not station_filter) or \
+               (waqi_sensor.station_name in station_filter):
                 dev.append(WaqiSensor(WaqiData(station), station))
 
     add_devices(dev)
