@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene/
 """
 import asyncio
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 
 import voluptuous as vol
 
@@ -23,14 +23,14 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): HASS_DOMAIN,
     vol.Required(STATES): vol.All(
         cv.ensure_list,
-        [
-            {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Required(CONF_ENTITIES): {
-                    cv.entity_id: vol.Any(str, bool, dict)
-                },
-            }
-        ]
+        [{
+            vol.Required(CONF_NAME): cv.string,
+            vol.Required(CONF_ENTITIES): {
+                cv.entity_id: vol.All(
+                    cv.ensure_list,
+                    [vol.Any(str, bool, dict)])
+            },
+        }]
     ),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -54,26 +54,28 @@ def _process_config(scene_config):
     """
     name = scene_config.get(CONF_NAME)
 
-    states = {}
+    states = defaultdict(list)
     c_entities = dict(scene_config.get(CONF_ENTITIES, {}))
 
-    for entity_id in c_entities:
-        if isinstance(c_entities[entity_id], dict):
-            entity_attrs = c_entities[entity_id].copy()
-            state = entity_attrs.pop(ATTR_STATE, None)
-            attributes = entity_attrs
-        else:
-            state = c_entities[entity_id]
-            attributes = {}
+    for entity_id, state_list in c_entities.items():
+        for state_task in state_list:
+            if isinstance(state_task, dict):
+                entity_attrs = state_task.copy()
+                state = entity_attrs.pop(ATTR_STATE, None)
+                attributes = entity_attrs
+            else:
+                state = state_task
+                attributes = {}
 
-        # YAML translates 'on' to a boolean
-        # http://yaml.org/type/bool.html
-        if isinstance(state, bool):
-            state = STATE_ON if state else STATE_OFF
-        else:
-            state = str(state)
+            # YAML translates 'on' to a boolean
+            # http://yaml.org/type/bool.html
+            if isinstance(state, bool):
+                state = STATE_ON if state else STATE_OFF
+            else:
+                state = str(state)
 
-        states[entity_id.lower()] = State(entity_id, state, attributes)
+            states[entity_id.lower()].append(
+                State(entity_id, state, attributes))
 
     return SCENECONFIG(name, states)
 

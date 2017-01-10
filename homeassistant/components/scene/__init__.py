@@ -42,6 +42,7 @@ def _platform_validator(config):
 
     return getattr(platform, 'PLATFORM_SCHEMA')(config)
 
+
 PLATFORM_SCHEMA = vol.Schema(
     vol.All(
         _hass_domain_validator,

@@ -34,7 +34,6 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED, STATE_CLOSED, STATE_LOCKED,
     STATE_OFF, STATE_ON, STATE_OPEN, STATE_PAUSED, STATE_PLAYING,
     STATE_UNKNOWN, STATE_UNLOCKED, SERVICE_SELECT_OPTION, ATTR_OPTION)
-from homeassistant.core import State
 from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,9 +123,7 @@ def reproduce_state(hass, states, blocking=False):
 @asyncio.coroutine
 def async_reproduce_state(hass, states, blocking=False):
     """Reproduce given state."""
-    if isinstance(states, State):
-        states = [states]
-
+    states = [state for entities in states for state in entities]
     to_call = defaultdict(list)
 
     for state in states:

@@ -124,3 +124,27 @@ class TestScene(unittest.TestCase):
         self.assertTrue(self.light_2.is_on)
         self.assertEqual(
             100, self.light_2.last_call('turn_on')[1].get('brightness'))
+
+    def test_activate_state_list(self):
+        """Test activate a scene with a list of states for an entity."""
+        self.assertTrue(setup_component(self.hass, scene.DOMAIN, {
+            'scene': [{
+                'name': 'test',
+                'entities': {
+                    self.light_1.entity_id: 'on',
+                    self.light_2.entity_id: [
+                        {'state': 'on', 'brightness': 100},
+                        {'state': 'off', 'transition': 60}]
+                }
+            }]
+        }))
+
+        scene.activate(self.hass, 'scene.test')
+        self.hass.block_till_done()
+
+        self.assertTrue(self.light_1.is_on)
+        self.assertEqual(
+            100, self.light_2.last_call('turn_on')[1].get('brightness'))
+        self.assertEqual(
+            60,
+            self.light_2.last_call('turn_off')[1].get('transition'))
