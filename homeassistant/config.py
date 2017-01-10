@@ -425,15 +425,15 @@ def merge_packages_config(config, packages):
                             pack_name, comp_name, config,
                             "cannot be merged. Expected a dict.")
                         continue
+
+                    if comp_name not in config:
+                        config[comp_name] = OrderedDict()
+
                     if not isinstance(config[comp_name], dict):
                         _log_pkg_error(
                             pack_name, comp_name, config,
                             "cannot be merged. Dict expected in main config.")
                         continue
-
-                    if comp_name not in config:
-                        config[comp_name] = OrderedDict()
-                        # Point the the packages config and line
 
                     for key, val in comp_conf.items():
                         if key in config[comp_name]:

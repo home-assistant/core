@@ -372,6 +372,7 @@ def test_merge(merge_log_err):
     """Test if we can merge packages."""
     packages = {
         'pack_dict': {'input_boolean': {'ib1': None}},
+        'pack_11': {'input_select': {'is1': None}},
         'pack_list': {'light': {'platform': 'test'}},
         'pack_list2': {'light': [{'platform': 'test'}]},
     }
@@ -383,8 +384,9 @@ def test_merge(merge_log_err):
     config_util.merge_packages_config(config, packages)
 
     assert merge_log_err.call_count == 0
-    assert len(config) == 3
+    assert len(config) == 4
     assert len(config['input_boolean']) == 2
+    assert len(config['input_select']) == 1
     assert len(config['light']) == 3
 
 
@@ -392,7 +394,11 @@ def test_merge_new(merge_log_err):
     """Test adding new components to outer scope."""
     packages = {
         'pack_1': {'light': [{'platform': 'one'}]},
-        'pack_2': {'light': {'platform': 'one'}},
+        'pack_11': {'input_select': {'ib1': None}},
+        'pack_2': {
+            'light': {'platform': 'one'},
+            'panel_custom': {'pan1': None},
+            'api': {}},
     }
     config = {
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
@@ -400,27 +406,49 @@ def test_merge_new(merge_log_err):
     config_util.merge_packages_config(config, packages)
 
     assert merge_log_err.call_count == 0
-    assert len(config) == 2
+    assert 'api' in config
+    assert len(config) == 5
     assert len(config['light']) == 2
+    assert len(config['panel_custom']) == 1
 
 
 def test_merge_type_mismatch(merge_log_err):
     """Test if we have a type mismatch for packages."""
     packages = {
         'pack_1': {'input_boolean': [{'ib1': None}]},
+        'pack_11': {'input_select': {'ib1': None}},
         'pack_2': {'light': {'ib1': None}},  # light gets merged - ensure_list
     }
     config = {
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
         'input_boolean': {'ib2': None},
+        'input_select': [{'ib2': None}],
         'light': [{'platform': 'two'}]
     }
     config_util.merge_packages_config(config, packages)
 
-    assert merge_log_err.call_count == 1
-    assert len(config) == 3
+    assert merge_log_err.call_count == 2
+    assert len(config) == 4
     assert len(config['input_boolean']) == 1
     assert len(config['light']) == 2
+
+
+def test_merge_once_only(merge_log_err):
+    """Test if we have a merge for a comp that may occur only once."""
+    packages = {
+        'pack_1': {'homeassistant': {}},
+        'pack_2': {
+            'mqtt': {},
+            'api': {},  # No config schema
+        },
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'mqtt': {}, 'api': {}
+    }
+    config_util.merge_packages_config(config, packages)
+    assert merge_log_err.call_count == 3
+    assert len(config) == 3
 
 
 def test_merge_id_schema(hass):
@@ -438,3 +466,19 @@ def test_merge_id_schema(hass):
         typ, _ = config_util._identify_config_schema(module)
         assert typ == expected_type, "{} expected {}, got {}".format(
             name, expected_type, typ)
+
+
+def test_merge_duplicate_keys(merge_log_err):
+    """Test if keys in dicts are duplicates."""
+    packages = {
+        'pack_1': {'input_select': {'ib1': None}},
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'input_select': {'ib1': None},
+    }
+    config_util.merge_packages_config(config, packages)
+
+    assert merge_log_err.call_count == 1
+    assert len(config) == 2
+    assert len(config['input_select']) == 1
