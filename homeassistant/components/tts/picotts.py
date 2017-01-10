@@ -29,11 +29,25 @@ def get_engine(hass, config):
     if shutil.which("pico2wave") is None:
         _LOGGER.error("'pico2wave' was not found")
         return False
-    return PicoProvider()
+    return PicoProvider(config[CONF_LANG])
 
 
 class PicoProvider(Provider):
     """pico speech api provider."""
+
+    def __init__(self, lang):
+        """Initialize pico provider."""
+        self._lang = lang
+
+    @property
+    def language(self):
+        """Default language."""
+        return self._lang
+
+    @property
+    def supported_languages(self):
+        """List of supported languages."""
+        return SUPPORT_LANGUAGES
 
     def get_tts_audio(self, message, language=None):
         """Load TTS using pico2wave."""

@@ -247,8 +247,6 @@ class SpeechManager(object):
     def async_register_engine(self, engine, provider, config):
         """Register a TTS provider."""
         provider.hass = self.hass
-        if CONF_LANG in config:
-            provider.language = config.get(CONF_LANG)
         self.providers[engine] = provider
 
     @asyncio.coroutine
@@ -257,10 +255,16 @@ class SpeechManager(object):
 
         This method is a coroutine.
         """
+        provider = self.providers[engine]
         msg_hash = hashlib.sha1(bytes(message, 'utf-8')).hexdigest()
-        language_key = language or self.providers[engine].language
+        language_key = language or provider.language
         key = KEY_PATTERN.format(msg_hash, language_key, engine).lower()
         use_cache = cache if cache is not None else self.use_cache
+
+        if language_key not in provider.supported_languages:
+            raise HomeAssistantError("Not supported language {0}".format(
+                language_key
+            ))
 
         # is speech allready in memory
         if key in self.mem_cache:
@@ -387,7 +391,16 @@ class Provider(object):
     """Represent a single provider."""
 
     hass = None
-    language = None
+
+    @property
+    def language(self):
+        """Default language."""
+        return None
+
+    @property
+    def supported_languages(self):
+        """List of supported languages."""
+        return None
 
     def get_tts_audio(self, message, language=None):
         """Load tts audio file from provider."""

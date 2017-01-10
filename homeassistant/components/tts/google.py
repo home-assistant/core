@@ -42,21 +42,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_get_engine(hass, config):
     """Setup Google speech component."""
-    return GoogleProvider(hass)
+    return GoogleProvider(hass, config[CONF_LANG])
 
 
 class GoogleProvider(Provider):
     """Google speech api provider."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, lang):
         """Init Google TTS service."""
         self.hass = hass
+        self._lang = lang
         self.headers = {
             'Referer': "http://translate.google.com/",
             'User-Agent': ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
                            "AppleWebKit/537.36 (KHTML, like Gecko) "
                            "Chrome/47.0.2526.106 Safari/537.36")
         }
+
+    @property
+    def language(self):
+        """Default language."""
+        return self._lang
+
+    @property
+    def supported_languages(self):
+        """List of supported languages."""
+        return SUPPORT_LANGUAGES
 
     @asyncio.coroutine
     def async_get_tts_audio(self, message, language=None):
