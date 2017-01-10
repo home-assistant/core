@@ -280,7 +280,8 @@ class Entity(object):
 
             for rule in _OVERWRITE:
                 if 'entity_id' in rule:
-                    entities = rule['entity_id'].split(',')
+                    entities = [
+                        key.lower() for key in rule['entity_id'].split(',')]
                     if domain in entities:
                         domain_result.update(rule)
                         clean_entry(domain_result)
@@ -288,7 +289,9 @@ class Entity(object):
                         exact_result.update(rule)
                         clean_entry(exact_result)
                 if 'entity_id_glob' in rule:
-                    for entity_id_glob in rule['entity_id_glob'].split(','):
+                    for entity_id_glob in [
+                            key.lower() for key in rule[
+                                'entity_id_glob'].split(',')]:
                         if fnmatch.fnmatchcase(entity_id, entity_id_glob):
                             glob_result.update(rule)
                             clean_entry(glob_result)
