@@ -10,7 +10,7 @@ from homeassistant.components.image_processing import (
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the demo light platform."""
+    """Setup the demo image_processing platform."""
     add_devices([
         DemoImageProcessing('camera.demo_camera', "Demo"),
         DemoImageProcessingAlpr('camera.demo_camera', "Demo Alpr")
