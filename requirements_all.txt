@@ -653,5 +653,8 @@ yahoo-finance==1.4.0
 # homeassistant.components.sensor.yweather
 yahooweather==0.8
 
+# homeassistant.components.light.zengge
+zengge==0.2
+
 # homeassistant.components.zeroconf
 zeroconf==0.17.6
