@@ -48,7 +48,8 @@ class Camera(Entity):
     def __init__(self):
         """Initialize a camera."""
         self.is_streaming = False
-        self._access_token = hashlib.sha256(str.encode(str(id(self)))).hexdigest()
+        self._access_token = hashlib.sha256(
+            str.encode(str(id(self)))).hexdigest()
 
     @property
     def access_token(self):
