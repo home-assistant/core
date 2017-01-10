@@ -158,7 +158,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                     None, platform.get_scanner, hass, {DOMAIN: p_config})
             elif hasattr(platform, 'async_setup_scanner'):
                 setup = yield from platform.async_setup_scanner(
-                    hass, p_config, tracker.see)
+                    hass, p_config, tracker.async_see)
             elif hasattr(platform, 'setup_scanner'):
                 setup = yield from hass.loop.run_in_executor(
                     None, platform.setup_scanner, hass, p_config, tracker.see)
