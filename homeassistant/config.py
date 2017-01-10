@@ -1,12 +1,13 @@
 """Module to help with parsing and generating configuration files."""
 import asyncio
+from collections import OrderedDict
 import logging
 import os
 import shutil
 from types import MappingProxyType
 
 # pylint: disable=unused-import
-from typing import Any, Tuple  # NOQA
+from typing import Any, List, Tuple  # NOQA
 
 import voluptuous as vol
 
@@ -85,9 +86,22 @@ tts:
 """
 
 
-CUSTOMIZE_SCHEMA = vol.Schema({
-    cv.string: cv.ordered_dict(cv.match_all, cv.string),
-})
+CUSTOMIZE_SCHEMA_ENTRY = vol.All(
+    cv.has_at_least_one_key('entity_id', 'entity_id_glob'),
+    cv.ordered_dict(cv.match_all, cv.string))
+
+
+def _dict_to_list(inp: Any) -> List:
+    if not isinstance(inp, dict):
+        return cv.ensure_list(inp)
+    if 'entity_id' in inp:
+        return [inp]  # sigle entry
+    res = []
+
+    for key, val in cv.ordered_dict(OrderedDict)(inp).items():
+        val['entity_id'] = key
+        res.append(val)
+    return res
 
 
 CORE_CONFIG_SCHEMA = vol.Schema({
@@ -99,7 +113,8 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
     vol.Required(CONF_CUSTOMIZE,
-                 default=MappingProxyType({})): CUSTOMIZE_SCHEMA,
+                 default=MappingProxyType({})): vol.All(
+                     _dict_to_list, [CUSTOMIZE_SCHEMA_ENTRY])
 })
 
 

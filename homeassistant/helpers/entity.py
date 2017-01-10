@@ -5,7 +5,7 @@ import functools as ft
 import fnmatch
 from timeit import default_timer as timer
 
-from typing import Any, Optional, List, Dict
+from typing import Optional, List, Dict
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
@@ -59,15 +59,14 @@ def async_generate_entity_id(entity_id_format: str, name: Optional[str],
         entity_id_format.format(slugify(name)), current_ids)
 
 
-def set_customize(customize: Dict[str, Any]) -> None:
+def set_customize(customize: List[Dict]) -> None:
     """Overwrite all current customize settings.
 
     Async friendly.
     """
     global _OVERWRITE
     global _OVERWRITE_CACHE
-
-    _OVERWRITE = {key.lower(): val for key, val in customize.items()}
+    _OVERWRITE = customize
     _OVERWRITE_CACHE = {}
 
 
@@ -273,17 +272,26 @@ class Entity(object):
             glob_result = {}  # type: Dict[str, Any]
             exact_result = {}  # type: Dict[str, Any]
             domain = split_entity_id(entity_id)[0]
-            for key, value in _OVERWRITE.items():
-                key_list = [
-                    single_key.strip() for single_key in key.split(',')]
-                if domain in key_list:
-                    domain_result.update(value)
-                if entity_id in key_list:
-                    exact_result.update(value)
-                else:
-                    for single_key in key_list:
-                        if fnmatch.fnmatchcase(entity_id, single_key):
-                            glob_result.update(value)
+
+            def clean_entry(entry: Dict) -> None:
+                """Clean up entity-matching keys."""
+                entry.pop('entity_id', None)
+                entry.pop('entity_id_glob', None)
+
+            for rule in _OVERWRITE:
+                if 'entity_id' in rule:
+                    entities = rule['entity_id'].split(',')
+                    if domain in entities:
+                        domain_result.update(rule)
+                        clean_entry(domain_result)
+                    if entity_id in entities:
+                        exact_result.update(rule)
+                        clean_entry(exact_result)
+                if 'entity_id_glob' in rule:
+                    for entity_id_glob in rule['entity_id_glob'].split(','):
+                        if fnmatch.fnmatchcase(entity_id, entity_id_glob):
+                            glob_result.update(rule)
+                            clean_entry(glob_result)
                             break
             result = {}
             result.update(domain_result)
