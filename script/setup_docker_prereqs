@@ -1,8 +1,22 @@
-#!/bin/sh
+#!/bin/bash
 # Install requirements and build dependencies for Home Assinstant in Docker.
 
-PACKAGES="nmap net-tools sudo libglib2.0-dev bluetooth libbluetooth-dev libtelldus-core2"
-PACKAGES_DEV="cython3 libudev-dev cmake libxrandr-dev swig"
+# Required debian packages for running hass or components
+PACKAGES=(
+  nmap               # homeassistant.components.device_tracker.nmap_tracker
+  net-tools          # homeassistant.components.device_tracker.nmap_tracker
+  bluetooth          # homeassistant.components.device_tracker.bluetooth_tracker
+  libtelldus-core2   # homeassistant.components.tellstick
+)
+
+# Required debian packages for building components
+PACKAGES_DEV=(
+  cython3            # python-openzwave
+  libudev-dev        # python-openzwave, libcec
+  cmake              # libcec
+  libxrandr-dev      # libcec
+  swig               # libcec
+)
 
 # Stop on errors
 set -e
@@ -15,7 +29,7 @@ wget -qO - http://download.telldus.se/debian/telldus-public.key | apt-key add -
 
 # Install packages
 apt-get update
-apt-get install -y --no-install-recommends $PACKAGES $PACKAGES_DEV
+apt-get install -y --no-install-recommends ${PACKAGES[@]} ${PACKAGES_DEV[@]}
 
 # Build and install openzwave
 script/build_python_openzwave
@@ -26,7 +40,7 @@ ln -sf /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/pyt
 script/build_libcec
 
 # Remove packages
-apt-get remove -y --purge $PACKAGES_DEV
+apt-get remove -y --purge ${PACKAGES_DEV[@]}
 apt-get -y --purge autoremove
 
 # Cleanup

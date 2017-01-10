@@ -6,8 +6,6 @@ VOLUME /config
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-RUN pip3 install --no-cache-dir colorlog cython
-
 # Copy build scripts
 COPY script/setup_docker_prereqs script/build_python_openzwave script/build_libcec script/
 RUN script/setup_docker_prereqs
