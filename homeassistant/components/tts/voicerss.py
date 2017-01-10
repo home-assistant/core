@@ -114,17 +114,12 @@ class VoiceRSSProvider(Provider):
         return SUPPORT_LANGUAGES
 
     @asyncio.coroutine
-    def async_get_tts_audio(self, message, language=None):
+    def async_get_tts_audio(self, message, language):
         """Load TTS from voicerss."""
         websession = async_get_clientsession(self.hass)
         form_data = self._form_data.copy()
 
         form_data['src'] = message
-
-        # If language is specified and supported - use it instead of the
-        # language in the config.
-        if language not in SUPPORT_LANGUAGES:
-            language = self.default_language
         form_data['hl'] = language
 
         request = None

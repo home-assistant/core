@@ -49,11 +49,8 @@ class PicoProvider(Provider):
         """List of supported languages."""
         return SUPPORT_LANGUAGES
 
-    def get_tts_audio(self, message, language=None):
+    def get_tts_audio(self, message, language):
         """Load TTS using pico2wave."""
-        if language not in SUPPORT_LANGUAGES:
-            language = self.default_language
-
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmpf:
             fname = tmpf.name
 
