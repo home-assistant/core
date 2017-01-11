@@ -9,44 +9,54 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_NAME
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-                                            ATTR_COLOR_TEMP,
-                                            SUPPORT_BRIGHTNESS,
-                                            SUPPORT_RGB_COLOR,
-                                            SUPPORT_COLOR_TEMP,
+from homeassistant.util.color import color_temperature_mired_to_kelvin
+from homeassistant.const import CONF_DEVICES, CONF_NAME, STATE_OFF
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION,
+                                            ATTR_COLOR_TEMP, ATTR_FLASH, FLASH_SHORT, FLASH_LONG,
+                                            SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
+                                            SUPPORT_COLOR_TEMP, SUPPORT_FLASH,
                                             Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import color as color_util
-from homeassistant.util.color import \
-    color_temperature_mired_to_kelvin as mired_to_kelvin
 
-REQUIREMENTS = ['pyyeelight==1.0-beta']
+REQUIREMENTS = ['yeelight==0.0.13']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_TRANSITION = "transition"
+DEFAULT_TRANSITION=350
+
 DOMAIN = 'yeelight'
 
-SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR |
-                    SUPPORT_COLOR_TEMP)
-
-DEVICE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string, })
+DEVICE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string,
+                            vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}, })
 
+COLOR_SUPPORTS = (SUPPORT_RGB_COLOR |
+                  SUPPORT_COLOR_TEMP)
+
+SUPPORTS = (SUPPORT_BRIGHTNESS |
+            SUPPORT_TRANSITION |
+            SUPPORT_FLASH)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yeelight bulbs."""
     lights = []
     if discovery_info is not None:
+        _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])
+
         device = {'name': discovery_info['hostname'],
                   'ipaddr': discovery_info['host']}
-        lights.append(YeelightLight(device))
+        # TODO: hardcoded default config
+        lights.append(YeelightLight(device, {'transition': DEFAULT_TRANSITION}))
     else:
         for ipaddr, device_config in config[CONF_DEVICES].items():
-            device = {'name': device_config[CONF_NAME], 'ipaddr': ipaddr}
-            lights.append(YeelightLight(device))
+            _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
+
+            device = {'name': device_config[CONF_NAME],
+                      'ipaddr': ipaddr}
+            lights.append(YeelightLight(device, device_config))
 
     add_devices(lights)
 
@@ -54,29 +64,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class YeelightLight(Light):
     """Representation of a Yeelight light."""
 
-    def __init__(self, device):
+    def __init__(self, device, config):
         """Initialize the light."""
-        import pyyeelight
+        import yeelight
 
         self._name = device['name']
         self._ipaddr = device['ipaddr']
-        self.is_valid = True
-        self._bulb = None
-        self._state = None
-        self._bright = None
-        self._rgb = None
-        self._ct = None
-        try:
-            self._bulb = pyyeelight.YeelightBulb(self._ipaddr)
-        except socket.error:
-            self.is_valid = False
-            _LOGGER.error("Failed to connect to bulb %s, %s", self._ipaddr,
-                          self._name)
+        self.config = config
+        self._supported_features = SUPPORTS
+        self.__bulb = None
+        self.__properties = None
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return self._supported_features
 
     @property
     def unique_id(self):
         """Return the ID of this light."""
         return "{}.{}".format(self.__class__, self._ipaddr)
+
+    @property
+    def color_temp(self):
+        return self._properties.get("color_temp", None)
 
     @property
     def name(self):
@@ -86,77 +97,158 @@ class YeelightLight(Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state == self._bulb.POWER_ON
+        if self._properties.get("power", STATE_OFF) == STATE_OFF:
+            return False
+        return True
 
     @property
     def brightness(self):
         """Return the brightness of this light between 1..255."""
-        return self._bright
+        bright = self._properties.get("bright", None)
+        if bright:
+            return 255 * (int(bright) / 100)
+
+        return None
 
     @property
     def rgb_color(self):
         """Return the color property."""
-        return self._rgb
+        rgb = self._properties.get("rgb", None)
+        if rgb is None:
+            return None
+
+        rgb = int(rgb)
+
+        b = rgb & 255
+        g = (rgb >> 8) & 255
+        r = (rgb >> 16) & 25
+
+        return r, g, b
 
     @property
-    def color_temp(self):
-        """Return the color temperature."""
-        return color_util.color_temperature_kelvin_to_mired(self._ct)
+    def _properties(self):
+        return self._bulb.last_properties
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_YEELIGHT
+    def _bulb(self):
+        import yeelight
+        self._module = yeelight
+        if self.__bulb is None:
+            try:
+                self.__bulb = yeelight.Bulb(self._ipaddr)
+                self.__bulb.get_properties()  # force init for type
+
+                btype = self.__bulb.bulb_type
+                if btype == yeelight.BulbType.Color:
+                    self._supported_features += COLOR_SUPPORTS
+            except (yeelight.BulbException, socket.error) as ex:
+                _LOGGER.error("Failed to connect to bulb %s, %s: %s", self._ipaddr,
+                              self._name, ex)
+            except Exception as ex:
+                _LOGGER.error("Non socket.error exception from bulb: %s", ex)
+
+        return self.__bulb
+
+    def update(self):
+        self._bulb.get_properties()
+
+    def cmd(func):
+        def wrap(self, *args, **kwargs):
+            try:
+                _LOGGER.debug("Calling %s with %s %s" % (func, args, kwargs))
+                return func(self, *args, **kwargs)
+            except self._module.BulbException as ex:
+                _LOGGER.error("Error when calling %s: %s", func, ex)
+        return wrap
+
+    @cmd
+    def set_brightness(self, brightness, duration):
+        if brightness:
+            _LOGGER.debug("Setting brightness: %s", brightness)
+            self._bulb.set_brightness(brightness / 255 * 100, duration=duration)
+
+    @cmd
+    def set_rgb(self, rgb, duration):
+        if rgb and self.supported_features & SUPPORT_RGB_COLOR:
+            _LOGGER.debug("Setting RGB: %s", rgb)
+            self._bulb.set_rgb(rgb[0], rgb[1], rgb[2], duration=duration)
+
+    @cmd
+    def set_colortemp(self, colortemp, duration):
+        if colortemp and self.supported_features & SUPPORT_COLOR_TEMP:
+            temp_in_k = color_temperature_mired_to_kelvin(colortemp)
+            _LOGGER.debug("Setting color temp: %s K", temp_in_k)
+
+            self._bulb.set_color_temp(temp_in_k, duraation=duration)
+
+
+    @cmd
+    def set_default(self):
+        self._bulb.set_default()
+
+    @cmd
+    def set_flash(self, flash):
+        # TODO: effects works per se, but this specific implementation doesn't
+        # therefore it's behind False until a solution is found
+        if flash and False:
+            # modified from python-yeelight's examples
+            if flash == FLASH_LONG:
+                duration = 1000
+            elif flash == FLASH_SHORT:
+                duration = 350
+            else:
+                _LOGGER.error("Unknown flash type: %s", flash)
+
+            if not self.rgb_color:
+                _LOGGER.error("RGB is not yet known, bailing out!")
+                return
+
+            # A simple breeth effect, going first down to ~0
+            # and returning then back to the original state.
+            r, g, b = self.rgb_color
+            orig_brightness = brightness = self.brightness
+            transitions = []
+            rgb_trans = self._module.RGBTransition
+            step_amount = ((brightness - 10) * 2 / 8)  # we can just go five below, five above
+            # _LOGGER.error("step: %s" % step_amount)
+
+            for i in range(0,4):
+                brightness -= step_amount
+                transitions.append(rgb_trans(r, g, b, brightness=max(1, brightness), duration=duration))
+            for i in range(0,4):
+                brightness += step_amount
+                transitions.append(rgb_trans(r, g, b, brightness=min(brightness, orig_brightness), duration=duration))
+
+            from pprint import pformat as pf
+            _LOGGER.error(pf(transitions))
+
+            flow = self._module.Flow(count=1, transitions=transitions)
+            self._bulb.start_flow(flow)
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
-        if not self.is_on:
-            self._bulb.turn_on()
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        colortemp = kwargs.get(ATTR_COLOR_TEMP)
+        rgb = kwargs.get(ATTR_RGB_COLOR)
+        flash = kwargs.get(ATTR_FLASH)
 
-        if ATTR_RGB_COLOR in kwargs:
-            rgb = kwargs[ATTR_RGB_COLOR]
-            self._bulb.set_rgb_color(rgb[0], rgb[1], rgb[2])
-            self._rgb = [rgb[0], rgb[1], rgb[2]]
+        # white bulb has problems with duration > 9000, doesn't always start
+        # TODO: move to python-yeelight?
+        duration = min(kwargs.get(ATTR_TRANSITION, self.config["transition"]), 9000)
 
-        if ATTR_COLOR_TEMP in kwargs:
-            kelvin = int(mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
-            self._bulb.set_color_temperature(kelvin)
-            self._ct = kelvin
+        self._bulb.turn_on(duration=duration)
 
-        if ATTR_BRIGHTNESS in kwargs:
-            bright = int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
-            self._bulb.set_brightness(bright)
-            self._bright = kwargs[ATTR_BRIGHTNESS]
+        # values checked for none in methods
+        self.set_rgb(rgb, duration)
+        self.set_colortemp(colortemp, duration)
+        self.set_brightness(brightness, duration)
+        self.set_flash(flash)
+
+        # saving current settings to the bulb if not flashing
+        # TODO: make saving configurable?
+        if not flash:
+            self.set_default()
 
     def turn_off(self, **kwargs):
-        """Turn the specified or all lights off."""
+        """Turn off."""
         self._bulb.turn_off()
-
-    def update(self):
-        """Synchronize state with bulb."""
-        self._bulb.refresh_property()
-
-        # Update power state
-        self._state = self._bulb.get_property(self._bulb.PROPERTY_NAME_POWER)
-
-        # Update Brightness value
-        bright_percent = self._bulb.get_property(
-            self._bulb.PROPERTY_NAME_BRIGHTNESS)
-        bright = int(bright_percent) * 255 / 100
-        # Handle 0
-        if int(bright) == 0:
-            self._bright = 1
-        else:
-            self._bright = int(bright)
-
-        # Update RGB Value
-        raw_rgb = int(
-            self._bulb.get_property(self._bulb.PROPERTY_NAME_RGB_COLOR))
-        red = int(raw_rgb / 65536)
-        green = int((raw_rgb - (red * 65536)) / 256)
-        blue = raw_rgb - (red * 65536) - (green * 256)
-        self._rgb = [red, green, blue]
-
-        # Update CT value
-        self._ct = int(self._bulb.get_property(
-            self._bulb.PROPERTY_NAME_COLOR_TEMPERATURE))
