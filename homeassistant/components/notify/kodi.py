@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 ATTR_DISPLAYTIME = 'displaytime'
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Return the notify service."""
     url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
 

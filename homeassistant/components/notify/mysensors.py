@@ -9,8 +9,10 @@ from homeassistant.components.notify import (ATTR_TARGET,
                                              BaseNotificationService)
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the MySensors notification service."""
+    if discovery_info is None:
+        return
     platform_devices = []
     gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
     if not gateways:

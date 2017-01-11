@@ -75,8 +75,8 @@ def setup(hass, config):
         """Set up a notify platform."""
         if p_config is None:
             p_config = {}
-        if discovery_info is not None:
-            p_config = discovery_info
+        if discovery_info is None:
+            discovery_info = {}
 
         notify_implementation = bootstrap.prepare_setup_platform(
             hass, config, DOMAIN, platform)
@@ -85,7 +85,8 @@ def setup(hass, config):
             _LOGGER.error("Unknown notification service specified")
             return False
 
-        notify_service = notify_implementation.get_service(hass, p_config)
+        notify_service = notify_implementation.get_service(
+            hass, p_config, discovery_info)
 
         if notify_service is None:
             _LOGGER.error("Failed to initialize notification service %s",
@@ -116,7 +117,9 @@ def setup(hass, config):
         service_call_handler = partial(notify_message, notify_service)
 
         if hasattr(notify_service, 'targets'):
-            platform_name = (p_config.get(CONF_NAME) or platform)
+            platform_name = (
+                p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or
+                platform)
             for name, target in notify_service.targets.items():
                 target_name = slugify('{}_{}'.format(platform_name, name))
                 targets[target_name] = target
@@ -125,7 +128,9 @@ def setup(hass, config):
                                        descriptions.get(SERVICE_NOTIFY),
                                        schema=NOTIFY_SERVICE_SCHEMA)
 
-        platform_name = (p_config.get(CONF_NAME) or SERVICE_NOTIFY)
+        platform_name = (
+            p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or
+            SERVICE_NOTIFY)
         platform_name_slug = slugify(platform_name)
 
         hass.services.register(

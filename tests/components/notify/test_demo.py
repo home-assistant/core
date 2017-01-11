@@ -7,10 +7,10 @@ from homeassistant.bootstrap import setup_component
 from homeassistant.components.notify import demo
 from homeassistant.core import callback
 from homeassistant.helpers import discovery, script
-from tests.common import get_test_home_assistant
+from tests.common import assert_setup_component, get_test_home_assistant
 
 CONFIG = {
-    'notify': {
+    notify.DOMAIN: {
         'platform': 'demo'
     }
 }
@@ -37,7 +37,9 @@ class TestNotifyDemo(unittest.TestCase):
         self.hass.stop()
 
     def _setup_notify(self):
-        self.assertTrue(setup_component(self.hass, notify.DOMAIN, CONFIG))
+        with assert_setup_component(1) as config:
+            assert setup_component(self.hass, notify.DOMAIN, CONFIG)
+        assert config[notify.DOMAIN]
 
     def test_setup(self):
         """Test setup."""
@@ -78,12 +80,14 @@ class TestNotifyDemo(unittest.TestCase):
     @patch('homeassistant.components.notify.demo.get_service')
     def test_discover_notify(self, mock_demo_get_service):
         """Test discovery of notify demo platform."""
+        assert notify.DOMAIN not in self.hass.config.components
         discovery.load_platform(
-            self.hass, 'notify', 'demo', {'test_key:test_val'}, CONFIG)
+            self.hass, 'notify', 'demo', {'test_key:test_val'}, {})
         self.hass.block_till_done()
+        assert notify.DOMAIN in self.hass.config.components
         assert mock_demo_get_service.called
         assert mock_demo_get_service.call_args[0] == (
-            self.hass, {'test_key:test_val'})
+            self.hass, {}, {'test_key:test_val'})
 
     @callback
     def record_calls(self, *args):

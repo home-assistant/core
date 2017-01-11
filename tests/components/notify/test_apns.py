@@ -1,14 +1,25 @@
 """The tests for the APNS component."""
-import unittest
 import os
+import unittest
+from unittest.mock import patch
+
+from apns2.errors import Unregistered
 
 import homeassistant.components.notify as notify
-from homeassistant.core import State
+from homeassistant.bootstrap import setup_component
 from homeassistant.components.notify.apns import ApnsNotificationService
-from tests.common import get_test_home_assistant
 from homeassistant.config import load_yaml_config_file
-from unittest.mock import patch
-from apns2.errors import Unregistered
+from homeassistant.core import State
+from tests.common import assert_setup_component, get_test_home_assistant
+
+CONFIG = {
+    notify.DOMAIN: {
+        'platform': 'apns',
+        'name': 'test_app',
+        'topic': 'testapp.appname',
+        'cert_file': 'test_app.pem'
+    }
+}
 
 
 class TestApns(unittest.TestCase):
@@ -21,6 +32,11 @@ class TestApns(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
+
+    def _setup_notify(self):
+        with assert_setup_component(1) as handle_config:
+            assert setup_component(self.hass, notify.DOMAIN, CONFIG)
+        assert handle_config[notify.DOMAIN]
 
     def test_apns_setup_full(self):
         """Test setup with all data."""
@@ -36,22 +52,52 @@ class TestApns(unittest.TestCase):
 
         self.assertTrue(notify.setup(self.hass, config))
 
-    def test_register_new_device(self):
-        """Test registering a new device with a name."""
+    def test_apns_setup_missing_name(self):
+        """Test setup with missing name."""
+        config = {
+            'notify': {
+                'platform': 'apns',
+                'topic': 'testapp.appname',
+                'cert_file': 'test_app.pem',
+            }
+        }
+        with assert_setup_component(0) as handle_config:
+            assert setup_component(self.hass, notify.DOMAIN, config)
+        assert not handle_config[notify.DOMAIN]
+
+    def test_apns_setup_missing_certificate(self):
+        """Test setup with missing certificate."""
         config = {
             'notify': {
                 'platform': 'apns',
                 'name': 'test_app',
                 'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
             }
         }
+        with assert_setup_component(0) as handle_config:
+            assert setup_component(self.hass, notify.DOMAIN, config)
+        assert not handle_config[notify.DOMAIN]
 
+    def test_apns_setup_missing_topic(self):
+        """Test setup with missing topic."""
+        config = {
+            'notify': {
+                'platform': 'apns',
+                'name': 'test_app',
+                'cert_file': 'test_app.pem',
+            }
+        }
+        with assert_setup_component(0) as handle_config:
+            assert setup_component(self.hass, notify.DOMAIN, config)
+        assert not handle_config[notify.DOMAIN]
+
+    def test_register_new_device(self):
+        """Test registering a new device with a name."""
         devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('5678: {name: test device 2}\n')
 
-        notify.setup(self.hass, config)
+        self._setup_notify()
         self.assertTrue(self.hass.services.call('apns',
                                                 'test_app',
                                                 {'push_id': '1234',
@@ -73,20 +119,11 @@ class TestApns(unittest.TestCase):
 
     def test_register_device_without_name(self):
         """Test registering a without a name."""
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
-        }
-
         devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('5678: {name: test device 2}\n')
 
-        notify.setup(self.hass, config)
+        self._setup_notify()
         self.assertTrue(self.hass.services.call('apns', 'test_app',
                                                 {'push_id': '1234'},
                                                 blocking=True))
@@ -103,21 +140,12 @@ class TestApns(unittest.TestCase):
 
     def test_update_existing_device(self):
         """Test updating an existing device."""
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
-        }
-
         devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('1234: {name: test device 1}\n')
             out.write('5678: {name: test device 2}\n')
 
-        notify.setup(self.hass, config)
+        self._setup_notify()
         self.assertTrue(self.hass.services.call('apns',
                                                 'test_app',
                                                 {'push_id': '1234',
@@ -139,15 +167,6 @@ class TestApns(unittest.TestCase):
 
     def test_update_existing_device_with_tracking_id(self):
         """Test updating an existing device that has a tracking id."""
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
-        }
-
         devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('1234: {name: test device 1, '
@@ -155,7 +174,7 @@ class TestApns(unittest.TestCase):
             out.write('5678: {name: test device 2, '
                       'tracking_device_id: tracking456}\n')
 
-        notify.setup(self.hass, config)
+        self._setup_notify()
         self.assertTrue(self.hass.services.call('apns',
                                                 'test_app',
                                                 {'push_id': '1234',
@@ -182,30 +201,20 @@ class TestApns(unittest.TestCase):
     def test_send(self, mock_client):
         """Test updating an existing device."""
         send = mock_client.return_value.send_notification
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
-        }
 
         devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('1234: {name: test device 1}\n')
 
-        notify.setup(self.hass, config)
+        self._setup_notify()
 
-        self.assertTrue(self.hass.services.call('notify', 'test_app',
-                                                {'message': 'Hello',
-                                                 'data': {
-                                                     'badge': 1,
-                                                     'sound': 'test.mp3',
-                                                     'category': 'testing'
-                                                     }
-                                                 },
-                                                blocking=True))
+        self.assertTrue(self.hass.services.call(
+            'notify', 'test_app',
+            {'message': 'Hello', 'data': {
+                'badge': 1,
+                'sound': 'test.mp3',
+                'category': 'testing'}},
+            blocking=True))
 
         self.assertTrue(send.called)
         self.assertEqual(1, len(send.mock_calls))
@@ -223,30 +232,20 @@ class TestApns(unittest.TestCase):
     def test_send_when_disabled(self, mock_client):
         """Test updating an existing device."""
         send = mock_client.return_value.send_notification
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
-        }
 
         devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('1234: {name: test device 1, disabled: True}\n')
 
-        notify.setup(self.hass, config)
+        self._setup_notify()
 
-        self.assertTrue(self.hass.services.call('notify', 'test_app',
-                                                {'message': 'Hello',
-                                                 'data': {
-                                                     'badge': 1,
-                                                     'sound': 'test.mp3',
-                                                     'category': 'testing'
-                                                 }
-                                                 },
-                                                blocking=True))
+        self.assertTrue(self.hass.services.call(
+            'notify', 'test_app',
+            {'message': 'Hello', 'data': {
+                'badge': 1,
+                'sound': 'test.mp3',
+                'category': 'testing'}},
+            blocking=True))
 
         self.assertFalse(send.called)
 
@@ -294,20 +293,11 @@ class TestApns(unittest.TestCase):
         send = mock_client.return_value.send_notification
         send.side_effect = Unregistered()
 
-        config = {
-            'notify': {
-                'platform': 'apns',
-                'name': 'test_app',
-                'topic': 'testapp.appname',
-                'cert_file': 'test_app.pem'
-            }
-        }
-
         devices_path = self.hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
             out.write('1234: {name: test device 1}\n')
 
-        notify.setup(self.hass, config)
+        self._setup_notify()
 
         self.assertTrue(self.hass.services.call('notify', 'test_app',
                                                 {'message': 'Hello'},

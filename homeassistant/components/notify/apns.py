@@ -11,8 +11,8 @@ import voluptuous as vol
 from homeassistant.helpers.event import track_state_change
 from homeassistant.config import load_yaml_config_file
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, BaseNotificationService, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME)
+    ATTR_TARGET, ATTR_DATA, BaseNotificationService)
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template as template_helper
 
@@ -26,11 +26,12 @@ SERVICE_REGISTER = "apns_register"
 ATTR_PUSH_ID = "push_id"
 ATTR_NAME = "name"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CERTFILE): cv.string,
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): cv.string,
     vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_CERTFILE): cv.string,
     vol.Required(CONF_TOPIC): cv.string,
-})
+}, extra=vol.ALLOW_EXTRA)
 
 REGISTER_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_PUSH_ID): cv.string,
@@ -40,7 +41,7 @@ REGISTER_SERVICE_SCHEMA = vol.Schema({
 REQUIREMENTS = ["apns2==0.1.1"]
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Return push service."""
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
@@ -200,8 +201,6 @@ class ApnsNotificationService(BaseNotificationService):
     def register(self, call):
         """Register a device to receive push messages."""
         push_id = call.data.get(ATTR_PUSH_ID)
-        if push_id is None:
-            return False
 
         device_name = call.data.get(ATTR_NAME)
         current_device = self.devices.get(push_id)
