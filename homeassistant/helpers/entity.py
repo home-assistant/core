@@ -1,5 +1,6 @@
 """An abstract class for entities."""
 import asyncio
+import collections
 import logging
 import functools as ft
 import fnmatch
@@ -273,33 +274,45 @@ class Entity(object):
             exact_result = {}  # type: Dict[str, Any]
             domain = split_entity_id(entity_id)[0]
 
-            def clean_entry(entry: Dict) -> None:
+            def clean_entry(entry: Dict) -> Dict:
                 """Clean up entity-matching keys."""
                 entry.pop('entity_id', None)
                 entry.pop('entity_id_glob', None)
+                return entry
+
+            def deep_update(target: Dict, source: Dict) -> None:
+                """Deep update a dictionary."""
+                for key, value in source.items():
+                    if isinstance(value, collections.Mapping):
+                        updated_value = target.get(key, {})
+                        # If the new value is map, but the old value is not -
+                        # overwrite the old value.
+                        if not isinstance(updated_value, collections.Mapping):
+                            updated_value = {}
+                        deep_update(updated_value, value)
+                        target[key] = updated_value
+                    else:
+                        target[key] = source[key]
 
             for rule in _OVERWRITE:
                 if 'entity_id' in rule:
                     entities = [
                         key.lower() for key in rule['entity_id'].split(',')]
                     if domain in entities:
-                        domain_result.update(rule)
-                        clean_entry(domain_result)
+                        deep_update(domain_result, rule)
                     if entity_id in entities:
-                        exact_result.update(rule)
-                        clean_entry(exact_result)
+                        deep_update(exact_result, rule)
                 if 'entity_id_glob' in rule:
                     for entity_id_glob in [
                             key.lower() for key in rule[
                                 'entity_id_glob'].split(',')]:
                         if fnmatch.fnmatchcase(entity_id, entity_id_glob):
-                            glob_result.update(rule)
-                            clean_entry(glob_result)
+                            deep_update(glob_result, rule)
                             break
             result = {}
-            result.update(domain_result)
-            result.update(glob_result)
-            result.update(exact_result)
+            deep_update(result, clean_entry(domain_result))
+            deep_update(result, clean_entry(glob_result))
+            deep_update(result, clean_entry(exact_result))
             _OVERWRITE_CACHE[entity_id] = result
             return result
 
