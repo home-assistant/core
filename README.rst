@@ -26,7 +26,8 @@ Examples of devices Home Assistant can interface with:
    `Netgear <http://netgear.com>`__,
    `DD-WRT <http://www.dd-wrt.com/site/index>`__,
    `TPLink <http://www.tp-link.us/>`__,
-   `ASUSWRT <http://event.asus.com/2013/nw/ASUSWRT/>`__ and any SNMP
+   `ASUSWRT <http://event.asus.com/2013/nw/ASUSWRT/>`__,
+   `Xiaomi <http://miwifi.com/>`__ and any SNMP
    capable Linksys WAP/WRT
 -  `Philips Hue <http://meethue.com>`__ lights,
    `WeMo <http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/>`__
