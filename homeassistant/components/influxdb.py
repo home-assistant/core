@@ -104,7 +104,7 @@ def setup(hass, config):
             if len(whitelist) > 0 and state.entity_id not in whitelist:
                 return
 
-            _state = state_helper.state_as_number(state)
+            _state = float(state_helper.state_as_number(state))
             _state_key = "value"
         except ValueError:
             _state = state.state
@@ -136,6 +136,9 @@ def setup(hass, config):
 
         for key, value in state.attributes.items():
             if key != 'unit_of_measurement':
+                # If the key is already in fields
+                if key in json_body[0]['fields']:
+                    key = key + "_"
                 # Prevent column data errors in influxDB.
                 # For each value we try to cast it as float
                 # But if we can not do it we store the value
