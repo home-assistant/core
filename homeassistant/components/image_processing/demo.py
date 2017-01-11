@@ -5,8 +5,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/demo/
 """
 
-from homeassistant.components.image_processing import (
-    ImageProcessingEntity, ImageProcessingAlprEntity)
+from homeassistant.components.image_processing import ImageProcessingEntity
+from homeassistant.components.image_processing.openalpr_local import (
+    ImageProcessingAlprEntity)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -51,6 +52,8 @@ class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
 
     def __init__(self, camera_entity, name):
         """Initialize demo alpr."""
+        super().__init__()
+
         self._name = name
         self._camera = camera_entity
 
@@ -58,6 +61,11 @@ class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
     def camera_entity(self):
         """Return camera entity id from process pictures."""
         return self._camera
+
+    @property
+    def confidence(self):
+        """Return minimum confidence for send events."""
+        return 80
 
     @property
     def name(self):

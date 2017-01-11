@@ -9,20 +9,17 @@ from datetime import timedelta
 import logging
 import os
 
-import aiohttp
-import async_timeout
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, CONF_TIMEOUT,
-    CONF_NAME, CONF_ENTITY_ID, STATE_UNKNOWN)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+    ATTR_ENTITY_ID, CONF_NAME, CONF_ENTITY_ID)
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.loader import get_component
+
 
 DOMAIN = 'image_processing'
 DEPENDENCIES = ['camera']
@@ -31,24 +28,14 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-PROCESSING_CLASSES = [
-    None,            # Generic
-    'alpr',          # Processing licences plates
-    'face',          # Processing biometric face data
-]
-
 SERVICE_SCAN = 'scan'
 
-EVENT_FOUND_PLATE = 'found_plate'
-
-ATTR_PLATE = 'plate'
 ATTR_CONFIDENCE = 'confidence'
 
 CONF_SOURCE = 'source'
 CONF_CONFIDENCE = 'confidence'
 
 DEFAULT_TIMEOUT = 10
-DEFAULT_CONFIDENCE = 80
 
 SOURCE_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
@@ -57,9 +44,6 @@ SOURCE_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
-        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
 
 SERVICE_SCAN_SCHEMA = vol.Schema({
@@ -104,16 +88,11 @@ def async_setup(hass, config):
 class ImageProcessingEntity(Entity):
     """Base entity class for image processing."""
 
-    timeout = DEFAULT_TIMEOUT  # timeout for requests
+    timeout = DEFAULT_TIMEOUT
 
     @property
     def camera_entity(self):
         """Return camera entity id from process pictures."""
-        return None
-
-    @property
-    def processing_class(self):
-        """Return the class of this entity from PROCESSING_CLASSES."""
         return None
 
     def process_image(self, image):
@@ -127,127 +106,22 @@ class ImageProcessingEntity(Entity):
         """
         return self.hass.loop.run_in_executor(None, self.process_image, image)
 
-    @property
-    def state_attributes(self):
-        """Return device specific state attributes."""
-        attr = {}
-
-        if self.processing_class is not None:
-            attr['processing_class'] = self.processing_class
-
-        return attr
-
     @asyncio.coroutine
     def async_update(self):
         """Update image and process it.
 
         This method is a coroutine.
         """
-        websession = async_get_clientsession(self.hass)
-        state = self.hass.states.get(self.camera_entity)
+        camera = get_component('camera')
+        image = None
 
-        if state is None:
-            _LOGGER.warning(
-                "No entity '%s' for grab a image.", self.camera_entity)
-            return
-
-        url = "{0}{1}".format(
-            self.hass.config.api.base_url,
-            state.attributes.get(ATTR_ENTITY_PICTURE))
-
-        response = None
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
-                response = yield from websession.get(url)
+            image = yield from camera.async_get_image(
+                self.hass, self.camera_entity, timeout=self.timeout)
 
-                if response.status != 200:
-                    _LOGGER.error("Error %d on %s", response.status, url)
-                    return
-
-                image = yield from response.read()
-
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
-            _LOGGER.error("Can't connect to %s", url)
+        except HomeAssistantError as err:
+            _LOGGER.error("Error on receive image from entity: %s", err)
             return
-
-        finally:
-            if response is not None:
-                yield from response.release()
 
         # process image data
         yield from self.async_process_image(image)
-
-
-class ImageProcessingAlprEntity(ImageProcessingEntity):
-    """Base entity class for alpr image processing."""
-
-    plates = {}  # last scan data
-    vehicles = 0  # vehicles count
-
-    @property
-    def confidence(self):
-        """Return minimum confidence for send events."""
-        return DEFAULT_CONFIDENCE
-
-    @property
-    def processing_class(self):
-        """Return the class of this entity from PROCESSING_CLASSES."""
-        return 'alpr'
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        confidence = 0
-        plate = STATE_UNKNOWN
-
-        # search high plate
-        for i_pl, i_co in self.plates.items():
-            if i_co > confidence:
-                confidence = i_co
-                plate = i_pl
-        return plate
-
-    @property
-    def state_attributes(self):
-        """Return device specific state attributes."""
-        attr = super().state_attributes
-
-        attr.update({
-            'plates': self.plates,
-            'vehicles': self.vehicles
-        })
-
-        return attr
-
-    def process_plates(self, plates, vehicles):
-        """Send event with new plates and store data."""
-        run_callback_threadsafe(
-            self.hass.loop, self.async_process_plates, plates, vehicles
-        ).result()
-
-    @callback
-    def async_process_plates(self, plates, vehicles):
-        """Send event with new plates and store data.
-
-        plates are a dict in follow format:
-          { 'plate': confidence }
-
-        This method must be run in the event loop.
-        """
-        plates = {plate: confidence for plate, confidence in plates.items()
-                  if confidence >= self.confidence}
-        new_plates = set(plates) - set(self.plates)
-
-        # send events
-        for i_plate in new_plates:
-            self.hass.async_add_job(
-                self.hass.bus.async_fire, EVENT_FOUND_PLATE, {
-                    ATTR_PLATE: i_plate,
-                    ATTR_ENTITY_ID: self.entity_id,
-                    ATTR_CONFIDENCE: plates.get(i_plate),
-                }
-            )
-
-        # update entity store
-        self.plates = plates
-        self.vehicles = vehicles

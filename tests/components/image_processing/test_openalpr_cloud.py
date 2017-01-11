@@ -143,7 +143,7 @@ class TestOpenAlprCloud(object):
             """Mock event."""
             self.alpr_events.append(event)
 
-        self.hass.bus.listen(ip.EVENT_FOUND_PLATE, mock_alpr_event)
+        self.hass.bus.listen('found_plate', mock_alpr_event)
 
         self.params = {
             'secret_key': "sk_abcxyz123456",
@@ -176,11 +176,11 @@ class TestOpenAlprCloud(object):
         assert state.state == 'H786P0J'
 
         event_data = [event.data for event in self.alpr_events if
-                      event.data.get(ip.ATTR_PLATE) == 'H786P0J']
+                      event.data.get('plate') == 'H786P0J']
         assert len(event_data) == 1
-        assert event_data[0][ip.ATTR_PLATE] == 'H786P0J'
-        assert event_data[0][ip.ATTR_CONFIDENCE] == float(90.436699)
-        assert event_data[0][ip.ATTR_ENTITY_ID] == \
+        assert event_data[0]['plate'] == 'H786P0J'
+        assert event_data[0]['confidence'] == float(90.436699)
+        assert event_data[0]['entity_id'] == \
             'image_processing.test_local'
 
     def test_openalpr_process_image_api_error(self, aioclient_mock):

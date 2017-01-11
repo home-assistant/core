@@ -15,8 +15,9 @@ import voluptuous as vol
 from homeassistant.core import split_entity_id
 from homeassistant.const import CONF_API_KEY
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA, ImageProcessingAlprEntity, CONF_CONFIDENCE, CONF_SOURCE,
-    CONF_ENTITY_ID, CONF_NAME)
+    PLATFORM_SCHEMA, CONF_CONFIDENCE, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
+from homeassistant.components.image_processing.openalpr_local import (
+    ImageProcessingAlprEntity)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -36,11 +37,14 @@ OPENALPR_REGIONS = [
 ]
 
 CONF_REGION = 'region'
+DEFAULT_CONFIDENCE = 80
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_REGION):
         vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
+    vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
+        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
 
 
@@ -69,6 +73,8 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
 
     def __init__(self, camera_entity, params, confidence, name=None):
         """Initialize openalpr local api."""
+        super().__init__()
+
         self._params = params
         self._camera = camera_entity
         self._confidence = confidence

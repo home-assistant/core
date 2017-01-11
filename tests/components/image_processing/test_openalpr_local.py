@@ -134,7 +134,7 @@ class TestOpenAlprLocal(object):
             """Mock event."""
             self.alpr_events.append(event)
 
-        self.hass.bus.listen(ip.EVENT_FOUND_PLATE, mock_alpr_event)
+        self.hass.bus.listen('found_plate', mock_alpr_event)
 
     def teardown_method(self):
         """Stop everything that was started."""
@@ -157,9 +157,9 @@ class TestOpenAlprLocal(object):
         assert state.state == 'PE3R2X'
 
         event_data = [event.data for event in self.alpr_events if
-                      event.data.get(ip.ATTR_PLATE) == 'PE3R2X']
+                      event.data.get('plate') == 'PE3R2X']
         assert len(event_data) == 1
-        assert event_data[0][ip.ATTR_PLATE] == 'PE3R2X'
-        assert event_data[0][ip.ATTR_CONFIDENCE] == float(98.9371)
-        assert event_data[0][ip.ATTR_ENTITY_ID] == \
+        assert event_data[0]['plate'] == 'PE3R2X'
+        assert event_data[0]['confidence'] == float(98.9371)
+        assert event_data[0]['entity_id'] == \
             'image_processing.test_local'

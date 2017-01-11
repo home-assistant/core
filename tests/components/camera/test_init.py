@@ -1,0 +1,101 @@
+"""The tests for the camera component."""
+import asyncio
+from unittest.mock import patch
+
+import pytest
+
+from homeassistant.bootstrap import setup_component
+from homeassistant.const import ATTR_ENTITY_PICTURE
+import homeassistant.components.camera as camera
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.async import run_coroutine_threadsafe
+
+from tests.common import get_test_home_assistant, assert_setup_component
+
+
+class TestSetupCamera(object):
+    """Test class for setup camera."""
+
+    def setup_method(self):
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+    def teardown_method(self):
+        """Stop everything that was started."""
+        self.hass.stop()
+
+    def test_setup_component(self):
+        """Setup demo platfrom on image_process component."""
+        config = {
+            camera.DOMAIN: {
+                'platform': 'demo'
+            }
+        }
+
+        with assert_setup_component(1, camera.DOMAIN):
+            setup_component(self.hass, camera.DOMAIN, config)
+
+
+class TestGetImage(object):
+    """Test class for camera."""
+
+    def setup_method(self):
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+        config = {
+            camera.DOMAIN: {
+                'platform': 'demo'
+            }
+        }
+
+        setup_component(self.hass, camera.DOMAIN, config)
+
+        state = self.hass.states.get('camera.demo_camera')
+        self.url = "{0}{1}".format(
+            self.hass.config.api.base_url,
+            state.attributes.get(ATTR_ENTITY_PICTURE))
+
+    def teardown_method(self):
+        """Stop everything that was started."""
+        self.hass.stop()
+
+    @patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
+           autospec=True, return_value=b'Test')
+    def test_get_image_from_camera(self, mock_camera):
+        """Grab a image from camera entity."""
+        self.hass.start()
+
+        image = run_coroutine_threadsafe(camera.async_get_image(
+            self.hass, 'camera.demo_camera'), self.hass.loop).result()
+
+        assert mock_camera.called
+        assert image == b'Test'
+
+    def test_get_image_without_exists_camera(self):
+        """Try to get image without exists camera."""
+        self.hass.states.remove('camera.demo_camera')
+
+        with pytest.raises(HomeAssistantError):
+            run_coroutine_threadsafe(camera.async_get_image(
+                self.hass, 'camera.demo_camera'), self.hass.loop).result()
+
+    def test_get_image_with_timeout(self, aioclient_mock):
+        """Try to get image with timeout."""
+        aioclient_mock.get(self.url, exc=asyncio.TimeoutError())
+
+        with pytest.raises(HomeAssistantError):
+            run_coroutine_threadsafe(camera.async_get_image(
+                self.hass, 'camera.demo_camera'), self.hass.loop).result()
+
+        assert len(aioclient_mock.mock_calls) == 1
+
+    def test_get_image_with_bad_http_state(self, aioclient_mock):
+        """Try to get image with timeout."""
+        aioclient_mock.get(self.url, status=400)
+
+        with pytest.raises(HomeAssistantError):
+            run_coroutine_threadsafe(camera.async_get_image(
+                self.hass, 'camera.demo_camera'), self.hass.loop).result()
+
+        assert len(aioclient_mock.mock_calls) == 1

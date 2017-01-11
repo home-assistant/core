@@ -1,10 +1,10 @@
 """The tests for the image_processing component."""
-import asyncio
 from unittest.mock import patch, PropertyMock
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.bootstrap import setup_component
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.components.image_processing as ip
 
 from tests.common import get_test_home_assistant, assert_setup_component
@@ -92,39 +92,18 @@ class TestImageProcessing(object):
 
         assert mock_process.call_args[0][1] == b'Test'
 
+    @patch('homeassistant.components.camera.async_get_image',
+           side_effect=HomeAssistantError())
     @patch('homeassistant.components.image_processing.demo.'
            'DemoImageProcessing.process_image', autospec=True)
-    def test_get_image_without_exists_camera(self, mock_process):
+    def test_get_image_without_exists_camera(self, mock_process, mock_image):
         """Try to get image without exists camera."""
         self.hass.states.remove('camera.demo_camera')
 
         ip.scan(self.hass, entity_id='image_processing.demo')
         self.hass.block_till_done()
 
-        assert not mock_process.called
-
-    @patch('homeassistant.components.image_processing.demo.'
-           'DemoImageProcessing.process_image', autospec=True)
-    def test_get_image_with_timeout(self, mock_process, aioclient_mock):
-        """Try to get image with timeout."""
-        aioclient_mock.get(self.url, exc=asyncio.TimeoutError())
-
-        ip.scan(self.hass, entity_id='image_processing.demo')
-        self.hass.block_till_done()
-
-        assert len(aioclient_mock.mock_calls) == 1
-        assert not mock_process.called
-
-    @patch('homeassistant.components.image_processing.demo.'
-           'DemoImageProcessing.process_image', autospec=True)
-    def test_get_image_with_bad_http_state(self, mock_process, aioclient_mock):
-        """Try to get image with timeout."""
-        aioclient_mock.get(self.url, status=400)
-
-        ip.scan(self.hass, entity_id='image_processing.demo')
-        self.hass.block_till_done()
-
-        assert len(aioclient_mock.mock_calls) == 1
+        assert mock_image.called
         assert not mock_process.called
 
 
@@ -161,7 +140,7 @@ class TestImageProcessingAlpr(object):
             """Mock event."""
             self.alpr_events.append(event)
 
-        self.hass.bus.listen(ip.EVENT_FOUND_PLATE, mock_alpr_event)
+        self.hass.bus.listen('found_plate', mock_alpr_event)
 
     def teardown_method(self):
         """Stop everything that was started."""
@@ -180,11 +159,11 @@ class TestImageProcessingAlpr(object):
         assert state.state == 'AC3829'
 
         event_data = [event.data for event in self.alpr_events if
-                      event.data.get(ip.ATTR_PLATE) == 'AC3829']
+                      event.data.get('plate') == 'AC3829']
         assert len(event_data) == 1
-        assert event_data[0][ip.ATTR_PLATE] == 'AC3829'
-        assert event_data[0][ip.ATTR_CONFIDENCE] == 98.3
-        assert event_data[0][ip.ATTR_ENTITY_ID] == 'image_processing.demo_alpr'
+        assert event_data[0]['plate'] == 'AC3829'
+        assert event_data[0]['confidence'] == 98.3
+        assert event_data[0]['entity_id'] == 'image_processing.demo_alpr'
 
     def test_alpr_event_double_call(self, aioclient_mock):
         """Setup and scan a picture and test plates from event."""
@@ -200,11 +179,11 @@ class TestImageProcessingAlpr(object):
         assert state.state == 'AC3829'
 
         event_data = [event.data for event in self.alpr_events if
-                      event.data.get(ip.ATTR_PLATE) == 'AC3829']
+                      event.data.get('plate') == 'AC3829']
         assert len(event_data) == 1
-        assert event_data[0][ip.ATTR_PLATE] == 'AC3829'
-        assert event_data[0][ip.ATTR_CONFIDENCE] == 98.3
-        assert event_data[0][ip.ATTR_ENTITY_ID] == 'image_processing.demo_alpr'
+        assert event_data[0]['plate'] == 'AC3829'
+        assert event_data[0]['confidence'] == 98.3
+        assert event_data[0]['entity_id'] == 'image_processing.demo_alpr'
 
     @patch('homeassistant.components.image_processing.demo.'
            'DemoImageProcessingAlpr.confidence',
@@ -223,8 +202,8 @@ class TestImageProcessingAlpr(object):
         assert state.state == 'AC3829'
 
         event_data = [event.data for event in self.alpr_events if
-                      event.data.get(ip.ATTR_PLATE) == 'AC3829']
+                      event.data.get('plate') == 'AC3829']
         assert len(event_data) == 1
-        assert event_data[0][ip.ATTR_PLATE] == 'AC3829'
-        assert event_data[0][ip.ATTR_CONFIDENCE] == 98.3
-        assert event_data[0][ip.ATTR_ENTITY_ID] == 'image_processing.demo_alpr'
+        assert event_data[0]['plate'] == 'AC3829'
+        assert event_data[0]['confidence'] == 98.3
+        assert event_data[0]['entity_id'] == 'image_processing.demo_alpr'
