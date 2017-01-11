@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_EVENT, CONF_ENTITY_ID, CONF_ZONE, MATCH_ALL, CONF_PLATFORM)
+    CONF_EVENT, CONF_ENTITY_ID, CONF_ZONE, MATCH_ALL, CONF_PLATFORM, STATE_NOT_HOME)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers import (
     condition, config_validation as cv, location)
@@ -35,13 +35,11 @@ def async_trigger(hass, config, action):
     @callback
     def zone_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
-
         if from_s and not location.has_location(from_s) or \
            not location.has_location(to_s):
             return
 
         zone_state = hass.states.get(zone_entity_id)
-
         if from_s:
             from_match = condition.zone(hass, zone_state, from_s)
         else:
@@ -52,8 +50,8 @@ def async_trigger(hass, config, action):
         #  If zone is "zone.any", trigger automation when entering or leaving
         #
         if zone_entity_id == "zone.any" and from_s.state != to_s.state:
-            if event == EVENT_ENTER and to_s.state != "not_home" or \
-               event == EVENT_LEAVE and from_s.state != "not_home":
+            if event == EVENT_ENTER and to_s.state != STATE_NOT_HOME or \
+               event == EVENT_LEAVE and from_s.state != STATE_NOT_HOME:
                 hass.async_run_job(action, {
                     'trigger': {
                         'platform': 'zone',
