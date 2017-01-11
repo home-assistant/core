@@ -8,7 +8,8 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_EVENT, CONF_ENTITY_ID, CONF_ZONE, MATCH_ALL, CONF_PLATFORM, STATE_NOT_HOME)
+    CONF_EVENT, CONF_ENTITY_ID, CONF_ZONE, MATCH_ALL, CONF_PLATFORM,
+    STATE_NOT_HOME)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers import (
     condition, config_validation as cv, location)
