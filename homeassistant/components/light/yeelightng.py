@@ -23,11 +23,12 @@ REQUIREMENTS = ['yeelight==0.0.12']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TRANSITION = "transition"
+DEFAULT_TRANSITION=10
 
 DOMAIN = 'yeelightng'
 
 DEVICE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string,
-                            vol.Optional(CONF_TRANSITION): cv.positive_int})
+                            vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}, })
@@ -45,9 +46,16 @@ MONO_SUPPORTS = (SUPPORT_BRIGHTNESS |
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yeelight bulbs."""
     lights = []
-    for ipaddr, device_config in config[CONF_DEVICES].items():
-        device = {'name': device_config[CONF_NAME], 'ipaddr': ipaddr}
-        lights.append(YeelightLight(device, device_config))
+    if discovery_info is not None:
+        device = {'name': discovery_info['hostname'],
+                  'ipaddr': discovery_info['host']}
+        _LOGGER.error("Adding autodetected %s", discovery_info['hostname'])
+        lights.append(YeelightLight(device, {'transition': DEFAULT_TRANSITION}))
+    else:
+        for ipaddr, device_config in config[CONF_DEVICES].items():
+            device = {'name': device_config[CONF_NAME], 'ipaddr': ipaddr}
+            _LOGGER.error("Adding configured %s", device_config[CONF_NAME])
+            lights.append(YeelightLight(device, device_config))
 
     add_devices(lights)
 
@@ -189,7 +197,12 @@ class YeelightLight(Light):
             self._bulb.set_brightness(brightness / 255 * 100, duration=duration)
 
         self._bulb.turn_on(duration=duration)
-        self._bulb.set_default()
+
+        try:
+            self._bulb.set_default()
+        except Exception:
+            pass  # bulb returns error sometimes on set_default
+
 
     def turn_off(self, **kwargs):
         """Turn off."""
