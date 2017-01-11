@@ -1,5 +1,4 @@
 """Contains functionality to use flic buttons as a binary sensor."""
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -10,7 +9,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.util.async import run_callback_threadsafe
 
 
 REQUIREMENTS = ['https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4']
@@ -43,9 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Setup the flic platform."""
     import pyflic
 
@@ -63,26 +59,27 @@ def async_setup_platform(hass, config, async_add_entities,
 
     def new_button_callback(address):
         """Setup newly verified button as device in home assistant."""
-        hass.add_job(async_setup_button(hass, config, async_add_entities,
-                                        client, address))
+        setup_button(hass, config, add_entities, client, address)
 
     client.on_new_verified_button = new_button_callback
     if discovery:
-        start_scanning(hass, config, async_add_entities, client)
+        start_scanning(config, add_entities, client)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                               lambda event: client.close())
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
+                         lambda event: client.close())
     hass.loop.run_in_executor(None, client.handle_events)
 
-    # Get addresses of already verified buttons
-    addresses = yield from async_get_verified_addresses(client)
-    if addresses:
+    def get_info_callback(items):
+        """Add entities for already verified buttons."""
+        addresses = items["bd_addr_of_verified_buttons"] or []
         for address in addresses:
-            yield from async_setup_button(hass, config, async_add_entities,
-                                          client, address)
+            setup_button(hass, config, add_entities, client, address)
+
+    # Get addresses of already verified buttons
+    client.get_info(get_info_callback)
 
 
-def start_scanning(hass, config, async_add_entities, client):
+def start_scanning(config, add_entities, client):
     """Start a new flic client for scanning & connceting to new buttons."""
     import pyflic
 
@@ -97,36 +94,20 @@ def start_scanning(hass, config, async_add_entities, client):
                             address, result)
 
         # Restart scan wizard
-        start_scanning(hass, config, async_add_entities, client)
+        start_scanning(config, add_entities, client)
 
     scan_wizard.on_completed = scan_completed_callback
     client.add_scan_wizard(scan_wizard)
 
 
-@asyncio.coroutine
-def async_setup_button(hass, config, async_add_entities, client, address):
+def setup_button(hass, config, add_entities, client, address):
     """Setup single button device."""
     timeout = config.get(CONF_TIMEOUT)
     ignored_click_types = config.get(CONF_IGNORED_CLICK_TYPES)
     button = FlicButton(hass, client, address, timeout, ignored_click_types)
     _LOGGER.info("Connected to button (%s)", address)
 
-    yield from async_add_entities([button])
-
-
-@asyncio.coroutine
-def async_get_verified_addresses(client):
-    """Retrieve addresses of verified buttons."""
-    future = asyncio.Future()
-    loop = asyncio.get_event_loop()
-
-    def get_info_callback(items):
-        """Set the addressed of connected buttons as result of the future."""
-        addresses = items["bd_addr_of_verified_buttons"]
-        run_callback_threadsafe(loop, future.set_result, addresses)
-    client.get_info(get_info_callback)
-
-    return future
+    add_entities([button])
 
 
 class FlicButton(BinarySensorDevice):
