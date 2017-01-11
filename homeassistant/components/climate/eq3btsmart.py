@@ -17,7 +17,7 @@ from homeassistant.const import (
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['bluepy_devices==0.2.0']
+REQUIREMENTS = ['bluepy_devices==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
