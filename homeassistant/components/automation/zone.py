@@ -35,16 +35,35 @@ def async_trigger(hass, config, action):
     @callback
     def zone_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
+
         if from_s and not location.has_location(from_s) or \
            not location.has_location(to_s):
             return
 
         zone_state = hass.states.get(zone_entity_id)
+
         if from_s:
             from_match = condition.zone(hass, zone_state, from_s)
         else:
             from_match = False
         to_match = condition.zone(hass, zone_state, to_s)
+
+        #
+        #  If zone is "zone.any", trigger automation when entering or leaving
+        #
+        if zone_entity_id == "zone.any" and from_s.state != to_s.state:
+            if event == EVENT_ENTER and to_s.state != "not_home" or \
+               event == EVENT_LEAVE and from_s.state != "not_home":
+                hass.async_run_job(action, {
+                    'trigger': {
+                        'platform': 'zone',
+                        'entity_id': entity,
+                        'from_state': from_s,
+                        'to_state': to_s,
+                        'zone': zone_state,
+                        'event': event,
+                    },
+                })
 
         # pylint: disable=too-many-boolean-expressions
         if event == EVENT_ENTER and not from_match and to_match or \
