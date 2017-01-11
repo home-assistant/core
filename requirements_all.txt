@@ -261,9 +261,6 @@ https://github.com/tfriedel/python-lightify/archive/d6eadcf311e6e21746182d1480e9
 # homeassistant.components.lutron
 https://github.com/thecynic/pylutron/archive/v0.1.0.zip#pylutron==0.1.0
 
-# homeassistant.components.media_player.emotiva
-https://github.com/thecynic/pymotiva/archive/v0.1.0.zip#pymotiva==0.1.0
-
 # homeassistant.components.mysensors
 https://github.com/theolind/pymysensors/archive/0b705119389be58332f17753c53167f551254b6c.zip#pymysensors==0.8
 
