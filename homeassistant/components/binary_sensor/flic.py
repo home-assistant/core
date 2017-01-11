@@ -1,5 +1,6 @@
 """Contains functionality to use flic buttons as a binary sensor."""
 import logging
+import threading
 
 import voluptuous as vol
 
@@ -67,7 +68,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                          lambda event: client.close())
-    hass.loop.run_in_executor(None, client.handle_events)
+
+    # Start the pyflic event handling thread
+    threading.Thread(target=client.handle_events).start()
 
     def get_info_callback(items):
         """Add entities for already verified buttons."""
