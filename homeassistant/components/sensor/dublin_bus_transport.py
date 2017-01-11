@@ -5,17 +5,6 @@ https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dublin_public_transport/
-
-Example Configuration:
-
-sensor:
-  - platform: dublin_bus_transport
-    # stopid available from Dublin Bus
-    stopid: 334
-    # Optional bust route
-    route: 140
-    # Optional name
-    name: 140 at Quays
 """
 import logging
 from datetime import timedelta, datetime
@@ -56,8 +45,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def time_in_minutes(diff):
-    """Get the time in minutes for a timedelta."""
+def due_in_minutes(timestamp):
+    """Get the time in minutes from a timestamp.
+
+    The timestamp should be in the format day/mont/year hour/minute/second
+    """
+    diff = datetime.strptime(
+        timestamp, "%d/%m/%Y %H:%M:%S") - dt_util.now().replace(tzinfo=None)
+
     return str(int(diff.total_seconds() / 60))
 
 
@@ -81,7 +76,6 @@ class DublinPublicTransportSensor(Entity):
         self._stop = stop
         self._route = route
         self.update()
-        self._unit_of_measurement = "min"
 
     @property
     def name(self):
@@ -114,7 +108,7 @@ class DublinPublicTransportSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
+        return "min"
 
     @property
     def icon(self):
@@ -173,21 +167,18 @@ class PublicTransportData(object):
                           ATTR_DUE_IN: 'n/a'}]
             return
 
-        try:
-            self.info = [
-                {ATTR_DUE_AT: item['departuredatetime'],
-                 ATTR_ROUTE: item['route'],
-                 ATTR_DUE_IN: time_in_minutes(
-                     dt_util.as_local(
-                         dt_util.utc_from_timestamp(
-                             dt_util.as_timestamp(
-                                 datetime.strptime(item['departuredatetime'],
-                                                   "%d/%m/%Y %H:%M:%S")))) -
-                     dt_util.as_local(dt_util.utcnow()))}
-                for item in result['results']
-            ]
+        self.info = []
+        for item in result['results']:
+            due_at = item.get('departuredatetime')
+            route = item.get('route')
+            if due_at is not None and route is not None:
+                bus_data = {ATTR_DUE_AT: due_at,
+                            ATTR_ROUTE: route,
+                            ATTR_DUE_IN:
+                                due_in_minutes(due_at)}
+                self.info.append(bus_data)
 
-        except KeyError:
+        if len(self.info) == 0:
             self.info = [{ATTR_DUE_AT: 'n/a',
                           ATTR_ROUTE: self.route,
                           ATTR_DUE_IN: 'n/a'}]
