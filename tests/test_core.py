@@ -568,6 +568,7 @@ class TestStateMachine(unittest.TestCase):
         state2 = self.states.get('light.Bowl')
         assert state2 is not None
         assert state.last_changed == state2.last_changed
+        assert state2.last_updated == future
 
     def test_force_update(self):
         """Test force update option."""
