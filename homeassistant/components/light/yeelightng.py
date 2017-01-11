@@ -23,7 +23,7 @@ REQUIREMENTS = ['yeelight==0.0.12']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TRANSITION = "transition"
-DEFAULT_TRANSITION=9000
+DEFAULT_TRANSITION=350
 
 DOMAIN = 'yeelightng'
 
@@ -125,11 +125,11 @@ class YeelightLight(Light):
 
     @property
     def effect_list(self):
-        return ["Loopy"]
+        return []
 
     @property
     def effect(self):
-        return "wat"
+        return "NONE"
 
     @property
     def _properties(self):
@@ -158,6 +158,53 @@ class YeelightLight(Light):
     def update(self):
         self._bulb.get_properties()
 
+    def cmd(func):
+        def wrap(self, *args, **kwargs):
+            try:
+                #_LOGGER.debug("Calling %s with %s %s" % (func, args, kwargs))
+                return func(self, *args, **kwargs)
+            except self._module.BulbException as ex:
+                _LOGGER.error("Error when calling %s: %s", func, ex)
+        return wrap
+
+    @cmd
+    def set_brightness(self, brightness, duration):
+        if brightness:
+            self._bulb.set_brightness(brightness / 255 * 100, duration=duration)
+
+    @cmd
+    def set_rgb(self, rgb, duration):
+        if rgb and self.supported_features & SUPPORT_RGB_COLOR:
+            self._bulb.set_rgb(rgb[0], rgb[1], rgb[2], duration=duration)
+
+    @cmd
+    def set_colortemp(self, colortemp, duration):
+        if colortemp and self.supported_features & SUPPORT_COLOR_TEMP:
+            temp_in_k = color_temperature_mired_to_kelvin(colortemp)
+            self._bulb.set_color_temp(temp_in_k, duraation=duration)
+            _LOGGER.error("Changing color temp to %s K", temp_in_k)
+
+    @cmd
+    def set_default(self):
+        self._bulb.set_default()
+
+    @cmd
+    def set_flash(self, flash):
+        if flash:  # to be refined..
+            _LOGGER.error("Got flash! %s" % flash)
+            # example taken from python-yeelight's quick pulse
+            transitions = [self._module.HSVTransition(hue, 100, duration=500)
+                          for hue in range(0, 359, 40)]
+
+            if flash == FLASH_LONG:
+                flow = self._module.Flow(count=50, transitions=transitions)
+            elif flash == FLASH_SHORT:
+                flow = self._module.Flow(count=50, transitions=transitions)
+            else:
+                _LOGGER.error("Unknown flash type: %s", flash)
+
+            self._bulb.bulb.start_flow(flow)
+
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -170,52 +217,14 @@ class YeelightLight(Light):
 
         duration = min(kwargs.get(ATTR_TRANSITION, self.config["transition"]), 9000)
 
-        if colortemp and self.supported_features & SUPPORT_COLOR_TEMP:
-            try:
-                temp_in_k = color_temperature_mired_to_kelvin(colortemp)
-                _LOGGER.error("Changing color temp to %s K", temp_in_k)
-                self._bulb.set_color_temp(temp_in_k, duration=duration)
-            except self._module.BulbException as ex:
-                _LOGGER.error("Got exception when setting the color temp: %s", ex)
-
-        if rgb and self.supported_features & SUPPORT_RGB_COLOR:
-            try:
-                self._bulb.set_rgb(rgb[0], rgb[1], rgb[2], duration=duration)
-            except self._module.BulbException as ex:
-                _LOGGER.error("Got exception when setting the RGB: %s", ex)
-
-        if brightness:
-            try:
-                self._bulb.set_brightness(brightness / 255 * 100, duration=duration)
-            except self._module.BulbException as ex:
-                _LOGGER.error("Exception when setting the brightness: %s", ex)
-
-        if flash:  # to be refined..
-            try:
-                # example taken from python-yeelight's quick pulse
-                transitions = [self._module.HSVTransition(hue, 100, duration=500)
-                              for hue in range(0, 359, 40)]
-
-                if flash == FLASH_LONG:
-                    flow = self._module.Flow(count=50, transitions=transitions)
-                elif flash == FLASH_SHORT:
-                    flow = self._module.Flow(count=50, transitions=transitions)
-                else:
-                    _LOGGER.error("Unknown flash type: %s", flash)
-
-                self._bulb.bulb.start_flow(flow)
-
-            except self._module.BulbException as ex:
-                _LOGGER.error("Exception when setting the flash: %s", ex)
-
-
         self._bulb.turn_on(duration=duration)
 
-        try:
-            self._bulb.set_default()
-        except self._module.BulbException:
-            pass  # bulb returns error sometimes on set_default
-
+        # values checked for none in methods
+        self.set_rgb(rgb, duration)
+        self.set_colortemp(colortemp, duration)
+        self.set_brightness(brightness, duration)
+        self.set_flash(flash)
+        self.set_default()  # saving current settings to the bulb
 
     def turn_off(self, **kwargs):
         """Turn off."""
