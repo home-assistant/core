@@ -18,7 +18,7 @@ from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATT
                                             Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yeelight==0.0.12']
+REQUIREMENTS = ['yeelight==0.0.13']
 
 _LOGGER = logging.getLogger(__name__)
 
