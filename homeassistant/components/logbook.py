@@ -257,14 +257,14 @@ def humanify(events):
                     continue
 
                 yield Entry(
-                    event.time_fired, "Home Assistant", "started",
+                    event.time_fired, "Home Assistant", " started",
                     domain=HA_DOMAIN)
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
                 if start_stop_events.get(event.time_fired.minute) == 2:
-                    action = "restarted"
+                    action = " restarted"
                 else:
-                    action = "stopped"
+                    action = " stopped"
 
                 yield Entry(
                     event.time_fired, "Home Assistant", action,
