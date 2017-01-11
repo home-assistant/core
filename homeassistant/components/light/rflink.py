@@ -80,20 +80,24 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     def add_new_device(ha_event):
         """Check if device is known, otherwise add to list of known devices."""
         event = ha_event.data[rflink.ATTR_EVENT]
+        device_id = event['id']
+
         entity_type = entity_type_for_device_id(event['id'])
         entity_class = entity_class_for_type(entity_type)
 
-        if event['id'] not in rflink.KNOWN_DEVICE_IDS:
-            rflink.KNOWN_DEVICE_IDS.append(event['id'])
-            device = entity_class(event['id'], hass)
-            yield from async_add_devices([device])
-            # make sure the event is processed by the new entity
-            device.match_event(event)
+        if device_id in rflink.KNOWN_DEVICE_IDS:
+            return
 
-            # maybe add to new devices group
-            if new_devices_group:
-                yield from new_devices_group.async_update_tracked_entity_ids(
-                    list(new_devices_group.tracking) + [device.entity_id])
+        rflink.KNOWN_DEVICE_IDS.append(device_id)
+        device = entity_class(device_id, hass)
+        yield from async_add_devices([device])
+        # make sure the event is processed by the new entity
+        device.match_event(event)
+
+        # maybe add to new devices group
+        if new_devices_group:
+            yield from new_devices_group.async_update_tracked_entity_ids(
+                list(new_devices_group.tracking) + [device.entity_id])
 
     hass.bus.async_listen(rflink.RFLINK_EVENT[DOMAIN], add_new_device)
 
