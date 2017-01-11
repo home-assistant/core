@@ -132,6 +132,9 @@ fitbit==0.2.3
 # homeassistant.components.sensor.fixer
 fixerio==0.1.1
 
+# homeassistant.components.light.flux_led
+flux_led==0.12
+
 # homeassistant.components.notify.free_mobile
 freesms==0.1.1
 
@@ -179,9 +182,6 @@ hikvision==0.4
 
 # homeassistant.components.nest
 http://github.com/technicalpickles/python-nest/archive/e6c9d56a8df455d4d7746389811f2c1387e8cb33.zip#python-nest==3.0.3
-
-# homeassistant.components.light.flux_led
-flux_led==0.12
 
 # homeassistant.components.switch.tplink
 https://github.com/GadgetReactor/pyHS100/archive/45fc3548882628bcde3e3d365db341849457bef2.zip#pyHS100==0.2.2
