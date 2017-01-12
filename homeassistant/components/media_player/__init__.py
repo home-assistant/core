@@ -754,6 +754,7 @@ class MediaPlayerDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         if hasattr(self, 'volume_up'):
+            # pylint: disable=no-member
             return self.hass.run_in_executor(None, self.volume_up)
 
         if self.volume_level < 1:
@@ -766,6 +767,7 @@ class MediaPlayerDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         if hasattr(self, 'volume_down'):
+            # pylint: disable=no-member
             return self.hass.run_in_executor(None, self.volume_down)
 
         if self.volume_level > 0:
