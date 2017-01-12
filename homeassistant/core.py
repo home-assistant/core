@@ -51,8 +51,8 @@ TIMER_INTERVAL = 1  # seconds
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
 
-# Pattern for validating entity IDs (format: <domain>.<entity>)
-ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
+# Pattern for validating entity IDs (format: <domain>.<entity> or <domain>.*)
+ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.([\w+,\*])$")
 
 # Size of a executor pool
 EXECUTOR_POOL_SIZE = 10
