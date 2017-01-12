@@ -8,13 +8,18 @@ import logging
 from datetime import timedelta
 from collections import namedtuple
 
-import requests
+import asyncio
+import aiohttp
+import async_timeout
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import \
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
@@ -29,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Return a Tado scanner."""
-    scanner = TadoDeviceScanner(config[DOMAIN])
+    scanner = TadoDeviceScanner(hass, config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -37,27 +42,33 @@ def get_scanner(hass, config):
 Device = namedtuple("Device", ["mac", "name"])
 
 
-class TadoDeviceScanner(object):
+class TadoDeviceScanner(DeviceScanner):
     """This class gets geofenced devices from Tado."""
 
-    def __init__(self, config):
+    def __init__(self, hass, config):
         """Initialize the scanner."""
         self.last_results = []
 
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        self.tadoapiurl = 'https://my.tado.com/api/v2/me'
+        self.tadoapiurl = 'https://my.tado.com/api/v2/me' \
+                          '?username={}&password={}'
+
+        self.websession = async_create_clientsession(
+            hass, cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop))
 
         self.success_init = self._update_info()
         _LOGGER.info("Tado scanner initialized")
 
-    def scan_devices(self):
+    @asyncio.coroutine
+    def async_scan_devices(self):
         """Scan for devices and return a list containing found device ids."""
-        self._update_info()
+        yield from self._update_info()
 
         return [device.mac for device in self.last_results]
 
-    def get_device_name(self, mac):
+    @asyncio.coroutine
+    def async_get_device_name(self, mac):
         """Return the name of the given device or None if we don't know."""
         filter_named = [device.name for device in self.last_results
                         if device.mac == mac]
@@ -77,13 +88,33 @@ class TadoDeviceScanner(object):
         _LOGGER.debug("Requesting Tado")
 
         last_results = []
-        cred = {'username': self.username, 'password': self.password}
-        tadoresponse = requests.get(self.tadoapiurl, params=cred, timeout=5)
 
-        # If response was not successful, raise exception
-        tadoresponse.raise_for_status()
+        response = None
+        tadojson = None
+        try:
+            # get first token
+            with async_timeout.timeout(10, loop=self.hass.loop):
+                url = self.tadoapiurl.format(self.username, self.password)
+                response = yield from self.websession.get(
+                    url
+                )
 
-        tadojson = tadoresponse.json()
+                # error on Tado webservice
+                if response.status != 200:
+                    _LOGGER.warning(
+                        "Error %d on %s.", response.status, self.tadoapiurl)
+                    self.token = None
+                    return
+
+                tadojson = yield from response.json()
+
+        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+            _LOGGER.error("Can not load Tado data")
+            return False
+
+        finally:
+            if response is not None:
+                yield from response.release()
 
         # Find devices that have geofencing enabled, and are currently at home
         for mobiledevice in tadojson['mobileDevices']:
