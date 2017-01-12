@@ -169,6 +169,7 @@ omit =
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
+    homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py
     homeassistant/components/device_tracker/volvooncall.py
     homeassistant/components/discovery.py
