@@ -90,7 +90,7 @@ denonavr==0.3.0
 directpy==0.1
 
 # homeassistant.components.updater
-distro==1.0.1
+distro==1.0.2
 
 # homeassistant.components.switch.digitalloggers
 dlipower==0.7.165
