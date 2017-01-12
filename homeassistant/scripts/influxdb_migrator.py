@@ -1,12 +1,9 @@
 """Script to convert an old-structure influxdb to a new one."""
 
 import argparse
-import os.path
 import sys
 
-from typing import Optional, List
-
-import homeassistant.config as config_util
+from typing import List
 
 
 # Based on code at
@@ -68,7 +65,7 @@ def run(script_args: List) -> int:
         '-s', '--step',
         metavar='step',
         default=1000,
-        help="How many points are migrate in the same time")
+        help="How many points to migrate at the same time")
     parser.add_argument(
         '-D', '--delete',
         action='store_true',
@@ -97,7 +94,8 @@ def run(script_args: List) -> int:
     if old_dbname not in db_list:
         client.create_database(old_dbname)
     # Copy data to the old DB
-    client.query('''SELECT * INTO {}..:MEASUREMENT FROM /.*/ '''.format(old_dbname))
+    client.query('''SELECT * INTO {}..:MEASUREMENT FROM '''
+                 '/.*/'.format(old_dbname))
 
     # Delete the database
     client.drop_database(args.dbname)
@@ -143,10 +141,11 @@ def run(script_args: List) -> int:
                     continue
                 # Convert all fields
                 for field in fields:
-                    if isinstance(point[field], (int, bool)):
+                    try:
                         new_point["fields"][field] = float(point[field])
-                    else:
-                        new_point["fields"][field] = point[field]
+                    except (ValueError, TypeError):
+                        new_key = "{}_str".format(field)
+                        new_point["fields"][new_key] = str(point[field])
                 # Add tags
                 for tag in tags:
                     new_point["tags"][tag] = point[tag]
@@ -173,5 +172,5 @@ def run(script_args: List) -> int:
 
     # Delete database if needed
     if args.delete:
-        print("Droping {}".format(old_dbname))
+        print("Dropping {}".format(old_dbname))
         client.drop_database(old_dbname)

@@ -146,7 +146,8 @@ def setup(hass, config):
                 try:
                     json_body[0]['fields'][key] = float(value)
                 except (ValueError, TypeError):
-                    json_body[0]['fields'][key + "_str"] = str(value)
+                    new_key = "{}_str".format(key)
+                    json_body[0]['fields'][new_key] = str(value)
 
         json_body[0]['tags'].update(tags)
 
