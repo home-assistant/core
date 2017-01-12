@@ -12,8 +12,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import (CONF_STRUCTURE, CONF_FILENAME,
-                                 CONF_SCAN_INTERVAL, CONF_BINARY_SENSORS,
-                                 CONF_SENSORS, CONF_MONITORED_CONDITIONS)
+                                 CONF_BINARY_SENSORS, CONF_SENSORS,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.loader import get_component
 
 _CONFIGURING = {}
