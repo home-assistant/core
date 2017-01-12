@@ -25,7 +25,7 @@ class TestSetupCamera(object):
         self.hass.stop()
 
     def test_setup_component(self):
-        """Setup demo platfrom on image_process component."""
+        """Setup demo platfrom on camera component."""
         config = {
             camera.DOMAIN: {
                 'platform': 'demo'
@@ -91,7 +91,7 @@ class TestGetImage(object):
         assert len(aioclient_mock.mock_calls) == 1
 
     def test_get_image_with_bad_http_state(self, aioclient_mock):
-        """Try to get image with timeout."""
+        """Try to get image with bad http status."""
         aioclient_mock.get(self.url, status=400)
 
         with pytest.raises(HomeAssistantError):
