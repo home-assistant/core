@@ -33,8 +33,6 @@ CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
 })
 
