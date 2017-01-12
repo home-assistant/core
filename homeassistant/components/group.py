@@ -404,6 +404,9 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
+        # remove
+        if new_state is None:
+            return
         self._async_update_group_state(new_state)
         self.hass.async_add_job(self.async_update_ha_state())
 
