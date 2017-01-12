@@ -16,7 +16,7 @@ if ! command -v npm >/dev/null 2>&1 ; then
     if python -c 'import sys; exit (0 if hasattr(sys, "real_prefix") else 1)' ; then
         # In a virtual environment, attempt npm install
         echo "Installing npm in virtual environment..."
-        pip install nodeenv
+        python3 -m pip install nodeenv
         nodeenv --python-virtualenv
     else
         echo "npm is required for frontend development."
