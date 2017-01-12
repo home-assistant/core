@@ -11,6 +11,7 @@ from typing import List
 def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
                    decimals: int=2, bar_length: int=68) -> None:
     """Print progress bar.
+
     Call in a loop to create terminal progress bar
     @params:
         iteration   - Required  : current iteration (Int)
@@ -67,6 +68,11 @@ def run(script_args: List) -> int:
         default=1000,
         help="How many points to migrate at the same time")
     parser.add_argument(
+        '-o', '--override-measurement',
+        metavar='override_measurement',
+        default="",
+        help="Store all your points in the same measurement")
+    parser.add_argument(
         '-D', '--delete',
         action='store_true',
         default=False,
@@ -111,8 +117,7 @@ def run(script_args: List) -> int:
     print("Migrating from {} to {}".format(old_dbname, args.dbname))
     # Walk into measurenebt
     for index, measurement in enumerate(measurements):
-        # Print progess
-        print_progress(index, nb_measurements)
+
         # Get tag list
         res = client.query('''SHOW TAG KEYS FROM "{}"'''.format(measurement))
         tags = [v['tagKey'] for v in res.get_points()]
@@ -129,10 +134,13 @@ def run(script_args: List) -> int:
             res = client.query('SELECT * FROM "{}" LIMIT {} OFFSET '
                                '{}'.format(measurement, args.step, offset))
             for point in res.get_points():
-                new_point = {"measurement": measurement,
-                             "tags": {},
+                new_point = {"tags": {},
                              "fields": {},
                              "time": None}
+                if args.override_measurement:
+                    new_point["measurement"] = args.override_measurement
+                else:
+                    new_point["measurement"] = measurement
                 # Check time
                 if point["time"] is None:
                     # Point without time
@@ -169,6 +177,8 @@ def run(script_args: List) -> int:
             else:
                 # Increment offset
                 offset += args.step
+        # Print progess
+        print_progress(index + 1, nb_measurements)
 
     # Delete database if needed
     if args.delete:

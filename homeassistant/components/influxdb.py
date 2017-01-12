@@ -85,7 +85,7 @@ def setup(hass, config):
 
     try:
         influx = InfluxDBClient(**kwargs)
-        influx.query("select * from /.*/ LIMIT 1;")
+        influx.query("SELECT * FROM /.*/ LIMIT 1;")
     except exceptions.InfluxDBClientError as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "
                       "check your entries in the configuration file and that "
