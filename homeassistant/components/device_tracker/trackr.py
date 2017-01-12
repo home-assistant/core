@@ -8,8 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import (PLATFORM_SCHEMA,
-                                                     ATTR_ATTRIBUTES)
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
@@ -75,10 +74,6 @@ class TrackRDeviceScanner(object):
                 'battery_level': trackr.battery_level()
             }
 
-            kwargs = {
-                'dev_id': dev_id,
-                'gps': (lat, lon),
-                ATTR_ATTRIBUTES: attrs
-            }
-
-            self.see(**kwargs)
+            self.see(
+                dev_id=dev_id, gps=(lat, lon), attributes=attrs
+            )
