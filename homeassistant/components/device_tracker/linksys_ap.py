@@ -21,6 +21,7 @@ from homeassistant.util import Throttle
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 INTERFACES = 2
+DEFAULT_TIMEOUT = 10
 
 REQUIREMENTS = ['beautifulsoup4==4.5.3']
 
@@ -100,6 +101,7 @@ class LinksysAPDeviceScanner(object):
         pwd = base64.b64encode(bytes(self.password, 'utf8')).decode('ascii')
         return requests.get(
             'https://%s/StatusClients.htm&&unit=%s&vap=0' % (self.host, unit),
+            timeout=DEFAULT_TIMEOUT,
             verify=self.verify_ssl,
             cookies={'LoginName': login,
                      'LoginPWD': pwd})
