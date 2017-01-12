@@ -1,10 +1,8 @@
 """
-homeassistant.components.device_tracker.tado.
+Support for Tado Smart Thermostat.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Device tracker platform that supports presence detection.
 The detection is based on geofencing enabled devices used with Tado.
-Tado is a Smart Thermostat device.
 """
 import logging
 from datetime import timedelta
@@ -19,7 +17,7 @@ from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 
 # Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,17 +26,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string
 })
 
-REQUIREMENTS = []
-
 
 def get_scanner(hass, config):
-    """Validate config and returns a Tado scanner."""
-    info = config[DOMAIN]
-
-    if info.get(CONF_USERNAME) is None or info.get(CONF_PASSWORD) is None:
-        _LOGGER.warning('Cannot find username or password')
-        return None
-
+    """Return a Tado scanner."""
     scanner = TadoDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
@@ -87,8 +77,8 @@ class TadoDeviceScanner(object):
         _LOGGER.debug("Requesting Tado")
 
         last_results = []
-        credentials = {'username': self.username, 'password': self.password}
-        tadoresponse = requests.get(self.tadoapiurl, params=credentials)
+        cred = {'username': self.username, 'password': self.password}
+        tadoresponse = requests.get(self.tadoapiurl, params=cred, timeout=5)
 
         # If response was not successful, raise exception
         tadoresponse.raise_for_status()
