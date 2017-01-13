@@ -395,7 +395,7 @@ def _identify_config_schema(module):
 
 
 def merge_packages_config(config, packages):
-    """Merge packages into the root level config. Mutate config."""
+    """Merge packages into the top-level config. Mutate config."""
     # pylint: disable=too-many-nested-blocks
     PACKAGES_CONFIG_SCHEMA(packages)
     for pack_name, pack_conf in packages.items():
