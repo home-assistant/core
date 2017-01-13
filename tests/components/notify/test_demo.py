@@ -82,12 +82,12 @@ class TestNotifyDemo(unittest.TestCase):
         """Test discovery of notify demo platform."""
         assert notify.DOMAIN not in self.hass.config.components
         discovery.load_platform(
-            self.hass, 'notify', 'demo', {'test_key:test_val'}, {})
+            self.hass, 'notify', 'demo', {'test_key': 'test_val'}, {})
         self.hass.block_till_done()
         assert notify.DOMAIN in self.hass.config.components
         assert mock_demo_get_service.called
         assert mock_demo_get_service.call_args[0] == (
-            self.hass, {}, {'test_key:test_val'})
+            self.hass, {}, {'test_key': 'test_val'})
 
     @callback
     def record_calls(self, *args):

@@ -191,7 +191,7 @@ def pf_callback_factory(map_sv_types, devices, entity_class, add_devices=None):
                     continue
                 if key in devices:
                     if add_devices:
-                        devices[key].update_ha_state(True)
+                        devices[key].schedule_update_ha_state(True)
                     else:
                         devices[key].update()
                     continue
@@ -206,7 +206,7 @@ def pf_callback_factory(map_sv_types, devices, entity_class, add_devices=None):
                 if add_devices:
                     _LOGGER.info('Adding new devices: %s', devices[key])
                     add_devices([devices[key]])
-                    devices[key].update_ha_state(True)
+                    devices[key].schedule_update_ha_state(True)
                 else:
                     devices[key].update()
     return mysensors_callback

@@ -2,6 +2,7 @@
 import os
 import unittest
 from unittest.mock import patch
+from unittest.mock import Mock
 
 from apns2.errors import Unregistered
 
@@ -33,6 +34,8 @@ class TestApns(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
+    @patch('os.path.isfile', Mock(return_value=True))
+    @patch('os.access', Mock(return_value=True))
     def _setup_notify(self):
         with assert_setup_component(1) as handle_config:
             assert setup_component(self.hass, notify.DOMAIN, CONFIG)

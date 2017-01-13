@@ -55,11 +55,11 @@ class MySensorsNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         target_devices = kwargs.get(ATTR_TARGET)
-        devices = [
-            device for gw_devs in self.platform_devices
-            for device in gw_devs.values()
-            if target_devices is None or
-            device.name in target_devices]
+        devices = []
+        for gw_devs in self.platform_devices:
+            for device in gw_devs.values():
+                if target_devices is None or device.name in target_devices:
+                    devices.append(device)
 
         for device in devices:
             device.send_msg(message)

@@ -16,10 +16,10 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template as template_helper
 
-DOMAIN = "apns"
 APNS_DEVICES = "apns.yaml"
 CONF_CERTFILE = "cert_file"
 CONF_TOPIC = "topic"
+CONF_SANDBOX = "sandbox"
 DEVICE_TRACKER_DOMAIN = "device_tracker"
 SERVICE_REGISTER = "apns_register"
 
@@ -27,11 +27,12 @@ ATTR_PUSH_ID = "push_id"
 ATTR_NAME = "name"
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): cv.string,
+    vol.Required(CONF_PLATFORM): 'apns',
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_CERTFILE): cv.string,
+    vol.Required(CONF_CERTFILE): cv.isfile,
     vol.Required(CONF_TOPIC): cv.string,
-}, extra=vol.ALLOW_EXTRA)
+    vol.Optional(CONF_SANDBOX, default=False): cv.boolean,
+})
 
 REGISTER_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_PUSH_ID): cv.string,
@@ -46,14 +47,13 @@ def get_service(hass, config, discovery_info=None):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    name = config.get("name")
-    cert_file = config.get('cert_file')
-    topic = config.get('topic')
-
-    sandbox = bool(config.get('sandbox', False))
+    name = config.get(CONF_NAME)
+    cert_file = config.get(CONF_CERTFILE)
+    topic = config.get(CONF_TOPIC)
+    sandbox = config.get(CONF_SANDBOX)
 
     service = ApnsNotificationService(hass, name, topic, sandbox, cert_file)
-    hass.services.register(DOMAIN,
+    hass.services.register('apns',
                            name,
                            service.register,
                            descriptions.get(SERVICE_REGISTER),
