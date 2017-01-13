@@ -54,33 +54,33 @@ ALERT_SERVICE_SCHEMA = vol.Schema({
 
 
 def is_on(hass, entity_id):
-    """Return if the alert is acknowledged."""
+    """Return if the alert is firing and not acknowledged."""
     return hass.states.is_state(entity_id, STATE_ON)
 
 
 def turn_on(hass, entity_id):
-    """Acknowledge the alert."""
+    """Reset the alert."""
     data = {ATTR_ENTITY_ID: entity_id}
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 @callback
 def async_turn_on(hass, entity_id):
-    """Async acknowledge the alert."""
+    """Async reset the alert."""
     data = {ATTR_ENTITY_ID: entity_id}
     hass.async_add_job(
         hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
 
 
 def turn_off(hass, entity_id):
-    """Reset alert."""
+    """Acknowledge alert."""
     data = {ATTR_ENTITY_ID: entity_id}
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 @callback
 def async_turn_off(hass, entity_id):
-    """Async reset the alert."""
+    """Async acknowledge the alert."""
     data = {ATTR_ENTITY_ID: entity_id}
     hass.async_add_job(
         hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
@@ -90,6 +90,11 @@ def toggle(hass, entity_id):
     """Toggle acknowledgement of alert."""
     data = {ATTR_ENTITY_ID: entity_id}
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
+
+
+def setup(hass, config):
+    """Setup alert component."""
+    run_callback_threadsafe(hass.loop, async_setup(hass, config))
 
 
 @asyncio.coroutine
@@ -134,6 +139,9 @@ def async_setup(hass, config):
         DOMAIN, SERVICE_TOGGLE, async_handle_alert_service,
         descriptions.get(SERVICE_TOGGLE), schema=ALERT_SERVICE_SCHEMA)
 
+    for alert in all_alerts.values():
+        yield from alert.async_update_ha_state()
+
     return True
 
 
@@ -159,12 +167,12 @@ class Alert(ToggleEntity):
 
     @property
     def name(self):
-        """Return the name of the URL."""
+        """Return the name of the alert."""
         return self._name
 
     @property
     def state(self):
-        """Return the URL."""
+        """Return the alert status."""
         if self._firing:
             if self._ack:
                 return STATE_OFF
@@ -193,9 +201,9 @@ class Alert(ToggleEntity):
         self._firing = True
 
         if not self._skip_first:
-            self._notify()
+            yield from self._notify()
         else:
-            self._schedule_notify()
+            yield from self._schedule_notify()
 
         yield from self.async_update_ha_state()
 
@@ -208,13 +216,14 @@ class Alert(ToggleEntity):
         self._firing = False
         yield from self.async_update_ha_state()
 
-    @callback
+    @asyncio.coroutine
     def _schedule_notify(self):
         """Schedule a notification."""
         self._cancel = \
             event.async_track_time_interval(self.hass, self._notify,
                                             self._repeat)
 
+    @asyncio.coroutine
     def _notify(self, *args):
         """Send the alert notification."""
         if not self._firing:
@@ -223,9 +232,9 @@ class Alert(ToggleEntity):
         if not self._ack:
             _LOGGER.info('Alerting: %s', self._name)
             for target in self._notifiers:
-                self.hass.services.call(
+                yield from self.hass.services.async_call(
                     'notify', target, {'message': self._name})
-        self._schedule_notify()
+        yield from self._schedule_notify()
 
     def turn_on(self):
         """Unacknowledge alert."""
