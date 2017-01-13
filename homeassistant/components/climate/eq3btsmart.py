@@ -17,7 +17,7 @@ from homeassistant.const import (
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['bluepy_devices==0.3.1']
+REQUIREMENTS = ['python-eq3bt==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,22 +58,22 @@ class EQ3BTSmartThermostat(ClimateDevice):
     def __init__(self, _mac, _name):
         """Initialize the thermostat."""
         # we want to avoid name clash with this module..
-        from bluepy_devices.devices import eq3btsmart as eq3
+        import eq3bt as eq3
 
-        self.modes = {None: STATE_UNKNOWN , # to avoid extra if in current_operation.
-                      eq3.EQ3BTSMART_UNKNOWN: STATE_UNKNOWN,
-                      eq3.EQ3BTSMART_AUTO: STATE_AUTO,
+        self.modes = {None: STATE_UNKNOWN,  # When not yet connected.
+                      eq3.Mode.Unknown: STATE_UNKNOWN,
+                      eq3.Mode.Auto: STATE_AUTO,
                       # away handled separately, here just for reverse mapping
-                      eq3.EQ3BTSMART_AWAY: STATE_AWAY,
-                      eq3.EQ3BTSMART_CLOSED: STATE_OFF,
-                      eq3.EQ3BTSMART_OPEN: STATE_ON,
-                      eq3.EQ3BTSMART_MANUAL: STATE_MANUAL,
-                      eq3.EQ3BTSMART_BOOST: STATE_BOOST}
+                      eq3.Mode.Away: STATE_AWAY,
+                      eq3.Mode.Closed: STATE_OFF,
+                      eq3.Mode.Open: STATE_ON,
+                      eq3.Mode.Manual: STATE_MANUAL,
+                      eq3.Mode.Boost: STATE_BOOST}
 
         self.reverse_modes = {v: k for k, v in self.modes.items()}
 
         self._name = _name
-        self._thermostat = eq3.EQ3BTSmartThermostat(_mac)
+        self._thermostat = eq3.Thermostat(_mac)
 
     @property
     def name(self):
@@ -87,7 +87,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     @property
     def precision(self):
-        """Return eq3bt's precision 0.5"""
+        """Return eq3bt's precision 0.5."""
         return PRECISION_HALVES
 
     @property
@@ -126,12 +126,12 @@ class EQ3BTSmartThermostat(ClimateDevice):
         self.set_operation_mode(STATE_AUTO)
 
     def turn_away_mode_on(self):
-        """Sets away mode on."""
+        """Set away mode on."""
         self.set_operation_mode(STATE_AWAY)
 
     @property
     def is_away_mode_on(self):
-        """Returns whether we are away."""
+        """Return if we are away."""
         return self.current_operation == STATE_AWAY
 
     @property
