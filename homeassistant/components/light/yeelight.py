@@ -46,8 +46,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])
 
-        device = {'name': discovery_info['hostname'],
+        # not using hostname here, as its last letter seems to be dropped off now and then..
+        name = "yeelight_%s_%s" % (discovery_info["device_type"], discovery_info["properties"]["mac"])
+        device = {'name': name,
                   'ipaddr': discovery_info['host']}
+        
         # TODO: hardcoded default config
         lights.append(YeelightLight(device, {'transition': DEFAULT_TRANSITION}))
     else:
