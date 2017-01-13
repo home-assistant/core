@@ -61,13 +61,14 @@ HM_DEVICE_TYPES = {
         'ThermostatWall', 'AreaThermostat', 'RotaryHandleSensor',
         'WaterSensor', 'PowermeterGas', 'LuxSensor', 'WeatherSensor',
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
-        'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter'],
+        'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
-        'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact'],
+        'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
+        'HMWIOSwitch'],
     DISCOVER_COVER: ['Blind', 'KeyBlind']
 }
 
