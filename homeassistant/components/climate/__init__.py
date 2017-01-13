@@ -672,7 +672,7 @@ class ClimateDevice(Entity):
         """
         return self.hass.loop.run_in_executor(
             None, self.turn_home_mode_on)
-    
+
     def turn_away_mode_off(self):
         """Turn away mode off."""
         raise NotImplementedError()
