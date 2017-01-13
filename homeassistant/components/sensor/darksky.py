@@ -57,7 +57,7 @@ SENSOR_TYPES = {
                            ['currently', 'minutely', 'hourly', 'daily']],
     'temperature': ['Temperature',
                     '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
-                    ['currently', 'hourly', 'daily']],
+                    ['currently', 'hourly']],
     'apparent_temperature': ['Apparent Temperature',
                              '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
                              ['currently', 'hourly']],
