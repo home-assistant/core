@@ -10,7 +10,7 @@ from homeassistant.components.light import (
 import homeassistant.helpers.config_validation as cv
 
 # Home Assistant depends on 3rd party packages for API specific code.
-REQUIREMENTS = ['piglow']
+REQUIREMENTS = ['piglow==1.2.4']
 
 _LOGGER = logging.getLogger(__name__)
 
