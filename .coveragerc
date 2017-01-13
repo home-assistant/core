@@ -193,6 +193,7 @@ omit =
     homeassistant/components/light/tikteck.py
     homeassistant/components/light/x10.py
     homeassistant/components/light/yeelight.py
+    homeassistant/components/light/piglow.py
     homeassistant/components/lirc.py
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/braviatv.py
