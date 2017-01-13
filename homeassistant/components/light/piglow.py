@@ -1,13 +1,10 @@
 import logging
 
-import voluptuous as vol
-
 # Import the device class from the component that you want to support
 from homeassistant.components.light import (
   ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
   ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
-  Light, PLATFORM_SCHEMA)
-import homeassistant.helpers.config_validation as cv
+  Light)
 
 # Home Assistant depends on 3rd party packages for API specific code.
 REQUIREMENTS = ['piglow==1.2.4']
