@@ -29,8 +29,8 @@ _ZABBIX_TRIGGER_SCHEMA = vol.Schema({
     vol.Optional(_CONF_NAME, default=None): cv.string,
 })
 
-SCAN_INTERVAL = 30
-
+# SCAN_INTERVAL = 30
+#
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(_CONF_TRIGGERS): vol.Any(_ZABBIX_TRIGGER_SCHEMA, None)
 })
