@@ -83,4 +83,3 @@ class PiglowLight(Light):
         self._isOn = False
 
     def update(self):
-
