@@ -748,31 +748,33 @@ class MediaPlayerDevice(Entity):
         else:
             return self.async_turn_off()
 
+    @asyncio.coroutine
     def async_volume_up(self):
         """Turn volume up for media player.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method is a coroutine.
         """
         if hasattr(self, 'volume_up'):
             # pylint: disable=no-member
-            return self.hass.run_in_executor(None, self.volume_up)
+            yield from self.hass.run_in_executor(None, self.volume_up)
 
         if self.volume_level < 1:
-            return self.async_set_volume_level(min(1, self.volume_level + .1))
-        return self.async_set_volume_level(self.volume_level)
+            yield from self.async_set_volume_level(
+                min(1, self.volume_level + .1))
 
+    @asyncio.coroutine
     def async_volume_down(self):
         """Turn volume down for media player.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method is a coroutine.
         """
         if hasattr(self, 'volume_down'):
             # pylint: disable=no-member
-            return self.hass.run_in_executor(None, self.volume_down)
+            yield from self.hass.run_in_executor(None, self.volume_down)
 
         if self.volume_level > 0:
-            return self.async_set_volume_level(max(0, self.volume_level - .1))
-        return self.async_set_volume_level(self.volume_level)
+            yield from self.async_set_volume_level(
+                max(0, self.volume_level - .1))
 
     def media_play_pause(self):
         """Play or pause the media player."""
