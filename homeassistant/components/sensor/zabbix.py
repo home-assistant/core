@@ -114,7 +114,6 @@ class ZabbixTriggerCountSensor(Entity):
         """Return the units of measurement."""
         return 'issues'
 
-
     def _call_zabbix_api(self):
         return self._zapi.trigger.get(output="extend",
                                       only_true=1,
