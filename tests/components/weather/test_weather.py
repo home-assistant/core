@@ -5,7 +5,7 @@ from homeassistant.components import weather
 from homeassistant.components.weather import (
     ATTR_WEATHER_ATTRIBUTION, ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRESSURE, ATTR_WEATHER_TEMPERATURE, ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED)
+    ATTR_WEATHER_WIND_SPEED, ATTR_FORECAST, ATTR_FORECAST_TEMP)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.bootstrap import setup_component
 
@@ -45,6 +45,9 @@ class TestWeather(unittest.TestCase):
         assert data.get(ATTR_WEATHER_OZONE) is None
         assert data.get(ATTR_WEATHER_ATTRIBUTION) == \
             'Powered by Home Assistant'
+        assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_TEMP) == 22
+        assert data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_TEMP) == 21
+        assert len(data.get(ATTR_FORECAST)) == 7
 
     def test_temperature_convert(self):
         """Test temperature conversion."""
