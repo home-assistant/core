@@ -1,10 +1,16 @@
+"""
+Support for Piglow LED's.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.piglow/
+"""
 import logging
 
 # Import the device class from the component that you want to support
 from homeassistant.components.light import (
-  ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
-  ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
-  Light)
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
+    ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
+    Light)
 
 # Home Assistant depends on 3rd party packages for API specific code.
 REQUIREMENTS = ['piglow==1.2.4']
@@ -28,7 +34,7 @@ class PiglowLight(Light):
     def __init__(self, piglow):
         """Initialize an PiglowLight."""
         self._piglow = piglow
-        self._isOn = False
+        self._is_on = False
         self._brightness = 255
         self._rgb_color = [255, 255, 255]
 
@@ -55,26 +61,26 @@ class PiglowLight(Light):
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self._isOn
+        return self._is_on
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         self._piglow.clear()
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        percentBright = (self._brightness / 255)
+        percent_bright = (self._brightness / 255)
 
         if ATTR_RGB_COLOR in kwargs:
             self._rgb_color = kwargs[ATTR_RGB_COLOR]
-            self._piglow.red(int(self._rgb_color[0] * percentBright))
-            self._piglow.green(int(self._rgb_color[1] * percentBright))
-            self._piglow.blue(int(self._rgb_color[2] * percentBright))
+            self._piglow.red(int(self._rgb_color[0] * percent_bright))
+            self._piglow.green(int(self._rgb_color[1] * percent_bright))
+            self._piglow.blue(int(self._rgb_color[2] * percent_bright))
         else:
             self._piglow.all(self._brightness)
         self._piglow.show()
-        self._isOn = True
+        self._is_on = True
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         self._piglow.clear()
         self._piglow.show()
-        self._isOn = False
+        self._is_on = False
