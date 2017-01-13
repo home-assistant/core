@@ -126,7 +126,7 @@ class MjpegCamera(Camera):
 
         finally:
             if stream is not None:
-                yield from stream.close()
+                stream.close()
             if response is not None:
                 yield from response.write_eof()
 

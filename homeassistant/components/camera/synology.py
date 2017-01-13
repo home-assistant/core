@@ -278,7 +278,7 @@ class SynologyCamera(Camera):
 
         finally:
             if stream is not None:
-                self.hass.async_add_job(stream.release())
+                stream.close()
             if response is not None:
                 yield from response.write_eof()
 
