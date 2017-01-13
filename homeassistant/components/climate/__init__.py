@@ -653,7 +653,6 @@ class ClimateDevice(Entity):
         """Turn away mode on."""
         raise NotImplementedError()
 
-<<<<<<< f7a1d63d52dc7687a07cd2c52ef4e8e6894e45d9
     def async_turn_away_mode_on(self):
         """Turn away mode on.
 
@@ -661,17 +660,23 @@ class ClimateDevice(Entity):
         """
         return self.hass.loop.run_in_executor(
             None, self.turn_away_mode_on)
-=======
+
     def turn_home_mode_on(self):
         """Turn home mode on."""
         raise NotImplementedError()
->>>>>>> Added home_mode
 
+    def async_turn_home_mode_on(self):
+        """Turn home mode on.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.turn_home_mode_on)
+    
     def turn_away_mode_off(self):
         """Turn away mode off."""
         raise NotImplementedError()
 
-<<<<<<< f7a1d63d52dc7687a07cd2c52ef4e8e6894e45d9
     def async_turn_away_mode_off(self):
         """Turn away mode off.
 
@@ -679,11 +684,18 @@ class ClimateDevice(Entity):
         """
         return self.hass.loop.run_in_executor(
             None, self.turn_away_mode_off)
-=======
+
     def turn_home_mode_off(self):
         """Turn home mode off."""
         raise NotImplementedError()
->>>>>>> Added home_mode
+
+    def async_turn_home_mode_off(self):
+        """Turn home mode off.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.turn_home_mode_off)
 
     def turn_aux_heat_on(self):
         """Turn auxillary heater on."""
