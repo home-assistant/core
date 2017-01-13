@@ -60,7 +60,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
         # we want to avoid name clash with this module..
         from bluepy_devices.devices import eq3btsmart as eq3
 
-        self.modes = {eq3.EQ3BTSMART_UNKOWN: STATE_UNKNOWN,
+        self.modes = {None: STATE_UNKNOWN , # to avoid extra if in current_operation.
+                      eq3.EQ3BTSMART_UNKNOWN: STATE_UNKNOWN,
                       eq3.EQ3BTSMART_AUTO: STATE_AUTO,
                       # away handled separately, here just for reverse mapping
                       eq3.EQ3BTSMART_AWAY: STATE_AWAY,
