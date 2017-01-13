@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def due_in_minutes(timestamp):
     """Get the time in minutes from a timestamp.
 
-    The timestamp should be in the format day/mont/year hour/minute/second
+    The timestamp should be in the format day/month/year hour/minute/second
     """
     diff = datetime.strptime(
         timestamp, "%d/%m/%Y %H:%M:%S") - dt_util.now().replace(tzinfo=None)
