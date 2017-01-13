@@ -7,10 +7,12 @@ https://home-assistant.io/components/alert/
 import asyncio
 from datetime import timedelta
 import logging
+import os
 
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (CONF_ENTITIES, CONF_ENTITY_ID, STATE_IDLE,
                                  CONF_NAME, CONF_STATE, STATE_ON, STATE_OFF,
                                  SERVICE_TURN_ON, SERVICE_TURN_OFF,
@@ -117,7 +119,10 @@ def async_setup(hass, config):
                        alert[CONF_NOTIFIERS])
         all_alerts[entity.entity_id] = entity
 
-    descriptions = {}
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+    descriptions = descriptions.get(DOMAIN, {})
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_alert_service,
@@ -243,3 +248,14 @@ class Alert(ToggleEntity):
         _LOGGER.debug('Acknowledged Alert: %s', self._name)
         self._ack = True
         yield from self.async_update_ha_state()
+
+    def toggle(self):
+        """Toggle alert."""
+        run_callback_threadsafe(self.hass.loop, self.async_toggle)
+
+    @asyncio.coroutine
+    def async_toggle(self):
+        """Async toggle alert."""
+        if self._ack:
+            return self.async_turn_on()
+        return self.async_turn_off()

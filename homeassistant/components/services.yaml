@@ -153,3 +153,29 @@ verisure:
       device_serial:
         description: The serial number of the smartcam you want to capture an image from.
         example: '2DEU AT5Z'
+
+
+alert:
+  turn_off:
+    description: Silence alert's notifications.
+
+    fields:
+      entity_id:
+        description: Name of the alert to silence.
+        example: 'alert.garage_door_open'
+
+  turn_on:
+    description: Reset alert's notifications.
+
+    fields:
+      entity_id:
+        description: Name of the alert to reset.
+        example: 'alert.garage_door_open'
+
+  toggle:
+    description: Toggle alert's notifications.
+
+    fields:
+      entity_id:
+        description: Name of the alert to toggle.
+        example: 'alert.garage_door_open'
