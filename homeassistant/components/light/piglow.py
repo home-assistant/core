@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Add devices
     add_devices([PiglowLight(piglow)])
 
-    
+
 class PiglowLight(Light):
     """Representation of an Piglow Light."""
 
