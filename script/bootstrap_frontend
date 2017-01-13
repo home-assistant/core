@@ -16,8 +16,16 @@ if ! command -v npm >/dev/null 2>&1 ; then
     if python -c 'import sys; exit (0 if hasattr(sys, "real_prefix") else 1)' ; then
         # In a virtual environment, attempt npm install
         echo "Installing npm in virtual environment..."
+
+        # Get the requested version number
+        REQUESTED_VERSION="$(cat .nvmrc)"
+        # Generate a list of nodeenv versions that match the requested version
+        VERSION_LIST=$(for ver in $(nodeenv --list 2>&1) ; do case "${ver}" in ${REQUESTED_VERSION}*) echo "${ver}" ;; esac ;  done)
+        # Select the latest version that matches the requested version
+        LATEST_MATCHING_VERSION=$(echo "${VERSION_LIST}" | sort --version-sort | tail -n 1)
+
         python3 -m pip install nodeenv
-        nodeenv --python-virtualenv
+        nodeenv --python-virtualenv --node="${LATEST_MATCHING_VERSION}"
     else
         echo "npm is required for frontend development."
         exit 1
