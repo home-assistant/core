@@ -359,14 +359,16 @@ class Group(Entity):
         """Start tracking members."""
         run_callback_threadsafe(self.hass.loop, self.async_start).result()
 
+    @callback
     def async_start(self):
         """Start tracking members.
 
         This method must be run in the event loop.
         """
-        self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self.tracking, self._state_changed_listener
-        )
+        if self._async_unsub_state_changed is None:
+            self._async_unsub_state_changed = async_track_state_change(
+                self.hass, self.tracking, self._state_changed_listener
+            )
 
     def stop(self):
         """Unregister the group from Home Assistant."""
@@ -392,11 +394,11 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
-        yield from super().async_remove()
-
         if self._async_unsub_state_changed:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None
+
+        yield from super().async_remove()
 
     @callback
     def _state_changed_listener(self, entity_id, old_state, new_state):
@@ -404,9 +406,10 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
-        # remove
-        if new_state is None:
+        # removed
+        if self.entity_id not in self.hass.states.async_entity_ids(DOMAIN):
             return
+
         self._async_update_group_state(new_state)
         self.hass.async_add_job(self.async_update_ha_state())
 
