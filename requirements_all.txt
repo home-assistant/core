@@ -425,7 +425,7 @@ pyharmony==1.0.12
 pyhik==0.0.7
 
 # homeassistant.components.homematic
-pyhomematic==0.1.18
+pyhomematic==0.1.19
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
