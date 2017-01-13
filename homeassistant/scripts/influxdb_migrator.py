@@ -152,7 +152,10 @@ def run(script_args: List) -> int:
                     try:
                         new_point["fields"][field] = float(point[field])
                     except (ValueError, TypeError):
-                        new_key = "{}_str".format(field)
+                        if field == "value":
+                            new_key = "state"
+                        else:
+                            new_key = "{}_str".format(field)
                         new_point["fields"][new_key] = str(point[field])
                 # Add tags
                 for tag in tags:
