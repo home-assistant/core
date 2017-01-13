@@ -278,7 +278,7 @@ insteon_hub==0.4.5
 insteonlocal==0.39
 
 # homeassistant.components.media_player.kodi
-jsonrpc-async==0.1
+jsonrpc-async==0.2
 
 # homeassistant.components.notify.kodi
 jsonrpc-requests==0.3
