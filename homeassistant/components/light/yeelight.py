@@ -66,11 +66,10 @@ class YeelightLight(Light):
 
     def __init__(self, device, config):
         """Initialize the light."""
-        import yeelight
-
+        self.config = config
         self._name = device['name']
         self._ipaddr = device['ipaddr']
-        self.config = config
+
         self._supported_features = SUPPORTS
         self.__bulb = None
         self.__properties = None
@@ -117,11 +116,13 @@ class YeelightLight(Light):
         if rgb is None:
             return None
 
+        _LOGGER.error("RGB: %s", rgb)
         rgb = int(rgb)
+        _LOGGER.error("RGB: %s", rgb)
 
-        b = rgb & 255
-        g = (rgb >> 8) & 255
-        r = (rgb >> 16) & 25
+        b = rgb & 0xff
+        g = (rgb >> 8) & 0xff
+        r = (rgb >> 16) & 0xff
 
         return r, g, b
 
@@ -188,41 +189,42 @@ class YeelightLight(Light):
 
     @cmd
     def set_flash(self, flash):
-        # TODO: effects works per se, but this specific implementation doesn't
-        # therefore it's behind False until a solution is found
-        if flash and False:
-            # modified from python-yeelight's examples
+        if flash:
             if flash == FLASH_LONG:
-                duration = 1000
-            elif flash == FLASH_SHORT:
-                duration = 350
-            else:
-                _LOGGER.error("Unknown flash type: %s", flash)
+                count = 1
+                duration = self.config[ATTR_TRANSITION] * 5
+            if flash == FLASH_SHORT:
+                count = 1
+                duration = self.config[ATTR_TRANSITION]
 
-            if not self.rgb_color:
-                _LOGGER.error("RGB is not yet known, bailing out!")
-                return
+            COLOR_MODE_RGB = 1
+            COLOR_MODE_TEMPERATURE = 2
 
-            # A simple breeth effect, going first down to ~0
-            # and returning then back to the original state.
+            if self._properties["color_mode"] == COLOR_MODE_RGB:
+                trans = self._module.RGBTransition
+                if not self.rgb_color:
+                    _LOGGER.error("RGB is not yet known, bailing out!")
+                    return
+            elif self._properties["color_mode"] == COLOR_MODE_TEMPERATURE:
+                if not self.color_temp:
+                    _LOGGER.error("Temperature is not yet known, bailing out!")
+                    return
+                trans = self._module.TemperatureTransition
+
+            # A simple breath effect.
+            _LOGGER.error(self.rgb_color)
             r, g, b = self.rgb_color
-            orig_brightness = brightness = self.brightness
-            transitions = []
-            rgb_trans = self._module.RGBTransition
-            step_amount = ((brightness - 10) * 2 / 8)  # we can just go five below, five above
-            # _LOGGER.error("step: %s" % step_amount)
+            _LOGGER.error("%s %s %s", r, g, b)
 
-            for i in range(0,4):
-                brightness -= step_amount
-                transitions.append(rgb_trans(r, g, b, brightness=max(1, brightness), duration=duration))
-            for i in range(0,4):
-                brightness += step_amount
-                transitions.append(rgb_trans(r, g, b, brightness=min(brightness, orig_brightness), duration=duration))
+            transitions = []
+            transitions.append(self._module.RGBTransition(r, g, b, brightness=10, duration=duration))
+            transitions.append(self._module.SleepTransition(duration=self.config[ATTR_TRANSITION]*2))
+            transitions.append(self._module.RGBTransition(r, g, b, brightness=self.brightness, duration=duration))
 
             from pprint import pformat as pf
             _LOGGER.error(pf(transitions))
 
-            flow = self._module.Flow(count=1, transitions=transitions)
+            flow = self._module.Flow(count=count, transitions=transitions)
             self._bulb.start_flow(flow)
 
     def turn_on(self, **kwargs):
@@ -235,7 +237,6 @@ class YeelightLight(Light):
         # white bulb has problems with duration > 9000, doesn't always start
         # TODO: move to python-yeelight?
         duration = min(kwargs.get(ATTR_TRANSITION, self.config["transition"]), 9000)
-
         self._bulb.turn_on(duration=duration)
 
         # values checked for none in methods
@@ -243,6 +244,8 @@ class YeelightLight(Light):
         self.set_colortemp(colortemp, duration)
         self.set_brightness(brightness, duration)
         self.set_flash(flash)
+
+
 
         # saving current settings to the bulb if not flashing
         # TODO: make saving configurable?
