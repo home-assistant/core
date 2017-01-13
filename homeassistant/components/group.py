@@ -367,7 +367,7 @@ class Group(Entity):
         """
         if self._async_unsub_state_changed is None:
             self._async_unsub_state_changed = async_track_state_change(
-                self.hass, self.tracking, self._state_changed_listener
+                self.hass, self.tracking, self._async_state_changed_listener
             )
 
     def stop(self):
@@ -400,8 +400,8 @@ class Group(Entity):
 
         yield from super().async_remove()
 
-    @callback
-    def _state_changed_listener(self, entity_id, old_state, new_state):
+    @asyncio.coroutine
+    def _async_state_changed_listener(self, entity_id, old_state, new_state):
         """Respond to a member state changing.
 
         This method must be run in the event loop.
@@ -411,7 +411,7 @@ class Group(Entity):
             return
 
         self._async_update_group_state(new_state)
-        self.hass.async_add_job(self.async_update_ha_state())
+        yield from self.async_update_ha_state()
 
     @property
     def _tracking_states(self):
