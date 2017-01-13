@@ -111,6 +111,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
+<<<<<<< HEAD
+=======
+    # Check to make sure that forecast is in a valid range of 1 week
+    forecast = config.get(CONF_FORECAST)
+    if forecast is not None:
+        for forecast_day in forecast:
+            if forecast_day > 7 or forecast_day < 1:
+                _LOGGER.error("DarkSky only supports 7 day forecast")
+                return False
+>>>>>>> 8a3810082dd7734575ccc02c43082295dc41d9b4
 
     if CONF_UNITS in config:
         units = config[CONF_UNITS]
@@ -138,7 +148,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(DarkSkySensor(forecast_data, variable, name))
+<<<<<<< HEAD
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
+=======
+        if forecast is not None and variable in ['temperature_min',
+                                                 'temperature_max',
+                                                 'apparent_temperature_min',
+                                                 'apparent_temperature_max',
+                                                 'precip_intensity_max']:
+>>>>>>> 8a3810082dd7734575ccc02c43082295dc41d9b4
             for forecast_day in forecast:
                 sensors.append(DarkSkySensor(forecast_data,
                                              variable, name, forecast_day))
@@ -223,6 +241,24 @@ class DarkSkySensor(Entity):
             self.forecast_data.update_hourly()
             hourly = self.forecast_data.data_hourly
             self._state = getattr(hourly, 'summary', '')
+<<<<<<< HEAD
+=======
+        elif self.type in ['daily_summary',
+                           'temperature_min',
+                           'temperature_max',
+                           'apparent_temperature_min',
+                           'apparent_temperature_max',
+                           'precip_intensity_max']:
+            self.forecast_data.update_daily()
+            daily = self.forecast_data.data_daily
+            if self.type == 'daily_summary':
+                self._state = getattr(daily, 'summary', '')
+            else:
+                if hasattr(daily, 'data'):
+                    self._state = self.get_state(daily.data[self.forecast_day])
+                else:
+                    self._state = 0
+>>>>>>> 8a3810082dd7734575ccc02c43082295dc41d9b4
         else:
             if self.forecast_day > 0 or self.type in ['daily_summary',
                                                       'temperature_min',
