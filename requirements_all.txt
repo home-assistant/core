@@ -535,6 +535,9 @@ pywemo==0.4.9
 # homeassistant.components.light.yeelight
 pyyeelight==1.0-beta
 
+# homeassistant.components.zabbix
+pyzabbix==0.7.4
+
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
 
