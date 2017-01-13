@@ -32,52 +32,64 @@ DEFAULT_NAME = 'Dark Sky'
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
-    'summary': ['Summary', None, None, None, None, None, None],
+    'summary': ['Summary', None, None, None, None, None, None, []],
     'minutely_summary': ['Minutely Summary',
-                         None, None, None, None, None, None],
-    'hourly_summary': ['Hourly Summary', None, None, None, None, None, None],
-    'daily_summary': ['Daily Summary', None, None, None, None, None, None],
-    'icon': ['Icon', None, None, None, None, None, None],
+                         None, None, None, None, None, None, []],
+    'hourly_summary': ['Hourly Summary', None, None, None, None, None, None, []],
+    'daily_summary': ['Daily Summary', None, None, None, None, None, None, []],
+    'icon': ['Icon', None, None, None, None, None, None, ['currently', 'hourly', 'daily']],
     'nearest_storm_distance': ['Nearest Storm Distance',
                                'km', 'm', 'km', 'km', 'm',
-                               'mdi:weather-lightning'],
+                               'mdi:weather-lightning', ['currently']],
     'nearest_storm_bearing': ['Nearest Storm Bearing',
                               '°', '°', '°', '°', '°',
-                              'mdi:weather-lightning'],
+                              'mdi:weather-lightning', ['currently']],
     'precip_type': ['Precip', None, None, None, None, None,
-                    'mdi:weather-pouring'],
+                    'mdi:weather-pouring', ['currently', 'minutely', 'hourly', 'daily']],
     'precip_intensity': ['Precip Intensity',
-                         'mm', 'in', 'mm', 'mm', 'mm', 'mdi:weather-rainy'],
+                         'mm', 'in', 'mm', 'mm', 'mm', 'mdi:weather-rainy',
+                         ['currently', 'minutely', 'hourly', 'daily']],
     'precip_probability': ['Precip Probability',
-                           '%', '%', '%', '%', '%', 'mdi:water-percent'],
+                           '%', '%', '%', '%', '%', 'mdi:water-percent',
+                          ['currently', 'minutely', 'hourly', 'daily']],
     'temperature': ['Temperature',
-                    '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer'],
+                    '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
+                    ['currently', 'hourly', 'daily']],
     'apparent_temperature': ['Apparent Temperature',
-                             '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer'],
+                             '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
+                             ['currently', 'hourly']],
     'dew_point': ['Dew point', '°C', '°F', '°C', '°C', '°C',
-                  'mdi:thermometer'],
+                  'mdi:thermometer', ['currently', 'hourly', 'daily']],
     'wind_speed': ['Wind Speed', 'm/s', 'mph', 'km/h', 'mph', 'mph',
-                   'mdi:weather-windy'],
-    'wind_bearing': ['Wind Bearing', '°', '°', '°', '°', '°', 'mdi:compass'],
+                   'mdi:weather-windy', ['currently', 'hourly', 'daily']],
+    'wind_bearing': ['Wind Bearing', '°', '°', '°', '°', '°', 'mdi:compass',
+                     ['currently', 'hourly', 'daily']],
     'cloud_cover': ['Cloud Coverage', '%', '%', '%', '%', '%',
-                    'mdi:weather-partlycloudy'],
-    'humidity': ['Humidity', '%', '%', '%', '%', '%', 'mdi:water-percent'],
+                    'mdi:weather-partlycloudy', ['currently', 'hourly', 'daily']],
+    'humidity': ['Humidity', '%', '%', '%', '%', '%', 'mdi:water-percent',
+                 ['currently', 'hourly', 'daily']],
     'pressure': ['Pressure', 'mbar', 'mbar', 'mbar', 'mbar', 'mbar',
-                 'mdi:gauge'],
-    'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm', 'mdi:eye'],
-    'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU', 'mdi:eye'],
+                 'mdi:gauge', ['currently', 'hourly', 'daily']],
+    'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm', 'mdi:eye',
+                   ['currently', 'hourly', 'daily']],
+    'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU', 'mdi:eye',
+              ['currently', 'hourly', 'daily']],
     'apparent_temperature_max': ['Daily High Apparent Temperature',
                                  '°C', '°F', '°C', '°C', '°C',
-                                 'mdi:thermometer'],
+                                 'mdi:thermometer',
+                                 ['currently', 'hourly', 'daily']],
     'apparent_temperature_min': ['Daily Low Apparent Temperature',
                                  '°C', '°F', '°C', '°C', '°C',
-                                 'mdi:thermometer'],
+                                 'mdi:thermometer', ['currently', 'hourly', 'daily']],
     'temperature_max': ['Daily High Temperature',
-                        '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer'],
+                        '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
+                        ['currently', 'hourly', 'daily']],
     'temperature_min': ['Daily Low Temperature',
-                        '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer'],
+                        '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
+                        ['currently', 'hourly', 'daily']],
     'precip_intensity_max': ['Daily Max Precip Intensity',
-                             'mm', 'in', 'mm', 'mm', 'mm', 'mdi:thermometer'],
+                             'mm', 'in', 'mm', 'mm', 'mm', 'mdi:thermometer',
+                             ['currently', 'hourly', 'daily']],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -88,6 +100,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2']),
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=120)): (
         vol.All(cv.time_period, cv.positive_timedelta)),
+    vol.Optional(CONF_FORECAST): vol.All(cv.ensure_list, [vol.Range(min=1, max=7)]),
 })
 
 
@@ -98,13 +111,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    # Check to make sure that forecast is in a valid range of 1 week
-    forecast = config.get(CONF_FORECAST)
-    if forecast is not None:
-        for forecast_day in forecast:
-            if forecast_day > 7 or forecast_day < 1:
-                _LOGGER.error("DarkSky only supports 7 day forecast")
-                return False
 
     if CONF_UNITS in config:
         units = config[CONF_UNITS]
@@ -128,14 +134,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     name = config.get(CONF_NAME)
 
+    forecast = config.get(CONF_FORECAST)
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(DarkSkySensor(forecast_data, variable, name))
-        if forecast is not None and variable in ['temperature_min',
-                                                 'temperature_max',
-                                                 'apparent_temperature_min',
-                                                 'apparent_temperature_max',
-                                                 'precip_intensity_max']:
+        if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
             for forecast_day in forecast:
                 sensors.append(DarkSkySensor(forecast_data,
                                              variable, name, forecast_day))
@@ -220,25 +223,26 @@ class DarkSkySensor(Entity):
             self.forecast_data.update_hourly()
             hourly = self.forecast_data.data_hourly
             self._state = getattr(hourly, 'summary', '')
-        elif self.type in ['daily_summary',
-                           'temperature_min',
-                           'temperature_max',
-                           'apparent_temperature_min',
-                           'apparent_temperature_max',
-                           'precip_intensity_max']:
-            self.forecast_data.update_daily()
-            daily = self.forecast_data.data_daily
-            if self.type == 'daily_summary':
-                self._state = getattr(daily, 'summary', '')
-            else:
-                if hasattr(daily, 'data'):
-                    self._state = self.get_state(daily.data[self.forecast_day])
-                else:
-                    self._state = 0
         else:
-            self.forecast_data.update_currently()
-            currently = self.forecast_data.data_currently
-            self._state = self.get_state(currently)
+            if self.forecast_day > 0 or self.type in ['daily_summary',
+                                                      'temperature_min',
+                                                      'temperature_max',
+                                                      'apparent_temperature_min',
+                                                      'apparent_temperature_max',
+                                                      'precip_intensity_max']:
+                self.forecast_data.update_daily()
+                daily = self.forecast_data.data_daily
+                if self.type == 'daily_summary':
+                    self._state = getattr(daily, 'summary', '')
+                else:
+                    if hasattr(daily, 'data'):
+                        self._state = self.get_state(daily.data[self.forecast_day])
+                    else:
+                        self._state = 0
+            else:
+                self.forecast_data.update_currently()
+                currently = self.forecast_data.data_currently
+                self._state = self.get_state(currently)
 
     def get_state(self, data):
         """
