@@ -3,7 +3,8 @@ import logging
 import voluptuous as vol
 
 # Import the device class from the component that you want to support
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_RGB_COLOR, SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA
+from homeassistant.components.light import (ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, 
+                                            ATTR_RGB_COLOR, SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
 # Home Assistant depends on 3rd party packages for API specific code.
@@ -13,15 +14,12 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_PIGLOW = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Piglow Light platform."""
     import piglow
 
-
     # Add devices
     add_devices([PiglowLight(piglow)])
-
 
 class PiglowLight(Light):
     """Representation of an Piglow Light."""
@@ -72,7 +70,7 @@ class PiglowLight(Light):
         else:
             self._piglow.all(self._brightness)
         self._piglow.show()
-        self._isOn = True;
+        self._isOn = True
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
