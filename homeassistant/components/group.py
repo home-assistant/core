@@ -407,7 +407,7 @@ class Group(Entity):
         This method must be run in the event loop.
         """
         # removed
-        if self.entity_id not in self.hass.states.async_entity_ids(DOMAIN):
+        if self._async_unsub_state_changed is None:
             return
 
         self._async_update_group_state(new_state)
