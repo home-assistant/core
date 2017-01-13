@@ -100,8 +100,12 @@ def run(script_args: List) -> int:
     if old_dbname not in db_list:
         client.create_database(old_dbname)
     # Copy data to the old DB
-    client.query('''SELECT * INTO {}..:MEASUREMENT FROM '''
-                 '/.*/'.format(old_dbname))
+    print("Cloning from {} to {}".format(args.dbname, old_dbname))
+    for index, measurement in enumerate(measurements):
+        client.query('''SELECT * INTO {}..:MEASUREMENT FROM '''
+                     '"{}" GROUP BY *'.format(old_dbname, measurement))
+        # Print progess
+        print_progress(index + 1, nb_measurements)
 
     # Delete the database
     client.drop_database(args.dbname)
