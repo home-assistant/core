@@ -14,6 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_PIGLOW = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Piglow Light platform."""
     import piglow
@@ -21,6 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Add devices
     add_devices([PiglowLight(piglow)])
 
+    
 class PiglowLight(Light):
     """Representation of an Piglow Light."""
 
