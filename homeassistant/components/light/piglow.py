@@ -40,11 +40,7 @@ class PiglowLight(Light):
 
     @property
     def brightness(self):
-        """Brightness of the light (an integer in the range 1-255).
-
-        This method is optional. Removing it indicates to Home Assistant
-        that brightness is not supported for this light.
-        """
+        """Brightness of the light (an integer in the range 1-255)."""
         return self._brightness
 
     @property
@@ -63,11 +59,7 @@ class PiglowLight(Light):
         return self._isOn
 
     def turn_on(self, **kwargs):
-        """Instruct the light to turn on.
-
-        You can skip the brightness part if your light does not support
-        brightness control.
-        """
+        """Instruct the light to turn on."""
         self._piglow.clear()
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         percentBright = (self._brightness / 255)
@@ -89,7 +81,3 @@ class PiglowLight(Light):
         self._isOn = False
 
     def update(self):
-        """Fetch new state data for this light.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
