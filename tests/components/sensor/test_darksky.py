@@ -81,4 +81,4 @@ class TestDarkSkySetup(unittest.TestCase):
         darksky.setup_platform(self.hass, self.config, self.add_entities)
         self.assertTrue(mock_get_forecast.called)
         self.assertEqual(mock_get_forecast.call_count, 1)
-        self.assertEqual(len(self.entities), 5)
+        self.assertEqual(len(self.entities), 7)
