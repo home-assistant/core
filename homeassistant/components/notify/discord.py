@@ -8,7 +8,7 @@ from homeassistant.components.notify import (
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiohttp==1.1.0', 'websockets', 'discord.py==0.16.0']
+#REQUIREMENTS = ['discord.py'] #This line was removed due to problems with dependencies. The 'discord.py' dependency should be manually installed
 
 CONF_CLIENT_ID = 'client_id'
 
