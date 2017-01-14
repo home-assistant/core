@@ -1,0 +1,50 @@
+#!/bin/bash
+# Install requirements and build dependencies for Home Assinstant in Docker.
+
+# Required debian packages for running hass or components
+PACKAGES=(
+  # homeassistant.components.device_tracker.nmap_tracker
+  nmap net-tools
+  # homeassistant.components.device_tracker.bluetooth_tracker
+  bluetooth libglib2.0-dev libbluetooth-dev
+  # homeassistant.components.tellstick
+  libtelldus-core2
+)
+
+# Required debian packages for building dependencies
+PACKAGES_DEV=(
+  # python-openzwave
+  cython3 libudev-dev
+  # libcec
+  cmake swig libxrandr-dev
+)
+
+# Stop on errors
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Add Tellstick repository
+echo "deb http://download.telldus.com/debian/ stable main" >> /etc/apt/sources.list.d/telldus.list
+wget -qO - http://download.telldus.se/debian/telldus-public.key | apt-key add -
+
+# Install packages
+apt-get update
+apt-get install -y --no-install-recommends ${PACKAGES[@]} ${PACKAGES_DEV[@]}
+
+# Build and install openzwave
+script/build_python_openzwave
+mkdir -p /usr/local/share/python-openzwave
+ln -sf /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/python-openzwave/config
+
+# Build and install libcec
+script/build_libcec
+
+# Remove packages
+apt-get remove -y --purge ${PACKAGES_DEV[@]}
+apt-get -y --purge autoremove
+
+# Cleanup
+apt-get clean
+rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* build/
+
