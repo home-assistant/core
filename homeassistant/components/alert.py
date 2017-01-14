@@ -13,8 +13,8 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (CONF_ENTITIES, CONF_ENTITY_ID, STATE_IDLE,
-                                 CONF_NAME, CONF_STATE, STATE_ON, STATE_OFF,
+from homeassistant.const import (CONF_ENTITY_ID, STATE_IDLE, CONF_NAME,
+                                 CONF_STATE, STATE_ON, STATE_OFF,
                                  SERVICE_TURN_ON, SERVICE_TURN_OFF,
                                  SERVICE_TOGGLE, ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
