@@ -18,7 +18,7 @@ DOMAIN = 'bbb_gpio'
 
 # pylint: disable=no-member
 def setup(hass, config):
-    """Setup the Beaglebone black GPIO component."""
+    """Set up the BeagleBone Black GPIO component."""
     # pylint: disable=import-error
     import Adafruit_BBIO.GPIO as GPIO
 
@@ -71,7 +71,4 @@ def edge_detect(pin, event_callback, bounce):
     # pylint: disable=import-error,undefined-variable
     import Adafruit_BBIO.GPIO as GPIO
     GPIO.add_event_detect(
-        pin,
-        GPIO.BOTH,
-        callback=event_callback,
-        bouncetime=bounce)
+        pin, GPIO.BOTH, callback=event_callback, bouncetime=bounce)
