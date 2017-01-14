@@ -30,6 +30,9 @@ SoCo==0.12
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.2
 
+# homeassistant.components.notify.discord
+discord.py
+
 # homeassistant.components.http
 aiohttp_cors==0.5.0
 
