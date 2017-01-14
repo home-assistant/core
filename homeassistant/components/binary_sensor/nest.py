@@ -49,7 +49,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     nest = hass.data[DATA_NEST]
 
-    conditions = discovery_info.get(CONF_MONITORED_CONDITIONS, {})
+    # Add all available binary sensors if no Nest binary sensor config is set
+    if discovery_info == {}:
+        conditions = _VALID_BINARY_SENSOR_TYPES
+    else:
+        conditions = discovery_info.get(CONF_MONITORED_CONDITIONS, {})
 
     for variable in conditions:
         if variable in _BINARY_TYPES_DEPRECATED:

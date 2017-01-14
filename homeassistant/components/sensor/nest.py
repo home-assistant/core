@@ -50,9 +50,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     nest = hass.data[DATA_NEST]
 
-    # Add Nest Protect sensors if no sensor config is specified
+    # Add all available sensors if no Nest sensor config is set
     if discovery_info == {}:
-        conditions = PROTECT_VARS
+        conditions = _VALID_SENSOR_TYPES
     else:
         conditions = discovery_info.get(CONF_MONITORED_CONDITIONS, {})
 
