@@ -223,6 +223,7 @@ class Alert(ToggleEntity):
 
         if not self._skip_first:
             yield from self._notify()
+            self._next_delay = self._delay
         else:
             yield from self._schedule_notify()
 
