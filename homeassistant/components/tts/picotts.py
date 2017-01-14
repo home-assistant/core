@@ -1,8 +1,8 @@
 """
-Support for the picotts speech service.
+Support for the Pico TTS speech service.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/picotts/
+https://home-assistant.io/components/tts.picotts/
 """
 import os
 import tempfile
@@ -33,10 +33,10 @@ def get_engine(hass, config):
 
 
 class PicoProvider(Provider):
-    """pico speech api provider."""
+    """The Pico TTS API provider."""
 
     def __init__(self, lang):
-        """Initialize pico provider."""
+        """Initialize Pico TTS provider."""
         self._lang = lang
 
     @property
