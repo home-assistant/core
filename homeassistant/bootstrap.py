@@ -606,7 +606,7 @@ def async_log_exception(ex, domain, config, hass):
         message += '{}.'.format(humanize_error(config, ex))
 
     domain_config = config.get(domain, config)
-    message += " (See {}:{}). ".format(
+    message += " (See {}, line {}). ".format(
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
 
