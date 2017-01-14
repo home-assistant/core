@@ -10,7 +10,8 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
     CONF_PORT
 from homeassistant.util import Throttle
@@ -39,7 +40,7 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-class CiscoDeviceScanner(object):
+class CiscoDeviceScanner(DeviceScanner):
     """This class queries a wireless router running Cisco IOS firmware."""
 
     def __init__(self, config):

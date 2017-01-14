@@ -10,7 +10,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 
 # Unifi package doesn't list urllib3 as a requirement
@@ -59,7 +60,7 @@ def get_scanner(hass, config):
     return UnifiScanner(ctrl)
 
 
-class UnifiScanner(object):
+class UnifiScanner(DeviceScanner):
     """Provide device_tracker support from Unifi WAP client data."""
 
     def __init__(self, controller):

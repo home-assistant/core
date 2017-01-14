@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_UNKNOWN, CONF_NAME, CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pynx584==0.2']
+REQUIREMENTS = ['pynx584==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,9 +86,11 @@ class NX584Alarm(alarm.AlarmControlPanel):
             _LOGGER.error('Unable to connect to %(host)s: %(reason)s',
                           dict(host=self._url, reason=ex))
             self._state = STATE_UNKNOWN
+            zones = []
         except IndexError:
             _LOGGER.error('nx584 reports no partitions')
             self._state = STATE_UNKNOWN
+            zones = []
 
         bypassed = False
         for zone in zones:

@@ -142,6 +142,10 @@ class Proximity(Entity):
         for device in self.proximity_devices:
             device_state = self.hass.states.get(device)
 
+            if device_state is None:
+                devices_to_calculate = True
+                continue
+
             if device_state.state not in self.ignored_zones:
                 devices_to_calculate = True
 

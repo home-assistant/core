@@ -106,6 +106,12 @@ class TestNX584SensorSetup(unittest.TestCase):
             requests.exceptions.ConnectionError
         self._test_assert_graceful_fail({})
 
+    def test_setup_no_partitions(self):
+        """Test the setup with connection failure."""
+        nx584_client.Client.return_value.list_zones.side_effect = \
+            IndexError
+        self._test_assert_graceful_fail({})
+
     def test_setup_version_too_old(self):
         """"Test if version is too old."""
         nx584_client.Client.return_value.get_version.return_value = '1.0'

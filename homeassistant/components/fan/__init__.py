@@ -4,6 +4,7 @@ Provides functionality to interact with fans.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/fan/
 """
+from datetime import timedelta
 import logging
 import os
 
@@ -21,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 
 
 DOMAIN = 'fan'
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_FANS = 'all fans'
 ENTITY_ID_ALL_FANS = group.ENTITY_ID_FORMAT.format(GROUP_NAME_ALL_FANS)
@@ -32,9 +33,11 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 ATTR_SUPPORTED_FEATURES = 'supported_features'
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
+SUPPORT_DIRECTION = 4
 
 SERVICE_SET_SPEED = 'set_speed'
 SERVICE_OSCILLATE = 'oscillate'
+SERVICE_SET_DIRECTION = 'set_direction'
 
 SPEED_OFF = 'off'
 SPEED_LOW = 'low'
@@ -42,15 +45,20 @@ SPEED_MED = 'med'
 SPEED_MEDIUM = 'medium'
 SPEED_HIGH = 'high'
 
+DIRECTION_FORWARD = 'forward'
+DIRECTION_REVERSE = 'reverse'
+
 ATTR_SPEED = 'speed'
 ATTR_SPEED_LIST = 'speed_list'
 ATTR_OSCILLATING = 'oscillating'
+ATTR_DIRECTION = 'direction'
 
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
     'speed_list': ATTR_SPEED_LIST,
     'oscillating': ATTR_OSCILLATING,
     'supported_features': ATTR_SUPPORTED_FEATURES,
+    'direction': ATTR_DIRECTION,
 }  # type: dict
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
@@ -75,6 +83,11 @@ FAN_OSCILLATE_SCHEMA = vol.Schema({
 FAN_TOGGLE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids
 })
+
+FAN_SET_DIRECTION_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_DIRECTION): cv.string
+})  # type: dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,6 +153,18 @@ def set_speed(hass, entity_id: str=None, speed: str=None) -> None:
     hass.services.call(DOMAIN, SERVICE_SET_SPEED, data)
 
 
+def set_direction(hass, entity_id: str=None, direction: str=None) -> None:
+    """Set direction for all or specified fan."""
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_DIRECTION, direction),
+        ] if value is not None
+    }
+
+    hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, data)
+
+
 def setup(hass, config: dict) -> None:
     """Expose fan control via statemachine and services."""
     component = EntityComponent(
@@ -157,7 +182,8 @@ def setup(hass, config: dict) -> None:
 
         service_fun = None
         for service_def in [SERVICE_TURN_ON, SERVICE_TURN_OFF,
-                            SERVICE_SET_SPEED, SERVICE_OSCILLATE]:
+                            SERVICE_SET_SPEED, SERVICE_OSCILLATE,
+                            SERVICE_SET_DIRECTION]:
             if service_def == service.service:
                 service_fun = service_def
                 break
@@ -190,6 +216,10 @@ def setup(hass, config: dict) -> None:
                            descriptions.get(SERVICE_OSCILLATE),
                            schema=FAN_OSCILLATE_SCHEMA)
 
+    hass.services.register(DOMAIN, SERVICE_SET_DIRECTION, handle_fan_service,
+                           descriptions.get(SERVICE_SET_DIRECTION),
+                           schema=FAN_SET_DIRECTION_SCHEMA)
+
     return True
 
 
@@ -200,7 +230,11 @@ class FanEntity(ToggleEntity):
 
     def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""
-        pass
+        raise NotImplementedError()
+
+    def set_direction(self: ToggleEntity, direction: str) -> None:
+        """Set the direction of the fan."""
+        raise NotImplementedError()
 
     def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
         """Turn on the fan."""
@@ -217,13 +251,22 @@ class FanEntity(ToggleEntity):
     @property
     def is_on(self):
         """Return true if the entity is on."""
-        return self.state_attributes.get(ATTR_SPEED, STATE_UNKNOWN) \
-            not in [SPEED_OFF, STATE_UNKNOWN]
+        return self.speed not in [SPEED_OFF, STATE_UNKNOWN]
+
+    @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        return None
 
     @property
     def speed_list(self: ToggleEntity) -> list:
         """Get the list of available speeds."""
         return []
+
+    @property
+    def current_direction(self) -> str:
+        """Return the current direction of the fan."""
+        return None
 
     @property
     def state_attributes(self: ToggleEntity) -> dict:

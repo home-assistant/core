@@ -14,7 +14,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOSTS
 from homeassistant.util import Throttle
 
@@ -63,7 +64,7 @@ def _arp(ip_address):
     return None
 
 
-class NmapDeviceScanner(object):
+class NmapDeviceScanner(DeviceScanner):
     """This class scans for devices using nmap."""
 
     exclude = []

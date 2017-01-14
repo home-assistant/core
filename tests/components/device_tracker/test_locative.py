@@ -108,6 +108,13 @@ class TestLocative(unittest.TestCase):
         req = requests.get(_url(copy))
         self.assertEqual(200, req.status_code)
 
+        # Test message, no location
+        copy = data.copy()
+        copy['trigger'] = 'test'
+        del copy['id']
+        req = requests.get(_url(copy))
+        self.assertEqual(200, req.status_code)
+
         # Unknown trigger
         copy = data.copy()
         copy['trigger'] = 'foobar'

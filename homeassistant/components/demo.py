@@ -23,12 +23,14 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     'cover',
     'device_tracker',
     'fan',
+    'image_processing',
     'light',
     'lock',
     'media_player',
     'notify',
     'sensor',
     'switch',
+    'tts',
 ]
 
 

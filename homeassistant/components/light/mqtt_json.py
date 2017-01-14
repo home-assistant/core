@@ -172,6 +172,11 @@ class MqttJson(Light):
         """Return true if we do optimistic updates."""
         return self._optimistic
 
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_MQTT_JSON
+
     def turn_on(self, **kwargs):
         """Turn the device on."""
         should_update = False
