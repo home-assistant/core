@@ -10,8 +10,13 @@ from datetime import timedelta
 import logging
 import hashlib
 
+import aiohttp
 from aiohttp import web
+import async_timeout
 
+from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -27,6 +32,41 @@ STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
 
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
+
+
+@asyncio.coroutine
+def async_get_image(hass, entity_id, timeout=10):
+    """Fetch a image from a camera entity."""
+    websession = async_get_clientsession(hass)
+    state = hass.states.get(entity_id)
+
+    if state is None:
+        raise HomeAssistantError(
+            "No entity '{0}' for grab a image".format(entity_id))
+
+    url = "{0}{1}".format(
+        hass.config.api.base_url,
+        state.attributes.get(ATTR_ENTITY_PICTURE)
+    )
+
+    response = None
+    try:
+        with async_timeout.timeout(timeout, loop=hass.loop):
+            response = yield from websession.get(url)
+
+            if response.status != 200:
+                raise HomeAssistantError("Error {0} on {1}".format(
+                    response.status, url))
+
+            image = yield from response.read()
+            return image
+
+    except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        raise HomeAssistantError("Can't connect to {0}".format(url))
+
+    finally:
+        if response is not None:
+            yield from response.release()
 
 
 @asyncio.coroutine
