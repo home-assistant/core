@@ -1,56 +1,41 @@
 """
 Support for Insteon switch devices via local hub support.
 
-Based on the insteonlocal library
-https://github.com/phareous/insteonlocal
-
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.insteon_local/
-
---
-Example platform config
---
-
-insteon_local:
-  host: YOUR HUB IP
-  username: YOUR HUB USERNAME
-  password: YOUR HUB PASSWORD
-  timeout: 10
-  port: 25105
 """
 import json
 import logging
 import os
 from datetime import timedelta
+
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.loader import get_component
 import homeassistant.util as util
 
-INSTEON_LOCAL_SWITCH_CONF = 'insteon_local_switch.conf'
+_CONFIGURING = {}
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['insteon_local']
+DOMAIN = 'switch'
 
-_LOGGER = logging.getLogger(__name__)
+INSTEON_LOCAL_SWITCH_CONF = 'insteon_local_switch.conf'
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
-
-DOMAIN = "switch"
-
-_LOGGER = logging.getLogger(__name__)
-_CONFIGURING = {}
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Insteon local switch platform."""
+    """Set up the Insteon local switch platform."""
     insteonhub = hass.data['insteon_local']
 
     conf_switches = config_from_file(hass.config.path(
         INSTEON_LOCAL_SWITCH_CONF))
     if len(conf_switches):
         for device_id in conf_switches:
-            setup_switch(device_id, conf_switches[device_id], insteonhub,
-                         hass, add_devices)
+            setup_switch(
+                device_id, conf_switches[device_id], insteonhub, hass,
+                add_devices)
 
     linked = insteonhub.get_linked()
 
@@ -90,12 +75,12 @@ def request_configuration(device_id, insteonhub, model, hass,
 
 
 def setup_switch(device_id, name, insteonhub, hass, add_devices_callback):
-    """Setup switch."""
+    """Set up the switch."""
     if device_id in _CONFIGURING:
         request_id = _CONFIGURING.pop(device_id)
         configurator = get_component('configurator')
         configurator.request_done(request_id)
-        _LOGGER.info('Device configuration done!')
+        _LOGGER.info("Device configuration done!")
 
     conf_switch = config_from_file(hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
     if device_id not in conf_switch:
@@ -103,7 +88,7 @@ def setup_switch(device_id, name, insteonhub, hass, add_devices_callback):
 
     if not config_from_file(
             hass.config.path(INSTEON_LOCAL_SWITCH_CONF), conf_switch):
-        _LOGGER.error('failed to save config file')
+        _LOGGER.error("Failed to save configuration file")
 
     device = insteonhub.switch(device_id)
     add_devices_callback([InsteonLocalSwitchDevice(device, name)])
@@ -117,7 +102,7 @@ def config_from_file(filename, config=None):
             with open(filename, 'w') as fdesc:
                 fdesc.write(json.dumps(config))
         except IOError as error:
-            _LOGGER.error('Saving config file failed: %s', error)
+            _LOGGER.error("Saving configuration file failed: %s", error)
             return False
         return True
     else:
@@ -127,7 +112,7 @@ def config_from_file(filename, config=None):
                 with open(filename, 'r') as fdesc:
                     return json.loads(fdesc.read())
             except IOError as error:
-                _LOGGER.error('Reading config file failed: %s', error)
+                _LOGGER.error("Reading config file failed: %s", error)
                 # This won't work yet
                 return False
         else:
@@ -150,8 +135,8 @@ class InsteonLocalSwitchDevice(SwitchDevice):
 
     @property
     def unique_id(self):
-        """Return the ID of this insteon node."""
-        return 'insteon_local_' + self.node.device_id
+        """Return the ID of this Insteon node."""
+        return 'insteon_local_{}'.format(self.node.device_id)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
