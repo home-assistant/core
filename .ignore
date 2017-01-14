@@ -2,6 +2,5 @@
 
 # Ignore generated html and javascript files
 /homeassistant/components/frontend/www_static/*.html
-/homeassistant/components/frontend/www_static/panels/*.html
 /homeassistant/components/frontend/www_static/*.js
-/homeassistant/components/frontend/www_static/panels/*.js
+/homeassistant/components/frontend/www_static/panels/*.html
