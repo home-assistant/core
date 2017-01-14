@@ -18,8 +18,6 @@ REQUIREMENTS = ['zengge==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'zengge'
-
 SUPPORT_ZENGGE_LED = (SUPPORT_RGB_COLOR | SUPPORT_WHITE_VALUE)
 
 DEVICE_SCHEMA = vol.Schema({
@@ -64,6 +62,7 @@ class ZenggeLight(Light):
             self.is_valid = False
             _LOGGER.error(
                 "Failed to connect to bulb %s, %s", self._address, self._name)
+            return
         self.update()
 
     @property
