@@ -5,18 +5,19 @@ import logging
 import os
 import shutil
 from types import MappingProxyType
-
 # pylint: disable=unused-import
 from typing import Any, List, Tuple  # NOQA
 
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_UNIT_SYSTEM,
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__)
+from homeassistant.core import DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import get_component
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as date_util, location as loc_util
@@ -107,6 +108,11 @@ def _dict_to_list(inp: Any) -> List:
     return res
 
 
+PACKAGES_CONFIG_SCHEMA = vol.Schema({
+    cv.slug: vol.Schema(  # Package names are slugs
+        {cv.slug: vol.Any(dict, list)})  # Only slugs for component names
+})
+
 CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_NAME: vol.Coerce(str),
     CONF_LATITUDE: cv.latitude,
@@ -117,7 +123,8 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_TIME_ZONE: cv.time_zone,
     vol.Required(CONF_CUSTOMIZE,
                  default=MappingProxyType({})): vol.All(
-                     _dict_to_list, [CUSTOMIZE_SCHEMA_ENTRY])
+                     _dict_to_list, [CUSTOMIZE_SCHEMA_ENTRY]),
+    vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 
 
@@ -364,3 +371,91 @@ def async_process_ha_core_config(hass, config):
         _LOGGER.warning(
             'Incomplete core config. Auto detected %s',
             ', '.join('{}: {}'.format(key, val) for key, val in discovered))
+
+
+def _log_pkg_error(package, component, config, message):
+    """Log an error while merging."""
+    message = "Package {} setup failed. Component {} {}".format(
+        package, component, message)
+
+    pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
+    message += " (See {}:{}). ".format(
+        getattr(pack_config, '__config_file__', '?'),
+        getattr(pack_config, '__line__', '?'))
+
+    _LOGGER.error(message)
+
+
+def _identify_config_schema(module):
+    """Extract the schema and identify list or dict based."""
+    try:
+        schema = module.CONFIG_SCHEMA.schema[module.DOMAIN]
+    except (AttributeError, KeyError):
+        return (None, None)
+    t_schema = str(schema)
+    if (t_schema.startswith('<function ordered_dict') or
+            t_schema.startswith('<Schema({<function slug')):
+        return ('dict', schema)
+    if t_schema.startswith('All(<function ensure_list'):
+        return ('list', schema)
+    return '', schema
+
+
+def merge_packages_config(config, packages):
+    """Merge packages into the top-level config. Mutate config."""
+    # pylint: disable=too-many-nested-blocks
+    PACKAGES_CONFIG_SCHEMA(packages)
+    for pack_name, pack_conf in packages.items():
+        for comp_name, comp_conf in pack_conf.items():
+            component = get_component(comp_name)
+
+            if component is None:
+                _log_pkg_error(pack_name, comp_name, config, "does not exist")
+                continue
+
+            if hasattr(component, 'PLATFORM_SCHEMA'):
+                config[comp_name] = cv.ensure_list(config.get(comp_name))
+                config[comp_name].extend(cv.ensure_list(comp_conf))
+                continue
+
+            if hasattr(component, 'CONFIG_SCHEMA'):
+                merge_type, _ = _identify_config_schema(component)
+
+                if merge_type == 'list':
+                    config[comp_name] = cv.ensure_list(config.get(comp_name))
+                    config[comp_name].extend(cv.ensure_list(comp_conf))
+                    continue
+
+                if merge_type == 'dict':
+                    if not isinstance(comp_conf, dict):
+                        _log_pkg_error(
+                            pack_name, comp_name, config,
+                            "cannot be merged. Expected a dict.")
+                        continue
+
+                    if comp_name not in config:
+                        config[comp_name] = OrderedDict()
+
+                    if not isinstance(config[comp_name], dict):
+                        _log_pkg_error(
+                            pack_name, comp_name, config,
+                            "cannot be merged. Dict expected in main config.")
+                        continue
+
+                    for key, val in comp_conf.items():
+                        if key in config[comp_name]:
+                            _log_pkg_error(pack_name, comp_name, config,
+                                           "duplicate key '{}'".format(key))
+                            continue
+                        config[comp_name][key] = val
+                    continue
+
+            # The last merge type are sections that may occur only once
+            if comp_name in config:
+                _log_pkg_error(
+                    pack_name, comp_name, config, "may occur only once"
+                    " and it already exist in your main config")
+                continue
+            config[comp_name] = comp_conf
+
+    return config

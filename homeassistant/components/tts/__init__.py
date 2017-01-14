@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tts/
 """
 import asyncio
-import functools
 import hashlib
 import logging
 import mimetypes
@@ -247,8 +246,6 @@ class SpeechManager(object):
     def async_register_engine(self, engine, provider, config):
         """Register a TTS provider."""
         provider.hass = self.hass
-        if CONF_LANG in config:
-            provider.language = config.get(CONF_LANG)
         self.providers[engine] = provider
 
     @asyncio.coroutine
@@ -257,9 +254,16 @@ class SpeechManager(object):
 
         This method is a coroutine.
         """
+        provider = self.providers[engine]
+
+        language = language or provider.default_language
+        if language is None or \
+           language not in provider.supported_languages:
+            raise HomeAssistantError("Not supported language {0}".format(
+                language))
+
         msg_hash = hashlib.sha1(bytes(message, 'utf-8')).hexdigest()
-        language_key = language or self.providers[engine].language
-        key = KEY_PATTERN.format(msg_hash, language_key, engine).lower()
+        key = KEY_PATTERN.format(msg_hash, language, engine).lower()
         use_cache = cache if cache is not None else self.use_cache
 
         # is speech allready in memory
@@ -387,13 +391,22 @@ class Provider(object):
     """Represent a single provider."""
 
     hass = None
-    language = None
 
-    def get_tts_audio(self, message, language=None):
+    @property
+    def default_language(self):
+        """Default language."""
+        return None
+
+    @property
+    def supported_languages(self):
+        """List of supported languages."""
+        return None
+
+    def get_tts_audio(self, message, language):
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
-    def async_get_tts_audio(self, message, language=None):
+    def async_get_tts_audio(self, message, language):
         """Load tts audio file from provider.
 
         Return a tuple of file extension and data as bytes.
@@ -401,8 +414,7 @@ class Provider(object):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.loop.run_in_executor(
-            None,
-            functools.partial(self.get_tts_audio, message, language=language))
+            None, self.get_tts_audio, message, language)
 
 
 class TextToSpeechView(HomeAssistantView):

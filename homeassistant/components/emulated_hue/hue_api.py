@@ -91,7 +91,7 @@ class HueOneLightStateView(HomeAssistantView):
         self.config = config
 
     @core.callback
-    def get(self, request, username, entity_id=None):
+    def get(self, request, username, entity_id):
         """Process a request to get the state of an individual light."""
         hass = request.app['hass']
         entity_id = self.config.number_to_entity_id(entity_id)

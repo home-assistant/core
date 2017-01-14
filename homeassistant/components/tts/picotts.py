@@ -1,8 +1,8 @@
 """
-Support for the picotts speech service.
+Support for the Pico TTS speech service.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/picotts/
+https://home-assistant.io/components/tts.picotts/
 """
 import os
 import tempfile
@@ -29,18 +29,31 @@ def get_engine(hass, config):
     if shutil.which("pico2wave") is None:
         _LOGGER.error("'pico2wave' was not found")
         return False
-    return PicoProvider()
+    return PicoProvider(config[CONF_LANG])
 
 
 class PicoProvider(Provider):
-    """pico speech api provider."""
+    """The Pico TTS API provider."""
 
-    def get_tts_audio(self, message, language=None):
+    def __init__(self, lang):
+        """Initialize Pico TTS provider."""
+        self._lang = lang
+
+    @property
+    def default_language(self):
+        """Default language."""
+        return self._lang
+
+    @property
+    def supported_languages(self):
+        """List of supported languages."""
+        return SUPPORT_LANGUAGES
+
+    def get_tts_audio(self, message, language):
         """Load TTS using pico2wave."""
-        if language not in SUPPORT_LANGUAGES:
-            language = self.language
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmpf:
             fname = tmpf.name
+
         cmd = ['pico2wave', '--wave', fname, '-l', language, message]
         subprocess.call(cmd)
         data = None
@@ -52,6 +65,7 @@ class PicoProvider(Provider):
             return (None, None)
         finally:
             os.remove(fname)
+
         if data:
             return ("wav", data)
         return (None, None)

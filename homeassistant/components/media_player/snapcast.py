@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE,
-    PLATFORM_SCHEMA, MediaPlayerDevice)
+    SUPPORT_PLAY, PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'snapcast'
 
 SUPPORT_SNAPCAST = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_SELECT_SOURCE
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

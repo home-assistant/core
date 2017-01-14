@@ -96,8 +96,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'message': event['summary'],
             'all_day': True,
             'offset_reached': False,
-            'start_time': '{} 06:00:00'.format(event['start']['date']),
-            'end_time': '{} 06:00:00'.format(event['end']['date']),
+            'start_time': '{} 00:00:00'.format(event['start']['date']),
+            'end_time': '{} 00:00:00'.format(event['end']['date']),
             'location': event['location'],
             'description': event['description']
         })
@@ -416,8 +416,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'message': event_summary,
             'all_day': True,
             'offset_reached': False,
-            'start_time': '{} 06:00:00'.format(event['start']['date']),
-            'end_time': '{} 06:00:00'.format(event['end']['date']),
+            'start_time': '{} 00:00:00'.format(event['start']['date']),
+            'end_time': '{} 00:00:00'.format(event['end']['date']),
             'location': event['location'],
             'description': event['description']
         })

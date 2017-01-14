@@ -7,11 +7,19 @@ set -e
 cd "$(dirname "$0")/.."
 
 echo "Installing dependencies..."
+# Requirements_all.txt states minimum pip version as 7.0.0 however,
+# parameter --only-binary doesn't work with pip < 7.0.0. Causing
+# python3 -m pip install -r requirements_all.txt to fail unless pip upgraded.
+
+if ! python3 -c 'import pkg_resources ; pkg_resources.require(["pip>=7.0.0"])' 2>/dev/null ; then
+  echo "Upgrading pip..."
+  python3 -m pip install -U pip
+fi
 python3 -m pip install -r requirements_all.txt
 
 REQ_STATUS=$?
 
-echo  "Installing development dependencies.."
+echo  "Installing development dependencies..."
 python3 -m pip install -r requirements_test.txt
 
 REQ_DEV_STATUS=$?
