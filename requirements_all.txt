@@ -413,7 +413,7 @@ pydispatcher==2.0.5
 pyemby==0.2
 
 # homeassistant.components.envisalink
-pyenvisalink==1.9
+pyenvisalink==2.0
 
 # homeassistant.components.ifttt
 pyfttt==0.3
