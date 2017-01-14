@@ -153,7 +153,7 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        if self.operation_mode == 'auto':
+        if self.current_operation == 'auto':
             return int(self.thermostat['runtime']['desiredCool'] / 10)
         else:
             return None
@@ -161,7 +161,7 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.operation_mode == 'auto':
+        if self.current_operation == 'auto':
             return None
         if self.current_operation == STATE_HEAT:
             return int(self.thermostat['runtime']['desiredHeat'] / 10)
