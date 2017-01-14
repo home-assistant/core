@@ -353,3 +353,22 @@ class TestScriptHelper(unittest.TestCase):
         script_obj.run()
         self.hass.block_till_done()
         assert len(script_obj._config_cache) == 2
+
+    def test_last_triggered(self):
+        """Test the last_triggered."""
+        event = 'test_event'
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {'delay': {'seconds': 5}},
+            {'event': event}]))
+
+        assert script_obj.last_triggered is None
+
+        time = dt_util.utcnow()
+        with mock.patch('homeassistant.helpers.script.date_util.utcnow',
+                        return_value=time):
+            script_obj.run()
+            self.hass.block_till_done()
+
+        assert script_obj.last_triggered == time

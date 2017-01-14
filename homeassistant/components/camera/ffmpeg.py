@@ -84,9 +84,15 @@ class FFmpegCamera(Camera):
                 if not data:
                     break
                 response.write(data)
+
+        except asyncio.CancelledError:
+            _LOGGER.debug("Close stream by browser.")
+            response = None
+
         finally:
-            self.hass.async_add_job(stream.close())
-            yield from response.write_eof()
+            yield from stream.close()
+            if response is not None:
+                yield from response.write_eof()
 
     @property
     def name(self):
