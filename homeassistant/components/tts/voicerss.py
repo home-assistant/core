@@ -93,34 +93,27 @@ class VoiceRSSProvider(Provider):
     def __init__(self, hass, conf):
         """Init VoiceRSS TTS service."""
         self.hass = hass
-        self._extension = conf[CONF_CODEC]
-        self._lang = conf[CONF_LANG]
+        self.extension = conf.get(CONF_CODEC)
 
-        self._form_data = {
-            'key': conf[CONF_API_KEY],
-            'hl': conf[CONF_LANG],
-            'c': (conf[CONF_CODEC]).upper(),
-            'f': conf[CONF_FORMAT],
+        self.form_data = {
+            'key': conf.get(CONF_API_KEY),
+            'hl': conf.get(CONF_LANG),
+            'c': (conf.get(CONF_CODEC)).upper(),
+            'f': conf.get(CONF_FORMAT),
         }
 
-    @property
-    def default_language(self):
-        """Default language."""
-        return self._lang
-
-    @property
-    def supported_languages(self):
-        """List of supported languages."""
-        return SUPPORT_LANGUAGES
-
     @asyncio.coroutine
-    def async_get_tts_audio(self, message, language):
+    def async_get_tts_audio(self, message, language=None):
         """Load TTS from voicerss."""
         websession = async_get_clientsession(self.hass)
-        form_data = self._form_data.copy()
+        form_data = self.form_data.copy()
 
         form_data['src'] = message
-        form_data['hl'] = language
+
+        # If language is specified and supported - use it instead of the
+        # language in the config.
+        if language in SUPPORT_LANGUAGES:
+            form_data['hl'] = language
 
         request = None
         try:
@@ -148,4 +141,4 @@ class VoiceRSSProvider(Provider):
             if request is not None:
                 yield from request.release()
 
-        return (self._extension, data)
+        return (self.extension, data)

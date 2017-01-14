@@ -32,7 +32,7 @@ from .const import (
     KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
     KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD,
     KEY_DEVELOPMENT, KEY_AUTHENTICATED)
-from .static import FILE_SENDER, CACHING_FILE_SENDER, staticresource_middleware
+from .static import FILE_SENDER, GZIP_FILE_SENDER, staticresource_middleware
 from .util import get_real_ip
 
 DOMAIN = 'http'
@@ -272,7 +272,7 @@ class HomeAssistantWSGI(object):
         @asyncio.coroutine
         def serve_file(request):
             """Serve file from disk."""
-            res = yield from CACHING_FILE_SENDER.send(request, filepath)
+            res = yield from GZIP_FILE_SENDER.send(request, filepath)
             return res
 
         # aiohttp supports regex matching for variables. Using that as temp

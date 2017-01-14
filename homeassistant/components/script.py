@@ -31,7 +31,6 @@ CONF_SEQUENCE = "sequence"
 
 ATTR_VARIABLES = 'variables'
 ATTR_LAST_ACTION = 'last_action'
-ATTR_LAST_TRIGGERED = 'last_triggered'
 ATTR_CAN_CANCEL = 'can_cancel'
 
 _LOGGER = logging.getLogger(__name__)
@@ -156,7 +155,6 @@ class ScriptEntity(ToggleEntity):
     def state_attributes(self):
         """Return the state attributes."""
         attrs = {}
-        attrs[ATTR_LAST_TRIGGERED] = self.script.last_triggered
         if self.script.can_cancel:
             attrs[ATTR_CAN_CANCEL] = self.script.can_cancel
         if self.script.last_action:

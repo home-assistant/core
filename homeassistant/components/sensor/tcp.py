@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.template import Template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +57,7 @@ class TcpSensor(Entity):
         value_template = config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
-            value_template.hass = hass
+            value_template = Template(value_template, hass)
 
         self._hass = hass
         self._config = {

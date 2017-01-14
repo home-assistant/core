@@ -276,13 +276,9 @@ class SynologyCamera(Camera):
             _LOGGER.exception("Error on %s", streaming_url)
             raise HTTPGatewayTimeout()
 
-        except asyncio.CancelledError:
-            _LOGGER.debug("Close stream by browser.")
-            response = None
-
         finally:
             if stream is not None:
-                stream.close()
+                self.hass.async_add_job(stream.release())
             if response is not None:
                 yield from response.write_eof()
 

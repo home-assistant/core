@@ -10,7 +10,6 @@ COMMENT_REQUIREMENTS = (
     'RPi.GPIO',
     'rpi-rf',
     'Adafruit_Python_DHT',
-    'Adafruit_BBIO',
     'fritzconnection',
     'pybluez',
     'bluepy',

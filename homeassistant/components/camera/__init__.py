@@ -8,7 +8,6 @@ https://home-assistant.io/components/camera/
 import asyncio
 from datetime import timedelta
 import logging
-import hashlib
 
 from aiohttp import web
 
@@ -48,13 +47,11 @@ class Camera(Entity):
     def __init__(self):
         """Initialize a camera."""
         self.is_streaming = False
-        self._access_token = hashlib.sha256(
-            str.encode(str(id(self)))).hexdigest()
 
     @property
     def access_token(self):
         """Access token for this camera."""
-        return self._access_token
+        return str(id(self))
 
     @property
     def should_poll(self):

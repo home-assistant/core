@@ -42,16 +42,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_get_engine(hass, config):
     """Setup Google speech component."""
-    return GoogleProvider(hass, config[CONF_LANG])
+    return GoogleProvider(hass)
 
 
 class GoogleProvider(Provider):
     """Google speech api provider."""
 
-    def __init__(self, hass, lang):
+    def __init__(self, hass):
         """Init Google TTS service."""
         self.hass = hass
-        self._lang = lang
         self.headers = {
             'Referer': "http://translate.google.com/",
             'User-Agent': ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
@@ -59,24 +58,19 @@ class GoogleProvider(Provider):
                            "Chrome/47.0.2526.106 Safari/537.36")
         }
 
-    @property
-    def default_language(self):
-        """Default language."""
-        return self._lang
-
-    @property
-    def supported_languages(self):
-        """List of supported languages."""
-        return SUPPORT_LANGUAGES
-
     @asyncio.coroutine
-    def async_get_tts_audio(self, message, language):
+    def async_get_tts_audio(self, message, language=None):
         """Load TTS from google."""
         from gtts_token import gtts_token
 
         token = gtts_token.Token()
         websession = async_get_clientsession(self.hass)
         message_parts = self._split_message_to_parts(message)
+
+        # If language is not specified or is not supported - use the language
+        # from the config.
+        if language not in SUPPORT_LANGUAGES:
+            language = self.language
 
         data = b''
         for idx, part in enumerate(message_parts):

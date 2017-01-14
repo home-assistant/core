@@ -29,31 +29,18 @@ def get_engine(hass, config):
     if shutil.which("pico2wave") is None:
         _LOGGER.error("'pico2wave' was not found")
         return False
-    return PicoProvider(config[CONF_LANG])
+    return PicoProvider()
 
 
 class PicoProvider(Provider):
     """pico speech api provider."""
 
-    def __init__(self, lang):
-        """Initialize pico provider."""
-        self._lang = lang
-
-    @property
-    def default_language(self):
-        """Default language."""
-        return self._lang
-
-    @property
-    def supported_languages(self):
-        """List of supported languages."""
-        return SUPPORT_LANGUAGES
-
-    def get_tts_audio(self, message, language):
+    def get_tts_audio(self, message, language=None):
         """Load TTS using pico2wave."""
+        if language not in SUPPORT_LANGUAGES:
+            language = self.language
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmpf:
             fname = tmpf.name
-
         cmd = ['pico2wave', '--wave', fname, '-l', language, message]
         subprocess.call(cmd)
         data = None
@@ -65,7 +52,6 @@ class PicoProvider(Provider):
             return (None, None)
         finally:
             os.remove(fname)
-
         if data:
             return ("wav", data)
         return (None, None)
