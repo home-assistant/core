@@ -1,10 +1,11 @@
 """
-Support for customised Kankun SP3 wifi switch.
+Support for customised Kankun SP3 Wifi switch.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.kankun/
 """
 import logging
+
 import requests
 import voluptuous as vol
 
@@ -35,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Find and return kankun switches."""
+    """Set up Kankun Wifi switches."""
     switches = config.get('switches', {})
     devices = []
 
@@ -54,15 +55,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class KankunSwitch(SwitchDevice):
-    """Represents a Kankun wifi switch."""
+    """Representation of a Kankun Wifi switch."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, name, host, port, path, user, passwd):
-        """Initialise device."""
+        """Initialise the device."""
         self._hass = hass
         self._name = name
         self._state = False
-        self._url = "http://{}:{}{}".format(host, port, path)
+        self._url = 'http://{}:{}{}'.format(host, port, path)
         if user is not None:
             self._auth = (user, passwd)
         else:
@@ -70,25 +70,25 @@ class KankunSwitch(SwitchDevice):
 
     def _switch(self, newstate):
         """Switch on or off."""
-        _LOGGER.info('Switching to state: %s', newstate)
+        _LOGGER.info("Switching to state: %s", newstate)
 
         try:
-            req = requests.get("{}?set={}".format(self._url, newstate),
-                               auth=self._auth)
+            req = requests.get('{}?set={}'.format(self._url, newstate),
+                               auth=self._auth, timeout=5)
             return req.json()['ok']
         except requests.RequestException:
-            _LOGGER.error('Switching failed.')
+            _LOGGER.error("Switching failed")
 
     def _query_state(self):
         """Query switch state."""
-        _LOGGER.info('Querying state from: %s', self._url)
+        _LOGGER.info("Querying state from: %s", self._url)
 
         try:
-            req = requests.get("{}?get=state".format(self._url),
-                               auth=self._auth)
+            req = requests.get('{}?get=state'.format(self._url),
+                               auth=self._auth, timeout=5)
             return req.json()['state'] == "on"
         except requests.RequestException:
-            _LOGGER.error('State query failed.')
+            _LOGGER.error("State query failed")
 
     @property
     def should_poll(self):
