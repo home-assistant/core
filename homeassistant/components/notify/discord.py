@@ -10,17 +10,17 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['discord.py']
 
-CONF_CLIENT_ID = 'client_id'
+CONF_TOKEN = 'token'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CLIENT_ID): cv.string
+    vol.Required(CONF_TOKEN): cv.string
 })
 
 
 def get_service(hass, config):
     """Get the Discord notification service."""
     try:
-        client_id=config.get(CONF_CLIENT_ID)
+        client_id=config.get(CONF_TOKEN)
     except RandomError:
         _LOGGER.error("Please specify a client ID")
         return None
