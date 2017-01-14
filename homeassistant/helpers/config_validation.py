@@ -388,7 +388,46 @@ def ordered_dict(value_validator, key_validator=match_all):
     return validator
 
 
+def list_or_comma_separated(member_validator=match_all) -> Callable:
+    """Return a validator.
+
+    The validator checks that the value is a list or a comma-separated string
+    that fits member_validator.
+    """
+    def validate(value: Union[str, Sequence]) -> Sequence:
+        """Validate string or sequence."""
+        if value is None:
+            raise vol.Invalid('Value can not be None')
+        if isinstance(value, str):
+            value = [member.strip() for member in value.split(',')]
+        try:
+            return [member_validator(member) for member in value]
+        except (ValueError, TypeError):
+            raise vol.Invalid(
+                'Expected sequence or string, got {}'.format(value))
+
+    return validate
+
+
+def validate_some_keys(keys: Sequence[str], validator: Callable) -> Callable:
+    """Return a validator that validates specified dictionary keys."""
+    def validate(value: Dict) -> Dict:
+        """Validate some of the dictionary keys."""
+        if not isinstance(value, dict):
+            raise vol.Invalid('validate_some_keys require a dict')
+        result = OrderedDict()
+        for key, val in value.items():
+            if key in keys:
+                result[key] = validator(val)
+            else:
+                result[key] = val
+        return result
+
+    return validate
+
+
 # Validator helpers
+
 
 def key_dependency(key, dependency):
     """Validate that all dependencies exist for key."""

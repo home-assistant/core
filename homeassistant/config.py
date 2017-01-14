@@ -19,9 +19,10 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import set_customize
 from homeassistant.util import dt as date_util, location as loc_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.helpers.customize import (
+    CUSTOMIZE_CONFIG_KEYS, set_customize)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,8 +88,10 @@ tts:
 
 
 CUSTOMIZE_SCHEMA_ENTRY = vol.All(
-    cv.has_at_least_one_key('entity_id', 'entity_id_glob'),
-    cv.ordered_dict(cv.match_all, cv.string))
+    cv.has_at_least_one_key(*CUSTOMIZE_CONFIG_KEYS),
+    cv.ordered_dict(cv.match_all, cv.string),
+    cv.validate_some_keys(
+        CUSTOMIZE_CONFIG_KEYS, cv.list_or_comma_separated(vol.Lower)))
 
 
 def _dict_to_list(inp: Any) -> List:
@@ -298,7 +301,7 @@ def async_process_ha_core_config(hass, config):
     if CONF_TIME_ZONE in config:
         set_time_zone(config.get(CONF_TIME_ZONE))
 
-    set_customize(config.get(CONF_CUSTOMIZE) or {})
+    set_customize(hass, config.get(CONF_CUSTOMIZE) or {})
 
     if CONF_UNIT_SYSTEM in config:
         if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL:

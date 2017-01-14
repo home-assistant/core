@@ -165,6 +165,30 @@ def test_entity_ids():
     ]
 
 
+def test_list_or_comma_separated():
+    """Test list_or_comma_separated."""
+    schema = vol.Schema(cv.list_or_comma_separated())
+
+    options = (
+        12,
+    )
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    options = (
+        [],
+        ['string'],
+        'string1,string2'
+    )
+    for value in options:
+        schema(value)
+
+    assert schema('string1, string2 ') == [
+        'string1', 'string2'
+    ]
+
+
 def test_event_schema():
     """Test event_schema validation."""
     options = (

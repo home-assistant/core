@@ -1,27 +1,22 @@
 """An abstract class for entities."""
 import asyncio
-import collections
 import logging
 import functools as ft
-import fnmatch
 from timeit import default_timer as timer
 
-from typing import Optional, List, Dict
+from typing import Optional, List
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_ENTITY_PICTURE)
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
-
-# Entity attributes that we will overwrite
-_OVERWRITE = {}  # type: Dict[str, Any]
-_OVERWRITE_CACHE = {}  # type: Dict[str, Dict]
+from homeassistant.helpers.customize import get_overrides
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,17 +53,6 @@ def async_generate_entity_id(entity_id_format: str, name: Optional[str],
 
     return ensure_unique_string(
         entity_id_format.format(slugify(name)), current_ids)
-
-
-def set_customize(customize: List[Dict]) -> None:
-    """Overwrite all current customize settings.
-
-    Async friendly.
-    """
-    global _OVERWRITE
-    global _OVERWRITE_CACHE
-    _OVERWRITE = customize
-    _OVERWRITE_CACHE = {}
 
 
 class Entity(object):
@@ -257,67 +241,8 @@ class Entity(object):
                             'https://goo.gl/Nvioub', self.entity_id,
                             end - start)
 
-        def get_overrides(entity_id: str) -> Dict:
-            """Return a dictionary of overrides related to entity_id.
-
-            Whole-domain overrides are of lowest priorities,
-            then glob on entity ID, and finally exact entity_id
-            matches are of highest priority.
-
-            The lookups are cached in a global variable.
-            """
-            result = _OVERWRITE_CACHE.get(self.entity_id)
-            if result is not None:
-                return result
-            domain_result = {}  # type: Dict[str, Any]
-            glob_result = {}  # type: Dict[str, Any]
-            exact_result = {}  # type: Dict[str, Any]
-            domain = split_entity_id(entity_id)[0]
-
-            def clean_entry(entry: Dict) -> Dict:
-                """Clean up entity-matching keys."""
-                entry.pop('entity_id', None)
-                entry.pop('entity_id_glob', None)
-                return entry
-
-            def deep_update(target: Dict, source: Dict) -> None:
-                """Deep update a dictionary."""
-                for key, value in source.items():
-                    if isinstance(value, collections.Mapping):
-                        updated_value = target.get(key, {})
-                        # If the new value is map, but the old value is not -
-                        # overwrite the old value.
-                        if not isinstance(updated_value, collections.Mapping):
-                            updated_value = {}
-                        deep_update(updated_value, value)
-                        target[key] = updated_value
-                    else:
-                        target[key] = source[key]
-
-            for rule in _OVERWRITE:
-                if 'entity_id' in rule:
-                    entities = [
-                        key.lower() for key in rule['entity_id'].split(',')]
-                    if domain in entities:
-                        deep_update(domain_result, rule)
-                    if entity_id in entities:
-                        deep_update(exact_result, rule)
-                if 'entity_id_glob' in rule:
-                    for entity_id_glob in [
-                            key.lower() for key in rule[
-                                'entity_id_glob'].split(',')]:
-                        if fnmatch.fnmatchcase(entity_id, entity_id_glob):
-                            deep_update(glob_result, rule)
-                            break
-            result = {}
-            deep_update(result, clean_entry(domain_result))
-            deep_update(result, clean_entry(glob_result))
-            deep_update(result, clean_entry(exact_result))
-            _OVERWRITE_CACHE[entity_id] = result
-            return result
-
         # Overwrite properties that have been set in the config file.
-        attr.update(get_overrides(self.entity_id))
+        attr.update(get_overrides(self.hass, self.entity_id))
 
         # Remove hidden property if false so it won't show up.
         if not attr.get(ATTR_HIDDEN, True):
