@@ -3,19 +3,20 @@
 
 # Required debian packages for running hass or components
 PACKAGES=(
-  nmap               # homeassistant.components.device_tracker.nmap_tracker
-  net-tools          # homeassistant.components.device_tracker.nmap_tracker
-  bluetooth          # homeassistant.components.device_tracker.bluetooth_tracker
-  libtelldus-core2   # homeassistant.components.tellstick
+  # homeassistant.components.device_tracker.nmap_tracker
+  nmap net-tools
+  # homeassistant.components.device_tracker.bluetooth_tracker
+  bluetooth libglib2.0-dev libbluetooth-dev
+  # homeassistant.components.tellstick
+  libtelldus-core2
 )
 
-# Required debian packages for building components
+# Required debian packages for building dependencies
 PACKAGES_DEV=(
-  cython3            # python-openzwave
-  libudev-dev        # python-openzwave, libcec
-  cmake              # libcec
-  libxrandr-dev      # libcec
-  swig               # libcec
+  # python-openzwave
+  cython3 libudev-dev
+  # libcec
+  cmake swig libxrandr-dev
 )
 
 # Stop on errors
