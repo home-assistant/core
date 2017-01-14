@@ -172,8 +172,14 @@ class Camera(Entity):
                     yield from response.drain()
 
                 yield from asyncio.sleep(.5)
+
+        except asyncio.CancelledError:
+            _LOGGER.debug("Close stream by browser.")
+            response = None
+
         finally:
-            yield from response.write_eof()
+            if response is not None:
+                yield from response.write_eof()
 
     @property
     def state(self):
