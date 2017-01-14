@@ -7,8 +7,8 @@ from homeassistant.bootstrap import setup_component
 from homeassistant.core import callback
 import homeassistant.components.alert as alert
 import homeassistant.components.notify as notify
-from homeassistant.const import (CONF_ENTITIES, CONF_ENTITY_ID, STATE_IDLE,
-                                 CONF_NAME, CONF_STATE, STATE_ON, STATE_OFF)
+from homeassistant.const import (CONF_ENTITY_ID, STATE_IDLE, CONF_NAME,
+                                 CONF_STATE, STATE_ON, STATE_OFF)
 
 from tests.common import get_test_home_assistant
 
@@ -16,14 +16,18 @@ NAME = "alert_test"
 NOTIFIER = 'test'
 TEST_CONFIG = \
     {alert.DOMAIN: {
-        CONF_ENTITIES: [{
+        NAME: {
             CONF_NAME: NAME,
             CONF_ENTITY_ID: "sensor.test",
             CONF_STATE: STATE_ON,
             alert.CONF_REPEAT: 30,
             alert.CONF_SKIP_FIRST: False,
-            alert.CONF_NOTIFIERS: [NOTIFIER]}]
+            alert.CONF_NOTIFIERS: [NOTIFIER]}
         }}
+TEST_BACKOFF = [NAME, NAME, "sensor.test", STATE_ON,
+                30, False, NOTIFIER, True, 1.5]
+TEST_NOACK = [NAME, NAME, "sensor.test", STATE_ON,
+              30, False, NOTIFIER, False, 1.0]
 ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
 
 
@@ -66,6 +70,7 @@ class TestAlert(unittest.TestCase):
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
         alert.turn_off(self.hass, ENTITY_ID)
+        self.hass.block_till_done()
         self.assertEqual(STATE_OFF, self.hass.states.get(ENTITY_ID).state)
 
         # alert should not be silenced on next fire
@@ -82,8 +87,10 @@ class TestAlert(unittest.TestCase):
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
         alert.turn_off(self.hass, ENTITY_ID)
+        self.hass.block_till_done()
         self.assertEqual(STATE_OFF, self.hass.states.get(ENTITY_ID).state)
         alert.turn_on(self.hass, ENTITY_ID)
+        self.hass.block_till_done()
         self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
 
     def test_toggle(self):
@@ -93,8 +100,10 @@ class TestAlert(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
         alert.toggle(self.hass, ENTITY_ID)
+        self.hass.block_till_done()
         self.assertEqual(STATE_OFF, self.hass.states.get(ENTITY_ID).state)
         alert.toggle(self.hass, ENTITY_ID)
+        self.hass.block_till_done()
         self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
 
     def test_hidden(self):
@@ -138,7 +147,7 @@ class TestAlert(unittest.TestCase):
     def test_skipfirst(self):
         """Test skipping first notification."""
         config = deepcopy(TEST_CONFIG)
-        config[alert.DOMAIN][CONF_ENTITIES][0][alert.CONF_SKIP_FIRST] = True
+        config[alert.DOMAIN][NAME][alert.CONF_SKIP_FIRST] = True
         events = []
 
         @callback
@@ -155,3 +164,22 @@ class TestAlert(unittest.TestCase):
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
         self.assertEqual(0, len(events))
+
+    def test_backoff(self):
+        """Test backoff feature."""
+        entity = alert.Alert(self.hass, *TEST_BACKOFF)
+        self.hass.async_add_job(entity.begin_alerting)
+        self.hass.block_till_done()
+        self.assertEqual(30 * 60 * 1.5, entity._next_delay.seconds)
+
+        self.hass.async_add_job(entity._notify())
+        self.hass.block_till_done()
+        self.assertEqual(30 * 60 * 1.5 * 1.5, entity._next_delay.seconds)
+
+    def test_noack(self):
+        """Test no ack feature."""
+        entity = alert.Alert(self.hass, *TEST_NOACK)
+        self.hass.async_add_job(entity.begin_alerting)
+        self.hass.block_till_done()
+
+        self.assertEqual(True, entity.hidden)
