@@ -1,28 +1,25 @@
 """
-Local Support for Insteon.
-
-Based on the insteonlocal library
-https://github.com/phareous/insteonlocal
+Local support for Insteon.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon_local/
 """
 import logging
-import voluptuous as vol
+
 import requests
-from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, CONF_HOST,
-                                 CONF_PORT, CONF_TIMEOUT)
+import voluptuous as vol
+
+from homeassistant.const import (
+    CONF_PASSWORD, CONF_USERNAME, CONF_HOST, CONF_PORT, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['insteonlocal==0.39']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'insteon_local'
-
 DEFAULT_PORT = 25105
-
 DEFAULT_TIMEOUT = 10
+DOMAIN = 'insteon_local'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -36,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup Insteon Hub component.
+    """Set up Insteon Hub component.
 
     This will automatically import associated lights.
     """
