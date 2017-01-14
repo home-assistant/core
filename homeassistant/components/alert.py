@@ -25,12 +25,22 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'alert'
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+CONF_BACKOFF = 'backoff'
+CONF_CAN_ACK = 'can_acknowledge'
 CONF_NOTIFIERS = 'notifiers'
 CONF_REPEAT = 'repeat'
 CONF_SKIP_FIRST = 'skip_first'
 
-DOMAIN = 'alert'
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+DEFAULT_BACKOFF = 1
+DEFAULT_CAN_ACK = True
+DEFAULT_SKIP_FIRST = False
+DEFAULT_STATE = STATE_ON
+
+MIN_DELAY = timedelta(minutes=1)
+MAX_DELAY = timedelta(days=1)
 
 ALERT_SCHEMA = vol.Schema({
     # pylint: disable=no-value-for-parameter
@@ -38,6 +48,8 @@ ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.string,
     vol.Optional(CONF_STATE): cv.string,
     vol.Required(CONF_REPEAT): cv.positive_int,
+    vol.Optional(CONF_BACKOFF): vol.Any(int, float),
+    vol.Optional(CONF_CAN_ACK): cv.boolean,
     vol.Optional(CONF_SKIP_FIRST): cv.boolean,
     vol.Required(CONF_NOTIFIERS): cv.ensure_list})
 
@@ -118,10 +130,14 @@ def async_setup(hass, config):
                 yield from alert.async_turn_off()
 
     for alert in alerts.get(CONF_ENTITIES):
-        entity = Alert(hass, alert[CONF_NAME], alert[CONF_ENTITY_ID],
-                       alert.get(CONF_STATE, STATE_ON), alert[CONF_REPEAT],
-                       alert.get(CONF_SKIP_FIRST, False),
-                       alert[CONF_NOTIFIERS])
+        entity = Alert(hass, alert[CONF_NAME],
+                       alert[CONF_ENTITY_ID],
+                       alert.get(CONF_STATE, DEFAULT_STATE),
+                       alert[CONF_REPEAT],
+                       alert.get(CONF_SKIP_FIRST, DEFAULT_SKIP_FIRST),
+                       alert[CONF_NOTIFIERS],
+                       alert.get(CONF_CAN_ACK, DEFAULT_CAN_ACK),
+                       alert.get(CONF_BACKOFF, DEFAULT_BACKOFF))
         all_alerts[entity.entity_id] = entity
 
     descriptions = yield from hass.loop.run_in_executor(
@@ -149,14 +165,18 @@ class Alert(ToggleEntity):
     """Representation of an alert."""
 
     def __init__(self, hass, name, entity, state, repeat, skip_first,
-                 notifiers):
+                 notifiers, can_ack, backoff):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
         self._alert_state = state
-        self._repeat = timedelta(minutes=repeat)
+        self._delay = timedelta(minutes=repeat)
         self._skip_first = skip_first
         self._notifiers = notifiers
+        self._can_ack = can_ack
+        self._backoff = backoff
+
+        self._next_delay = None
         self._firing = False
         self._ack = False
         self._cancel = None
@@ -182,7 +202,7 @@ class Alert(ToggleEntity):
     @property
     def hidden(self):
         """Hide the alert when it is not firing."""
-        return not self._firing
+        return not self._can_ack or not self._firing
 
     @asyncio.coroutine
     def watched_entity_change(self, entity, from_state, to_state):
@@ -199,6 +219,7 @@ class Alert(ToggleEntity):
         _LOGGER.info('Begining Alert: %s', self._name)
         self._ack = False
         self._firing = True
+        self._next_delay = self._delay
 
         if not self._skip_first:
             yield from self._notify()
@@ -221,7 +242,9 @@ class Alert(ToggleEntity):
         """Schedule a notification."""
         self._cancel = \
             event.async_track_time_interval(self.hass, self._notify,
-                                            self._repeat)
+                                            self._next_delay)
+        self._next_delay = \
+            min(max(self._next_delay * self._backoff, MIN_DELAY), MAX_DELAY)
 
     @asyncio.coroutine
     def _notify(self, *args):
