@@ -22,6 +22,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -72,8 +74,7 @@ def async_get_image(hass, entity_id, timeout=10):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup the camera component."""
-    component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     hass.http.register_view(CameraImageView(component.entities))
     hass.http.register_view(CameraMjpegStream(component.entities))
@@ -172,8 +173,14 @@ class Camera(Entity):
                     yield from response.drain()
 
                 yield from asyncio.sleep(.5)
+
+        except asyncio.CancelledError:
+            _LOGGER.debug("Close stream by browser.")
+            response = None
+
         finally:
-            yield from response.write_eof()
+            if response is not None:
+                yield from response.write_eof()
 
     @property
     def state(self):
