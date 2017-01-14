@@ -160,7 +160,6 @@ class YeelightLight(Light):
             try:
                 self.__bulb = yeelight.Bulb(self._ipaddr)
                 self.__bulb.get_properties()  # force init for type
-                #self.set_mode(MODE_MUSIC)
 
                 btype = self.__bulb.bulb_type
                 if btype == yeelight.BulbType.Color:
@@ -175,7 +174,6 @@ class YeelightLight(Light):
 
     def set_mode(self, mode):
         """ Sets mode of the bulb. """
-        _LOGGER.error("Mode: %s", mode)
         if mode == MODE_MUSIC:
             self._bulb.start_music()
         elif mode == MODE_NORMAL:
@@ -263,6 +261,8 @@ class YeelightLight(Light):
         self.set_colortemp(colortemp, duration)
         self.set_brightness(brightness, duration)
         self.set_flash(flash)
+
+        #self.set_mode(MODE_MUSIC)
 
         # saving current settings to the bulb if not flashing
         # TODO: make saving configurable?
