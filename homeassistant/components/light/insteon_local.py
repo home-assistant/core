@@ -1,50 +1,35 @@
 """
 Support for Insteon dimmers via local hub control.
 
-Based on the insteonlocal library
-https://github.com/phareous/insteonlocal
-
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.insteon_local/
-
---
-Example platform config
---
-
-insteon_local:
-  host: YOUR HUB IP
-  username: YOUR HUB USERNAME
-  password: YOUR HUB PASSWORD
-  timeout: 10
-  port: 25105
-
 """
 import json
 import logging
 import os
 from datetime import timedelta
-from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS, Light)
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.loader import get_component
 import homeassistant.util as util
 
-INSTEON_LOCAL_LIGHTS_CONF = 'insteon_local_lights.conf'
+_CONFIGURING = {}
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['insteon_local']
+DOMAIN = 'light'
+
+INSTEON_LOCAL_LIGHTS_CONF = 'insteon_local_lights.conf'
+
+MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 SUPPORT_INSTEON_LOCAL = SUPPORT_BRIGHTNESS
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
-
-DOMAIN = "light"
-
-_LOGGER = logging.getLogger(__name__)
-_CONFIGURING = {}
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Insteon local light platform."""
+    """Set up the Insteon local light platform."""
     insteonhub = hass.data['insteon_local']
 
     conf_lights = config_from_file(hass.config.path(INSTEON_LOCAL_LIGHTS_CONF))
@@ -92,12 +77,12 @@ def request_configuration(device_id, insteonhub, model, hass,
 
 
 def setup_light(device_id, name, insteonhub, hass, add_devices_callback):
-    """Setup light."""
+    """Set up the light."""
     if device_id in _CONFIGURING:
         request_id = _CONFIGURING.pop(device_id)
         configurator = get_component('configurator')
         configurator.request_done(request_id)
-        _LOGGER.info('Device configuration done!')
+        _LOGGER.info("Device configuration done!")
 
     conf_lights = config_from_file(hass.config.path(INSTEON_LOCAL_LIGHTS_CONF))
     if device_id not in conf_lights:
@@ -106,7 +91,7 @@ def setup_light(device_id, name, insteonhub, hass, add_devices_callback):
     if not config_from_file(
             hass.config.path(INSTEON_LOCAL_LIGHTS_CONF),
             conf_lights):
-        _LOGGER.error('failed to save config file')
+        _LOGGER.error("Failed to save configuration file")
 
     device = insteonhub.dimmer(device_id)
     add_devices_callback([InsteonLocalDimmerDevice(device, name)])
@@ -130,7 +115,7 @@ def config_from_file(filename, config=None):
                 with open(filename, 'r') as fdesc:
                     return json.loads(fdesc.read())
             except IOError as error:
-                _LOGGER.error('Reading config file failed: %s', error)
+                _LOGGER.error("Reading configuration file failed: %s", error)
                 # This won't work yet
                 return False
         else:
@@ -153,8 +138,8 @@ class InsteonLocalDimmerDevice(Light):
 
     @property
     def unique_id(self):
-        """Return the ID of this insteon node."""
-        return 'insteon_local_' + self.node.device_id
+        """Return the ID of this Insteon node."""
+        return 'insteon_local_{}'.format(self.node.device_id)
 
     @property
     def brightness(self):
