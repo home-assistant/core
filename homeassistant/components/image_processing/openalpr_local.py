@@ -173,6 +173,7 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
         """Return the name of the entity."""
         return self._name
 
+    @asyncio.coroutine
     def async_process_image(self, image):
         """Process image.
 
