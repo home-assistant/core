@@ -34,11 +34,6 @@ CONF_NOTIFIERS = 'notifiers'
 CONF_REPEAT = 'repeat'
 CONF_SKIP_FIRST = 'skip_first'
 
-DEFAULT_BACKOFF = 1
-DEFAULT_CAN_ACK = True
-DEFAULT_SKIP_FIRST = False
-DEFAULT_STATE = STATE_ON
-
 MIN_DELAY = timedelta(minutes=1)
 MAX_DELAY = timedelta(days=1)
 
@@ -46,16 +41,16 @@ ALERT_SCHEMA = vol.Schema({
     # pylint: disable=no-value-for-parameter
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ENTITY_ID): cv.string,
-    vol.Optional(CONF_STATE): cv.string,
+    vol.Required(CONF_STATE, default=STATE_ON): cv.string,
     vol.Required(CONF_REPEAT): cv.positive_int,
-    vol.Optional(CONF_BACKOFF): vol.Any(int, float),
-    vol.Optional(CONF_CAN_ACK): cv.boolean,
-    vol.Optional(CONF_SKIP_FIRST): cv.boolean,
+    vol.Required(CONF_BACKOFF, default=1): vol.Any(int, float),
+    vol.Required(CONF_CAN_ACK, default=True): cv.boolean,
+    vol.Required(CONF_SKIP_FIRST, default=False): cv.boolean,
     vol.Required(CONF_NOTIFIERS): cv.ensure_list})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_ENTITIES): [ALERT_SCHEMA],
+        cv.string: ALERT_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -72,8 +67,7 @@ def is_on(hass, entity_id):
 
 def turn_on(hass, entity_id):
     """Reset the alert."""
-    data = {ATTR_ENTITY_ID: entity_id}
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+    run_callback_threadsafe(hass.loop, async_turn_on, hass, entity_id)
 
 
 @callback
@@ -86,8 +80,7 @@ def async_turn_on(hass, entity_id):
 
 def turn_off(hass, entity_id):
     """Acknowledge alert."""
-    data = {ATTR_ENTITY_ID: entity_id}
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+    run_callback_threadsafe(hass.loop, async_turn_off, hass, entity_id)
 
 
 @callback
@@ -100,13 +93,15 @@ def async_turn_off(hass, entity_id):
 
 def toggle(hass, entity_id):
     """Toggle acknowledgement of alert."""
+    run_callback_threadsafe(hass.loop, async_toggle, hass, entity_id)
+
+
+@callback
+def async_toggle(hass, entity_id):
+    """Async toggle acknowledgement of alert."""
     data = {ATTR_ENTITY_ID: entity_id}
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
-
-
-def setup(hass, config):
-    """Setup alert component."""
-    run_callback_threadsafe(hass.loop, async_setup(hass, config))
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data))
 
 
 @asyncio.coroutine
@@ -129,22 +124,22 @@ def async_setup(hass, config):
             else:
                 yield from alert.async_turn_off()
 
-    for alert in alerts.get(CONF_ENTITIES):
-        entity = Alert(hass, alert[CONF_NAME],
-                       alert[CONF_ENTITY_ID],
-                       alert.get(CONF_STATE, DEFAULT_STATE),
-                       alert[CONF_REPEAT],
-                       alert.get(CONF_SKIP_FIRST, DEFAULT_SKIP_FIRST),
-                       alert[CONF_NOTIFIERS],
-                       alert.get(CONF_CAN_ACK, DEFAULT_CAN_ACK),
-                       alert.get(CONF_BACKOFF, DEFAULT_BACKOFF))
+    # setup alerts
+    for entity_id, alert in alerts.items():
+        entity = Alert(hass, entity_id,
+                       alert[CONF_NAME], alert[CONF_ENTITY_ID],
+                       alert[CONF_STATE], alert[CONF_REPEAT],
+                       alert[CONF_SKIP_FIRST], alert[CONF_NOTIFIERS],
+                       alert[CONF_CAN_ACK], alert[CONF_BACKOFF])
         all_alerts[entity.entity_id] = entity
 
+    # read descriptions
     descriptions = yield from hass.loop.run_in_executor(
         None, load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
     descriptions = descriptions.get(DOMAIN, {})
 
+    # setup service calls
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_alert_service,
         descriptions.get(SERVICE_TURN_OFF), schema=ALERT_SERVICE_SCHEMA)
@@ -164,8 +159,8 @@ def async_setup(hass, config):
 class Alert(ToggleEntity):
     """Representation of an alert."""
 
-    def __init__(self, hass, name, entity, state, repeat, skip_first,
-                 notifiers, can_ack, backoff):
+    def __init__(self, hass, entity_id, name, entity, state, repeat,
+                 skip_first, notifiers, can_ack, backoff):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
@@ -174,13 +169,13 @@ class Alert(ToggleEntity):
         self._skip_first = skip_first
         self._notifiers = notifiers
         self._can_ack = can_ack
-        self._backoff = backoff
+        self._backoff = float(backoff)
 
         self._next_delay = None
         self._firing = False
         self._ack = False
         self._cancel = None
-        self.entity_id = ENTITY_ID_FORMAT.format(slugify(name))
+        self.entity_id = ENTITY_ID_FORMAT.format(slugify(entity_id))
 
         event.async_track_state_change(hass, entity,
                                        self.watched_entity_change)
@@ -209,34 +204,33 @@ class Alert(ToggleEntity):
         """Determine if the alert should start or stop."""
         _LOGGER.debug('Watched entity (%s) has changed.', entity)
         if to_state.state == self._alert_state and not self._firing:
-            return self.begin_alerting()
+            yield from self.begin_alerting()
         if to_state.state != self._alert_state and self._firing:
-            return self.end_alerting()
+            yield from self.end_alerting()
 
     @asyncio.coroutine
     def begin_alerting(self):
         """Begin the alert procedures."""
-        _LOGGER.info('Begining Alert: %s', self._name)
+        _LOGGER.debug('Beginning Alert: %s', self._name)
         self._ack = False
         self._firing = True
         self._next_delay = self._delay
 
         if not self._skip_first:
             yield from self._notify()
-            self._next_delay = self._delay
         else:
             yield from self._schedule_notify()
 
-        yield from self.async_update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state)
 
     @asyncio.coroutine
     def end_alerting(self):
         """End the alert procedures."""
-        _LOGGER.info('Ending Alert: %s', self._name)
+        _LOGGER.debug('Ending Alert: %s', self._name)
         self._cancel()
         self._ack = False
         self._firing = False
-        yield from self.async_update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state)
 
     @asyncio.coroutine
     def _schedule_notify(self):
@@ -260,10 +254,6 @@ class Alert(ToggleEntity):
                     'notify', target, {'message': self._name})
         yield from self._schedule_notify()
 
-    def turn_on(self):
-        """Unacknowledge alert."""
-        run_callback_threadsafe(self.hass.loop, self.async_turn_on)
-
     @asyncio.coroutine
     def async_turn_on(self):
         """Async Unacknowledge alert."""
@@ -271,20 +261,12 @@ class Alert(ToggleEntity):
         self._ack = False
         yield from self.async_update_ha_state()
 
-    def turn_off(self):
-        """Acknowledge alert."""
-        run_callback_threadsafe(self.hass.loop, self.async_turn_off)
-
     @asyncio.coroutine
     def async_turn_off(self):
         """Async Acknowledge alert."""
         _LOGGER.debug('Acknowledged Alert: %s', self._name)
         self._ack = True
         yield from self.async_update_ha_state()
-
-    def toggle(self):
-        """Toggle alert."""
-        run_callback_threadsafe(self.hass.loop, self.async_toggle)
 
     @asyncio.coroutine
     def async_toggle(self):
