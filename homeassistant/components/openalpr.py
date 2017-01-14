@@ -126,6 +126,9 @@ def setup(hass, config):
     binary = config[DOMAIN].get(CONF_ALPR_BINARY)
     use_render_fffmpeg = False
 
+    _LOGGER.waring("This platform is replaced by 'image_processing' and will "
+                   "remove on next release!")
+
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     openalpr_device = []
 
