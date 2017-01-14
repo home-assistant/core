@@ -151,6 +151,11 @@ class AiohttpClientMockResponse:
         return self.response.decode(encoding)
 
     @asyncio.coroutine
+    def json(self, encoding='utf-8'):
+        """Return mock response as a json."""
+        return _json.loads(self.response.decode(encoding))
+
+    @asyncio.coroutine
     def release(self):
         """Mock release."""
         pass
