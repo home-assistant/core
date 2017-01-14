@@ -180,9 +180,6 @@ hikvision==0.4
 # homeassistant.components.nest
 http://github.com/technicalpickles/python-nest/archive/e6c9d56a8df455d4d7746389811f2c1387e8cb33.zip#python-nest==3.0.3
 
-# homeassistant.components.switch.tplink
-https://github.com/GadgetReactor/pyHS100/archive/45fc3548882628bcde3e3d365db341849457bef2.zip#pyHS100==0.2.2
-
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.7.zip#pyW215==0.3.7
 
@@ -375,6 +372,9 @@ pwaqi==1.3
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==0.2.3
+
+# homeassistant.components.switch.tplink
+pyHS100==0.2.3
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.14.0
