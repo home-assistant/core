@@ -127,7 +127,7 @@ def setup(hass, config):
     use_render_fffmpeg = False
 
     _LOGGER.warning("This platform is replaced by 'image_processing' and will "
-                    "remove on next release!")
+                    "be removed in a future version!")
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     openalpr_device = []
