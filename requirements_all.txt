@@ -37,8 +37,6 @@ TwitterAPI==2.4.3
 aiohttp_cors==0.5.0
 
 # homeassistant.components.camera.amcrest
-amcrest==1.0.0
-
 # homeassistant.components.sensor.amcrest
 amcrest==1.1.0
 
