@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['amcrest==1.0.0']
+REQUIREMENTS = ['amcrest==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
