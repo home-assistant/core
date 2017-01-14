@@ -20,14 +20,14 @@ REQUIREMENTS = ['python-vlc==1.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-ADDITIONAL_ARGS = 'arguments'
+CONF_ARGUMENTS = 'arguments'
 
 SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PLAY_MEDIA | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(ADDITIONAL_ARGS): cv.string,
+    vol.Optional(CONF_ARGUMENTS): cv.string,
 })
 
 
@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the vlc platform."""
     add_devices([VlcDevice(config.get(CONF_NAME),
-                           config.get(ADDITIONAL_ARGS))])
+                           config.get(CONF_ARGUMENTS))])
 
 
 class VlcDevice(MediaPlayerDevice):
