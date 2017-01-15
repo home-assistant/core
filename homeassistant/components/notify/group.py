@@ -38,13 +38,13 @@ def update(input_dict, update_source):
     return input_dict
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Group notification service."""
     return GroupNotifyPlatform(hass, config.get(CONF_SERVICES))
 
 
 class GroupNotifyPlatform(BaseNotificationService):
-    """Implement the notification service for the group notify playform."""
+    """Implement the notification service for the group notify platform."""
 
     def __init__(self, hass, entities):
         """Initialize the service."""
