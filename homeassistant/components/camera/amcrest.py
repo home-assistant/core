@@ -153,7 +153,7 @@ class AmcrestCam(Camera):
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
             _LOGGER.exception("Error on %s", streaming_url)
             raise HTTPGatewayTimeout()
-            
+
         except asyncio.CancelledError:
             _LOGGER.debug("Close stream by frontend.")
             response = None
