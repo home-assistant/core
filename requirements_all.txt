@@ -431,7 +431,7 @@ pyicloud==0.9.1
 pyiss==1.0.1
 
 # homeassistant.components.sensor.lastfm
-pylast==1.6.0
+pylast==1.7.0
 
 # homeassistant.components.litejet
 pylitejet==0.1
