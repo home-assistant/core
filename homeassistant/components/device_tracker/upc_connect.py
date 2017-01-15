@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 
 import aiohttp
 import async_timeout
+from yarl import URL
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -159,6 +160,6 @@ class UPCDeviceScanner(DeviceScanner):
     def _async_get_token(self):
         """Extract token from cookies."""
         cookie_manager = self.websession.cookie_jar.filter_cookies(
-            "http://{}".format(self.host))
+            URL("http://{}".format(self.host)))
 
         return cookie_manager.get('sessionToken')
