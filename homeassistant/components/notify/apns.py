@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.helpers.event import track_state_change
 from homeassistant.config import load_yaml_config_file
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, BaseNotificationService)
+    ATTR_TARGET, ATTR_DATA, BaseNotificationService, DOMAIN)
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template as template_helper
@@ -53,8 +53,8 @@ def get_service(hass, config, discovery_info=None):
     sandbox = config.get(CONF_SANDBOX)
 
     service = ApnsNotificationService(hass, name, topic, sandbox, cert_file)
-    hass.services.register('apns',
-                           name,
+    hass.services.register(DOMAIN,
+                           'apns_{}'.format(name),
                            service.register,
                            descriptions.get(SERVICE_REGISTER),
                            schema=REGISTER_SERVICE_SCHEMA)

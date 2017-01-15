@@ -101,8 +101,8 @@ class TestApns(unittest.TestCase):
             out.write('5678: {name: test device 2}\n')
 
         self._setup_notify()
-        self.assertTrue(self.hass.services.call('apns',
-                                                'test_app',
+        self.assertTrue(self.hass.services.call(notify.DOMAIN,
+                                                'apns_test_app',
                                                 {'push_id': '1234',
                                                  'name': 'test device'},
                                                 blocking=True))
@@ -127,7 +127,7 @@ class TestApns(unittest.TestCase):
             out.write('5678: {name: test device 2}\n')
 
         self._setup_notify()
-        self.assertTrue(self.hass.services.call('apns', 'test_app',
+        self.assertTrue(self.hass.services.call(notify.DOMAIN, 'apns_test_app',
                                                 {'push_id': '1234'},
                                                 blocking=True))
 
@@ -149,8 +149,8 @@ class TestApns(unittest.TestCase):
             out.write('5678: {name: test device 2}\n')
 
         self._setup_notify()
-        self.assertTrue(self.hass.services.call('apns',
-                                                'test_app',
+        self.assertTrue(self.hass.services.call(notify.DOMAIN,
+                                                'apns_test_app',
                                                 {'push_id': '1234',
                                                  'name': 'updated device 1'},
                                                 blocking=True))
@@ -178,8 +178,8 @@ class TestApns(unittest.TestCase):
                       'tracking_device_id: tracking456}\n')
 
         self._setup_notify()
-        self.assertTrue(self.hass.services.call('apns',
-                                                'test_app',
+        self.assertTrue(self.hass.services.call(notify.DOMAIN,
+                                                'apns_test_app',
                                                 {'push_id': '1234',
                                                  'name': 'updated device 1'},
                                                 blocking=True))
