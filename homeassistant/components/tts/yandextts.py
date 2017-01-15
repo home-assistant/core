@@ -62,12 +62,8 @@ class YandexSpeechKitProvider(Provider):
         """Init VoiceRSS TTS service."""
         self.hass = hass
         self._codec = conf.get(CONF_CODEC)
-        conf.get(CONF_API_KEY)
-        self._url = '{baseUrl}format={format}&speaker={speaker}&key={key}' \
-            .format(baseUrl=YANDEX_API_URL,
-                    key=conf.get(CONF_API_KEY),
-                    speaker=conf.get(CONF_VOICE),
-                    format=conf.get(CONF_CODEC))
+        self._key = conf.get(CONF_API_KEY)
+        self._speaker = conf.get(CONF_VOICE)
         self._language = conf.get(CONF_LANG)
 
     @property
@@ -81,26 +77,25 @@ class YandexSpeechKitProvider(Provider):
         return SUPPORT_LANGUAGES
 
     @asyncio.coroutine
-    def async_get_tts_audio(self, message, language=None):
+    def async_get_tts_audio(self, message, language):
         """Load TTS from yandex."""
         websession = async_get_clientsession(self.hass)
 
-        actual_language = self._language
-        # If language is specified and supported - use it instead of the
-        # language in the config.
-        if language in SUPPORT_LANGUAGES:
-            actual_language = language
+        actual_language = language
 
         request = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                request_url = '{base_url}' \
-                              '&text={message}' \
-                              '&lang={lang}'\
-                    .format(base_url=self._url,
-                            lang=actual_language,
-                            message=message)
-                request = yield from websession.get(request_url)
+                url_param = {
+                    'text': message,
+                    'lang': actual_language,
+                    'key': self._key,
+                    'speaker': self._speaker,
+                    'format': self._codec,
+                }
+
+                request = yield from websession.get(YANDEX_API_URL,
+                                                    params=url_param)
 
                 if request.status != 200:
                     _LOGGER.error("Error %d on load url %s.",
