@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the SendGrid notification service."""
     api_key = config.get(CONF_API_KEY)
     sender = config.get(CONF_SENDER)
