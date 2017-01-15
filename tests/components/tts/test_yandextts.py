@@ -104,5 +104,82 @@ class TestTTSYandexPlatform(object):
         assert len(aioclient_mock.mock_calls) == 1
         assert len(calls) == 1
 
+    def test_service_say_russian_service(self, aioclient_mock):
+        """Test service call say."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        url = "https://tts.voicetech.yandex.net/generate?format=mp3&speaker=zahar&key=1234567xx&text=HomeAssistant&lang=ru-RU"
+        aioclient_mock.get(
+            url, status=200, content=b'test')
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'yandextts',
+                'api_key': '1234567xx',
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'yandextts_say', {
+            tts.ATTR_MESSAGE: "HomeAssistant",
+            tts.ATTR_LANGUAGE: "ru-RU"
+        })
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert len(calls) == 1
+
+    def test_service_say_timeout(self, aioclient_mock):
+        """Test service call say."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        url = "https://tts.voicetech.yandex.net/generate?format=mp3&speaker=zahar&key=1234567xx&text=HomeAssistant&lang=en-US"
+        aioclient_mock.get(
+            url, status=200, exc=asyncio.TimeoutError())
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'yandextts',
+                'api_key': '1234567xx'
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'yandextts_say', {
+            tts.ATTR_MESSAGE: "HomeAssistant",
+        })
+        self.hass.block_till_done()
+
+        assert len(calls) == 0
+        assert len(aioclient_mock.mock_calls) == 1
+
+    def test_service_say_http_error(self, aioclient_mock):
+        """Test service call say."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        url = "https://tts.voicetech.yandex.net/generate?format=mp3&speaker=zahar&key=1234567xx&text=HomeAssistant&lang=en-US"
+        aioclient_mock.get(
+            url, status=403, content=b'test')
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'yandextts',
+                'api_key': '1234567xx'
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'yandextts_say', {
+            tts.ATTR_MESSAGE: "HomeAssistant",
+        })
+        self.hass.block_till_done()
+
+        assert len(calls) == 0
 
 
