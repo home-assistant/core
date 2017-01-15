@@ -61,22 +61,32 @@ class YandexSpeechKitProvider(Provider):
     def __init__(self, hass, conf):
         """Init VoiceRSS TTS service."""
         self.hass = hass
-        self.extension = conf.get(CONF_CODEC)
+        self._codec = conf.get(CONF_CODEC)
         conf.get(CONF_API_KEY)
-        self.url = '{baseUrl}format={format}' \
+        self._url = '{baseUrl}format={format}' \
                    '&speaker={speaker}&key={key}' \
             .format(baseUrl=YANDEX_API_URL,
                     key=conf.get(CONF_API_KEY),
                     speaker=conf.get(CONF_VOICE),
                     format=conf.get(CONF_CODEC))
-        self.language = conf.get(CONF_LANG)
+        self._language = conf.get(CONF_LANG)
+
+    @property
+    def default_language(self):
+        """Default language."""
+        return self._language
+
+    @property
+    def supported_languages(self):
+        """List of supported languages."""
+        return SUPPORT_LANGUAGES
 
     @asyncio.coroutine
     def async_get_tts_audio(self, message, language=None):
         """Load TTS from yandex."""
         websession = async_get_clientsession(self.hass)
 
-        actual_language = self.language
+        actual_language = self._language
         # If language is specified and supported - use it instead of the
         # language in the config.
         if language in SUPPORT_LANGUAGES:
@@ -88,7 +98,7 @@ class YandexSpeechKitProvider(Provider):
                 request_url = '{base_url}' \
                               '&text={message}' \
                               '&lang={lang}'\
-                    .format(base_url=self.url,
+                    .format(base_url=self._url,
                             lang=actual_language,
                             message=message)
                 request = yield from websession.get(request_url)
@@ -107,4 +117,4 @@ class YandexSpeechKitProvider(Provider):
             if request is not None:
                 yield from request.release()
 
-        return (self.extension, data)
+        return (self._codec, data)
