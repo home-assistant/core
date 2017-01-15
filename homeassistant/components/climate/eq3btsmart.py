@@ -17,7 +17,7 @@ from homeassistant.const import (
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-eq3bt==0.1.2']
+#REQUIREMENTS = ['python-eq3bt==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ ATTR_STATE_WINDOW_OPEN = "window_open"
 ATTR_STATE_VALVE = "valve"
 ATTR_STATE_LOCKED = "is_locked"
 ATTR_STATE_LOW_BAT = "low_battery"
+ATTR_STATE_AWAY_END = "away_end"
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_MAC): cv.string,
@@ -152,6 +153,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
             ATTR_STATE_LOW_BAT: self._thermostat.low_battery,
             ATTR_STATE_VALVE: self._thermostat.valve_state,
             ATTR_STATE_WINDOW_OPEN: self._thermostat.window_open,
+            ATTR_STATE_AWAY_END: self._thermostat.away_end,
         }
 
         return dev_specific
