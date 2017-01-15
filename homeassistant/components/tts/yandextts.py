@@ -63,8 +63,7 @@ class YandexSpeechKitProvider(Provider):
         self.hass = hass
         self._codec = conf.get(CONF_CODEC)
         conf.get(CONF_API_KEY)
-        self._url = '{baseUrl}format={format}' \
-                   '&speaker={speaker}&key={key}' \
+        self._url = '{baseUrl}format={format}&speaker={speaker}&key={key}' \
             .format(baseUrl=YANDEX_API_URL,
                     key=conf.get(CONF_API_KEY),
                     speaker=conf.get(CONF_VOICE),
