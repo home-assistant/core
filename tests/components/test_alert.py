@@ -25,9 +25,13 @@ TEST_CONFIG = \
             alert.CONF_NOTIFIERS: [NOTIFIER]}
         }}
 TEST_BACKOFF = [NAME, NAME, "sensor.test", STATE_ON,
-                30, False, NOTIFIER, True, 1.5]
+                30, 1, 1440, False, NOTIFIER, True, 1.5]
 TEST_NOACK = [NAME, NAME, "sensor.test", STATE_ON,
-              30, False, NOTIFIER, False, 1.0]
+              30, 1, 1440, False, NOTIFIER, False, 1.0]
+TEST_MIN_REP = [NAME, NAME, "sensor.test", STATE_ON,
+                30, 1, 1440, False, NOTIFIER, True, 0.01]
+TEST_MAX_REP = [NAME, NAME, "sensor.test", STATE_ON,
+                30, 1, 1440, False, NOTIFIER, True, 100]
 ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
 
 
@@ -170,11 +174,12 @@ class TestAlert(unittest.TestCase):
         entity = alert.Alert(self.hass, *TEST_BACKOFF)
         self.hass.async_add_job(entity.begin_alerting)
         self.hass.block_till_done()
-        self.assertEqual(30 * 60 * 1.5, entity._next_delay.seconds)
+        self.assertEqual(30 * 60 * 1.5, entity._next_delay.total_seconds())
 
         self.hass.async_add_job(entity._notify())
         self.hass.block_till_done()
-        self.assertEqual(30 * 60 * 1.5 * 1.5, entity._next_delay.seconds)
+        self.assertEqual(30 * 60 * 1.5 * 1.5,
+                         entity._next_delay.total_seconds())
 
     def test_noack(self):
         """Test no ack feature."""
@@ -183,3 +188,21 @@ class TestAlert(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(True, entity.hidden)
+
+    def test_max_repeat(self):
+        """Test the max repeat limit."""
+        entity = alert.Alert(self.hass, *TEST_MAX_REP)
+        self.hass.async_add_job(entity.begin_alerting)
+        self.hass.block_till_done()
+
+        self.assertEqual(TEST_MAX_REP[6] * 60,
+                         entity._next_delay.total_seconds())
+
+    def test_min_repeat(self):
+        """Test the min repeat limit."""
+        entity = alert.Alert(self.hass, *TEST_MIN_REP)
+        self.hass.async_add_job(entity.begin_alerting)
+        self.hass.block_till_done()
+
+        self.assertEqual(TEST_MIN_REP[5] * 60,
+                         entity._next_delay.total_seconds())

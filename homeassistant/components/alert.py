@@ -32,10 +32,9 @@ CONF_BACKOFF = 'backoff'
 CONF_CAN_ACK = 'can_acknowledge'
 CONF_NOTIFIERS = 'notifiers'
 CONF_REPEAT = 'repeat'
+CONF_REPEAT_MAX = 'max_repeat'
+CONF_REPEAT_MIN = 'min_repeat'
 CONF_SKIP_FIRST = 'skip_first'
-
-MIN_DELAY = timedelta(minutes=1)
-MAX_DELAY = timedelta(days=1)
 
 ALERT_SCHEMA = vol.Schema({
     # pylint: disable=no-value-for-parameter
@@ -43,6 +42,8 @@ ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.string,
     vol.Required(CONF_STATE, default=STATE_ON): cv.string,
     vol.Required(CONF_REPEAT): cv.positive_int,
+    vol.Required(CONF_REPEAT_MAX, default=1440): cv.positive_int,
+    vol.Required(CONF_REPEAT_MIN, default=1): cv.positive_int,
     vol.Required(CONF_BACKOFF, default=1): vol.Any(int, float),
     vol.Required(CONF_CAN_ACK, default=True): cv.boolean,
     vol.Required(CONF_SKIP_FIRST, default=False): cv.boolean,
@@ -129,6 +130,7 @@ def async_setup(hass, config):
         entity = Alert(hass, entity_id,
                        alert[CONF_NAME], alert[CONF_ENTITY_ID],
                        alert[CONF_STATE], alert[CONF_REPEAT],
+                       alert[CONF_REPEAT_MIN], alert[CONF_REPEAT_MAX],
                        alert[CONF_SKIP_FIRST], alert[CONF_NOTIFIERS],
                        alert[CONF_CAN_ACK], alert[CONF_BACKOFF])
         all_alerts[entity.entity_id] = entity
@@ -160,12 +162,15 @@ class Alert(ToggleEntity):
     """Representation of an alert."""
 
     def __init__(self, hass, entity_id, name, entity, state, repeat,
-                 skip_first, notifiers, can_ack, backoff):
+                 min_repeat, max_repeat, skip_first, notifiers, can_ack,
+                 backoff):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
         self._alert_state = state
         self._delay = timedelta(minutes=repeat)
+        self._delay_limits = (timedelta(minutes=min_repeat),
+                              timedelta(minutes=max_repeat))
         self._skip_first = skip_first
         self._notifiers = notifiers
         self._can_ack = can_ack
@@ -239,7 +244,9 @@ class Alert(ToggleEntity):
             event.async_track_time_interval(self.hass, self._notify,
                                             self._next_delay)
         self._next_delay = \
-            min(max(self._next_delay * self._backoff, MIN_DELAY), MAX_DELAY)
+            min(max(self._next_delay * self._backoff,
+                    self._delay_limits[0]),
+                self._delay_limits[1])
 
     @asyncio.coroutine
     def _notify(self, *args):
