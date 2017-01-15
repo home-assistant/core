@@ -277,7 +277,7 @@ class SynologyCamera(Camera):
             raise HTTPGatewayTimeout()
 
         except asyncio.CancelledError:
-            _LOGGER.debug("Close stream by browser.")
+            _LOGGER.debug("Close stream by frontend.")
             response = None
 
         finally:
