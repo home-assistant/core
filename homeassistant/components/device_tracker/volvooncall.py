@@ -37,7 +37,7 @@ def setup_scanner(hass, config, see):
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD))
 
-    interval = max(MIN_TIME_BETWEEN_SCANS.seconds,
+    interval = max(MIN_TIME_BETWEEN_SCANS,
                    config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
 
     def _see_vehicle(vehicle):
@@ -91,8 +91,7 @@ def setup_scanner(hass, config, see):
 
             return True
         finally:
-            track_point_in_utc_time(hass, update,
-                                    now + timedelta(seconds=interval))
+            track_point_in_utc_time(hass, update, now + interval)
 
     _LOGGER.info('Logging in to service')
     return update(utcnow())
