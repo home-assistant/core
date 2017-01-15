@@ -4,6 +4,7 @@ Allows to configure custom shell commands to turn a value for a sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.command_line/
 """
+from datetime import timedelta
 import logging
 import subprocess
 
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Command Sensor'
 
-SCAN_INTERVAL = 60
+SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND): cv.string,

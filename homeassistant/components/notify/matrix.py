@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Matrix notification service."""
     if not AUTH_TOKENS:
         load_token(hass.config.path(SESSION_FILE))

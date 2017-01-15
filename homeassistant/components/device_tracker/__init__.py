@@ -8,7 +8,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import os
-from typing import Any, Sequence, Callable
+from typing import Any, List, Sequence, Callable
 
 import aiohttp
 import async_timeout
@@ -24,6 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
@@ -50,10 +51,10 @@ CONF_TRACK_NEW = 'track_new_devices'
 DEFAULT_TRACK_NEW = True
 
 CONF_CONSIDER_HOME = 'consider_home'
-DEFAULT_CONSIDER_HOME = 180
+DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 
 CONF_SCAN_INTERVAL = 'interval_seconds'
-DEFAULT_SCAN_INTERVAL = 12
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=12)
 
 CONF_AWAY_HIDE = 'hide_if_away'
 DEFAULT_AWAY_HIDE = False
@@ -69,12 +70,16 @@ ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
 ATTR_BATTERY = 'battery'
 ATTR_ATTRIBUTES = 'attributes'
+ATTR_SOURCE_TYPE = 'source_type'
+
+SOURCE_TYPE_GPS = 'gps'
+SOURCE_TYPE_ROUTER = 'router'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,  # seconds
+    vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
     vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
     vol.Optional(CONF_CONSIDER_HOME,
-                 default=timedelta(seconds=DEFAULT_CONSIDER_HOME)): vol.All(
+                 default=DEFAULT_CONSIDER_HOME): vol.All(
                      cv.time_period, cv.positive_timedelta)
 })
 
@@ -121,8 +126,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         return False
     else:
         conf = conf[0] if len(conf) > 0 else {}
-        consider_home = conf.get(CONF_CONSIDER_HOME,
-                                 timedelta(seconds=DEFAULT_CONSIDER_HOME))
+        consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
         track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
@@ -142,23 +146,34 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         if platform is None:
             return
 
+        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:
-            if hasattr(platform, 'get_scanner'):
+            scanner = None
+            setup = None
+            if hasattr(platform, 'async_get_scanner'):
+                scanner = yield from platform.async_get_scanner(
+                    hass, {DOMAIN: p_config})
+            elif hasattr(platform, 'get_scanner'):
                 scanner = yield from hass.loop.run_in_executor(
                     None, platform.get_scanner, hass, {DOMAIN: p_config})
+            elif hasattr(platform, 'async_setup_scanner'):
+                setup = yield from platform.async_setup_scanner(
+                    hass, p_config, tracker.async_see)
+            elif hasattr(platform, 'setup_scanner'):
+                setup = yield from hass.loop.run_in_executor(
+                    None, platform.setup_scanner, hass, p_config, tracker.see)
+            else:
+                raise HomeAssistantError("Invalid device_tracker platform.")
 
-                if scanner is None:
-                    _LOGGER.error('Error setting up platform %s', p_type)
-                    return
-
+            if scanner:
                 yield from async_setup_scanner_platform(
                     hass, p_config, scanner, tracker.async_see)
                 return
 
-            ret = yield from hass.loop.run_in_executor(
-                None, platform.setup_scanner, hass, p_config, tracker.see)
-            if not ret:
+            if not setup:
                 _LOGGER.error('Error setting up platform %s', p_type)
+                return
+
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error setting up platform %s', p_type)
 
@@ -223,17 +238,19 @@ class DeviceTracker(object):
 
     def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
             location_name: str=None, gps: GPSType=None, gps_accuracy=None,
-            battery: str=None, attributes: dict=None):
+            battery: str=None, attributes: dict=None,
+            source_type: str=SOURCE_TYPE_GPS):
         """Notify the device tracker that you see a device."""
         self.hass.add_job(
             self.async_see(mac, dev_id, host_name, location_name, gps,
-                           gps_accuracy, battery, attributes)
+                           gps_accuracy, battery, attributes, source_type)
         )
 
     @asyncio.coroutine
     def async_see(self, mac: str=None, dev_id: str=None, host_name: str=None,
                   location_name: str=None, gps: GPSType=None,
-                  gps_accuracy=None, battery: str=None, attributes: dict=None):
+                  gps_accuracy=None, battery: str=None, attributes: dict=None,
+                  source_type: str=SOURCE_TYPE_GPS):
         """Notify the device tracker that you see a device.
 
         This method is a coroutine.
@@ -251,7 +268,8 @@ class DeviceTracker(object):
 
         if device:
             yield from device.async_seen(host_name, location_name, gps,
-                                         gps_accuracy, battery, attributes)
+                                         gps_accuracy, battery, attributes,
+                                         source_type)
             if device.track:
                 yield from device.async_update_ha_state()
             return
@@ -266,7 +284,8 @@ class DeviceTracker(object):
             self.mac_to_dev[mac] = device
 
         yield from device.async_seen(host_name, location_name, gps,
-                                     gps_accuracy, battery, attributes)
+                                     gps_accuracy, battery, attributes,
+                                     source_type)
 
         if device.track:
             yield from device.async_update_ha_state()
@@ -370,6 +389,9 @@ class Device(Entity):
 
         self.away_hide = hide_if_away
         self.vendor = vendor
+
+        self.source_type = None
+
         self._attributes = {}
 
     @property
@@ -390,7 +412,9 @@ class Device(Entity):
     @property
     def state_attributes(self):
         """Return the device state attributes."""
-        attr = {}
+        attr = {
+            ATTR_SOURCE_TYPE: self.source_type
+        }
 
         if self.gps:
             attr[ATTR_LATITUDE] = self.gps[0]
@@ -415,12 +439,13 @@ class Device(Entity):
     @asyncio.coroutine
     def async_seen(self, host_name: str=None, location_name: str=None,
                    gps: GPSType=None, gps_accuracy=0, battery: str=None,
-                   attributes: dict=None):
+                   attributes: dict=None, source_type: str=SOURCE_TYPE_GPS):
         """Mark the device as seen."""
+        self.source_type = source_type
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
-        self.gps_accuracy = gps_accuracy or 0
+
         if battery:
             self.battery = battery
         if attributes:
@@ -431,7 +456,10 @@ class Device(Entity):
         if gps is not None:
             try:
                 self.gps = float(gps[0]), float(gps[1])
+                self.gps_accuracy = gps_accuracy or 0
             except (ValueError, TypeError, IndexError):
+                self.gps = None
+                self.gps_accuracy = 0
                 _LOGGER.warning('Could not parse gps value for %s: %s',
                                 self.dev_id, gps)
 
@@ -456,7 +484,7 @@ class Device(Entity):
             return
         elif self.location_name:
             self._state = self.location_name
-        elif self.gps is not None:
+        elif self.gps is not None and self.source_type == SOURCE_TYPE_GPS:
             zone_state = zone.async_active_zone(
                 self.hass, self.gps[0], self.gps[1], self.gps_accuracy)
             if zone_state is None:
@@ -465,9 +493,9 @@ class Device(Entity):
                 self._state = STATE_HOME
             else:
                 self._state = zone_state.name
-
         elif self.stale():
             self._state = STATE_NOT_HOME
+            self.gps = None
             self.last_update_home = False
         else:
             self._state = STATE_HOME
@@ -485,13 +513,18 @@ class Device(Entity):
         if not self.mac:
             return None
 
+        if '_' in self.mac:
+            _, mac = self.mac.split('_', 1)
+        else:
+            mac = self.mac
+
         # prevent lookup of invalid macs
-        if not len(self.mac.split(':')) == 6:
+        if not len(mac.split(':')) == 6:
             return 'unknown'
 
         # we only need the first 3 bytes of the mac for a lookup
         # this improves somewhat on privacy
-        oui_bytes = self.mac.split(':')[0:3]
+        oui_bytes = mac.split(':')[0:3]
         # bytes like 00 get truncates to 0, API needs full bytes
         oui = '{:02x}:{:02x}:{:02x}'.format(*[int(b, 16) for b in oui_bytes])
         url = 'http://api.macvendors.com/' + oui
@@ -519,6 +552,34 @@ class Device(Entity):
         finally:
             if resp is not None:
                 yield from resp.release()
+
+
+class DeviceScanner(object):
+    """Device scanner object."""
+
+    hass = None  # type: HomeAssistantType
+
+    def scan_devices(self) -> List[str]:
+        """Scan for devices."""
+        raise NotImplementedError()
+
+    def async_scan_devices(self) -> Any:
+        """Scan for devices.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(None, self.scan_devices)
+
+    def get_device_name(self, mac: str) -> str:
+        """Get device name from mac."""
+        raise NotImplementedError()
+
+    def async_get_device_name(self, mac: str) -> Any:
+        """Get device name from mac.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(None, self.get_device_name, mac)
 
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
@@ -577,26 +638,39 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
     This method is a coroutine.
     """
     interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    scanner.hass = hass
 
     # Initial scan of each mac we also tell about host name for config
     seen = set()  # type: Any
 
-    def device_tracker_scan(now: dt_util.dt.datetime):
+    @asyncio.coroutine
+    def async_device_tracker_scan(now: dt_util.dt.datetime):
         """Called when interval matches."""
-        found_devices = scanner.scan_devices()
+        found_devices = yield from scanner.async_scan_devices()
 
         for mac in found_devices:
             if mac in seen:
                 host_name = None
             else:
-                host_name = scanner.get_device_name(mac)
+                host_name = yield from scanner.async_get_device_name(mac)
                 seen.add(mac)
-            hass.add_job(async_see_device(mac=mac, host_name=host_name))
 
-    async_track_utc_time_change(
-        hass, device_tracker_scan, second=range(0, 60, interval))
+            kwargs = {
+                'mac': mac,
+                'host_name': host_name,
+                'source_type': SOURCE_TYPE_ROUTER
+            }
 
-    hass.async_add_job(device_tracker_scan, None)
+            zone_home = hass.states.get(zone.ENTITY_ID_HOME)
+            if zone_home:
+                kwargs['gps'] = [zone_home.attributes[ATTR_LATITUDE],
+                                 zone_home.attributes[ATTR_LONGITUDE]]
+                kwargs['gps_accuracy'] = 0
+
+            hass.async_add_job(async_see_device(**kwargs))
+
+    async_track_time_interval(hass, async_device_tracker_scan, interval)
+    hass.async_add_job(async_device_tracker_scan, None)
 
 
 def update_config(path: str, dev_id: str, device: Device):

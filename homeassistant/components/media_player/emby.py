@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
     MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_PREVIOUS_TRACK, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
+    SUPPORT_PLAY, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_API_KEY, CONF_PORT, CONF_SSL, DEVICE_DEFAULT_NAME,
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
@@ -34,7 +34,7 @@ DEFAULT_PORT = 8096
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_EMBY = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_STOP | SUPPORT_SEEK
+    SUPPORT_STOP | SUPPORT_SEEK | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default='localhost'): cv.string,

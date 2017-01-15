@@ -122,19 +122,35 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=in_, domain='fake', object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
-            body = [{
-                'measurement': 'foobars',
-                'tags': {
-                    'domain': 'fake',
-                    'entity_id': 'entity',
-                },
-                'time': 12345,
-                'fields': {
-                    'value': out,
-                    'longitude': '1.1',
-                    'latitude': '2.2'
-                },
-            }]
+            if isinstance(out, str):
+                body = [{
+                    'measurement': 'foobars',
+                    'tags': {
+                        'domain': 'fake',
+                        'entity_id': 'entity',
+                    },
+                    'time': 12345,
+                    'fields': {
+                        'state': out,
+                        'longitude': 1.1,
+                        'latitude': 2.2
+                    },
+                }]
+
+            else:
+                body = [{
+                    'measurement': 'foobars',
+                    'tags': {
+                        'domain': 'fake',
+                        'entity_id': 'entity',
+                    },
+                    'time': 12345,
+                    'fields': {
+                        'value': out,
+                        'longitude': 1.1,
+                        'latitude': 2.2
+                    },
+                }]
             self.handler_method(event)
             self.assertEqual(
                 mock_client.return_value.write_points.call_count, 1
@@ -278,19 +294,37 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=in_, domain='fake', object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
-            body = [{
-                'measurement': 'foobars',
-                'tags': {
-                    'domain': 'fake',
-                    'entity_id': 'entity',
-                },
-                'time': 12345,
-                'fields': {
-                    'value': out,
-                    'longitude': '1.1',
-                    'latitude': '2.2'
-                },
-            }]
+            if isinstance(out, str):
+                body = [{
+                    'measurement': 'foobars',
+                    'tags': {
+                        'domain': 'fake',
+                        'entity_id': 'entity',
+                    },
+                    'time': 12345,
+                    'fields': {
+                        'state': out,
+                        'longitude': 1.1,
+                        'latitude': 2.2,
+                        'invalid_attribute_str': "['value1', 'value2']"
+                    },
+                }]
+
+            else:
+                body = [{
+                    'measurement': 'foobars',
+                    'tags': {
+                        'domain': 'fake',
+                        'entity_id': 'entity',
+                    },
+                    'time': 12345,
+                    'fields': {
+                        'value': float(out),
+                        'longitude': 1.1,
+                        'latitude': 2.2,
+                        'invalid_attribute_str': "['value1', 'value2']"
+                    },
+                }]
             self.handler_method(event)
             self.assertEqual(
                 mock_client.return_value.write_points.call_count, 1

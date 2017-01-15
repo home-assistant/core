@@ -572,9 +572,13 @@ class TestSonarrSetup(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.hass.config.time_zone = 'America/Los_Angeles'
 
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
+
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_diskspace_no_paths(self, req_mock):
-        """Tests getting all disk space"""
+        """Test getting all disk space."""
         config = {
             'platform': 'sonarr',
             'api_key': 'foo',
@@ -599,7 +603,7 @@ class TestSonarrSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_diskspace_paths(self, req_mock):
-        """Tests getting diskspace for included paths"""
+        """Test getting diskspace for included paths."""
         config = {
             'platform': 'sonarr',
             'api_key': 'foo',
@@ -626,7 +630,7 @@ class TestSonarrSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_commands(self, req_mock):
-        """Tests getting running commands"""
+        """Test getting running commands."""
         config = {
             'platform': 'sonarr',
             'api_key': 'foo',
@@ -653,7 +657,7 @@ class TestSonarrSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_queue(self, req_mock):
-        """Tests getting downloads in the queue"""
+        """Test getting downloads in the queue."""
         config = {
             'platform': 'sonarr',
             'api_key': 'foo',
@@ -680,7 +684,7 @@ class TestSonarrSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_series(self, req_mock):
-        """Tests getting the number of series"""
+        """Test getting the number of series."""
         config = {
             'platform': 'sonarr',
             'api_key': 'foo',
@@ -707,7 +711,7 @@ class TestSonarrSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_wanted(self, req_mock):
-        """Tests getting wanted episodes"""
+        """Test getting wanted episodes."""
         config = {
             'platform': 'sonarr',
             'api_key': 'foo',
@@ -734,7 +738,7 @@ class TestSonarrSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_upcoming_multiple_days(self, req_mock):
-        """Tests upcoming episodes for multiple days"""
+        """Test the upcoming episodes for multiple days."""
         config = {
             'platform': 'sonarr',
             'api_key': 'foo',
@@ -762,8 +766,8 @@ class TestSonarrSetup(unittest.TestCase):
     @pytest.mark.skip
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_upcoming_today(self, req_mock):
-        """
-        Tests filtering for a single day.
+        """Test filtering for a single day.
+
         Sonarr needs to respond with at least 2 days
         """
         config = {
@@ -793,7 +797,7 @@ class TestSonarrSetup(unittest.TestCase):
     @pytest.mark.skip
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_ssl(self, req_mock):
-        """Tests SSL being enabled"""
+        """Test SSL being enabled."""
         config = {
             'platform': 'sonarr',
             'api_key': 'foo',
@@ -822,7 +826,7 @@ class TestSonarrSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_exception)
     def test_exception_handling(self, req_mock):
-        """Tests exception being handled"""
+        """Test exception being handled."""
         config = {
             'platform': 'sonarr',
             'api_key': 'foo',

@@ -5,8 +5,8 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tts/
 """
 import asyncio
-import logging
 import hashlib
+import logging
 import mimetypes
 import os
 import re
@@ -48,8 +48,10 @@ SERVICE_CLEAR_CACHE = 'clear_cache'
 
 ATTR_MESSAGE = 'message'
 ATTR_CACHE = 'cache'
+ATTR_LANGUAGE = 'language'
 
-_RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([a-z]+)\.[a-z0-9]{3,4}")
+_RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([^_]+)_([a-z]+)\.[a-z0-9]{3,4}")
+KEY_PATTERN = '{}_{}_{}'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
@@ -63,6 +65,7 @@ SCHEMA_SERVICE_SAY = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.string,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_CACHE): cv.boolean,
+    vol.Optional(ATTR_LANGUAGE): cv.string
 })
 
 SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
@@ -121,10 +124,11 @@ def async_setup(hass, config):
             entity_ids = service.data.get(ATTR_ENTITY_ID)
             message = service.data.get(ATTR_MESSAGE)
             cache = service.data.get(ATTR_CACHE)
+            language = service.data.get(ATTR_LANGUAGE)
 
             try:
                 url = yield from tts.async_get_url(
-                    p_type, message, cache=cache)
+                    p_type, message, cache=cache, language=language)
             except HomeAssistantError as err:
                 _LOGGER.error("Error on init tts: %s", err)
                 return
@@ -207,7 +211,8 @@ class SpeechManager(object):
             for file_data in folder_data:
                 record = _RE_VOICE_FILE.match(file_data)
                 if record:
-                    key = "{}_{}".format(record.group(1), record.group(2))
+                    key = KEY_PATTERN.format(
+                        record.group(1), record.group(2), record.group(3))
                     cache[key.lower()] = file_data.lower()
             return cache
 
@@ -241,17 +246,24 @@ class SpeechManager(object):
     def async_register_engine(self, engine, provider, config):
         """Register a TTS provider."""
         provider.hass = self.hass
-        provider.language = config.get(CONF_LANG)
         self.providers[engine] = provider
 
     @asyncio.coroutine
-    def async_get_url(self, engine, message, cache=None):
+    def async_get_url(self, engine, message, cache=None, language=None):
         """Get URL for play message.
 
         This method is a coroutine.
         """
+        provider = self.providers[engine]
+
+        language = language or provider.default_language
+        if language is None or \
+           language not in provider.supported_languages:
+            raise HomeAssistantError("Not supported language {0}".format(
+                language))
+
         msg_hash = hashlib.sha1(bytes(message, 'utf-8')).hexdigest()
-        key = ("{}_{}".format(msg_hash, engine)).lower()
+        key = KEY_PATTERN.format(msg_hash, language, engine).lower()
         use_cache = cache if cache is not None else self.use_cache
 
         # is speech allready in memory
@@ -260,23 +272,24 @@ class SpeechManager(object):
         # is file store in file cache
         elif use_cache and key in self.file_cache:
             filename = self.file_cache[key]
-            self.hass.async_add_job(self.async_file_to_mem(engine, key))
+            self.hass.async_add_job(self.async_file_to_mem(key))
         # load speech from provider into memory
         else:
             filename = yield from self.async_get_tts_audio(
-                engine, key, message, use_cache)
+                engine, key, message, use_cache, language)
 
         return "{}/api/tts_proxy/{}".format(
             self.hass.config.api.base_url, filename)
 
     @asyncio.coroutine
-    def async_get_tts_audio(self, engine, key, message, cache):
+    def async_get_tts_audio(self, engine, key, message, cache, language):
         """Receive TTS and store for view in cache.
 
         This method is a coroutine.
         """
         provider = self.providers[engine]
-        extension, data = yield from provider.async_get_tts_audio(message)
+        extension, data = yield from provider.async_get_tts_audio(
+            message, language)
 
         if data is None or extension is None:
             raise HomeAssistantError(
@@ -314,7 +327,7 @@ class SpeechManager(object):
             _LOGGER.error("Can't write %s", filename)
 
     @asyncio.coroutine
-    def async_file_to_mem(self, engine, key):
+    def async_file_to_mem(self, key):
         """Load voice from file cache into memory.
 
         This method is a coroutine.
@@ -362,13 +375,13 @@ class SpeechManager(object):
         if not record:
             raise HomeAssistantError("Wrong tts file format!")
 
-        key = "{}_{}".format(record.group(1), record.group(2))
+        key = KEY_PATTERN.format(
+            record.group(1), record.group(2), record.group(3))
 
         if key not in self.mem_cache:
             if key not in self.file_cache:
                 raise HomeAssistantError("%s not in cache!", key)
-            engine = record.group(2)
-            yield from self.async_file_to_mem(engine, key)
+            yield from self.async_file_to_mem(key)
 
         content, _ = mimetypes.guess_type(filename)
         return (content, self.mem_cache[key][MEM_CACHE_VOICE])
@@ -378,23 +391,30 @@ class Provider(object):
     """Represent a single provider."""
 
     hass = None
-    language = None
 
-    def get_tts_audio(self, message):
+    @property
+    def default_language(self):
+        """Default language."""
+        return None
+
+    @property
+    def supported_languages(self):
+        """List of supported languages."""
+        return None
+
+    def get_tts_audio(self, message, language):
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
-    @asyncio.coroutine
-    def async_get_tts_audio(self, message):
+    def async_get_tts_audio(self, message, language):
         """Load tts audio file from provider.
 
         Return a tuple of file extension and data as bytes.
 
-        This method is a coroutine.
+        This method must be run in the event loop and returns a coroutine.
         """
-        extension, data = yield from self.hass.loop.run_in_executor(
-            None, self.get_tts_audio, message)
-        return (extension, data)
+        return self.hass.loop.run_in_executor(
+            None, self.get_tts_audio, message, language)
 
 
 class TextToSpeechView(HomeAssistantView):

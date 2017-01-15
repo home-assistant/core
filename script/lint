@@ -1,10 +1,10 @@
 #!/bin/sh
-#
-# NOTE: all testing is now driven through tox. The tox command below
-# performs roughly what this test did in the past.
+# Execute lint to spot code mistakes.
+
+cd "$(dirname "$0")/.."
 
 if [ "$1" = "--changed" ]; then
-  export files="`git diff upstream/dev --name-only | grep -v requirements_all.txt`"
+  export files="`git diff upstream/dev --name-only | grep -e '\.py$'`"
   echo "================================================="
   echo "FILES CHANGED (git diff upstream/dev --name-only)"
   echo "================================================="

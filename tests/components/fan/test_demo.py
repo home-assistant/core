@@ -55,6 +55,15 @@ class TestDemoFan(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(STATE_OFF, self.get_entity().state)
 
+    def test_set_direction(self):
+        """Test setting the direction of the device."""
+        self.assertEqual(STATE_OFF, self.get_entity().state)
+
+        fan.set_direction(self.hass, FAN_ENTITY_ID, fan.DIRECTION_REVERSE)
+        self.hass.block_till_done()
+        self.assertEqual(fan.DIRECTION_REVERSE,
+                         self.get_entity().attributes.get('direction'))
+
     def test_set_speed(self):
         """Test setting the speed of the device."""
         self.assertEqual(STATE_OFF, self.get_entity().state)

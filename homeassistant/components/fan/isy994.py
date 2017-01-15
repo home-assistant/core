@@ -64,7 +64,11 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
     def __init__(self, node) -> None:
         """Initialize the ISY994 fan device."""
         isy.ISYDevice.__init__(self, node)
-        self.speed = self.state
+
+    @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        return self.state
 
     @property
     def state(self) -> str:

@@ -4,6 +4,7 @@ Support the ISY-994 controllers.
 For configuration details please visit the documentation for this component at
 https://home-assistant.io/components/isy994/
 """
+from collections import namedtuple
 import logging
 from urllib.parse import urlparse
 import voluptuous as vol
@@ -47,6 +48,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SENSOR_NODES = []
+WEATHER_NODES = []
 NODES = []
 GROUPS = []
 PROGRAMS = {}
@@ -57,6 +59,9 @@ HIDDEN_STRING = DEFAULT_HIDDEN_STRING
 
 SUPPORTED_DOMAINS = ['binary_sensor', 'cover', 'fan', 'light', 'lock',
                      'sensor', 'switch']
+
+
+WeatherNode = namedtuple('WeatherNode', ('status', 'name', 'uom'))
 
 
 def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
@@ -132,6 +137,17 @@ def _categorize_programs() -> None:
                         PROGRAMS[component].append(program)
 
 
+def _categorize_weather() -> None:
+    """Categorize the ISY994 weather data."""
+    global WEATHER_NODES
+
+    climate_attrs = dir(ISY.climate)
+    WEATHER_NODES = [WeatherNode(getattr(ISY.climate, attr), attr,
+                                 getattr(ISY.climate, attr + '_units'))
+                     for attr in climate_attrs
+                     if attr + '_units' in climate_attrs]
+
+
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ISY 994 platform."""
     isy_config = config.get(DOMAIN)
@@ -177,6 +193,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _categorize_nodes(hidden_identifier, sensor_identifier)
 
     _categorize_programs()
+
+    if ISY.configuration.get('Weather Information'):
+        _categorize_weather()
 
     # Listen for HA stop to disconnect.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)

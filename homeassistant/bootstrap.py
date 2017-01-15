@@ -395,6 +395,10 @@ def async_from_config_dict(config: Dict[str, Any],
     if not loader.PREPARED:
         yield from hass.loop.run_in_executor(None, loader.prepare, hass)
 
+    # Merge packages
+    conf_util.merge_packages_config(
+        config, core_config.get(conf_util.CONF_PACKAGES, {}))
+
     # Make a copy because we are mutating it.
     # Use OrderedDict in case original one was one.
     # Convert values to dictionaries if they are None
@@ -606,7 +610,7 @@ def async_log_exception(ex, domain, config, hass):
         message += '{}.'.format(humanize_error(config, ex))
 
     domain_config = config.get(domain, config)
-    message += " (See {}:{}). ".format(
+    message += " (See {}, line {}). ".format(
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
 

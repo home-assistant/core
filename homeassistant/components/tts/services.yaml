@@ -14,5 +14,9 @@ say:
       description: Control file cache of this message.
       example: 'true'
 
+    language:
+      description: Language to use for speech generation.
+      example: 'ru' 
+
 clear_cache:
   description: Remove cache files and RAM cache.

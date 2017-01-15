@@ -60,9 +60,11 @@ class TestLiteJetLight(unittest.TestCase):
         self.mock_lj.get_load_level.reset_mock()
 
     def light(self):
+        """Test for main light entity."""
         return self.hass.states.get(ENTITY_LIGHT)
 
     def other_light(self):
+        """Test the other light."""
         return self.hass.states.get(ENTITY_OTHER_LIGHT)
 
     def teardown_method(self, method):
@@ -71,7 +73,6 @@ class TestLiteJetLight(unittest.TestCase):
 
     def test_on_brightness(self):
         """Test turning the light on with brightness."""
-
         assert self.light().state == 'off'
         assert self.other_light().state == 'off'
 
@@ -84,7 +85,6 @@ class TestLiteJetLight(unittest.TestCase):
 
     def test_on_off(self):
         """Test turning the light on and off."""
-
         assert self.light().state == 'off'
         assert self.other_light().state == 'off'
 
@@ -100,7 +100,6 @@ class TestLiteJetLight(unittest.TestCase):
 
     def test_activated_event(self):
         """Test handling an event from LiteJet."""
-
         self.mock_lj.get_load_level.return_value = 99
 
         # Light 1
@@ -138,7 +137,6 @@ class TestLiteJetLight(unittest.TestCase):
 
     def test_deactivated_event(self):
         """Test handling an event from LiteJet."""
-
         # Initial state is on.
 
         self.mock_lj.get_load_level.return_value = 99

@@ -251,6 +251,9 @@ def setup_platform(hass, config: ConfigType,
             _LOGGER.debug('LOADING %s', node.name)
             devices.append(ISYSensorDevice(node))
 
+    for node in isy.WEATHER_NODES:
+        devices.append(ISYWeatherDevice(node))
+
     add_devices(devices)
 
 
@@ -309,3 +312,47 @@ class ISYSensorDevice(isy.ISYDevice):
             return self.hass.config.units.temperature_unit
         else:
             return raw_units
+
+
+class ISYWeatherDevice(isy.ISYDevice):
+    """Representation of an ISY994 weather device."""
+
+    _domain = 'sensor'
+
+    def __init__(self, node) -> None:
+        """Initialize the ISY994 weather device."""
+        isy.ISYDevice.__init__(self, node)
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique identifier for the node."""
+        return self._node.name
+
+    @property
+    def raw_units(self) -> str:
+        """Return the raw unit of measurement."""
+        if self._node.uom == 'F':
+            return TEMP_FAHRENHEIT
+        if self._node.uom == 'C':
+            return TEMP_CELSIUS
+        return self._node.uom
+
+    @property
+    def state(self) -> object:
+        """Return the value of the node."""
+        # pylint: disable=protected-access
+        val = self._node.status._val
+        raw_units = self._node.uom
+
+        if raw_units in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
+            return self.hass.config.units.temperature(val, raw_units)
+        return val
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement for the node."""
+        raw_units = self.raw_units
+
+        if raw_units in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
+            return self.hass.config.units.temperature_unit
+        return raw_units

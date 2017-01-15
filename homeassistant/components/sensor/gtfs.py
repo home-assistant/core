@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ORIGIN): cv.string,
     vol.Required(CONF_DESTINATION): cv.string,
     vol.Required(CONF_DATA): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 
@@ -226,9 +226,9 @@ class GTFSDepartureSensor(Entity):
                                                  self.destination)
             if not self._departure:
                 self._state = 0
-                self._attributes = {'Info': 'No more bus today'}
+                self._attributes = {'Info': 'No more departures today'}
                 if self._name == '':
-                    self._name = (self._custom_name or "GTFS Sensor")
+                    self._name = (self._custom_name or DEFAULT_NAME)
                 return
 
             self._state = self._departure['minutes_until_departure']

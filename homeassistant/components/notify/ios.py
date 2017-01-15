@@ -39,7 +39,7 @@ def log_rate_limits(target, resp, level=20):
                 str(resetsAtTime).split(".")[0])
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the iOS notification service."""
     if "notify.ios" not in hass.config.components:
         # Need this to enable requirements checking in the app.
