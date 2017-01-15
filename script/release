@@ -1,9 +1,6 @@
 #!/bin/sh
 # Pushes a new version to PyPi.
 
-# Stop on errors
-set -e
-
 cd "$(dirname "$0")/.."
 
 head -n 5 homeassistant/const.py | tail -n 1 | grep PATCH_VERSION > /dev/null
