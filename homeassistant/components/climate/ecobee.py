@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components import ecobee
 from homeassistant.components.climate import (
-    DOMAIN, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice,
+    DOMAIN, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_IDLE, ClimateDevice,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH)
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT)
@@ -145,7 +145,7 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if self.operation_mode == 'auto':
+        if self.current_operation == STATE_AUTO:
             return int(self.thermostat['runtime']['desiredHeat'] / 10)
         else:
             return None
@@ -153,7 +153,7 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        if self.current_operation == 'auto':
+        if self.current_operation == STATE_AUTO:
             return int(self.thermostat['runtime']['desiredCool'] / 10)
         else:
             return None
@@ -161,7 +161,7 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.current_operation == 'auto':
+        if self.current_operation == STATE_AUTO:
             return None
         if self.current_operation == STATE_HEAT:
             return int(self.thermostat['runtime']['desiredHeat'] / 10)
