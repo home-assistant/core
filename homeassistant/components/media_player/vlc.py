@@ -27,7 +27,7 @@ SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_ARGUMENTS): cv.string,
+    vol.Optional(CONF_ARGUMENTS, default=''): cv.string,
 })
 
 
