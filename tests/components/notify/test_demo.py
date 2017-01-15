@@ -1,13 +1,19 @@
 """The tests for the notify demo platform."""
 import unittest
+from unittest.mock import patch
 
-from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
 import homeassistant.components.notify as notify
+from homeassistant.bootstrap import setup_component
 from homeassistant.components.notify import demo
-from homeassistant.helpers import script
+from homeassistant.core import callback
+from homeassistant.helpers import discovery, script
+from tests.common import assert_setup_component, get_test_home_assistant
 
-from tests.common import get_test_home_assistant
+CONFIG = {
+    notify.DOMAIN: {
+        'platform': 'demo'
+    }
+}
 
 
 class TestNotifyDemo(unittest.TestCase):
@@ -16,11 +22,6 @@ class TestNotifyDemo(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.assertTrue(setup_component(self.hass, notify.DOMAIN, {
-            'notify': {
-                'platform': 'demo'
-            }
-        }))
         self.events = []
         self.calls = []
 
@@ -35,6 +36,59 @@ class TestNotifyDemo(unittest.TestCase):
         """"Stop down everything that was started."""
         self.hass.stop()
 
+    def _setup_notify(self):
+        with assert_setup_component(1) as config:
+            assert setup_component(self.hass, notify.DOMAIN, CONFIG)
+        assert config[notify.DOMAIN]
+
+    def test_setup(self):
+        """Test setup."""
+        self._setup_notify()
+
+    @patch('homeassistant.bootstrap.prepare_setup_platform')
+    def test_no_prepare_setup_platform(self, mock_prep_setup_platform):
+        """Test missing notify platform."""
+        mock_prep_setup_platform.return_value = None
+        with self.assertLogs('homeassistant.components.notify',
+                             level='ERROR') as log_handle:
+            self._setup_notify()
+        self.hass.block_till_done()
+        assert mock_prep_setup_platform.called
+        self.assertEqual(
+            log_handle.output,
+            ['ERROR:homeassistant.components.notify:'
+             'Unknown notification service specified',
+             'ERROR:homeassistant.components.notify:'
+             'Failed to set up platform demo'])
+
+    @patch('homeassistant.components.notify.demo.get_service')
+    def test_no_notify_service(self, mock_demo_get_service):
+        """Test missing platform notify service instance."""
+        mock_demo_get_service.return_value = None
+        with self.assertLogs('homeassistant.components.notify',
+                             level='ERROR') as log_handle:
+            self._setup_notify()
+        self.hass.block_till_done()
+        assert mock_demo_get_service.called
+        self.assertEqual(
+            log_handle.output,
+            ['ERROR:homeassistant.components.notify:'
+             'Failed to initialize notification service demo',
+             'ERROR:homeassistant.components.notify:'
+             'Failed to set up platform demo'])
+
+    @patch('homeassistant.components.notify.demo.get_service')
+    def test_discover_notify(self, mock_demo_get_service):
+        """Test discovery of notify demo platform."""
+        assert notify.DOMAIN not in self.hass.config.components
+        discovery.load_platform(
+            self.hass, 'notify', 'demo', {'test_key': 'test_val'}, {})
+        self.hass.block_till_done()
+        assert notify.DOMAIN in self.hass.config.components
+        assert mock_demo_get_service.called
+        assert mock_demo_get_service.call_args[0] == (
+            self.hass, {}, {'test_key': 'test_val'})
+
     @callback
     def record_calls(self, *args):
         """Helper for recording calls."""
@@ -42,12 +96,14 @@ class TestNotifyDemo(unittest.TestCase):
 
     def test_sending_none_message(self):
         """Test send with None as message."""
+        self._setup_notify()
         notify.send_message(self.hass, None)
         self.hass.block_till_done()
         self.assertTrue(len(self.events) == 0)
 
     def test_sending_templated_message(self):
         """Send a templated message."""
+        self._setup_notify()
         self.hass.states.set('sensor.temperature', 10)
         notify.send_message(self.hass, '{{ states.sensor.temperature.state }}',
                             '{{ states.sensor.temperature.name }}')
@@ -58,6 +114,7 @@ class TestNotifyDemo(unittest.TestCase):
 
     def test_method_forwards_correct_data(self):
         """Test that all data from the service gets forwarded to service."""
+        self._setup_notify()
         notify.send_message(self.hass, 'my message', 'my title',
                             {'hello': 'world'})
         self.hass.block_till_done()
@@ -71,6 +128,7 @@ class TestNotifyDemo(unittest.TestCase):
 
     def test_calling_notify_from_script_loaded_from_yaml_without_title(self):
         """Test if we can call a notify from a script."""
+        self._setup_notify()
         conf = {
             'service': 'notify.notify',
             'data': {
@@ -97,6 +155,7 @@ class TestNotifyDemo(unittest.TestCase):
 
     def test_calling_notify_from_script_loaded_from_yaml_with_title(self):
         """Test if we can call a notify from a script."""
+        self._setup_notify()
         conf = {
             'service': 'notify.notify',
             'data': {
@@ -127,12 +186,14 @@ class TestNotifyDemo(unittest.TestCase):
 
     def test_targets_are_services(self):
         """Test that all targets are exposed as individual services."""
+        self._setup_notify()
         self.assertIsNotNone(self.hass.services.has_service("notify", "demo"))
         service = "demo_test_target_name"
         self.assertIsNotNone(self.hass.services.has_service("notify", service))
 
     def test_messages_to_targets_route(self):
         """Test message routing to specific target services."""
+        self._setup_notify()
         self.hass.bus.listen_once("notify", self.record_calls)
 
         self.hass.services.call("notify", "demo_test_target_name",

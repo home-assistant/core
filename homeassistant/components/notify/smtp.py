@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the mail notification service."""
     mail_service = MailNotificationService(
         config.get(CONF_SERVER),
