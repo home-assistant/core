@@ -285,11 +285,11 @@ class Thermostat(ClimateDevice):
             high_temp = temp
 
         if self.hold_temp:
-            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
-                                           high_temp, "indefinite")
+            self.data.ecobee.set_hold_temp(self.thermostat_index, high_temp,
+                                           low_temp, "indefinite")
         else:
-            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
-                                           high_temp)
+            self.data.ecobee.set_hold_temp(self.thermostat_index, high_temp,
+                                           low_temp)
 
         _LOGGER.debug("Setting ecobee hold_temp to: low=%s, is=%s, "
                       "high=%s, is=%s", low_temp, isinstance(
