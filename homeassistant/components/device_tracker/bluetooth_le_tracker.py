@@ -6,9 +6,8 @@ import voluptuous as vol
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker import (
     YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
-    PLATFORM_SCHEMA, load_config, DEFAULT_TRACK_NEW
+    PLATFORM_SCHEMA, load_config
 )
-import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 
@@ -86,14 +85,13 @@ def setup_scanner(hass, config, see):
 
     # if track new devices is true discover new devices
     # on every scan.
-    track_new = util.convert(config.get(CONF_TRACK_NEW), bool,
-                             DEFAULT_TRACK_NEW)
+    track_new = config.get(CONF_TRACK_NEW)
+
     if not devs_to_track and not track_new:
         _LOGGER.warning("No Bluetooth LE devices to track!")
         return False
 
-    interval = util.convert(config.get(CONF_SCAN_INTERVAL), int,
-                            DEFAULT_SCAN_INTERVAL)
+    interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     def update_ble(now):
         """Lookup Bluetooth LE devices and update status."""
@@ -113,8 +111,7 @@ def setup_scanner(hass, config, see):
                     _LOGGER.info("Discovered Bluetooth LE device %s", address)
                     see_device(address, devs[address], new_device=True)
 
-        track_point_in_utc_time(hass, update_ble,
-                                now + timedelta(seconds=interval))
+        track_point_in_utc_time(hass, update_ble, now + interval)
 
     update_ble(dt_util.utcnow())
 

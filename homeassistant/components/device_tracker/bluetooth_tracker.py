@@ -83,8 +83,7 @@ def setup_scanner(hass, config, see):
                 see_device((mac, result))
         except bluetooth.BluetoothError:
             _LOGGER.exception('Error looking up bluetooth device!')
-        track_point_in_utc_time(hass, update_bluetooth,
-                                now + timedelta(seconds=interval))
+        track_point_in_utc_time(hass, update_bluetooth, now + interval)
 
     update_bluetooth(dt_util.utcnow())
 
