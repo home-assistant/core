@@ -1,6 +1,5 @@
 """Tracking for bluetooth low energy devices."""
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 from homeassistant.helpers.event import track_point_in_utc_time
