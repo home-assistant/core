@@ -133,6 +133,9 @@ class APIEventStream(HomeAssistantView):
                 except asyncio.TimeoutError:
                     yield from to_write.put(STREAM_PING_PAYLOAD)
 
+        except asyncio.CancelledError:
+            _LOGGER.debug('STREAM %s ABORT', id(stop_obj))
+
         finally:
             _LOGGER.debug('STREAM %s RESPONSE CLOSED', id(stop_obj))
             unsub_stream()
