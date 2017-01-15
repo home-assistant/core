@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DB_NAME = 'database'
 CONF_TAGS = 'tags'
 CONF_DEFAULT_MEASUREMENT = 'default_measurement'
+CONF_OVERRIDE_MEASUREMENT = 'override_measurement'
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
@@ -39,6 +40,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL): cv.boolean,
         vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
+        vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}):
             vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_WHITELIST, default=[]):
@@ -79,10 +81,11 @@ def setup(hass, config):
     whitelist = conf.get(CONF_WHITELIST)
     tags = conf.get(CONF_TAGS)
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
+    override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
 
     try:
         influx = InfluxDBClient(**kwargs)
-        influx.query("select * from /.*/ LIMIT 1;")
+        influx.query("SELECT * FROM /.*/ LIMIT 1;")
     except exceptions.InfluxDBClientError as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "
                       "check your entries in the configuration file and that "
@@ -101,16 +104,21 @@ def setup(hass, config):
             if len(whitelist) > 0 and state.entity_id not in whitelist:
                 return
 
-            _state = state_helper.state_as_number(state)
+            _state = float(state_helper.state_as_number(state))
+            _state_key = "value"
         except ValueError:
             _state = state.state
+            _state_key = "state"
 
-        measurement = state.attributes.get('unit_of_measurement')
-        if measurement in (None, ''):
-            if default_measurement:
-                measurement = default_measurement
-            else:
-                measurement = state.entity_id
+        if override_measurement:
+            measurement = override_measurement
+        else:
+            measurement = state.attributes.get('unit_of_measurement')
+            if measurement in (None, ''):
+                if default_measurement:
+                    measurement = default_measurement
+                else:
+                    measurement = state.entity_id
 
         json_body = [
             {
@@ -121,19 +129,25 @@ def setup(hass, config):
                 },
                 'time': event.time_fired,
                 'fields': {
-                    'value': _state,
+                    _state_key: _state,
                 }
             }
         ]
 
         for key, value in state.attributes.items():
             if key != 'unit_of_measurement':
-                if isinstance(value, (str, float, bool)) or \
-                        key.endswith('_id'):
-                    json_body[0]['fields'][key] = value
-                elif isinstance(value, int):
-                    # Prevent column data errors in influxDB.
+                # If the key is already in fields
+                if key in json_body[0]['fields']:
+                    key = key + "_"
+                # Prevent column data errors in influxDB.
+                # For each value we try to cast it as float
+                # But if we can not do it we store the value
+                # as string add "_str" postfix to the field key
+                try:
                     json_body[0]['fields'][key] = float(value)
+                except (ValueError, TypeError):
+                    new_key = "{}_str".format(key)
+                    json_body[0]['fields'][new_key] = str(value)
 
         json_body[0]['tags'].update(tags)
 

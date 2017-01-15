@@ -22,14 +22,23 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FAN_MIN_ON_TIME = 'fan_min_on_time'
+ATTR_RESUME_ALL = 'resume_all'
+
+DEFAULT_RESUME_ALL = False
 
 DEPENDENCIES = ['ecobee']
 
 SERVICE_SET_FAN_MIN_ON_TIME = 'ecobee_set_fan_min_on_time'
+SERVICE_RESUME_PROGRAM = 'ecobee_resume_program'
 
 SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_FAN_MIN_ON_TIME): vol.Coerce(int),
+})
+
+RESUME_PROGRAM_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_RESUME_ALL, default=DEFAULT_RESUME_ALL): cv.boolean,
 })
 
 
@@ -48,18 +57,33 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def fan_min_on_time_set_service(service):
         """Set the minimum fan on time on the target thermostats."""
-        entity_id = service.data.get('entity_id')
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        fan_min_on_time = service.data[ATTR_FAN_MIN_ON_TIME]
 
         if entity_id:
             target_thermostats = [device for device in devices
-                                  if device.entity_id == entity_id]
+                                  if device.entity_id in entity_id]
         else:
             target_thermostats = devices
 
-        fan_min_on_time = service.data[ATTR_FAN_MIN_ON_TIME]
-
         for thermostat in target_thermostats:
             thermostat.set_fan_min_on_time(str(fan_min_on_time))
+
+            thermostat.update_ha_state(True)
+
+    def resume_program_set_service(service):
+        """Resume the program on the target thermostats."""
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        resume_all = service.data.get(ATTR_RESUME_ALL)
+
+        if entity_id:
+            target_thermostats = [device for device in devices
+                                  if device.entity_id in entity_id]
+        else:
+            target_thermostats = devices
+
+        for thermostat in target_thermostats:
+            thermostat.resume_program(resume_all)
 
             thermostat.update_ha_state(True)
 
@@ -70,6 +94,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DOMAIN, SERVICE_SET_FAN_MIN_ON_TIME, fan_min_on_time_set_service,
         descriptions.get(SERVICE_SET_FAN_MIN_ON_TIME),
         schema=SET_FAN_MIN_ON_TIME_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_RESUME_PROGRAM, resume_program_set_service,
+        descriptions.get(SERVICE_RESUME_PROGRAM),
+        schema=RESUME_PROGRAM_SCHEMA)
 
 
 class Thermostat(ClimateDevice):
@@ -247,6 +276,12 @@ class Thermostat(ClimateDevice):
         """Set the minimum fan on time."""
         self.data.ecobee.set_fan_min_on_time(self.thermostat_index,
                                              fan_min_on_time)
+        self.update_without_throttle = True
+
+    def resume_program(self, resume_all):
+        """Resume the thermostat schedule program."""
+        self.data.ecobee.resume_program(self.thermostat_index,
+                                        str(resume_all).lower())
         self.update_without_throttle = True
 
     # Home and Sleep mode aren't used in UI yet:

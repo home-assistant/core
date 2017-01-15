@@ -63,7 +63,6 @@ class TestCors:
 
     def test_cors_allowed_with_password_in_url(self):
         """Test cross origin resource sharing with password in url."""
-
         req = requests.get(_url(const.URL_API),
                            params={'api_password': API_PASSWORD},
                            headers={const.HTTP_HEADER_ORIGIN: HTTP_BASE_URL})
@@ -119,6 +118,7 @@ class TestCors:
 
 
 class TestView(http.HomeAssistantView):
+    """Test the HTTP views."""
 
     name = 'test'
     url = '/hello'
@@ -159,7 +159,6 @@ def test_registering_view_while_running(hass, test_client):
 
 def test_api_base_url(loop):
     """Test setting api url."""
-
     hass = MagicMock()
     hass.loop = loop
 

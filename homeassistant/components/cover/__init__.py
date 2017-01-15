@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover/
 """
 import os
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -23,7 +24,7 @@ from homeassistant.const import (
 
 
 DOMAIN = 'cover'
-SCAN_INTERVAL = 15
+SCAN_INTERVAL = timedelta(seconds=15)
 
 GROUP_NAME_ALL_COVERS = 'all covers'
 ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format('all_covers')

@@ -75,7 +75,7 @@ class TestHttp:
                 assert req.status_code == 403
 
     def test_access_from_banned_ip_when_ban_is_off(self):
-        """Test accessing to server from banned IP when feature is off"""
+        """Test accessing to server from banned IP when feature is off."""
         hass.http.app[KEY_BANS_ENABLED] = False
         for remote_addr in BANNED_IPS:
             with patch('homeassistant.components.http.'
@@ -87,7 +87,7 @@ class TestHttp:
                 assert req.status_code == 200
 
     def test_ip_bans_file_creation(self):
-        """Testing if banned IP file created"""
+        """Testing if banned IP file created."""
         hass.http.app[KEY_BANS_ENABLED] = True
         hass.http.app[KEY_LOGIN_THRESHOLD] = 1
 

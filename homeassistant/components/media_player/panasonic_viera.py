@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
@@ -30,7 +30,7 @@ DEFAULT_PORT = 55000
 SUPPORT_VIERATV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_TURN_OFF
+    SUPPORT_TURN_OFF | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -133,10 +133,13 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         """Turn on the media player."""
         if self._mac:
             self._wol.send_magic_packet(self._mac)
+            self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
-        self.send_key('NRC_POWER-ONOFF')
+        if self._state != STATE_OFF:
+            self.send_key('NRC_POWER-ONOFF')
+            self._state = STATE_OFF
 
     def volume_up(self):
         """Volume up the media player."""

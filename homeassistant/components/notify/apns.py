@@ -11,17 +11,28 @@ import voluptuous as vol
 from homeassistant.helpers.event import track_state_change
 from homeassistant.config import load_yaml_config_file
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, BaseNotificationService)
+    ATTR_TARGET, ATTR_DATA, BaseNotificationService, DOMAIN)
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template as template_helper
 
-DOMAIN = "apns"
 APNS_DEVICES = "apns.yaml"
+CONF_CERTFILE = "cert_file"
+CONF_TOPIC = "topic"
+CONF_SANDBOX = "sandbox"
 DEVICE_TRACKER_DOMAIN = "device_tracker"
 SERVICE_REGISTER = "apns_register"
 
 ATTR_PUSH_ID = "push_id"
 ATTR_NAME = "name"
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'apns',
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_CERTFILE): cv.isfile,
+    vol.Required(CONF_TOPIC): cv.string,
+    vol.Optional(CONF_SANDBOX, default=False): cv.boolean,
+})
 
 REGISTER_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_PUSH_ID): cv.string,
@@ -31,31 +42,19 @@ REGISTER_SERVICE_SCHEMA = vol.Schema({
 REQUIREMENTS = ["apns2==0.1.1"]
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Return push service."""
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    name = config.get("name")
-    if name is None:
-        logging.error("Name must be specified.")
-        return None
-
-    cert_file = config.get('cert_file')
-    if cert_file is None:
-        logging.error("Certificate must be specified.")
-        return None
-
-    topic = config.get('topic')
-    if topic is None:
-        logging.error("Topic must be specified.")
-        return None
-
-    sandbox = bool(config.get('sandbox', False))
+    name = config.get(CONF_NAME)
+    cert_file = config.get(CONF_CERTFILE)
+    topic = config.get(CONF_TOPIC)
+    sandbox = config.get(CONF_SANDBOX)
 
     service = ApnsNotificationService(hass, name, topic, sandbox, cert_file)
     hass.services.register(DOMAIN,
-                           name,
+                           'apns_{}'.format(name),
                            service.register,
                            descriptions.get(SERVICE_REGISTER),
                            schema=REGISTER_SERVICE_SCHEMA)
@@ -202,8 +201,6 @@ class ApnsNotificationService(BaseNotificationService):
     def register(self, call):
         """Register a device to receive push messages."""
         push_id = call.data.get(ATTR_PUSH_ID)
-        if push_id is None:
-            return False
 
         device_name = call.data.get(ATTR_NAME)
         current_device = self.devices.get(push_id)

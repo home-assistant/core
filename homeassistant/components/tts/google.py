@@ -2,7 +2,7 @@
 Support for the google speech service.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/google/
+https://home-assistant.io/components/tts.google/
 """
 import asyncio
 import logging
@@ -41,16 +41,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_get_engine(hass, config):
-    """Setup Google speech component."""
-    return GoogleProvider(hass)
+    """Set up Google speech component."""
+    return GoogleProvider(hass, config[CONF_LANG])
 
 
 class GoogleProvider(Provider):
-    """Google speech api provider."""
+    """The Google speech API provider."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, lang):
         """Init Google TTS service."""
         self.hass = hass
+        self._lang = lang
         self.headers = {
             'Referer': "http://translate.google.com/",
             'User-Agent': ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
@@ -58,8 +59,18 @@ class GoogleProvider(Provider):
                            "Chrome/47.0.2526.106 Safari/537.36")
         }
 
+    @property
+    def default_language(self):
+        """Default language."""
+        return self._lang
+
+    @property
+    def supported_languages(self):
+        """List of supported languages."""
+        return SUPPORT_LANGUAGES
+
     @asyncio.coroutine
-    def async_get_tts_audio(self, message):
+    def async_get_tts_audio(self, message, language):
         """Load TTS from google."""
         from gtts_token import gtts_token
 
@@ -74,7 +85,7 @@ class GoogleProvider(Provider):
 
             url_param = {
                 'ie': 'UTF-8',
-                'tl': self.language,
+                'tl': language,
                 'q': yarl.quote(part),
                 'tk': part_token,
                 'total': len(message_parts),

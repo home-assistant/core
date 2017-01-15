@@ -78,9 +78,9 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id or \
            self._value.node == value.node:
+            _LOGGER.debug('Value changed for label %s', self._value.label)
             self.update_properties()
-            self.update_ha_state()
-            _LOGGER.debug("Value changed on network %s", value)
+            self.schedule_update_ha_state()
 
     def update_properties(self):
         """Callback on data change for the registered node/value pair."""
@@ -170,9 +170,9 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def value_changed(self, value):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id:
+            _LOGGER.debug('Value changed for label %s', self._value.label)
             self._state = value.data
-            self.update_ha_state()
-            _LOGGER.debug("Value changed on network %s", value)
+            self.schedule_update_ha_state()
 
     @property
     def is_closed(self):

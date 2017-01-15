@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
@@ -24,7 +24,7 @@ CONF_SOURCES = 'sources'
 DEFAULT_NAME = 'Onkyo Receiver'
 
 SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 KNOWN_HOSTS = []  # type: List[str]
 DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
@@ -111,13 +111,21 @@ class OnkyoDevice(MediaPlayerDevice):
         current_source_raw = self.command('input-selector query')
         if not (volume_raw and mute_raw and current_source_raw):
             return
-        for source in current_source_raw[1]:
+
+        # eiscp can return string or tuple. Make everything tuples.
+        if isinstance(current_source_raw[1], str):
+            current_source_tuples = \
+                (current_source_raw[0], (current_source_raw[1],))
+        else:
+            current_source_tuples = current_source_raw
+
+        for source in current_source_tuples[1]:
             if source in self._source_mapping:
                 self._current_source = self._source_mapping[source]
                 break
             else:
                 self._current_source = '_'.join(
-                    [i for i in current_source_raw[1]])
+                    [i for i in current_source_tuples[1]])
         self._muted = bool(mute_raw[1] == 'on')
         self._volume = int(volume_raw[1], 16) / 80.0
 

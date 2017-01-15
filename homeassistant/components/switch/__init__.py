@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.components import group
 
 DOMAIN = 'switch'
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_SWITCHES = 'all switches'
 ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_switches')

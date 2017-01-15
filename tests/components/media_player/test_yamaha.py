@@ -20,6 +20,7 @@ class FakeYamaha(rxv.rxv.RXV):
     ensure that usage of the rxv library by HomeAssistant is as we'd
     expect.
     """
+
     _fake_input = 'HDMI1'
 
     def _discover_features(self):
@@ -75,7 +76,7 @@ class TestYamaha(unittest.TestCase):
         self.rec = FakeYamaha('10.0.0.0')
 
     def test_get_playback_support(self):
-        """Test the playback"""
+        """Test the playback."""
         rec = self.rec
         support = rec.get_playback_support()
         self.assertFalse(support.play)

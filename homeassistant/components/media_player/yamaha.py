@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, SUPPORT_PAUSE, SUPPORT_STOP,
-    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY,
     MEDIA_TYPE_MUSIC,
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON,
@@ -23,7 +23,7 @@ REQUIREMENTS = ['rxv==0.4.0']
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 CONF_SOURCE_NAMES = 'source_names'
 CONF_SOURCE_IGNORE = 'source_ignore'
@@ -184,7 +184,7 @@ class YamahaDevice(MediaPlayerDevice):
         supported_commands = SUPPORT_YAMAHA
 
         supports = self._receiver.get_playback_support()
-        mapping = {'play': SUPPORT_PLAY_MEDIA,
+        mapping = {'play': (SUPPORT_PLAY | SUPPORT_PLAY_MEDIA),
                    'pause': SUPPORT_PAUSE,
                    'stop': SUPPORT_STOP,
                    'skip_f': SUPPORT_NEXT_TRACK,

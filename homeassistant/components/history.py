@@ -10,7 +10,8 @@ from datetime import timedelta
 from itertools import groupby
 import voluptuous as vol
 
-from homeassistant.const import HTTP_BAD_REQUEST
+from homeassistant.const import (
+    HTTP_BAD_REQUEST, CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, script
@@ -20,11 +21,6 @@ from homeassistant.const import ATTR_HIDDEN
 
 DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
-
-CONF_EXCLUDE = 'exclude'
-CONF_INCLUDE = 'include'
-CONF_ENTITIES = 'entities'
-CONF_DOMAINS = 'domains'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
