@@ -86,7 +86,7 @@ class FFmpegCamera(Camera):
                 response.write(data)
 
         except asyncio.CancelledError:
-            _LOGGER.debug("Close stream by browser.")
+            _LOGGER.debug("Close stream by frontend.")
             response = None
 
         finally:
