@@ -17,7 +17,7 @@ from homeassistant.const import (
 
 import homeassistant.helpers.config_validation as cv
 
-#REQUIREMENTS = ['python-eq3bt==0.1.3']
+REQUIREMENTS = ['python-eq3bt==0.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
