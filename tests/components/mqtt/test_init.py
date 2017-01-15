@@ -17,6 +17,7 @@ from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
 
 
+# pylint: disable=invalid-name
 class TestMQTT(unittest.TestCase):
     """Test the MQTT component."""
 
@@ -49,27 +50,37 @@ class TestMQTT(unittest.TestCase):
         self.hass.block_till_done()
         self.assertTrue(mqtt.MQTT_CLIENT.stop.called)
 
-    def test_setup_fails_if_no_connect_broker(self):
+    @mock.patch('paho.mqtt.client.Client')
+    def test_setup_fails_if_no_connect_broker(self, _):
         """Test for setup failure if connection to broker is missing."""
+        test_broker_cfg = {mqtt.DOMAIN: {mqtt.CONF_BROKER: 'test-broker'}}
+
         with mock.patch('homeassistant.components.mqtt.MQTT',
                         side_effect=socket.error()):
             self.hass.config.components = []
-            assert not setup_component(self.hass, mqtt.DOMAIN, {
-                mqtt.DOMAIN: {
-                    mqtt.CONF_BROKER: 'test-broker',
-                }
-            })
+            assert not setup_component(self.hass, mqtt.DOMAIN, test_broker_cfg)
 
-    def test_setup_protocol_validation(self):
-        """Test for setup failure if connection to broker is missing."""
-        with mock.patch('paho.mqtt.client.Client'):
+        # Ensure if we dont raise it sets up correctly
+        self.hass.config.components = []
+        assert setup_component(self.hass, mqtt.DOMAIN, test_broker_cfg)
+
+    @mock.patch('paho.mqtt.client.Client')
+    def test_setup_embedded(self, _):
+        """Test setting up embedded server with no config."""
+        client_config = ('localhost', 1883, 'user', 'pass', None, '3.1.1')
+
+        with mock.patch('homeassistant.components.mqtt.server.start',
+                        return_value=(True, client_config)) as _start:
             self.hass.config.components = []
-            assert setup_component(self.hass, mqtt.DOMAIN, {
-                mqtt.DOMAIN: {
-                    mqtt.CONF_BROKER: 'test-broker',
-                    mqtt.CONF_PROTOCOL: 3.1,
-                }
-            })
+            assert setup_component(self.hass, mqtt.DOMAIN,
+                                   {mqtt.DOMAIN: {}})
+            assert _start.call_count == 1
+
+            # Test with `embedded: None`
+            self.hass.config.components = []
+            assert setup_component(self.hass, mqtt.DOMAIN,
+                                   {mqtt.DOMAIN: {'embedded': None}})
+            assert _start.call_count == 2  # Another call
 
     def test_publish_calls_service(self):
         """Test the publishing of call to services."""
@@ -81,11 +92,11 @@ class TestMQTT(unittest.TestCase):
 
         self.assertEqual(1, len(self.calls))
         self.assertEqual(
-                'test-topic',
-                self.calls[0][0].data['service_data'][mqtt.ATTR_TOPIC])
+            'test-topic',
+            self.calls[0][0].data['service_data'][mqtt.ATTR_TOPIC])
         self.assertEqual(
-                'test-payload',
-                self.calls[0][0].data['service_data'][mqtt.ATTR_PAYLOAD])
+            'test-payload',
+            self.calls[0][0].data['service_data'][mqtt.ATTR_PAYLOAD])
 
     def test_service_call_without_topic_does_not_publish(self):
         """Test the service call if topic is missing."""
@@ -293,7 +304,8 @@ class TestMQTTCallbacks(unittest.TestCase):
             3: 'home/sensor',
         }, mqtt.MQTT_CLIENT.progress)
 
-    def test_mqtt_birth_message_on_connect(self):
+    def test_mqtt_birth_message_on_connect(self):  \
+            # pylint: disable=no-self-use
         """Test birth message on connect."""
         mqtt.MQTT_CLIENT._mqtt_on_connect(None, None, 0, 0)
         mqtt.MQTT_CLIENT._mqttc.publish.assert_called_with('birth', 'birth', 0,

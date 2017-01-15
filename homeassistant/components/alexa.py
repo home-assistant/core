@@ -203,11 +203,12 @@ class AlexaResponse(object):
         self.reprompt = None
         self.session_attributes = {}
         self.should_end_session = True
+        self.variables = {}
         if intent is not None and 'slots' in intent:
-            self.variables = {key: value['value'] for key, value
-                              in intent['slots'].items() if 'value' in value}
-        else:
-            self.variables = {}
+            for key, value in intent['slots'].items():
+                if 'value' in value:
+                    underscored_key = key.replace('.', '_')
+                    self.variables[underscored_key] = value['value']
 
     def add_card(self, card_type, title, content):
         """Add a card to the response."""

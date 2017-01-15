@@ -10,15 +10,14 @@ import random
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_NAME
+from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_RANDOM,
     SUPPORT_BRIGHTNESS, SUPPORT_EFFECT, SUPPORT_RGB_COLOR, Light,
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/0.10.zip'
-                '#flux_led==0.10']
+REQUIREMENTS = ['flux_led==0.12']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +33,8 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(ATTR_MODE, default='rgbw'):
         vol.All(cv.string, vol.In(['rgbw', 'rgb'])),
+    vol.Optional(CONF_PROTOCOL, default=None):
+        vol.All(cv.string, vol.In(['ledenet'])),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -51,6 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device = {}
         device['name'] = device_config[CONF_NAME]
         device['ipaddr'] = ipaddr
+        device[CONF_PROTOCOL] = device_config[CONF_PROTOCOL]
         device[ATTR_MODE] = device_config[ATTR_MODE]
         light = FluxLight(device)
         if light.is_valid:
@@ -87,11 +89,14 @@ class FluxLight(Light):
 
         self._name = device['name']
         self._ipaddr = device['ipaddr']
+        self._protocol = device[CONF_PROTOCOL]
         self._mode = device[ATTR_MODE]
         self.is_valid = True
         self._bulb = None
         try:
             self._bulb = flux_led.WifiLedBulb(self._ipaddr)
+            if self._protocol:
+                self._bulb.setProtocol(self._protocol)
         except socket.error:
             self.is_valid = False
             _LOGGER.error(

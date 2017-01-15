@@ -30,6 +30,7 @@ class MockDevice(STD):
     """Mock device."""
 
     def __init__(self):
+        """Init the class."""
         self._config = MockConfig
 
 
@@ -37,6 +38,7 @@ class MockConfig(Config):
     """Mock config."""
 
     def __init__(self):
+        """Init class."""
         self._name = "name"
 
 
@@ -49,6 +51,7 @@ class MockPreset(Preset):
     """Mock preset."""
 
     def __init__(self, id):
+        """Init the class."""
         self._id = id
         self._name = "preset"
 
@@ -57,6 +60,7 @@ class MockVolume(Volume):
     """Mock volume with value."""
 
     def __init__(self):
+        """Init class."""
         self._actual = 12
 
 
@@ -64,6 +68,7 @@ class MockVolumeMuted(Volume):
     """Mock volume muted."""
 
     def __init__(self):
+        """Init the class."""
         self._actual = 12
         self._muted = True
 
@@ -72,6 +77,7 @@ class MockStatusStandby(Status):
     """Mock status standby."""
 
     def __init__(self):
+        """Init the class."""
         self._source = "STANDBY"
 
 
@@ -79,6 +85,7 @@ class MockStatusPlaying(Status):
     """Mock status playing media."""
 
     def __init__(self):
+        """Init the class."""
         self._source = ""
         self._play_status = "PLAY_STATE"
         self._image = "image.url"
@@ -93,6 +100,7 @@ class MockStatusPlayingRadio(Status):
     """Mock status radio."""
 
     def __init__(self):
+        """Init the class."""
         self._source = ""
         self._play_status = "PLAY_STATE"
         self._image = "image.url"
@@ -107,6 +115,7 @@ class MockStatusUnknown(Status):
     """Mock status unknown media."""
 
     def __init__(self):
+        """Init the class."""
         self._source = ""
         self._play_status = "PLAY_STATE"
         self._image = "image.url"
@@ -121,6 +130,7 @@ class MockStatusPause(Status):
     """Mock status pause."""
 
     def __init__(self):
+        """Init the class."""
         self._source = ""
         self._play_status = "PAUSE_STATE"
 
@@ -308,7 +318,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   default_component(),
                                   mock.MagicMock())
         self.assertEqual(mocked_sountouch_device.call_count, 1)
-        self.assertEqual(soundtouch.DEVICES[0].supported_media_commands, 1469)
+        self.assertEqual(soundtouch.DEVICES[0].supported_media_commands, 17853)
 
     @mock.patch('libsoundtouch.device.SoundTouchDevice.power_off')
     @mock.patch('libsoundtouch.device.SoundTouchDevice.volume')

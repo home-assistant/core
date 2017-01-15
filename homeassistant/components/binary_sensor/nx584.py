@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pynx584==0.2']
+REQUIREMENTS = ['pynx584==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

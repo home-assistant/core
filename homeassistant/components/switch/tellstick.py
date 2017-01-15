@@ -46,9 +46,9 @@ class TellstickSwitch(TellstickDevice, ToggleEntity):
         """Update the device entity state to match the arguments."""
         self._state = new_state
 
-    def _send_tellstick_command(self):
-        """Let tellcore update the device to match the current state."""
-        if self._state:
+    def _send_device_command(self, requested_state, requested_data):
+        """Let tellcore update the actual device to the requested state."""
+        if requested_state:
             self._tellcore_device.turn_on()
         else:
             self._tellcore_device.turn_off()

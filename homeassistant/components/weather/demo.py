@@ -79,7 +79,7 @@ class DemoWeather(WeatherEntity):
 
     @property
     def pressure(self):
-        """Return the wind speed."""
+        """Return the pressure."""
         return self._pressure
 
     @property
