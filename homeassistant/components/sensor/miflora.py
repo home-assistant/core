@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC)
 
@@ -31,9 +30,7 @@ DEFAULT_MEDIAN = 3
 DEFAULT_NAME = 'Mi Flora'
 DEFAULT_RETRIES = 2
 DEFAULT_TIMEOUT = 10
-
-UPDATE_INTERVAL = 1200
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=UPDATE_INTERVAL)
+DEFAULT_UPDATE_INTERVAL = 1200
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
@@ -53,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_RETRIES, default=DEFAULT_RETRIES): cv.positive_int,
-    vol.Optional(CONF_CACHE, default=UPDATE_INTERVAL): cv.positive_int,
+    vol.Optional(CONF_CACHE, default=DEFAULT_UPDATE_INTERVAL): cv.positive_int,
 })
 
 
@@ -122,7 +119,6 @@ class MiFloraSensor(Entity):
         """Force update."""
         return self._force_update
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """
         Update current conditions.
