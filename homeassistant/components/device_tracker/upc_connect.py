@@ -75,8 +75,11 @@ class UPCDeviceScanner(DeviceScanner):
                 return []
 
         raw = yield from self._async_ws_function(CMD_DEVICES)
-        xml_root = ET.fromstring(raw)
+        if raw is None:
+            _LOGGER.warning("Can't read device from %s", self.host)
+            return
 
+        xml_root = ET.fromstring(raw)
         return [mac.text for mac in xml_root.iter('MACAddr')]
 
     @asyncio.coroutine
