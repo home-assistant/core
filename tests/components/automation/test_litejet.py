@@ -71,6 +71,7 @@ class TestLiteJetTrigger(unittest.TestCase):
         self.hass.stop()
 
     def simulate_press(self, number):
+        """Test to simulate a press."""
         _LOGGER.info('*** simulate press of %d', number)
         callback = self.switch_pressed_callbacks.get(number)
         with mock.patch('homeassistant.helpers.condition.dt_util.utcnow',
@@ -80,6 +81,7 @@ class TestLiteJetTrigger(unittest.TestCase):
             self.hass.block_till_done()
 
     def simulate_release(self, number):
+        """Test to simulate releasing."""
         _LOGGER.info('*** simulate release of %d', number)
         callback = self.switch_released_callbacks.get(number)
         with mock.patch('homeassistant.helpers.condition.dt_util.utcnow',
@@ -89,6 +91,7 @@ class TestLiteJetTrigger(unittest.TestCase):
             self.hass.block_till_done()
 
     def simulate_time(self, delta):
+        """Test to simulate time."""
         _LOGGER.info(
             '*** simulate time change by %s: %s',
             delta,
@@ -102,6 +105,7 @@ class TestLiteJetTrigger(unittest.TestCase):
             _LOGGER.info('done with now=%s', dt_util.utcnow())
 
     def setup_automation(self, trigger):
+        """Test setting up the automation."""
         assert bootstrap.setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: [
                 {

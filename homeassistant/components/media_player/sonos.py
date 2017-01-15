@@ -15,7 +15,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_STOP)
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_STOP,
+    SUPPORT_PLAY)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
     CONF_HOSTS)
@@ -39,7 +40,7 @@ _REQUESTS_LOGGER.setLevel(logging.ERROR)
 SUPPORT_SONOS = SUPPORT_STOP | SUPPORT_PAUSE | SUPPORT_VOLUME_SET |\
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
     SUPPORT_PLAY_MEDIA | SUPPORT_SEEK | SUPPORT_CLEAR_PLAYLIST |\
-    SUPPORT_SELECT_SOURCE
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 SERVICE_GROUP_PLAYERS = 'sonos_group_players'
 SERVICE_UNJOIN = 'sonos_unjoin'
@@ -424,6 +425,7 @@ class SonosDevice(MediaPlayerDevice):
                 media_artist = track_info.get('artist')
                 media_album_name = track_info.get('album')
                 media_title = track_info.get('title')
+                media_image_url = track_info.get('album_art', None)
 
                 media_position = None
                 media_position_updated_at = None
@@ -454,6 +456,7 @@ class SonosDevice(MediaPlayerDevice):
 
                 elif is_radio_stream:
                     media_image_url = self._format_media_image_url(
+                        media_image_url,
                         current_media_uri
                     )
                     support_previous_track = False
@@ -521,6 +524,7 @@ class SonosDevice(MediaPlayerDevice):
                 else:
                     # not a radio stream
                     media_image_url = self._format_media_image_url(
+                        media_image_url,
                         track_info['uri']
                     )
                     support_previous_track = True
@@ -647,12 +651,14 @@ class SonosDevice(MediaPlayerDevice):
 
         self._last_avtransport_event = None
 
-    def _format_media_image_url(self, uri):
-        return 'http://{host}:{port}/getaa?s=1&u={uri}'.format(
-            host=self._player.ip_address,
-            port=1400,
-            uri=urllib.parse.quote(uri)
-        )
+    def _format_media_image_url(self, url, fallback_uri):
+        if url in ('', 'NOT_IMPLEMENTED', None):
+            return 'http://{host}:{port}/getaa?s=1&u={uri}'.format(
+                host=self._player.ip_address,
+                port=1400,
+                uri=urllib.parse.quote(fallback_uri)
+            )
+        return url
 
     def process_sonos_event(self, event):
         """Process a service event coming from the speaker."""
@@ -672,6 +678,7 @@ class SonosDevice(MediaPlayerDevice):
             next_track_uri = event.variables.get('next_track_uri')
             if next_track_uri:
                 next_track_image_url = self._format_media_image_url(
+                    None,
                     next_track_uri
                 )
 

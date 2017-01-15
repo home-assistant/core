@@ -36,7 +36,7 @@ GROUP_NAME_ALL_REMOTES = 'all remotes'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = timedelta(seconds=30)
 SERVICE_SEND_COMMAND = 'send_command'
 SERVICE_SYNC = 'sync'
 
@@ -149,6 +149,9 @@ class RemoteDevice(ToggleEntity):
         raise NotImplementedError()
 
     def async_send_command(self, **kwargs):
-        """Send a command to a device."""
-        yield from self.hass.loop.run_in_executor(
+        """Send a command to a device.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
             None, ft.partial(self.send_command, **kwargs))

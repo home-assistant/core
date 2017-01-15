@@ -691,6 +691,10 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
 
+    def teardown_method(self, method):
+        """Tear down resources."""
+        self.hass.stop()
+
     def mock_cipher():  # pylint: disable=no-method-argument
         """Return a dummy pickle-based cipher."""
         def mock_decrypt(ciphertext, key):

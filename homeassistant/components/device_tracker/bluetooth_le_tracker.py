@@ -5,13 +5,8 @@ from datetime import timedelta
 import voluptuous as vol
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker import (
-    YAML_DEVICES,
-    CONF_TRACK_NEW,
-    CONF_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
-    PLATFORM_SCHEMA,
-    load_config,
-    DEFAULT_TRACK_NEW
+    YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
+    PLATFORM_SCHEMA, load_config, DEFAULT_TRACK_NEW
 )
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
@@ -24,9 +19,11 @@ REQUIREMENTS = ['gattlib==0.20150805']
 BLE_PREFIX = 'BLE_'
 MIN_SEEN_NEW = 5
 CONF_SCAN_DURATION = "scan_duration"
+CONF_BLUETOOTH_DEVICE = "device_id"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_DURATION, default=10): cv.positive_int
+    vol.Optional(CONF_SCAN_DURATION, default=10): cv.positive_int,
+    vol.Optional(CONF_BLUETOOTH_DEVICE, default="hci0"): cv.string
 })
 
 
@@ -60,7 +57,7 @@ def setup_scanner(hass, config, see):
         """Discover Bluetooth LE devices."""
         _LOGGER.debug("Discovering Bluetooth LE devices")
         try:
-            service = DiscoveryService()
+            service = DiscoveryService(ble_dev_id)
             devices = service.discover(duration)
             _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
         except RuntimeError as error:
@@ -70,6 +67,7 @@ def setup_scanner(hass, config, see):
 
     yaml_path = hass.config.path(YAML_DEVICES)
     duration = config.get(CONF_SCAN_DURATION)
+    ble_dev_id = config.get(CONF_BLUETOOTH_DEVICE)
     devs_to_track = []
     devs_donot_track = []
 

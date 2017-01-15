@@ -19,7 +19,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
 
-REQUIREMENTS = ['speedtest-cli==1.0.0']
+REQUIREMENTS = ['speedtest-cli==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 _SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms[\r\n]+'

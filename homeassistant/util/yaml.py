@@ -20,6 +20,27 @@ _SECRET_YAML = 'secrets.yaml'
 __SECRET_CACHE = {}  # type: Dict
 
 
+def _add_reference(obj, loader, node):
+    """Add file reference information to an object."""
+    class NodeListClass(list):
+        """Wrapper class to be able to add attributes on a list."""
+
+        pass
+
+    class NodeStrClass(str):
+        """Wrapper class to be able to add attributes on a string."""
+
+        pass
+
+    if isinstance(obj, list):
+        obj = NodeListClass(obj)
+    if isinstance(obj, str):
+        obj = NodeStrClass(obj)
+    setattr(obj, '__config_file__', loader.name)
+    setattr(obj, '__line__', node.start_mark.line)
+    return obj
+
+
 # pylint: disable=too-many-ancestors
 class SafeLineLoader(yaml.SafeLoader):
     """Loader class that keeps track of line numbers."""
@@ -70,7 +91,7 @@ def _include_yaml(loader: SafeLineLoader,
         device_tracker: !include device_tracker.yaml
     """
     fname = os.path.join(os.path.dirname(loader.name), node.value)
-    return load_yaml(fname)
+    return _add_reference(load_yaml(fname), loader, node)
 
 
 def _is_file_valid(name: str) -> bool:
@@ -96,7 +117,7 @@ def _include_dir_named_yaml(loader: SafeLineLoader,
     for fname in _find_files(loc, '*.yaml'):
         filename = os.path.splitext(os.path.basename(fname))[0]
         mapping[filename] = load_yaml(fname)
-    return mapping
+    return _add_reference(mapping, loader, node)
 
 
 def _include_dir_merge_named_yaml(loader: SafeLineLoader,
@@ -110,7 +131,7 @@ def _include_dir_merge_named_yaml(loader: SafeLineLoader,
         loaded_yaml = load_yaml(fname)
         if isinstance(loaded_yaml, dict):
             mapping.update(loaded_yaml)
-    return mapping
+    return _add_reference(mapping, loader, node)
 
 
 def _include_dir_list_yaml(loader: SafeLineLoader,
@@ -133,7 +154,7 @@ def _include_dir_merge_list_yaml(loader: SafeLineLoader,
         loaded_yaml = load_yaml(fname)
         if isinstance(loaded_yaml, list):
             merged_list.extend(loaded_yaml)
-    return merged_list
+    return _add_reference(merged_list, loader, node)
 
 
 def _ordered_dict(loader: SafeLineLoader,
@@ -165,25 +186,13 @@ def _ordered_dict(loader: SafeLineLoader,
             )
         seen[key] = line
 
-    processed = OrderedDict(nodes)
-    setattr(processed, '__config_file__', loader.name)
-    setattr(processed, '__line__', node.start_mark.line)
-    return processed
+    return _add_reference(OrderedDict(nodes), loader, node)
 
 
 def _construct_seq(loader: SafeLineLoader, node: yaml.nodes.Node):
     """Add line number and file name to Load YAML sequence."""
     obj, = loader.construct_yaml_seq(node)
-
-    class NodeClass(list):
-        """Wrapper class to be able to add attributes on a list."""
-
-        pass
-
-    processed = NodeClass(obj)
-    setattr(processed, '__config_file__', loader.name)
-    setattr(processed, '__line__', node.start_mark.line)
-    return processed
+    return _add_reference(obj, loader, node)
 
 
 def _env_var_yaml(loader: SafeLineLoader,

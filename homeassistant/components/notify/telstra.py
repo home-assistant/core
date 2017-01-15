@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Telstra SMS API notification service."""
     consumer_key = config.get(CONF_CONSUMER_KEY)
     consumer_secret = config.get(CONF_CONSUMER_SECRET)

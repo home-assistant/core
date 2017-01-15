@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==0.11.0', 'pubnubsub-handler==0.0.5']
+REQUIREMENTS = ['python-wink==0.12.0', 'pubnubsub-handler==0.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 WINK_COMPONENTS = [
-    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate'
+    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
+    'fan'
 ]
 
 

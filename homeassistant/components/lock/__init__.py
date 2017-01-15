@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.components import group
 
 DOMAIN = 'lock'
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = timedelta(seconds=30)
 ATTR_CHANGED_BY = 'changed_by'
 
 GROUP_NAME_ALL_LOCKS = 'all locks'
