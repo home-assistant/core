@@ -175,7 +175,7 @@ class Camera(Entity):
                 yield from asyncio.sleep(.5)
 
         except asyncio.CancelledError:
-            _LOGGER.debug("Close stream by browser.")
+            _LOGGER.debug("Close stream by frontend.")
             response = None
 
         finally:
@@ -249,12 +249,16 @@ class CameraImageView(CameraView):
     @asyncio.coroutine
     def handle(self, request, camera):
         """Serve camera image."""
-        image = yield from camera.async_camera_image()
+        try:
+            image = yield from camera.async_camera_image()
 
-        if image is None:
-            return web.Response(status=500)
+            if image is None:
+                return web.Response(status=500)
 
-        return web.Response(body=image)
+            return web.Response(body=image)
+
+        except asyncio.CancelledError:
+            _LOGGER.debug("Close stream by frontend.")
 
 
 class CameraMjpegStream(CameraView):
