@@ -2,7 +2,7 @@
 Support for the google speech service.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/google/
+https://home-assistant.io/components/tts.google/
 """
 import asyncio
 import logging
@@ -41,12 +41,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_get_engine(hass, config):
-    """Setup Google speech component."""
+    """Set up Google speech component."""
     return GoogleProvider(hass, config[CONF_LANG])
 
 
 class GoogleProvider(Provider):
-    """Google speech api provider."""
+    """The Google speech API provider."""
 
     def __init__(self, hass, lang):
         """Init Google TTS service."""
