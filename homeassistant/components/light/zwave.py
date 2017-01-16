@@ -164,10 +164,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._zw098:
-            return SUPPORT_ZWAVE_COLORTEMP
-        else:
-            return SUPPORT_ZWAVE_DIMMER
+        return SUPPORT_ZWAVE_DIMMER
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -361,4 +358,7 @@ class ZwaveColorLight(ZwaveDimmer):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_ZWAVE_COLOR
+        if self._zw098:
+            return SUPPORT_ZWAVE_COLORTEMP
+        else:
+            return SUPPORT_ZWAVE_COLOR
