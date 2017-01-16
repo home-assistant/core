@@ -324,8 +324,9 @@ class TestHoneywellUS(unittest.TestCase):
         """Test the setup method."""
         self.client = mock.MagicMock()
         self.device = mock.MagicMock()
+        self.away_temp = 18
         self.honeywell = honeywell.HoneywellUSThermostat(
-            self.client, self.device)
+            self.client, self.device, self.away_temp)
 
         self.device.fan_running = True
         self.device.name = 'test'

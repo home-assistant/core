@@ -343,14 +343,15 @@ class HoneywellUSThermostat(ClimateDevice):
             try:
                 self._device.refresh()
                 break
-            except (somecomfort.client.APIRateLimited,
+            except (somecomfort.client.APIRateLimited, OSError,
                     requests.exceptions.ReadTimeout) as exp:
-                _LOGGER.error("%s - Retrying", exp)
                 retries -= 1
                 if retries == 0:
                     raise exp
                 if not self._retry():
                     raise exp
+                _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
+
 
     def _retry(self):
         """Recreate a new somecomfort client.
