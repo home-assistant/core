@@ -33,19 +33,16 @@ class DiscordNotificationService(BaseNotificationService):
 
     @asyncio.coroutine
     def async_send_message(self, message, target):
-        """Login to Discord and send message."""
+        """Login to Discord, send message to channel(s) and log out."""
         import discord
         discord_bot = discord.Client(loop=self.hass.loop)
 
-        """Logs in."""
         yield from discord_bot.login(self.token)
 
-        """Gets channel ID(s) and sends message."""
         for channelid in target:
             channel = discord.Object(id=channelid)
             yield from discord_bot.send_message(channel, message)
 
-        """Closes connection and logs out."""
         yield from discord_bot.logout()
         yield from discord_bot.close()
 
