@@ -178,7 +178,7 @@ hikvision==0.4
 # http://github.com/adafruit/Adafruit_Python_DHT/archive/310c59b0293354d07d94375f1365f7b9b9110c7d.zip#Adafruit_DHT==1.3.0
 
 # homeassistant.components.nest
-http://github.com/technicalpickles/python-nest/archive/e6c9d56a8df455d4d7746389811f2c1387e8cb33.zip#python-nest==3.0.3
+http://github.com/technicalpickles/python-nest/archive/e6c9d56a8df455d4d7746389811f2c1387e8cb33.zip#python-nest==3.0.2
 
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.7.zip#pyW215==0.3.7
