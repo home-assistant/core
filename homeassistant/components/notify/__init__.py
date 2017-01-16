@@ -4,6 +4,7 @@ Provides functionality to notify people.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/notify/
 """
+import asyncio
 import logging
 import os
 from functools import partial
@@ -11,6 +12,7 @@ from functools import partial
 import voluptuous as vol
 
 import homeassistant.bootstrap as bootstrap
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
@@ -64,57 +66,76 @@ def send_message(hass, message, title=None, data=None):
     hass.services.call(DOMAIN, SERVICE_NOTIFY, info)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Setup the notify services."""
-    descriptions = load_yaml_config_file(
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     targets = {}
 
-    def setup_notify_platform(platform, p_config=None, discovery_info=None):
+    @asyncio.coroutine
+    def async_setup_platform(platform, p_config=None, discovery_info=None):
         """Set up a notify platform."""
         if p_config is None:
             p_config = {}
         if discovery_info is None:
             discovery_info = {}
 
-        notify_implementation = bootstrap.prepare_setup_platform(
+        notify_implementation = bootstrap.async_prepare_setup_platform(
             hass, config, DOMAIN, platform)
 
         if notify_implementation is None:
             _LOGGER.error("Unknown notification service specified")
-            return False
+            return
 
-        notify_service = notify_implementation.get_service(
-            hass, p_config, discovery_info)
+        _LOGGER.info("Setting up %s.%s", DOMAIN, platform)
+        notify_service = None
+        try:
+            if hasattr(notify_implementation, 'async_get_service'):
+                notify_service = yield from \
+                    notify_implementation.async_get_service(
+                        hass, p_config, discovery_info)
+            elif hasattr(notify_implementation, 'get_service'):
+                notify_service = yield from hass.loop.run_in_executor(
+                    None, notify_implementation.get_service, hass, p_config,
+                    discovery_info)
+            else:
+                raise HomeAssistantError("Invalid notify platform.")
 
-        if notify_service is None:
-            _LOGGER.error("Failed to initialize notification service %s",
-                          platform)
-            return False
+            if notify_service is None:
+                _LOGGER.error(
+                    "Failed to initialize notification service %s", platform)
+                return
 
-        def notify_message(notify_service, call):
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error setting up platform %s', platform)
+            return
+
+        notify_service.hass = hass
+
+        @asyncio.coroutine
+        def async_notify_message(service):
             """Handle sending notification message service calls."""
             kwargs = {}
-            message = call.data[ATTR_MESSAGE]
-            title = call.data.get(ATTR_TITLE)
+            message = service.data[ATTR_MESSAGE]
+            title = service.data.get(ATTR_TITLE)
 
             if title:
                 title.hass = hass
-                kwargs[ATTR_TITLE] = title.render()
+                kwargs[ATTR_TITLE] = title.async_render()
 
-            if targets.get(call.service) is not None:
-                kwargs[ATTR_TARGET] = [targets[call.service]]
-            elif call.data.get(ATTR_TARGET) is not None:
-                kwargs[ATTR_TARGET] = call.data.get(ATTR_TARGET)
+            if targets.get(service.service) is not None:
+                kwargs[ATTR_TARGET] = [targets[service.service]]
+            elif service.data.get(ATTR_TARGET) is not None:
+                kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
 
             message.hass = hass
-            kwargs[ATTR_MESSAGE] = message.render()
-            kwargs[ATTR_DATA] = call.data.get(ATTR_DATA)
+            kwargs[ATTR_MESSAGE] = message.async_render()
+            kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
 
-            notify_service.send_message(**kwargs)
-
-        service_call_handler = partial(notify_message, notify_service)
+            yield from notify_service.async_send_message(**kwargs)
 
         if hasattr(notify_service, 'targets'):
             platform_name = (
@@ -123,32 +144,34 @@ def setup(hass, config):
             for name, target in notify_service.targets.items():
                 target_name = slugify('{}_{}'.format(platform_name, name))
                 targets[target_name] = target
-                hass.services.register(DOMAIN, target_name,
-                                       service_call_handler,
-                                       descriptions.get(SERVICE_NOTIFY),
-                                       schema=NOTIFY_SERVICE_SCHEMA)
+                hass.services.async_register(
+                    DOMAIN, target_name, async_notify_message,
+                    descriptions.get(SERVICE_NOTIFY),
+                    schema=NOTIFY_SERVICE_SCHEMA)
 
         platform_name = (
             p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or
             SERVICE_NOTIFY)
         platform_name_slug = slugify(platform_name)
 
-        hass.services.register(
-            DOMAIN, platform_name_slug, service_call_handler,
+        hass.services.async_register(
+            DOMAIN, platform_name_slug, async_notify_message,
             descriptions.get(SERVICE_NOTIFY), schema=NOTIFY_SERVICE_SCHEMA)
 
         return True
 
-    for platform, p_config in config_per_platform(config, DOMAIN):
-        if not setup_notify_platform(platform, p_config):
-            _LOGGER.error("Failed to set up platform %s", platform)
-            continue
+    setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
+                   in config_per_platform(config, DOMAIN)]
 
-    def platform_discovered(platform, info):
+    if setup_tasks:
+        yield from asyncio.wait(setup_tasks, loop=hass.loop)
+
+    @asyncio.coroutine
+    def async_platform_discovered(platform, info):
         """Callback to load a platform."""
-        setup_notify_platform(platform, discovery_info=info)
+        yield from async_setup_platform(platform, discovery_info=info)
 
-    discovery.listen_platform(hass, DOMAIN, platform_discovered)
+    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 
     return True
 
@@ -156,9 +179,20 @@ def setup(hass, config):
 class BaseNotificationService(object):
     """An abstract class for notification services."""
 
+    hass = None
+
     def send_message(self, message, **kwargs):
         """Send a message.
 
         kwargs can contain ATTR_TITLE to specify a title.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
+
+    def async_send_message(self, message, **kwargs):
+        """Send a message.
+
+        kwargs can contain ATTR_TITLE to specify a title.
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, partial(self.send_message, message, **kwargs))
