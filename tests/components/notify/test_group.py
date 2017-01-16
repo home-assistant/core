@@ -19,7 +19,7 @@ class TestNotifyGroup(unittest.TestCase):
         self.service1 = MagicMock()
         self.service2 = MagicMock()
 
-        def mock_get_service(hass, config):
+        def mock_get_service(hass, config, discovery_info=None):
             if config['name'] == 'demo1':
                 return self.service1
             else:

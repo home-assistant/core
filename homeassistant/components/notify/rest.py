@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the RESTful notification service."""
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)

@@ -169,8 +169,10 @@ omit =
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
+    homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py
     homeassistant/components/device_tracker/volvooncall.py
+    homeassistant/components/device_tracker/xiaomi.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
     homeassistant/components/emoncms_history.py
@@ -193,6 +195,7 @@ omit =
     homeassistant/components/light/tikteck.py
     homeassistant/components/light/x10.py
     homeassistant/components/light/yeelight.py
+    homeassistant/components/light/zengge.py
     homeassistant/components/lirc.py
     homeassistant/components/media_player/anthemav.py
     homeassistant/components/media_player/aquostv.py
@@ -211,6 +214,7 @@ omit =
     homeassistant/components/media_player/lg_netcast.py
     homeassistant/components/media_player/mpchc.py
     homeassistant/components/media_player/mpd.py
+    homeassistant/components/media_player/nad.py
     homeassistant/components/media_player/onkyo.py
     homeassistant/components/media_player/panasonic_viera.py
     homeassistant/components/media_player/pandora.py
@@ -228,6 +232,7 @@ omit =
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
     homeassistant/components/notify/aws_sqs.py
+    homeassistant/components/notify/facebook.py
     homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/gntp.py
     homeassistant/components/notify/group.py
@@ -264,6 +269,7 @@ omit =
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/broadlink.py
+    homeassistant/components/sensor/dublin_bus_transport.py
     homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/cups.py
@@ -313,6 +319,7 @@ omit =
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py
     homeassistant/components/sensor/serial_pm.py
+    homeassistant/components/sensor/sma.py
     homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/sonarr.py
     homeassistant/components/sensor/speedtest.py
@@ -358,6 +365,7 @@ omit =
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/picotts.py
     homeassistant/components/upnp.py
+    homeassistant/components/weather/bom.py
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/zeroconf.py
 

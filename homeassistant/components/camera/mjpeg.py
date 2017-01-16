@@ -124,9 +124,13 @@ class MjpegCamera(Camera):
         except asyncio.TimeoutError:
             raise HTTPGatewayTimeout()
 
+        except asyncio.CancelledError:
+            _LOGGER.debug("Close stream by frontend.")
+            response = None
+
         finally:
             if stream is not None:
-                yield from stream.close()
+                stream.close()
             if response is not None:
                 yield from response.write_eof()
 
