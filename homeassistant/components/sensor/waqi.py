@@ -30,6 +30,7 @@ ATTR_TIME = 'time'
 ATTRIBUTION = 'Data provided by the World Air Quality Index project'
 
 CONF_LOCATIONS = 'locations'
+CONF_STATIONS = 'stations'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
@@ -38,7 +39,8 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_LOCATIONS): cv.ensure_list
+    vol.Optional(CONF_STATIONS): cv.ensure_list,
+    vol.Required(CONF_LOCATIONS): cv.ensure_list,
 })
 
 
@@ -47,11 +49,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pwaqi
 
     dev = []
+    station_filter = config.get(CONF_STATIONS)
     for location_name in config.get(CONF_LOCATIONS):
         station_ids = pwaqi.findStationCodesByCity(location_name)
-        _LOGGER.error('The following stations were returned: %s', station_ids)
+        _LOGGER.info('The following stations were returned: %s', station_ids)
         for station in station_ids:
-            dev.append(WaqiSensor(WaqiData(station), station))
+            waqi_sensor = WaqiSensor(WaqiData(station), station)
+            if (not station_filter) or \
+               (waqi_sensor.station_name in station_filter):
+                dev.append(WaqiSensor(WaqiData(station), station))
 
     add_devices(dev)
 
@@ -73,6 +79,14 @@ class WaqiSensor(Entity):
             return 'WAQI {}'.format(self._details['city']['name'])
         except (KeyError, TypeError):
             return 'WAQI {}'.format(self._station_id)
+
+    @property
+    def station_name(self):
+        """Return the name of the station."""
+        try:
+            return self._details['city']['name']
+        except (KeyError, TypeError):
+            return None
 
     @property
     def icon(self):
