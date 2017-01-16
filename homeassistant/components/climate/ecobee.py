@@ -264,32 +264,30 @@ class Thermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        low_temp = None
-        high_temp = None
-        temp = None
+        low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        temp = kwargs.get("temperature")
 
-        if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
-            low_temp = int(kwargs.get(ATTR_TARGET_TEMP_LOW))
-
-        if kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
-            high_temp = int(kwargs.get(ATTR_TARGET_TEMP_HIGH))
-
-        if kwargs.get("temperature") is not None:
-            temp = int(kwargs.get("temperature"))
-
-        if self.current_operation == STATE_HEAT:
+        if self.current_operation == STATE_HEAT and temp is not None:
             low_temp = temp
             high_temp = temp + 20
-        elif self.current_operation == STATE_COOL:
+        elif self.current_operation == STATE_COOL and temp is not None:
             low_temp = temp - 20
             high_temp = temp
+        if low_temp is None and high_temp is None:
+            _LOGGER.error(
+                'Missing valid arguments for set_temperature in %s', kwargs)
+            return
+
+        low_temp = int(low_temp)
+        high_temp = int(high_temp)
 
         if self.hold_temp:
-            self.data.ecobee.set_hold_temp(self.thermostat_index, high_temp,
-                                           low_temp, "indefinite")
+            self.data.ecobee.set_hold_temp(
+                self.thermostat_index, high_temp, low_temp, "indefinite")
         else:
-            self.data.ecobee.set_hold_temp(self.thermostat_index, high_temp,
-                                           low_temp)
+            self.data.ecobee.set_hold_temp(
+                self.thermostat_index, high_temp, low_temp)
 
         _LOGGER.debug("Setting ecobee hold_temp to: low=%s, is=%s, "
                       "high=%s, is=%s", low_temp, isinstance(
