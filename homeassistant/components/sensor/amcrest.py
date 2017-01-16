@@ -13,23 +13,23 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_MONITORED_CONDITIONS,
-    CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
-    STATE_UNKNOWN)
+    CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
+    CONF_PORT, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.loader as loader
+
+from requests.exceptions import HTTPError, ConnectTimeout
 
 REQUIREMENTS = ['amcrest==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 NOTIFICATION_ID = 'amcrest_notification'
 NOTIFICATION_TITLE = 'Amcrest Sensor Setup'
 
 DEFAULT_NAME = 'Amcrest'
 DEFAULT_PORT = 80
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
 
 # Sensor types are defined like: Name, units, icon
 SENSOR_TYPES = {
@@ -44,6 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
@@ -60,8 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     persistent_notification = loader.get_component('persistent_notification')
     try:
         data.camera.current_time
-    # pylint: disable=broad-except
-    except Exception as ex:
+    except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
         persistent_notification.create(
             hass, 'Error: {}<br />'
@@ -75,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         sensors.append(AmcrestSensor(config, data, sensor_type))
 
-    add_devices(sensors)
+    add_devices(sensors, True)
 
     return True
 
@@ -93,8 +94,6 @@ class AmcrestSensor(Entity):
                                       SENSOR_TYPES.get(self._sensor_type)[0])
         self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[2])
         self._state = STATE_UNKNOWN
-
-        self.update()
 
     @property
     def name(self):
@@ -121,7 +120,6 @@ class AmcrestSensor(Entity):
         """Return the units of measurement."""
         return SENSOR_TYPES.get(self._sensor_type)[1]
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data and updates the state."""
         version, build_date = self._data.camera.software_information
