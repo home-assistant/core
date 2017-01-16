@@ -22,6 +22,7 @@ REQUIREMENTS = ['myusps==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+COOKIE = 'usps_cookies.pickle'
 CONF_UPDATE_INTERVAL = 'update_interval'
 ICON = 'mdi:package-variant-closed'
 STATUS_DELIVERED = 'delivered'
@@ -39,8 +40,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the USPS platform."""
     import myusps
     try:
+        cookie = hass.config.path(COOKIE)
         session = myusps.get_session(config.get(CONF_USERNAME),
-                                     config.get(CONF_PASSWORD))
+                                     config.get(CONF_PASSWORD),
+                                     cookie_path=cookie)
     except myusps.USPSError:
         _LOGGER.exception('Could not connect to My USPS')
         return False
