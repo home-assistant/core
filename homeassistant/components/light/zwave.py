@@ -43,8 +43,9 @@ TEMP_WARM_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 * 2 + HASS_COLOR_MIN
 TEMP_COLD_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 + HASS_COLOR_MIN
 
 SUPPORT_ZWAVE_DIMMER = SUPPORT_BRIGHTNESS
-SUPPORT_ZWAVE_COLOR = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
-                       | SUPPORT_RGB_COLOR)
+SUPPORT_ZWAVE_COLOR = SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+SUPPORT_ZWAVE_COLORTEMP = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+                           | SUPPORT_COLOR_TEMP)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -163,7 +164,10 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_ZWAVE_DIMMER
+        if self._zw098:
+            return SUPPORT_ZWAVE_COLORTEMP
+        else:
+            return SUPPORT_ZWAVE_DIMMER
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
