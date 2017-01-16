@@ -6,10 +6,12 @@ https://home-assistant.io/components/device_tracker.upc_connect/
 """
 import asyncio
 import logging
+import re
 import xml.etree.ElementTree as ET
 
 import aiohttp
 import async_timeout
+from yarl import URL
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -30,6 +32,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 CMD_LOGIN = 15
 CMD_DEVICES = 123
+
+RE_SESSIONTOKEN = re.compile(r"sessionToken=(\d+)")
 
 
 @asyncio.coroutine
@@ -74,8 +78,11 @@ class UPCDeviceScanner(DeviceScanner):
                 return []
 
         raw = yield from self._async_ws_function(CMD_DEVICES)
-        xml_root = ET.fromstring(raw)
+        if raw is None:
+            _LOGGER.warning("Can't read device from %s", self.host)
+            return
 
+        xml_root = ET.fromstring(raw)
         return [mac.text for mac in xml_root.iter('MACAddr')]
 
     @asyncio.coroutine
@@ -159,6 +166,8 @@ class UPCDeviceScanner(DeviceScanner):
     def _async_get_token(self):
         """Extract token from cookies."""
         cookie_manager = self.websession.cookie_jar.filter_cookies(
-            "http://{}".format(self.host))
+            URL("http://{}".format(self.host)))
 
-        return cookie_manager.get('sessionToken')
+        found = RE_SESSIONTOKEN.match(cookie_manager.get('sessionToken'))
+        if found:
+            return found.group(1)
