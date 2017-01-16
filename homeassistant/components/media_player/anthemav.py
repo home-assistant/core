@@ -46,14 +46,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     _LOGGER.info('Provisioning Anthem AVR device at %s:%d', host, port)
 
-    def anthemav_update_callback(message):
+    def async_anthemav_update_callback(message):
         """Receive notification from transport that new data exists."""
         _LOGGER.info('Received update calback from AVR: %s', message)
         device.schedule_update_ha_state()
 
     avr = yield from anthemav.Connection.create(
         host=host, port=port, loop=hass.loop,
-        update_callback=anthemav_update_callback)
+        update_callback=async_anthemav_update_callback)
 
     device = AnthemAVR(avr, name)
 
