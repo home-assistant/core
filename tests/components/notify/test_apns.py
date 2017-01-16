@@ -53,7 +53,9 @@ class TestApns(unittest.TestCase):
             }
         }
 
-        self.assertTrue(notify.setup(self.hass, config))
+        with assert_setup_component(1) as handle_config:
+            assert setup_component(self.hass, notify.DOMAIN, config)
+        assert handle_config[notify.DOMAIN]
 
     def test_apns_setup_missing_name(self):
         """Test setup with missing name."""

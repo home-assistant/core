@@ -11,7 +11,7 @@ from functools import partial
 
 import voluptuous as vol
 
-import homeassistant.bootstrap as bootstrap
+from homeassistant.bootstrap import async_prepare_setup_platform
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
@@ -76,41 +76,39 @@ def async_setup(hass, config):
     targets = {}
 
     @asyncio.coroutine
-    def async_setup_platform(platform, p_config=None, discovery_info=None):
+    def async_setup_platform(p_type, p_config=None, discovery_info=None):
         """Set up a notify platform."""
         if p_config is None:
             p_config = {}
         if discovery_info is None:
             discovery_info = {}
 
-        notify_implementation = bootstrap.async_prepare_setup_platform(
-            hass, config, DOMAIN, platform)
+        platform = yield from async_prepare_setup_platform(
+            hass, config, DOMAIN, p_type)
 
-        if notify_implementation is None:
+        if platform is None:
             _LOGGER.error("Unknown notification service specified")
             return
 
-        _LOGGER.info("Setting up %s.%s", DOMAIN, platform)
+        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         notify_service = None
         try:
-            if hasattr(notify_implementation, 'async_get_service'):
+            if hasattr(platform, 'async_get_service'):
                 notify_service = yield from \
-                    notify_implementation.async_get_service(
-                        hass, p_config, discovery_info)
-            elif hasattr(notify_implementation, 'get_service'):
+                    platform.async_get_service(hass, p_config, discovery_info)
+            elif hasattr(platform, 'get_service'):
                 notify_service = yield from hass.loop.run_in_executor(
-                    None, notify_implementation.get_service, hass, p_config,
-                    discovery_info)
+                    None, platform.get_service, hass, p_config, discovery_info)
             else:
                 raise HomeAssistantError("Invalid notify platform.")
 
             if notify_service is None:
                 _LOGGER.error(
-                    "Failed to initialize notification service %s", platform)
+                    "Failed to initialize notification service %s", p_type)
                 return
 
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception('Error setting up platform %s', platform)
+            _LOGGER.exception('Error setting up platform %s', p_type)
             return
 
         notify_service.hass = hass
@@ -140,7 +138,7 @@ def async_setup(hass, config):
         if hasattr(notify_service, 'targets'):
             platform_name = (
                 p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or
-                platform)
+                p_type)
             for name, target in notify_service.targets.items():
                 target_name = slugify('{}_{}'.format(platform_name, name))
                 targets[target_name] = target
