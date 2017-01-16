@@ -19,16 +19,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the Discord notification service."""
-    return DiscordNotificationService(hass, client_id)
+    token = config.get(CONF_TOKEN)
+    return DiscordNotificationService(hass, token)
 
 
 class DiscordNotificationService(BaseNotificationService):
     """Implement the notification service for Discord."""
 
-    def __init__(self, hass, client_id):
+    def __init__(self, hass, token):
         """Initialize the service."""
-        self.client_id = client_id
+        self.token = token
         self.hass = hass
+
     @asyncio.coroutine
     def async_send_message(self, message, target):
         """Login to Discord and send message."""
@@ -36,7 +38,7 @@ class DiscordNotificationService(BaseNotificationService):
         discord_bot = discord.Client(loop=self.hass.loop)
 
         """Logs in."""
-        yield from discord_bot.login(self.client_id)
+        yield from discord_bot.login(self.token)
 
         """Gets channel ID(s) and sends message."""
         for channelid in target:
