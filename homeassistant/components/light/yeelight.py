@@ -27,17 +27,14 @@ CONF_TRANSITION = "transition"
 DEFAULT_TRANSITION = 350
 
 CONF_SAVE_ON_CHANGE = "save_on_change"
-
-CONF_MODE = "mode"
-MODE_NORMAL = "normal"
-MODE_MUSIC = "music"
+CONF_MODE_MUSIC = "use_music_mode"
 
 DOMAIN = 'yeelight'
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
-    vol.Optional(CONF_MODE, default=MODE_MUSIC, default=False): cv.boolean,
+    vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
     vol.Optional(CONF_SAVE_ON_CHANGE, default=True): cv.boolean,
 })
 
@@ -175,11 +172,11 @@ class YeelightLight(Light):
 
         return self.__bulb
 
-    def set_mode(self, mode):
+    def set_music_mode(self, mode):
         """ Sets mode of the bulb. """
-        if mode == MODE_MUSIC:
+        if mode:
             self._bulb.start_music()
-        elif mode == MODE_NORMAL:
+        else:
             self._bulb.stop_music()
 
     def update(self):
@@ -258,6 +255,9 @@ class YeelightLight(Light):
         transition = self.config["transition"]
         duration = min(kwargs.get(ATTR_TRANSITION, transition), 9000)
         self._bulb.turn_on(duration=duration)
+
+        if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
+            self.set_music_mode(self.config[CONF_MODE_MUSIC])
 
         # values checked for none in methods
         self.set_rgb(rgb, duration)
