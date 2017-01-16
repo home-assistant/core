@@ -26,6 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_TRANSITION = "transition"
 DEFAULT_TRANSITION = 350
 
+CONF_SAVE_ON_CHANGE = "save_on_change"
+
 CONF_MODE = "mode"
 MODE_NORMAL = "normal"
 MODE_MUSIC = "music"
@@ -35,7 +37,8 @@ DOMAIN = 'yeelight'
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
-    vol.Optional(CONF_MODE, default=MODE_MUSIC): cv.boolean,
+    vol.Optional(CONF_MODE, default=MODE_MUSIC, default=False): cv.boolean,
+    vol.Optional(CONF_SAVE_ON_CHANGE, default=True): cv.boolean,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -72,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device = {'name': name, 'ipaddr': discovery_info['host']}
 
         # TODO: hardcoded default config
-        default_config = {'transition': DEFAULT_TRANSITION}
+        default_config = DEVICE_SCHEMA({'transition': DEFAULT_TRANSITION})
         lights.append(YeelightLight(device, default_config))
     else:
         for ipaddr, device_config in config[CONF_DEVICES].items():
@@ -265,8 +268,7 @@ class YeelightLight(Light):
         #self.set_mode(MODE_MUSIC)
 
         # saving current settings to the bulb if not flashing
-        # TODO: make saving configurable?
-        if not flash:
+        if not flash and self.config[CONF_SAVE_ON_CHANGE]:
             self.set_default()
 
     def turn_off(self, **kwargs):
