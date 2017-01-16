@@ -160,10 +160,6 @@ class AnthemAVR(MediaPlayerDevice):
         _LOGGER.info('Sending command to AVR: set '+propname+' to '+str(value))
         setattr(self.avr.protocol, propname, value)
 
-    def media_play(self):
-        """Unused stub to satisfy frontend code."""
-        return
-
     @property
     def dump_avrdata(self):
         """Return state of avr object for debugging forensics."""
