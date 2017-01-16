@@ -8,7 +8,7 @@ from homeassistant.components.notify import (
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['discord.py']
+REQUIREMENTS = ['discord.py==0.16.0']
 
 CONF_TOKEN = 'token'
 
@@ -17,13 +17,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Discord notification service."""
-    try:
-        client_id = config.get(CONF_TOKEN)
-    except:
-        _LOGGER.error("Please specify a token")
-        return None
     return DiscordNotificationService(hass, client_id)
 
 
@@ -34,25 +29,24 @@ class DiscordNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.client_id = client_id
         self.hass = hass
-
-    async def async_send_message(self, message, target):
+    @asyncio.coroutine
+    def async_send_message(self, message, target):
         """Login to Discord and send message."""
         import discord
         discord_bot = discord.Client(loop=self.hass.loop)
 
         """Logs in."""
-        await discord_bot.login(self.client_id)
+        yield from discord_bot.login(self.client_id)
 
         """Gets channel ID(s) and sends message."""
         for channelid in target:
             channel = discord.Object(id=channelid)
-            await discord_bot.send_message(channel, message)
+            yield from discord_bot.send_message(channel, message)
 
         """Closes connection and logs out."""
-        await discord_bot.logout()
-        await discord_bot.close()
+        yield from discord_bot.logout()
+        yield from discord_bot.close()
 
     def send_message(self, message=None, target=None, **kwargs):
         """Send a message using Discord."""
-        asyncio.gather(self.async_send_message(message, target), 
-                       loop=self.hass.loop)
+        self.hass.async_add_job(self.async_send_message(message, target))
