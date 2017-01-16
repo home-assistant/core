@@ -36,8 +36,8 @@ def _add_reference(obj, loader, node):
         obj = NodeListClass(obj)
     if isinstance(obj, str):
         obj = NodeStrClass(obj)
-    setattr(obj, '__config_file__', loader.name)
-    setattr(obj, '__line__', node.start_mark.line)
+        setattr(obj, '__config_file__', loader.name)
+        setattr(obj, '__line__', node.start_mark.line)
     return obj
 
 
