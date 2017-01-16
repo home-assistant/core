@@ -36,7 +36,6 @@ def _add_reference(obj, loader, node):
         """Wrapper class to be able to add attributes on a dict."""
 
         pass
-
     if isinstance(obj, list):
         obj = NodeListClass(obj)
     if isinstance(obj, str):
