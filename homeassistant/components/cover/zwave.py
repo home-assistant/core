@@ -17,6 +17,9 @@ SOMFY_ZRTSI = 0x5a52
 SOMFY_ZRTSI_CONTROLLER = (SOMFY, SOMFY_ZRTSI)
 WORKAROUND = 'workaround'
 
+ICON_GARAGE_OPEN = 'mdi:garage-open'
+ICON_GARAGE_CLOSED = 'mdi:garage'
+
 DEVICE_MAPPINGS = {
     SOMFY_ZRTSI_CONTROLLER: WORKAROUND
 }
@@ -186,3 +189,8 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def open_cover(self):
         """Open the garage door."""
         self._value.data = True
+
+    @property
+    def icon(self):
+        """Display icon based on current garage door state."""
+        return ICON_GARAGE_CLOSED if self.is_closed else ICON_GARAGE_OPEN
