@@ -162,7 +162,7 @@ class YeelightLight(Light):
 
                 btype = self.__bulb.bulb_type
                 if btype == yeelight.BulbType.Color:
-                    self._supported_features += COLOR_SUPPORTS
+                    self._supported_features |= COLOR_SUPPORTS
             except (yeelight.BulbException, socket.error) as ex:
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",
                               self._ipaddr, self._name, ex)
