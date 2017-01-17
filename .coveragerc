@@ -122,6 +122,9 @@ omit =
     homeassistant/components/mochad.py
     homeassistant/components/*/mochad.py
 
+    homeassistant/components/zabbix.py
+    homeassistant/components/*/zabbix.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/nx584.py
@@ -168,6 +171,7 @@ omit =
     homeassistant/components/device_tracker/swisscom.py
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
+    homeassistant/components/device_tracker/tado.py
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py
@@ -232,6 +236,7 @@ omit =
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
     homeassistant/components/notify/aws_sqs.py
+    homeassistant/components/notify/discord.py
     homeassistant/components/notify/facebook.py
     homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/gntp.py
@@ -263,6 +268,7 @@ omit =
     homeassistant/components/openalpr.py
     homeassistant/components/remote/harmony.py
     homeassistant/components/scene/hunterdouglas_powerview.py
+    homeassistant/components/sensor/amcrest.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/arwn.py
     homeassistant/components/sensor/bbox.py
@@ -319,6 +325,7 @@ omit =
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py
     homeassistant/components/sensor/serial_pm.py
+    homeassistant/components/sensor/skybeacon.py
     homeassistant/components/sensor/sma.py
     homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/sonarr.py

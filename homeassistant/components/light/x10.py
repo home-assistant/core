@@ -33,16 +33,10 @@ def x10_command(command):
     return check_output(['heyu'] + command.split(' '), stderr=STDOUT)
 
 
-def get_status():
-    """Get on/off status for all x10 units in default housecode."""
-    output = check_output('heyu info | grep monitored', shell=True)
-    return output.decode('utf-8').split(' ')[-1].strip('\n()')
-
-
 def get_unit_status(code):
     """Get on/off status for given unit."""
-    unit = int(code[1:])
-    return get_status()[16 - int(unit)] == '1'
+    output = check_output('heyu onstate ' + code, shell=True)
+    return int(output.decode('utf-8')[0])
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -63,8 +57,8 @@ class X10Light(Light):
         """Initialize an X10 Light."""
         self._name = light['name']
         self._id = light['id']
-        self._is_on = False
         self._brightness = 0
+        self._state = False
 
     @property
     def name(self):
@@ -79,7 +73,7 @@ class X10Light(Light):
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self._is_on
+        return self._state
 
     @property
     def supported_features(self):
@@ -90,13 +84,13 @@ class X10Light(Light):
         """Instruct the light to turn on."""
         x10_command('on ' + self._id)
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        self._is_on = True
+        self._state = True
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         x10_command('off ' + self._id)
-        self._is_on = False
+        self._state = False
 
     def update(self):
-        """Fetch new state data for this light."""
-        self._is_on = get_unit_status(self._id)
+        """Fetch update state."""
+        self._state = bool(get_unit_status(self._id))

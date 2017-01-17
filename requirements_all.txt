@@ -37,7 +37,8 @@ TwitterAPI==2.4.3
 aiohttp_cors==0.5.0
 
 # homeassistant.components.camera.amcrest
-amcrest==1.0.0
+# homeassistant.components.sensor.amcrest
+amcrest==1.1.0
 
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.5
@@ -84,10 +85,13 @@ colorlog>2.1,<3
 concord232==0.14
 
 # homeassistant.components.media_player.denonavr
-denonavr==0.3.0
+denonavr==0.3.1
 
 # homeassistant.components.media_player.directv
 directpy==0.1
+
+# homeassistant.components.notify.discord
+discord.py==0.16.0
 
 # homeassistant.components.updater
 distro==1.0.2
@@ -102,7 +106,7 @@ dnspython3==1.15.0
 dovado==0.1.15
 
 # homeassistant.components.sensor.dsmr
-dsmr_parser==0.4
+dsmr_parser==0.6
 
 # homeassistant.components.dweet
 # homeassistant.components.sensor.dweet
@@ -213,7 +217,7 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 # https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
 
 # homeassistant.components.netatmo
-https://github.com/jabesq/netatmo-api-python/archive/v0.8.1.zip#lnetatmo==0.8.1
+https://github.com/jabesq/netatmo-api-python/archive/v0.9.0.zip#lnetatmo==0.9.0
 
 # homeassistant.components.neato
 https://github.com/jabesq/pybotvac/archive/v0.0.1.zip#pybotvac==0.0.1
@@ -418,6 +422,9 @@ pyenvisalink==2.0
 # homeassistant.components.ifttt
 pyfttt==0.3
 
+# homeassistant.components.sensor.skybeacon
+pygatt==3.0.0
+
 # homeassistant.components.remote.harmony
 pyharmony==1.0.12
 
@@ -537,6 +544,9 @@ pywemo==0.4.9
 
 # homeassistant.components.light.yeelight
 pyyeelight==1.0-beta
+
+# homeassistant.components.zabbix
+pyzabbix==0.7.4
 
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
