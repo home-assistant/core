@@ -873,7 +873,7 @@ class HMDevice(Entity):
                 (self._hmdevice.SENSORNODE, self._hmdevice.getSensorData),
                 (self._hmdevice.BINARYNODE, self._hmdevice.getBinaryData)):
             for node in metadata:
-                if node in self._data:
+                if metadata[node] and node in self._data:
                     self._data[node] = funct(name=node, channel=self._channel)
 
         return True
