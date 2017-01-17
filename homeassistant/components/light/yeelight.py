@@ -19,7 +19,7 @@ from homeassistant.components.light import (
     Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yeelight==0.0.13']
+REQUIREMENTS = ['yeelight==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ SUPPORTS = (SUPPORT_BRIGHTNESS |
 
 
 def _cmd(func):
-    """ A wrapper to catch exceptions from the bulb. """
+    """A wrapper to catch exceptions from the bulb."""
     def _wrap(self, *args, **kwargs):
         try:
             _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
@@ -110,6 +110,7 @@ class YeelightLight(Light):
 
     @property
     def color_temp(self):
+        """Return the color temperature."""
         return self._properties.get("color_temp", None)
 
     @property
@@ -173,19 +174,19 @@ class YeelightLight(Light):
         return self.__bulb
 
     def set_music_mode(self, mode):
-        """ Sets mode of the bulb. """
+        """Set the music mode on or off."""
         if mode:
             self._bulb.start_music()
         else:
             self._bulb.stop_music()
 
     def update(self):
-        """ Update properties from the bulb. """
+        """Update properties from the bulb."""
         self._bulb.get_properties()
 
     @_cmd
     def set_brightness(self, brightness, duration):
-        """ Set bulb brightness. """
+        """Set bulb brightness."""
         if brightness:
             _LOGGER.debug("Setting brightness: %s", brightness)
             self._bulb.set_brightness(brightness / 255 * 100,
@@ -193,14 +194,14 @@ class YeelightLight(Light):
 
     @_cmd
     def set_rgb(self, rgb, duration):
-        """ Set bulb's color. """
+        """Set bulb's color."""
         if rgb and self.supported_features & SUPPORT_RGB_COLOR:
             _LOGGER.debug("Setting RGB: %s", rgb)
             self._bulb.set_rgb(rgb[0], rgb[1], rgb[2], duration=duration)
 
     @_cmd
     def set_colortemp(self, colortemp, duration):
-        """ Set bulb's color temperature. """
+        """Set bulb's color temperature."""
         if colortemp and self.supported_features & SUPPORT_COLOR_TEMP:
             temp_in_k = color_temperature_mired_to_kelvin(colortemp)
             _LOGGER.debug("Setting color temp: %s K", temp_in_k)
@@ -209,13 +210,12 @@ class YeelightLight(Light):
 
     @_cmd
     def set_default(self):
-        """ Set current options as default. """
+        """Set current options as default."""
         self._bulb.set_default()
 
     @_cmd
     def set_flash(self, flash):
-        """ Activate flash. """
-
+        """Activate flash."""
         if flash:
             if self._bulb.last_properties["color_mode"] != 1:
                 _LOGGER.error("Flash supported currently only in RGB mode.")
@@ -232,13 +232,17 @@ class YeelightLight(Light):
             r, g, b = self.rgb_color
             rgb_transform = self._module.RGBTransition
 
-            transitions = []
-            transitions.append(rgb_transform(255, 0, 0, brightness=10, duration=duration))
-            transitions.append(self._module.SleepTransition(duration=self.config[ATTR_TRANSITION]))
-            transitions.append(rgb_transform(r, g, b, brightness=self.brightness, duration=duration))
+            transitions = list()
+            transitions.append(
+                rgb_transform(255, 0, 0, brightness=10, duration=duration))
+            transitions.append(self._module.SleepTransition(
+                duration=self.config[ATTR_TRANSITION]))
+            transitions.append(
+                rgb_transform(r, g, b, brightness=self.brightness,
+                              duration=duration))
 
-            #from pprint import pformat as pf
-            #_LOGGER.error(pf(transitions))
+            # from pprint import pformat as pf
+            # _LOGGER.error(pf(transitions))
 
             flow = self._module.Flow(count=count, transitions=transitions)
             self._bulb.start_flow(flow)
@@ -251,7 +255,6 @@ class YeelightLight(Light):
         flash = kwargs.get(ATTR_FLASH)
 
         # white bulb has problems with duration > 9000, doesn't always start
-        # TODO: move to python-yeelight?
         transition = self.config["transition"]
         duration = min(kwargs.get(ATTR_TRANSITION, transition), 9000)
         self._bulb.turn_on(duration=duration)
@@ -264,8 +267,6 @@ class YeelightLight(Light):
         self.set_colortemp(colortemp, duration)
         self.set_brightness(brightness, duration)
         self.set_flash(flash)
-
-        #self.set_mode(MODE_MUSIC)
 
         # saving current settings to the bulb if not flashing
         if not flash and self.config[CONF_SAVE_ON_CHANGE]:
