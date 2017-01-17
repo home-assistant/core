@@ -50,6 +50,9 @@ cp -R /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/pyth
 # Build and install libcec
 script/build_libcec
 
+# Install phantomjs
+script/install_phantomjs
+
 # Remove packages
 apt-get remove -y --purge ${PACKAGES_DEV[@]}
 apt-get -y --purge autoremove
