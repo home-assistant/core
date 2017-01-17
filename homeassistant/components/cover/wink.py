@@ -46,3 +46,8 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
             return False
         else:
             return None
+
+    @property
+    def current_cover_position(self):
+        """Return current position of cover."""
+        return 0 if self.is_closed else 100

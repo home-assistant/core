@@ -136,13 +136,15 @@ class MqttCover(CoverDevice):
         """Return if the cover is closed."""
         return self._state
 
-    @property
-    def current_cover_position(self):
-        """Return current position of cover.
-
-        None is unknown, 0 is closed, 100 is fully open.
-        """
-        return self._position
+   @property
+   def current_cover_position(self):
+       """Return current position of cover. If current_cover_postion is unknown use is_closed""" 
+       if state == 0:
+        return 0
+       elif state == 100:
+        return 100
+       else:
+        return 0 if self.is_closed else 100
 
     def open_cover(self, **kwargs):
         """Move the cover up."""
