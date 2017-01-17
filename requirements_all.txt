@@ -103,7 +103,7 @@ dnspython3==1.15.0
 dovado==0.1.15
 
 # homeassistant.components.sensor.dsmr
-dsmr_parser==0.4
+dsmr_parser==0.6
 
 # homeassistant.components.dweet
 # homeassistant.components.sensor.dweet
