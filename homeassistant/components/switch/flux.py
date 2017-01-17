@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_STOP_CT, default=1900):
         vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
     vol.Optional(CONF_BRIGHTNESS):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+        vol.All(vol.Coerce(int), vol.Range(min=-1, max=255)),
     vol.Optional(CONF_MODE, default=DEFAULT_MODE):
         vol.Any(MODE_XY, MODE_MIRED)
 })
@@ -192,6 +192,8 @@ class FluxSwitch(SwitchDevice):
                 temp = self._sunset_colortemp + temp_offset
         x_val, y_val, b_val = color_RGB_to_xy(*color_temperature_to_rgb(temp))
         brightness = self._brightness if self._brightness else b_val
+        if brightness < 0:  # If -1 in config, we disable brightness setting
+            brightness = None
         if self._mode == MODE_XY:
             set_lights_xy(self.hass, self._lights, x_val,
                           y_val, brightness)
