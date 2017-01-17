@@ -41,7 +41,9 @@ class TestApns(unittest.TestCase):
             assert setup_component(self.hass, notify.DOMAIN, CONFIG)
         assert handle_config[notify.DOMAIN]
 
-    def test_apns_setup_full(self):
+    @patch('os.path.isfile', return_value=True)
+    @patch('os.access', return_value=True)
+    def test_apns_setup_full(self, mock_access, mock_isfile):
         """Test setup with all data."""
         config = {
             'notify': {
