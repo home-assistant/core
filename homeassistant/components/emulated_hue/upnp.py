@@ -60,12 +60,13 @@ class UPNPResponderThread(threading.Thread):
 
     _interrupted = False
 
-    def __init__(self, host_ip_addr, listen_port):
+    def __init__(self, host_ip_addr, listen_port, upnp_bind_multicast):
         """Initialize the class."""
         threading.Thread.__init__(self)
 
         self.host_ip_addr = host_ip_addr
         self.listen_port = listen_port
+        self.upnp_bind_multicast = upnp_bind_multicast
 
         # Note that the double newline at the end of
         # this string is required per the SSDP spec
@@ -116,7 +117,10 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
             socket.inet_aton("239.255.255.250") +
             socket.inet_aton(self.host_ip_addr))
 
-        ssdp_socket.bind(("239.255.255.250", 1900))
+        if self.upnp_bind_multicast:
+            ssdp_socket.bind(("239.255.255.250", 1900))
+        else:
+            ssdp_socket.bind((self.host_ip_addr, 1900))
 
         while True:
             if self._interrupted:
