@@ -1,36 +1,26 @@
 """
-Support for SKYBEACON temperature/humidity Bluetooth LE sensor.
+Support for Skybeacon temperature/humidity Bluetooth LE sensors.
 
-These are inexpensive CR2477-powered ibeacon/eddystone sensors
-that come with temperature/sensor module.
-More information: http://cnsky9.en.alibaba.com
-
-example:
-sensor:
-  - platform: skybeacon
-    mac: 'F7:BE:12:02:47:31'
-    name: 'living room'
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.skybeacon/
 """
-
 import logging
 import threading
 from uuid import UUID
 
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME,
-                                 CONF_MAC,
-                                 TEMP_CELSIUS,
-                                 STATE_UNKNOWN,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    CONF_NAME, CONF_MAC, TEMP_CELSIUS, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['pygatt==3.0.0']
 
-CONNECT_LOCK = threading.Lock()
-
 _LOGGER = logging.getLogger(__name__)
+
+CONNECT_LOCK = threading.Lock()
 
 ATTR_DEVICE = 'device'
 ATTR_MODEL = 'model'
@@ -48,17 +38,18 @@ CONNECT_TIMEOUT = 30
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor."""
+    """Set up the sensor."""
     name = config.get(CONF_NAME)
     mac = config.get(CONF_MAC)
-    _LOGGER.error("setting up..")
+    _LOGGER.debug("Setting up...")
+
     mon = Monitor(hass, mac, name)
     add_devices([SkybeaconTemp(name, mon)])
     add_devices([SkybeaconHumid(name, mon)])
 
     def monitor_stop(_service_or_event):
         """Stop the monitor thread."""
-        _LOGGER.info("skybeacon: stopping monitor for %s ", name)
+        _LOGGER.info("Stopping monitor for %s", name)
         mon.terminate()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, monitor_stop)
@@ -147,15 +138,14 @@ class Monitor(threading.Thread):
         """Thread that keeps connection alive."""
         import pygatt
         from pygatt.backends import Characteristic
-        from pygatt.exceptions import (BLEError,
-                                       NotConnectedError,
-                                       NotificationTimeout)
+        from pygatt.exceptions import (
+            BLEError, NotConnectedError, NotificationTimeout)
 
         cached_char = Characteristic(BLE_TEMP_UUID, BLE_TEMP_HANDLE)
         adapter = pygatt.backends.GATTToolBackend()
         while True:
             try:
-                _LOGGER.info("connecting to %s", self.name)
+                _LOGGER.info("Connecting to %s", self.name)
                 # we need concurrent connect, so lets not reset the device
                 adapter.start(reset_on_start=False)
                 # seems only one connection can be initiated at a time
@@ -170,7 +160,7 @@ class Monitor(threading.Thread):
                 # magic: writing this makes device happy
                 device.char_write_handle(0x1b, bytearray([255]), False)
                 device.subscribe(BLE_TEMP_UUID, self._update)
-                _LOGGER.info("subscribed to %s", self.name)
+                _LOGGER.info("Subscribed to %s", self.name)
                 while self.keep_going:
                     # protect against stale connections, just read temperature
                     device.char_read(BLE_TEMP_UUID, timeout=CONNECT_TIMEOUT)
@@ -183,8 +173,8 @@ class Monitor(threading.Thread):
 
     def _update(self, handle, value):
         """Notification callback from pygatt."""
-        _LOGGER.info("%s: %15s temperature = %-2d.%-2d, humidity = %3d",
-                     handle, self.name, value[0], value[2], value[1])
+        _LOGGER.debug("%s: %15s temperature = %-2d.%-2d, humidity = %3d",
+                      handle, self.name, value[0], value[2], value[1])
         self.data['temp'] = float(("%d.%d" % (value[0], value[2])))
         self.data['humid'] = value[1]
 
