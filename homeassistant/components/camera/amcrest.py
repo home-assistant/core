@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-REQUIREMENTS = ['amcrest==1.0.0']
+REQUIREMENTS = ['amcrest==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
