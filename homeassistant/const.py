@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 36
+MINOR_VERSION = 37
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -109,6 +109,7 @@ CONF_MONITORED_VARIABLES = 'monitored_variables'
 CONF_NAME = 'name'
 CONF_OFFSET = 'offset'
 CONF_OPTIMISTIC = 'optimistic'
+CONF_PACKAGES = 'packages'
 CONF_PASSWORD = 'password'
 CONF_PATH = 'path'
 CONF_PAYLOAD = 'payload'

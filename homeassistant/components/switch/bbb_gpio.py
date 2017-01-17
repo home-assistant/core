@@ -1,18 +1,8 @@
 """
-Allows to configure a switch using BBB GPIO.
+Allows to configure a switch using BeagleBone Black GPIO.
 
-Switch example for two GPIOs pins P9_12 and P9_42
-Allowed GPIO pin name is GPIOxxx or Px_x
-
-switch:
-  - platform: bbb_gpio
-    pins:
-      GPIO0_7:
-        name: LED Red
-      P9_12:
-        name: LED Green
-        initial: true
-        invert_logic: true
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/switch.bbb_gpio/
 """
 import logging
 
@@ -46,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Beaglebone GPIO devices."""
+    """Set up the BeagleBone Black GPIO devices."""
     pins = config.get(CONF_PINS)
 
     switches = []
@@ -56,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class BBBGPIOSwitch(ToggleEntity):
-    """Representation of a  Beaglebone GPIO."""
+    """Representation of a BeagleBone Black GPIO."""
 
     def __init__(self, pin, params):
         """Initialize the pin."""

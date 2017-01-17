@@ -17,8 +17,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/0.11.zip'
-                '#flux_led==0.11']
+REQUIREMENTS = ['flux_led==0.12']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             continue
         device['name'] = device['id'] + " " + ipaddr
         device[ATTR_MODE] = 'rgbw'
+        device[CONF_PROTOCOL] = None
         light = FluxLight(device)
         if light.is_valid:
             lights.append(light)

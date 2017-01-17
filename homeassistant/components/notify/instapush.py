@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Instapush notification service."""
     headers = {'x-instapush-appid': config[CONF_API_KEY],
                'x-instapush-appsecret': config[CONF_APP_SECRET]}
