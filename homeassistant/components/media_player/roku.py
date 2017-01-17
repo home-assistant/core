@@ -114,7 +114,8 @@ class RokuDevice(MediaPlayerDevice):
         if self.current_app is None:
             return STATE_UNKNOWN
 
-        if self.current_app.name in ["Power Saver", "Default screensaver"]:
+        idle_list = ["Power Saver", "Screensaver", "screensaver"]
+        if any(idle_type in self.current_app.name for idle_type in idle_list):
             return STATE_IDLE
         elif self.current_app.name == "Roku":
             return STATE_HOME
