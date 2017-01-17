@@ -281,3 +281,42 @@ class TestUPCConnect(object):
         assert len(aioclient_mock.mock_calls) == 2
         assert aioclient_mock.mock_calls[1][2]['fun'] == 15
         assert mac_list == []
+
+    def test_scan_devices_parse_error(self, aioclient_mock):
+        """Setup a upc platform and scan device with parse error."""
+        aioclient_mock.get(
+            "http://{}/common_page/login.html".format(self.host),
+            cookies={'sessionToken': '654321'}
+        )
+        aioclient_mock.post(
+            "http://{}/xml/getter.xml".format(self.host),
+            content=b'successful',
+            cookies={'sessionToken': '654321'}
+        )
+
+        scanner = run_coroutine_threadsafe(platform.async_get_scanner(
+            self.hass, {DOMAIN: {
+                    CONF_PLATFORM: 'upc_connect',
+                    CONF_HOST: self.host,
+                    CONF_PASSWORD: '123456'
+                }}
+            ), self.hass.loop).result()
+
+        assert aioclient_mock.mock_calls[1][2]['Password'] == '123456'
+        assert aioclient_mock.mock_calls[1][2]['fun'] == 15
+        assert aioclient_mock.mock_calls[1][2]['token'] == '654321'
+
+        aioclient_mock.clear_requests()
+        aioclient_mock.post(
+            "http://{}/xml/getter.xml".format(self.host),
+            text="Blablebla blabalble",
+            cookies={'sessionToken': '1235678'}
+        )
+
+        mac_list = run_coroutine_threadsafe(
+            scanner.async_scan_devices(), self.hass.loop).result()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert aioclient_mock.mock_calls[0][2]['fun'] == 123
+        assert scanner.token is None
+        assert mac_list == []
