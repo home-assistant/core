@@ -11,10 +11,10 @@ import voluptuous as vol
 
 from homeassistant.components import ecobee
 from homeassistant.components.climate import (
-    DOMAIN, STATE_COOL, STATE_HEAT, STATE_IDLE, ClimateDevice,
+    DOMAIN, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_IDLE, ClimateDevice,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
@@ -145,12 +145,30 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        return int(self.thermostat['runtime']['desiredHeat'] / 10)
+        if self.current_operation == STATE_AUTO:
+            return int(self.thermostat['runtime']['desiredHeat'] / 10)
+        else:
+            return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        return int(self.thermostat['runtime']['desiredCool'] / 10)
+        if self.current_operation == STATE_AUTO:
+            return int(self.thermostat['runtime']['desiredCool'] / 10)
+        else:
+            return None
+
+    @property
+    def target_temperature(self):
+        """Return the temperature we try to reach."""
+        if self.current_operation == STATE_AUTO:
+            return None
+        if self.current_operation == STATE_HEAT:
+            return int(self.thermostat['runtime']['desiredHeat'] / 10)
+        elif self.current_operation == STATE_COOL:
+            return int(self.thermostat['runtime']['desiredCool'] / 10)
+        else:
+            return None
 
     @property
     def desired_fan_mode(self):
@@ -246,25 +264,36 @@ class Thermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None and \
-           kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
-            high_temp = int(kwargs.get(ATTR_TARGET_TEMP_LOW))
-            low_temp = int(kwargs.get(ATTR_TARGET_TEMP_HIGH))
+        low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        temp = kwargs.get(ATTR_TEMPERATURE)
+
+        if self.current_operation == STATE_HEAT and temp is not None:
+            low_temp = temp
+            high_temp = temp + 20
+        elif self.current_operation == STATE_COOL and temp is not None:
+            low_temp = temp - 20
+            high_temp = temp
+        if low_temp is None and high_temp is None:
+            _LOGGER.error(
+                'Missing valid arguments for set_temperature in %s', kwargs)
+            return
+
+        low_temp = int(low_temp)
+        high_temp = int(high_temp)
 
         if self.hold_temp:
-            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
-                                           high_temp, "indefinite")
-            _LOGGER.debug("Setting ecobee hold_temp to: low=%s, is=%s, "
-                          "high=%s, is=%s", low_temp, isinstance(
-                              low_temp, (int, float)), high_temp,
-                          isinstance(high_temp, (int, float)))
+            self.data.ecobee.set_hold_temp(
+                self.thermostat_index, high_temp, low_temp, "indefinite")
         else:
-            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
-                                           high_temp)
-            _LOGGER.debug("Setting ecobee temp to: low=%s, is=%s, "
-                          "high=%s, is=%s", low_temp, isinstance(
-                              low_temp, (int, float)), high_temp,
-                          isinstance(high_temp, (int, float)))
+            self.data.ecobee.set_hold_temp(
+                self.thermostat_index, high_temp, low_temp)
+
+        _LOGGER.debug("Setting ecobee hold_temp to: low=%s, is=%s, "
+                      "high=%s, is=%s", low_temp, isinstance(
+                          low_temp, (int, float)), high_temp,
+                      isinstance(high_temp, (int, float)))
+
         self.update_without_throttle = True
 
     def set_operation_mode(self, operation_mode):
