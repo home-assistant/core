@@ -52,13 +52,15 @@ SUPPORTS = (SUPPORT_BRIGHTNESS |
 def _cmd(func):
     """A wrapper to catch exceptions from the bulb."""
     def _wrap(self, *args, **kwargs):
+        import yeelight
         try:
             _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
             return func(self, *args, **kwargs)
-        except self._module.BulbException as ex:
+        except yeelight.BulbException as ex:
             _LOGGER.error("Error when calling %s: %s", func, ex)
 
     return _wrap
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yeelight bulbs."""
@@ -71,7 +73,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                    discovery_info["properties"]["mac"])
         device = {'name': name, 'ipaddr': discovery_info['host']}
 
-        # TODO: hardcoded default config
         default_config = DEVICE_SCHEMA({'transition': DEFAULT_TRANSITION})
         lights.append(YeelightLight(device, default_config))
     else:
@@ -90,7 +91,6 @@ class YeelightLight(Light):
     def __init__(self, device, config):
         """Initialize the light."""
         self.config = config
-        self._module = None
         self._name = device['name']
         self._ipaddr = device['ipaddr']
 
@@ -141,13 +141,12 @@ class YeelightLight(Light):
         if rgb is None:
             return None
 
-        # pylint: disable=invalid-name
         rgb = int(rgb)
-        b = rgb & 0xff
-        g = (rgb >> 8) & 0xff
-        r = (rgb >> 16) & 0xff
+        blue = rgb & 0xff
+        green = (rgb >> 8) & 0xff
+        red = (rgb >> 16) & 0xff
 
-        return r, g, b
+        return red, green, blue
 
     @property
     def _properties(self):
@@ -156,7 +155,6 @@ class YeelightLight(Light):
     @property
     def _bulb(self):
         import yeelight
-        self._module = yeelight
         if self.__bulb is None:
             try:
                 self.__bulb = yeelight.Bulb(self._ipaddr)
@@ -168,8 +166,6 @@ class YeelightLight(Light):
             except (yeelight.BulbException, socket.error) as ex:
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",
                               self._ipaddr, self._name, ex)
-            except Exception as ex:
-                _LOGGER.error("Non socket.error exception from bulb: %s", ex)
 
         return self.__bulb
 
@@ -217,34 +213,34 @@ class YeelightLight(Light):
     def set_flash(self, flash):
         """Activate flash."""
         if flash:
+            from yeelight import RGBTransition, SleepTransition, Flow
             if self._bulb.last_properties["color_mode"] != 1:
                 _LOGGER.error("Flash supported currently only in RGB mode.")
                 return
 
+            transition = self.config[ATTR_TRANSITION]
             if flash == FLASH_LONG:
                 count = 1
-                duration = self.config[ATTR_TRANSITION] * 5
+                duration = transition * 5
             if flash == FLASH_SHORT:
                 count = 1
-                duration = self.config[ATTR_TRANSITION] * 2
+                duration = transition * 2
 
-            # pylint: disable=invalid-name
-            r, g, b = self.rgb_color
-            rgb_transform = self._module.RGBTransition
+            red, green, blue = self.rgb_color
 
             transitions = list()
             transitions.append(
-                rgb_transform(255, 0, 0, brightness=10, duration=duration))
-            transitions.append(self._module.SleepTransition(
-                duration=self.config[ATTR_TRANSITION]))
+                RGBTransition(255, 0, 0, brightness=10, duration=duration))
+            transitions.append(SleepTransition(
+                duration=transition))
             transitions.append(
-                rgb_transform(r, g, b, brightness=self.brightness,
+                RGBTransition(red, green, blue, brightness=self.brightness,
                               duration=duration))
 
             # from pprint import pformat as pf
             # _LOGGER.error(pf(transitions))
 
-            flow = self._module.Flow(count=count, transitions=transitions)
+            flow = Flow(count=count, transitions=transitions)
             self._bulb.start_flow(flow)
 
     def turn_on(self, **kwargs):
