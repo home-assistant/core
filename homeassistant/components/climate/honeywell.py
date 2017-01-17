@@ -95,7 +95,8 @@ def _setup_us(username, password, config, add_devices):
     loc_id = config.get('location')
     away_temp = config.get(CONF_AWAY_TEMPERATURE)
 
-    add_devices([HoneywellUSThermostat(client, device, away_temp)
+    add_devices([HoneywellUSThermostat(client, device, away_temp,
+                                       username, password)
                  for location in client.locations_by_id.values()
                  for device in location.devices_by_id.values()
                  if ((not loc_id or location.locationid == loc_id) and
@@ -205,12 +206,14 @@ class RoundThermostat(ClimateDevice):
 class HoneywellUSThermostat(ClimateDevice):
     """Representation of a Honeywell US Thermostat."""
 
-    def __init__(self, client, device, away_temp):
+    def __init__(self, client, device, away_temp, username, password):
         """Initialize the thermostat."""
         self._client = client
         self._device = device
         self._away_temp = away_temp
         self._away = False
+        self._username = username
+        self._password = password
 
     @property
     def is_fan_on(self):
@@ -244,7 +247,6 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def current_operation(self: ClimateDevice) -> str:
         """Return current operation ie. heat, cool, idle."""
-
         oper = getattr(self._device, ATTR_CURRENT_OPERATION, None)
         if oper == "off":
             oper = "idle"
@@ -350,22 +352,22 @@ class HoneywellUSThermostat(ClimateDevice):
                     raise exp
                 if not self._retry():
                     raise exp
-                _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
-
+                _LOGGER.error("SomeComfort update failed, Retrying "
+                              "- Error: %s", exp)
 
     def _retry(self):
         """Recreate a new somecomfort client.
 
         When we got an error, the best way to be sure that the next query
-        will succeed is to recreate a new somecomfort client.
+        will succeed, is to recreate a new somecomfort client.
         """
         import somecomfort
         try:
-            self._client = somecomfort.SomeComfort(self._client._username,
-                                                   self._client._password)
+            self._client = somecomfort.SomeComfort(self._username,
+                                                   self._password)
         except somecomfort.AuthError:
             _LOGGER.error('Failed to login to honeywell account %s',
-                          self._client._username)
+                          self._username)
             return False
         except somecomfort.SomeComfortError as ex:
             _LOGGER.error('Failed to initialize honeywell client: %s',
