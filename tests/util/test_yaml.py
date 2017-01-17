@@ -74,6 +74,12 @@ class TestYaml(unittest.TestCase):
                 doc = yaml.yaml.safe_load(file)
                 assert doc["key"] == "value"
 
+        with patch_yaml_files({'test.yaml': None}):
+            conf = 'key: !include test.yaml'
+            with io.StringIO(conf) as file:
+                doc = yaml.yaml.safe_load(file)
+                assert doc["key"] == {}
+
     @patch('homeassistant.util.yaml.os.walk')
     def test_include_dir_list(self, mock_walk):
         """Test include dir list yaml."""
