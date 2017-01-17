@@ -234,6 +234,50 @@ class TestUPCConnect(object):
         mac_list = run_coroutine_threadsafe(
             scanner.async_scan_devices(), self.hass.loop).result()
 
+        assert len(aioclient_mock.mock_calls) == 3
+        assert aioclient_mock.mock_calls[1][2]['fun'] == 15
+        assert mac_list == ['30:D3:2D:0:69:21', '5C:AA:FD:25:32:02',
+                            '70:EE:50:27:A1:38']
+
+    def test_scan_devices_without_session_wrong_re(self, aioclient_mock):
+        """Setup a upc platform and scan device with no token and wrong."""
+        aioclient_mock.get(
+            "http://{}/common_page/login.html".format(self.host),
+            cookies={'sessionToken': '654321'}
+        )
+        aioclient_mock.post(
+            "http://{}/xml/getter.xml".format(self.host),
+            content=b'successful',
+            cookies={'sessionToken': '654321'}
+        )
+
+        scanner = run_coroutine_threadsafe(platform.async_get_scanner(
+            self.hass, {DOMAIN: {
+                    CONF_PLATFORM: 'upc_connect',
+                    CONF_HOST: self.host,
+                    CONF_PASSWORD: '123456'
+                }}
+            ), self.hass.loop).result()
+
+        assert aioclient_mock.mock_calls[1][2]['Password'] == '123456'
+        assert aioclient_mock.mock_calls[1][2]['fun'] == 15
+        assert aioclient_mock.mock_calls[1][2]['token'] == '654321'
+
+        aioclient_mock.clear_requests()
+        aioclient_mock.get(
+            "http://{}/common_page/login.html".format(self.host),
+            cookies={'sessionToken': '654321'}
+        )
+        aioclient_mock.post(
+            "http://{}/xml/getter.xml".format(self.host),
+            status=400,
+            cookies={'sessionToken': '1235678'}
+        )
+
+        scanner.token = None
+        mac_list = run_coroutine_threadsafe(
+            scanner.async_scan_devices(), self.hass.loop).result()
+
         assert len(aioclient_mock.mock_calls) == 2
         assert aioclient_mock.mock_calls[1][2]['fun'] == 15
         assert mac_list == []
