@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
     DOMAIN, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_IDLE, ClimateDevice,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
@@ -266,7 +266,7 @@ class Thermostat(ClimateDevice):
         """Set new target temperature."""
         low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        temp = kwargs.get("temperature")
+        temp = kwargs.get(ATTR_TEMPERATURE)
 
         if self.current_operation == STATE_HEAT and temp is not None:
             low_temp = temp
