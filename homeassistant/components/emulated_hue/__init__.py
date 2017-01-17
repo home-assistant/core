@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_HOST_IP = 'host_ip'
 CONF_LISTEN_PORT = 'listen_port'
+CONF_UPNP_BIND_MULTICAST = 'upnp_bind_multicast'
 CONF_OFF_MAPS_TO_ON_DOMAINS = 'off_maps_to_on_domains'
 CONF_EXPOSE_BY_DEFAULT = 'expose_by_default'
 CONF_EXPOSED_DOMAINS = 'exposed_domains'
@@ -35,6 +36,7 @@ TYPE_ALEXA = 'alexa'
 TYPE_GOOGLE = 'google_home'
 
 DEFAULT_LISTEN_PORT = 8300
+DEFAULT_UPNP_BIND_MULTICAST = True
 DEFAULT_OFF_MAPS_TO_ON_DOMAINS = ['script', 'scene']
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
@@ -47,6 +49,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_HOST_IP): cv.string,
         vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT):
             vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
         vol.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS): cv.ensure_list,
         vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
         vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
@@ -84,7 +87,8 @@ def setup(hass, yaml_config):
     server.register_view(HueOneLightChangeView(config))
 
     upnp_listener = UPNPResponderThread(
-        config.host_ip_addr, config.listen_port)
+        config.host_ip_addr, config.listen_port,
+        config.upnp_bind_multicast)
 
     @asyncio.coroutine
     def stop_emulated_hue_bridge(event):
@@ -133,6 +137,11 @@ class Config(object):
         if self.type == TYPE_GOOGLE and self.listen_port != 80:
             _LOGGER.warning('When targetting Google Home, listening port has '
                             'to be port 80')
+
+        # Get whether or not UPNP binds to multicast address (239.255.255.250)
+        # or to the unicast address (host_ip_addr)
+        self.upnp_bind_multicast = conf.get(
+            CONF_UPNP_BIND_MULTICAST, DEFAULT_UPNP_BIND_MULTICAST)
 
         # Get domains that cause both "on" and "off" commands to map to "on"
         # This is primarily useful for things like scenes or scripts, which
