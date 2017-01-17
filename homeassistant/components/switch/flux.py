@@ -134,6 +134,8 @@ class FluxSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn on flux."""
+        if not self._state:  # make initial update
+            self.flux_update()
         self._state = True
         self.unsub_tracker = track_utc_time_change(self.hass, self.flux_update,
                                                    second=[0, 30])
