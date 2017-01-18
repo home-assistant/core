@@ -277,7 +277,7 @@ class TestConfig(unittest.TestCase):
                   CONF_NAME: 'Test',
                   CONF_CUSTOMIZE: [
                       {'entity_id': 'test', 'hidden': False},
-                      {'entity_id_glob': 'test.t*', 'hidden': True},
+                      {'entity_id': 'test.t*', 'hidden': True},
                   ]}
 
         state = self._compute_state(config)
@@ -290,7 +290,7 @@ class TestConfig(unittest.TestCase):
                   CONF_NAME: 'Test',
                   CONF_CUSTOMIZE: [
                       {'entity_id': 'test.test', 'hidden': True},
-                      {'entity_id_glob': 'test.t*', 'hidden': False},
+                      {'entity_id': 'test.t*', 'hidden': False},
                   ]}
 
         state = self._compute_state(config)

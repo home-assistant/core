@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant, split_entity_id
 _OVERWRITE_KEY = 'overwrite'
 _OVERWRITE_CACHE_KEY = 'overwrite_cache'
 
-CUSTOMIZE_CONFIG_KEYS = ['entity_id', 'entity_id_glob']
+CUSTOMIZE_CONFIG_KEYS = ['entity_id']
 
 
 def set_customize(hass: HomeAssistant, customize: List[Dict]) -> None:
@@ -66,8 +66,9 @@ def get_overrides(hass: HomeAssistant, entity_id: str) -> Dict:
                 deep_update(domain_result, rule)
             if entity_id in entities:
                 deep_update(exact_result, rule)
-        if 'entity_id_glob' in rule:
-            for entity_id_glob in rule['entity_id_glob']:
+            for entity_id_glob in entities:
+                if entity_id_glob == entity_id:
+                    continue
                 if fnmatch.fnmatchcase(entity_id, entity_id_glob):
                     deep_update(glob_result, rule)
                     break
