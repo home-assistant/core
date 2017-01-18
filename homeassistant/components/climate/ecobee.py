@@ -193,7 +193,7 @@ class Thermostat(ClimateDevice):
         elif self.is_temp_hold_on():
             hold = 'temp'
         else:
-            hold = None
+            hold = 'off'
         return hold
 
     @property
@@ -251,19 +251,28 @@ class Thermostat(ClimateDevice):
 
     def is_vacation_on(self):
         """Return true if vacation mode is on."""
+        mode = ''
         events = self.thermostat['events']
-        return any(event['type'] == 'vacation' and event['running']
-                   for event in events)
+        for event in events:
+            if event['type'] == 'vacation' and event['running']:
+                mode = "vacation"
+                break
+        return 'vacation' in mode
 
     def is_temp_hold_on(self):
         """Return true if temperature hold is on."""
+        mode = ''
         events = self.thermostat['events']
-        return any(event['type'] == 'hold' and event['running']
-                   for event in events)
+        for event in events:
+            if event['type'] == 'hold':
+                mode = "temp"
+                break
+        return 'temp' in mode
 
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
+        mode = ''
         events = self.thermostat['events']
         return any(event['holdClimateRef'] == 'away' or
                    event['type'] == 'autoAway'
@@ -277,15 +286,19 @@ class Thermostat(ClimateDevice):
 
     def turn_away_mode_off(self):
         """Turn away off."""
-        self.set_hold_mode(None)
+        self.set_hold_mode('off')
 
     @property
     def is_home_mode_on(self):
         """Return true if home mode is on."""
+        mode = ''
         events = self.thermostat['events']
-        return any(event['holdClimateRef'] == 'home' or
-                   event['type'] == 'autoHome'
-                   for event in events)
+        for event in events:
+            if event['holdClimateRef'] == 'home' or \
+               event['type'] == 'autoHome':
+                mode = "home"
+                break
+        return 'home' in mode
 
     def turn_home_mode_on(self):
         """Turn home on."""
@@ -294,9 +307,10 @@ class Thermostat(ClimateDevice):
         self.update_without_throttle = True
 
     def set_hold_mode(self, hold_mode):
-        """Set hold mode (away, home, temp)."""
+        """Set hold mode (away, home, temperature, off)."""
         hold = self.current_hold_mode
 
+        _LOGGER.debug("Setting hold mode current=%s hold=%s ", hold, hold_mode)
         if hold == hold_mode:
             return
         elif hold_mode == 'away':
@@ -305,7 +319,7 @@ class Thermostat(ClimateDevice):
             self.turn_home_mode_on()
         elif hold_mode == 'temp':
             self.set_temp_hold(int(self.current_temperature))
-        else:
+        elif hold_mode == 'off':
             self.data.ecobee.resume_program(self.thermostat_index)
             self.update_without_throttle = True
 
@@ -341,6 +355,7 @@ class Thermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
+
         low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
