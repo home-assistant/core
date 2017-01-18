@@ -23,7 +23,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.util import Throttle
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ["pyhomematic==0.1.19"]
+REQUIREMENTS = ["pyhomematic==0.1.20"]
 
 MIN_TIME_BETWEEN_UPDATE_HUB = timedelta(seconds=300)
 SCAN_INTERVAL = timedelta(seconds=30)
