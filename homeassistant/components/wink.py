@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==0.12.0', 'pubnubsub-handler==0.0.7']
+REQUIREMENTS = ['python-wink==0.12.0', 'pubnubsub-handler==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,6 +112,7 @@ class WinkDevice(Entity):
 
     def __init__(self, wink, hass):
         """Initialize the Wink device."""
+        self.hass = hass
         self.wink = wink
         self._battery = self.wink.battery_level
         hass.data[DOMAIN]['pubnub'].add_subscription(
@@ -135,7 +136,7 @@ class WinkDevice(Entity):
     @property
     def unique_id(self):
         """Return the ID of this Wink device."""
-        return '{}.{}'.format(self.__class__, self.wink.device_id())
+        return '{}.{}'.format(self.__class__, self.name)
 
     @property
     def name(self):
