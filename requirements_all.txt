@@ -81,6 +81,9 @@ colorlog>2.1,<3
 # homeassistant.components.binary_sensor.concord232
 concord232==0.14
 
+# homeassistant.components.sensor.metoffice
+datapoint==0.4.2
+
 # homeassistant.components.media_player.denonavr
 denonavr==0.3.1
 

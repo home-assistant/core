@@ -4,12 +4,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.metoffice/
 """
 
-import datapoint
+import logging
+import datetime
 
+import voluptuous as vol
+import datapoint as dp
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, STATE_UNKNOWN, CONF_NAME,
     ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,23 +50,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    datapoint = datapoint.connection(api_key=config.get(CONF_MO_API_KEY))
+    datapoint = dp.connection(api_key=config.get(CONF_MO_API_KEY))
 
-    site = datapoint.get_nearest_site(config.get(CONF_LONGITUDE),
-                                      config.get(CONF_LATITUDE))
-
-    # Get data
-    data = MetOfficeCurrentData(hass, datapoint, site)
-    try:
-        data.update()
-    except ValueError as err:
-        _LOGGER.error("Received error from BOM_Current: %s", err)
+    if None in (hass.config.latitude, hass.config.longitude):
+        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    # Add
-    add_devices([MetOfficeCurrentSensor(data, variable)
-                 for variable in config[CONF_MONITORED_CONDITIONS]])
-    return True
+    site = datapoint.get_nearest_site(longitude=hass.config.longitude,
+                                      latitude=hass.config.latitude)
+
+    if not site:
+        _LOGGER.error("Unable to get nearest Met Office forecast site")
+        return False
+    else:
+
+        # Get data
+        data = MetOfficeCurrentData(hass, datapoint, site)
+        try:
+            data.update()
+        except ValueError as err:
+            _LOGGER.error("Received error from Datapoint: %s", err)
+            return False
+
+        # Add
+        add_devices([MetOfficeCurrentSensor(site, data, variable)
+                     for variable in config[CONF_MONITORED_CONDITIONS]])
+        return True
 
 
 class MetOfficeCurrentSensor(Entity):
@@ -96,8 +112,7 @@ class MetOfficeCurrentSensor(Entity):
         attr['Sensor Id'] = self._condition
         attr['Site Id'] = self.site.id
         attr['Site Name'] = self.site.name
-        attr['Last Update'] = datetime.datetime.strptime(str(
-            self.rest.data['local_date_time_full']), '%Y%m%d%H%M%S')
+        attr['Last Update'] = self.data._lastupdate
         attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return attr
 
@@ -131,8 +146,7 @@ class MetOfficeCurrentData(object):
         try:
             forecast = self._datapoint.get_forecast_for_site(self._site.id, "3hourly")
             self.data = forecast.now()
-            self._lastupdate = datetime.datetime.strptime(
-                str(self.data['local_date_time_full']), '%Y%m%d%H%M%S')
+            self._lastupdate = datetime.datetime.now()
             return self._lastupdate
         except ValueError as err:
             _LOGGER.error("Check Met Office %s", err.args)
