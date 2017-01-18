@@ -4,7 +4,7 @@ import asyncio
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService)
+    PLATFORM_SCHEMA, BaseNotificationService, ATTR_TARGET)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,20 +32,16 @@ class DiscordNotificationService(BaseNotificationService):
         self.hass = hass
 
     @asyncio.coroutine
-    def async_send_message(self, message, target):
+    def async_send_message(self, message, **kwargs):
         """Login to Discord, send message to channel(s) and log out."""
         import discord
         discord_bot = discord.Client(loop=self.hass.loop)
 
         yield from discord_bot.login(self.token)
 
-        for channelid in target:
+        for channelid in kwargs[ATTR_TARGET]:
             channel = discord.Object(id=channelid)
             yield from discord_bot.send_message(channel, message)
 
         yield from discord_bot.logout()
         yield from discord_bot.close()
-
-    def send_message(self, message=None, target=None, **kwargs):
-        """Send a message using Discord."""
-        self.hass.async_add_job(self.async_send_message(message, target))
