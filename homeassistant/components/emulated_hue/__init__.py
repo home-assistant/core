@@ -6,6 +6,7 @@ https://home-assistant.io/components/emulated_hue/
 """
 import asyncio
 import logging
+import hashlib
 
 import voluptuous as vol
 
@@ -170,9 +171,9 @@ class Config(object):
             if entity_id == ent_id:
                 return number
 
-        number = str(len(self.numbers) + 1)
+        number = hashlib.sha1(entity_id.encode('utf-8')).hexdigest() 
         self.numbers[number] = entity_id
-        return number
+        return number 
 
     def number_to_entity_id(self, number):
         """Convert unique number to entity id."""
