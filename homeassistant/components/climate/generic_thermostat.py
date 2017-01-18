@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.generic_thermostat/
 """
 import logging
+import time
 
 import voluptuous as vol
 
@@ -16,7 +17,6 @@ from homeassistant.const import (
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import track_state_change
 import homeassistant.helpers.config_validation as cv
-import time
 
 _LOGGER = logging.getLogger(__name__)
 
