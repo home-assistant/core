@@ -135,23 +135,28 @@ class AnthemAVR(MediaPlayerDevice):
         """Return all active, configured inputs."""
         return self._lookup('input_list', ["Unknown"])
 
-    def select_source(self, source):
+    @asyncio.coroutine
+    def async_select_source(self, source):
         """Change AVR to the designated source (by name)."""
         self._update_avr('input_name', source)
 
-    def turn_off(self):
+    @asyncio.coroutine
+    def async_turn_off(self):
         """Turn AVR power off."""
         self._update_avr('power', False)
 
-    def turn_on(self):
+    @asyncio.coroutine
+    def async_turn_on(self):
         """Turn AVR power on."""
         self._update_avr('power', True)
 
-    def set_volume_level(self, volume):
+    @asyncio.coroutine
+    def async_set_volume_level(self, volume):
         """Set AVR volume (0 to 1)."""
         self._update_avr('volume_as_percentage', volume)
 
-    def mute_volume(self, mute):
+    @asyncio.coroutine
+    def async_mute_volume(self, mute):
         """Engage AVR mute."""
         self._update_avr('mute', mute)
 
