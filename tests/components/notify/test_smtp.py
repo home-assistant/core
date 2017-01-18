@@ -1,5 +1,6 @@
 """The tests for the notify smtp platform."""
 import unittest
+from unittest.mock import patch
 
 from homeassistant.components.notify import smtp
 
@@ -8,10 +9,6 @@ from tests.common import get_test_home_assistant
 
 class MockSMTP(smtp.MailNotificationService):
     """Test SMTP object that doesn't need a working server."""
-
-    def connection_is_valid(self):
-        """Pretend connection is always valid for testing."""
-        return True
 
     def _send_email(self, msg):
         """Just return string for testing."""
@@ -31,7 +28,8 @@ class TestNotifySmtp(unittest.TestCase):
         """"Stop down everything that was started."""
         self.hass.stop()
 
-    def test_text_email(self):
+    @patch('email.utils.make_msgid', return_value='<mock@mock>')
+    def test_text_email(self, mock_make_msgid):
         """Test build of default text email behavior."""
         msg = self.mailer.send_message('Test msg')
         expected = ('^Content-Type: text/plain; charset="us-ascii"\n'
@@ -47,7 +45,8 @@ class TestNotifySmtp(unittest.TestCase):
                     'Test msg$')
         self.assertRegex(msg, expected)
 
-    def test_mixed_email(self):
+    @patch('email.utils.make_msgid', return_value='<mock@mock>')
+    def test_mixed_email(self, mock_make_msgid):
         """Test build of mixed text email behavior."""
         msg = self.mailer.send_message('Test msg',
                                        data={'images': ['test.jpg']})
