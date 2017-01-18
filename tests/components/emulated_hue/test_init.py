@@ -13,7 +13,7 @@ def test_config_google_home_entity_id_to_number():
 
     number = conf.entity_id_to_number('light.test')
     expected = hashlib.sha1(str('light.test').encode('utf-8')).hexdigest()
-    assert number == expected 
+    assert number == expected
 
     number = conf.entity_id_to_number('light.test')
     assert number == expected
