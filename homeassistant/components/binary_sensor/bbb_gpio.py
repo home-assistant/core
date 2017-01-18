@@ -1,5 +1,5 @@
 """
-Support for binary sensor using RPi GPIO.
+Support for binary sensor using Beaglebone Black GPIO.
 
 Example configuration:
 
@@ -50,7 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Beaglebone Black GPIO devices."""
     pins = config.get(CONF_PINS)
@@ -63,10 +62,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class BBBGPIOBinarySensor(BinarySensorDevice):
-    """Represent a binary sensor that uses Raspberry Pi GPIO."""
+    """Represent a binary sensor that uses Beaglebone Black GPIO."""
 
     def __init__(self, pin, params):
-        """Initialize the RPi binary sensor."""
+        """Initialize the Beaglebone Black binary sensor."""
         import Adafruit_BBIO.GPIO as GPIO
         # pylint: disable=no-member
         self._pin = pin
