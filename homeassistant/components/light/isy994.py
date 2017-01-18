@@ -8,7 +8,7 @@ import logging
 from typing import Callable
 
 from homeassistant.components.light import (
-    Light, SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS)
+    Light, SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS, ATTR_SUPPORTED_FEATURES)
 import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType
@@ -72,7 +72,9 @@ class ISYLightDevice(isy.ISYDevice, Light):
     @property
     def state_attributes(self):
         """Flag supported attributes."""
-        return {ATTR_BRIGHTNESS: self.value}
+        return {
+            ATTR_BRIGHTNESS: self.value,
+            ATTR_SUPPORTED_FEATURES: self.supported_features}
 
     @property
     def supported_features(self):
