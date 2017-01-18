@@ -30,6 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # From http://lxr.mein.io/source/ubus/ubusmsg.h#L99
 class UbusStatus(IntEnum):
     """Ubus status codes."""
+
     UBUS_STATUS_OK = 0
     UBUS_STATUS_INVALID_COMMAND = 1
     UBUS_STATUS_INVALID_ARGUMENT = 2
@@ -45,6 +46,7 @@ class UbusStatus(IntEnum):
 
 class UbusException(Exception):
     """UbusException gets raised when receiving errors from ubus."""
+
     pass
 
 
@@ -140,7 +142,6 @@ class UbusDeviceScanner:
 
 def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
     """Perform one JSON RPC operation."""
-
     data = {"jsonrpc": "2.0",
             "id": 1,
             "method": rpcmethod,
