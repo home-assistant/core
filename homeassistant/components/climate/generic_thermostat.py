@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import track_state_change
 import homeassistant.helpers.config_validation as cv
+import time
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -222,6 +223,7 @@ class GenericThermostat(ClimateDevice):
                 if too_cold:
                     _LOGGER.info('Turning on heater %s', self.heater_entity_id)
                     switch.turn_on(self.hass, self.heater_entity_id)
+        time.sleep(.1)
 
     @property
     def _is_device_active(self):
