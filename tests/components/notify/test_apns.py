@@ -41,7 +41,9 @@ class TestApns(unittest.TestCase):
             assert setup_component(self.hass, notify.DOMAIN, CONFIG)
         assert handle_config[notify.DOMAIN]
 
-    def test_apns_setup_full(self):
+    @patch('os.path.isfile', return_value=True)
+    @patch('os.access', return_value=True)
+    def test_apns_setup_full(self, mock_access, mock_isfile):
         """Test setup with all data."""
         config = {
             'notify': {
@@ -53,7 +55,9 @@ class TestApns(unittest.TestCase):
             }
         }
 
-        self.assertTrue(notify.setup(self.hass, config))
+        with assert_setup_component(1) as handle_config:
+            assert setup_component(self.hass, notify.DOMAIN, config)
+        assert handle_config[notify.DOMAIN]
 
     def test_apns_setup_missing_name(self):
         """Test setup with missing name."""
