@@ -757,6 +757,7 @@ class MediaPlayerDevice(Entity):
         if hasattr(self, 'volume_up'):
             # pylint: disable=no-member
             yield from self.hass.loop.run_in_executor(None, self.volume_up)
+            return
 
         if self.volume_level < 1:
             yield from self.async_set_volume_level(
@@ -771,6 +772,7 @@ class MediaPlayerDevice(Entity):
         if hasattr(self, 'volume_down'):
             # pylint: disable=no-member
             yield from self.hass.loop.run_in_executor(None, self.volume_down)
+            return
 
         if self.volume_level > 0:
             yield from self.async_set_volume_level(
