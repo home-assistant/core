@@ -134,11 +134,6 @@ class WinkDevice(Entity):
             self.update_ha_state(True)
 
     @property
-    def unique_id(self):
-        """Return the ID of this Wink device."""
-        return '{}.{}'.format(self.__class__, self.name)
-
-    @property
     def name(self):
         """Return the name of the device."""
         return self.wink.name()
