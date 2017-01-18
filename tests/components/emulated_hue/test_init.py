@@ -12,15 +12,17 @@ def test_config_google_home_entity_id_to_number():
     })
 
     number = conf.entity_id_to_number('light.test')
-    assert number == hashlib.sha1(str('light.test').encode('utf-8')).hexdigest()
+    expected = hashlib.sha1(str('light.test').encode('utf-8')).hexdigest()
+    assert number == expected 
 
     number = conf.entity_id_to_number('light.test')
-    assert number == hashlib.sha1(str('light.test').encode('utf-8')).hexdigest()
+    assert number == expected
 
     number = conf.entity_id_to_number('light.test2')
-    assert number == hashlib.sha1(str('light.test2').encode('utf-8')).hexdigest()
+    expected2 = hashlib.sha1(str('light.test2').encode('utf-8')).hexdigest()
+    assert number == expected2
 
-    entity_id = conf.number_to_entity_id(hashlib.sha1(str('light.test').encode('utf-8')).hexdigest())
+    entity_id = conf.number_to_entity_id(expected)
     assert entity_id == 'light.test'
 
 
