@@ -564,7 +564,7 @@ class ClimateDevice(Entity):
 
     @property
     def current_hold_mode(self):
-        """Return the current hold mode, e.g., home, away, temp, off"""
+        """Return the current hold mode, e.g., home, away, temp, off."""
         return None
 
     @property
