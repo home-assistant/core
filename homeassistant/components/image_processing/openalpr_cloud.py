@@ -26,14 +26,18 @@ _LOGGER = logging.getLogger(__name__)
 OPENALPR_API_URL = "https://api.openalpr.com/v1/recognize"
 
 OPENALPR_REGIONS = [
-    'us',
-    'eu',
     'au',
     'auwide',
+    'br',
+    'eu',
+    'fr',
     'gb',
     'kr',
+    'kr2',
     'mx',
     'sg',
+    'us',
+    'vn2'
 ]
 
 CONF_REGION = 'region'
