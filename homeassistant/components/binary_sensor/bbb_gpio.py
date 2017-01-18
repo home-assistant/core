@@ -39,6 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Schema({cv.string: PIN_SCHEMA}),
 })
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Beaglebone Black GPIO devices."""
@@ -51,34 +52,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(binary_sensors)
 
 
-    ports = config.get('ports')
-    for port_num, port_name in ports.items():
-        binary_sensors.append(RPiGPIOBinarySensor(
-            port_name, port_num, pull_mode, bouncetime, invert_logic))
-    add_devices(binary_sensors)
-
-
 class BBBGPIOBinarySensor(BinarySensorDevice):
     """Represent a binary sensor that uses Raspberry Pi GPIO."""
 
-    def __init__(self, name, port, pull_mode, bouncetime, invert_logic):
+    def __init__(self, pin, params):
         """Initialize the RPi binary sensor."""
+        import Adafruit_BBIO.GPIO as GPIO
         # pylint: disable=no-member
-        self._name = name or DEVICE_DEFAULT_NAME
-        self._port = port
-        self._pull_mode = pull_mode
-        self._bouncetime = bouncetime
-        self._invert_logic = invert_logic
+        self._pin = pin
+        self._name = params.get(CONF_NAME) or DEVICE_DEFAULT_NAME
+        self._bouncetime = params.get(CONF_BOUNCETIME)
+        self._pull_mode = params.get(CONF_BOUNCETIME)
+        self._invert_logic = params.get(CONF_INVERT_LOGIC)
 
-        rpi_gpio.setup_input(self._port, self._pull_mode)
-        self._state = rpi_gpio.read_input(self._port)
+        bbb_gpio.setup_input(self._pin, self._pull_mode)
+        self._input = bbb_gpio.read_input(self._pin)
+        self._state = True if self._input is GPIO.HIGH else False
 
-        def read_gpio(port):
+        def read_gpio(pin):
             """Read state from GPIO."""
-            self._state = rpi_gpio.read_input(self._port)
+            self._input = bbb_gpio.read_input(self._pin)
+            self._state = True if self._input is GPIO.HIGH else False
             self.schedule_update_ha_state()
 
-        rpi_gpio.edge_detect(self._port, read_gpio, self._bouncetime)
+        bbb_gpio.edge_detect(self._pin, read_gpio, self._bouncetime)
 
     @property
     def should_poll(self):
