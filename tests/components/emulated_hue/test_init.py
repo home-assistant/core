@@ -1,5 +1,6 @@
 """Test the Emulated Hue component."""
 from unittest.mock import patch
+import hashlib
 
 from homeassistant.components.emulated_hue import Config, _LOGGER
 
@@ -11,15 +12,15 @@ def test_config_google_home_entity_id_to_number():
     })
 
     number = conf.entity_id_to_number('light.test')
-    assert number == '1'
+    assert number == hashlib.sha1(str('light.test').encode('utf-8')).hexdigest()
 
     number = conf.entity_id_to_number('light.test')
-    assert number == '1'
+    assert number == hashlib.sha1(str('light.test').encode('utf-8')).hexdigest()
 
     number = conf.entity_id_to_number('light.test2')
-    assert number == '2'
+    assert number == hashlib.sha1(str('light.test2').encode('utf-8')).hexdigest()
 
-    entity_id = conf.number_to_entity_id('1')
+    entity_id = conf.number_to_entity_id(hashlib.sha1(str('light.test').encode('utf-8')).hexdigest())
     assert entity_id == 'light.test'
 
 
