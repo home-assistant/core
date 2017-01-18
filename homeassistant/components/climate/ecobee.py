@@ -184,6 +184,19 @@ class Thermostat(ClimateDevice):
             return STATE_OFF
 
     @property
+    def current_hold_mode(self):
+        """Return current hold mode."""
+        if self.is_away_mode_on:
+            hold = 'away'
+        elif self.is_home_mode_on:
+            hold = 'home'
+        elif self.is_temp_hold_on():
+            hold = 'temp'
+        else:
+            hold = 'off'
+        return hold
+
+    @property
     def current_operation(self):
         """Return current operation."""
         if self.operation_mode == 'auxHeatOnly' or \
@@ -236,10 +249,30 @@ class Thermostat(ClimateDevice):
             "fan_min_on_time": self.fan_min_on_time
         }
 
+    def is_vacation_on(self):
+        """Return true if vacation mode is on."""
+        mode = ''
+        events = self.thermostat['events']
+        for event in events:
+            if event['type'] == 'vacation' and event['running']:
+                mode = "vacation"
+                break
+        return 'vacation' in mode
+
+    def is_temp_hold_on(self):
+        """Return true if temperature hold is on."""
+        mode = ''
+        events = self.thermostat['events']
+        for event in events:
+            if event['type'] == 'hold':
+                mode = "temp"
+                break
+        return 'temp' in mode
+
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
-        mode = self.mode
+        mode = ''
         events = self.thermostat['events']
         for event in events:
             if event['holdClimateRef'] == 'away' or \
@@ -250,51 +283,94 @@ class Thermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on."""
-        if self.hold_temp:
-            self.data.ecobee.set_climate_hold(self.thermostat_index,
-                                              "away", "indefinite")
-        else:
-            self.data.ecobee.set_climate_hold(self.thermostat_index, "away")
+        self.data.ecobee.set_climate_hold(self.thermostat_index,
+                                          "away", self.hold_preference())
         self.update_without_throttle = True
 
     def turn_away_mode_off(self):
         """Turn away off."""
-        self.data.ecobee.resume_program(self.thermostat_index)
+        self.set_hold_mode('off')
+
+    @property
+    def is_home_mode_on(self):
+        """Return true if home mode is on."""
+        mode = ''
+        events = self.thermostat['events']
+        for event in events:
+            if event['holdClimateRef'] == 'home' or \
+               event['type'] == 'autoHome':
+                mode = "home"
+                break
+        return 'home' in mode
+
+    def turn_home_mode_on(self):
+        """Turn home on."""
+        self.data.ecobee.set_climate_hold(self.thermostat_index,
+                                          "home", self.hold_preference())
+        self.update_without_throttle = True
+
+    def set_hold_mode(self, hold_mode):
+        """Set hold mode (away, home, temperature, off)."""
+        hold = self.current_hold_mode
+
+        _LOGGER.debug("Setting hold mode current=%s hold=%s ", hold, hold_mode)
+        if hold == hold_mode:
+            return
+        elif hold_mode == 'away':
+            self.turn_away_mode_on()
+        elif hold_mode == 'home':
+            self.turn_home_mode_on()
+        elif hold_mode == 'temp':
+            self.set_temp_hold(int(self.current_temperature))
+        elif hold_mode == 'off':
+            self.data.ecobee.resume_program(self.thermostat_index)
+            self.update_without_throttle = True
+
+    def set_auto_temp_hold(self, heat_temp, cool_temp):
+        """Set temperature hold in auto mode."""
+        self.data.ecobee.set_hold_temp(self.thermostat_index, cool_temp,
+                                       heat_temp, self.hold_preference())
+        _LOGGER.debug("Setting ecobee hold_temp to: heat=%s, is=%s, "
+                      "cool=%s, is=%s", heat_temp, isinstance(
+                          heat_temp, (int, float)), cool_temp,
+                      isinstance(cool_temp, (int, float)))
+
+        self.update_without_throttle = True
+
+    def set_temp_hold(self, temp):
+        """Set temperature hold in modes other than auto."""
+        # Set arbitrary range when not in auto mode
+        if self.current_operation == STATE_HEAT:
+            heat_temp = temp
+            cool_temp = temp + 20
+        elif self.current_operation == STATE_COOL:
+            heat_temp = temp - 20
+            cool_temp = temp
+
+        self.data.ecobee.set_hold_temp(self.thermostat_index, cool_temp,
+                                       heat_temp, self.hold_preference())
+        _LOGGER.debug("Setting ecobee hold_temp to: low=%s, is=%s, "
+                      "cool=%s, is=%s", heat_temp, isinstance(
+                          heat_temp, (int, float)), cool_temp,
+                      isinstance(cool_temp, (int, float)))
+
         self.update_without_throttle = True
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
+
         low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        if self.current_operation == STATE_HEAT and temp is not None:
-            low_temp = temp
-            high_temp = temp + 20
-        elif self.current_operation == STATE_COOL and temp is not None:
-            low_temp = temp - 20
-            high_temp = temp
-        if low_temp is None and high_temp is None:
+        if self.current_operation == STATE_AUTO and low_temp is not None \
+           and high_temp is not None:
+            self.set_auto_temp_hold(int(low_temp), int(high_temp))
+        elif temp is not None:
+            self.set_temp_hold(int(temp))
+        else:
             _LOGGER.error(
                 'Missing valid arguments for set_temperature in %s', kwargs)
-            return
-
-        low_temp = int(low_temp)
-        high_temp = int(high_temp)
-
-        if self.hold_temp:
-            self.data.ecobee.set_hold_temp(
-                self.thermostat_index, high_temp, low_temp, "indefinite")
-        else:
-            self.data.ecobee.set_hold_temp(
-                self.thermostat_index, high_temp, low_temp)
-
-        _LOGGER.debug("Setting ecobee hold_temp to: low=%s, is=%s, "
-                      "high=%s, is=%s", low_temp, isinstance(
-                          low_temp, (int, float)), high_temp,
-                      isinstance(high_temp, (int, float)))
-
-        self.update_without_throttle = True
 
     def set_operation_mode(self, operation_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
@@ -313,15 +389,19 @@ class Thermostat(ClimateDevice):
                                         str(resume_all).lower())
         self.update_without_throttle = True
 
-    # Home and Sleep mode aren't used in UI yet:
+    def hold_preference(self):
+        """Return user preference setting for hold time."""
+        # Values returned from thermostat are 'useEndTime4hour',
+        # 'useEndTime2hour', 'nextTransition', 'indefinite', 'askMe'
+        default = self.thermostat['settings']['holdAction']
+        if default == 'nextTransition':
+            return default
+        elif default == 'indefinite':
+            return default
+        else:
+            return 'nextTransition'
 
-    # def turn_home_mode_on(self):
-    #     """ Turns home mode on. """
-    #     self.data.ecobee.set_climate_hold(self.thermostat_index, "home")
-
-    # def turn_home_mode_off(self):
-    #     """ Turns home mode off. """
-    #     self.data.ecobee.resume_program(self.thermostat_index)
+    # Sleep mode isn't used in UI yet:
 
     # def turn_sleep_mode_on(self):
     #     """ Turns sleep mode on. """
