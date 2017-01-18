@@ -81,7 +81,7 @@ class YandexSpeechKitProvider(Provider):
         self._speaker = conf.get(CONF_VOICE)
         self._language = conf.get(CONF_LANG)
         self._emotion = conf.get(CONF_EMOTION)
-        self._speed = conf.get(CONF_SPEED)
+        self._speed = str(conf.get(CONF_SPEED))
 
     @property
     def default_language(self):
