@@ -67,8 +67,8 @@ class BBBGPIOBinarySensor(BinarySensorDevice):
 
     def __init__(self, pin, params):
         """Initialize the Beaglebone Black binary sensor."""
+        # pylint: disable=import-error,no-member
         import Adafruit_BBIO.GPIO as GPIO
-        # pylint: disable=no-member
         self._pin = pin
         self._name = params.get(CONF_NAME) or DEVICE_DEFAULT_NAME
         self._bouncetime = params.get(CONF_BOUNCETIME)
