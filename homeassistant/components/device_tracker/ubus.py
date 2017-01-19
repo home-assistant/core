@@ -69,25 +69,31 @@ class UbusDeviceScanner:
         """Fetch clients and leases from the router."""
         clients = self._get_devices()
         leases = self._get_leases()
+        _LOGGER.info("Got %s clients, %s leases", len(clients), len(leases))
 
+        # Note, we may have clients who have leases expired..
         for client in clients:
             mac = client["mac"].replace(":", "").lower()
-            for lease in leases:
-                if lease["mac"] == mac:
-                    lease.update(client)
-                    # example lease
-                    # {'ip': '192.168.250.186', 'inactive': 3530,
-                    # 'hostname': 'XXXX', 'valid': -23916,
-                    # 'mac': '50:C7:BF:XX:XX:XX', 'noise': -95, 'signal': -48}
-                    extra_attrs = {
-                        "ip": lease["ip"],
-                        "signal": lease["signal"],
-                        "noise": lease["noise"]
-                    }
-                    # _LOGGER.info("Seen: %s", lease)
-                    see(mac=lease["mac"], host_name=lease["hostname"],
-                        source_type=SOURCE_TYPE_ROUTER,
-                        attributes=extra_attrs)
+            lease = [lease for lease in leases if lease["mac"] == mac]
+            if lease:
+                client["ip"] = lease[0]["ip"]
+                client["hostname"] = lease[0]["hostname"]
+            else:
+                _LOGGER.warning("Couldn't find lease for %s", client["mac"])
+                client["hostname"] = "<no lease>"
+                client["ip"] = "<no lease>"
+
+            extra_attrs = {
+                "ip": client["ip"],
+                "signal": client["signal"],
+                "noise": client["noise"]
+            }
+            # _LOGGER.info("Seen: %s (%s)", client["hostname"], client["mac"])
+            see(mac=client["mac"], host_name=client["hostname"],
+                source_type=SOURCE_TYPE_ROUTER,
+                attributes=extra_attrs)
+
+        return True
 
     def _get_devices(self):
         """Request all connected devices."""
