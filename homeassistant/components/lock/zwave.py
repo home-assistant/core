@@ -22,6 +22,7 @@ LOCK_NOTIFICATION = {
     4: 'RF Unlock',
     5: 'Keypad Lock',
     6: 'Keypad Unlock',
+    11: 'Lock Jammed',
     254: 'Unknown Event'
 }
 
