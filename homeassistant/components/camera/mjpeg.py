@@ -94,7 +94,7 @@ class MjpegCamera(Camera):
         response = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                response = websession.get(
+                response = yield from websession.get(
                     self._still_image_url, auth=self._auth)
 
                 image = yield from response.read()
