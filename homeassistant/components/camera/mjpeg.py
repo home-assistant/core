@@ -9,6 +9,7 @@ import logging
 from contextlib import closing
 
 import aiohttp
+import async_timeout
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
