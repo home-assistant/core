@@ -9,9 +9,6 @@ import logging
 from contextlib import closing
 
 import aiohttp
-from aiohttp import web
-from aiohttp.web_exceptions import HTTPGatewayTimeout
-import async_timeout
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
@@ -20,7 +17,8 @@ from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    async_get_clientsession, async_aiohttp_proxy_stream)
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -137,36 +135,9 @@ class MjpegCamera(Camera):
 
         # connect to stream
         websession = async_get_clientsession(self.hass)
-        stream = None
-        response = None
-        try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
-                stream = yield from websession.get(self._mjpeg_url,
-                                                   auth=self._auth)
+        stream_coro = websession.get(self._mjpeg_url, auth=self._auth)
 
-            response = web.StreamResponse()
-            response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
-
-            yield from response.prepare(request)
-
-            while True:
-                data = yield from stream.content.read(102400)
-                if not data:
-                    break
-                response.write(data)
-
-        except asyncio.TimeoutError:
-            raise HTTPGatewayTimeout()
-
-        except asyncio.CancelledError:
-            _LOGGER.debug("Close stream by frontend.")
-            response = None
-
-        finally:
-            if stream is not None:
-                stream.close()
-            if response is not None:
-                yield from response.write_eof()
+        yield from async_aiohttp_proxy_stream(self.hass, request, stream_coro)
 
     @property
     def name(self):

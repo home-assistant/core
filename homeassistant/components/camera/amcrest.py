@@ -8,9 +8,6 @@ import asyncio
 import logging
 
 import aiohttp
-from aiohttp import web
-from aiohttp.web_exceptions import HTTPGatewayTimeout
-import async_timeout
 import voluptuous as vol
 
 import homeassistant.loader as loader
@@ -18,7 +15,8 @@ from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    async_get_clientsession, async_aiohttp_proxy_stream)
 
 REQUIREMENTS = ['amcrest==1.1.0']
 
@@ -108,7 +106,6 @@ class AmcrestCam(Camera):
             device_info.get(CONF_USERNAME),
             password=device_info.get(CONF_PASSWORD)
         )
-        self._websession = async_create_clientsession(hass)
 
     def camera_image(self):
         """Return a still image reponse from the camera."""
@@ -125,44 +122,16 @@ class AmcrestCam(Camera):
             return
 
         # Otherwise, stream an MJPEG image stream directly from the camera
+        websession = async_get_clientsession(self.hass)
         streaming_url = '%s/mjpg/video.cgi?channel=0&subtype=%d' % (
             self._base_url,
             self._resolution
         )
 
-        stream = None
-        response = None
-        try:
-            with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
-                stream = yield from self._websession.get(
-                    streaming_url,
-                    auth=self._token,
-                    timeout=TIMEOUT
-                )
-            response = web.StreamResponse()
-            response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
+        stream_coro = websession.get(
+            streaming_url, auth=self._token, timeout=TIMEOUT)
 
-            yield from response.prepare(request)
-
-            while True:
-                data = yield from stream.content.read(16384)
-                if not data:
-                    break
-                response.write(data)
-
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
-            _LOGGER.exception("Error on %s", streaming_url)
-            raise HTTPGatewayTimeout()
-
-        except asyncio.CancelledError:
-            _LOGGER.debug("Close stream by frontend.")
-            response = None
-
-        finally:
-            if stream is not None:
-                stream.close()
-            if response is not None:
-                yield from response.write_eof()
+        yield from async_aiohttp_proxy_stream(self.hass, request, stream_coro)
 
     @property
     def name(self):
