@@ -15,8 +15,11 @@ from tests.common import get_test_home_assistant
 _LOGGER = logging.getLogger(__name__)
 
 INVALID_USERNAME = 'bob'
+TOKEN_TIMEOUT_USERNAME = 'tok'
 URL_AUTHORIZE = 'http://192.168.0.1/cgi-bin/luci/api/xqsystem/login'
 URL_LIST_END = 'api/misystem/devicelist'
+
+FIRST_CALL = True
 
 
 def mocked_requests(*args, **kwargs):
@@ -44,20 +47,38 @@ def mocked_requests(*args, **kwargs):
                 raise requests.HTTPError(self.status_code)
 
     data = kwargs.get('data')
+    global FIRST_CALL
 
     if data and data.get('username', None) == INVALID_USERNAME:
+        # deliver an invalid token
         return MockResponse({
             "code": "401",
             "msg": "Invalid token"
         }, 200)
+    elif data and data.get('username', None) == TOKEN_TIMEOUT_USERNAME:
+        # deliver an expired token
+        return MockResponse({
+            "url": "/cgi-bin/luci/;stok=ef5860/web/home",
+            "token": "timedOut",
+            "code": "0"
+        }, 200)
     elif str(args[0]).startswith(URL_AUTHORIZE):
-        print("deliver authorized")
+        # deliver an authorized token
         return MockResponse({
             "url": "/cgi-bin/luci/;stok=ef5860/web/home",
             "token": "ef5860",
             "code": "0"
         }, 200)
+    elif str(args[0]).endswith("timedOut/" + URL_LIST_END) \
+            and FIRST_CALL is True:
+        FIRST_CALL = False
+        # deliver an error when called with expired token
+        return MockResponse({
+            "code": "401",
+            "msg": "Invalid token"
+        }, 200)
     elif str(args[0]).endswith(URL_LIST_END):
+        # deliver the device list
         return MockResponse({
             "mac": "1C:98:EC:0E:D5:A4",
             "list": [
@@ -144,7 +165,7 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
         self.hass.stop()
 
     @mock.patch(
-        'homeassistant.components.device_tracker.xiaomi.XioamiDeviceScanner',
+        'homeassistant.components.device_tracker.xiaomi.XiaomiDeviceScanner',
         return_value=mock.MagicMock())
     def test_config(self, xiaomi_mock):
         """Testing minimal configuration."""
@@ -165,7 +186,7 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
         self.assertEqual(call_arg['platform'], 'device_tracker')
 
     @mock.patch(
-        'homeassistant.components.device_tracker.xiaomi.XioamiDeviceScanner',
+        'homeassistant.components.device_tracker.xiaomi.XiaomiDeviceScanner',
         return_value=mock.MagicMock())
     def test_config_full(self, xiaomi_mock):
         """Testing full configuration."""
@@ -209,6 +230,29 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
                 CONF_PLATFORM: xiaomi.DOMAIN,
                 CONF_HOST: '192.168.0.1',
                 CONF_USERNAME: 'admin',
+                CONF_PASSWORD: 'passwordTest'
+            })
+        }
+        scanner = get_scanner(self.hass, config)
+        self.assertIsNotNone(scanner)
+        self.assertEqual(2, len(scanner.scan_devices()))
+        self.assertEqual("Device1",
+                         scanner.get_device_name("23:83:BF:F6:38:A0"))
+        self.assertEqual("Device2",
+                         scanner.get_device_name("1D:98:EC:5E:D5:A6"))
+
+    @patch('requests.get', side_effect=mocked_requests)
+    @patch('requests.post', side_effect=mocked_requests)
+    def test_token_timed_out(self, mock_get, mock_post):
+        """"Testing refresh with a timed out token.
+
+        New token is requested and list is downloaded a second time.
+        """
+        config = {
+            DOMAIN: xiaomi.PLATFORM_SCHEMA({
+                CONF_PLATFORM: xiaomi.DOMAIN,
+                CONF_HOST: '192.168.0.1',
+                CONF_USERNAME: TOKEN_TIMEOUT_USERNAME,
                 CONF_PASSWORD: 'passwordTest'
             })
         }
