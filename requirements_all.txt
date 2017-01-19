@@ -140,6 +140,7 @@ flux_led==0.12
 freesms==0.1.1
 
 # homeassistant.components.device_tracker.fritz
+# homeassistant.components.sensor.fritzbox_netmonitor
 # fritzconnection==0.6
 
 # homeassistant.components.conversation
