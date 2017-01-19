@@ -4,6 +4,8 @@ Support for binary sensor using RPi GPIO.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.rpi_gpio/
 """
+from time import sleep
+
 import logging
 
 import voluptuous as vol
@@ -13,8 +15,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
-
-from time import sleep
 
 _LOGGER = logging.getLogger(__name__)
 
