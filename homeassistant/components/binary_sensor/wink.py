@@ -89,7 +89,7 @@ class WinkHub(WinkDevice, BinarySensorDevice, Entity):
 
     def __init(self, wink, hass):
         """Initialize the hub sensor."""
-        WinkDevice.__init__(self, wink, hass)
+        WinkDevice.__init__(wink, hass)
 
     @property
     def device_state_attributes(self):
