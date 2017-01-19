@@ -174,7 +174,7 @@ class Camera(Entity):
 
                 yield from asyncio.sleep(.5)
 
-        except asyncio.CancelledError:
+        except (asyncio.CancelledError, ConnectionResetError):
             _LOGGER.debug("Close stream by frontend.")
             response = None
 
