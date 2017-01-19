@@ -201,6 +201,7 @@ omit =
     homeassistant/components/light/yeelight.py
     homeassistant/components/light/zengge.py
     homeassistant/components/lirc.py
+    homeassistant/components/media_player/anthemav.py
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/braviatv.py
     homeassistant/components/media_player/cast.py
