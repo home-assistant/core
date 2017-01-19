@@ -26,12 +26,14 @@ from homeassistant.helpers import config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_MJPEG_URL = 'mjpeg_url'
+CONF_STILL_IMAGE_URL = 'still_image_url'
 CONTENT_TYPE_HEADER = 'Content-Type'
 
 DEFAULT_NAME = 'Mjpeg Camera'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MJPEG_URL): cv.url,
+    vol.Optional(CONF_STILL_IMAGE_URL): cv.url,
     vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -70,6 +72,7 @@ class MjpegCamera(Camera):
         self._username = device_info.get(CONF_USERNAME)
         self._password = device_info.get(CONF_PASSWORD)
         self._mjpeg_url = device_info[CONF_MJPEG_URL]
+        self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
 
         self._auth = None
         if self._username and self._password:
@@ -77,6 +80,37 @@ class MjpegCamera(Camera):
                 self._auth = aiohttp.BasicAuth(
                     self._username, password=self._password
                 )
+
+    @asyncio.coroutine
+    def async_camera_image(self):
+        """Return a still image response from the camera."""
+        # DigestAuth is not supported
+        if self._authentication == HTTP_DIGEST_AUTHENTICATION or \
+           self._still_image_url is None:
+            image = yield from self.hass.loop.run_in_executor(
+                None, self.camera_image)
+            return image
+
+        websession = async_get_clientsession(self.hass)
+        response = None
+        try:
+            with async_timeout.timeout(10, loop=self.hass.loop):
+                response = websession.get(
+                    self._still_image_url, auth=self._auth)
+
+                image = yield from response.read()
+                return image
+
+        except asyncio.TimeoutError:
+            _LOGGER.error('Timeout getting camera image')
+
+        except (aiohttp.errors.ClientError,
+                aiohttp.errors.ClientDisconnectedError) as err:
+            _LOGGER.error('Error getting new camera image: %s', err)
+
+        finally:
+            if response is not None:
+                yield from response.release()
 
     def camera_image(self):
         """Return a still image response from the camera."""
