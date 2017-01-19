@@ -77,7 +77,7 @@ class YandexSpeechKitProvider(Provider):
         return SUPPORT_LANGUAGES
 
     @asyncio.coroutine
-    def async_get_tts_audio(self, message, language):
+    def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from yandex."""
         websession = async_get_clientsession(self.hass)
 
