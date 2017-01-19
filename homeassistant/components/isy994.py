@@ -272,7 +272,7 @@ class ISYDevice(Entity):
         return self._node.status._val
 
     @property
-    def state_attributes(self) -> Dict:
+    def device_state_attributes(self) -> Dict:
         """Get the state attributes for the device."""
         attr = {}
         if hasattr(self._node, 'aux_properties'):
