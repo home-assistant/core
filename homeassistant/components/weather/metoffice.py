@@ -88,7 +88,7 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the mean sea-level pressure."""
-        return False
+        return None
 
     @property
     def humidity(self):
