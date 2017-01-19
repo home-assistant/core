@@ -50,6 +50,7 @@ class AvionLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
+        # pylint: disable=import-error
         import avion
 
         self._name = device['name']
