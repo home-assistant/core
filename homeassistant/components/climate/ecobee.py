@@ -265,7 +265,7 @@ class Thermostat(ClimateDevice):
     def is_away_mode_on(self):
         """Return true if away mode is on."""
         events = self.thermostat['events']
-        return any(event['holdClimateRef'] == 'away' or \
+        return any(event['holdClimateRef'] == 'away' or
                    event['type'] == 'autoAway'
                    for event in events)
 
@@ -283,7 +283,7 @@ class Thermostat(ClimateDevice):
     def is_home_mode_on(self):
         """Return true if home mode is on."""
         events = self.thermostat['events']
-        return any(event['holdClimateRef'] == 'home' or \
+        return any(event['holdClimateRef'] == 'home' or
                    event['type'] == 'autoHome'
                    for event in events)
 
