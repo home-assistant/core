@@ -105,7 +105,8 @@ class TestSyncMediaPlayer(unittest.TestCase):
         self.assertEqual(self.player.volume_level, 0)
         self.player.set_volume_level(0.5)
         self.assertEqual(self.player.volume_level, 0.5)
-        self.player.volume_up()
+        run_coroutine_threadsafe(
+            self.player.async_volume_up(), self.hass.loop).result()
         self.assertEqual(self.player.volume_level, 0.7)
 
     def test_volume_down(self):
@@ -113,5 +114,6 @@ class TestSyncMediaPlayer(unittest.TestCase):
         self.assertEqual(self.player.volume_level, 0)
         self.player.set_volume_level(0.5)
         self.assertEqual(self.player.volume_level, 0.5)
-        self.player.volume_down()
+        run_coroutine_threadsafe(
+            self.player.async_volume_down(), self.hass.loop).result()
         self.assertEqual(self.player.volume_level, 0.3)
