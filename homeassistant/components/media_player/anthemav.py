@@ -43,6 +43,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
+    device = None
 
     _LOGGER.info('Provisioning Anthem AVR device at %s:%d', host, port)
 
