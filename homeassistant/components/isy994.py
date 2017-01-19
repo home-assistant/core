@@ -228,10 +228,6 @@ class ISYDevice(Entity):
         self._change_handler = self._node.status.subscribe('changed',
                                                            self.on_update)
 
-    def __del__(self) -> None:
-        """Cleanup the subscriptions."""
-        self._change_handler.unsubscribe()
-
     # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
         """Handle the update event from the ISY994 Node."""
