@@ -6,10 +6,12 @@ https://home-assistant.io/components/emulated_hue/
 """
 import asyncio
 import logging
+import json
 
 import voluptuous as vol
 
 from homeassistant import util
+from homeassistant.config import get_default_config_dir
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
 )
@@ -115,8 +117,10 @@ class Config(object):
     def __init__(self, conf):
         """Initialize the instance."""
         self.type = conf.get(CONF_TYPE)
-        self.numbers = {}
+        self.json_config = EmulatedHueJson()
         self.cached_states = {}
+
+        self.load_json_config()
 
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)
@@ -160,19 +164,45 @@ class Config(object):
         self.exposed_domains = conf.get(
             CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS)
 
+    def load_json_config(self):
+        configDir = get_default_config_dir()
+        self.entity_mapping_file_path = configDir + '/emulated_hue.json'
+        # Set up or read the json configuration file
+
+        try:
+            self.device_json_file = open(self.entity_mapping_file_path, 'r+')
+        except IOError:
+            self.device_json_file = open(self.entity_mapping_file_path, 'w')
+
+        self.json_config = EmulatedHueJson()
+        try:
+            thawed = json.load(self.device_json_file)
+            self.json_config.__dict__ = thawed
+        except ValueError:
+            _LOGGER.info('Nothing found in configuration file,' +
+            ' creating a new object')
+            self.persist_json_config()
+
+    def persist_json_config(self):
+        self.device_json_file = open(self.entity_mapping_file_path, 'w')
+        json.dump(self.json_config.__dict__, self.device_json_file)
+        self.device_json_file.close()
+
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""
         if self.type == TYPE_ALEXA:
             return entity_id
 
         # Google Home
-        for number, ent_id in self.numbers.items():
+        for number, ent_id in self.json_config.numbers.items():
             if entity_id == ent_id:
                 return number
 
-        number = str(len(self.numbers) + 1)
-        self.numbers[number] = entity_id
-        return number
+        self.json_config.max_id += 1
+        number = self.json_config.max_id
+        self.json_config.numbers[number] = entity_id
+        self.persist_json_config()
+        return int(number)
 
     def number_to_entity_id(self, number):
         """Convert unique number to entity id."""
@@ -181,7 +211,7 @@ class Config(object):
 
         # Google Home
         assert isinstance(number, str)
-        return self.numbers.get(number)
+        return self.json_config.numbers.get(number)
 
     def is_entity_exposed(self, entity):
         """Determine if an entity should be exposed on the emulated bridge.
@@ -205,3 +235,10 @@ class Config(object):
             domain_exposed_by_default and explicit_expose is not False
 
         return is_default_exposed or explicit_expose
+
+
+class EmulatedHueJson(object):
+
+    def __init__(self):
+        self.numbers = {}
+        self.max_id = 0
