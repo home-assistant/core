@@ -17,7 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['anthemav==1.1.5']
+REQUIREMENTS = ['anthemav==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,10 +46,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     _LOGGER.info('Provisioning Anthem AVR device at %s:%d', host, port)
 
+    @asyncio.coroutine
     def async_anthemav_update_callback(message):
         """Receive notification from transport that new data exists."""
         _LOGGER.info('Received update calback from AVR: %s', message)
-        device.schedule_update_ha_state()
+        hass.async_add_job(device.async_update_ha_state())
 
     avr = yield from anthemav.Connection.create(
         host=host, port=port, loop=hass.loop,
