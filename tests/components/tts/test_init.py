@@ -1,7 +1,8 @@
 """The tests for the TTS component."""
+import ctypes
 import os
 import shutil
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 
 import requests
 
@@ -181,6 +182,105 @@ class TestTTS(object):
         assert not os.path.isfile(os.path.join(
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_lang_-_demo.mp3"))
+
+    def test_setup_component_and_test_service_with_service_options(self):
+        """Setup the demo platform and call service with options."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'demo_say', {
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_LANGUAGE: "de",
+            tts.ATTR_OPTIONS: {
+                'voice': 'alex'
+            }
+        })
+        self.hass.block_till_done()
+
+        opt_hash = ctypes.c_size_t(hash(frozenset({'voice': 'alex'}))).value
+
+        assert len(calls) == 1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(
+            "/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
+            "_de_{0}_demo.mp3".format(opt_hash)) \
+            != -1
+        assert os.path.isfile(os.path.join(
+            self.default_tts_cache,
+            "265944c108cbb00b2a621be5930513e03a0bb2cd_de_{0}_demo.mp3".format(
+                opt_hash)))
+
+    @patch('homeassistant.components.tts.demo.DemoProvider.default_options',
+           new_callable=PropertyMock(return_value={'voice': 'alex'}))
+    def test_setup_component_and_test_with_service_options_def(self, def_mock):
+        """Setup the demo platform and call service with default options."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'demo_say', {
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_LANGUAGE: "de",
+        })
+        self.hass.block_till_done()
+
+        opt_hash = ctypes.c_size_t(hash(frozenset({'voice': 'alex'}))).value
+
+        assert len(calls) == 1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(
+            "/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
+            "_de_{0}_demo.mp3".format(opt_hash)) \
+            != -1
+        assert os.path.isfile(os.path.join(
+            self.default_tts_cache,
+            "265944c108cbb00b2a621be5930513e03a0bb2cd_de_{0}_demo.mp3".format(
+                opt_hash)))
+
+    def test_setup_component_and_test_service_with_service_options_wrong(self):
+        """Setup the demo platform and call service with wrong options."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'demo_say', {
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_LANGUAGE: "de",
+            tts.ATTR_OPTIONS: {
+                'speed': 1
+            }
+        })
+        self.hass.block_till_done()
+
+        opt_hash = ctypes.c_size_t(hash(frozenset({'speed': 1}))).value
+
+        assert len(calls) == 0
+        assert not os.path.isfile(os.path.join(
+            self.default_tts_cache,
+            "265944c108cbb00b2a621be5930513e03a0bb2cd_de_{0}_demo.mp3".format(
+                opt_hash)))
 
     def test_setup_component_and_test_service_clear_cache(self):
         """Setup the demo platform and call service clear cache."""
