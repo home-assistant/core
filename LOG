@@ -1,0 +1,33 @@
+    def set_hold_mode(self, hold_mode):
+        """Set hold mode (away, home, temp)."""
+        hold = self.current_hold_mode
+
+        _LOGGER.debug("Setting hold mode current=%s hold=%s ", hold, hold_mode)
+        _LOGGER.debug("Setting hold mode current=%s hold=%s ", hold, hold_mode)
+        if hold_mode is None:
+            _LOGGER.debug("Setting None 1 current=%s hold=%s ", hold, hold_mode)
+        if hold == hold_mode:
+            _LOGGER.debug("Setting returning current=%s hold=%s ", hold, hold_mode)
+            return
+        elif hold_mode == 'away':
+            _LOGGER.debug("Setting Away current=%s hold=%s ", hold, hold_mode)
+            self.turn_away_mode_on()
+        elif hold_mode == 'home':
+            _LOGGER.debug("Setting Home current=%s hold=%s ", hold, hold_mode)
+            self.turn_home_mode_on()
+        elif hold_mode == 'temp':
+            _LOGGER.debug("Setting Temp current=%s hold=%s ", hold, hold_mode)
+            self.set_temp_hold(int(self.current_temperature))
+        elif hold_mode is None:
+            _LOGGER.debug("Setting None current=%s hold=%s ", hold, hold_mode)
+            self.data.ecobee.resume_program(self.thermostat_index)
+            self.update_without_throttle = True
+        else:
+            _LOGGER.debug("Setting else current=%s hold=%s ", hold, hold_mode)
+
+        _LOGGER.debug("Setting hold mode current=%s hold=%s ", hold, hold_mode)
+
+17-01-18 19:00:48 homeassistant.components.climate.ecobee: Setting hold mode current=home hold=None 
+17-01-18 19:00:48 homeassistant.components.climate.ecobee: Setting hold mode current=home hold=None 
+17-01-18 19:00:48 homeassistant.components.climate.ecobee: Setting else current=home hold=None 
+17-01-18 19:00:48 homeassistant.components.climate.ecobee: Setting hold mode current=home hold=None 
