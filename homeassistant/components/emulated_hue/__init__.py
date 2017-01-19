@@ -6,7 +6,6 @@ https://home-assistant.io/components/emulated_hue/
 """
 import asyncio
 import logging
-import hashlib
 import json
 
 import voluptuous as vol
@@ -165,10 +164,10 @@ class Config(object):
         self.exposed_domains = conf.get(
             CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS)
 
-    def load_json_config(self): 
-        configDir = get_default_config_dir();
-        self.entity_mapping_file_path =  configDir + '/emulated_hue.json';
-        #Set up or read the json configuration file
+    def load_json_config(self):
+        configDir = get_default_config_dir()
+        self.entity_mapping_file_path = configDir + '/emulated_hue.json'
+        # Set up or read the json configuration file
 
         try:
             self.device_json_file = open(self.entity_mapping_file_path, 'r+')
@@ -180,8 +179,8 @@ class Config(object):
             self.json_config = EmulatedHueJson()
             self.json_config.__dict__ = thawed
         except ValueError:
-            _LOGGER.info("Nothing found in configuration file, creating a new object")
-  
+            _LOGGER.info('Nothing found in configuration file,' +
+		' creating a new object')
 
         json.dump(self.json_config.__dict__, self.device_json_file)
         self.device_json_file.close();
@@ -237,6 +236,7 @@ class Config(object):
             domain_exposed_by_default and explicit_expose is not False
 
         return is_default_exposed or explicit_expose
+
 
 class EmulatedHueJson(object):
 
