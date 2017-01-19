@@ -134,8 +134,8 @@ class GenericThermostat(ClimateDevice):
         if temperature is None:
             return
         self._target_temp = temperature
+        self.schedule_update_ha_state()
         self._control_heating()
-        self.update_ha_state()
 
     @property
     def min_temp(self):
@@ -163,8 +163,8 @@ class GenericThermostat(ClimateDevice):
             return
 
         self._update_temp(new_state)
-        self._control_heating()
         self.schedule_update_ha_state()
+        self._control_heating()
 
     def _switch_changed(self, entity_id, old_state, new_state):
         """Called when heater switch changes state."""
