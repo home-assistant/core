@@ -70,11 +70,6 @@ class ISYLightDevice(isy.ISYDevice, Light):
             _LOGGER.debug('Unable to turn on light.')
 
     @property
-    def device_state_attributes(self):
-        """Flag supported attributes."""
-        return {ATTR_BRIGHTNESS: self.value}
-
-    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
