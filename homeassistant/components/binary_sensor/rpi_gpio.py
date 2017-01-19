@@ -14,6 +14,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
+from time import sleep
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BOUNCETIME = 'bouncetime'
@@ -67,6 +69,7 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
         self._invert_logic = invert_logic
 
         rpi_gpio.setup_input(self._port, self._pull_mode)
+        sleep(bouncetime/1000)
         self._state = rpi_gpio.read_input(self._port)
 
         def read_gpio(port):
