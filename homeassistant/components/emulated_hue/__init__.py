@@ -181,7 +181,7 @@ class Config(object):
         except ValueError:
             _LOGGER.info('Nothing found in configuration file,' +
             ' creating a new object')
-            self.persist_json_config()        
+            self.persist_json_config()
 
     def persist_json_config(self):
         self.device_json_file = open(self.entity_mapping_file_path, 'w')
