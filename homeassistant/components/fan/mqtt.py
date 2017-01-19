@@ -267,7 +267,10 @@ class MqttFan(FanEntity):
         """Set oscillation."""
         if self._topic[CONF_SPEED_COMMAND_TOPIC] is not None:
             self._oscillation = oscillating
+            payload = self._payload[OSCILLATE_ON_PAYLOAD]
+            if oscillating is False:
+                payload = self._payload[OSCILLATE_OFF_PAYLOAD]
             mqtt.publish(self._hass,
                          self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
-                         self._oscillation, self._qos, self._retain)
+                         payload, self._qos, self._retain)
             self.update_ha_state()
