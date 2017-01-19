@@ -1,5 +1,6 @@
 """
 Support for UK Met Office weather service.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.metoffice/
 """
@@ -69,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             data.update()
         except ValueError as err:
-            _LOGGER.error("Received error from Datapoint: %s", err)
+            _LOGGER.error("Received error from Met Office Datapoint: %s", err)
             return False
 
         # Add
