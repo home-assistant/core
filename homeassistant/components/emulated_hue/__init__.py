@@ -174,20 +174,19 @@ class Config(object):
         except IOError:
             self.device_json_file = open(self.entity_mapping_file_path, 'w')
 
+        self.json_config = EmulatedHueJson()
         try:
             thawed = json.load(self.device_json_file)
-            self.json_config = EmulatedHueJson()
             self.json_config.__dict__ = thawed
         except ValueError:
             _LOGGER.info('Nothing found in configuration file,' +
-                ' creating a new object')
-
-        json.dump(self.json_config.__dict__, self.device_json_file)
-        self.device_json_file.close();
+            ' creating a new object')
+            self.persist_json_config()        
 
     def persist_json_config(self):
         self.device_json_file = open(self.entity_mapping_file_path, 'w')
         json.dump(self.json_config.__dict__, self.device_json_file)
+        self.device_json_file.close()
 
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""
