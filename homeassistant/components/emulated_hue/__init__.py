@@ -175,12 +175,12 @@ class Config(object):
             self.device_json_file = open(self.entity_mapping_file_path, 'w')
 
         try:
-            thawed = json.load(self.device_json_file);
+            thawed = json.load(self.device_json_file)
             self.json_config = EmulatedHueJson()
             self.json_config.__dict__ = thawed
         except ValueError:
             _LOGGER.info('Nothing found in configuration file,' +
-		' creating a new object')
+                ' creating a new object')
 
         json.dump(self.json_config.__dict__, self.device_json_file)
         self.device_json_file.close();
