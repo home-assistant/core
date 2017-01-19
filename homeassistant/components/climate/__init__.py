@@ -271,12 +271,6 @@ def async_setup(hass, config):
 
         hold_mode = service.data.get(ATTR_HOLD_MODE)
 
-        if hold_mode is None:
-            _LOGGER.error(
-                "Received call to %s without attribute %s",
-                SERVICE_SET_HOLD_MODE, ATTR_HOLD_MODE)
-            return
-
         for climate in target_climate:
             yield from climate.async_set_hold_mode(hold_mode)
 
@@ -568,7 +562,7 @@ class ClimateDevice(Entity):
 
     @property
     def current_hold_mode(self):
-        """Return the current hold mode, e.g., home, away, temp, off."""
+        """Return the current hold mode, e.g., home, away, temp."""
         return None
 
     @property
