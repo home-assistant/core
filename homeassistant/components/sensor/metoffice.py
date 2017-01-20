@@ -100,8 +100,12 @@ class MetOfficeCurrentSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._condition in self.data.__dict__.keys():
-            return getattr(self.data, self._condition)
+        if self._condition in self.data.data.__dict__.keys():
+            variable = getattr(self.data.data, self._condition)
+            if self._condition == "weather":
+                return variable.text
+            else:
+                return variable.value
         else:
             return STATE_UNKNOWN
 
