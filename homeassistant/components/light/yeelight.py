@@ -6,10 +6,13 @@ https://home-assistant.io/components/light.yeelight/
 """
 import logging
 import socket
+import colorsys
 
 import voluptuous as vol
 
-from homeassistant.util.color import color_temperature_mired_to_kelvin
+from homeassistant.util.color import (
+    color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired,
+    color_temperature_to_rgb)
 from homeassistant.const import CONF_DEVICES, CONF_NAME, STATE_OFF
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
@@ -111,7 +114,9 @@ class YeelightLight(Light):
     @property
     def color_temp(self):
         """Return the color temperature."""
-        return self._properties.get("color_temp", None)
+        temp_in_k = self._properties.get("ct", None)
+        temp_in_mired = color_temperature_kelvin_to_mired(int(temp_in_k))
+        return temp_in_mired
 
     @property
     def name(self):
@@ -138,8 +143,18 @@ class YeelightLight(Light):
     def rgb_color(self):
         """Return the color property."""
         rgb = self._properties.get("rgb", None)
-        if rgb is None:
-            return None
+        color_mode = self._properties.get("color_mode", None)
+        if not rgb or not color_mode:
+            return rgb
+
+        color_mode = int(color_mode)
+        if color_mode == 2:  # color temperature
+            return color_temperature_to_rgb(self.color_temp)
+        if color_mode == 3:  # hsv
+            hue = self._properties.get("hue")
+            sat = self._properties.get("sat")
+            val = self._properties.get("bright")
+            return colorsys.hsv_to_rgb(hue, sat, val)
 
         rgb = int(rgb)
         blue = rgb & 0xff
