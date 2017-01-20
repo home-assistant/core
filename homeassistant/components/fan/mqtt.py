@@ -131,9 +131,9 @@ class MqttFan(FanEntity):
         self._state = False
         self._supported_functions = 0
         self._supported_functions |= (topic[CONF_OSCILLATION_STATE_TOPIC]
-                                     is not None and SUPPORT_OSCILLATE)
+                                      is not None and SUPPORT_OSCILLATE)
         self._supported_functions |= (topic[CONF_SPEED_STATE_TOPIC]
-                                     is not None and SUPPORT_SET_SPEED)
+                                      is not None and SUPPORT_SET_SPEED)
 
         for key, tpl in list(templates.items()):
             if tpl is None:
