@@ -47,7 +47,7 @@ def devices_from_config(domain_config, hass=None):
         kwargs = {k: v for k, v in config.items() if k in VALID_CONFIG_KEYS}
         kwargs['unit'] = lookup_unit_for_sensor_type(kwargs['sensor_type'])
         devices.append(RflinkSensor(device_id, hass, **kwargs))
-        rflink.KNOWN_DEVICE_IDS.append(device_id)
+        hass.data[rflink.DATA_KNOWN_DEVICES].append(device_id)
     return devices
 
 
@@ -70,10 +70,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         event = event.data[rflink.ATTR_EVENT]
         device_id = event['id']
 
-        if device_id in rflink.KNOWN_DEVICE_IDS:
+        if device_id in hass.data[rflink.DATA_KNOWN_DEVICES]:
             return
 
-        rflink.KNOWN_DEVICE_IDS.append(device_id)
+        hass.data[rflink.DATA_KNOWN_DEVICES].append(device_id)
         rflinksensor = partial(RflinkSensor, device_id, hass)
         device = rflinksensor(event['sensor'], event['unit'])
         # add device entity

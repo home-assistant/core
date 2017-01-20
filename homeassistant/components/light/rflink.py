@@ -59,7 +59,7 @@ def devices_from_config(domain_config, hass=None):
 
         # now we know
         device_ids = [device_id] + config.get('aliasses', [])
-        rflink.KNOWN_DEVICE_IDS.extend(device_ids)
+        hass.data[rflink.DATA_KNOWN_DEVICES].extend(device_ids)
     return devices
 
 
@@ -85,10 +85,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_type = entity_type_for_device_id(event['id'])
         entity_class = entity_class_for_type(entity_type)
 
-        if device_id in rflink.KNOWN_DEVICE_IDS:
+        if device_id in hass.data[rflink.DATA_KNOWN_DEVICES]:
             return
 
-        rflink.KNOWN_DEVICE_IDS.append(device_id)
+        hass.data[rflink.DATA_KNOWN_DEVICES].append(device_id)
         device = entity_class(device_id, hass)
         yield from async_add_devices([device])
         # make sure the event is processed by the new entity

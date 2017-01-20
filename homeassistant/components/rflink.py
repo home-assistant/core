@@ -43,10 +43,9 @@ RFLINK_EVENT = {
 
 ATTR_EVENT = 'event'
 ATTR_COMMAND = 'command'
+DATA_KNOWN_DEVICES = 'rflink_known_device_ids'
 
 _LOGGER = logging.getLogger(__name__)
-
-KNOWN_DEVICE_IDS = []
 
 
 def identify_event_type(event):
@@ -64,8 +63,8 @@ def async_setup(hass, config):
     """Setup the Rflink component."""
     from rflink.protocol import create_rflink_connection
 
-    # make sure no known devices are left (mostly during tests)
-    del KNOWN_DEVICE_IDS[:]
+    # initialize list of known devices
+    hass.data[DATA_KNOWN_DEVICES] = []
 
     def event_callback(event):
         """Handle incoming rflink events.

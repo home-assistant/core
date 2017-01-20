@@ -30,7 +30,7 @@ def devices_from_config(domain_config, hass=None):
         # extract only valid keys from device configuration
         kwargs = {k: v for k, v in config.items() if k in VALID_CONFIG_KEYS}
         devices.append(RflinkSwitch(device_id, hass, **kwargs))
-        rflink.KNOWN_DEVICE_IDS.append(device_id)
+        hass.data[rflink.DATA_KNOWN_DEVICES].append(device_id)
     return devices
 
 
