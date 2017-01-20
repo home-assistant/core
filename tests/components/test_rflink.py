@@ -75,8 +75,10 @@ def test_send_no_wait(hass, monkeypatch):
     """Test command sending without ack."""
     domain = 'switch'
     config = {
-        'rflink': {'port': '/dev/ttyABC0', },
-        'wait_for_ack': False,
+        'rflink': {
+            'port': '/dev/ttyABC0',
+            'wait_for_ack': False,
+        },
         domain: {
             'platform': 'rflink',
             'devices': {

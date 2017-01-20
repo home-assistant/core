@@ -41,11 +41,13 @@ CONF_IGNORE_DEVICES = 'ignore_devices'
 CONF_DEVICES = 'devices'
 CONF_NEW_DEVICES_GROUP = 'new_devices_group'
 CONF_ALIASSES = 'aliasses'
+CONF_WAIT_FOR_ACK = 'wait_for_ack'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
         vol.Optional(CONF_HOST, default=None): cv.string,
+        vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
         vol.Optional(CONF_IGNORE_DEVICES, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
     }),
@@ -155,7 +157,7 @@ def async_setup(hass, config):
             event.data[ATTR_COMMAND],
         )
 
-    if config.get('wait_for_ack', True):
+    if config[DOMAIN][CONF_WAIT_FOR_ACK]:
         hass.bus.async_listen(RFLINK_EVENT['send_command'], send_command_ack)
     else:
         hass.bus.async_listen(RFLINK_EVENT['send_command'], send_command)
