@@ -87,20 +87,24 @@ class LockitronSensor(Entity):
 
     def update(self):
         """Get the latest data with a shell command."""
-        _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
+        lock_name = self._lock_name
+        lock_uuid = self._lock_uuid
+        access_token = self._access_token
+        state = self._state
+        _LOGGER.info('Updating Lockitron state for ' + lock_name)
 
         """Return the state of the sensor."""
         try:
             url = (
-                "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
-                "?access_token=" + self._access_token
+                "https://api.lockitron.com/v2/locks/" + lock_uuid +
+                "?access_token=" + access_token
                 )
             req = requests.get(url)
             resp = req.json()
-            self._state = resp["state"]
+            state = resp["state"]
         except:
-            self._state = 'FAILED'
-        return self._state
+            state = 'FAILED'
+        return state
 
 
 class LockitronSensorData(object):
@@ -108,23 +112,25 @@ class LockitronSensorData(object):
 
     def __init__(self, command):
         """Initialize the data object."""
-        self._state = ''
+        state = self._state
+        lock_name = self._lock_name
+        lock_uuid = self._lock_uuid
         _LOGGER.info('initializing the Lockitron object')
 
     def update(self):
         """Get the latest data with a shell command."""
-        _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
+        _LOGGER.info('Updating Lockitron state for ' + lock_name)
 
         """Return the state of the sensor."""
         try:
             url = (
-                "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
-                "?access_token=" + self._access_token
+                "https://api.lockitron.com/v2/locks/" + lock_uuid +
+                "?access_token=" + access_token
                 )
             req = requests.get(url)
             resp = req.json()
             self._state = resp["state"]
-            _LOGGER.info('Insdie Try ' + self._state)
+            _LOGGER.info('Insdie Try ' + state)
         except:
-            self._state = 'FAILED'
-        return self._state
+            tate = 'FAILED'
+        return state
