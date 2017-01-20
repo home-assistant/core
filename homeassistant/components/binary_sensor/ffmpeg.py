@@ -102,7 +102,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         yield from entity.async_shutdown_ffmpeg()
 
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, async_shutdown())
+        EVENT_HOMEASSISTANT_STOP, async_shutdown)
 
     # start on startup
     if config.get(CONF_INITIAL_STATE):
@@ -112,7 +112,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             yield from entity.async_start_ffmpeg()
 
         hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, async_start())
+            EVENT_HOMEASSISTANT_START, async_start)
 
     # add to system
     yield from async_add_devices([entity])
