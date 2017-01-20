@@ -49,6 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     datapoint = dp.connection(api_key=config.get(CONF_MO_API_KEY))
