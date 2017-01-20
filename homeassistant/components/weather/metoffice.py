@@ -10,8 +10,7 @@ import voluptuous as vol
 import datapoint as dp
 
 from homeassistant.components.weather import WeatherEntity, PLATFORM_SCHEMA
-from homeassistant.const import \
-    CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_NAME, TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.metoffice import \
@@ -39,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except dp.exceptions.APIException as err:
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
         return False
-        
+
     if not site:
         _LOGGER.error("Unable to get nearest Met Office forecast site")
         return False
@@ -51,7 +50,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         except (ValueError, dp.exceptions.APIException) as err:
             _LOGGER.error("Received error from Met Office Datapoint: %s", err)
             return False
-        add_devices([MetOfficeWeather(site, data, config.get(CONF_NAME))], True)
+        add_devices([MetOfficeWeather(site, data, config.get(CONF_NAME))],
+                    True)
         return True
 
 

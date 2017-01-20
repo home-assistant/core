@@ -14,7 +14,7 @@ import datapoint as dp
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, STATE_UNKNOWN, CONF_NAME,
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE)
+    ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -153,7 +153,8 @@ class MetOfficeCurrentData(object):
             return self._lastupdate
 
         try:
-            forecast = self._datapoint.get_forecast_for_site(self._site.id, "3hourly")
+            forecast = self._datapoint.get_forecast_for_site(self._site.id,
+                                                             "3hourly")
             self.data = forecast.now()
             self._lastupdate = datetime.datetime.now()
             return self._lastupdate
