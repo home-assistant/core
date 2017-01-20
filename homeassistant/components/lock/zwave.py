@@ -174,15 +174,17 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                 self._lock_status = LOCK_ALARM_TYPE.get(alarm_type)
                 break
 
-        if self._notification or self._lock_status:
+        if not self._notification and not self._lock_status:
             for value in self._node.get_values(
                     class_id=zwave.const.COMMAND_CLASS_DOOR_LOCK).values():
-                if value.type == zwave.const.TYPE_BOOL:
-                    if value.genre != zwave.const.GENRE_USER:
-                        self._state = value.data
-                        _LOGGER.debug('Lock state set from Bool value and'
-                                      ' is %s', value.data)
-                        break
+                if value.type != zwave.const.TYPE_BOOL:
+                    continue
+                if value.genre != zwave.const.GENRE_USER:
+                    continue
+                self._state = value.data
+                _LOGGER.debug('Lock state set from Bool value and'
+                              ' is %s', value.data)
+                break
 
     @property
     def is_locked(self):
