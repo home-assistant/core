@@ -20,6 +20,8 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['datapoint==0.4.3']
+
 CONF_ATTRIBUTION = "Data provided by the Met Office"
 CONF_MO_API_KEY = 'api_key'
 

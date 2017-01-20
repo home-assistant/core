@@ -17,6 +17,8 @@ from homeassistant.components.sensor.metoffice import \
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['datapoint==0.4.3']
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_MO_API_KEY): cv.string,
