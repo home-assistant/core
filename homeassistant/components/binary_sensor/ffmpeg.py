@@ -6,7 +6,7 @@ https://home-assistant.io/components/binary_sensor.ffmpeg/
 """
 import asyncio
 import logging
-from os import path
+from os
 
 import voluptuous as vol
 
@@ -89,9 +89,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # generate sensor object
     if config.get(CONF_TOOL) == FFMPEG_SENSOR_NOISE:
-        entity = FFmpegNoise(SensorNoise, config)
+        entity = FFmpegNoise(hass, SensorNoise, config)
     else:
-        entity = FFmpegMotion(SensorMotion, config)
+        entity = FFmpegMotion(hass, SensorMotion, config)
 
     @asyncio.coroutine
     def async_shutdown(event):
@@ -110,7 +110,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         EVENT_HOMEASSISTANT_START, async_start())
 
     # add to system
-    yield from async_add_devies([entity])
+    yield from async_add_devices([entity])
     DEVICES.append(entity)
 
     # exists service?
@@ -145,7 +145,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class FFmpegBinarySensor(BinarySensorDevice):
     """A binary sensor which use ffmpeg for noise detection."""
 
-    def __init__(self, ffobj, config):
+    def __init__(self, hass, ffobj, config):
         """Constructor for binary sensor noise detection."""
         self._manager = hass.data[DATA_FFMPEG]
         self._state = False

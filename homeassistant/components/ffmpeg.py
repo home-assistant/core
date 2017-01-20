@@ -78,7 +78,7 @@ class FFmpegManager(object):
                 return self._cache[input_source]
 
             # run test
-            ffmpeg_test = Test(self.binary, loop=hass.loop)
+            ffmpeg_test = Test(self.binary, loop=self.hass.loop)
             success = yield from ffmpeg_test.run_test(input_source)
             if not success:
                 _LOGGER.error("FFmpeg '%s' test fails!", input_source)
