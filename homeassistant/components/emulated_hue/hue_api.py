@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.fan import (
     ATTR_SUPPORTED_FUNCTIONS, ATTR_SPEED, SUPPORT_SET_SPEED,
-    SERVICE_SET_SPEED, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH
+    SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH
 )
 from homeassistant.components.http import HomeAssistantView
 
@@ -217,13 +217,11 @@ class HueOneLightChangeView(HomeAssistantView):
                 ATTR_SUPPORTED_FUNCTIONS, 0)
             if (functions & SUPPORT_SET_SPEED) == SUPPORT_SET_SPEED:
                 if brightness is not None:
-                    # turn_on_needed = True
                     domain = entity.domain
-                    service = SERVICE_SET_SPEED
                     # Convert 0-100 to a fan speed
                     if brightness == 0:
                         data[ATTR_SPEED] = SPEED_OFF
-                    elif brightness <= 33.3:
+                    elif brightness <= 33.3 and brightness > 0:
                         data[ATTR_SPEED] = SPEED_LOW
                     elif brightness <= 66.6 and brightness > 33.3:
                         data[ATTR_SPEED] = SPEED_MEDIUM
