@@ -108,6 +108,7 @@ class LockitronSensorData(object):
 
     def __init__(self, command):
         """Initialize the data object."""
+        self._state = ''
         _LOGGER.info('initializing the Lockitron object')
 
     def update(self):
@@ -115,7 +116,6 @@ class LockitronSensorData(object):
         _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
 
         """Return the state of the sensor."""
-        self._state = ''
         try:
             url = (
                 "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
