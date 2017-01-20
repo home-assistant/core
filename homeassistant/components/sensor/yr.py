@@ -201,6 +201,7 @@ class YrData(object):
             for time_entry in self.data['product']['time']:
                 valid_from = dt_util.parse_datetime(time_entry['@from'])
                 valid_to = dt_util.parse_datetime(time_entry['@to'])
+                new_state = None
 
                 loc_data = time_entry['location']
 
