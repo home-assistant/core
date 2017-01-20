@@ -43,7 +43,7 @@ try:
 except ImportError:
     pass
 
-DOMAIN = "homeassistant"
+DOMAIN = 'homeassistant'
 
 # How often time_changed event should fire
 TIMER_INTERVAL = 1  # seconds
@@ -88,10 +88,10 @@ def is_callback(func: Callable[..., Any]) -> bool:
 class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
-    not_running = "NOT_RUNNING"
-    starting = "STARTING"
-    running = "RUNNING"
-    stopping = "STOPPING"
+    not_running = 'NOT_RUNNING'
+    starting = 'STARTING'
+    running = 'RUNNING'
+    stopping = 'STOPPING'
 
     def __str__(self) -> str:
         """Return the event."""
@@ -103,7 +103,7 @@ class HomeAssistant(object):
 
     def __init__(self, loop=None):
         """Initialize new Home Assistant object."""
-        if sys.platform == "win32":
+        if sys.platform == 'win32':
             self.loop = loop or asyncio.ProactorEventLoop()
         else:
             self.loop = loop or asyncio.get_event_loop()
@@ -164,13 +164,13 @@ class HomeAssistant(object):
                 self.loop.add_signal_handler(
                     signal.SIGTERM, self._async_stop_handler)
             except ValueError:
-                _LOGGER.warning('Could not bind to SIGTERM.')
+                _LOGGER.warning("Could not bind to SIGTERM")
 
             try:
                 self.loop.add_signal_handler(
                     signal.SIGHUP, self._async_restart_handler)
             except ValueError:
-                _LOGGER.warning('Could not bind to SIGHUP.')
+                _LOGGER.warning("Could not bind to SIGHUP")
 
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
@@ -185,7 +185,7 @@ class HomeAssistant(object):
         args: parameters for method to call.
         """
         if target is None:
-            raise ValueError("Don't call add_job with None.")
+            raise ValueError("Don't call add_job with None")
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     @callback
@@ -322,8 +322,7 @@ class HomeAssistant(object):
             kwargs['exc_info'] = (type(exception), exception,
                                   exception.__traceback__)
 
-        _LOGGER.error('Error doing job: %s', context['message'],
-                      **kwargs)
+        _LOGGER.error("Error doing job: %s", context['message'], **kwargs)
 
     @callback
     def _async_stop_handler(self, *args):
@@ -341,8 +340,8 @@ class HomeAssistant(object):
 class EventOrigin(enum.Enum):
     """Represent the origin of an event."""
 
-    local = "LOCAL"
-    remote = "REMOTE"
+    local = 'LOCAL'
+    remote = 'REMOTE'
 
     def __str__(self):
         """Return the event."""
@@ -420,8 +419,8 @@ class EventBus(object):
 
     def fire(self, event_type: str, event_data=None, origin=EventOrigin.local):
         """Fire an event."""
-        self._hass.loop.call_soon_threadsafe(self.async_fire, event_type,
-                                             event_data, origin)
+        self._hass.loop.call_soon_threadsafe(
+            self.async_fire, event_type, event_data, origin)
 
     @callback
     def async_fire(self, event_type: str, event_data=None,
@@ -432,7 +431,7 @@ class EventBus(object):
         """
         if event_type != EVENT_HOMEASSISTANT_STOP and \
                 self._hass.state == CoreState.stopping:
-            raise ShuttingDown('Home Assistant is shutting down.')
+            raise ShuttingDown("Home Assistant is shutting down")
 
         # Copy the list of the current listeners because some listeners
         # remove themselves as a listener while being executed which
@@ -549,8 +548,7 @@ class EventBus(object):
         except (KeyError, ValueError):
             # KeyError is key event_type listener did not exist
             # ValueError if listener did not exist within event_type
-            _LOGGER.warning('Unable to remove unknown listener %s',
-                            listener)
+            _LOGGER.warning("Unable to remove unknown listener %s", listener)
 
 
 class State(object):
@@ -995,14 +993,14 @@ class ServiceRegistry(object):
                 if event.data[ATTR_SERVICE_CALL_ID] == call_id:
                     fut.set_result(True)
 
-            unsub = self._hass.bus.async_listen(EVENT_SERVICE_EXECUTED,
-                                                service_executed)
+            unsub = self._hass.bus.async_listen(
+                EVENT_SERVICE_EXECUTED, service_executed)
 
         self._hass.bus.async_fire(EVENT_CALL_SERVICE, event_data)
 
         if blocking:
-            done, _ = yield from asyncio.wait([fut], loop=self._hass.loop,
-                                              timeout=SERVICE_CALL_LIMIT)
+            done, _ = yield from asyncio.wait(
+                [fut], loop=self._hass.loop, timeout=SERVICE_CALL_LIMIT)
             success = bool(done)
             unsub()
             return success
@@ -1017,7 +1015,7 @@ class ServiceRegistry(object):
 
         if not self.has_service(domain, service):
             if event.origin == EventOrigin.local:
-                _LOGGER.warning('Unable to find service %s/%s',
+                _LOGGER.warning("Unable to find service %s/%s",
                                 domain, service)
             return
 
@@ -1040,7 +1038,7 @@ class ServiceRegistry(object):
             if service_handler.schema:
                 service_data = service_handler.schema(service_data)
         except vol.Invalid as ex:
-            _LOGGER.error('Invalid service data for %s.%s: %s',
+            _LOGGER.error("Invalid service data for %s.%s: %s",
                           domain, service, humanize_error(service_data, ex))
             fire_service_executed()
             return
@@ -1064,7 +1062,7 @@ class ServiceRegistry(object):
     def _generate_unique_id(self):
         """Generate a unique service call id."""
         self._cur_id += 1
-        return "{}-{}".format(id(self), self._cur_id)
+        return '{}-{}'.format(id(self), self._cur_id)
 
 
 class Config(object):
@@ -1118,6 +1116,7 @@ class Config(object):
         return {
             'latitude': self.latitude,
             'longitude': self.longitude,
+            'elevation': self.elevation,
             'unit_system': self.units.as_dict(),
             'location_name': self.location_name,
             'time_zone': time_zone.zone,
