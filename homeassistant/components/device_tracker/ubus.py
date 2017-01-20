@@ -60,10 +60,17 @@ class UbusDeviceScanner:
     def __init__(self, config):
         """Initialize the scanner."""
         host = config[CONF_HOST]
-        username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
+        self.username = config[CONF_USERNAME]
+        self.password = config[CONF_PASSWORD]
 
         self.url = 'http://{}/ubus'.format(host)
-        self.session_id = _get_session_id(self.url, username, password)
+        self.session_id = None  # lazy init, will be fetched on first error
+
+
+    def login(self):
+        _LOGGER.debug("Fetching the session id..")
+        self.session_id = _get_session_id(self.url, self.username, self.password)
+        _LOGGER.debug("Got session: %s", self.session_id)
 
     def update(self, see):
         """Fetch clients and leases from the router."""
@@ -104,7 +111,8 @@ class UbusDeviceScanner:
                                    "call", "iwinfo", "devices")
         except UbusException as ex:
             _LOGGER.error("Unable to fetch interfaces: %s", ex)
-            return
+            self.login()  # try to renew the session
+            return clients
 
         # _LOGGER.debug("Found %s ifaces: %s", len(ifaces), ifaces)
         for iface in ifaces["devices"]:
@@ -131,8 +139,13 @@ class UbusDeviceScanner:
         """Get all DHCP leases to obtain hostnames."""
         leases = []
         for ip_version in ["ipv4leases", "ipv6leases"]:
-            lease_res = _req_json_rpc(self.url, self.session_id,
-                                      "call", "dhcp", ip_version)
+            try:
+                lease_res = _req_json_rpc(self.url, self.session_id,
+                                          "call", "dhcp", ip_version)
+            except UbusException as ex:
+                _LOGGER.error("Unable to fetch leases: %s", ex)
+                self.login()  # try to renew the session
+                return leases
             for network in lease_res["device"]:
                 # _LOGGER.debug("Checking network %s" % network)
                 for lease in lease_res["device"][network]["leases"]:
@@ -236,7 +249,6 @@ def setup_scanner(hass, config, see):
 
         def update(now):
             """Update all the hosts on every interval time."""
-            _LOGGER.info("Update called..")
             scanner.update(see)
             track_point_in_utc_time(hass, update, now + interval)
             return True
