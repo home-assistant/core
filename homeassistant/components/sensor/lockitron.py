@@ -86,10 +86,6 @@ class LockitronSensor(Entity):
 class LockitronSensorData(LockitronSensor):
     """The class for handling the data retrieval."""
 
-    def __init__(self, command):
-        """Initialize the data object."""
-        _LOGGER.info('initializing the Lockitron object')
-
     def update(self):
         """Get the latest data with a shell command."""
         _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
