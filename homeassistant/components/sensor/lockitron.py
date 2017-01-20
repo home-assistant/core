@@ -43,9 +43,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     access_token = config.get(CONF_ACCESS_TOKEN)
     lock_name = config.get(CONF_LOCK_NAME)
 
-    add_devices([LockitronSensor(lock_name, 'Unlocked', lock_uuid, access_token)])
+    add_devices(
+        [LockitronSensor(lock_name, 'Unlocked', lock_uuid, access_token)]
+        )
 
-	
+
 class LockitronSensor(Entity):
     """Representation of a Lockitron sensor."""
 
