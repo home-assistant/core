@@ -1,4 +1,5 @@
 """Lockitron Sensor.
+
 by Rick Breidenstein
 www.virtualrick.com
 """
