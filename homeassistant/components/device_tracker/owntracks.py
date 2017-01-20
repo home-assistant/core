@@ -227,7 +227,8 @@ def setup_scanner(hass, config, see):
 
                 if new_region:
                     # Exit to previous region
-                    zone = hass.states.get("zone.{}".format(slugify(new_region)))
+                    zone = hass.states.get(
+                        "zone.{}".format(slugify(new_region)))
                     _set_gps_from_zone(kwargs, new_region, zone)
                     _LOGGER.info("Exit to %s", new_region)
                     see(**kwargs)
