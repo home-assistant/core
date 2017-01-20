@@ -6,7 +6,7 @@ https://home-assistant.io/components/binary_sensor.ffmpeg/
 """
 import asyncio
 import logging
-from os
+import os
 
 import voluptuous as vol
 
