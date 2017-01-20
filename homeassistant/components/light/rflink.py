@@ -10,24 +10,40 @@ import logging
 from homeassistant.components import group
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-import homeassistant.components.rflink as rflink
+from homeassistant.components.rflink import (
+    ATTR_EVENT, CONF_ALIASSES, CONF_DEVICES, CONF_IGNORE_DEVICES,
+    CONF_NEW_DEVICES_GROUP, DATA_KNOWN_DEVICES, DOMAIN, EVENT_KEY_ID,
+    RFLINK_EVENT, SwitchableRflinkDevice, cv, vol)
+from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TYPE
 
-from . import DOMAIN
+from . import DOMAIN as PLATFORM
 
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_CONFIG_KEYS = [
-    'aliasses',
-    'name',
-]
+TYPE_DIMMABLE = 'dimmable'
+
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): DOMAIN,
+    vol.Optional(CONF_NEW_DEVICES_GROUP, default=None): cv.string,
+    vol.Optional(CONF_IGNORE_DEVICES): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_DEVICES, default={}): vol.Schema({
+        cv.string: {
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_TYPE): vol.Any(TYPE_DIMMABLE),
+            vol.Optional(CONF_ALIASSES, default=[]):
+                vol.All(cv.ensure_list, [cv.string]),
+        },
+    }),
+})
 
 
 def entity_type_for_device_id(device_id):
     """Return entity class for procotol of a given device_id."""
     entity_type_mapping = {
-        'newkaku': 'dimmable',
+        'newkaku': TYPE_DIMMABLE,
     }
     protocol = device_id.split('_')[0]
     return entity_type_mapping.get(protocol, None)
@@ -36,7 +52,7 @@ def entity_type_for_device_id(device_id):
 def entity_class_for_type(entity_type):
     """Translate entity type to entity class."""
     entity_device_mapping = {
-        'dimmable': DimmableRflinkLight,
+        TYPE_DIMMABLE: DimmableRflinkLight,
     }
 
     return entity_device_mapping.get(entity_type, RflinkLight)
@@ -45,21 +61,19 @@ def entity_class_for_type(entity_type):
 def devices_from_config(domain_config, hass=None):
     """Parse config and add rflink switch devices."""
     devices = []
-    for device_id, config in domain_config.get('devices', {}).items():
-        # extract only valid keys from device configuration
-        kwargs = {k: v for k, v in config.items() if k in VALID_CONFIG_KEYS}
+    for device_id, config in domain_config[CONF_DEVICES].items():
         # determine which kind of entity to create
-        if 'type' in config:
-            entity_type = config['type']
+        if CONF_TYPE in config:
+            entity_type = config.pop(CONF_TYPE)
         else:
             entity_type = entity_type_for_device_id(device_id)
         entity_class = entity_class_for_type(entity_type)
 
-        devices.append(entity_class(device_id, hass, **kwargs))
+        devices.append(entity_class(device_id, hass, **config))
 
         # now we know
-        device_ids = [device_id] + config.get('aliasses', [])
-        hass.data[rflink.DATA_KNOWN_DEVICES].extend(device_ids)
+        device_ids = [device_id] + config[CONF_ALIASSES]
+        hass.data[DATA_KNOWN_DEVICES].extend(device_ids)
     return devices
 
 
@@ -70,25 +84,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     yield from async_add_devices(devices_from_config(config, hass))
 
     # add new (unconfigured) devices to user desired group
-    if config.get('new_devices_group'):
+    if config[CONF_NEW_DEVICES_GROUP]:
         new_devices_group = yield from group.Group.async_create_group(
-            hass, config.get('new_devices_group'), [], True)
+            hass, config[CONF_NEW_DEVICES_GROUP], [], True)
     else:
         new_devices_group = None
 
     @asyncio.coroutine
     def add_new_device(ha_event):
         """Check if device is known, otherwise add to list of known devices."""
-        event = ha_event.data[rflink.ATTR_EVENT]
-        device_id = event['id']
+        event = ha_event.data[ATTR_EVENT]
+        device_id = event[EVENT_KEY_ID]
 
-        entity_type = entity_type_for_device_id(event['id'])
+        entity_type = entity_type_for_device_id(event[EVENT_KEY_ID])
         entity_class = entity_class_for_type(entity_type)
 
-        if device_id in hass.data[rflink.DATA_KNOWN_DEVICES]:
+        if device_id in hass.data[DATA_KNOWN_DEVICES]:
             return
 
-        hass.data[rflink.DATA_KNOWN_DEVICES].append(device_id)
+        hass.data[DATA_KNOWN_DEVICES].append(device_id)
         device = entity_class(device_id, hass)
         yield from async_add_devices([device])
         # make sure the event is processed by the new entity
@@ -99,14 +113,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             yield from new_devices_group.async_update_tracked_entity_ids(
                 list(new_devices_group.tracking) + [device.entity_id])
 
-    hass.bus.async_listen(rflink.RFLINK_EVENT[DOMAIN], add_new_device)
+    hass.bus.async_listen(RFLINK_EVENT[PLATFORM], add_new_device)
 
 
-class RflinkLight(rflink.SwitchableRflinkDevice, Light):
+class RflinkLight(SwitchableRflinkDevice, Light):
     """Representation of a Rflink light."""
 
     # used for matching bus events
-    domain = DOMAIN
+    platform = PLATFORM
 
 
 class DimmableRflinkLight(RflinkLight):

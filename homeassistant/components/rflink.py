@@ -27,12 +27,29 @@ import asyncio
 import logging
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
+    STATE_UNKNOWN)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+import voluptuous as vol
 
 REQUIREMENTS = ['rflink==0.0.18']
 
 DOMAIN = 'rflink'
+
+CONF_IGNORE_DEVICES = 'ignore_devices'
+CONF_DEVICES = 'devices'
+CONF_NEW_DEVICES_GROUP = 'new_devices_group'
+CONF_ALIASSES = 'aliasses'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
+        vol.Optional(CONF_HOST, default=None): cv.string,
+        vol.Optional(CONF_IGNORE_DEVICES, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 RFLINK_EVENT = {
     'light': 'rflink_switch_event_received',
@@ -43,7 +60,12 @@ RFLINK_EVENT = {
 
 ATTR_EVENT = 'event'
 ATTR_COMMAND = 'command'
+
 DATA_KNOWN_DEVICES = 'rflink_known_device_ids'
+
+EVENT_KEY_ID = 'id'
+EVENT_KEY_SENSOR = 'sensor'
+EVENT_KEY_UNIT = 'unit'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,17 +106,21 @@ def async_setup(hass, config):
             _LOGGER.debug('unhandled event of type: %s', event_type)
 
     # when connecting to tcp host instead of serial port (optional)
-    host = config[DOMAIN].get('host', None)
+    host = config[DOMAIN][CONF_HOST]
     # tcp port when host configured, otherwise serial port
-    port = config[DOMAIN]['port']
+    port = config[DOMAIN][CONF_PORT]
+
+    # rflink create_rflink_connection decides based on the value of host
+    # (string or None) if serial or tcp mode should be used
 
     # initiate serial/tcp connection to Rflink gateway
+    print(port, host)
     connection = create_rflink_connection(
         port=port,
         host=host,
         event_callback=event_callback,
         loop=hass.loop,
-        ignore=config[DOMAIN].get('ignore_devices', []),
+        ignore=config[DOMAIN][CONF_IGNORE_DEVICES]
     )
     transport, protocol = yield from connection
     # handle shutdown of rflink asyncio transport
@@ -146,7 +172,7 @@ class RflinkDevice(Entity):
     """
 
     # should be set by component implementation
-    domain = None
+    platform = None
     # default state
     _state = STATE_UNKNOWN
 
@@ -168,7 +194,7 @@ class RflinkDevice(Entity):
             self._aliasses = []
 
         # listen to component domain specific messages
-        hass.bus.async_listen(RFLINK_EVENT[self.domain], lambda event:
+        hass.bus.async_listen(RFLINK_EVENT[self.platform], lambda event:
                               self.match_event(event.data[ATTR_EVENT]))
 
     def match_event(self, event):
@@ -187,14 +213,14 @@ class RflinkDevice(Entity):
 
     def handle_event(self, event):
         """Handle incoming event for device type."""
-        # call domain specific event handler
+        # call platform specific event handler
         self._handle_event(event)
 
         # propagate changes through ha
         self.hass.async_add_job(self.async_update_ha_state())
 
     def _handle_event(self, event):
-        """Domain specific event handler."""
+        """Platform specific event handler."""
         raise NotImplementedError()
 
     @property

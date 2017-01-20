@@ -7,29 +7,37 @@ at https://home-assistant.io/components/switch.rflink/
 import asyncio
 import logging
 
-import homeassistant.components.rflink as rflink
+from homeassistant.components.rflink import (
+    CONF_ALIASSES, CONF_DEVICES, DATA_KNOWN_DEVICES, DOMAIN,
+    SwitchableRflinkDevice, cv, vol)
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 
-from . import DOMAIN
+from . import DOMAIN as PLATFORM
 
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_CONFIG_KEYS = [
-    'aliasses',
-    'name',
-]
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): DOMAIN,
+    vol.Optional(CONF_DEVICES, default={}): vol.Schema({
+        cv.string: {
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_ALIASSES, default=[]):
+                vol.All(cv.ensure_list, [cv.string]),
+        },
+    }),
+})
 
 
 def devices_from_config(domain_config, hass=None):
     """Parse config and add rflink switch devices."""
     devices = []
-    for device_id, config in domain_config.get('devices', {}).items():
-        # extract only valid keys from device configuration
-        kwargs = {k: v for k, v in config.items() if k in VALID_CONFIG_KEYS}
-        devices.append(RflinkSwitch(device_id, hass, **kwargs))
-        hass.data[rflink.DATA_KNOWN_DEVICES].append(device_id)
+    for device_id, config in domain_config[CONF_DEVICES].items():
+        devices.append(RflinkSwitch(device_id, hass, **config))
+        hass.data[DATA_KNOWN_DEVICES].append(device_id)
     return devices
 
 
@@ -39,8 +47,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     yield from async_add_devices(devices_from_config(config, hass))
 
 
-class RflinkSwitch(rflink.SwitchableRflinkDevice, SwitchDevice):
+class RflinkSwitch(SwitchableRflinkDevice, SwitchDevice):
     """Representation of a Rflink switch."""
 
     # used for matching bus events
-    domain = DOMAIN
+    platform = PLATFORM
