@@ -123,17 +123,16 @@ class ApiaiIntentsView(HomeAssistantView):
         # use intent to no mix HASS actions with this parameter
         intent = req.get('action')
         parameters = req.get('parameters')
-        #contexts = req.get('contexts')
+        # contexts = req.get('contexts')
         response = ApiaiResponse(parameters)
 
-        #
         # Default Welcome Intent
-        #
         # Maybe is better to handle this in api.ai directly?
-        #if intent == 'input.welcome':
-        #    response.add_speech(
-        #    "Hello, and welcome to the future. How may I help?")
-        #    return self.json(response)
+        #
+        # if intent == 'input.welcome':
+        #     response.add_speech(
+        #     "Hello, and welcome to the future. How may I help?")
+        #     return self.json(response)
 
         config = self.intents.get(intent)
 
