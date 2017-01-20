@@ -31,15 +31,20 @@ ATTR_PLATES = 'plates'
 ATTR_VEHICLES = 'vehicles'
 
 OPENALPR_REGIONS = [
-    'us',
-    'eu',
     'au',
     'auwide',
+    'br',
+    'eu',
+    'fr',
     'gb',
     'kr',
+    'kr2',
     'mx',
     'sg',
+    'us',
+    'vn2'
 ]
+
 
 CONF_REGION = 'region'
 CONF_ALPR_BIN = 'alp_bin'
