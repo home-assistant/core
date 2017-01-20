@@ -7,7 +7,6 @@ https://home-assistant.io/components/sensor.metoffice/
 import logging
 
 import voluptuous as vol
-import datapoint as dp
 
 from homeassistant.components.weather import WeatherEntity, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS
@@ -26,6 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Met Office weather platform."""
+    import datapoint as dp
     datapoint = dp.connection(api_key=config.get(CONF_MO_API_KEY))
 
     if None in (hass.config.latitude, hass.config.longitude):

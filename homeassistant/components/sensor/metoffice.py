@@ -9,7 +9,6 @@ import logging
 import datetime
 
 import voluptuous as vol
-import datapoint as dp
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -52,6 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
+    import datapoint as dp
     datapoint = dp.connection(api_key=config.get(CONF_MO_API_KEY))
 
     if None in (hass.config.latitude, hass.config.longitude):
@@ -122,7 +122,7 @@ class MetOfficeCurrentSensor(Entity):
         attr['Sensor Id'] = self._condition
         attr['Site Id'] = self.site.id
         attr['Site Name'] = self.site.name
-        attr['Last Update'] = self.data._lastupdate
+        attr['Last Update'] = self.data.lastupdate
         attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return attr
 
@@ -140,25 +140,25 @@ class MetOfficeCurrentData(object):
         self._datapoint = datapoint
         self._site = site
         self.data = None
-        self._lastupdate = LAST_UPDATE
+        self.lastupdate = LAST_UPDATE
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Datapoint."""
-        if self._lastupdate != 0 and \
-            ((datetime.datetime.now() - self._lastupdate) <
+        if self.lastupdate != 0 and \
+            ((datetime.datetime.now() - self.lastupdate) <
              datetime.timedelta(minutes=35)):
             _LOGGER.info(
                 "Met Office was updated %s minutes ago, skipping update as"
-                " < 35 minutes", (datetime.datetime.now() - self._lastupdate))
-            return self._lastupdate
+                " < 35 minutes", (datetime.datetime.now() - self.lastupdate))
+            return self.lastupdate
 
         try:
             forecast = self._datapoint.get_forecast_for_site(self._site.id,
                                                              "3hourly")
             self.data = forecast.now()
-            self._lastupdate = datetime.datetime.now()
-            return self._lastupdate
+            self.lastupdate = datetime.datetime.now()
+            return self.lastupdate
         except (ValueError, dp.exceptions.APIException) as err:
             _LOGGER.error("Check Met Office %s", err.args)
             self.data = None
