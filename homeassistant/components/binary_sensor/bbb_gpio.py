@@ -1,18 +1,8 @@
 """
 Support for binary sensor using Beaglebone Black GPIO.
 
-Example configuration:
-
-binary_sensor:
-  - platform: bbb_gpio
-    pins:
-      P8_12:
-        name: Door
-      GPIO0_26:
-        name: Window
-        bouncetime: 100
-        invert_logic: true
-        pull_mode: DOWN
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/binary_sensor.bbb_gpio/
 """
 import logging
 
@@ -67,7 +57,6 @@ class BBBGPIOBinarySensor(BinarySensorDevice):
 
     def __init__(self, pin, params):
         """Initialize the Beaglebone Black binary sensor."""
-        # pylint: no-member
         self._pin = pin
         self._name = params.get(CONF_NAME) or DEVICE_DEFAULT_NAME
         self._bouncetime = params.get(CONF_BOUNCETIME)
