@@ -24,7 +24,11 @@ DEPENDENCIES = ['ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_START = 'ffmpeg_start'
+SERVICE_STOP = 'ffmpeg_stop'
 SERVICE_RESTART = 'ffmpeg_restart'
+
+DATA_FFMPEG_DEVICE = 'ffmpeg_binary_sensor'
 
 FFMPEG_SENSOR_NOISE = 'noise'
 FFMPEG_SENSOR_MOTION = 'motion'
@@ -34,6 +38,7 @@ MAP_FFMPEG_BIN = [
     FFMPEG_SENSOR_MOTION
 ]
 
+CONF_INITIAL_STATE = 'initial_state'
 CONF_TOOL = 'tool'
 CONF_PEAK = 'peak'
 CONF_DURATION = 'duration'
@@ -43,10 +48,12 @@ CONF_REPEAT = 'repeat'
 CONF_REPEAT_TIME = 'repeat_time'
 
 DEFAULT_NAME = 'FFmpeg'
+DEFAULT_INIT_STATE = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOOL): vol.In(MAP_FFMPEG_BIN),
     vol.Required(CONF_INPUT): cv.string,
+    vol.Optional(CONF_INITIAL_STATE, default=DEFAULT_INIT_STATE): cv.boolean,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
     vol.Optional(CONF_OUTPUT): cv.string,
@@ -63,7 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=0)),
 })
 
-SERVICE_RESTART_SCHEMA = vol.Schema({
+SERVICE_FFMPEG_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
@@ -72,10 +79,6 @@ def restart(hass, entity_id=None):
     """Restart a ffmpeg process on entity."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_RESTART, data)
-
-
-# list of all ffmpeg sensors
-DEVICES = []
 
 
 @asyncio.coroutine
@@ -101,21 +104,24 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, async_shutdown())
 
-    @asyncio.coroutine
-    def async_start(event):
-        """Start ffmpeg."""
-        yield from entity.async_start_ffmpeg()
+    # start on startup
+    if config.get(CONF_INITIAL_STATE):
+        @asyncio.coroutine
+        def async_start(event):
+            """Start ffmpeg."""
+            yield from entity.async_start_ffmpeg()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_START, async_start())
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, async_start())
 
     # add to system
     yield from async_add_devices([entity])
-    DEVICES.append(entity)
 
     # exists service?
     if hass.services.has_service(DOMAIN, SERVICE_RESTART):
+        hass.data[DATA_FFMPEG_DEVICE].append(entity)
         return
+    hass.data[DATA_FFMPEG_DEVICE] = [entity]
 
     descriptions = yield from hass.loop.run_in_executor(
         None, load_yaml_config_file,
@@ -123,23 +129,39 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # register service
     @asyncio.coroutine
-    def async_service_handle_restart(service):
+    def async_service_handle(service):
         """Handle service binary_sensor.ffmpeg_restart."""
         entity_ids = service.data.get('entity_id')
 
         if entity_ids:
-            _devices = [device for device in DEVICES
+            _devices = [device for device in hass.data[DATA_FFMPEG_DEVICE]
                         if device.entity_id in entity_ids]
         else:
-            _devices = DEVICES
+            _devices = hass.data[DATA_FFMPEG_DEVICE]
 
+        tasks = []
         for device in _devices:
-            yield from device.async_shutdown_ffmpeg()
-            yield from device.async_start_ffmpeg()
+            if service.service == SERVICE_START:
+                tasks.append(device.async_start_ffmpeg())
+            elif service.service == SERVICE_STOP:
+                tasks.append(device.async_shutdown_ffmpeg())
+            else:
+                tasks.append(device.async_restart_ffmpeg())
+
+        if tasks:
+            yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_RESTART, async_service_handle_restart,
-        descriptions.get(SERVICE_RESTART), schema=SERVICE_RESTART_SCHEMA)
+        DOMAIN, SERVICE_START, async_service_handle,
+        descriptions.get(SERVICE_START), schema=SERVICE_FFMPEG_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_STOP, async_service_handle,
+        descriptions.get(SERVICE_STOP), schema=SERVICE_FFMPEG_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_RESTART, async_service_handle,
+        descriptions.get(SERVICE_RESTART), schema=SERVICE_FFMPEG_SCHEMA)
 
 
 class FFmpegBinarySensor(BinarySensorDevice):
@@ -166,12 +188,18 @@ class FFmpegBinarySensor(BinarySensorDevice):
         """
         raise NotImplementedError()
 
-    def async_shutdown_ffmpeg(self, event):
+    def async_shutdown_ffmpeg(self):
         """For STOP event to shutdown ffmpeg.
 
         This method must be run in the event loop and returns a coroutine.
         """
         return self._ffmpeg.close()
+
+    @asyncio.coroutine
+    def async_restart_ffmpeg(self):
+        """Restart processing."""
+        yield from self.async_shutdown_ffmpeg()
+        yield from self.async_start_ffmpeg()
 
     @property
     def is_on(self):
