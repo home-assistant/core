@@ -45,8 +45,3 @@ class RflinkSwitch(rflink.SwitchableRflinkDevice, SwitchDevice):
 
     # used for matching bus events
     domain = DOMAIN
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon

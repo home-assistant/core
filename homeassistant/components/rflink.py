@@ -222,6 +222,11 @@ class RflinkDevice(Entity):
         """Assume device state until first device event sets state."""
         return self._state is STATE_UNKNOWN
 
+    @property
+    def icon(self):
+        """Return the icon to use for device if any."""
+        return self._icon
+
     def _send_command(self, command, *args):
         """Send a command for this device to Rflink gateway."""
         if command == "turn_on":

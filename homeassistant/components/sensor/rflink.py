@@ -1,4 +1,4 @@
-"""Support for Rflink lights.
+"""Support for Rflink sensors.
 
 For more details about this platform, please refer to the documentation
 at https://home-assistant.io/components/light.rflink/
@@ -99,6 +99,12 @@ class RflinkSensor(rflink.RflinkDevice):
         """Handle sensor specific args and super init."""
         self._sensor_type = sensor_type
         self._unit = unit
+
+        # if user does not override icon in config and a icon is available
+        # for the specific sensor type, set icon
+        if not kwargs.get('icon') and sensor_type in SENSOR_ICONS:
+            kwargs['icon'] = SENSOR_ICONS[self._sensor_type]
+
         super().__init__(device_id, hass, **kwargs)
 
     def _handle_event(self, event):
@@ -114,11 +120,3 @@ class RflinkSensor(rflink.RflinkDevice):
     def state(self):
         """Return value."""
         return self._state
-
-    @property
-    def icon(self):
-        """Return possible sensor specific icon or user override."""
-        if self._icon:
-            return self._icon
-        elif self._sensor_type in SENSOR_ICONS:
-            return SENSOR_ICONS[self._sensor_type]
