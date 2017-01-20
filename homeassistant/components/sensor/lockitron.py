@@ -1,5 +1,6 @@
 """
-Lockitron Sensor for Home-Assistant
+Lockitron Sensor
+by Rick Breidenstein
 www.virtualrick.com
 
 sample configuration.yaml entries
@@ -19,9 +20,6 @@ import requests
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN)
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,14 +89,12 @@ class LockitronSensor(Entity):
             self._state = 'FAILED'
         return self._state
 
+
 class LockitronSensorData(object):
     """The class for handling the data retrieval."""
 
     def __init__(self, command):
         """Initialize the data object."""
-        lock_uuid = config.get(CONF_LOCK_UUID)
-        access_token = config.get(CONF_ACCESS_TOKEN)
-        lock_name = config.get(CONF_LOCK_NAME)
 
     def update(self):
         """Get the latest data with a shell command."""
@@ -111,6 +107,7 @@ class LockitronSensorData(object):
             r = requests.get(url)
             resp = r.json()
             self._state = resp["state"]
+            _LOGGER.info('Insdie Try ' + self._state)
         except:
             self._state = 'FAILED'
         return self._state
