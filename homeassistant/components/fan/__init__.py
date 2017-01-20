@@ -29,8 +29,8 @@ ENTITY_ID_ALL_FANS = group.ENTITY_ID_FORMAT.format(GROUP_NAME_ALL_FANS)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-# Bitfield of features supported by the fan entity
-ATTR_SUPPORTED_FEATURES = 'supported_features'
+# Bitfield of functions supported by the fan entity
+ATTR_SUPPORTED_FUNCTIONS = 'supported_functions'
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
@@ -56,7 +56,7 @@ PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
     'speed_list': ATTR_SPEED_LIST,
     'oscillating': ATTR_OSCILLATING,
-    'supported_features': ATTR_SUPPORTED_FEATURES,
+    'supported_functions': ATTR_SUPPORTED_FUNCTIONS,
     'direction': ATTR_DIRECTION,
 }  # type: dict
 
@@ -283,6 +283,6 @@ class FanEntity(ToggleEntity):
         return data
 
     @property
-    def supported_features(self: ToggleEntity) -> int:
-        """Flag supported features."""
+    def supported_functions(self: ToggleEntity) -> int:
+        """Flag supported functions."""
         return 0
