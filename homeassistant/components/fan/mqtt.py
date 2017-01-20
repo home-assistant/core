@@ -265,7 +265,7 @@ class MqttFan(FanEntity):
 
     def oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
-        if self._topic[CONF_SPEED_COMMAND_TOPIC] is not None:
+        if self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None:
             self._oscillation = oscillating
             payload = self._payload[OSCILLATE_ON_PAYLOAD]
             if oscillating is False:
