@@ -73,8 +73,6 @@ class LockitronSensor(Entity):
     def update(self):
         """Get the latest data with a shell command."""
         _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
-
-        """Return the state of the sensor."""
         url = (
             "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
             "?access_token=" + self._access_token
@@ -95,8 +93,6 @@ class LockitronSensorData(LockitronSensor):
     def update(self):
         """Get the latest data with a shell command."""
         _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
-
-        """Return the state of the sensor."""
         url = (
             "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
             "?access_token=" + self._access_token
