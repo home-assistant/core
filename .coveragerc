@@ -189,6 +189,7 @@ omit =
     homeassistant/components/joaoapps_join.py
     homeassistant/components/keyboard.py
     homeassistant/components/keyboard_remote.py
+    homeassistant/components/light/avion.py
     homeassistant/components/light/blinksticklight.py
     homeassistant/components/light/flux_led.py
     homeassistant/components/light/hue.py
@@ -201,6 +202,7 @@ omit =
     homeassistant/components/light/yeelight.py
     homeassistant/components/light/zengge.py
     homeassistant/components/lirc.py
+    homeassistant/components/media_player/anthemav.py
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/braviatv.py
     homeassistant/components/media_player/cast.py
@@ -264,7 +266,6 @@ omit =
     homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/nuimo_controller.py
-    homeassistant/components/openalpr.py
     homeassistant/components/remote/harmony.py
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/sensor/amcrest.py

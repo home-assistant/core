@@ -19,6 +19,8 @@ COMMENT_REQUIREMENTS = (
     'pyuserinput',
     'evdev',
     'pycups',
+    'python-eq3bt',
+    'avion'
 )
 
 IGNORE_PACKAGES = (

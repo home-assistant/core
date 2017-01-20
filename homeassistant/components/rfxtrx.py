@@ -14,7 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (ATTR_ENTITY_ID, TEMP_CELSIUS)
 
-REQUIREMENTS = ['pyRFXtrx==0.14.0']
+REQUIREMENTS = ['pyRFXtrx==0.15.0']
 
 DOMAIN = "rfxtrx"
 
@@ -34,6 +34,7 @@ EVENT_BUTTON_PRESSED = 'button_pressed'
 
 DATA_TYPES = OrderedDict([
     ('Temperature', TEMP_CELSIUS),
+    ('Temperature2', TEMP_CELSIUS),
     ('Humidity', '%'),
     ('Barometer', ''),
     ('Wind direction', ''),

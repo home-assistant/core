@@ -106,7 +106,7 @@ def hass_hue(loop, hass):
 def hue_client(loop, hass_hue, test_client):
     """Create web client for emulated hue api."""
     web_app = mock_http_component_app(hass_hue)
-    config = Config({'type': 'alexa'})
+    config = Config(None, {'type': 'alexa'})
 
     HueUsernameView().register(web_app.router)
     HueAllLightsStateView(config).register(web_app.router)

@@ -1,4 +1,5 @@
 """The tests for the notify demo platform."""
+import asyncio
 import unittest
 from unittest.mock import patch
 
@@ -14,6 +15,12 @@ CONFIG = {
         'platform': 'demo'
     }
 }
+
+
+@asyncio.coroutine
+def mock_setup_platform():
+    """Mock prepare_setup_platform."""
+    return None
 
 
 class TestNotifyDemo(unittest.TestCase):
@@ -45,23 +52,16 @@ class TestNotifyDemo(unittest.TestCase):
         """Test setup."""
         self._setup_notify()
 
-    @patch('homeassistant.bootstrap.prepare_setup_platform')
+    @patch('homeassistant.bootstrap.async_prepare_setup_platform',
+           return_value=mock_setup_platform())
     def test_no_prepare_setup_platform(self, mock_prep_setup_platform):
         """Test missing notify platform."""
-        mock_prep_setup_platform.return_value = None
-        with self.assertLogs('homeassistant.components.notify',
-                             level='ERROR') as log_handle:
-            self._setup_notify()
-        self.hass.block_till_done()
-        assert mock_prep_setup_platform.called
-        self.assertEqual(
-            log_handle.output,
-            ['ERROR:homeassistant.components.notify:'
-             'Unknown notification service specified',
-             'ERROR:homeassistant.components.notify:'
-             'Failed to set up platform demo'])
+        with assert_setup_component(0):
+            setup_component(self.hass, notify.DOMAIN, CONFIG)
 
-    @patch('homeassistant.components.notify.demo.get_service')
+        assert mock_prep_setup_platform.called
+
+    @patch('homeassistant.components.notify.demo.get_service', autospec=True)
     def test_no_notify_service(self, mock_demo_get_service):
         """Test missing platform notify service instance."""
         mock_demo_get_service.return_value = None
@@ -73,11 +73,9 @@ class TestNotifyDemo(unittest.TestCase):
         self.assertEqual(
             log_handle.output,
             ['ERROR:homeassistant.components.notify:'
-             'Failed to initialize notification service demo',
-             'ERROR:homeassistant.components.notify:'
-             'Failed to set up platform demo'])
+             'Failed to initialize notification service demo'])
 
-    @patch('homeassistant.components.notify.demo.get_service')
+    @patch('homeassistant.components.notify.demo.get_service', autospec=True)
     def test_discover_notify(self, mock_demo_get_service):
         """Test discovery of notify demo platform."""
         assert notify.DOMAIN not in self.hass.config.components
