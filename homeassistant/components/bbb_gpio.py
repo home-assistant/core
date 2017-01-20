@@ -63,7 +63,7 @@ def read_input(pin):
     """Read a value from a GPIO."""
     # pylint: disable=import-error,undefined-variable
     import Adafruit_BBIO.GPIO as GPIO
-    return GPIO.input(pin)
+    return True if GPIO.input(pin) is GPIO.HIGH else False
 
 
 def edge_detect(pin, event_callback, bounce):

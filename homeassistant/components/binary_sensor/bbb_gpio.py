@@ -67,8 +67,7 @@ class BBBGPIOBinarySensor(BinarySensorDevice):
 
     def __init__(self, pin, params):
         """Initialize the Beaglebone Black binary sensor."""
-        # pylint: disable=import-error,no-member
-        import Adafruit_BBIO.GPIO as GPIO
+        # pylint: no-member
         self._pin = pin
         self._name = params.get(CONF_NAME) or DEVICE_DEFAULT_NAME
         self._bouncetime = params.get(CONF_BOUNCETIME)
@@ -76,13 +75,11 @@ class BBBGPIOBinarySensor(BinarySensorDevice):
         self._invert_logic = params.get(CONF_INVERT_LOGIC)
 
         bbb_gpio.setup_input(self._pin, self._pull_mode)
-        self._input = bbb_gpio.read_input(self._pin)
-        self._state = True if self._input is GPIO.HIGH else False
+        self._state = bbb_gpio.read_input(self._pin)
 
         def read_gpio(pin):
             """Read state from GPIO."""
-            self._input = bbb_gpio.read_input(self._pin)
-            self._state = True if self._input is GPIO.HIGH else False
+            self._state = bbb_gpio.read_input(self._pin)
             self.schedule_update_ha_state()
 
         bbb_gpio.edge_detect(self._pin, read_gpio, self._bouncetime)
