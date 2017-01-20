@@ -153,7 +153,7 @@ class MetOfficeCurrentData(object):
             self.data = forecast.now()
             self._lastupdate = datetime.datetime.now()
             return self._lastupdate
-        except ValueError as err:
+        except (ValueError, dp.exceptions.APIException) as err:
             _LOGGER.error("Check Met Office %s", err.args)
             self.data = None
             raise
