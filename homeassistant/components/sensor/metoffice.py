@@ -57,8 +57,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    site = datapoint.get_nearest_site(longitude=hass.config.longitude,
-                                      latitude=hass.config.latitude)
+    try:
+        site = datapoint.get_nearest_site(longitude=hass.config.longitude,
+                                          latitude=hass.config.latitude)
+    except dp.exceptions.APIException as err:
+        _LOGGER.error("Received error from Met Office Datapoint: %s", err)
+        return False
 
     if not site:
         _LOGGER.error("Unable to get nearest Met Office forecast site")
@@ -69,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         data = MetOfficeCurrentData(hass, datapoint, site)
         try:
             data.update()
-        except ValueError as err:
+        except (ValueError, dp.exceptions.APIException) as err:
             _LOGGER.error("Received error from Met Office Datapoint: %s", err)
             return False
 
