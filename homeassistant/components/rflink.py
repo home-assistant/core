@@ -150,7 +150,7 @@ class RflinkDevice(Entity):
     # default state
     _state = STATE_UNKNOWN
 
-    def __init__(self, device_id, hass, name=None, aliasses=None, icon=None):
+    def __init__(self, device_id, hass, name=None, aliasses=None):
         """Initialize the device."""
         self.hass = hass
 
@@ -166,9 +166,6 @@ class RflinkDevice(Entity):
             self._aliasses = aliasses
         else:
             self._aliasses = []
-
-        # optional attributes
-        self._icon = icon
 
         # listen to component domain specific messages
         hass.bus.async_listen(RFLINK_EVENT[self.domain], lambda event:
@@ -221,11 +218,6 @@ class RflinkDevice(Entity):
     def assumed_state(self):
         """Assume device state until first device event sets state."""
         return self._state is STATE_UNKNOWN
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
 
     def _send_command(self, command, *args):
         """Send a command for this device to Rflink gateway."""

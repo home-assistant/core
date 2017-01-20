@@ -19,7 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 VALID_CONFIG_KEYS = [
     'aliasses',
     'name',
-    'icon',
 ]
 
 

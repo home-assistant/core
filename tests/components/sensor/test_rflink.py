@@ -22,7 +22,6 @@ CONFIG = {
             'test': {
                 'name': 'test',
                 'sensor_type': 'temperature',
-                'icon': 'mdi:thermometer-lines',
             },
         },
     },
@@ -44,7 +43,6 @@ def test_default_setup(hass, monkeypatch):
     assert config_sensor
     assert config_sensor.state == 'unknown'
     assert config_sensor.attributes['unit_of_measurement'] == '°C'
-    assert config_sensor.attributes['icon'] == 'mdi:thermometer-lines'
 
     # test event for config sensor
     event_callback({
