@@ -88,13 +88,13 @@ class LockitronSensor(Entity):
     def update(self):
         """Get the latest data with a shell command."""
         state = self._state
-        _LOGGER.info('Updating Lockitron state for ' + _lock_name)
+        _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
 
         """Return the state of the sensor."""
         try:
             url = (
-                "https://api.lockitron.com/v2/locks/" + _lock_uuid +
-                "?access_token=" + _access_token
+                "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
+                "?access_token=" + self._access_token
                 )
             req = requests.get(url)
             resp = req.json()
@@ -109,25 +109,22 @@ class LockitronSensorData(object):
 
     def __init__(self, command):
         """Initialize the data object."""
-        state = self._state
-        lock_name = _lock_name
-        lock_uuid = _lock_uuid
         _LOGGER.info('initializing the Lockitron object')
 
     def update(self):
         """Get the latest data with a shell command."""
-        _LOGGER.info('Updating Lockitron state for ' + lock_name)
+        _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
 
         """Return the state of the sensor."""
         try:
             url = (
-                "https://api.lockitron.com/v2/locks/" + lock_uuid +
-                "?access_token=" + access_token
+                "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
+                "?access_token=" + self._access_token
                 )
             req = requests.get(url)
             resp = req.json()
             state = resp["state"]
-            _LOGGER.info('Insdie Try ' + state)
+            _LOGGER.info('Insdie Try ' + _state)
         except:
-            state = 'FAILED'
-        return state
+            _state = 'FAILED'
+        return _state
