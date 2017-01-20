@@ -307,6 +307,7 @@ omit =
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
+    homeassistant/components/sensor/metoffice.py
     homeassistant/components/sensor/mhz19.py
     homeassistant/components/sensor/miflora.py
     homeassistant/components/sensor/mqtt_room.py
@@ -373,6 +374,7 @@ omit =
     homeassistant/components/tts/picotts.py
     homeassistant/components/upnp.py
     homeassistant/components/weather/bom.py
+    homeassistant/components/weather/metoffice.py
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/zeroconf.py
 
