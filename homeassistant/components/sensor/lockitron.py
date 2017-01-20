@@ -1,19 +1,6 @@
-"""
- Lockitron Sensor.
- 
- by Rick Breidenstein
- www.virtualrick.com
- 
- sample configuration.yaml entries
- sensor:
-   - platform: lockitron
-     lock_name: 'VirtualLock'
-     lock_uuid: 'YOURUUIDFORYOURLOCK'
-     access_token: 'YOURACCESSTOKENHERE'
-   - platform: lockitron
-     lock_name: 'Some Other Door'
-     lock_uuid: 'YOURUUIDFORYOURLOCK'
-     access_token: 'YOURVERYLONGACCESSTOKENHERE'.
+"""Lockitron Sensor.
+by Rick Breidenstein
+www.virtualrick.com
 """
 
 import logging
@@ -73,16 +60,13 @@ class LockitronSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        try:
-            url = (
-                "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
-                "?access_token=" + self._access_token
-                )
-            req = requests.get(url)
-            resp = req.json()
-            self._state = resp["state"]
-        except:
-            self._state = 'FAILED'
+        url = (
+            "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
+            "?access_token=" + self._access_token
+            )
+        req = requests.get(url)
+        resp = req.json()
+        self._state = resp["state"]
         return self._state
 
     def update(self):
@@ -90,16 +74,13 @@ class LockitronSensor(Entity):
         _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
 
         """Return the state of the sensor."""
-        try:
-            url = (
-                "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
-                "?access_token=" + self._access_token
-                )
-            req = requests.get(url)
-            resp = req.json()
-            self._state = resp["state"]
-        except:
-            self._state = 'FAILED'
+        url = (
+            "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
+            "?access_token=" + self._access_token
+            )
+        req = requests.get(url)
+        resp = req.json()
+        self._state = resp["state"]
         return self._state
 
 
@@ -115,15 +96,12 @@ class LockitronSensorData(LockitronSensor):
         _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
 
         """Return the state of the sensor."""
-        try:
-            url = (
-                "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
-                "?access_token=" + self._access_token
-                )
-            req = requests.get(url)
-            resp = req.json()
-            self._state = resp["state"]
-            _LOGGER.info('Insdie Try ' + self._state)
-        except:
-            self._state = 'FAILED'
+        url = (
+            "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
+            "?access_token=" + self._access_token
+            )
+        req = requests.get(url)
+        resp = req.json()
+        self._state = resp["state"]
+        _LOGGER.info('Insdie Try ' + self._state)
         return self._state
