@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     lock_name = config.get(CONF_LOCK_NAME)
 
     add_devices(
-        [LockitronSensor(lock_name, 'Unlocked', lock_uuid, access_token)]
+        [LockitronSensor(lock_name, 'INIT', lock_uuid, access_token)]
         )
 
 
@@ -113,8 +113,8 @@ class LockitronSensorData(object):
     def __init__(self, command):
         """Initialize the data object."""
         state = self._state
-        lock_name = self._lock_name
-        lock_uuid = self._lock_uuid
+        lock_name = _lock_name
+        lock_uuid = _lock_uuid
         _LOGGER.info('initializing the Lockitron object')
 
     def update(self):
@@ -129,8 +129,8 @@ class LockitronSensorData(object):
                 )
             req = requests.get(url)
             resp = req.json()
-            self._state = resp["state"]
+            state = resp["state"]
             _LOGGER.info('Insdie Try ' + state)
         except:
-            tate = 'FAILED'
+            state = 'FAILED'
         return state
