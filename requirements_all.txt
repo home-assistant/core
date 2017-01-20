@@ -169,9 +169,6 @@ googlemaps==2.4.4
 # homeassistant.components.sensor.gpsd
 gps3==0.33.3
 
-# homeassistant.components.openalpr
-ha-alpr==0.3
-
 # homeassistant.components.ffmpeg
 ha-ffmpeg==0.15
 
@@ -243,9 +240,6 @@ https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a8
 # homeassistant.components.joaoapps_join
 # homeassistant.components.notify.joaoapps_join
 https://github.com/nkgilley/python-join-api/archive/3e1e849f1af0b4080f551b62270c6d244d5fbcbd.zip#python-join-api==0.0.1
-
-# homeassistant.components.openalpr
-https://github.com/pvizeli/cloudapi/releases/download/1.0.2/python-1.0.2.zip#openalpr_api==1.0.2
 
 # homeassistant.components.switch.edimax
 https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
