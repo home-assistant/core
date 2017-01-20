@@ -53,7 +53,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LockitronSensor(Entity):
     """Representation of a Lockitron sensor."""
 
-
     def __init__(self, lock_name, state, lock_uuid, access_token):
         """Initialize the Lockitron sensor."""
 
