@@ -87,17 +87,14 @@ class LockitronSensor(Entity):
 
     def update(self):
         """Get the latest data with a shell command."""
-        lock_name = self._lock_name
-        lock_uuid = self._lock_uuid
-        access_token = self._access_token
         state = self._state
-        _LOGGER.info('Updating Lockitron state for ' + lock_name)
+        _LOGGER.info('Updating Lockitron state for ' + _lock_name)
 
         """Return the state of the sensor."""
         try:
             url = (
-                "https://api.lockitron.com/v2/locks/" + lock_uuid +
-                "?access_token=" + access_token
+                "https://api.lockitron.com/v2/locks/" + _lock_uuid +
+                "?access_token=" + _access_token
                 )
             req = requests.get(url)
             resp = req.json()
