@@ -86,8 +86,8 @@ class UbusDeviceScanner:
                 client["ip"] = lease[0]["ip"]
                 client["hostname"] = lease[0]["hostname"]
             else:
-                _LOGGER.warning("Couldn't find lease for %s", client["mac"])
-                client["hostname"] = "<no lease>"
+                _LOGGER.warning("Couldn't find lease for %s, using mac as name", client["mac"])
+                client["hostname"] = mac
                 client["ip"] = "<no lease>"
 
             extra_attrs = {
