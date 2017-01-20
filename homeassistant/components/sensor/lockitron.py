@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([LockitronSensor(lock_name, 'Unlocked', lock_uuid, access_token)])
 
-	
+
 class LockitronSensor(Entity):
     """Representation of a Lockitron sensor."""
 
