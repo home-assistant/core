@@ -106,7 +106,8 @@ def async_setup(hass, config):
     def send_command_ack(event):
         """Send command to rflink gateway via asyncio transport/protocol.
 
-        Waits for Rflink to confirm the packet has been sent.
+        Puts command on outgoing buffer then waits for Rflink to confirm
+        the command has been send out in the ether.
 
         """
         yield from protocol.send_command_ack(
@@ -117,7 +118,10 @@ def async_setup(hass, config):
     def send_command(event):
         """Send command to rflink gateway via asyncio transport/protocol.
 
-        Does not wait for Rflink to confirm the packet has been sent.
+        Puts command on outgoing buffer and returns straight away.
+        Rflink protocol/transport handles asynchronous writing of buffer
+        to serial/tcp device. Does not wait for command send
+        confirmation.
 
         """
         protocol.send_command(
