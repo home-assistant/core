@@ -70,7 +70,7 @@ class LockitronSensor(Entity):
         """Return the state of the sensor."""
         try:
             url = "https://api.lockitron.com/v2/locks/" + self._lock_uuid \
-			+ "?access_token=" + self._access_token
+            + "?access_token=" + self._access_token
             r = requests.get(url)
             resp = r.json()
             self._state = resp["state"]
@@ -84,7 +84,7 @@ class LockitronSensor(Entity):
         """Return the state of the sensor."""
         try:
             url = "https://api.lockitron.com/v2/locks/" + self._lock_uuid + \
-			"?access_token=" + self._access_token
+            "?access_token=" + self._access_token
             r = requests.get(url)
             resp = r.json()
             self._state = resp["state"]
@@ -107,7 +107,7 @@ class LockitronSensorData(object):
         self._state = ''
         try:
             url = "https://api.lockitron.com/v2/locks/" + self._lock_uuid + \
-			"?access_token=" + self._access_token
+            "?access_token=" + self._access_token
             r = requests.get(url)
             resp = r.json()
             self._state = resp["state"]
