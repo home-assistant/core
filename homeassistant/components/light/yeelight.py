@@ -217,7 +217,7 @@ class YeelightLight(Light):
             temp_in_k = color_temperature_mired_to_kelvin(colortemp)
             _LOGGER.debug("Setting color temp: %s K", temp_in_k)
 
-            self._bulb.set_color_temp(temp_in_k, duraation=duration)
+            self._bulb.set_color_temp(temp_in_k, duration=duration)
 
     @_cmd
     def set_default(self):
