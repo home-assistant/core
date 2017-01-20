@@ -1,5 +1,6 @@
-""".
-Lockitron Sensor
+"""
+Lockitron Sensor.
+
 by Rick Breidenstein
 www.virtualrick.com
 
@@ -61,7 +62,7 @@ class LockitronSensor(Entity):
 
     @property
     def should_poll(self):
-        """Enable polling"""
+        """Enable polling."""
         return True
 
     @property
