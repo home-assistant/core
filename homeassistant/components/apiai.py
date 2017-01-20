@@ -8,16 +8,12 @@ import asyncio
 import copy
 import enum
 import logging
-import uuid
-from datetime import datetime
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.const import PROJECT_NAME,HTTP_BAD_REQUEST
+from homeassistant.const import PROJECT_NAME, HTTP_BAD_REQUEST
 from homeassistant.helpers import template, script, config_validation as cv
 from homeassistant.components.http import HomeAssistantView
-import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,20 +123,24 @@ class ApiaiIntentsView(HomeAssistantView):
         # use intent to no mix HASS actions with this parameter
         intent = req.get('action')
         parameters = req.get('parameters')
-        contexts = req.get('contexts')
+        #contexts = req.get('contexts')
         response = ApiaiResponse(parameters)
 
+        #
         # Default Welcome Intent
+        #
         # Maybe is better to handle this in api.ai directly?
         #if intent == 'input.welcome':
-        #    response.add_speech("Hello, and welcome to the future. How may I help?")
+        #    response.add_speech(
+        #    "Hello, and welcome to the future. How may I help?")
         #    return self.json(response)
 
         config = self.intents.get(intent)
 
         if config is None:
             _LOGGER.warning('Received unknown intent %s', intent)
-            response.add_speech("This intent is not yet configured within Home Assistant.")
+            response.add_speech(
+                    "This intent is not yet configured within Home Assistant.")
             return self.json(response)
 
         speech = config.get(CONF_SPEECH)
@@ -167,7 +167,7 @@ class ApiaiResponse(object):
         self.parameters = {}
         # Parameter names replace '.' and '-' for '_'
         for key, value in parameters.items():
-            underscored_key = key.replace('.', '_').replace('-','_')
+            underscored_key = key.replace('.', '_').replace('-', '_')
             self.parameters[underscored_key] = value
 
     def add_speech(self, text):
