@@ -1,4 +1,4 @@
-"""
+""".
 Lockitron Sensor
 by Rick Breidenstein
 www.virtualrick.com
@@ -82,8 +82,8 @@ class LockitronSensor(Entity):
                 "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
                 "?access_token=" + self._access_token
                 )
-            r = requests.get(url)
-            resp = r.json()
+            req = requests.get(url)
+            resp = req.json()
             self._state = resp["state"]
         except:
             self._state = 'FAILED'
@@ -100,8 +100,8 @@ class LockitronSensor(Entity):
                 "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
                 "?access_token=" + self._access_token
                 )
-            r = requests.get(url)
-            resp = r.json()
+            req = requests.get(url)
+            resp = req.json()
             self._state = resp["state"]
         except:
             self._state = 'FAILED'
@@ -113,6 +113,7 @@ class LockitronSensorData(object):
 
     def __init__(self, command):
         """Initialize the data object."""
+        _LOGGER.info('initializing the Lockitron object')
 
     def update(self):
         """Get the latest data with a shell command."""
@@ -128,8 +129,8 @@ class LockitronSensorData(object):
                 "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
                 "?access_token=" + self._access_token
                 )
-            r = requests.get(url)
-            resp = r.json()
+            req = requests.get(url)
+            resp = req.json()
             self._state = resp["state"]
             _LOGGER.info('Insdie Try ' + self._state)
         except:
