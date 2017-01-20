@@ -1,19 +1,19 @@
 """
-Lockitron Sensor.
-
-by Rick Breidenstein
-www.virtualrick.com
-
-sample configuration.yaml entries
-sensor:
-  - platform: lockitron
-    lock_name: 'VirtualLock'
-    lock_uuid: 'YOURUUIDFORYOURLOCK'
-    access_token: 'YOURACCESSTOKENHERE'
-  - platform: lockitron
-    lock_name: 'Some Other Door'
-    lock_uuid: 'YOURUUIDFORYOURLOCK'
-    access_token: 'YOURVERYLONGACCESSTOKENHERE'.
+ Lockitron Sensor.
+ 
+ by Rick Breidenstein
+ www.virtualrick.com
+ 
+ sample configuration.yaml entries
+ sensor:
+   - platform: lockitron
+     lock_name: 'VirtualLock'
+     lock_uuid: 'YOURUUIDFORYOURLOCK'
+     access_token: 'YOURACCESSTOKENHERE'
+   - platform: lockitron
+     lock_name: 'Some Other Door'
+     lock_uuid: 'YOURUUIDFORYOURLOCK'
+     access_token: 'YOURVERYLONGACCESSTOKENHERE'.
 """
 
 import logging
@@ -87,7 +87,6 @@ class LockitronSensor(Entity):
 
     def update(self):
         """Get the latest data with a shell command."""
-        state = self._state
         _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
 
         """Return the state of the sensor."""
