@@ -64,6 +64,8 @@ class LockitronSensor(Entity):
 
     @property
     def should_poll(self):
+        """Enable polling"""
+
         return True
 
     @property
