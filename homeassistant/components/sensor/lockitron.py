@@ -98,10 +98,10 @@ class LockitronSensor(Entity):
                 )
             req = requests.get(url)
             resp = req.json()
-            state = resp["state"]
+            self._state = resp["state"]
         except:
-            state = 'FAILED'
-        return state
+            self._state = 'FAILED'
+        return self._state
 
 
 class LockitronSensorData(LockitronSensor):
@@ -110,9 +110,6 @@ class LockitronSensorData(LockitronSensor):
     def __init__(self, command):
         """Initialize the data object."""
         _LOGGER.info('initializing the Lockitron object')
-#        self._lock_name = None
-#        self._lock_uuid = None
-#        self._access_token = None
 
     def update(self):
         """Get the latest data with a shell command."""
@@ -126,8 +123,8 @@ class LockitronSensorData(LockitronSensor):
                 )
             req = requests.get(url)
             resp = req.json()
-            state = resp["state"]
-            _LOGGER.info('Insdie Try ' + _state)
+            self._state = resp["state"]
+            _LOGGER.info('Insdie Try ' + self._state)
         except:
-            _state = 'FAILED'
-        return _state
+            self._state = 'FAILED'
+        return self._state
