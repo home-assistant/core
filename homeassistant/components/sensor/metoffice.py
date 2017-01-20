@@ -145,6 +145,7 @@ class MetOfficeCurrentData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Datapoint."""
+        import datapoint as dp
         if self.lastupdate != 0 and \
             ((datetime.datetime.now() - self.lastupdate) <
              datetime.timedelta(minutes=35)):
