@@ -4,6 +4,7 @@ Provides a binary sensor which is a collection of ffmpeg tools.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.ffmpeg/
 """
+import asyncio
 import logging
 from os import path
 
@@ -13,10 +14,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA, DOMAIN)
 from homeassistant.components.ffmpeg import (
-    get_binary, run_test, CONF_INPUT, CONF_OUTPUT, CONF_EXTRA_ARGUMENTS)
+    DATA_FFMPEG, CONF_INPUT, CONF_OUTPUT, CONF_EXTRA_ARGUMENTS)
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_NAME,
-                                 ATTR_ENTITY_ID)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START, CONF_NAME,
+    ATTR_ENTITY_ID)
 
 DEPENDENCIES = ['ffmpeg']
 
@@ -76,12 +78,13 @@ def restart(hass, entity_id=None):
 DEVICES = []
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Create the binary sensor."""
     from haffmpeg import SensorNoise, SensorMotion
 
     # check source
-    if not run_test(hass, config.get(CONF_INPUT)):
+    if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_INPUT)):
         return
 
     # generate sensor object
@@ -90,21 +93,37 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         entity = FFmpegMotion(SensorMotion, config)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, entity.shutdown_ffmpeg)
+    @asyncio.coroutine
+    def async_shutdown(event):
+        """Stop ffmpeg."""
+        yield from entity.async_shutdown_ffmpeg()
+
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, async_shutdown())
+
+    @asyncio.coroutine
+    def async_start(event):
+        """Start ffmpeg."""
+        yield from entity.async_start_ffmpeg()
+
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_START, async_start())
 
     # add to system
-    add_entities([entity])
+    yield from async_add_devies([entity])
     DEVICES.append(entity)
 
     # exists service?
     if hass.services.has_service(DOMAIN, SERVICE_RESTART):
         return
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file,
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     # register service
-    def _service_handle_restart(service):
+    @asyncio.coroutine
+    def async_service_handle_restart(service):
         """Handle service binary_sensor.ffmpeg_restart."""
         entity_ids = service.data.get('entity_id')
 
@@ -115,12 +134,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _devices = DEVICES
 
         for device in _devices:
-            device.restart_ffmpeg()
+            yield from device.async_shutdown_ffmpeg()
+            yield from device.async_start_ffmpeg()
 
-    hass.services.register(DOMAIN, SERVICE_RESTART,
-                           _service_handle_restart,
-                           descriptions.get(SERVICE_RESTART),
-                           schema=SERVICE_RESTART_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_RESTART, async_service_handle_restart,
+        descriptions.get(SERVICE_RESTART), schema=SERVICE_RESTART_SCHEMA)
 
 
 class FFmpegBinarySensor(BinarySensorDevice):
@@ -128,30 +147,31 @@ class FFmpegBinarySensor(BinarySensorDevice):
 
     def __init__(self, ffobj, config):
         """Constructor for binary sensor noise detection."""
+        self._manager = hass.data[DATA_FFMPEG]
         self._state = False
         self._config = config
         self._name = config.get(CONF_NAME)
-        self._ffmpeg = ffobj(get_binary(), self._callback)
+        self._ffmpeg = ffobj(
+            self._manager.binary, hass.loop, self._async_callback)
 
-        self._start_ffmpeg(config)
-
-    def _callback(self, state):
+    def _async_callback(self, state):
         """HA-FFmpeg callback for noise detection."""
         self._state = state
-        self.schedule_update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())
 
-    def _start_ffmpeg(self, config):
-        """Start a FFmpeg instance."""
-        raise NotImplementedError
+    def async_start_ffmpeg(self):
+        """Start a FFmpeg instance.
 
-    def shutdown_ffmpeg(self, event):
-        """For STOP event to shutdown ffmpeg."""
-        self._ffmpeg.close()
+        This method must be run in the event loop and returns a coroutine.
+        """
+        raise NotImplementedError()
 
-    def restart_ffmpeg(self):
-        """Restart ffmpeg with new config."""
-        self._ffmpeg.close()
-        self._start_ffmpeg(self._config)
+    def async_shutdown_ffmpeg(self, event):
+        """For STOP event to shutdown ffmpeg.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self._ffmpeg.close()
 
     @property
     def is_on(self):
@@ -177,20 +197,23 @@ class FFmpegBinarySensor(BinarySensorDevice):
 class FFmpegNoise(FFmpegBinarySensor):
     """A binary sensor which use ffmpeg for noise detection."""
 
-    def _start_ffmpeg(self, config):
-        """Start a FFmpeg instance."""
+    def async_start_ffmpeg(self):
+        """Start a FFmpeg instance.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
         # init config
         self._ffmpeg.set_options(
-            time_duration=config.get(CONF_DURATION),
-            time_reset=config.get(CONF_RESET),
-            peak=config.get(CONF_PEAK),
+            time_duration=self._config.get(CONF_DURATION),
+            time_reset=self._config.get(CONF_RESET),
+            peak=self._config.get(CONF_PEAK),
         )
 
         # run
-        self._ffmpeg.open_sensor(
-            input_source=config.get(CONF_INPUT),
-            output_dest=config.get(CONF_OUTPUT),
-            extra_cmd=config.get(CONF_EXTRA_ARGUMENTS),
+        return self._ffmpeg.open_sensor(
+            input_source=self._config.get(CONF_INPUT),
+            output_dest=self._config.get(CONF_OUTPUT),
+            extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),
         )
 
     @property
@@ -202,20 +225,23 @@ class FFmpegNoise(FFmpegBinarySensor):
 class FFmpegMotion(FFmpegBinarySensor):
     """A binary sensor which use ffmpeg for noise detection."""
 
-    def _start_ffmpeg(self, config):
-        """Start a FFmpeg instance."""
+    def async_start_ffmpeg(self):
+        """Start a FFmpeg instance.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
         # init config
         self._ffmpeg.set_options(
-            time_reset=config.get(CONF_RESET),
-            time_repeat=config.get(CONF_REPEAT_TIME),
-            repeat=config.get(CONF_REPEAT),
-            changes=config.get(CONF_CHANGES),
+            time_reset=self._config.get(CONF_RESET),
+            time_repeat=self._config.get(CONF_REPEAT_TIME),
+            repeat=self._config.get(CONF_REPEAT),
+            changes=self._config.get(CONF_CHANGES),
         )
 
         # run
-        self._ffmpeg.open_sensor(
-            input_source=config.get(CONF_INPUT),
-            extra_cmd=config.get(CONF_EXTRA_ARGUMENTS),
+        return self._ffmpeg.open_sensor(
+            input_source=self._config.get(CONF_INPUT),
+            extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),
         )
 
     @property
