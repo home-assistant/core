@@ -71,8 +71,10 @@ class LockitronSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         try:
-            url = "https://api.lockitron.com/v2/locks/" + self._lock_uuid \
-            + "?access_token=" + self._access_token
+            url = (
+                "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
+                "?access_token=" + self._access_token
+                )
             r = requests.get(url)
             resp = r.json()
             self._state = resp["state"]
@@ -85,8 +87,10 @@ class LockitronSensor(Entity):
         _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
         """Return the state of the sensor."""
         try:
-            url = "https://api.lockitron.com/v2/locks/" + self._lock_uuid + \
-            "?access_token=" + self._access_token
+            url = (
+                "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
+                "?access_token=" + self._access_token
+                )
             r = requests.get(url)
             resp = r.json()
             self._state = resp["state"]
@@ -108,8 +112,10 @@ class LockitronSensorData(object):
         """Return the state of the sensor."""
         self._state = ''
         try:
-            url = "https://api.lockitron.com/v2/locks/" + self._lock_uuid + \
-            "?access_token=" + self._access_token
+            url = (
+                "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
+                "?access_token=" + self._access_token
+                )
             r = requests.get(url)
             resp = r.json()
             self._state = resp["state"]
