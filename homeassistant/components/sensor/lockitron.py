@@ -12,8 +12,9 @@ sensor:
   - platform: lockitron
     lock_name: 'Some Other Door'
     lock_uuid: 'YOURUUIDFORYOURLOCK'
-    access_token: 'YOURVERYLONGACCESSTOKENHERE'
+    access_token: 'YOURVERYLONGACCESSTOKENHERE'.
 """
+
 import logging
 import voluptuous as vol
 import requests
@@ -39,6 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Lockitron sensors."""
+
     lock_uuid = config.get(CONF_LOCK_UUID)
     access_token = config.get(CONF_ACCESS_TOKEN)
     lock_name = config.get(CONF_LOCK_NAME)
@@ -51,8 +53,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LockitronSensor(Entity):
     """Representation of a Lockitron sensor."""
 
+
     def __init__(self, lock_name, state, lock_uuid, access_token):
         """Initialize the Lockitron sensor."""
+
         self._lock_name = lock_name
         self._state = state
         self._lock_uuid = lock_uuid
@@ -65,11 +69,13 @@ class LockitronSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
+
         return self._lock_name
 
     @property
     def state(self):
         """Return the state of the sensor."""
+
         try:
             url = (
                 "https://api.lockitron.com/v2/locks/" + self._lock_uuid +
@@ -84,7 +90,9 @@ class LockitronSensor(Entity):
 
     def update(self):
         """Get the latest data with a shell command."""
+
         _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
+
         """Return the state of the sensor."""
         try:
             url = (
@@ -107,9 +115,12 @@ class LockitronSensorData(object):
 
     def update(self):
         """Get the latest data with a shell command."""
+
         _LOGGER.info('Updating Lockitron state for ' + self._lock_name)
         _LOGGER.info(self._lock_uuid)
+
         """Return the state of the sensor."""
+
         self._state = ''
         try:
             url = (
