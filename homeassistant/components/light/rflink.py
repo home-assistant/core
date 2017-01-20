@@ -41,7 +41,11 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 def entity_type_for_device_id(device_id):
-    """Return entity class for procotol of a given device_id."""
+    """Return entity class for procotol of a given device_id.
+
+    Async friendly.
+
+    """
     entity_type_mapping = {
         'newkaku': TYPE_DIMMABLE,
     }
@@ -50,7 +54,11 @@ def entity_type_for_device_id(device_id):
 
 
 def entity_class_for_type(entity_type):
-    """Translate entity type to entity class."""
+    """Translate entity type to entity class.
+
+    Async friendly.
+
+    """
     entity_device_mapping = {
         TYPE_DIMMABLE: DimmableRflinkLight,
     }
@@ -96,11 +104,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         event = ha_event.data[ATTR_EVENT]
         device_id = event[EVENT_KEY_ID]
 
-        entity_type = entity_type_for_device_id(event[EVENT_KEY_ID])
-        entity_class = entity_class_for_type(entity_type)
-
         if device_id in hass.data[DATA_KNOWN_DEVICES]:
             return
+
+        entity_type = entity_type_for_device_id(event[EVENT_KEY_ID])
+        entity_class = entity_class_for_type(entity_type)
 
         hass.data[DATA_KNOWN_DEVICES].append(device_id)
         device = entity_class(device_id, hass)

@@ -73,7 +73,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def identify_event_type(event):
-    """Look at event to determine type of device."""
+    """Look at event to determine type of device.
+
+    Async friendly.
+
+    """
     if 'command' in event:
         return 'light'
     elif 'sensor' in event:
