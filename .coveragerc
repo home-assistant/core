@@ -214,6 +214,7 @@ omit =
     homeassistant/components/media_player/emby.py
     homeassistant/components/media_player/firetv.py
     homeassistant/components/media_player/gpmdp.py
+    homeassistant/components/media_player/hdmi_cec.py
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/lg_netcast.py
@@ -356,6 +357,7 @@ omit =
     homeassistant/components/switch/digitalloggers.py
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py
+    homeassistant/components/switch/hdmi_cec.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/hook.py
     homeassistant/components/switch/kankun.py
