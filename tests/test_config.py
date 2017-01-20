@@ -1,6 +1,5 @@
 """Test config utils."""
 # pylint: disable=protected-access
-from collections import OrderedDict
 import os
 import unittest
 import unittest.mock as mock
@@ -181,7 +180,6 @@ class TestConfig(unittest.TestCase):
                 {'longitude': -181},
                 {'customize': 'bla'},
                 {'customize': {'light.sensor': 100}},
-                {'customize': {'light.sensor': dict({'hidden': True})}},
         ):
             with pytest.raises(MultipleInvalid):
                 config_util.CORE_CONFIG_SCHEMA(value)
@@ -192,9 +190,9 @@ class TestConfig(unittest.TestCase):
             'longitude': '123.45',
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             'customize': {
-                'sensor.temperature': OrderedDict({
+                'sensor.temperature': {
                     'hidden': True,
-                }),
+                },
             },
         })
 
@@ -218,7 +216,7 @@ class TestConfig(unittest.TestCase):
                   CONF_LONGITUDE: 50,
                   CONF_NAME: 'Test',
                   CONF_CUSTOMIZE: {
-                      'test.test': OrderedDict({'hidden': False})}}
+                      'test.test': {'hidden': False}}}
 
         state = self._compute_state(config)
 
@@ -229,73 +227,30 @@ class TestConfig(unittest.TestCase):
         config = {CONF_LATITUDE: 50,
                   CONF_LONGITUDE: 50,
                   CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: {'test.test': OrderedDict({'hidden': True})}}
+                  CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
 
         state = self._compute_state(config)
 
         assert state.attributes['hidden']
 
-    def test_entity_customization_single_entity(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: {'entity_id': 'test.test', 'hidden': True}}
-
-        state = self._compute_state(config)
-
-        assert state.attributes['hidden']
-
-    def test_entity_customization_multiple_entities(self):
+    def test_entity_customization_comma_separated(self):
         """Test entity customization through configuration."""
         config = {CONF_LATITUDE: 50,
                   CONF_LONGITUDE: 50,
                   CONF_NAME: 'Test',
                   CONF_CUSTOMIZE: [
-                      {'entity_id': 'test.test', 'hidden': True},
-                      {'entity_id': 'some.other'}]}
+                      {'entity_id': 'test.not_test,test,test.not_t*',
+                       'key1': 'value1'},
+                      {'entity_id': 'test.test,not_test,test.not_t*',
+                       'key2': 'value2'},
+                      {'entity_id': 'test.not_test,not_test,test.t*',
+                       'key3': 'value3'}]}
 
         state = self._compute_state(config)
 
-        assert state.attributes['hidden']
-
-    def test_entity_customization_domain(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: {'entity_id': 'test', 'hidden': True}}
-
-        state = self._compute_state(config)
-
-        assert state.attributes['hidden']
-
-    def test_entity_customization_glob(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: [
-                      {'entity_id': 'test', 'hidden': False},
-                      {'entity_id': 'test.t*', 'hidden': True},
-                  ]}
-
-        state = self._compute_state(config)
-        assert state.attributes['hidden']
-
-    def test_entity_customization_exact(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: [
-                      {'entity_id': 'test.test', 'hidden': True},
-                      {'entity_id': 'test.t*', 'hidden': False},
-                  ]}
-
-        state = self._compute_state(config)
-
-        assert state.attributes['hidden']
+        assert state.attributes['key1'] == 'value1'
+        assert state.attributes['key2'] == 'value2'
+        assert state.attributes['key3'] == 'value3'
 
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')

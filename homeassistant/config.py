@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
-    __version__)
+    CONF_ENTITY_ID, __version__)
 from homeassistant.core import DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
@@ -22,8 +22,7 @@ from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as date_util, location as loc_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.helpers.customize import (
-    CUSTOMIZE_CONFIG_KEYS, set_customize)
+from homeassistant.helpers.customize import set_customize
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,21 +88,22 @@ tts:
 
 
 CUSTOMIZE_SCHEMA_ENTRY = vol.All(
-    cv.has_at_least_one_key(*CUSTOMIZE_CONFIG_KEYS),
+    cv.has_at_least_one_key(CONF_ENTITY_ID),
     cv.ordered_dict(cv.match_all, cv.string),
     cv.validate_some_keys(
-        CUSTOMIZE_CONFIG_KEYS, cv.list_or_comma_separated(vol.Lower)))
+        [CONF_ENTITY_ID], cv.list_or_comma_separated(vol.Lower)))
 
 
 def _dict_to_list(inp: Any) -> List:
     if not isinstance(inp, dict):
         return cv.ensure_list(inp)
-    if 'entity_id' in inp:
+    if CONF_ENTITY_ID in inp:
         return [inp]  # sigle entry
     res = []
 
-    for key, val in cv.ordered_dict(OrderedDict)(inp).items():
-        val['entity_id'] = key
+    for key, val in inp.items():
+        val = cv.ordered_dict(cv.match_all)(val)
+        val[CONF_ENTITY_ID] = key
         res.append(val)
     return res
 

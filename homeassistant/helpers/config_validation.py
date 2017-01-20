@@ -376,12 +376,11 @@ def ordered_dict(value_validator, key_validator=match_all):
         """Validate ordered dict."""
         config = OrderedDict()
 
-        try:
-            for key, val in value.items():
-                v_res = item_validator({key: val})
-                config.update(v_res)
-        except AttributeError:
+        if not isinstance(value, dict):
             raise vol.Invalid('Value {} is not a dictionary'.format(value))
+        for key, val in value.items():
+            v_res = item_validator({key: val})
+            config.update(v_res)
 
         return config
 
@@ -414,7 +413,7 @@ def validate_some_keys(keys: Sequence[str], validator: Callable) -> Callable:
     def validate(value: Dict) -> Dict:
         """Validate some of the dictionary keys."""
         if not isinstance(value, dict):
-            raise vol.Invalid('validate_some_keys require a dict')
+            raise vol.Invalid('Value {} is not a dictionary'.format(value))
         result = OrderedDict()
         for key, val in value.items():
             if key in keys:

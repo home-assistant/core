@@ -3,12 +3,11 @@ import collections
 from typing import Dict, List
 import fnmatch
 
+from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, split_entity_id
 
 _OVERWRITE_KEY = 'overwrite'
 _OVERWRITE_CACHE_KEY = 'overwrite_cache'
-
-CUSTOMIZE_CONFIG_KEYS = ['entity_id']
 
 
 def set_customize(hass: HomeAssistant, customize: List[Dict]) -> None:
@@ -41,8 +40,7 @@ def get_overrides(hass: HomeAssistant, entity_id: str) -> Dict:
 
     def clean_entry(entry: Dict) -> Dict:
         """Clean up entity-matching keys."""
-        for key in CUSTOMIZE_CONFIG_KEYS:
-            entry.pop(key, None)
+        entry.pop(CONF_ENTITY_ID, None)
         return entry
 
     def deep_update(target: Dict, source: Dict) -> None:
@@ -60,8 +58,8 @@ def get_overrides(hass: HomeAssistant, entity_id: str) -> Dict:
                 target[key] = source[key]
 
     for rule in hass.data[_OVERWRITE_KEY]:
-        if 'entity_id' in rule:
-            entities = rule['entity_id']
+        if CONF_ENTITY_ID in rule:
+            entities = rule[CONF_ENTITY_ID]
             if domain in entities:
                 deep_update(domain_result, rule)
             if entity_id in entities:

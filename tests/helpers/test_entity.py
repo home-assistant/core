@@ -96,20 +96,6 @@ class TestHelpersEntity(object):
         state = self.hass.states.get(self.entity.entity_id)
         assert state.attributes.get(ATTR_HIDDEN)
 
-    def test_overwriting_deep_dict(self):
-        """Test we can overwrite hidden property to True."""
-        set_customize(
-            self.hass,
-            [{'entity_id': [self.entity.entity_id],
-              'test': {'key1': 'value1', 'key2': 'value2'}},
-             {'entity_id': [self.entity.entity_id],
-              'test': {'key3': 'value3', 'key2': 'value22'}}])
-        self.entity.update_ha_state()
-
-        state = self.hass.states.get(self.entity.entity_id)
-        assert state.attributes.get('test') == {
-            'key1': 'value1', 'key2': 'value22', 'key3': 'value3'}
-
     def test_generate_entity_id_given_hass(self):
         """Test generating an entity id given hass object."""
         fmt = 'test.{}'
