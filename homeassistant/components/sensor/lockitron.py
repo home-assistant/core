@@ -104,15 +104,15 @@ class LockitronSensor(Entity):
         return state
 
 
-class LockitronSensorData(object):
+class LockitronSensorData(LockitronSensor):
     """The class for handling the data retrieval."""
 
     def __init__(self, command):
         """Initialize the data object."""
         _LOGGER.info('initializing the Lockitron object')
-        self._lock_name = None
-        self._lock_uuid = None
-        self._access_token = None
+#        self._lock_name = None
+#        self._lock_uuid = None
+#        self._access_token = None
 
     def update(self):
         """Get the latest data with a shell command."""
