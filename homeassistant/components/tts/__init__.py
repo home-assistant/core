@@ -346,6 +346,7 @@ class SpeechManager(object):
         try:
             data = yield from self.hass.loop.run_in_executor(None, load_speech)
         except OSError:
+            del self.file_cache[key]
             raise HomeAssistantError("Can't read {}".format(voice_file))
 
         self._async_store_to_memcache(key, filename, data)
