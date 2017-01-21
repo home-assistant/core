@@ -4,8 +4,6 @@ Support for binary sensor using RPi GPIO.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.rpi_gpio/
 """
-from time import sleep
-
 import logging
 
 import voluptuous as vol
@@ -53,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for port_num, port_name in ports.items():
         binary_sensors.append(RPiGPIOBinarySensor(
             port_name, port_num, pull_mode, bouncetime, invert_logic))
-    add_devices(binary_sensors)
+    add_devices(binary_sensors, True)
 
 
 class RPiGPIOBinarySensor(BinarySensorDevice):
@@ -69,8 +67,6 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
         self._invert_logic = invert_logic
 
         rpi_gpio.setup_input(self._port, self._pull_mode)
-        sleep(bouncetime/1000)
-        self._state = rpi_gpio.read_input(self._port)
 
         def read_gpio(port):
             """Read state from GPIO."""
@@ -93,3 +89,7 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Return the state of the entity."""
         return self._state != self._invert_logic
+
+    def update(self):
+        """Update the GPIO state."""
+        self._state = rpi_gpio.read_input(self._port)
