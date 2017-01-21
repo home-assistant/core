@@ -26,7 +26,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC==0.4.7']
+REQUIREMENTS = ['pyCEC==0.4.8']
 
 DOMAIN = 'hdmi_cec'
 
@@ -158,8 +158,9 @@ def setup(hass: HomeAssistant, base_config):
     """Setup CEC capability."""
     from pycec.network import HDMINetwork
     from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
-    from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE, \
-        ADDR_AUDIOSYSTEM, ADDR_BROADCAST, ADDR_UNREGISTERED
+    from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE_ON, \
+        KEY_MUTE_OFF, KEY_MUTE_TOGGLE, ADDR_AUDIOSYSTEM, ADDR_BROADCAST, \
+        ADDR_UNREGISTERED
     from pycec.cec import CecAdapter
     from pycec.tcp import TcpAdapter
 
@@ -187,8 +188,8 @@ def setup(hass: HomeAssistant, base_config):
 
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""
-        mute_key_mapping = {ATTR_TOGGLE: KEY_MUTE, ATTR_ON: KEY_MUTE,
-                            ATTR_OFF: KEY_MUTE}
+        mute_key_mapping = {ATTR_TOGGLE: KEY_MUTE_TOGGLE, ATTR_ON: KEY_MUTE_ON,
+                            ATTR_OFF: KEY_MUTE_OFF}
         for cmd, att in call.data.items():
             if cmd == CMD_UP:
                 _process_volume(KEY_VOLUME_UP, att)
