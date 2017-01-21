@@ -20,52 +20,18 @@ _LOGGER = logging.getLogger(__name__)
 INTENTS_API_ENDPOINT = '/api/apiai'
 
 CONF_ACTION = 'action'
-CONF_CARD = 'card'
 CONF_INTENTS = 'intents'
 CONF_SPEECH = 'speech'
 
-CONF_TYPE = 'type'
-CONF_TITLE = 'title'
-CONF_CONTENT = 'content'
-CONF_TEXT = 'text'
-
-CONF_UID = 'uid'
-CONF_DATE = 'date'
-CONF_AUDIO = 'audio'
-CONF_DISPLAY_URL = 'display_url'
-
-ATTR_UPDATE_DATE = 'updateDate'
-ATTR_TITLE_TEXT = 'titleText'
-ATTR_STREAM_URL = 'streamUrl'
-ATTR_MAIN_TEXT = 'mainText'
-ATTR_REDIRECTION_URL = 'redirectionURL'
-
-DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.0Z'
-
 DOMAIN = 'apiai'
 DEPENDENCIES = ['http']
-
-
-class CardType(enum.Enum):
-    """The API.AI card types."""
-
-    simple = "Simple"
-    link_account = "LinkAccount"
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {
         CONF_INTENTS: {
             cv.string: {
                 vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
-                vol.Optional(CONF_CARD): {
-                    vol.Required(CONF_TYPE): cv.enum(CardType),
-                    vol.Required(CONF_TITLE): cv.template,
-                    vol.Required(CONF_CONTENT): cv.template,
-                },
-                vol.Optional(CONF_SPEECH): {
-                    vol.Required(CONF_TEXT): cv.template,
-                }
+                vol.Optional(CONF_SPEECH): cv.template
             }
         }
     }
@@ -134,12 +100,18 @@ class ApiaiIntentsView(HomeAssistantView):
         #     "Hello, and welcome to the future. How may I help?")
         #     return self.json(response)
 
+        if intent == "":
+            _LOGGER.warning('Received intent with empty action')
+            response.add_speech(
+                "You have not defined an action in your api.ai intent.")
+            return self.json(response)
+
         config = self.intents.get(intent)
 
         if config is None:
             _LOGGER.warning('Received unknown intent %s', intent)
             response.add_speech(
-                "This intent is not yet configured within Home Assistant.")
+                "Intent '%s' is not yet configured within Home Assistant." % intent)
             return self.json(response)
 
         speech = config.get(CONF_SPEECH)
@@ -152,7 +124,7 @@ class ApiaiIntentsView(HomeAssistantView):
 
         # pylint: disable=unsubscriptable-object
         if speech is not None:
-            response.add_speech(speech[CONF_TEXT])
+            response.add_speech(speech)
 
         return self.json(response)
 
