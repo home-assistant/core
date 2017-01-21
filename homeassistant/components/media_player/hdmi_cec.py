@@ -59,8 +59,8 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Mute volume."""
-        from pycec.const import KEY_MUTE
-        self.send_keypress(KEY_MUTE)
+        from pycec.const import KEY_MUTE_TOGGLE
+        self.send_keypress(KEY_MUTE_TOGGLE)
 
     def media_previous_track(self):
         """Go to previous track."""
