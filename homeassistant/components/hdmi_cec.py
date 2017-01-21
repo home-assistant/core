@@ -199,7 +199,7 @@ def setup(hass: HomeAssistant, base_config):
                 _process_volume(KEY_VOLUME_DOWN, att)
             elif cmd == CMD_MUTE:
                 hdmi_network.send_command(
-                    KeyPressCommand(mute_key_mapping[att[0]],
+                    KeyPressCommand(mute_key_mapping[att],
                                     dst=ADDR_AUDIOSYSTEM))
                 hdmi_network.send_command(
                     KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
