@@ -87,22 +87,21 @@ tts:
 """
 
 
-CUSTOMIZE_SCHEMA_ENTRY = vol.All(
-    cv.has_at_least_one_key(CONF_ENTITY_ID),
-    cv.ordered_dict(cv.match_all, cv.string),
-    cv.validate_some_keys(
-        [CONF_ENTITY_ID], cv.list_or_comma_separated(vol.Lower)))
+CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
+    vol.Required(CONF_ENTITY_ID): vol.All(
+        cv.ensure_list_csv, [cv.string], [vol.Lower])
+}, extra=vol.ALLOW_EXTRA)
 
 
-def _dict_to_list(inp: Any) -> List:
+def _convert_old_config(inp: Any) -> List:
     if not isinstance(inp, dict):
         return cv.ensure_list(inp)
     if CONF_ENTITY_ID in inp:
         return [inp]  # sigle entry
     res = []
 
+    inp = vol.Schema({cv.match_all: dict})(inp)
     for key, val in inp.items():
-        val = cv.ordered_dict(cv.match_all)(val)
         val[CONF_ENTITY_ID] = key
         res.append(val)
     return res
@@ -123,7 +122,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_TIME_ZONE: cv.time_zone,
     vol.Required(CONF_CUSTOMIZE,
                  default=MappingProxyType({})): vol.All(
-                     _dict_to_list, [CUSTOMIZE_SCHEMA_ENTRY]),
+                     _convert_old_config, [CUSTOMIZE_SCHEMA_ENTRY]),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 

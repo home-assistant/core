@@ -165,18 +165,19 @@ def test_entity_ids():
     ]
 
 
-def test_list_or_comma_separated():
-    """Test list_or_comma_separated."""
-    schema = vol.Schema(cv.list_or_comma_separated())
+def test_ensure_list_csv():
+    """Test ensure_list_csv."""
+    schema = vol.Schema(cv.ensure_list_csv)
 
     options = (
-        12,
+        None,
     )
     for value in options:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
     options = (
+        12,
         [],
         ['string'],
         'string1,string2'
