@@ -97,7 +97,7 @@ SERVICE_VOLUME = 'volume'
 SERVICE_VOLUME_SCHEMA = vol.Schema({
     vol.Optional(CMD_UP): vol.Any(CMD_PRESS, CMD_RELEASE, vol.Coerce(int)),
     vol.Optional(CMD_DOWN): vol.Any(CMD_PRESS, CMD_RELEASE, vol.Coerce(int)),
-    vol.Optional(CMD_MUTE): vol.Any(ATTR_ON, ATTR_ON, ATTR_TOGGLE),
+    vol.Optional(CMD_MUTE): vol.Any(ATTR_ON, ATTR_OFF, ATTR_TOGGLE),
 }, extra=vol.PREVENT_EXTRA)
 
 SERVICE_UPDATE_DEVICES = 'update'
