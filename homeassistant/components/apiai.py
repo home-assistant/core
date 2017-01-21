@@ -115,9 +115,9 @@ class ApiaiIntentsView(HomeAssistantView):
             return self.json_message('Expected result value not received',
                                      HTTP_BAD_REQUEST)
 
-        actionIncomplete = req['actionIncomplete']
+        action_incomplete = req['actionIncomplete']
 
-        if actionIncomplete:
+        if action_incomplete:
             return None
 
         # use intent to no mix HASS actions with this parameter
@@ -139,7 +139,7 @@ class ApiaiIntentsView(HomeAssistantView):
         if config is None:
             _LOGGER.warning('Received unknown intent %s', intent)
             response.add_speech(
-                    "This intent is not yet configured within Home Assistant.")
+                "This intent is not yet configured within Home Assistant.")
             return self.json(response)
 
         speech = config.get(CONF_SPEECH)
@@ -180,7 +180,6 @@ class ApiaiResponse(object):
 
     def as_dict(self):
         """Return response in an API.AI valid dict."""
-
         return {
             'speech': self.speech,
             'displayText': self.speech,
