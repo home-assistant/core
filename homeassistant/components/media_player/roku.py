@@ -69,10 +69,10 @@ class RokuDevice(MediaPlayerDevice):
         from roku import Roku
 
         self.roku = Roku(host)
-        self.roku_name = None
         self.ip_address = host
         self.channels = []
         self.current_app = None
+        self.device_info = {}
 
         self.update()
 
@@ -81,7 +81,7 @@ class RokuDevice(MediaPlayerDevice):
         import requests.exceptions
 
         try:
-            self.roku_name = "roku_" + self.roku.device_info.sernum
+            self.device_info = self.roku.device_info
             self.ip_address = self.roku.host
             self.channels = self.get_source_list()
 
@@ -106,7 +106,7 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.roku_name
+        return self.device_info.userdevicename
 
     @property
     def state(self):
