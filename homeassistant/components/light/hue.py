@@ -423,7 +423,9 @@ class HueLight(Light):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {
-            ATTR_EMULATED_HUE: self.allow_in_emulated_hue,
-            ATTR_IS_HUE_GROUP: self.is_group
-        }
+        attributes = {}
+        if not self.allow_in_emulated_hue:
+            attributes[ATTR_EMULATED_HUE] = self.allow_in_emulated_hue
+        if self.is_group:
+            attributes[ATTR_IS_HUE_GROUP] = self.is_group
+        return attributes
