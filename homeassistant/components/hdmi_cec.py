@@ -26,13 +26,13 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC==0.4.8']
+REQUIREMENTS = ['pyCEC==0.4.9']
 
 DOMAIN = 'hdmi_cec'
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DISPLAY_NAME = "Home Assistant"
+DEFAULT_DISPLAY_NAME = "HomeAssistant"
 
 ICON_UNKNOWN = 'mdi:help'
 ICON_AUDIO = 'mdi:speaker'
