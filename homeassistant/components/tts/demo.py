@@ -43,7 +43,12 @@ class DemoProvider(Provider):
         """List of supported languages."""
         return SUPPORT_LANGUAGES
 
-    def get_tts_audio(self, message, language):
+    @property
+    def supported_options(self):
+        """List of supported options like voice, emotionen."""
+        return ['voice', 'age']
+
+    def get_tts_audio(self, message, language, options=None):
         """Load TTS from demo."""
         filename = os.path.join(os.path.dirname(__file__), "demo.mp3")
         try:

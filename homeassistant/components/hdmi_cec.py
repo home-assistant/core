@@ -53,6 +53,8 @@ CEC_DEVICES = defaultdict(list)
 CMD_UP = 'up'
 CMD_DOWN = 'down'
 CMD_MUTE = 'mute'
+CMD_UNMUTE = 'unmute'
+CMD_MUTE_TOGGLE = 'toggle mute'
 CMD_PRESS = 'press'
 CMD_RELEASE = 'release'
 
@@ -249,6 +251,7 @@ def setup(hass: HomeAssistant, base_config):
                 att = ""
             command = CecCommand(cmd, dst, src, att)
         hdmi_network.send_command(command)
+
 
     @callback
     def _standby(call):

@@ -37,6 +37,7 @@ KNOWN_HOSTS = []
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_IGNORE_CEC): [cv.string],
 })
 
 
@@ -46,11 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pychromecast
 
     # import CEC IGNORE attributes
-    ignore_cec = config.get(CONF_IGNORE_CEC, [])
-    if isinstance(ignore_cec, list):
-        pychromecast.IGNORE_CEC += ignore_cec
-    else:
-        _LOGGER.error('CEC config "%s" must be a list.', CONF_IGNORE_CEC)
+    pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
 
     hosts = []
 
