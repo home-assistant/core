@@ -193,7 +193,7 @@ hdmi_cec:
         description: Decreases volume x levels.
         example: 3
       mute:
-        description: Mutes audio system. Value should be: on, off or toggle.
+        description: Mutes audio system. Value should be on, off or toggle.
         example: "toggle"
 
   select_device:
