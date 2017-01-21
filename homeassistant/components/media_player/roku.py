@@ -17,8 +17,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
-    'https://github.com/bah2830/python-roku/archive/3.1.2.zip'
-    '#roku==3.1.2']
+    'https://github.com/bah2830/python-roku/archive/3.1.3.zip'
+    '#roku==3.1.3']
 
 KNOWN_HOSTS = []
 DEFAULT_PORT = 8060
@@ -114,8 +114,8 @@ class RokuDevice(MediaPlayerDevice):
         if self.current_app is None:
             return STATE_UNKNOWN
 
-        idle_list = ["Power Saver", "Screensaver", "screensaver"]
-        if any(idle_type in self.current_app.name for idle_type in idle_list):
+        if (self.current_app.name == "Power Saver" or
+                self.current_app.is_screensaver):
             return STATE_IDLE
         elif self.current_app.name == "Roku":
             return STATE_HOME
