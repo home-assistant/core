@@ -6,7 +6,6 @@ https://home-assistant.io/components/apiai/
 """
 import asyncio
 import copy
-import enum
 import logging
 
 import voluptuous as vol
@@ -111,7 +110,8 @@ class ApiaiIntentsView(HomeAssistantView):
         if config is None:
             _LOGGER.warning('Received unknown intent %s', intent)
             response.add_speech(
-                "Intent '%s' is not yet configured within Home Assistant." % intent)
+                "Intent '%s' is not yet configured within Home Assistant." %
+                intent)
             return self.json(response)
 
         speech = config.get(CONF_SPEECH)
