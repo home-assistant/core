@@ -215,6 +215,9 @@ ATTR_ENTITY_PICTURE = 'entity_picture'
 # Icon to use in the frontend
 ATTR_ICON = 'icon'
 
+# Indications that the state of the entity was restored from the DB
+ATTR_RESTORED_STATE = 'restored'
+
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 

@@ -47,17 +47,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PURGE_DAYS):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_DB_URL): cv.string,
-        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
-        }),
-        vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
-        })
-    })
+    }).extend(cv.FILTER_SCHEMA.schema)
 }, extra=vol.ALLOW_EXTRA)
 
 _INSTANCE = None  # type: Any
@@ -294,6 +284,8 @@ class Recorder(threading.Thread):
     def _setup_connection(self):
         """Ensure database is ready to fly."""
         global _SESSION  # pylint: disable=invalid-name,global-statement
+        if _SESSION is not None:
+            return
 
         import homeassistant.components.recorder.models as models
         from sqlalchemy import create_engine

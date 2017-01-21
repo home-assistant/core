@@ -28,25 +28,14 @@ DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        CONF_EXCLUDE: vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
-        }),
-        CONF_INCLUDE: vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
-        })
-    }),
+    DOMAIN: cv.FILTER_SCHEMA,
 }, extra=vol.ALLOW_EXTRA)
 
 SIGNIFICANT_DOMAINS = ('thermostat', 'climate')
 IGNORE_DOMAINS = ('zone', 'scene',)
 
 
-def last_5_states(entity_id):
+def last_5_states(entity_id: str):
     """Return the last 5 states for entity_id."""
     entity_id = entity_id.lower()
 
@@ -56,6 +45,12 @@ def last_5_states(entity_id):
             (states.entity_id == entity_id) &
             (states.last_changed == states.last_updated)
         ).order_by(states.state_id.desc()).limit(5))
+
+
+def last_recorder_run():
+    """Retireve the last closed recorder run from the DB."""
+    rec_runs = recorder.get_model('RecorderRuns')
+    return recorder.query(rec_runs).order_by(rec_runs.end.desc()).first()
 
 
 def get_significant_states(start_time, end_time=None, entity_id=None,
