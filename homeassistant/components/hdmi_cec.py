@@ -22,15 +22,17 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
                                  EVENT_HOMEASSISTANT_STOP, STATE_ON,
                                  STATE_OFF, CONF_DEVICES, CONF_PLATFORM,
                                  CONF_CUSTOMIZE, STATE_PLAYING, STATE_IDLE,
-                                 STATE_PAUSED, CONF_HOST)
+                                 STATE_PAUSED, CONF_HOST, CONF_DISPLAY_NAME)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC==0.4.6']
+REQUIREMENTS = ['pyCEC==0.4.7']
 
 DOMAIN = 'hdmi_cec'
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_DISPLAY_NAME = "Home Assistant"
 
 ICON_UNKNOWN = 'mdi:help'
 ICON_AUDIO = 'mdi:speaker'
@@ -51,8 +53,6 @@ CEC_DEVICES = defaultdict(list)
 CMD_UP = 'up'
 CMD_DOWN = 'down'
 CMD_MUTE = 'mute'
-CMD_UNMUTE = 'unmute'
-CMD_MUTE_TOGGLE = 'toggle mute'
 CMD_PRESS = 'press'
 CMD_RELEASE = 'release'
 
@@ -76,6 +76,9 @@ ATTR_RAW = 'raw'
 ATTR_DIR = 'dir'
 ATTR_ABT = 'abt'
 ATTR_NEW = 'new'
+ATTR_ON = 'on'
+ATTR_OFF = 'off'
+ATTR_TOGGLE = 'toggle'
 
 _VOL_HEX = vol.Any(vol.Coerce(int), lambda x: int(x, 16))
 
@@ -92,9 +95,7 @@ SERVICE_VOLUME = 'volume'
 SERVICE_VOLUME_SCHEMA = vol.Schema({
     vol.Optional(CMD_UP): vol.Any(CMD_PRESS, CMD_RELEASE, vol.Coerce(int)),
     vol.Optional(CMD_DOWN): vol.Any(CMD_PRESS, CMD_RELEASE, vol.Coerce(int)),
-    vol.Optional(CMD_MUTE): None,
-    vol.Optional(CMD_UNMUTE): None,
-    vol.Optional(CMD_MUTE_TOGGLE): None
+    vol.Optional(CMD_MUTE): vol.Any(ATTR_ON, ATTR_ON, ATTR_TOGGLE),
 }, extra=vol.PREVENT_EXTRA)
 
 SERVICE_UPDATE_DEVICES = 'update'
@@ -127,6 +128,7 @@ CONFIG_SCHEMA = vol.Schema({
                                             })),
         vol.Optional(CONF_PLATFORM): vol.Any(SWITCH, MEDIA_PLAYER),
         vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_DISPLAY_NAME): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -175,14 +177,18 @@ def setup(hass: HomeAssistant, base_config):
         # Create own thread if more than 1 CPU
         hass.loop if multiprocessing.cpu_count() < 2 else None)
     host = base_config[DOMAIN].get(CONF_HOST, None)
+    display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME,
+                                           DEFAULT_DISPLAY_NAME)
     if host:
-        adapter = TcpAdapter(host, name="HASS", activate_source=False)
+        adapter = TcpAdapter(host, name=display_name, activate_source=False)
     else:
-        adapter = CecAdapter(name="HASS", activate_source=False)
+        adapter = CecAdapter(name=display_name, activate_source=False)
     hdmi_network = HDMINetwork(adapter, loop=loop)
 
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""
+        mute_key_mapping = {ATTR_TOGGLE: KEY_MUTE, ATTR_ON: KEY_MUTE,
+                            ATTR_OFF: KEY_MUTE}
         for cmd, att in call.data.items():
             if cmd == CMD_UP:
                 _process_volume(KEY_VOLUME_UP, att)
@@ -190,7 +196,8 @@ def setup(hass: HomeAssistant, base_config):
                 _process_volume(KEY_VOLUME_DOWN, att)
             elif cmd == CMD_MUTE:
                 hdmi_network.send_command(
-                    KeyPressCommand(KEY_MUTE, dst=ADDR_AUDIOSYSTEM))
+                    KeyPressCommand(mute_key_mapping[att[0]],
+                                    dst=ADDR_AUDIOSYSTEM))
                 hdmi_network.send_command(
                     KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
                 _LOGGER.info("Audio muted")
