@@ -66,8 +66,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
     vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
     vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
-        vol.In(SUPPORTED_VOICES),
+    # vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
+    #     vol.In(SUPPORTED_VOICES),
     vol.Optional(CONF_OUTPUT_FORMAT, default=DEFAULT_OUTPUT_FORMAT):
         vol.In(SUPPORTED_OUTPUT_FORMATS),
     vol.Optional(CONF_SAMPLE_RATE): vol.All(cv.string,
@@ -103,36 +103,57 @@ def get_engine(hass, config):
 
     polly_client = boto3.client("polly", **aws_config)
 
-    def find_voice_language():
-        """Get the language code for the chosen voice."""
-        all_voices = polly_client.describe_voices()
-        for voice in all_voices.get("Voices"):
-            if voice.get("Id", "") == config.get(CONF_VOICE):
-                return "{}-{}".format(config.get(CONF_VOICE).lower(),
-                                      voice.get("LanguageCode"))
+    all_voices = polly_client.describe_voices()
 
-    voice_language = find_voice_language()
+    supported_languages = []
 
-    return AmazonPollyProvider(polly_client, config, voice_language)
+    voice_language = "en-US"
+
+    for voice in all_voices.get("Voices"):
+        if voice.get("LanguageCode") not in supported_languages:
+            supported_languages.append(voice.get("LanguageCode"))
+        if voice.get("Id", "") == config.get(CONF_VOICE):
+            voice_language = "{}-{}".format(config.get(CONF_VOICE).lower(),
+                                            voice.get("LanguageCode"))
+
+    return AmazonPollyProvider(polly_client, config, supported_languages,
+                               voice_language)
 
 
 class AmazonPollyProvider(Provider):
     """Amazon Polly speech api provider."""
 
-    def __init__(self, polly_client, config, voice_language):
+    def __init__(self, polly_client, config, supported_languages,
+                 voice_language):
         """Initialize Amazon Polly provider for TTS."""
         self.client = polly_client
         self.config = config
+        self.all_languages = supported_languages
         self.language = voice_language
 
-    def get_tts_audio(self, message, language=None):
+    @property
+    def supported_languages(self):
+        """List of supported languages."""
+        return self.all_languages
+
+    @property
+    def default_language(self):
+        """Default language."""
+        return self.language
+
+    @property
+    def supported_options(self):
+        """List of supported options."""
+        return [CONF_VOICE]
+
+    def get_tts_audio(self, message, language=None, options=None):
         """Request TTS file from Polly."""
         resp = self.client.synthesize_speech(
             OutputFormat=self.config[CONF_OUTPUT_FORMAT],
             SampleRate=self.config[CONF_SAMPLE_RATE],
             Text=message,
             TextType=self.config[CONF_TEXT_TYPE],
-            VoiceId=self.config[CONF_VOICE]
+            VoiceId=options.get(CONF_VOICE, self.config[CONF_VOICE])
         )
 
         return (CONTENT_TYPE_EXTENSIONS[resp.get("ContentType")],
