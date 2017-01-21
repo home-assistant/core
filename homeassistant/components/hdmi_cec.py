@@ -32,7 +32,7 @@ DOMAIN = 'hdmi_cec'
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DISPLAY_NAME = "Home Assistant"
+DEFAULT_DISPLAY_NAME = "HomeAssistant"
 
 ICON_UNKNOWN = 'mdi:help'
 ICON_AUDIO = 'mdi:speaker'
@@ -179,11 +179,11 @@ def setup(hass: HomeAssistant, base_config):
         hass.loop if multiprocessing.cpu_count() < 2 else None)
     host = base_config[DOMAIN].get(CONF_HOST, None)
     display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME,
-                                           DEFAULT_DISPLAY_NAME)
+                                           DEFAULT_DISPLAY_NAME)[:13]
     if host:
-        adapter = TcpAdapter(host, name=display_name, activate_source=False)
+        adapter = TcpAdapter(host, name=str(display_name), activate_source=False)
     else:
-        adapter = CecAdapter(name=display_name, activate_source=False)
+        adapter = CecAdapter(name=str(display_name), activate_source=False)
     hdmi_network = HDMINetwork(adapter, loop=loop)
 
     def _volume(call):
