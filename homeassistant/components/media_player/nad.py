@@ -18,7 +18,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/joopert/nad_receiver/archive/'
-                '0.0.2.zip#nad_receiver==0.0.2']
+                '0.0.3.zip#nad_receiver==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
