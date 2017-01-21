@@ -22,7 +22,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
                                  EVENT_HOMEASSISTANT_STOP, STATE_ON,
                                  STATE_OFF, CONF_DEVICES, CONF_PLATFORM,
                                  CONF_CUSTOMIZE, STATE_PLAYING, STATE_IDLE,
-                                 STATE_PAUSED, CONF_HOST, CONF_DISPLAY_NAME)
+                                 STATE_PAUSED, CONF_HOST)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
@@ -121,6 +121,7 @@ CUSTOMIZE_SCHEMA = vol.Schema({
                                                                SWITCH)
 })
 
+CONF_DISPLAY_NAME = 'osd_name'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_DEVICES): vol.Any(DEVICE_SCHEMA,
