@@ -28,6 +28,8 @@ IGNORE_PACKAGES = (
     'homeassistant.components.recorder.models',
 )
 
+IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
+
 
 def explore_module(package, explore_children):
     """Explore the modules."""
@@ -80,6 +82,9 @@ def gather_modules():
             continue
 
         for req in module.REQUIREMENTS:
+            if req.partition('==')[1] == '' and req not in IGNORE_PIN:
+                errors.append("{}[Please pin requirement {}]"
+                              .format(package, req))
             reqs.setdefault(req, []).append(package)
 
     for key in reqs:
