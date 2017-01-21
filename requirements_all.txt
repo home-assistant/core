@@ -378,7 +378,7 @@ pwaqi==1.3
 py-cpuinfo==0.2.3
 
 # homeassistant.components.hdmi_cec
-pyCEC==0.4.6
+pyCEC==0.4.9
 
 # homeassistant.components.switch.tplink
 pyHS100==0.2.3
