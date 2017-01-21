@@ -54,13 +54,18 @@ SUPPORT_HUE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
 CONF_ALLOW_IN_EMULATED_HUE = "allow_in_emulated_hue"
 DEFAULT_ALLOW_IN_EMULATED_HUE = True
 
+CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
+DEFAULT_ALLOW_HUE_GROUPS = True
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_ALLOW_UNREACHABLE,
                  default=DEFAULT_ALLOW_UNREACHABLE): cv.boolean,
     vol.Optional(CONF_FILENAME, default=PHUE_CONFIG_FILE): cv.string,
     vol.Optional(CONF_ALLOW_IN_EMULATED_HUE,
                  default=DEFAULT_ALLOW_IN_EMULATED_HUE): cv.boolean,
+    vol.Optional(CONF_ALLOW_HUE_GROUPS,
+                 default=DEFAULT_ALLOW_HUE_GROUPS): cv.boolean,
 })
 
 ATTR_GROUP_NAME = "group_name"
@@ -71,6 +76,7 @@ SCENE_SCHEMA = vol.Schema({
 })
 
 ATTR_IS_HUE_GROUP = "is_hue_group"
+
 
 def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
     """Attempt to detect host based on existing configuration."""
@@ -95,6 +101,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     filename = config.get(CONF_FILENAME)
     allow_unreachable = config.get(CONF_ALLOW_UNREACHABLE)
     allow_in_emulated_hue = config.get(CONF_ALLOW_IN_EMULATED_HUE)
+    allow_hue_groups = config.get(CONF_ALLOW_HUE_GROUPS)
 
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
@@ -118,11 +125,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     setup_bridge(host, hass, add_devices, filename, allow_unreachable,
-                 allow_in_emulated_hue)
+                 allow_in_emulated_hue, allow_hue_groups)
 
 
 def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
-                 allow_in_emulated_hue):
+                 allow_in_emulated_hue, allow_hue_groups):
     """Setup a phue bridge based on host parameter."""
     import phue
 
@@ -139,7 +146,8 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
         _LOGGER.warning("Connected to Hue at %s but not registered.", host)
 
         request_configuration(host, hass, add_devices, filename,
-                              allow_unreachable)
+                              allow_unreachable, allow_in_emulated_hue,
+                              allow_hue_groups)
 
         return
 
@@ -153,7 +161,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
     lights = {}
     lightgroups = {}
-    skip_groups = False
+    skip_groups = not allow_hue_groups
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_lights():
@@ -241,7 +249,8 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
 
 def request_configuration(host, hass, add_devices, filename,
-                          allow_unreachable):
+                          allow_unreachable, allow_in_emulated_hue,
+                          allow_hue_groups):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
@@ -255,7 +264,8 @@ def request_configuration(host, hass, add_devices, filename,
     # pylint: disable=unused-argument
     def hue_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_bridge(host, hass, add_devices, filename, allow_unreachable)
+        setup_bridge(host, hass, add_devices, filename, allow_unreachable,
+                     allow_in_emulated_hue, allow_hue_groups)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, "Philips Hue", hue_configuration_callback,
@@ -414,5 +424,6 @@ class HueLight(Light):
     def device_state_attributes(self):
         """Return the device state attributes."""
         return {
-            ATTR_EMULATED_HUE: self.allow_in_emulated_hue
+            ATTR_EMULATED_HUE: self.allow_in_emulated_hue,
+            ATTR_IS_HUE_GROUP: self.is_group
         }
