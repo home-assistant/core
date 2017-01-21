@@ -146,7 +146,7 @@ def run(script_args: List) -> int:
             print(' -', skey + ':', sval, color('cyan', '[from:', flatsecret
                                                 .get(skey, 'keyring') + ']'))
 
-    return 0
+    return len(res['except'])
 
 
 def check(config_path):

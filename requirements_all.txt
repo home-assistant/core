@@ -170,11 +170,8 @@ googlemaps==2.4.4
 # homeassistant.components.sensor.gpsd
 gps3==0.33.3
 
-# homeassistant.components.openalpr
-ha-alpr==0.3
-
 # homeassistant.components.ffmpeg
-ha-ffmpeg==0.15
+ha-ffmpeg==1.0
 
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.1
@@ -212,7 +209,7 @@ https://github.com/Xorso/pyalarmdotcom/archive/0.1.1.zip#pyalarmdotcom==0.1.1
 https://github.com/aparraga/braviarc/archive/0.3.6.zip#braviarc==0.3.6
 
 # homeassistant.components.media_player.roku
-https://github.com/bah2830/python-roku/archive/3.1.2.zip#roku==3.1.2
+https://github.com/bah2830/python-roku/archive/3.1.3.zip#roku==3.1.3
 
 # homeassistant.components.modbus
 https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b612661.zip#pymodbus==1.2.0
@@ -244,9 +241,6 @@ https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a8
 # homeassistant.components.joaoapps_join
 # homeassistant.components.notify.joaoapps_join
 https://github.com/nkgilley/python-join-api/archive/3e1e849f1af0b4080f551b62270c6d244d5fbcbd.zip#python-join-api==0.0.1
-
-# homeassistant.components.openalpr
-https://github.com/pvizeli/cloudapi/releases/download/1.0.2/python-1.0.2.zip#openalpr_api==1.0.2
 
 # homeassistant.components.switch.edimax
 https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
@@ -384,11 +378,14 @@ pwaqi==1.3
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==0.2.3
 
+# homeassistant.components.hdmi_cec
+pyCEC==0.4.6
+
 # homeassistant.components.switch.tplink
 pyHS100==0.2.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.14.0
+pyRFXtrx==0.15.0
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.0.8
