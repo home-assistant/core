@@ -180,7 +180,7 @@ class HueOneLightChangeView(HomeAssistantView):
 
         if (entity_features &
                 SUPPORT_BRIGHTNESS &
-                entity.domain == "light") == SUPPORT_BRIGHTNESS:
+                (entity.domain == "light")) == SUPPORT_BRIGHTNESS:
             if brightness is not None:
                 data[ATTR_BRIGHTNESS] = brightness
 
