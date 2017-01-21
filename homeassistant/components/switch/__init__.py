@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.components import group
 
 DOMAIN = 'switch'
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_SWITCHES = 'all switches'
 ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_switches')
@@ -98,7 +98,7 @@ def async_setup(hass, config):
             update_coro = hass.loop.create_task(
                 switch.async_update_ha_state(True))
             if hasattr(switch, 'async_update'):
-                update_tasks.append(hass.loop.create_task(update_coro))
+                update_tasks.append(update_coro)
             else:
                 yield from update_coro
 

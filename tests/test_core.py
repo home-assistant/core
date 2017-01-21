@@ -6,6 +6,7 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 
 import pytz
+import pytest
 
 import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
@@ -213,6 +214,11 @@ class TestHomeAssistant(unittest.TestCase):
 
         assert len(self.hass._pending_tasks) == 0
         assert len(call_count) == 2
+
+    def test_add_job_with_none(self):
+        """Try to add a job with None as function."""
+        with pytest.raises(ValueError):
+            self.hass.add_job(None, 'test_arg')
 
 
 class TestEvent(unittest.TestCase):
@@ -718,6 +724,7 @@ class TestConfig(unittest.TestCase):
         expected = {
             'latitude': None,
             'longitude': None,
+            'elevation': None,
             CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
             'location_name': None,
             'time_zone': 'UTC',

@@ -105,7 +105,8 @@ def async_setup(hass, config):
 
         tasks = [input_slider.async_select_value(call.data[ATTR_VALUE])
                  for input_slider in target_inputs]
-        yield from asyncio.wait(tasks, loop=hass.loop)
+        if tasks:
+            yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SELECT_VALUE, async_select_value_service,

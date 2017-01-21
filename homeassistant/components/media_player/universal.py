@@ -15,7 +15,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_PLAYLIST, ATTR_MEDIA_SEASON, ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, ATTR_INPUT_SOURCE_LIST,
-    ATTR_SUPPORTED_MEDIA_COMMANDS, DOMAIN, SERVICE_PLAY_MEDIA,
+    ATTR_SUPPORTED_MEDIA_COMMANDS, ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT, DOMAIN, SERVICE_PLAY_MEDIA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
     ATTR_INPUT_SOURCE, SERVICE_SELECT_SOURCE, SERVICE_CLEAR_PLAYLIST,
@@ -189,6 +190,10 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             return
 
         active_child = self._child_state
+        if active_child is None:
+            # No child to call service on
+            return
+
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
 
         self.hass.services.call(DOMAIN, service_name, service_data,
@@ -379,6 +384,16 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         active_child = self._child_state
         return {ATTR_ACTIVE_CHILD: active_child.entity_id} \
             if active_child else {}
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        return self._child_attr(ATTR_MEDIA_POSITION)
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid."""
+        return self._child_attr(ATTR_MEDIA_POSITION_UPDATED_AT)
 
     def turn_on(self):
         """Turn the media player on."""

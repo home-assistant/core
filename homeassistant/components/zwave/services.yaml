@@ -38,6 +38,15 @@ set_config_parameter:
       description: Value to set on parameter. (integer).
     size:
       description: (Optional) The size of the value. Defaults to 2.
+
+print_config_parameter:
+  description: Prints a Z-Wave node config parameter value to log.
+  fields:
+    node_id:
+      description: Node id of the device to print the parameter from (integer).
+    parameter:
+      description: Parameter number to print (integer).
+
 start_network:
   description: Start the Z-Wave network. This might take a while, depending on how big your Z-Wave network is.
 

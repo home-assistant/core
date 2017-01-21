@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.yr/
 import asyncio
 from datetime import timedelta
 import logging
+from random import randrange
 from xml.parsers.expat import ExpatError
 
 import async_timeout
@@ -80,8 +81,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     yield from async_add_devices(dev)
 
     weather = YrData(hass, coordinates, dev)
-    # Update weather on the hour
-    async_track_utc_time_change(hass, weather.async_update, minute=0, second=0)
+    # Update weather on the hour, spread seconds
+    async_track_utc_time_change(hass, weather.async_update,
+                                minute=randrange(1, 10),
+                                second=randrange(0, 59))
     yield from weather.async_update()
 
 
@@ -137,7 +140,8 @@ class YrData(object):
 
     def __init__(self, hass, coordinates, devices):
         """Initialize the data object."""
-        self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/'
+        self._url = 'https://aa015h6buqvih86i1.api.met.no/'\
+                    'weatherapi/locationforecast/1.9/'
         self._urlparams = coordinates
         self._nextrun = None
         self.devices = devices
@@ -197,6 +201,7 @@ class YrData(object):
             for time_entry in self.data['product']['time']:
                 valid_from = dt_util.parse_datetime(time_entry['@from'])
                 valid_to = dt_util.parse_datetime(time_entry['@to'])
+                new_state = None
 
                 loc_data = time_entry['location']
 

@@ -1,16 +1,23 @@
 """Helper for aiohttp webclient stuff."""
 import asyncio
+import sys
 
 import aiohttp
+from aiohttp.hdrs import USER_AGENT, CONTENT_TYPE
+from aiohttp import web
+from aiohttp.web_exceptions import HTTPGatewayTimeout
+import async_timeout
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-
+from homeassistant.const import __version__
 
 DATA_CONNECTOR = 'aiohttp_connector'
 DATA_CONNECTOR_NOTVERIFY = 'aiohttp_connector_notverify'
 DATA_CLIENTSESSION = 'aiohttp_clientsession'
 DATA_CLIENTSESSION_NOTVERIFY = 'aiohttp_clientsession_notverify'
+SERVER_SOFTWARE = 'HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}'.format(
+    __version__, aiohttp.__version__, sys.version_info)
 
 
 @callback
@@ -28,9 +35,9 @@ def async_get_clientsession(hass, verify_ssl=True):
         connector = _async_get_connector(hass, verify_ssl)
         clientsession = aiohttp.ClientSession(
             loop=hass.loop,
-            connector=connector
+            connector=connector,
+            headers={USER_AGENT: SERVER_SOFTWARE}
         )
-        _async_register_clientsession_shutdown(hass, clientsession)
         hass.data[key] = clientsession
 
     return hass.data[key]
@@ -52,6 +59,7 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
     clientsession = aiohttp.ClientSession(
         loop=hass.loop,
         connector=connector,
+        headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs
     )
 
@@ -59,6 +67,43 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
         _async_register_clientsession_shutdown(hass, clientsession)
 
     return clientsession
+
+
+@asyncio.coroutine
+def async_aiohttp_proxy_stream(hass, request, stream_coro, buffer_size=102400,
+                               timeout=10):
+    """Stream websession request to aiohttp web response."""
+    response = None
+    stream = None
+
+    try:
+        with async_timeout.timeout(timeout, loop=hass.loop):
+            stream = yield from stream_coro
+
+        response = web.StreamResponse()
+        response.content_type = stream.headers.get(CONTENT_TYPE)
+
+        yield from response.prepare(request)
+
+        while True:
+            data = yield from stream.content.read(buffer_size)
+            response.write(data)
+
+    except asyncio.TimeoutError:
+        raise HTTPGatewayTimeout()
+
+    except (aiohttp.errors.ClientError,
+            aiohttp.errors.ClientDisconnectedError):
+        pass
+
+    except (asyncio.CancelledError, ConnectionResetError):
+        response = None
+
+    finally:
+        if stream is not None:
+            stream.close()
+        if response is not None:
+            yield from response.write_eof()
 
 
 @callback
@@ -87,33 +132,33 @@ def _async_get_connector(hass, verify_ssl=True):
         if DATA_CONNECTOR not in hass.data:
             connector = aiohttp.TCPConnector(loop=hass.loop)
             hass.data[DATA_CONNECTOR] = connector
-
-            _async_register_connector_shutdown(hass, connector)
         else:
             connector = hass.data[DATA_CONNECTOR]
     else:
         if DATA_CONNECTOR_NOTVERIFY not in hass.data:
             connector = aiohttp.TCPConnector(loop=hass.loop, verify_ssl=False)
             hass.data[DATA_CONNECTOR_NOTVERIFY] = connector
-
-            _async_register_connector_shutdown(hass, connector)
         else:
             connector = hass.data[DATA_CONNECTOR_NOTVERIFY]
 
     return connector
 
 
-@callback
-# pylint: disable=invalid-name
-def _async_register_connector_shutdown(hass, connector):
-    """Register connector pool close on homeassistant shutdown.
+@asyncio.coroutine
+def async_cleanup_websession(hass):
+    """Cleanup aiohttp connector pool.
 
-    This method must be run in the event loop.
+    This method is a coroutine.
     """
-    @asyncio.coroutine
-    def _async_close_connector(event):
-        """Close websession on shutdown."""
-        yield from connector.close()
+    tasks = []
+    if DATA_CLIENTSESSION in hass.data:
+        hass.data[DATA_CLIENTSESSION].detach()
+    if DATA_CONNECTOR in hass.data:
+        tasks.append(hass.data[DATA_CONNECTOR].close())
+    if DATA_CLIENTSESSION_NOTVERIFY in hass.data:
+        hass.data[DATA_CLIENTSESSION_NOTVERIFY].detach()
+    if DATA_CONNECTOR_NOTVERIFY in hass.data:
+        tasks.append(hass.data[DATA_CONNECTOR_NOTVERIFY].close())
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _async_close_connector)
+    if tasks:
+        yield from asyncio.wait(tasks, loop=hass.loop)

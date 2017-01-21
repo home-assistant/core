@@ -64,26 +64,25 @@ class TestLiteJetSwitch(unittest.TestCase):
         self.hass.stop()
 
     def switch(self):
+        """Return the switch state."""
         return self.hass.states.get(ENTITY_SWITCH)
 
     def other_switch(self):
+        """Return the other switch state."""
         return self.hass.states.get(ENTITY_OTHER_SWITCH)
 
     def test_include_switches_unspecified(self):
         """Test that switches are ignored by default."""
-
         self.mock_lj.button_switches.assert_not_called()
         self.mock_lj.all_switches.assert_not_called()
 
     def test_include_switches_False(self):
         """Test that switches can be explicitly ignored."""
-
         self.mock_lj.button_switches.assert_not_called()
         self.mock_lj.all_switches.assert_not_called()
 
     def test_on_off(self):
         """Test turning the switch on and off."""
-
         assert self.switch().state == 'off'
         assert self.other_switch().state == 'off'
 
@@ -99,9 +98,7 @@ class TestLiteJetSwitch(unittest.TestCase):
 
     def test_pressed_event(self):
         """Test handling an event from LiteJet."""
-
         # Switch 1
-
         _LOGGER.info(self.switch_pressed_callbacks[ENTITY_SWITCH_NUMBER])
         self.switch_pressed_callbacks[ENTITY_SWITCH_NUMBER]()
         self.hass.block_till_done()
@@ -112,7 +109,6 @@ class TestLiteJetSwitch(unittest.TestCase):
         assert self.other_switch().state == 'off'
 
         # Switch 2
-
         self.switch_pressed_callbacks[ENTITY_OTHER_SWITCH_NUMBER]()
         self.hass.block_till_done()
 
@@ -123,9 +119,7 @@ class TestLiteJetSwitch(unittest.TestCase):
 
     def test_released_event(self):
         """Test handling an event from LiteJet."""
-
         # Initial state is on.
-
         self.switch_pressed_callbacks[ENTITY_OTHER_SWITCH_NUMBER]()
         self.hass.block_till_done()
 

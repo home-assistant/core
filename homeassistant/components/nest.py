@@ -11,7 +11,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.const import (CONF_STRUCTURE, CONF_FILENAME)
+from homeassistant.const import (CONF_STRUCTURE, CONF_FILENAME,
+                                 CONF_BINARY_SENSORS, CONF_SENSORS,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.loader import get_component
 
 _CONFIGURING = {}
@@ -19,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = [
     'http://github.com/technicalpickles/python-nest'
-    '/archive/b8391d2b3cb8682f8b0c2bdff477179983609f39.zip'  # nest-cam branch
+    '/archive/e6c9d56a8df455d4d7746389811f2c1387e8cb33.zip'  # nest-cam branch
     '#python-nest==3.0.2']
 
 DOMAIN = 'nest'
@@ -30,11 +32,17 @@ NEST_CONFIG_FILE = 'nest.conf'
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 
+SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string)
+        vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string),
+        vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
+        vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -88,9 +96,15 @@ def setup_nest(hass, nest, config, pin=None):
 
     _LOGGER.debug("proceeding with discovery")
     discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
+
+    sensor_config = conf.get(CONF_SENSORS, {})
+    discovery.load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
+
+    binary_sensor_config = conf.get(CONF_BINARY_SENSORS, {})
+    discovery.load_platform(hass, 'binary_sensor', DOMAIN,
+                            binary_sensor_config, config)
+
     _LOGGER.debug("setup done")
 
     return True
@@ -132,12 +146,12 @@ class NestDevice(object):
             self._structure = conf[CONF_STRUCTURE]
         _LOGGER.debug("Structures to include: %s", self._structure)
 
-    def devices(self):
-        """Generator returning list of devices and their location."""
+    def thermostats(self):
+        """Generator returning list of thermostats and their location."""
         try:
             for structure in self.nest.structures:
                 if structure.name in self._structure:
-                    for device in structure.devices:
+                    for device in structure.thermostats:
                         yield (structure, device)
                 else:
                     _LOGGER.debug("Ignoring structure %s, not in %s",
@@ -146,12 +160,12 @@ class NestDevice(object):
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
 
-    def protect_devices(self):
-        """Generator returning list of protect devices."""
+    def smoke_co_alarms(self):
+        """Generator returning list of smoke co alarams."""
         try:
             for structure in self.nest.structures:
                 if structure.name in self._structure:
-                    for device in structure.protectdevices:
+                    for device in structure.smoke_co_alarms:
                         yield(structure, device)
                 else:
                     _LOGGER.info("Ignoring structure %s, not in %s",
@@ -160,12 +174,12 @@ class NestDevice(object):
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
 
-    def camera_devices(self):
-        """Generator returning list of camera devices."""
+    def cameras(self):
+        """Generator returning list of cameras."""
         try:
             for structure in self.nest.structures:
                 if structure.name in self._structure:
-                    for device in structure.cameradevices:
+                    for device in structure.cameras:
                         yield(structure, device)
                 else:
                     _LOGGER.info("Ignoring structure %s, not in %s",
@@ -173,18 +187,3 @@ class NestDevice(object):
         except socket.error:
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
-
-
-def is_thermostat(device):
-    """Target devices that are Nest Thermostats."""
-    return bool(device.__class__.__name__ == 'Device')
-
-
-def is_protect(device):
-    """Target devices that are Nest Protect Smoke Alarms."""
-    return bool(device.__class__.__name__ == 'ProtectDevice')
-
-
-def is_camera(device):
-    """Target devices that are Nest Protect Smoke Alarms."""
-    return bool(device.__class__.__name__ == 'CameraDevice')

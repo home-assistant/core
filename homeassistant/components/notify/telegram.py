@@ -19,7 +19,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==5.2.0']
+REQUIREMENTS = ['python-telegram-bot==5.3.0']
 
 ATTR_PHOTO = 'photo'
 ATTR_DOCUMENT = 'document'
@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Telegram notification service."""
     import telegram
 

@@ -46,6 +46,7 @@ class Script():
         self._change_listener = change_listener
         self._cur = -1
         self.last_action = None
+        self.last_triggered = None
         self.can_cancel = any(CONF_DELAY in action for action
                               in self.sequence)
         self._async_unsub_delay_listener = None
@@ -68,6 +69,7 @@ class Script():
 
         This method is a coroutine.
         """
+        self.last_triggered = date_util.utcnow()
         if self._cur == -1:
             self._log('Running script')
             self._cur = 0

@@ -38,7 +38,7 @@ SENSOR_TYPES = {
     'daily_summary': ['Daily Summary', None, None, None, None, None, None],
     'icon': ['Icon', None, None, None, None, None, None],
     'nearest_storm_distance': ['Nearest Storm Distance',
-                               'km', 'm', 'km', 'km', 'm',
+                               'km', 'mi', 'km', 'km', 'mi',
                                'mdi:weather-lightning'],
     'nearest_storm_bearing': ['Nearest Storm Bearing',
                               '°', '°', '°', '°', '°',
@@ -63,7 +63,7 @@ SENSOR_TYPES = {
     'humidity': ['Humidity', '%', '%', '%', '%', '%', 'mdi:water-percent'],
     'pressure': ['Pressure', 'mbar', 'mbar', 'mbar', 'mbar', 'mbar',
                  'mdi:gauge'],
-    'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm', 'mdi:eye'],
+    'visibility': ['Visibility', 'km', 'mi', 'km', 'km', 'mi', 'mdi:eye'],
     'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU', 'mdi:eye'],
     'apparent_temperature_max': ['Daily High Apparent Temperature',
                                  '°C', '°F', '°C', '°C', '°C',
@@ -104,19 +104,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         units = 'us'
 
-    # Create a data fetcher to support all of the configured sensors. Then make
-    # the first call to init the data and confirm we can connect.
-    try:
-        forecast_data = DarkSkyData(
-            api_key=config.get(CONF_API_KEY, None),
-            latitude=hass.config.latitude,
-            longitude=hass.config.longitude,
-            units=units,
-            interval=config.get(CONF_UPDATE_INTERVAL))
-        forecast_data.update()
-        forecast_data.update_currently()
-    except ValueError as error:
-        _LOGGER.error(error)
+    forecast_data = DarkSkyData(
+        api_key=config.get(CONF_API_KEY, None),
+        latitude=hass.config.latitude,
+        longitude=hass.config.longitude,
+        units=units,
+        interval=config.get(CONF_UPDATE_INTERVAL))
+    forecast_data.update()
+    forecast_data.update_currently()
+
+    # If connection failed don't setup platform.
+    if forecast_data.data is None:
         return False
 
     name = config.get(CONF_NAME)
@@ -227,7 +225,10 @@ class DarkSkySensor(Entity):
         If the sensor type is unknown, the current state is returned.
         """
         lookup_type = convert_to_camel(self.type)
-        state = getattr(data, lookup_type, 0)
+        state = getattr(data, lookup_type, None)
+
+        if state is None:
+            return state
 
         # Some state data needs to be rounded to whole values or converted to
         # percentages
@@ -284,21 +285,22 @@ class DarkSkyData(object):
             self.data = forecastio.load_forecast(
                 self._api_key, self.latitude, self.longitude, units=self.units)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            raise ValueError("Unable to init Dark Sky. %s", error)
-        self.unit_system = self.data.json['flags']['units']
+            _LOGGER.error("Unable to connect to Dark Sky. %s", error)
+            self.data = None
+        self.unit_system = self.data and self.data.json['flags']['units']
 
     def _update_currently(self):
         """Update currently data."""
-        self.data_currently = self.data.currently()
+        self.data_currently = self.data and self.data.currently()
 
     def _update_minutely(self):
         """Update minutely data."""
-        self.data_minutely = self.data.minutely()
+        self.data_minutely = self.data and self.data.minutely()
 
     def _update_hourly(self):
         """Update hourly data."""
-        self.data_hourly = self.data.hourly()
+        self.data_hourly = self.data and self.data.hourly()
 
     def _update_daily(self):
         """Update daily data."""
-        self.data_daily = self.data.daily()
+        self.data_daily = self.data and self.data.daily()

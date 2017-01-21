@@ -5,18 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.samsungtv/
 """
 import logging
+import socket
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['samsungctl==0.5.1']
+REQUIREMENTS = ['samsungctl==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,9 +27,11 @@ DEFAULT_NAME = 'Samsung TV Remote'
 DEFAULT_PORT = 55000
 DEFAULT_TIMEOUT = 0
 
+KNOWN_DEVICES_KEY = 'samsungtv_known_devices'
+
 SUPPORT_SAMSUNGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF
+    SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -41,28 +44,47 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Samsung TV platform."""
-    name = config.get(CONF_NAME)
+    known_devices = hass.data.get(KNOWN_DEVICES_KEY)
+    if known_devices is None:
+        known_devices = set()
+        hass.data[KNOWN_DEVICES_KEY] = known_devices
 
-    # Generate a configuration for the Samsung library
-    remote_config = {
-        'name': 'HomeAssistant',
-        'description': config.get(CONF_NAME),
-        'id': 'ha.component.samsung',
-        'port': config.get(CONF_PORT),
-        'host': config.get(CONF_HOST),
-        'timeout': config.get(CONF_TIMEOUT),
-    }
+    # Is this a manual configuration?
+    if config.get(CONF_HOST) is not None:
+        host = config.get(CONF_HOST)
+        port = config.get(CONF_PORT)
+        name = config.get(CONF_NAME)
+        timeout = config.get(CONF_TIMEOUT)
+    elif discovery_info is not None:
+        tv_name, model, host = discovery_info
+        name = "{} ({})".format(tv_name, model)
+        port = DEFAULT_PORT
+        timeout = DEFAULT_TIMEOUT
+    else:
+        _LOGGER.warning(
+            'Internal error on samsungtv component. Cannot determine device')
+        return
 
-    add_devices([SamsungTVDevice(name, remote_config)])
+    # Only add a device once, so discovered devices do not override manual
+    # config.
+    ip_addr = socket.gethostbyname(host)
+    if ip_addr not in known_devices:
+        known_devices.add(ip_addr)
+        add_devices([SamsungTVDevice(host, port, name, timeout)])
+        _LOGGER.info("Samsung TV %s:%d added as '%s'", host, port, name)
+    else:
+        _LOGGER.info("Ignoring duplicate Samsung TV %s:%d", host, port)
 
 
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, name, config):
+    def __init__(self, host, port, name, timeout):
         """Initialize the Samsung device."""
+        from samsungctl import exceptions
         from samsungctl import Remote
-        # Save a reference to the imported class
+        # Save a reference to the imported classes
+        self._exceptions_class = exceptions
         self._remote_class = Remote
         self._name = name
         # Assume that the TV is not muted
@@ -71,7 +93,20 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._playing = True
         self._state = STATE_UNKNOWN
         self._remote = None
-        self._config = config
+        # Generate a configuration for the Samsung library
+        self._config = {
+            'name': 'HomeAssistant',
+            'description': name,
+            'id': 'ha.component.samsung',
+            'port': port,
+            'host': host,
+            'timeout': timeout,
+        }
+
+        if self._config['port'] == 8001:
+            self._config['method'] = 'websocket'
+        else:
+            self._config['method'] = 'legacy'
 
     def update(self):
         """Retrieve the latest data."""
@@ -91,14 +126,14 @@ class SamsungTVDevice(MediaPlayerDevice):
         try:
             self.get_remote().control(key)
             self._state = STATE_ON
-        except (self._remote_class.UnhandledResponse,
-                self._remote_class.AccessDenied, BrokenPipeError):
+        except (self._exceptions_class.UnhandledResponse,
+                self._exceptions_class.AccessDenied, BrokenPipeError):
             # We got a response so it's on.
             # BrokenPipe can occur when the commands is sent to fast
             self._state = STATE_ON
             self._remote = None
             return False
-        except (self._remote_class.ConnectionClosed, OSError):
+        except (self._exceptions_class.ConnectionClosed, OSError):
             self._state = STATE_OFF
             self._remote = None
             return False
@@ -127,7 +162,10 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self.send_key('KEY_POWEROFF')
+        if self._config['method'] == 'websocket':
+            self.send_key('KEY_POWER')
+        else:
+            self.send_key('KEY_POWEROFF')
         # Force closing of remote session to provide instant UI feedback
         self.get_remote().close()
 

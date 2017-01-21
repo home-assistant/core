@@ -8,9 +8,8 @@ import asyncio
 from functools import partial
 import logging
 
-from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE,
-                                 STATE_NOT_HOME,
-                                 HTTP_UNPROCESSABLE_ENTITY)
+from homeassistant.const import (
+    ATTR_LATITUDE, ATTR_LONGITUDE, STATE_NOT_HOME, HTTP_UNPROCESSABLE_ENTITY)
 from homeassistant.components.http import HomeAssistantView
 # pylint: disable=unused-import
 from homeassistant.components.device_tracker import (  # NOQA
@@ -64,18 +63,18 @@ class LocativeView(HomeAssistantView):
             return ('Device id not specified.',
                     HTTP_UNPROCESSABLE_ENTITY)
 
-        if 'id' not in data:
-            _LOGGER.error('Location id not specified.')
-            return ('Location id not specified.',
-                    HTTP_UNPROCESSABLE_ENTITY)
-
         if 'trigger' not in data:
             _LOGGER.error('Trigger is not specified.')
             return ('Trigger is not specified.',
                     HTTP_UNPROCESSABLE_ENTITY)
 
+        if 'id' not in data and data['trigger'] != 'test':
+            _LOGGER.error('Location id not specified.')
+            return ('Location id not specified.',
+                    HTTP_UNPROCESSABLE_ENTITY)
+
         device = data['device'].replace('-', '')
-        location_name = data['id'].lower()
+        location_name = data.get('id', data['trigger']).lower()
         direction = data['trigger']
         gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 

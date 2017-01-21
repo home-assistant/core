@@ -4,15 +4,18 @@ Provides functionality to interact with climate devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/climate/
 """
+import asyncio
+from datetime import timedelta
 import logging
 import os
+import functools as ft
 from numbers import Number
-import voluptuous as vol
 
-from homeassistant.helpers.entity_component import EntityComponent
+import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
@@ -23,7 +26,7 @@ from homeassistant.const import (
 DOMAIN = "climate"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-SCAN_INTERVAL = 60
+SCAN_INTERVAL = timedelta(seconds=60)
 
 SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_SET_AUX_HEAT = "set_aux_heat"
@@ -185,17 +188,38 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_SWING_MODE, data)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Setup climate devices."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
-    component.setup(config)
+    yield from component.async_setup(config)
 
-    descriptions = load_yaml_config_file(
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    def away_mode_set_service(service):
+    @asyncio.coroutine
+    def _async_update_climate(target_climate):
+        """Update climate entity after service stuff."""
+        update_tasks = []
+        for climate in target_climate:
+            if not climate.should_poll:
+                continue
+
+            update_coro = hass.loop.create_task(
+                climate.async_update_ha_state(True))
+            if hasattr(climate, 'async_update'):
+                update_tasks.append(update_coro)
+            else:
+                yield from update_coro
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    @asyncio.coroutine
+    def async_away_mode_set_service(service):
         """Set away mode on target climate devices."""
-        target_climate = component.extract_from_service(service)
+        target_climate = component.async_extract_from_service(service)
 
         away_mode = service.data.get(ATTR_AWAY_MODE)
 
@@ -207,21 +231,21 @@ def setup(hass, config):
 
         for climate in target_climate:
             if away_mode:
-                climate.turn_away_mode_on()
+                yield from climate.async_turn_away_mode_on()
             else:
-                climate.turn_away_mode_off()
+                yield from climate.async_turn_away_mode_off()
 
-            if climate.should_poll:
-                climate.update_ha_state(True)
+        yield from _async_update_climate(target_climate)
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_AWAY_MODE, away_mode_set_service,
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_AWAY_MODE, async_away_mode_set_service,
         descriptions.get(SERVICE_SET_AWAY_MODE),
         schema=SET_AWAY_MODE_SCHEMA)
 
-    def aux_heat_set_service(service):
+    @asyncio.coroutine
+    def async_aux_heat_set_service(service):
         """Set auxillary heater on target climate devices."""
-        target_climate = component.extract_from_service(service)
+        target_climate = component.async_extract_from_service(service)
 
         aux_heat = service.data.get(ATTR_AUX_HEAT)
 
@@ -233,21 +257,21 @@ def setup(hass, config):
 
         for climate in target_climate:
             if aux_heat:
-                climate.turn_aux_heat_on()
+                yield from climate.async_turn_aux_heat_on()
             else:
-                climate.turn_aux_heat_off()
+                yield from climate.async_turn_aux_heat_off()
 
-            if climate.should_poll:
-                climate.update_ha_state(True)
+        yield from _async_update_climate(target_climate)
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_AUX_HEAT, aux_heat_set_service,
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_AUX_HEAT, async_aux_heat_set_service,
         descriptions.get(SERVICE_SET_AUX_HEAT),
         schema=SET_AUX_HEAT_SCHEMA)
 
-    def temperature_set_service(service):
+    @asyncio.coroutine
+    def async_temperature_set_service(service):
         """Set temperature on the target climate devices."""
-        target_climate = component.extract_from_service(service)
+        target_climate = component.async_extract_from_service(service)
 
         for climate in target_climate:
             kwargs = {}
@@ -261,18 +285,19 @@ def setup(hass, config):
                 else:
                     kwargs[value] = temp
 
-            climate.set_temperature(**kwargs)
-            if climate.should_poll:
-                climate.update_ha_state(True)
+            yield from climate.async_set_temperature(**kwargs)
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_TEMPERATURE, temperature_set_service,
+        yield from _async_update_climate(target_climate)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_TEMPERATURE, async_temperature_set_service,
         descriptions.get(SERVICE_SET_TEMPERATURE),
         schema=SET_TEMPERATURE_SCHEMA)
 
-    def humidity_set_service(service):
+    @asyncio.coroutine
+    def async_humidity_set_service(service):
         """Set humidity on the target climate devices."""
-        target_climate = component.extract_from_service(service)
+        target_climate = component.async_extract_from_service(service)
 
         humidity = service.data.get(ATTR_HUMIDITY)
 
@@ -283,19 +308,19 @@ def setup(hass, config):
             return
 
         for climate in target_climate:
-            climate.set_humidity(humidity)
+            yield from climate.async_set_humidity(humidity)
 
-            if climate.should_poll:
-                climate.update_ha_state(True)
+        yield from _async_update_climate(target_climate)
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_HUMIDITY, humidity_set_service,
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_HUMIDITY, async_humidity_set_service,
         descriptions.get(SERVICE_SET_HUMIDITY),
         schema=SET_HUMIDITY_SCHEMA)
 
-    def fan_mode_set_service(service):
+    @asyncio.coroutine
+    def async_fan_mode_set_service(service):
         """Set fan mode on target climate devices."""
-        target_climate = component.extract_from_service(service)
+        target_climate = component.async_extract_from_service(service)
 
         fan = service.data.get(ATTR_FAN_MODE)
 
@@ -306,19 +331,19 @@ def setup(hass, config):
             return
 
         for climate in target_climate:
-            climate.set_fan_mode(fan)
+            yield from climate.async_set_fan_mode(fan)
 
-            if climate.should_poll:
-                climate.update_ha_state(True)
+        yield from _async_update_climate(target_climate)
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_FAN_MODE, fan_mode_set_service,
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_FAN_MODE, async_fan_mode_set_service,
         descriptions.get(SERVICE_SET_FAN_MODE),
         schema=SET_FAN_MODE_SCHEMA)
 
-    def operation_set_service(service):
+    @asyncio.coroutine
+    def async_operation_set_service(service):
         """Set operating mode on the target climate devices."""
-        target_climate = component.extract_from_service(service)
+        target_climate = component.async_extract_from_service(service)
 
         operation_mode = service.data.get(ATTR_OPERATION_MODE)
 
@@ -329,19 +354,19 @@ def setup(hass, config):
             return
 
         for climate in target_climate:
-            climate.set_operation_mode(operation_mode)
+            yield from climate.async_set_operation_mode(operation_mode)
 
-            if climate.should_poll:
-                climate.update_ha_state(True)
+        yield from _async_update_climate(target_climate)
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_OPERATION_MODE, operation_set_service,
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_OPERATION_MODE, async_operation_set_service,
         descriptions.get(SERVICE_SET_OPERATION_MODE),
         schema=SET_OPERATION_MODE_SCHEMA)
 
-    def swing_set_service(service):
+    @asyncio.coroutine
+    def async_swing_set_service(service):
         """Set swing mode on the target climate devices."""
-        target_climate = component.extract_from_service(service)
+        target_climate = component.async_extract_from_service(service)
 
         swing_mode = service.data.get(ATTR_SWING_MODE)
 
@@ -352,15 +377,15 @@ def setup(hass, config):
             return
 
         for climate in target_climate:
-            climate.set_swing_mode(swing_mode)
+            yield from climate.async_set_swing_mode(swing_mode)
 
-            if climate.should_poll:
-                climate.update_ha_state(True)
+        yield from _async_update_climate(target_climate)
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_SWING_MODE, swing_set_service,
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_SWING_MODE, async_swing_set_service,
         descriptions.get(SERVICE_SET_SWING_MODE),
         schema=SET_SWING_MODE_SCHEMA)
+
     return True
 
 
@@ -521,37 +546,109 @@ class ClimateDevice(Entity):
         """Set new target temperature."""
         raise NotImplementedError()
 
+    def async_set_temperature(self, **kwargs):
+        """Set new target temperature.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, ft.partial(self.set_temperature, **kwargs))
+
     def set_humidity(self, humidity):
         """Set new target humidity."""
         raise NotImplementedError()
+
+    def async_set_humidity(self, humidity):
+        """Set new target humidity.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.set_humidity, humidity)
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
         raise NotImplementedError()
 
+    def async_set_fan_mode(self, fan):
+        """Set new target fan mode.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.set_fan_mode, fan)
+
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         raise NotImplementedError()
+
+    def async_set_operation_mode(self, operation_mode):
+        """Set new target operation mode.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.set_operation_mode, operation_mode)
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
         raise NotImplementedError()
 
+    def async_set_swing_mode(self, swing_mode):
+        """Set new target swing operation.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.set_swing_mode, swing_mode)
+
     def turn_away_mode_on(self):
         """Turn away mode on."""
         raise NotImplementedError()
+
+    def async_turn_away_mode_on(self):
+        """Turn away mode on.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.turn_away_mode_on)
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
         raise NotImplementedError()
 
+    def async_turn_away_mode_off(self):
+        """Turn away mode off.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.turn_away_mode_off)
+
     def turn_aux_heat_on(self):
         """Turn auxillary heater on."""
         raise NotImplementedError()
 
+    def async_turn_aux_heat_on(self):
+        """Turn auxillary heater on.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.turn_aux_heat_on)
+
     def turn_aux_heat_off(self):
         """Turn auxillary heater off."""
         raise NotImplementedError()
+
+    def async_turn_aux_heat_off(self):
+        """Turn auxillary heater off.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.turn_aux_heat_off)
 
     @property
     def min_temp(self):

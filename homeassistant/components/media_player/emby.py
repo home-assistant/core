@@ -14,24 +14,27 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
     MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_PREVIOUS_TRACK, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
+    SUPPORT_PLAY, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_API_KEY, CONF_PORT, CONF_SSL, DEVICE_DEFAULT_NAME,
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 from homeassistant.helpers.event import (track_utc_time_change)
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyemby==0.1']
+REQUIREMENTS = ['pyemby==0.2']
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
+
+MEDIA_TYPE_TRAILER = 'trailer'
 
 DEFAULT_PORT = 8096
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_EMBY = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_STOP | SUPPORT_SEEK
+    SUPPORT_STOP | SUPPORT_SEEK | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default='localhost'): cv.string,
@@ -119,6 +122,8 @@ class EmbyClient(MediaPlayerDevice):
         self.update_sessions = update_sessions
         self.client = client
         self.set_device(device)
+        self.media_status_last_position = None
+        self.media_status_received = None
 
     def set_device(self, device):
         """Set the device property."""
@@ -178,6 +183,17 @@ class EmbyClient(MediaPlayerDevice):
         """Get the latest details."""
         self.update_devices(no_throttle=True)
         self.update_sessions(no_throttle=True)
+        # Check if we should update progress
+        try:
+            position = self.session['PlayState']['PositionTicks']
+        except (KeyError, TypeError):
+            self.media_status_last_position = None
+            self.media_status_received = None
+        else:
+            position = int(position) / 10000000
+            if position != self.media_status_last_position:
+                self.media_status_last_position = position
+                self.media_status_received = dt_util.utcnow()
 
     def play_percent(self):
         """Return current media percent complete."""
@@ -220,6 +236,8 @@ class EmbyClient(MediaPlayerDevice):
                 return MEDIA_TYPE_TVSHOW
             elif media_type == 'Movie':
                 return MEDIA_TYPE_VIDEO
+            elif media_type == 'Trailer':
+                return MEDIA_TYPE_TRAILER
             return None
         except KeyError:
             return None
@@ -234,18 +252,31 @@ class EmbyClient(MediaPlayerDevice):
                 return None
 
     @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        return self.media_status_last_position
+
+    @property
+    def media_position_updated_at(self):
+        """
+        When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        return self.media_status_received
+
+    @property
     def media_image_url(self):
         """Image url of current playing media."""
         if self.now_playing_item is not None:
             try:
                 return self.client.get_image(
-                    self.now_playing_item['ThumbItemId'], 'Thumb',
-                    self.play_percent())
+                    self.now_playing_item['ThumbItemId'], 'Thumb', 0)
             except KeyError:
                 try:
                     return self.client.get_image(
-                        self.now_playing_item['PrimaryImageItemId'], 'Primary',
-                        self.play_percent())
+                        self.now_playing_item[
+                            'PrimaryImageItemId'], 'Primary', 0)
                 except KeyError:
                     return None
 

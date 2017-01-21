@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP, SUPPORT_PLAY, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 from homeassistant.util import Throttle
@@ -28,7 +28,7 @@ SUPPORT_PHILIPS_JS = SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
                      SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE
 
 SUPPORT_PHILIPS_JS_TV = SUPPORT_PHILIPS_JS | SUPPORT_NEXT_TRACK | \
-                        SUPPORT_PREVIOUS_TRACK
+                        SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
 
 DEFAULT_DEVICE = 'default'
 DEFAULT_HOST = '127.0.0.1'

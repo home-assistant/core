@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['TwitterAPI==2.4.2']
+REQUIREMENTS = ['TwitterAPI==2.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Twitter notification service."""
     return TwitterNotificationService(
         config[CONF_CONSUMER_KEY], config[CONF_CONSUMER_SECRET],

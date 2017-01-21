@@ -14,7 +14,7 @@ import homeassistant.util as util
 from homeassistant.components.media_player import (
     MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_PLAY, MediaPlayerDevice)
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_UNKNOWN)
@@ -32,7 +32,7 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_STOP | SUPPORT_VOLUME_SET
+    SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_PLAY
 
 
 def config_from_file(filename, config=None):
@@ -200,6 +200,7 @@ class PlexClient(MediaPlayerDevice):
         self.update_devices = update_devices
         self.update_sessions = update_sessions
         self.set_device(device)
+        self._season = None
 
     def set_device(self, device):
         """Set the device property."""
@@ -240,8 +241,14 @@ class PlexClient(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details."""
+        from plexapi.video import Show
+
         self.update_devices(no_throttle=True)
         self.update_sessions(no_throttle=True)
+
+        if isinstance(self.session, Show):
+            self._season = self._convert_na_to_none(
+                self.session.seasons()[0].index)
 
     # pylint: disable=no-self-use, singleton-comparison
     def _convert_na_to_none(self, value):
@@ -310,9 +317,7 @@ class PlexClient(MediaPlayerDevice):
     @property
     def media_season(self):
         """Season of curent playing media (TV Show only)."""
-        from plexapi.video import Show
-        if isinstance(self.session, Show):
-            return self._convert_na_to_none(self.session.seasons()[0].index)
+        return self._season
 
     @property
     def media_series_title(self):

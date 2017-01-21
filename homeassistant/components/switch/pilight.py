@@ -35,7 +35,7 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Optional(CONF_ID): cv.positive_int,
     vol.Optional(CONF_STATE): cv.string,
     vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
-})
+}, extra=vol.ALLOW_EXTRA)
 
 SWITCHES_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,

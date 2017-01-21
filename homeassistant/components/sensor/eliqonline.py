@@ -4,6 +4,7 @@ Monitors home energy use for the ELIQ Online service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.eliqonline/
 """
+from datetime import timedelta
 import logging
 from urllib.error import URLError
 
@@ -14,7 +15,7 @@ from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['eliqonline==1.0.12']
+REQUIREMENTS = ['eliqonline==1.0.13']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ DEFAULT_NAME = 'ELIQ Online'
 
 ICON = 'mdi:speedometer'
 
-SCAN_INTERVAL = 60
+SCAN_INTERVAL = timedelta(seconds=60)
 
 UNIT_OF_MEASUREMENT = 'W'
 

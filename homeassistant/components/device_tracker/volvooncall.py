@@ -14,12 +14,9 @@ from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 from homeassistant.util import slugify
 from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME)
+    CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
 from homeassistant.components.device_tracker import (
-    DEFAULT_SCAN_INTERVAL,
-    PLATFORM_SCHEMA)
+    DEFAULT_SCAN_INTERVAL, PLATFORM_SCHEMA)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(minutes=1)
 
@@ -40,7 +37,7 @@ def setup_scanner(hass, config, see):
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD))
 
-    interval = max(MIN_TIME_BETWEEN_SCANS.seconds,
+    interval = max(MIN_TIME_BETWEEN_SCANS,
                    config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
 
     def _see_vehicle(vehicle):
@@ -94,8 +91,7 @@ def setup_scanner(hass, config, see):
 
             return True
         finally:
-            track_point_in_utc_time(hass, update,
-                                    now + timedelta(seconds=interval))
+            track_point_in_utc_time(hass, update, now + interval)
 
     _LOGGER.info('Logging in to service')
     return update(utcnow())

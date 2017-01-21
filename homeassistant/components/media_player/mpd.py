@@ -6,18 +6,20 @@ https://home-assistant.io/components/media_player.mpd/
 """
 import logging
 import socket
+from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_PLAYLIST,
-    MediaPlayerDevice)
+    SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, SUPPORT_PLAY, MEDIA_TYPE_PLAYLIST,
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_PORT, CONF_PASSWORD,
     CONF_HOST)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['python-mpd2==0.5.5']
 
@@ -28,9 +30,11 @@ CONF_LOCATION = 'location'
 DEFAULT_LOCATION = 'MPD'
 DEFAULT_PORT = 6600
 
+PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
+
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
     SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_PLAY_MEDIA
+    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -88,6 +92,8 @@ class MpdDevice(MediaPlayerDevice):
         self.password = password
         self.status = None
         self.currentsong = None
+        self.playlists = []
+        self.currentplaylist = None
 
         self.client = mpd.MPDClient()
         self.client.timeout = 10
@@ -100,6 +106,7 @@ class MpdDevice(MediaPlayerDevice):
         try:
             self.status = self.client.status()
             self.currentsong = self.client.currentsong()
+            self._update_playlists()
         except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError):
             # Cleanly disconnect in case connection is not in valid state
             try:
@@ -181,6 +188,20 @@ class MpdDevice(MediaPlayerDevice):
         """Flag of media commands that are supported."""
         return SUPPORT_MPD
 
+    @property
+    def source(self):
+        """Name of the current input source."""
+        return self.currentplaylist
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return self.playlists
+
+    def select_source(self, source):
+        """Choose a different available playlist and play it."""
+        self.play_media(MEDIA_TYPE_PLAYLIST, source)
+
     def turn_off(self):
         """Service to send the MPD the command to stop playing."""
         self.client.stop()
@@ -188,6 +209,14 @@ class MpdDevice(MediaPlayerDevice):
     def turn_on(self):
         """Service to send the MPD the command to start playing."""
         self.client.play()
+        self._update_playlists(no_throttle=True)
+
+    @Throttle(PLAYLIST_UPDATE_INTERVAL)
+    def _update_playlists(self, **kwargs):
+        """Update available MPD playlists."""
+        self.playlists = []
+        for playlist_data in self.client.listplaylists():
+            self.playlists.append(playlist_data['playlist'])
 
     def set_volume_level(self, volume):
         """Set volume of media player."""
@@ -227,6 +256,12 @@ class MpdDevice(MediaPlayerDevice):
         """Send the media player the command for playing a playlist."""
         _LOGGER.info(str.format("Playing playlist: {0}", media_id))
         if media_type == MEDIA_TYPE_PLAYLIST:
+            if media_id in self.playlists:
+                self.currentplaylist = media_id
+            else:
+                self.currentplaylist = None
+                _LOGGER.warning(str.format("Unknown playlist name %s.",
+                                           media_id))
             self.client.clear()
             self.client.load(media_id)
             self.client.play()

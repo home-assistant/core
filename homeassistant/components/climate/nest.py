@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(
         [NestThermostat(structure, device, temp_unit)
-         for structure, device in hass.data[DATA_NEST].devices()],
+         for structure, device in hass.data[DATA_NEST].thermostats()],
         True
     )
 
@@ -155,8 +155,8 @@ class NestThermostat(ClimateDevice):
         """Set new target temperature."""
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        if target_temp_low is not None and target_temp_high is not None:
-            if self._mode == STATE_HEAT_COOL:
+        if self._mode == STATE_HEAT_COOL:
+            if target_temp_low is not None and target_temp_high is not None:
                 temp = (target_temp_low, target_temp_high)
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)

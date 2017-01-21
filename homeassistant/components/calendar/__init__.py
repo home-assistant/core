@@ -6,6 +6,8 @@ https://home-assistant.io/components/calendar/
 
 """
 import logging
+from datetime import timedelta
+
 import re
 
 from homeassistant.components.google import (CONF_OFFSET,
@@ -20,6 +22,7 @@ from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=60)
 DOMAIN = 'calendar'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -27,7 +30,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 def setup(hass, config):
     """Track states and offer events for calendars."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, 60, DOMAIN)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
 
     component.setup(config)
 
@@ -144,10 +147,10 @@ class CalendarEventDevice(Entity):
         def _get_date(date):
             """Get the dateTime from date or dateTime as a local."""
             if 'date' in date:
-                return dt.as_utc(dt.dt.datetime.combine(
-                    dt.parse_date(date['date']), dt.dt.time()))
+                return dt.start_of_local_day(dt.dt.datetime.combine(
+                    dt.parse_date(date['date']), dt.dt.time.min))
             else:
-                return dt.parse_datetime(date['dateTime'])
+                return dt.as_local(dt.parse_datetime(date['dateTime']))
 
         start = _get_date(self.data.event['start'])
         end = _get_date(self.data.event['end'])

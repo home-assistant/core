@@ -18,7 +18,7 @@ from aiohttp.web_exceptions import HTTPUnauthorized, HTTPMovedPermanently
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.remote as rem
-from homeassistant.util import get_local_ip
+import homeassistant.util as hass_util
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
     SERVER_PORT, CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS,
@@ -32,7 +32,7 @@ from .const import (
     KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
     KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD,
     KEY_DEVELOPMENT, KEY_AUTHENTICATED)
-from .static import FILE_SENDER, GZIP_FILE_SENDER, staticresource_middleware
+from .static import FILE_SENDER, CACHING_FILE_SENDER, staticresource_middleware
 from .util import get_real_ip
 
 DOMAIN = 'http'
@@ -41,6 +41,7 @@ REQUIREMENTS = ('aiohttp_cors==0.5.0',)
 CONF_API_PASSWORD = 'api_password'
 CONF_SERVER_HOST = 'server_host'
 CONF_SERVER_PORT = 'server_port'
+CONF_BASE_URL = 'base_url'
 CONF_DEVELOPMENT = 'development'
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
@@ -84,6 +85,7 @@ HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
     vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
         vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+    vol.Optional(CONF_BASE_URL): cv.string,
     vol.Optional(CONF_DEVELOPMENT, default=DEFAULT_DEVELOPMENT): cv.string,
     vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
     vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
@@ -155,9 +157,19 @@ def async_setup(hass, config):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
 
     hass.http = server
-    hass.config.api = rem.API(server_host if server_host != '0.0.0.0'
-                              else get_local_ip(),
-                              api_password, server_port,
+
+    host = conf.get(CONF_BASE_URL)
+
+    if host:
+        port = None
+    elif server_host != DEFAULT_SERVER_HOST:
+        host = server_host
+        port = server_port
+    else:
+        host = hass_util.get_local_ip()
+        port = server_port
+
+    hass.config.api = rem.API(host, api_password, port,
                               ssl_certificate is not None)
 
     return True
@@ -260,7 +272,7 @@ class HomeAssistantWSGI(object):
         @asyncio.coroutine
         def serve_file(request):
             """Serve file from disk."""
-            res = yield from GZIP_FILE_SENDER.send(request, filepath)
+            res = yield from CACHING_FILE_SENDER.send(request, filepath)
             return res
 
         # aiohttp supports regex matching for variables. Using that as temp
@@ -288,10 +300,16 @@ class HomeAssistantWSGI(object):
                 cors_added.add(route)
 
         if self.ssl_certificate:
-            context = ssl.SSLContext(SSL_VERSION)
-            context.options |= SSL_OPTS
-            context.set_ciphers(CIPHERS)
-            context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+            try:
+                context = ssl.SSLContext(SSL_VERSION)
+                context.options |= SSL_OPTS
+                context.set_ciphers(CIPHERS)
+                context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+            except OSError as error:
+                _LOGGER.error("Could not read SSL certificate from %s: %s",
+                              self.ssl_certificate, error)
+                context = None
+                return
         else:
             context = None
 
@@ -305,18 +323,24 @@ class HomeAssistantWSGI(object):
 
         self._handler = self.app.make_handler()
 
-        self.server = yield from self.hass.loop.create_server(
-            self._handler, self.server_host, self.server_port, ssl=context)
+        try:
+            self.server = yield from self.hass.loop.create_server(
+                self._handler, self.server_host, self.server_port, ssl=context)
+        except OSError as error:
+            _LOGGER.error("Failed to create HTTP server at port %d: %s",
+                          self.server_port, error)
 
         self.app._frozen = False  # pylint: disable=protected-access
 
     @asyncio.coroutine
     def stop(self):
         """Stop the wsgi server."""
-        self.server.close()
-        yield from self.server.wait_closed()
+        if self.server:
+            self.server.close()
+            yield from self.server.wait_closed()
         yield from self.app.shutdown()
-        yield from self._handler.finish_connections(60.0)
+        if self._handler:
+            yield from self._handler.finish_connections(60.0)
         yield from self.app.cleanup()
 
 

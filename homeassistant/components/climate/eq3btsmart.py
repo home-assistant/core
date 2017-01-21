@@ -8,18 +8,28 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import (
+    ClimateDevice, PLATFORM_SCHEMA, PRECISION_HALVES,
+    STATE_UNKNOWN, STATE_AUTO, STATE_ON, STATE_OFF,
+)
 from homeassistant.const import (
     CONF_MAC, TEMP_CELSIUS, CONF_DEVICES, ATTR_TEMPERATURE)
-from homeassistant.util.temperature import convert
+
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['bluepy_devices==0.2.0']
+REQUIREMENTS = ['python-eq3bt==0.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MODE = 'mode'
-ATTR_MODE_READABLE = 'mode_readable'
+STATE_BOOST = "boost"
+STATE_AWAY = "away"
+STATE_MANUAL = "manual"
+
+ATTR_STATE_WINDOW_OPEN = "window_open"
+ATTR_STATE_VALVE = "valve"
+ATTR_STATE_LOCKED = "is_locked"
+ATTR_STATE_LOW_BAT = "low_battery"
+ATTR_STATE_AWAY_END = "away_end"
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_MAC): cv.string,
@@ -48,10 +58,23 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def __init__(self, _mac, _name):
         """Initialize the thermostat."""
-        from bluepy_devices.devices import eq3btsmart
+        # we want to avoid name clash with this module..
+        import eq3bt as eq3
+
+        self.modes = {None: STATE_UNKNOWN,  # When not yet connected.
+                      eq3.Mode.Unknown: STATE_UNKNOWN,
+                      eq3.Mode.Auto: STATE_AUTO,
+                      # away handled separately, here just for reverse mapping
+                      eq3.Mode.Away: STATE_AWAY,
+                      eq3.Mode.Closed: STATE_OFF,
+                      eq3.Mode.Open: STATE_ON,
+                      eq3.Mode.Manual: STATE_MANUAL,
+                      eq3.Mode.Boost: STATE_BOOST}
+
+        self.reverse_modes = {v: k for k, v in self.modes.items()}
 
         self._name = _name
-        self._thermostat = eq3btsmart.EQ3BTSmartThermostat(_mac)
+        self._thermostat = eq3.Thermostat(_mac)
 
     @property
     def name(self):
@@ -62,6 +85,11 @@ class EQ3BTSmartThermostat(ClimateDevice):
     def temperature_unit(self):
         """Return the unit of measurement that is used."""
         return TEMP_CELSIUS
+
+    @property
+    def precision(self):
+        """Return eq3bt's precision 0.5."""
+        return PRECISION_HALVES
 
     @property
     def current_temperature(self):
@@ -81,24 +109,54 @@ class EQ3BTSmartThermostat(ClimateDevice):
         self._thermostat.target_temperature = temperature
 
     @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        return {
-            ATTR_MODE: self._thermostat.mode,
-            ATTR_MODE_READABLE: self._thermostat.mode_readable,
-        }
+    def current_operation(self):
+        """Current mode."""
+        return self.modes[self._thermostat.mode]
+
+    @property
+    def operation_list(self):
+        """List of available operation modes."""
+        return [x for x in self.modes.values()]
+
+    def set_operation_mode(self, operation_mode):
+        """Set operation mode."""
+        self._thermostat.mode = self.reverse_modes[operation_mode]
+
+    def turn_away_mode_off(self):
+        """Away mode off turns to AUTO mode."""
+        self.set_operation_mode(STATE_AUTO)
+
+    def turn_away_mode_on(self):
+        """Set away mode on."""
+        self.set_operation_mode(STATE_AWAY)
+
+    @property
+    def is_away_mode_on(self):
+        """Return if we are away."""
+        return self.current_operation == STATE_AWAY
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert(self._thermostat.min_temp, TEMP_CELSIUS,
-                       self.unit_of_measurement)
+        return self._thermostat.min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert(self._thermostat.max_temp, TEMP_CELSIUS,
-                       self.unit_of_measurement)
+        return self._thermostat.max_temp
+
+    @property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+        dev_specific = {
+            ATTR_STATE_LOCKED: self._thermostat.locked,
+            ATTR_STATE_LOW_BAT: self._thermostat.low_battery,
+            ATTR_STATE_VALVE: self._thermostat.valve_state,
+            ATTR_STATE_WINDOW_OPEN: self._thermostat.window_open,
+            ATTR_STATE_AWAY_END: self._thermostat.away_end,
+        }
+
+        return dev_specific
 
     def update(self):
         """Update the data from the thermostat."""

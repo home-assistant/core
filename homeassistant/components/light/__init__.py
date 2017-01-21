@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light/
 """
 import asyncio
+from datetime import timedelta
 import logging
 import os
 import csv
@@ -26,7 +27,7 @@ from homeassistant.util.async import run_callback_threadsafe
 
 
 DOMAIN = "light"
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'
 ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
@@ -253,7 +254,7 @@ def async_setup(hass, config):
             update_coro = hass.loop.create_task(
                 light.async_update_ha_state(True))
             if hasattr(light, 'async_update'):
-                update_tasks.append(hass.loop.create_task(update_coro))
+                update_tasks.append(update_coro)
             else:
                 yield from update_coro
 
