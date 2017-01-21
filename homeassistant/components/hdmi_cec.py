@@ -214,7 +214,7 @@ def setup(hass: HomeAssistant, base_config):
             hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
         else:
             att = 1 if att == "" else int(att)
-            for _ in range(1, att):
+            for _ in range(0, att):
                 hdmi_network.send_command(
                     KeyPressCommand(cmd, dst=ADDR_AUDIOSYSTEM))
                 hdmi_network.send_command(
