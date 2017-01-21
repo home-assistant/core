@@ -44,7 +44,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     and device_id not in conf_switches:
                 request_configuration(device_id, insteonhub,
                                       linked[device_id]['model_name'] + ' ' +
-                                      linked[device_id]['sku'], hass, add_devices)
+                                      linked[device_id]['sku'],
+                                      hass, add_devices)
 
 
 def request_configuration(device_id, insteonhub, model, hass,
