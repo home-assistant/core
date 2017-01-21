@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
     vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
     vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
-    vol.Required(CONF_TILT_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_TILT_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_TILT_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_TILT_PAYLOAD_OPEN,
                  default=DEFAULT_PAYLOAD_OPEN): cv.string,
