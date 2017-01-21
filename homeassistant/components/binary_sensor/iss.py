@@ -5,29 +5,28 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.iss/
 """
 import logging
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_NAME, ATTR_LONGITUDE, ATTR_LATITUDE)
 from homeassistant.util import Throttle
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, ATTR_LONGITUDE, ATTR_LATITUDE, STATE_UNKNOWN)
-from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyiss==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ISS_VISIBLE = 'visible'
 ATTR_ISS_NEXT_RISE = 'next_rise'
 ATTR_ISS_NUMBER_PEOPLE_SPACE = 'number_of_people_in_space'
 
 CONF_SHOW_ON_MAP = 'show_on_map'
 
 DEFAULT_NAME = 'ISS'
+DEFAULT_SENSOR_CLASS = 'visible'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -53,46 +52,43 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     show_on_map = config.get(CONF_SHOW_ON_MAP)
 
-    add_devices([IssSensor(iss_data, name, show_on_map)], True)
+    add_devices([IssBinarySensor(iss_data, name, show_on_map)], True)
 
 
-class IssSensor(Entity):
-    """Implementation of the ISS sensor."""
+class IssBinarySensor(BinarySensorDevice):
+    """Implementation of the ISS binary sensor."""
 
     def __init__(self, iss_data, name, show):
         """Initialize the sensor."""
         self.iss_data = iss_data
         self._state = None
-        self._attributes = {}
-        self._client_name = name
-        self._name = ATTR_ISS_VISIBLE
+        self._name = name
         self._show_on_map = show
-        self._unit_of_measurement = None
-        self._icon = 'mdi:rocket'
         self.update()
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._client_name, self._name)
+        return self._name
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        if self.iss_data:
-            return self.iss_data.is_above
-        else:
-            return STATE_UNKNOWN
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self.iss_data.is_above if self.iss_data else False
+
+    @property
+    def sensor_class(self):
+        """Return the class of this sensor."""
+        return DEFAULT_SENSOR_CLASS
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         if self.iss_data:
-            delta = self.iss_data.next_rise - datetime.utcnow()
             attrs = {
                 ATTR_ISS_NUMBER_PEOPLE_SPACE:
                     self.iss_data.number_of_people_in_space,
-                ATTR_ISS_NEXT_RISE: int(delta.total_seconds() / 60),
+                ATTR_ISS_NEXT_RISE: self.iss_data.next_rise,
             }
             if self._show_on_map:
                 attrs[ATTR_LONGITUDE] = self.iss_data.position.get('longitude')
@@ -101,16 +97,6 @@ class IssSensor(Entity):
                 attrs['long'] = self.iss_data.position.get('longitude')
                 attrs['lat'] = self.iss_data.position.get('latitude')
             return attrs
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
 
     def update(self):
         """Get the latest data from ISS API and updates the states."""
