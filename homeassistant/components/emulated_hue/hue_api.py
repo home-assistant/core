@@ -18,8 +18,8 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.components.fan import (
-    ATTR_SUPPORTED_FUNCTIONS, ATTR_SPEED, SUPPORT_SET_SPEED,
-    SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH
+    ATTR_SPEED, SUPPORT_SET_SPEED, SPEED_OFF, SPEED_LOW,
+    SPEED_MEDIUM, SPEED_HIGH
 )
 from homeassistant.components.http import HomeAssistantView
 
@@ -178,7 +178,9 @@ class HueOneLightChangeView(HomeAssistantView):
         # Make sure the entity actually supports brightness
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if (entity_features & SUPPORT_BRIGHTNESS) == SUPPORT_BRIGHTNESS:
+        if (entity_features &
+                SUPPORT_BRIGHTNESS &
+                entity.domain == "light") == SUPPORT_BRIGHTNESS:
             if brightness is not None:
                 data[ATTR_BRIGHTNESS] = brightness
 
@@ -214,7 +216,7 @@ class HueOneLightChangeView(HomeAssistantView):
         # If the requested entity is a fan, convert to speed
         elif entity.domain == "fan":
             functions = entity.attributes.get(
-                ATTR_SUPPORTED_FUNCTIONS, 0)
+                ATTR_SUPPORTED_FEATURES, 0)
             if (functions & SUPPORT_SET_SPEED) == SUPPORT_SET_SPEED:
                 if brightness is not None:
                     domain = entity.domain

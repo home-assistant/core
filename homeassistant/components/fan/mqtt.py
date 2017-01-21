@@ -129,11 +129,11 @@ class MqttFan(FanEntity):
         self._optimistic_speed = (
             optimistic or topic[CONF_SPEED_STATE_TOPIC] is None)
         self._state = False
-        self._supported_functions = 0
-        self._supported_functions |= (topic[CONF_OSCILLATION_STATE_TOPIC]
-                                      is not None and SUPPORT_OSCILLATE)
-        self._supported_functions |= (topic[CONF_SPEED_STATE_TOPIC]
-                                      is not None and SUPPORT_SET_SPEED)
+        self._supported_features = 0
+        self._supported_features |= (topic[CONF_OSCILLATION_STATE_TOPIC]
+                                     is not None and SUPPORT_OSCILLATE)
+        self._supported_features |= (topic[CONF_SPEED_STATE_TOPIC]
+                                     is not None and SUPPORT_SET_SPEED)
 
         for key, tpl in list(templates.items()):
             if tpl is None:
@@ -221,9 +221,9 @@ class MqttFan(FanEntity):
         return self._speed_list
 
     @property
-    def supported_functions(self) -> int:
-        """Flag supported functions."""
-        return self._supported_functions
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return self._supported_features
 
     @property
     def speed(self):

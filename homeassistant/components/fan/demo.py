@@ -86,6 +86,6 @@ class DemoFan(FanEntity):
         return self.direction
 
     @property
-    def supported_functions(self) -> int:
-        """Flag supported functions."""
+    def supported_features(self) -> int:
+        """Flag supported features."""
         return DEMO_SUPPORT
