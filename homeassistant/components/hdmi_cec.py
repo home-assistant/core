@@ -252,7 +252,6 @@ def setup(hass: HomeAssistant, base_config):
             command = CecCommand(cmd, dst, src, att)
         hdmi_network.send_command(command)
 
-
     @callback
     def _standby(call):
         hdmi_network.standby()
